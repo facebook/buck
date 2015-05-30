@@ -139,20 +139,8 @@ public class CxxLexYaccIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(
-        ImmutableSet.of(
-            yaccTarget,
-            headerSymlinkTreeTarget,
-            yaccPreprocessTarget,
-            yaccCompileTarget,
-            preprocessTarget,
-            compileTarget,
-            binaryTarget,
-            target),
+        ImmutableSet.of(target, binaryTarget),
         buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingRuleKey(yaccTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(compileTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(yaccCompileTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(binaryTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
 

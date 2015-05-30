@@ -36,6 +36,16 @@ class BuildInfo {
    */
   static final String METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS = "RULE_KEY_NO_DEPS";
 
+  /**
+   * Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule.
+   */
+  static final String METADATA_KEY_FOR_TARGET = "TARGET";
+
+  /**
+   * Key for {@link OnDiskBuildInfo} to store the dependencies of a build rule.
+   */
+  static final String METADATA_KEY_FOR_DEPS = "DEPS";
+
   /** Utility class: do not instantiate. */
   private BuildInfo() {}
 

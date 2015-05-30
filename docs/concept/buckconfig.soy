@@ -54,6 +54,7 @@ The following sections are recognized by Buck:
     'adb',
     'alias',
     'android',
+    'build',
     'buildfile',
     'cache',
     'color',
@@ -121,6 +122,25 @@ the version of the SDK that Buck has chosen will be printed to the console.
 
 You can find the list of valid values on your system by running{sp}
 <code>android list targets --compact</code>.
+
+{call .section}{param title: 'build' /}{/call}
+
+This section includes settings that control build engine behavior.
+
+{literal}<pre class="prettyprint lang-ini">
+[build]
+  # Build engine mode.
+  #
+  # engine_mode is one of:
+  #   deep     : When building a target, ensure that all transitive
+  #              dependencies of that target are materialized locally.
+  #   shallow  : When building a target, don't require that it's
+  #              transitive dependencies are materialized locally.
+  #
+  # The default is shallow.
+  engine_mode = shallow
+</pre>{/literal}
+
 
 {call .section}{param title: 'buildfile' /}{/call}
 

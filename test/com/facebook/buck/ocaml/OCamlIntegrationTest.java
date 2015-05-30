@@ -104,9 +104,9 @@ public class OCamlIntegrationTest {
     // date.
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertTrue(buildLog.getAllTargets().containsAll(targets));
+    assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
+    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
-    buildLog.assertTargetHadMatchingRuleKey(staticLib.toString());
 
     workspace.resetBuildLogFile();
 
@@ -189,11 +189,9 @@ public class OCamlIntegrationTest {
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        targets,
-        buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(binary.toString());
+    buildLog.assertTargetHadMatchingRuleKey(target.toString());
 
     workspace.resetBuildLogFile();
 
@@ -241,9 +239,9 @@ public class OCamlIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(binary.toString());
+    buildLog.assertTargetHadMatchingRuleKey(target.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("ctest/ctest.c", "NATIVE PLUS", "Native Plus");
@@ -276,9 +274,9 @@ public class OCamlIntegrationTest {
     workspace.replaceFileContents("ctest/BUCK", "compiler_flags=[]", "compiler_flags=[]");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(binary.toString());
+    buildLog.assertTargetHadMatchingRuleKey(target.toString());
   }
 
   @Test
@@ -416,17 +414,9 @@ public class OCamlIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertTrue(buildLog.getAllTargets().containsAll(targets));
-
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(binary.toString());
-    buildLog.assertTargetHadMatchingRuleKey(libplus.toString());
-    buildLog.assertTargetHadMatchingRuleKey(libplusStatic.toString());
-    buildLog.assertTargetHadMatchingRuleKey(cclibbin.toString());
-    buildLog.assertTargetHadMatchingRuleKey(ccObj.toString());
-    buildLog.assertTargetHadMatchingRuleKey(ppObj.toString());
-    buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(exportedHeaderSymlinkTreeTarget.toString());
+    buildLog.assertTargetHadMatchingRuleKey(target.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("clib/cc/cc.cpp", "Hi there", "hi there");

@@ -18,6 +18,7 @@ package com.facebook.buck.util.concurrent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -29,6 +30,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+
+import javax.annotation.Nonnull;
 
 public class MoreFutures {
 
@@ -134,8 +137,9 @@ public class MoreFutures {
               waiter.set(null);
             }
           }
+
           @Override
-          public void onFailure(Throwable throwable) {
+          public void onFailure(@Nonnull Throwable throwable) {
             try {
               callback.onFailure(throwable);
             } catch (Throwable thrown) {
@@ -156,6 +160,24 @@ public class MoreFutures {
         future,
         callback,
         com.google.common.util.concurrent.MoreExecutors.directExecutor());
+  }
+
+  /**
+   * @return a {@link ListenableFuture} which fails if either input future fails or returns
+   *     the value contained in {@code to} if they both succeed.
+   */
+  public static <F, T> ListenableFuture<T> chainExceptions(
+      ListenableFuture<F> from,
+      final ListenableFuture<T> to) {
+    return Futures.transform(
+        from,
+        new AsyncFunction<F, T>() {
+          @Override
+          public ListenableFuture<T> apply(@Nonnull F result)
+              throws Exception {
+            return to;
+          }
+        });
   }
 
 }

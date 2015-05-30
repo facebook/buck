@@ -97,16 +97,8 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(
-        ImmutableSet.of(
-            headerSymlinkTreeTarget,
-            preprocessTarget,
-            compileTarget,
-            binaryTarget,
-            target),
+        ImmutableSet.of(target, binaryTarget),
         buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(preprocessTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(compileTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(binaryTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(target.toString());
 
@@ -148,11 +140,15 @@ public class CxxBinaryIntegrationTest {
         ImmutableSet.of(
             headerSymlinkTreeTarget,
             preprocessTarget,
-            compileTarget),
+            compileTarget,
+            binaryTarget,
+            target),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     buildLog.assertTargetFailed(compileTarget.toString());
+    buildLog.assertTargetFailed(binaryTarget.toString());
+    buildLog.assertTargetFailed(target.toString());
   }
 
   @Test
@@ -385,8 +381,6 @@ public class CxxBinaryIntegrationTest {
             depCompileTarget,
             depArchiveTarget,
             depTarget,
-            headerSymlinkTreeTarget,
-            preprocessTarget,
             compileTarget,
             binaryTarget,
             target),
@@ -397,8 +391,6 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
     buildLog.assertTargetBuiltLocally(depArchiveTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetHadMatchingRuleKey(preprocessTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(compileTarget.toString());
     buildLog.assertTargetBuiltLocally(binaryTarget.toString());
     buildLog.assertTargetBuiltLocally(target.toString());

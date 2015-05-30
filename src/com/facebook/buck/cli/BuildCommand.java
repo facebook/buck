@@ -74,6 +74,8 @@ public class BuildCommand extends AbstractCommand {
   private static final String BUILD_DEPENDENCIES_LONG_ARG = "--build-dependencies";
   private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
+  private static final String DEEP_LONG_ARG = "--deep";
+  private static final String SHALLOW_LONG_ARG = "--shallow";
 
   @Option(name = NUM_THREADS_LONG_ARG, aliases = "-j", usage = "Default is 1.25 * num processors.")
   @Nullable
@@ -110,6 +112,22 @@ public class BuildCommand extends AbstractCommand {
       hidden = true)
   private String justBuildTarget = null;
 
+  @Option(
+      name = DEEP_LONG_ARG,
+      usage =
+          "Perform a \"deep\" build, which makes the output of all transitive dependencies" +
+          " available.",
+      forbids = SHALLOW_LONG_ARG)
+  private boolean deepBuild = false;
+
+  @Option(
+      name = SHALLOW_LONG_ARG,
+      usage =
+          "Perform a \"shallow\" build, which only makes the output of all explicitly listed" +
+          " targets available.",
+      forbids = DEEP_LONG_ARG)
+  private boolean shallowBuild = false;
+
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
@@ -129,6 +147,17 @@ public class BuildCommand extends AbstractCommand {
 
   public boolean isDebugEnabled() {
     return false;
+  }
+
+  public Optional<CachingBuildEngine.BuildMode> getBuildEngineMode() {
+    Optional<CachingBuildEngine.BuildMode> mode = Optional.absent();
+    if (deepBuild) {
+      mode = Optional.of(CachingBuildEngine.BuildMode.DEEP);
+    }
+    if (shallowBuild) {
+      mode = Optional.of(CachingBuildEngine.BuildMode.SHALLOW);
+    }
+    return mode;
   }
 
 
@@ -316,7 +345,7 @@ public class BuildCommand extends AbstractCommand {
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),
-                 params.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
+                 getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode())),
              artifactCache,
              params.getConsole(),
              params.getBuckEventBus(),

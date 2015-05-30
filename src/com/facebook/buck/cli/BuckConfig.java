@@ -27,6 +27,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DirArtifactCache;
 import com.facebook.buck.rules.HttpArtifactCache;
 import com.facebook.buck.rules.MultiArtifactCache;
@@ -779,6 +780,14 @@ public class BuckConfig {
 
     Path pathToAapt = Paths.get(pathString.get(), platformDir, "aapt");
     return checkPathExists(pathToAapt.toString(), "Overridden aapt path not found: ");
+  }
+
+  /**
+   * @return the mode with which to run the build engine.
+   */
+  public CachingBuildEngine.BuildMode getBuildEngineMode() {
+    return getEnum("build", "engine", CachingBuildEngine.BuildMode.class)
+        .or(CachingBuildEngine.BuildMode.SHALLOW);
   }
 
   /**

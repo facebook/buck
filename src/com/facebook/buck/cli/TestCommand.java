@@ -285,7 +285,7 @@ public class TestCommand extends BuildCommand {
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),
-              params.getBuckConfig().getSkipLocalBuildChainDepth().or(1L));
+              getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()));
       try (Build build = createBuild(
           params.getBuckConfig(),
           graph,

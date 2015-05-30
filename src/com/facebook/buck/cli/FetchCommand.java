@@ -94,7 +94,7 @@ public class FetchCommand extends BuildCommand {
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),
-                 params.getBuckConfig().getSkipLocalBuildChainDepth().or(1L)),
+                 getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode())),
              getArtifactCache(params),
              params.getConsole(),
              params.getBuckEventBus(),
