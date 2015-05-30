@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
@@ -55,6 +56,11 @@ public final class AppleBuildRules {
 
   private static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
       ImmutableSet.of(AppleTestDescription.TYPE);
+
+  private static final ImmutableSet<BuildRuleType> RECURSIVE_DEPENDENCIES_STOP_AT_TYPES =
+      ImmutableSet.of(
+          AppleBundleDescription.TYPE,
+          GenruleDescription.TYPE);
 
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.OCTEST, AppleBundleExtension.XCTEST);
@@ -119,6 +125,7 @@ public final class AppleBuildRules {
           @Override
           protected Iterator<TargetNode<?>> findChildren(TargetNode<?> node) throws IOException {
             LOG.verbose("Finding children of node: %s", node);
+
             ImmutableSortedSet.Builder<TargetNode<?>> defaultDepsBuilder =
               ImmutableSortedSet.naturalOrder();
             ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder =
@@ -176,14 +183,14 @@ public final class AppleBuildRules {
                     } else {
                       deps = defaultDeps;
                     }
-                  } else if (node.getType().equals(AppleBundleDescription.TYPE)) {
+                  } else if (RECURSIVE_DEPENDENCIES_STOP_AT_TYPES.contains(node.getType())) {
                     deps = exportedDeps;
                   } else {
                     deps = defaultDeps;
                   }
                   break;
                 case COPYING:
-                  if (node.getType().equals(AppleBundleDescription.TYPE)) {
+                  if (RECURSIVE_DEPENDENCIES_STOP_AT_TYPES.contains(node.getType())) {
                     deps = exportedDeps;
                   } else {
                     deps = defaultDeps;

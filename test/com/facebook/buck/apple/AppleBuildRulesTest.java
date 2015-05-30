@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -263,6 +264,118 @@ public class AppleBuildRulesTest {
         ImmutableSortedSet.of(
             barFrameworkNode,
             fooFrameworkNode),
+        ImmutableSortedSet.copyOf(rules));
+  }
+
+  @Test
+  public void linkingStopsAtGenruleDep() throws Exception {
+    // Pass a random static lib in a genrule and make sure a framework
+    // depending on the genrule doesn't link against or copy in the static lib.
+    BuildTarget fooLibTarget =
+        BuildTarget
+            .builder("//foo", "lib")
+            .build();
+    TargetNode<?> fooLibNode = AppleLibraryBuilder
+        .createBuilder(fooLibTarget)
+        .build();
+
+    BuildTarget fooGenruleTarget = BuildTarget.builder("//foo", "genrule").build();
+    TargetNode<?> fooGenruleNode = GenruleBuilder
+        .newGenruleBuilder(fooGenruleTarget)
+        .setOut("foo")
+        .setCmd("echo hi > $OUT")
+        .setDeps(ImmutableSortedSet.of(fooLibTarget))
+        .build();
+
+    BuildTarget barLibTarget =
+        BuildTarget
+            .builder("//bar", "lib")
+            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .build();
+    TargetNode<?> barLibNode = AppleLibraryBuilder
+        .createBuilder(barLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(fooGenruleTarget)))
+        .build();
+    BuildTarget barFrameworkTarget = BuildTarget.builder("//bar", "framework").build();
+    TargetNode<?> barFrameworkNode = AppleBundleBuilder
+        .createBuilder(barFrameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(barLibTarget)
+        .build();
+
+    ImmutableSet<TargetNode<?>> targetNodes =
+        ImmutableSet.<TargetNode<?>>builder()
+          .add(
+            fooLibNode,
+            fooGenruleNode,
+            barLibNode,
+            barFrameworkNode)
+          .build();
+
+    Iterable<TargetNode<?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+        TargetGraphFactory.newInstance(targetNodes),
+        AppleBuildRules.RecursiveDependenciesMode.LINKING,
+        barFrameworkNode,
+        Optional.<ImmutableSet<BuildRuleType>>absent());
+
+    assertEquals(
+        ImmutableSortedSet.of(fooGenruleNode),
+        ImmutableSortedSet.copyOf(rules));
+  }
+
+  @Test
+  public void copyingStopsAtGenruleDep() throws Exception {
+    // Pass a random static lib in a genrule and make sure a framework
+    // depending on the genrule doesn't link against or copy in the static lib.
+    BuildTarget fooLibTarget =
+        BuildTarget
+            .builder("//foo", "lib")
+            .build();
+    TargetNode<?> fooLibNode = AppleLibraryBuilder
+        .createBuilder(fooLibTarget)
+        .build();
+
+    BuildTarget fooGenruleTarget = BuildTarget.builder("//foo", "genrule").build();
+    TargetNode<?> fooGenruleNode = GenruleBuilder
+        .newGenruleBuilder(fooGenruleTarget)
+        .setOut("foo")
+        .setCmd("echo hi > $OUT")
+        .setDeps(ImmutableSortedSet.of(fooLibTarget))
+        .build();
+
+    BuildTarget barLibTarget =
+        BuildTarget
+            .builder("//bar", "lib")
+            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .build();
+    TargetNode<?> barLibNode = AppleLibraryBuilder
+        .createBuilder(barLibTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(fooGenruleTarget)))
+        .build();
+    BuildTarget barFrameworkTarget = BuildTarget.builder("//bar", "framework").build();
+    TargetNode<?> barFrameworkNode = AppleBundleBuilder
+        .createBuilder(barFrameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(barLibTarget)
+        .build();
+
+    ImmutableSet<TargetNode<?>> targetNodes =
+        ImmutableSet.<TargetNode<?>>builder()
+          .add(
+            fooLibNode,
+            fooGenruleNode,
+            barLibNode,
+            barFrameworkNode)
+          .build();
+
+    Iterable<TargetNode<?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+        TargetGraphFactory.newInstance(targetNodes),
+        AppleBuildRules.RecursiveDependenciesMode.COPYING,
+        barFrameworkNode,
+        Optional.<ImmutableSet<BuildRuleType>>absent());
+
+    assertEquals(
+        ImmutableSortedSet.of(fooGenruleNode),
         ImmutableSortedSet.copyOf(rules));
   }
 }
