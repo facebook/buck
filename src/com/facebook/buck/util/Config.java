@@ -21,6 +21,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
+import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -142,10 +143,10 @@ public class Config {
       return Optional.of(Enum.valueOf(clazz, value.get().toUpperCase(Locale.ROOT)));
     } catch (IllegalArgumentException e) {
       throw new HumanReadableException(
-          ".buckconfig: %s:%s must be one of %s (was %s)",
+          ".buckconfig: %s:%s must be one of %s (case insensitive) (was \"%s\")",
           section,
           field,
-          clazz.getEnumConstants(),
+          Joiner.on(", ").join(clazz.getEnumConstants()),
           value.get());
     }
   }
