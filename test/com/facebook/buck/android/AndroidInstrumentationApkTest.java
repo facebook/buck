@@ -124,7 +124,7 @@ public class AndroidInstrumentationApkTest {
         new AndroidInstrumentationApkDescription(
             new ProGuardConfig(new FakeBuckConfig()),
             DEFAULT_JAVAC_OPTIONS,
-            ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>of(),
+            ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
             MoreExecutors.newDirectExecutorService())
                 .createBuildRule(params, ruleResolver, arg);
 

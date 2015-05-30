@@ -648,4 +648,15 @@ public class NdkCxxPlatforms {
         .addAll(getCommonCompilerFlags())
         .build();
   }
+
+  /**
+   * The CPU architectures to target.
+   */
+  public enum TargetCpuType {
+    ARM,
+    ARMV7,
+    X86,
+    MIPS,
+  }
+
 }

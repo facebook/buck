@@ -125,13 +125,6 @@ public class AndroidBinary extends AbstractBuildRule implements
     }
   }
 
-  public static enum TargetCpuType {
-    ARM,
-    ARMV7,
-    X86,
-    MIPS,
-  }
-
   static enum ExopackageMode {
     SECONDARY_DEX(1),
     NATIVE_LIBRARY(2),
@@ -179,7 +172,7 @@ public class AndroidBinary extends AbstractBuildRule implements
   @AddToRuleKey
   private final ResourceCompressionMode resourceCompressionMode;
   @AddToRuleKey
-  private final ImmutableSet<TargetCpuType> cpuFilters;
+  private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final Path primaryDexPath;
   @AddToRuleKey
@@ -208,7 +201,7 @@ public class AndroidBinary extends AbstractBuildRule implements
       Optional<Integer> proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       ResourceCompressionMode resourceCompressionMode,
-      Set<TargetCpuType> cpuFilters,
+      Set<NdkCxxPlatforms.TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
       Function<String, String> macroExpander,
@@ -285,7 +278,7 @@ public class AndroidBinary extends AbstractBuildRule implements
     return resourceCompressionMode;
   }
 
-  public ImmutableSet<TargetCpuType> getCpuFilters() {
+  public ImmutableSet<NdkCxxPlatforms.TargetCpuType> getCpuFilters() {
     return this.cpuFilters;
   }
 

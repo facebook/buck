@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
@@ -65,7 +65,7 @@ public class CopyNativeLibrariesTest {
     final Path source = Paths.get("/path/to/source");
     final Path destination = Paths.get("/path/to/destination/");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.of(TargetCpuType.ARMV7),
+        ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
         source.toString(),
         destination.toString(),
         ImmutableList.of(
@@ -83,7 +83,7 @@ public class CopyNativeLibrariesTest {
     final Path source = Paths.get("/path/to/source");
     final Path destination = Paths.get("/path/to/destination/");
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.of(TargetCpuType.ARM, TargetCpuType.X86),
+        ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARM, NdkCxxPlatforms.TargetCpuType.X86),
         source.toString(),
         destination.toString(),
         ImmutableList.of(

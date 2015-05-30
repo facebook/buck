@@ -39,11 +39,11 @@ public class NdkLibraryBuilder extends AbstractNodeBuilder<NdkLibraryDescription
           .setCxxSharedRuntimePath(Paths.get("runtime"))
           .build();
 
-  private static final ImmutableMap<AndroidBinary.TargetCpuType, NdkCxxPlatform> NDK_PLATFORMS =
-      ImmutableMap.<AndroidBinary.TargetCpuType, NdkCxxPlatform>builder()
-          .put(AndroidBinary.TargetCpuType.ARM, DEFAULT_NDK_PLATFORM)
-          .put(AndroidBinary.TargetCpuType.ARMV7, DEFAULT_NDK_PLATFORM)
-          .put(AndroidBinary.TargetCpuType.X86, DEFAULT_NDK_PLATFORM)
+  private static final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> NDK_PLATFORMS =
+      ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>builder()
+          .put(NdkCxxPlatforms.TargetCpuType.ARM, DEFAULT_NDK_PLATFORM)
+          .put(NdkCxxPlatforms.TargetCpuType.ARMV7, DEFAULT_NDK_PLATFORM)
+          .put(NdkCxxPlatforms.TargetCpuType.X86, DEFAULT_NDK_PLATFORM)
           .build();
 
   public NdkLibraryBuilder(BuildTarget target) {

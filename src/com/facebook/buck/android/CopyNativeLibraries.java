@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.common.SdkConstants;
-import com.facebook.buck.android.AndroidBinary.TargetCpuType;
+import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.cxx.ObjcopyStep;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -289,13 +289,13 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
    */
   private static Optional<String> getAbiDirectoryComponent(TargetCpuType cpuType) {
     String component = null;
-    if (cpuType.equals(TargetCpuType.ARM)) {
+    if (cpuType.equals(NdkCxxPlatforms.TargetCpuType.ARM)) {
       component = SdkConstants.ABI_ARMEABI;
-    } else if (cpuType.equals(TargetCpuType.ARMV7)) {
+    } else if (cpuType.equals(NdkCxxPlatforms.TargetCpuType.ARMV7)) {
       component = SdkConstants.ABI_ARMEABI_V7A;
-    } else if (cpuType.equals(TargetCpuType.X86)) {
+    } else if (cpuType.equals(NdkCxxPlatforms.TargetCpuType.X86)) {
       component = SdkConstants.ABI_INTEL_ATOM;
-    } else if (cpuType.equals(TargetCpuType.MIPS)) {
+    } else if (cpuType.equals(NdkCxxPlatforms.TargetCpuType.MIPS)) {
       component = SdkConstants.ABI_MIPS;
     }
     return Optional.fromNullable(component);
