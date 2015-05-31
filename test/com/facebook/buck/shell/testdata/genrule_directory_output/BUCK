@@ -1,0 +1,5 @@
+genrule(
+  name = 'mkdir',
+  cmd = 'mkdir $OUT',
+  out = 'directory',
+)

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -29,8 +31,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
-public class GenruleFailingCommandIntegrationTest {
+public class GenruleIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
@@ -73,4 +76,30 @@ public class GenruleFailingCommandIntegrationTest {
         "Unexpected output:\n" + quoteOutput(buildResult.getStderr()),
         buildResult.getStderr().matches(outputPattern));
   }
+
+  @Test
+  public void genruleDirectoryOutput() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "genrule_directory_output", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:mkdir");
+    buildResult.assertSuccess();
+
+    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/directory")), equalTo(true));
+  }
+
+  @Test
+  public void genruleDirectorySourcePath() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "genrule_directory_source_path", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//:cpdir");
+    buildResult.assertSuccess();
+
+    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/copy")), equalTo(true));
+    assertThat(Files.isRegularFile(workspace.resolve("buck-out/gen/copy/hello")), equalTo(true));
+  }
+
 }

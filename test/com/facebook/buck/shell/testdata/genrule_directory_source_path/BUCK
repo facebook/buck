@@ -1,0 +1,11 @@
+genrule(
+  name = 'mkdir',
+  cmd = 'mkdir $OUT && touch $OUT/hello',
+  out = 'directory',
+)
+
+genrule(
+  name = 'cpdir',
+  cmd = 'cp -r $(location :mkdir) $OUT',
+  out = 'copy',
+)
