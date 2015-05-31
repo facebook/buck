@@ -520,7 +520,7 @@ public class ProjectGenerator {
       TargetNode<AppleResourceDescription.Arg> resource =
           (TargetNode<AppleResourceDescription.Arg>) targetNode;
       AppleResourceDescription.Arg arg = resource.getConstructorArg();
-      for (Path dir : arg.dirs) {
+      for (Path dir : Iterables.transform(arg.dirs, sourcePathResolver)) {
         if (!projectFilesystem.isDirectory(dir)) {
           throw new HumanReadableException(
               "%s specified in the dirs parameter of %s is not a directory",

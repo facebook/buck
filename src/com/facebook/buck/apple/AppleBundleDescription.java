@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
@@ -45,9 +46,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -117,7 +118,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         AppleBundleDestinations.platformDestinations(
             appleCxxPlatform.getAppleSdk().getApplePlatform());
 
-    ImmutableSet.Builder<Path> bundleDirsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> bundleDirsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> bundleFilesBuilder = ImmutableSet.builder();
     ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
         AppleResources.collectRecursiveResources(
@@ -125,7 +126,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
             ImmutableSet.of(params.getTargetGraph().get(params.getBuildTarget())));
     AppleResources.addResourceDirsToBuilder(bundleDirsBuilder, resourceDescriptions);
     AppleResources.addResourceFilesToBuilder(bundleFilesBuilder, resourceDescriptions);
-    ImmutableSet<Path> bundleDirs = bundleDirsBuilder.build();
+    ImmutableSet<SourcePath> bundleDirs = bundleDirsBuilder.build();
     ImmutableSet<SourcePath> bundleFiles = bundleFilesBuilder.build();
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -151,6 +152,12 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
             .add(flavoredBinaryRule)
             .addAll(mergedAssetCatalog.asSet())
             .addAll(bundledAssetCatalogs)
+            .addAll(
+                BuildRules.toBuildRulesFor(
+                    params.getBuildTarget(),
+                    resolver,
+                    SourcePaths.filterBuildTargetSourcePaths(
+                        Iterables.concat(bundleFiles, bundleDirs))))
             .build());
 
     return new AppleBundle(

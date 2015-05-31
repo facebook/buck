@@ -434,9 +434,9 @@ public class NewNativeTargetProjectMutator {
     PBXBuildPhase phase = new PBXResourcesBuildPhase();
     target.getBuildPhases().add(phase);
     for (AppleResourceDescription.Arg resource : resources) {
-      Iterable<Path> paths = Iterables.concat(
-          Iterables.transform(resource.files, sourcePathResolver),
-          resource.dirs);
+      Iterable<Path> paths = Iterables.transform(
+          Iterables.concat(resource.files, resource.dirs),
+          sourcePathResolver);
       for (Path path : paths) {
         PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(

@@ -38,6 +38,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
@@ -51,9 +52,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-
-import java.nio.file.Path;
 
 import java.util.Map;
 import java.util.Set;
@@ -244,9 +244,9 @@ public class AppleTestDescription implements
             params.getTargetGraph(),
             ImmutableSet.of(params.getTargetGraph().get(params.getBuildTarget())));
     LOG.debug("Got resource nodes %s", resourceDescriptions);
-    ImmutableSet.Builder<Path> resourceDirsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> resourceDirsBuilder = ImmutableSet.builder();
     AppleResources.addResourceDirsToBuilder(resourceDirsBuilder, resourceDescriptions);
-    ImmutableSet<Path> resourceDirs = resourceDirsBuilder.build();
+    ImmutableSet<SourcePath> resourceDirs = resourceDirsBuilder.build();
 
     ImmutableSet.Builder<SourcePath> resourceFilesBuilder = ImmutableSet.builder();
     AppleResources.addResourceFilesToBuilder(resourceFilesBuilder, resourceDescriptions);
@@ -275,6 +275,12 @@ public class AppleTestDescription implements
                     .addAll(mergedAssetCatalog.asSet())
                     .addAll(bundledAssetCatalogs)
                     .addAll(params.getDeclaredDeps())
+                    .addAll(
+                        BuildRules.toBuildRulesFor(
+                            params.getBuildTarget(),
+                            resolver,
+                            SourcePaths.filterBuildTargetSourcePaths(
+                                Iterables.concat(resourceFiles, resourceDirs))))
                     .build()),
             Suppliers.ofInstance(params.getExtraDeps())),
         sourcePathResolver,

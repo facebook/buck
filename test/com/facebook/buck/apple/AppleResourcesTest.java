@@ -33,8 +33,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
-import java.nio.file.Path;
-
 public class AppleResourcesTest {
 
   @Test
@@ -56,7 +54,7 @@ public class AppleResourcesTest {
     TargetNode<AppleResourceDescription.Arg> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
-            .setDirs(ImmutableSet.<Path>of())
+            .setDirs(ImmutableSet.<SourcePath>of())
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> libNode = AppleLibraryBuilder
         .createBuilder(BuildTarget.builder("//foo", "lib").build())
@@ -82,7 +80,7 @@ public class AppleResourcesTest {
     TargetNode<AppleResourceDescription.Arg> fooResourceNode =
         AppleResourceBuilder.createBuilder(fooResourceTarget)
             .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
-            .setDirs(ImmutableSet.<Path>of())
+            .setDirs(ImmutableSet.<SourcePath>of())
             .build();
     BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<AppleNativeTargetDescriptionArg> fooLibNode = AppleLibraryBuilder
@@ -93,7 +91,7 @@ public class AppleResourcesTest {
     TargetNode<AppleResourceDescription.Arg> barResourceNode =
         AppleResourceBuilder.createBuilder(barResourceTarget)
             .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
-            .setDirs(ImmutableSet.<Path>of())
+            .setDirs(ImmutableSet.<SourcePath>of())
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> barLibNode = AppleLibraryBuilder
         .createBuilder(BuildTarget.builder("//bar", "lib").build())

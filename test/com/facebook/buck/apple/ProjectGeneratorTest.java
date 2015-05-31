@@ -1650,7 +1650,7 @@ public class ProjectGeneratorTest {
     TargetNode<?> resourceNode = AppleResourceBuilder
         .createBuilder(resourceTarget)
         .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
-        .setDirs(ImmutableSet.<Path>of())
+        .setDirs(ImmutableSet.<SourcePath>of())
         .build();
 
     BuildTarget sharedLibraryTarget = BuildTarget
@@ -1747,7 +1747,7 @@ public class ProjectGeneratorTest {
     TargetNode<?> resourceNode = AppleResourceBuilder
         .createBuilder(resourceTarget)
         .setFiles(ImmutableSet.<SourcePath>of())
-        .setDirs(ImmutableSet.<Path>of())
+        .setDirs(ImmutableSet.<SourcePath>of())
         .setVariants(
             Optional.<Map<String, Map<String, SourcePath>>>of(
                 ImmutableMap.<String, Map<String, SourcePath>>of(
@@ -2142,7 +2142,7 @@ public class ProjectGeneratorTest {
     TargetNode<?> resourceNode = AppleResourceBuilder
         .createBuilder(resourceTarget)
         .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
-        .setDirs(ImmutableSet.of(Paths.get("foodir")))
+        .setDirs(ImmutableSet.<SourcePath>of(new TestSourcePath("foodir")))
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
@@ -2499,7 +2499,7 @@ public class ProjectGeneratorTest {
   public void nonexistentResourceDirectoryShouldThrow() throws IOException {
     ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
         ImmutableSet.<SourcePath>of(),
-        ImmutableSet.of(Paths.get("nonexistent-directory")));
+        ImmutableSet.<SourcePath>of(new TestSourcePath("nonexistent-directory")));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -2513,7 +2513,7 @@ public class ProjectGeneratorTest {
   public void nonexistentResourceFileShouldThrow() throws IOException {
     ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
         ImmutableSet.<SourcePath>of(new TestSourcePath("nonexistent-file.png")),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<SourcePath>of());
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -2527,7 +2527,7 @@ public class ProjectGeneratorTest {
   public void usingFileAsResourceDirectoryShouldThrow() throws IOException {
     ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
         ImmutableSet.<SourcePath>of(),
-        ImmutableSet.of(Paths.get("bar.png")));
+        ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -2541,7 +2541,7 @@ public class ProjectGeneratorTest {
   public void usingDirectoryAsResourceFileShouldThrow() throws IOException {
     ImmutableSet<TargetNode<?>> nodes = setupSimpleLibraryWithResources(
         ImmutableSet.<SourcePath>of(new TestSourcePath("foodir")),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<SourcePath>of());
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -2586,7 +2586,7 @@ public class ProjectGeneratorTest {
     TargetNode<AppleResourceDescription.Arg> testLibDepResource =
         AppleResourceBuilder.createBuilder(BuildTarget.builder("//lib", "deplibresource").build())
             .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
-            .setDirs(ImmutableSet.<Path>of())
+            .setDirs(ImmutableSet.<SourcePath>of())
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> testLibDepLib =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder("//libs", "deplib").build())
@@ -2895,7 +2895,7 @@ public class ProjectGeneratorTest {
 
   private ImmutableSet<TargetNode<?>> setupSimpleLibraryWithResources(
       ImmutableSet<SourcePath> resourceFiles,
-      ImmutableSet<Path> resourceDirectories) {
+      ImmutableSet<SourcePath> resourceDirectories) {
     BuildTarget resourceTarget = BuildTarget.builder("//foo", "res").build();
     TargetNode<?> resourceNode = AppleResourceBuilder
         .createBuilder(resourceTarget)

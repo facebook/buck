@@ -77,7 +77,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final AppleBundleDestinations destinations;
 
   @AddToRuleKey
-  private final Set<Path> resourceDirs;
+  private final Set<SourcePath> resourceDirs;
 
   @AddToRuleKey
   private final Set<SourcePath> resourceFiles;
@@ -109,7 +109,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
       AppleBundleDestinations destinations,
-      Set<Path> resourceDirs,
+      Set<SourcePath> resourceDirs,
       Set<SourcePath> resourceFiles,
       Tool ibtool,
       Tool dsymutil,
@@ -201,12 +201,12 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
                   bundleBinaryPath.getFileName().toString() + ".dSYM")));
     }
 
-    for (Path dir : resourceDirs) {
+    for (SourcePath dir : resourceDirs) {
       Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
       stepsBuilder.add(new MkdirStep(bundleDestinationPath));
       stepsBuilder.add(
           CopyStep.forDirectory(
-              dir,
+              getResolver().getPath(dir),
               bundleDestinationPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }

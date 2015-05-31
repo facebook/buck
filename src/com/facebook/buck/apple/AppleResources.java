@@ -23,8 +23,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
-
 import java.util.Set;
 
 public class AppleResources {
@@ -59,15 +57,15 @@ public class AppleResources {
   }
 
   public static void addResourceDirsToBuilder(
-      ImmutableSet.Builder<Path> resourceDirsBuilder,
+      ImmutableSet.Builder<SourcePath> resourceDirsBuilder,
       Iterable<AppleResourceDescription.Arg> resourceDescriptions) {
     resourceDirsBuilder.addAll(
         FluentIterable
             .from(resourceDescriptions)
             .transformAndConcat(
-                new Function<AppleResourceDescription.Arg, Set<Path>>() {
+                new Function<AppleResourceDescription.Arg, Set<SourcePath>>() {
                   @Override
-                  public Set<Path> apply(AppleResourceDescription.Arg arg) {
+                  public Set<SourcePath> apply(AppleResourceDescription.Arg arg) {
                     return arg.dirs;
                   }
                 })
