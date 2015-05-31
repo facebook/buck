@@ -19,7 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -29,6 +31,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -44,17 +47,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class CxxGtestTest extends CxxTest {
+public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
 
   private static final Pattern START = Pattern.compile("^\\[\\s*RUN\\s*\\] (.*)$");
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
 
-  private final Path binary;
+  private final SourcePath binary;
 
   public CxxGtestTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Path binary,
+      SourcePath binary,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
@@ -67,7 +70,7 @@ public class CxxGtestTest extends CxxTest {
       ExecutionContext context,
       Path output) {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
-    String resolvedBinary = filesystem.resolve(binary).toString();
+    String resolvedBinary = filesystem.resolve(getResolver().getPath(binary)).toString();
     String resolvedOutput = filesystem.resolve(output).toString();
     return ImmutableList.of(
         resolvedBinary,
@@ -132,6 +135,13 @@ public class CxxGtestTest extends CxxTest {
     }
 
     return summariesBuilder.build();
+  }
+
+  // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
+  // always available to run the test.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.copyOf(getResolver().getRule(binary).asSet());
   }
 
 }

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -69,7 +70,7 @@ public class CxxGtestTestTest {
     CxxGtestTest test = new CxxGtestTest(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
         new SourcePathResolver(new BuildRuleResolver()),
-        Paths.get(""),
+        new TestSourcePath(""),
         ImmutableSet.<Label>of(),
         ImmutableSet.<String>of(),
         ImmutableSet.<BuildRule>of());

@@ -19,7 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -31,6 +33,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -49,7 +52,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class CxxBoostTest extends CxxTest {
+public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
 
   private static final Pattern SUITE_START = Pattern.compile("^Entering test suite \"(.*)\"$");
   private static final Pattern SUITE_END = Pattern.compile("^Leaving test suite \"(.*)\"$");
@@ -60,12 +63,12 @@ public class CxxBoostTest extends CxxTest {
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
-  private final Path binary;
+  private final SourcePath binary;
 
   public CxxBoostTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Path binary,
+      SourcePath binary,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
@@ -78,7 +81,7 @@ public class CxxBoostTest extends CxxTest {
       ExecutionContext context,
       Path output) {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
-    String resolvedBinary = filesystem.resolve(binary).toString();
+    String resolvedBinary = filesystem.resolve(getResolver().getPath(binary)).toString();
     String resolvedOutput = filesystem.resolve(output).toString();
     return ImmutableList.of(
         resolvedBinary,
@@ -195,6 +198,13 @@ public class CxxBoostTest extends CxxTest {
     visitTestSuite(summariesBuilder, messages, stdout, times, "", testSuite);
 
     return summariesBuilder.build();
+  }
+
+  // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
+  // always available to run the test.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.copyOf(getResolver().getRule(binary).asSet());
   }
 
 }

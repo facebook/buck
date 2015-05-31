@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
@@ -117,7 +118,7 @@ public class CxxTestDescription implements
         test = new CxxGtestTest(
             testParams,
             pathResolver,
-            cxxLink.getOutput(),
+            new BuildTargetSourcePath(cxxLink.getProjectFilesystem(), cxxLink.getBuildTarget()),
             args.labels.get(),
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()));
@@ -127,7 +128,7 @@ public class CxxTestDescription implements
         test = new CxxBoostTest(
             testParams,
             pathResolver,
-            cxxLink.getOutput(),
+            new BuildTargetSourcePath(cxxLink.getProjectFilesystem(), cxxLink.getBuildTarget()),
             args.labels.get(),
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()));
