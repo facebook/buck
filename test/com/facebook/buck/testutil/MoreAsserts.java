@@ -104,6 +104,10 @@ public final class MoreAsserts {
       return;
     }
 
+    String errmsgPart = String.format("expected:[%s] observed:[%s]",
+        Joiner.on(", ").join(expected),
+        Joiner.on(", ").join(observed));
+
     // Compare each item in the list, one at a time.
     Iterator<?> expectedIter = expected.iterator();
     Iterator<?> observedIter = observed.iterator();
@@ -111,12 +115,13 @@ public final class MoreAsserts {
     while (expectedIter.hasNext()) {
       if (!observedIter.hasNext()) {
         fail(prefixWithUserMessage(userMessage, "Item " + index + " does not exist in the " +
-            "observed list: " + expectedIter.next()));
+                "observed list (" + errmsgPart + "): " + expectedIter.next()));
       }
       Object expectedItem = expectedIter.next();
       Object observedItem = observedIter.next();
       assertEquals(
-          prefixWithUserMessage(userMessage, "Item " + index + " in the lists should match."),
+          prefixWithUserMessage(userMessage, "Item " + index + " in the lists should match (" +
+              errmsgPart + ")."),
           expectedItem,
           observedItem);
       ++index;
@@ -125,7 +130,7 @@ public final class MoreAsserts {
       fail(
           prefixWithUserMessage(
               userMessage,
-              "Extraneous item %s in the observed list: %s.",
+              "Extraneous item %s in the observed list (" + errmsgPart + "): %s.",
               index,
               observedIter.next()));
     }
