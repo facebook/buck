@@ -40,6 +40,7 @@ java_library(
   srcs = glob(['*.java'], excludes = FAKE_BUCK_CONFIG_SRCS + STANDARD_TEST_SRCS),
   deps = [
     ':FakeBuckConfig',
+    '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:utils',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',

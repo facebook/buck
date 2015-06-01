@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
@@ -497,10 +498,11 @@ public final class Main {
     PropertyFinder propertyFinder = new DefaultPropertyFinder(
         filesystem,
         clientEnvironment);
+    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
     AndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
             filesystem,
-            buckConfig.getNdkVersion(),
+            androidBuckConfig.getNdkVersion(),
             propertyFinder);
 
     ProcessExecutor processExecutor = new ProcessExecutor(console);
@@ -634,7 +636,7 @@ public final class Main {
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
           createAndroidPlatformTargetSupplier(
               rootRepository.getAndroidDirectoryResolver(),
-              buckConfig,
+              androidBuckConfig,
               buildEventBus);
 
       // At this point, we have parsed options but haven't started running the command yet.  This is
@@ -702,7 +704,7 @@ public final class Main {
   @VisibleForTesting
   static Supplier<AndroidPlatformTarget> createAndroidPlatformTargetSupplier(
       final AndroidDirectoryResolver androidDirectoryResolver,
-      final BuckConfig buckConfig,
+      final AndroidBuckConfig androidBuckConfig,
       final BuckEventBus eventBus) {
     // TODO(mbolin): Only one such Supplier should be created per Repository per Buck execution.
     // Currently, only one Supplier is created per Buck execution because Main creates the Supplier
@@ -735,7 +737,7 @@ public final class Main {
         }
 
         String androidPlatformTargetId;
-        Optional<String> target = buckConfig.getAndroidTarget();
+        Optional<String> target = androidBuckConfig.getAndroidTarget();
         if (target.isPresent()) {
           androidPlatformTargetId = target.get();
         } else {
@@ -749,7 +751,7 @@ public final class Main {
             .getTargetForId(
                 androidPlatformTargetId,
                 androidDirectoryResolver,
-                buckConfig.getAaptOverride());
+                androidBuckConfig.getAaptOverride());
         if (androidPlatformTargetOptional.isPresent()) {
           androidPlatformTarget = androidPlatformTargetOptional.get();
           return androidPlatformTarget;

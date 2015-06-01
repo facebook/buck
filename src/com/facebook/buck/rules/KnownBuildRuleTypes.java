@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidAarDescription;
 import com.facebook.buck.android.AndroidBinaryDescription;
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
@@ -314,7 +315,8 @@ public class KnownBuildRuleTypes {
 
     Platform platform = Platform.detect();
 
-    Optional<String> ndkVersion = config.getNdkVersion();
+    AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
+    Optional<String> ndkVersion = androidConfig.getNdkVersion();
     // If a NDK version isn't specified, we've got to reach into the runtime environment to find
     // out which one we will end up using.
     if (!ndkVersion.isPresent()) {
@@ -341,7 +343,7 @@ public class KnownBuildRuleTypes {
     if (ndkRoot.isPresent()) {
       ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(
               ndkRoot.get(),
-              config.getNdkAppPlatform().or("android-9"),
+              androidConfig.getNdkAppPlatform().or("android-9"),
               platform));
     }
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =

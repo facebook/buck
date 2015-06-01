@@ -39,6 +39,7 @@ RULES_SRCS = [
   'AndroidBinaryGraphEnhancer.java',
   'AndroidBinary.java',
   'AndroidBinaryDescription.java',
+  'AndroidBuckConfig.java',
   'AndroidBuildConfig.java',
   'AndroidBuildConfigDescription.java',
   'AndroidBuildConfigJavaLibrary.java',

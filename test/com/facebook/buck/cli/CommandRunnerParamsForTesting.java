@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventBus;
@@ -69,7 +70,7 @@ public class CommandRunnerParamsForTesting {
         repository,
         Main.createAndroidPlatformTargetSupplier(
             androidDirectoryResolver,
-            new FakeBuckConfig(),
+            new AndroidBuckConfig(new FakeBuckConfig(), platform),
             eventBus),
         artifactCacheFactory,
         eventBus,

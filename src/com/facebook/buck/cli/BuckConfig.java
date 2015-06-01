@@ -695,18 +695,6 @@ public class BuckConfig {
     return doStore;
   }
 
-  public Optional<String> getAndroidTarget() {
-    return getValue("android", "target");
-  }
-
-  public Optional<String> getNdkVersion() {
-    return getValue("ndk", "ndk_version");
-  }
-
-  public Optional<String> getNdkAppPlatform() {
-    return getValue("ndk", "app_platform");
-  }
-
   public Optional<String> getValue(String sectionName, String propertyName) {
     return config.getValue(sectionName, propertyName);
   }
@@ -755,31 +743,6 @@ public class BuckConfig {
       value = "";
     }
     return value.split(separator);
-  }
-
-  /**
-   * Returns the path to the platform specific aapt executable that is overridden by the current
-   * project. If not specified, the Android platform aapt will be used.
-   */
-  public Optional<Path> getAaptOverride() {
-    Optional<String> pathString = getValue("tools", "aapt");
-    if (!pathString.isPresent()) {
-      return Optional.absent();
-    }
-
-    String platformDir;
-    if (platform == Platform.LINUX) {
-      platformDir = "linux";
-    } else if (platform == Platform.MACOS) {
-      platformDir = "mac";
-    } else if (platform == Platform.WINDOWS) {
-      platformDir = "windows";
-    } else {
-      return Optional.absent();
-    }
-
-    Path pathToAapt = Paths.get(pathString.get(), platformDir, "aapt");
-    return checkPathExists(pathToAapt.toString(), "Overridden aapt path not found: ");
   }
 
   /**
