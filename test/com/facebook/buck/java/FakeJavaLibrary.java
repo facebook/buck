@@ -96,11 +96,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
         this,
-        Optional.fromNullable(getPathToOutputFile()));
+        Optional.fromNullable(getPathToOutput()));
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return BuildTargets.getGenPath(getBuildTarget(), "%s.jar");
   }
 

@@ -116,7 +116,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     final boolean hasClassesToDx = !classNamesToHashes.isEmpty();
     final Supplier<Integer> linearAllocEstimate;
     if (hasClassesToDx) {
-      Path pathToOutputFile = javaLibrary.getPathToOutputFile();
+      Path pathToOutputFile = javaLibrary.getPathToOutput();
       EstimateLinearAllocStep estimate = new EstimateLinearAllocStep(pathToOutputFile);
       steps.add(estimate);
       linearAllocEstimate = estimate;
@@ -193,7 +193,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
   @Override
   @Nullable
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     // A .dex file is not guaranteed to be generated, so we return null to be conservative.
     return null;
   }

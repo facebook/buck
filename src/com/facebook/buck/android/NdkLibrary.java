@@ -126,7 +126,7 @@ public class NdkLibrary extends AbstractBuildRule
 
   @Override
   @Nullable
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     // An ndk_library() does not have a "primary output" at this time.
     return null;
   }

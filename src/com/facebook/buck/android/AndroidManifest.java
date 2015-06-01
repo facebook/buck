@@ -101,14 +101,14 @@ public class AndroidManifest extends AbstractBuildRule {
     commands.add(new GenerateManifestStep(
         getResolver().getPath(skeletonFile),
         ImmutableSet.copyOf(getResolver().getAllPaths(manifestFiles)),
-        getPathToOutputFile()));
+        getPathToOutput()));
 
     buildableContext.recordArtifact(pathToOutputFile);
     return commands.build();
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return pathToOutputFile;
   }
 }

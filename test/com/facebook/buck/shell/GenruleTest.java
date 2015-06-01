@@ -156,7 +156,7 @@ public class GenruleTest {
 
     // Verify all of the observers of the Genrule.
     assertEquals(GEN_PATH.resolve("src/com/facebook/katana/AndroidManifest.xml"),
-        genrule.getPathToOutputFile());
+        genrule.getPathToOutput());
     assertEquals(
         getAbsolutePathInBase(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString(),
         ((Genrule) genrule).getAbsoluteOutputFilePath());
@@ -249,7 +249,7 @@ public class GenruleTest {
         depTarget,
         new SourcePathResolver(new BuildRuleResolver())) {
       @Override
-      public Path getPathToOutputFile() {
+      public Path getPathToOutput() {
         return Paths.get("buck-out/gen/foo/bar.jar");
       }
     };

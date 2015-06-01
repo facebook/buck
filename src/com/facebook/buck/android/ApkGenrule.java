@@ -96,7 +96,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
 
   @Override
   public Path getApkPath() {
-    return getPathToOutputFile();
+    return getPathToOutput();
   }
 
   @Override

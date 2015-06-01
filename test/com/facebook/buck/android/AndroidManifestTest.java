@@ -47,7 +47,7 @@ public class AndroidManifestTest {
 
     assertEquals(
         BuckConstant.GEN_PATH.resolve("java/com/example/AndroidManifest__manifest__.xml"),
-        androidManifest.getPathToOutputFile());
+        androidManifest.getPathToOutput());
   }
 
   @Test

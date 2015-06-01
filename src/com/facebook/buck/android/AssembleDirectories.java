@@ -66,7 +66,7 @@ public class AssembleDirectories extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return destinationDirectory;
   }
 

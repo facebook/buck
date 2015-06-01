@@ -135,7 +135,7 @@ public class GwtBinary extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Create a clean directory where the .zip file will be written.
-    Path workingDirectory = getPathToOutputFile().getParent();
+    Path workingDirectory = getPathToOutput().getParent();
     steps.add(new MakeCleanDirectoryStep(workingDirectory));
 
     // Write the deploy files into a separate directory so that the generated .zip is smaller.
@@ -160,7 +160,7 @@ public class GwtBinary extends AbstractBuildRule {
             "-classpath", Joiner.on(File.pathSeparator).join(
                 Iterables.transform(getClasspathEntries(), projectFilesystem.getAbsolutifier())),
             GWT_COMPILER_CLASS,
-            "-war", projectFilesystem.resolve(getPathToOutputFile()).toString(),
+            "-war", projectFilesystem.resolve(getPathToOutput()).toString(),
             "-style", style.name(),
             "-optimize", String.valueOf(optimize),
             "-localWorkers", String.valueOf(localWorkers),
@@ -180,7 +180,7 @@ public class GwtBinary extends AbstractBuildRule {
     };
     steps.add(javaStep);
 
-    buildableContext.recordArtifact(getPathToOutputFile());
+    buildableContext.recordArtifact(getPathToOutput());
 
     return steps.build();
   }
@@ -189,7 +189,7 @@ public class GwtBinary extends AbstractBuildRule {
    * @return The {@code .zip} file produced by this rule.
    */
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return outputFile;
   }
 

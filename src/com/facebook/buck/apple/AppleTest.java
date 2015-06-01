@@ -164,7 +164,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       TestSelectorList testSelectorList) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path resolvedTestBundleDirectory = executionContext.getProjectFilesystem().resolve(
-        Preconditions.checkNotNull(testBundle.getPathToOutputFile()));
+        Preconditions.checkNotNull(testBundle.getPathToOutput()));
 
     Path pathToTestOutput = executionContext.getProjectFilesystem().resolve(
         getPathToTestOutputDirectory());
@@ -176,7 +176,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     Optional<Path> testHostAppPath = Optional.absent();
     if (testHostApp.isPresent()) {
       Path resolvedTestHostAppDirectory = executionContext.getProjectFilesystem().resolve(
-          Preconditions.checkNotNull(testHostApp.get().getPathToOutputFile()));
+          Preconditions.checkNotNull(testHostApp.get().getPathToOutput()));
       testHostAppPath = Optional.of(
           resolvedTestHostAppDirectory.resolve(
               testHostApp.get().getUnzippedOutputFilePathToBinary()));

@@ -63,7 +63,7 @@ public class BuildReport {
       if (success.isPresent()) {
         successIndicator = ansi.asHighlightedSuccessText("OK  ");
         successType = success.get().name();
-        outputFile = rule.getPathToOutputFile();
+        outputFile = rule.getPathToOutput();
       } else {
         successIndicator = ansi.asHighlightedFailureText("FAIL");
         successType = null;
@@ -101,7 +101,7 @@ public class BuildReport {
 
       if (isSuccess) {
         value.put("type", success.get().name());
-        Path outputFile = rule.getPathToOutputFile();
+        Path outputFile = rule.getPathToOutput();
         value.put("output", outputFile != null ? outputFile.toString() : null);
       }
       results.put(rule.getFullyQualifiedName(), value);

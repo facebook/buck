@@ -94,7 +94,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return null;
   }
 

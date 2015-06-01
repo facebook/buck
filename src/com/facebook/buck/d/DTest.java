@@ -81,7 +81,7 @@ public class DTest extends DLinkable implements TestRule {
   }
 
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(projectFilesystem.resolve(getPathToOutputFile()).toString());
+    return ImmutableList.of(projectFilesystem.resolve(getPathToOutput()).toString());
   }
 
   @Override

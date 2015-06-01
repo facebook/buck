@@ -59,7 +59,7 @@ public class JavaSourceJarTest {
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<SourcePath>of());
 
-    Path output = rule.getPathToOutputFile();
+    Path output = rule.getPathToOutput();
 
     assertNotNull(output);
     assertTrue(output.toString().endsWith(Javac.SRC_ZIP));

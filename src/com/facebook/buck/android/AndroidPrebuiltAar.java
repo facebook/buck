@@ -100,7 +100,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
   }
 
   public Path getBinaryJar() {
-    return prebuiltJar.getPathToOutputFile();
+    return prebuiltJar.getPathToOutput();
   }
 
 }

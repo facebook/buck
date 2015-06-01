@@ -57,7 +57,7 @@ public class OCamlDebugLauncher extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return args.getOutput();
   }
 }

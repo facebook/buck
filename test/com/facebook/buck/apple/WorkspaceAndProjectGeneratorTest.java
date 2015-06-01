@@ -1229,7 +1229,7 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraphToActionGraph.apply(subgraph));
         BuildRule rule = Preconditions.checkNotNull(
             actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
-        return rule.getPathToOutputFile();
+        return rule.getPathToOutput();
       }
     };
   }

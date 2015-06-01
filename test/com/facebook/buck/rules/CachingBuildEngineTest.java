@@ -913,7 +913,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     @Override
     @Nullable
-    public Path getPathToOutputFile() {
+    public Path getPathToOutput() {
       return pathToOutputFile;
     }
 
@@ -979,7 +979,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     @Nullable
     @Override
-    public Path getPathToOutputFile() {
+    public Path getPathToOutput() {
       return null;
     }
 

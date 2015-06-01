@@ -68,7 +68,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return outputFile;
   }
 

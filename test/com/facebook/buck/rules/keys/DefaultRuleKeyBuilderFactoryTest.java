@@ -454,7 +454,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
 
     @Nullable
     @Override
-    public Path getPathToOutputFile() {
+    public Path getPathToOutput() {
       return null;
     }
 

@@ -48,7 +48,7 @@ public class Keystore extends AbstractBuildRule {
 
   @Nullable
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return null;
   }
 

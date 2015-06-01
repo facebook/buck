@@ -54,7 +54,7 @@ public class SourcePathResolver {
       return resolvedPath.get();
     }
 
-    Path path = ruleResolver.getRule(buildTargetSourcePath.getTarget()).getPathToOutputFile();
+    Path path = ruleResolver.getRule(buildTargetSourcePath.getTarget()).getPathToOutput();
     if (path == null) {
       throw new HumanReadableException(
           "No known output for: %s",

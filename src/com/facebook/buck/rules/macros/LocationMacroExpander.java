@@ -33,7 +33,7 @@ public class LocationMacroExpander extends BuildTargetMacroExpander {
 
   @Override
   public String expand(ProjectFilesystem filesystem, BuildRule rule) throws MacroException {
-    Path output = rule.getPathToOutputFile();
+    Path output = rule.getPathToOutput();
     if (output == null) {
       throw new MacroException(
           String.format(

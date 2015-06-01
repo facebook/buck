@@ -60,7 +60,7 @@ public class BuildTargetSourcePathTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRule rule = new FakeBuildRule(BuildRuleType.of("example"), target, pathResolver) {
       @Override
-      public Path getPathToOutputFile() {
+      public Path getPathToOutput() {
         return Paths.get("cheese");
       }
     };

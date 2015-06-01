@@ -92,19 +92,19 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     // put manifest into tmp folder
     commands.add(
         CopyStep.forFile(
-            manifest.getPathToOutputFile(),
+            manifest.getPathToOutput(),
             temp.resolve("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
-    commands.add(CopyStep.forFile(androidResource.getPathToOutputFile(), temp.resolve("R.txt")));
+    commands.add(CopyStep.forFile(androidResource.getPathToOutput(), temp.resolve("R.txt")));
 
     // put res/ and assets/ into tmp folder
     commands.add(CopyStep.forDirectory(
-            assembleResourceDirectories.getPathToOutputFile(),
+            assembleResourceDirectories.getPathToOutput(),
             temp.resolve("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
     commands.add(CopyStep.forDirectory(
-            assembleAssetsDirectories.getPathToOutputFile(),
+            assembleAssetsDirectories.getPathToOutput(),
             temp.resolve("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
@@ -140,7 +140,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return pathToOutputFile;
   }
 

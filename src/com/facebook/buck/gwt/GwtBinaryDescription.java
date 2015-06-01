@@ -98,7 +98,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         if (gwtModule.isPresent()) {
           extraDeps.add(gwtModule.get());
           gwtModuleJarsBuilder.add(
-              Preconditions.checkNotNull(gwtModule.get().getPathToOutputFile()));
+              Preconditions.checkNotNull(gwtModule.get().getPathToOutput()));
         }
 
         // Traverse all of the deps of this rule.

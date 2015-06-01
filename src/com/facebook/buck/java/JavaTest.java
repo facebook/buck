@@ -412,7 +412,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
 
     CompiledClassFileFinder(JavaTest rule, ExecutionContext context) {
       Path outputPath;
-      Path relativeOutputPath = rule.getPathToOutputFile();
+      Path relativeOutputPath = rule.getPathToOutput();
       if (relativeOutputPath != null) {
         outputPath = context.getProjectFilesystem().getAbsolutifier().apply(relativeOutputPath);
       } else {

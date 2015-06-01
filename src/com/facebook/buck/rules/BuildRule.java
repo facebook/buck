@@ -84,7 +84,7 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
   public ImmutableList<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext);
 
   @Nullable
-  public Path getPathToOutputFile();
+  public Path getPathToOutput();
 
   public ProjectFilesystem getProjectFilesystem();
 

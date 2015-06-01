@@ -77,7 +77,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return getBinPath();
   }
 

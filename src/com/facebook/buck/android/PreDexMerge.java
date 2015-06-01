@@ -300,7 +300,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
   @Nullable
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return null;
   }
 

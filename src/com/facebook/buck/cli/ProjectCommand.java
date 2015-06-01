@@ -648,7 +648,7 @@ public class ProjectCommand extends BuildCommand {
                   targetGraphToActionGraph.apply(subgraph));
               BuildRule rule = Preconditions.checkNotNull(
                   actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
-              return rule.getPathToOutputFile();
+              return rule.getPathToOutput();
             }
           });
       generator.setGroupableTests(groupableTests);

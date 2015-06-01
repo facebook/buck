@@ -59,7 +59,7 @@ public class BuildCommandTest {
         resolver) {
       @Override
       @Nullable
-      public Path getPathToOutputFile() {
+      public Path getPathToOutput() {
         return Paths.get("buck-out/gen/fake/rule1.txt");
       }
     };

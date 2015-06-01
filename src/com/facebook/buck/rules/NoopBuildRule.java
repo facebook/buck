@@ -43,7 +43,7 @@ public class NoopBuildRule extends AbstractBuildRule {
 
   @Nullable
   @Override
-  public final Path getPathToOutputFile() {
+  public final Path getPathToOutput() {
     return null;
   }
 

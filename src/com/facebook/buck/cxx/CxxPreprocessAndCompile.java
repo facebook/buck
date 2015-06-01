@@ -277,7 +277,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return output;
   }
 

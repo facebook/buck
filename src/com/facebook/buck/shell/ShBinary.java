@@ -118,7 +118,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return output;
   }
 

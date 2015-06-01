@@ -154,7 +154,7 @@ public class CxxLibraryTest {
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
-    assertNull(cxxLibrary.getPathToOutputFile());
+    assertNull(cxxLibrary.getPathToOutput());
   }
 
   @Test

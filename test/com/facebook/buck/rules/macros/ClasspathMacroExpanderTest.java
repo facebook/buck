@@ -66,7 +66,7 @@ public class ClasspathMacroExpanderTest {
 
     String classpath = expander.expand(filesystem, rule);
 
-    assertEquals(ROOT + File.separator + rule.getPathToOutputFile(), classpath);
+    assertEquals(ROOT + File.separator + rule.getPathToOutput(), classpath);
   }
 
   @Test
@@ -90,9 +90,9 @@ public class ClasspathMacroExpanderTest {
         String.format(
             "%s/%s:%s/%s",
             ROOT,
-            dep.getPathToOutputFile(),
+            dep.getPathToOutput(),
             ROOT,
-            rule.getPathToOutputFile()).replace(':', File.pathSeparatorChar),
+            rule.getPathToOutput()).replace(':', File.pathSeparatorChar),
         classpath);
   }
 

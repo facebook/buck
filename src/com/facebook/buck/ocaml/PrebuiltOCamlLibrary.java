@@ -165,7 +165,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @Nullable
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return null;
   }
 }

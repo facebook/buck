@@ -60,8 +60,8 @@ public class AndroidInstrumentationApkTest {
       public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
         ImmutableSetMultimap.Builder<JavaLibrary, Path> builder =
             ImmutableSetMultimap.builder();
-        builder.put(javaLibrary1, javaLibrary1.getPathToOutputFile());
-        builder.put(this, this.getPathToOutputFile());
+        builder.put(javaLibrary1, javaLibrary1.getPathToOutput());
+        builder.put(this, this.getPathToOutput());
         return builder.build();
       }
     };
@@ -77,8 +77,8 @@ public class AndroidInstrumentationApkTest {
       public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
         ImmutableSetMultimap.Builder<JavaLibrary, Path> builder =
             ImmutableSetMultimap.builder();
-        builder.put(javaLibrary3, javaLibrary3.getPathToOutputFile());
-        builder.put(this, this.getPathToOutputFile());
+        builder.put(javaLibrary3, javaLibrary3.getPathToOutput());
+        builder.put(this, this.getPathToOutput());
         return builder.build();
       }
     };

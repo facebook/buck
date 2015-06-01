@@ -223,7 +223,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
             params,
             new SourcePathResolver(new BuildRuleResolver()),
             accumulateClassNames);
-    assertNull(preDexWithClasses.getPathToOutputFile());
+    assertNull(preDexWithClasses.getPathToOutput());
     assertEquals(Paths.get("buck-out/gen/foo/bar.dex.jar"), preDexWithClasses.getPathToDex());
 
     verifyAll();

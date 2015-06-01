@@ -145,7 +145,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
   @Override
   @Nullable
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return bundleRoot;
   }
 
@@ -184,7 +184,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Path bundleBinaryPath = bundleRoot.resolve(binaryPath);
       stepsBuilder.add(
           CopyStep.forFile(
-              binary.get().getPathToOutputFile(),
+              binary.get().getPathToOutput(),
               bundleBinaryPath));
       stepsBuilder.add(
           new DsymStep(

@@ -51,7 +51,7 @@ public class OCamlCCompile extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return args.output;
   }
 }

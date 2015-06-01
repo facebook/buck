@@ -77,7 +77,7 @@ public class AssembleDirectoriesTest {
     for (Step step : steps) {
       assertEquals(0, step.execute(context));
     }
-    File outputFile = filesystem.resolve(assembleDirectories.getPathToOutputFile()).toFile();
+    File outputFile = filesystem.resolve(assembleDirectories.getPathToOutput()).toFile();
     assertEquals(4, outputFile.list().length);
   }
 }

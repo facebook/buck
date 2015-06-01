@@ -86,7 +86,7 @@ public class LocationMacroExpanderTest {
     BuildTargetParser parser = new BuildTargetParser();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
-    Path outputPath = javaBinary.getPathToOutputFile();
+    Path outputPath = javaBinary.getPathToOutput();
     Path absolutePath = outputPath.toAbsolutePath();
 
     String originalCmd = String.format(

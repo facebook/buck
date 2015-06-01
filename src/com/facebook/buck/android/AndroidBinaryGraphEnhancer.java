@@ -465,7 +465,7 @@ public class AndroidBinaryGraphEnhancer {
       ruleResolver.addToIndex(buildConfigJavaLibrary);
 
       enhancedDeps.add(buildConfigJavaLibrary);
-      Path buildConfigJar = buildConfigJavaLibrary.getPathToOutputFile();
+      Path buildConfigJar = buildConfigJavaLibrary.getPathToOutput();
       Preconditions.checkNotNull(
           buildConfigJar,
           "%s must have an output file.",
@@ -520,7 +520,7 @@ public class AndroidBinaryGraphEnhancer {
 
       // If the rule has no output file (which happens when a java_library has no srcs or
       // resources, but export_deps is true), then there will not be anything to dx.
-      if (javaLibrary.getPathToOutputFile() == null) {
+      if (javaLibrary.getPathToOutput() == null) {
         continue;
       }
 

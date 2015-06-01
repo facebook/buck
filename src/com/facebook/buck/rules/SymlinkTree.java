@@ -99,7 +99,7 @@ public class SymlinkTree
   // null here.
   @Override
   @Nullable
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return null;
   }
 

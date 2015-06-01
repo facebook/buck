@@ -43,7 +43,7 @@ public class OCamlBinary extends AbstractBuildRule implements BinaryBuildRule, H
 
   @Override
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(projectFilesystem.resolve(getPathToOutputFile()).toString());
+    return ImmutableList.of(projectFilesystem.resolve(getPathToOutput()).toString());
   }
 
   @Override
@@ -54,8 +54,8 @@ public class OCamlBinary extends AbstractBuildRule implements BinaryBuildRule, H
   }
 
   @Override
-  public Path getPathToOutputFile() {
-    return Preconditions.checkNotNull(binary.getPathToOutputFile());
+  public Path getPathToOutput() {
+    return Preconditions.checkNotNull(binary.getPathToOutput());
   }
 
   // Since this rule doesn't actual generate the binary it references, and is just a wrapper for

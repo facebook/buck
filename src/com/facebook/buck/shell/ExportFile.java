@@ -123,7 +123,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return out;
   }
 

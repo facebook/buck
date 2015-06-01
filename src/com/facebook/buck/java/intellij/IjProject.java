@@ -86,7 +86,7 @@ public class IjProject {
               return Optional.absent();
             }
             requiredBuildTargets.add(rule.getBuildTarget());
-            return Optional.fromNullable(rule.getPathToOutputFile());
+            return Optional.fromNullable(rule.getPathToOutput());
           }
         });
     IjModuleFactory moduleFactory = new IjModuleFactory(

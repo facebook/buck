@@ -164,7 +164,7 @@ public class PackageStringAssets extends AbstractBuildRule
 
   @Nullable
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return getPathToStringAssetsZip();
   }
 

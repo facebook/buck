@@ -1120,7 +1120,7 @@ public class DefaultJavaLibraryTest {
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     buildable.createCommandsForJavac(
-        buildable.getPathToOutputFile(),
+        buildable.getPathToOutput(),
         ImmutableSet.copyOf(buildable.getTransitiveClasspathEntries().values()),
         ImmutableSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
         DEFAULT_JAVAC_OPTIONS,
@@ -1152,7 +1152,7 @@ public class DefaultJavaLibraryTest {
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     buildable.createCommandsForJavac(
-        buildable.getPathToOutputFile(),
+        buildable.getPathToOutput(),
         ImmutableSet.copyOf(buildable.getTransitiveClasspathEntries().values()),
         ImmutableSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
         buildable.getJavacOptions(),

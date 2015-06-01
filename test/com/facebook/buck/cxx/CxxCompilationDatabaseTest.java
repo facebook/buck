@@ -97,9 +97,9 @@ public class CxxCompilationDatabaseTest {
         ImmutableSortedSet.of(testCompileRule));
 
     assertEquals(
-        "getPathToOutputFile() should be a function of the build target.",
+        "getPathToOutput() should be a function of the build target.",
         Paths.get("buck-out/gen/foo/__baz#compilation-database.json"),
-        compilationDatabase.getPathToOutputFile());
+        compilationDatabase.getPathToOutput());
 
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     BuildableContext buildableContext = new FakeBuildableContext();
@@ -211,9 +211,9 @@ public class CxxCompilationDatabaseTest {
         ImmutableSortedSet.of(testPreprocessRule, testCompileRule));
 
     assertEquals(
-        "getPathToOutputFile() should be a function of the build target.",
+        "getPathToOutput() should be a function of the build target.",
         Paths.get("buck-out/gen/foo/__baz#compilation-database.json"),
-        compilationDatabase.getPathToOutputFile());
+        compilationDatabase.getPathToOutput());
 
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     BuildableContext buildableContext = new FakeBuildableContext();

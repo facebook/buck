@@ -625,7 +625,7 @@ public class TargetsCommand extends AbstractCommand {
             builder.add(rule.getRuleKey().toString());
           }
           if (isShowOutput()) {
-            Path outputPath = rule.getPathToOutputFile();
+            Path outputPath = rule.getPathToOutput();
             if (outputPath != null) {
               builder.add(outputPath.toString());
             }

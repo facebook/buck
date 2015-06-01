@@ -77,7 +77,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
 
   @Override
   @Nullable
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     // A prebuilt_native_library does not have a "primary output" at this time.
     return null;
   }

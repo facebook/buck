@@ -288,7 +288,7 @@ public class AndroidResource extends AbstractBuildRule
 
   @Override
   @Nullable
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return Optional.fromNullable(pathToTextSymbolsFile).orNull();
   }
 

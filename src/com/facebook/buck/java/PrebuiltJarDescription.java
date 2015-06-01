@@ -142,12 +142,12 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       public ImmutableList<Step> getBuildSteps(
           BuildContext context,
           BuildableContext buildableContext) {
-        buildableContext.recordArtifact(getPathToOutputFile());
+        buildableContext.recordArtifact(getPathToOutput());
         return ImmutableList.of();
       }
 
       @Override
-      public Path getPathToOutputFile() {
+      public Path getPathToOutput() {
         return pathToExistingJarFile;
       }
     };

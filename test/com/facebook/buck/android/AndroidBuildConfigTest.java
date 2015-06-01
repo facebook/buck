@@ -52,11 +52,11 @@ import java.util.List;
 public class AndroidBuildConfigTest {
 
   @Test
-  public void testGetPathToOutputFile() {
+  public void testGetPathToOutput() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     assertEquals(
         BuckConstant.GEN_PATH.resolve("java/com/example/__build_config__/BuildConfig.java"),
-        buildConfig.getPathToOutputFile());
+        buildConfig.getPathToOutput());
   }
 
   @Test

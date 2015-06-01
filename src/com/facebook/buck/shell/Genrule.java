@@ -181,7 +181,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
 
   /** @return the absolute path to the output file */
   public String getAbsoluteOutputFilePath() {
-    return relativeToAbsolutePathFunction.apply(getPathToOutputFile()).toString();
+    return relativeToAbsolutePathFunction.apply(getPathToOutput()).toString();
   }
 
   @VisibleForTesting
@@ -190,7 +190,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return pathToOutFile;
   }
 
@@ -236,7 +236,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     }
     processedBuildRules.add(rule);
 
-    Path output = rule.getPathToOutputFile();
+    Path output = rule.getPathToOutput();
     if (output != null) {
       // TODO(t6405518): This is a giant hack and we should do away with $DEPS altogether.
       // There can be a lot of paths here and the filesystem location can be arbitrarily long.
@@ -290,7 +290,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Delete the old output for this rule, if it exists.
-    commands.add(new RmStep(getPathToOutputFile(), true /* shouldForceDeletion */));
+    commands.add(new RmStep(getPathToOutput(), true /* shouldForceDeletion */));
 
     // Make sure that the directory to contain the output file exists. Rules get output to a
     // directory named after the base path, so we don't want to nuke the entire directory.

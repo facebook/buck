@@ -49,7 +49,7 @@ public class JavaLibraryRules {
         javaLibrary.getBuildTarget());
     steps.add(new MkdirStep(pathToClassHashes.getParent()));
     steps.add(new AccumulateClassNamesStep(
-        Optional.fromNullable(javaLibrary.getPathToOutputFile()),
+        Optional.fromNullable(javaLibrary.getPathToOutput()),
         pathToClassHashes));
     buildableContext.recordArtifact(pathToClassHashes);
   }

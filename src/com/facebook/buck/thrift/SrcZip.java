@@ -49,7 +49,7 @@ public class SrcZip extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return sourceZip;
   }
 

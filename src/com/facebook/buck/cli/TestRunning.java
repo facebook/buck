@@ -649,7 +649,7 @@ public class TestRunning {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      Path pathToOutput = rule.getPathToOutputFile();
+      Path pathToOutput = rule.getPathToOutput();
       if (pathToOutput == null) {
         continue;
       }

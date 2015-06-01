@@ -198,7 +198,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   }
 
   @Override
-  public Path getPathToOutputFile() {
+  public Path getPathToOutput() {
     return getOutputPath();
   }
 

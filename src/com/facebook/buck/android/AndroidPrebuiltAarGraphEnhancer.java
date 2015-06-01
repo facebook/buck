@@ -284,7 +284,7 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     @Override
     @Nullable
-    public Path getPathToOutputFile() {
+    public Path getPathToOutput() {
       return null;
     }
 

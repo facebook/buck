@@ -50,7 +50,7 @@ public class AndroidManifestDescriptionTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         new SourcePathResolver(buildRuleResolver)) {
       @Override
-      public Path getPathToOutputFile() {
+      public Path getPathToOutput() {
         return Paths.get("buck-out/gen/foo/bar/AndroidManifest.xml");
       }
     };
