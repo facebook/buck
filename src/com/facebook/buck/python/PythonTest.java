@@ -49,6 +49,7 @@ import java.util.concurrent.Callable;
 public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
 
   private final PythonBinary binary;
+  private final ImmutableSortedSet<BuildRule> additionalDeps;
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
@@ -57,6 +58,7 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
       BuildRuleParams params,
       SourcePathResolver resolver,
       PythonBinary binary,
+      ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<BuildRule> sourceUnderTest,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts) {
@@ -64,6 +66,7 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
     super(params, resolver);
 
     this.binary = binary;
+    this.additionalDeps = additionalDeps;
     this.sourceUnderTest = sourceUnderTest;
     this.labels = labels;
     this.contacts = contacts;
@@ -75,7 +78,7 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
         ProjectFilesystem fs = context.getProjectFilesystem();
-        ImmutableList.Builder<String> builder = new ImmutableList.Builder<String>();
+        ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
         builder.addAll(binary.getExecutableCommand(fs));
         builder.add("-o", fs.resolve(getPathToTestOutputResult()).toString());
         return builder.build();
@@ -173,7 +176,10 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
   // rule around to run this test, so model this via the {@link HasRuntimeDeps} interface.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>of(binary);
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .add(binary)
+        .addAll(additionalDeps)
+        .build();
   }
 
 }

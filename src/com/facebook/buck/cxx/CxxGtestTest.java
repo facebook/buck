@@ -53,16 +53,19 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
 
   private final SourcePath binary;
+  private final ImmutableSortedSet<BuildRule> additionalDeps;
 
   public CxxGtestTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath binary,
+      ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver, labels, contacts, sourceUnderTest);
     this.binary = binary;
+    this.additionalDeps = additionalDeps;
   }
 
   @Override
@@ -141,7 +144,10 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
   // always available to run the test.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.copyOf(getResolver().getRule(binary).asSet());
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(getResolver().getRule(binary).asSet())
+        .addAll(additionalDeps)
+        .build();
   }
 
 }

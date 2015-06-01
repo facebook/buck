@@ -37,6 +37,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -71,6 +72,7 @@ public class CxxGtestTestTest {
         BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
         new SourcePathResolver(new BuildRuleResolver()),
         new TestSourcePath(""),
+        ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<Label>of(),
         ImmutableSet.<String>of(),
         ImmutableSet.<BuildRule>of());

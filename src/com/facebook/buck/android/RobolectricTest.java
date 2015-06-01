@@ -140,13 +140,18 @@ public class RobolectricTest extends JavaTest {
         resourceDirectories);
   }
 
-  // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
-  // {@link DummyRDotJava} is available locally, if it exists, to run this test.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
+        // Inherit any runtime deps from `JavaTest`.
         .addAll(super.getRuntimeDeps())
+        // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
+        // {@link DummyRDotJava} is available locally, if it exists, to run this test.
         .addAll(Optional.presentInstances(ImmutableList.of(optionalDummyRDotJava)))
+        // It's possible that the user added some tool as a dependency, so make sure we promote
+        // this rules first-order deps to runtime deps, so that these potential tools are available
+        // when this test runs.
+        .addAll(getDeps())
         .build();
   }
 

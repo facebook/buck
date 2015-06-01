@@ -64,16 +64,19 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
   private final SourcePath binary;
+  private final ImmutableSortedSet<BuildRule> additionalDeps;
 
   public CxxBoostTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath binary,
+      ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver, labels, contacts, sourceUnderTest);
     this.binary = binary;
+    this.additionalDeps = additionalDeps;
   }
 
   @Override
@@ -204,7 +207,10 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   // always available to run the test.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.copyOf(getResolver().getRule(binary).asSet());
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(getResolver().getRule(binary).asSet())
+        .addAll(additionalDeps)
+        .build();
   }
 
 }

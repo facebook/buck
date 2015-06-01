@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -38,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 public class CxxTestDescription implements
     Description<CxxTestDescription.Arg>,
@@ -113,12 +115,19 @@ public class CxxTestDescription implements
 
     CxxTestType type = args.framework.or(getDefaultTestType());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePath binary =
+        new BuildTargetSourcePath(cxxLink.getProjectFilesystem(), cxxLink.getBuildTarget());
+    // It's not uncommon for users to add dependencies onto other binaries that they run during
+    // the test, so make sure to add them as runtime deps.
+    ImmutableSortedSet<BuildRule> additionalDeps =
+        ImmutableSortedSet.copyOf(Sets.difference(params.getDeps(), cxxLink.getDeps()));
     switch (type) {
       case GTEST: {
         test = new CxxGtestTest(
             testParams,
             pathResolver,
-            new BuildTargetSourcePath(cxxLink.getProjectFilesystem(), cxxLink.getBuildTarget()),
+            binary,
+            additionalDeps,
             args.labels.get(),
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()));
@@ -128,7 +137,8 @@ public class CxxTestDescription implements
         test = new CxxBoostTest(
             testParams,
             pathResolver,
-            new BuildTargetSourcePath(cxxLink.getProjectFilesystem(), cxxLink.getBuildTarget()),
+            binary,
+            additionalDeps,
             args.labels.get(),
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()));

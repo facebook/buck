@@ -849,6 +849,130 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         eventIter.next());
   }
 
+  @Test
+  public void testMatchingTopLevelRuleKeyStillProcessesRuntimeDeps() throws Exception {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ArtifactCache cache = new NoopArtifactCache();
+
+    // The EventBus should be updated with events indicating how the rule was built.
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    buckEventBus.register(listener);
+
+    // Setup a runtime dependency that is found transitively from the top-level rule.
+    FakeBuildRule transitiveRuntimeDep =
+        new FakeBuildRule(
+            BuildTargetFactory.newInstance("//:transitive_dep"),
+            pathResolver);
+    transitiveRuntimeDep.setRuleKey(new RuleKey("aaaa"));
+
+    // Setup a runtime dependency that is referenced directly by the top-level rule.
+    FakeBuildRule runtimeDep =
+        new FakeHasRuntimeDeps(
+            BuildTargetFactory.newInstance("//:runtime_dep"),
+            pathResolver,
+            transitiveRuntimeDep);
+    runtimeDep.setRuleKey(new RuleKey("bbbb"));
+
+    // Create a dep for the build rule.
+    FakeBuildRule ruleToTest = new FakeHasRuntimeDeps(buildTarget, pathResolver, runtimeDep);
+    ruleToTest.setRuleKey(new RuleKey("cccc"));
+
+    // The BuildContext that will be used by the rule's build() method.
+    BuildContext context = createNiceMock(BuildContext.class);
+    expect(context.getArtifactCache()).andReturn(cache).anyTimes();
+    expect(context.getEventBus()).andReturn(buckEventBus).anyTimes();
+    expect(context.getStepRunner()).andReturn(createStepRunner(buckEventBus)).anyTimes();
+    expect(context.createOnDiskBuildInfoFor(buildTarget))
+        .andReturn(new FakeOnDiskBuildInfo().setRuleKey(ruleToTest.getRuleKey()))
+        .anyTimes();
+    expect(context.createOnDiskBuildInfoFor(runtimeDep.getBuildTarget()))
+        .andReturn(new FakeOnDiskBuildInfo().setRuleKey(runtimeDep.getRuleKey()))
+        .anyTimes();
+    expect(context.createOnDiskBuildInfoFor(transitiveRuntimeDep.getBuildTarget()))
+        .andReturn(new FakeOnDiskBuildInfo().setRuleKey(transitiveRuntimeDep.getRuleKey()))
+        .anyTimes();
+    expect(
+        context.createBuildInfoRecorder(
+            anyObject(BuildTarget.class),
+            anyObject(RuleKey.class),
+            /* ruleKeyWithoutDepsForRecorder */ anyObject(RuleKey.class)))
+        .andReturn(createNiceMock(BuildInfoRecorder.class))
+        .anyTimes();
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            CachingBuildEngine.BuildMode.SHALLOW);
+
+    // Run the build.
+    replayAll();
+    BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
+    assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
+    verifyAll();
+
+    // Verify the events logged to the BuckEventBus.
+    List<BuckEvent> events = listener.getEvents();
+    assertThat(events, Matchers.hasSize(12));
+    Iterator<BuckEvent> eventIter = events.iterator();
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.started(ruleToTest), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.suspended(ruleToTest), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.resumed(ruleToTest), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(
+            BuildRuleEvent.finished(
+                ruleToTest,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.localKeyUnchangedHit(),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+            buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.started(runtimeDep), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.suspended(runtimeDep), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.resumed(runtimeDep), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(
+            BuildRuleEvent.finished(
+                runtimeDep,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.localKeyUnchangedHit(),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+            buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.started(transitiveRuntimeDep), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.suspended(transitiveRuntimeDep), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(BuildRuleEvent.resumed(transitiveRuntimeDep), buckEventBus),
+        eventIter.next());
+    assertEquals(
+        configureTestEvent(
+            BuildRuleEvent.finished(
+                transitiveRuntimeDep,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.localKeyUnchangedHit(),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+            buckEventBus),
+        eventIter.next());
+  }
+
 
   // TODO(mbolin): Test that when the success files match, nothing is built and nothing is written
   // back to the cache.
@@ -1093,4 +1217,24 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     String reverseHash = new StringBuilder(hash).reverse().toString();
     return new RuleKey(reverseHash);
   }
+
+  private static class FakeHasRuntimeDeps extends FakeBuildRule implements HasRuntimeDeps {
+
+    private final ImmutableSortedSet<BuildRule> runtimeDeps;
+
+    public FakeHasRuntimeDeps(
+        BuildTarget target,
+        SourcePathResolver resolver,
+        BuildRule... runtimeDeps) {
+      super(target, resolver);
+      this.runtimeDeps = ImmutableSortedSet.copyOf(runtimeDeps);
+    }
+
+    @Override
+    public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+      return runtimeDeps;
+    }
+
+  }
+
 }

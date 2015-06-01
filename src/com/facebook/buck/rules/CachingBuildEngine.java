@@ -407,7 +407,7 @@ public class CachingBuildEngine implements BuildEngine {
     List<ListenableFuture<BuildResult>> runtimeDepResults =
         Lists.newArrayListWithExpectedSize(runtimeDeps.size());
     for (BuildRule dep : runtimeDeps) {
-      runtimeDepResults.add(getBuildRuleResult(dep, context, asyncCallbacks));
+      runtimeDepResults.add(getBuildRuleResultWithRuntimeDeps(dep, context, asyncCallbacks));
     }
 
     // Create a new combined future, which runs the original rule and all the runtime deps in

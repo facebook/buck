@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.io.File;
@@ -511,14 +510,20 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
     return runTestSeparately;
   }
 
-  // By the end of the build, all the transitive Java library dependencies *must* be available on
-  // disk, so signal this requirement via the {@link HasRuntimeDeps} interface.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return FluentIterable.from(getTransitiveClasspathEntries().keySet())
-        .filter(BuildRule.class)
-        .filter(Predicates.not(Predicates.<BuildRule>equalTo(this)))
-        .toSortedSet(Ordering.natural());
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        // By the end of the build, all the transitive Java library dependencies *must* be available
+        // on disk, so signal this requirement via the {@link HasRuntimeDeps} interface.
+        .addAll(
+            FluentIterable.from(getTransitiveClasspathEntries().keySet())
+                .filter(BuildRule.class)
+                .filter(Predicates.not(Predicates.<BuildRule>equalTo(this))))
+        // It's possible that the user added some tool as a dependency, so make sure we promote
+        // this rules first-order deps to runtime deps, so that these potential tools are available
+        // when this test runs.
+        .addAll(getDeps())
+        .build();
   }
 
 }
