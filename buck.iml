@@ -26,26 +26,15 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/parser/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/shell/testdata" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="buck-lib" level="project" />
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
     <orderEntry type="module" module-name="aosp" />
-    <orderEntry type="library" name="astyanax-cassandra-1.56.38" level="project" />
-    <orderEntry type="library" name="astyanax-cassandra-1.56.38-javadoc" level="project" />
-    <orderEntry type="library" name="astyanax-cassandra-1.56.38-sources" level="project" />
-    <orderEntry type="library" name="astyanax-core-1.56.38" level="project" />
-    <orderEntry type="library" name="astyanax-thrift-1.56.38" level="project" />
-    <orderEntry type="library" name="cassandra-1.2.3" level="project" />
-    <orderEntry type="library" name="cassandra-thrift-1.2.3" level="project" />
     <orderEntry type="library" name="dd-plist" level="project" />
     <orderEntry type="library" name="gson-2.2.4" level="project" />
-    <orderEntry type="library" name="high-scale-lib-1.1.2" level="project" />
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jetty" level="project" />
-    <orderEntry type="library" name="joda-time-2.2" level="project" />
-    <orderEntry type="library" name="libthrift-0.7.0" level="project" />
-    <orderEntry type="library" name="log4j-1.2.16" level="project" />
     <orderEntry type="library" name="slf4j-api-1.7.2" level="project" />
     <orderEntry type="library" name="slf4j-log4j12-1.7.2" level="project" />
     <orderEntry type="library" name="soy-no-guava" level="project" />
@@ -55,7 +44,5 @@
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="immutables-annotations" level="project" />
-    <orderEntry type="library" name="okhttp-2.2.0" level="project" />
-    <orderEntry type="library" name="okio-1.2.0" level="project" />
   </component>
 </module>

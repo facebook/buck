@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="astyanax-core-1.56.38">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/astyanax/astyanax-core-1.56.38.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

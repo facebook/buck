@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="high-scale-lib-1.1.2">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/astyanax/high-scale-lib-1.1.2.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
