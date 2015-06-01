@@ -38,6 +38,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,9 +50,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.Callable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
@@ -86,8 +87,6 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<Label> labels;
 
-  private final Path testBundleDirectory;
-  private final Path testHostAppDirectory;
   private final Path xctoolUnzipDirectory;
   private final Path testOutputPath;
 
@@ -121,13 +120,6 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     this.contacts = contacts;
     this.labels = labels;
     this.testBundleExtension = testBundleExtension;
-    // xctool requires the extension to be present to determine whether the test is ocunit or xctest
-    this.testBundleDirectory = BuildTargets.getScratchPath(
-        params.getBuildTarget(),
-        "__test_bundle_%s__." + testBundleExtension);
-    this.testHostAppDirectory = BuildTargets.getScratchPath(
-        params.getBuildTarget(),
-        "__test_host_app_%s__.app");
     this.xctoolUnzipDirectory = BuildTargets.getScratchPath(
         params.getBuildTarget(),
         "__xctool_%s__");
@@ -172,9 +164,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       TestSelectorList testSelectorList) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path resolvedTestBundleDirectory = executionContext.getProjectFilesystem().resolve(
-        testBundleDirectory);
-    steps.add(new MakeCleanDirectoryStep(resolvedTestBundleDirectory));
-    steps.add(new UnzipStep(testBundle.getPathToOutputFile(), resolvedTestBundleDirectory));
+        Preconditions.checkNotNull(testBundle.getPathToOutputFile()));
 
     Path pathToTestOutput = executionContext.getProjectFilesystem().resolve(
         getPathToTestOutputDirectory());
@@ -186,13 +176,10 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     Optional<Path> testHostAppPath = Optional.absent();
     if (testHostApp.isPresent()) {
       Path resolvedTestHostAppDirectory = executionContext.getProjectFilesystem().resolve(
-          testHostAppDirectory);
-      steps.add(new MakeCleanDirectoryStep(resolvedTestHostAppDirectory));
-      steps.add(
-          new UnzipStep(testHostApp.get().getPathToOutputFile(), resolvedTestHostAppDirectory));
-
-      testHostAppPath = Optional.of(resolvedTestHostAppDirectory.resolve(
-          testHostApp.get().getUnzippedOutputFilePathToBinary()));
+          Preconditions.checkNotNull(testHostApp.get().getPathToOutputFile()));
+      testHostAppPath = Optional.of(
+          resolvedTestHostAppDirectory.resolve(
+              testHostApp.get().getUnzippedOutputFilePathToBinary()));
     }
 
     if (!useXctest) {

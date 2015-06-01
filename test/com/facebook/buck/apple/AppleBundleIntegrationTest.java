@@ -71,7 +71,7 @@ public class AppleBundleIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace
         .runBuckCommand("targets", "--show-output", "//:DemoApp");
     result.assertSuccess();
-    assertEquals("//:DemoApp buck-out/gen/DemoApp.zip", result.getStdout().trim());
+    assertEquals("//:DemoApp buck-out/gen/DemoApp/DemoApp.app", result.getStdout().trim());
   }
 
   @Test

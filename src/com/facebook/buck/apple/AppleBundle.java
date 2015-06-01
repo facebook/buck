@@ -38,9 +38,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -95,8 +93,6 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
   private final Optional<AppleAssetCatalog> mergedAssetCatalog;
 
-  private final Path outputZipPath;
-
   private final String binaryName;
   private final Path bundleRoot;
   private final Path binaryPath;
@@ -128,9 +124,6 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.resourceFiles = resourceFiles;
     this.ibtool = ibtool;
     this.dsymutil = dsymutil;
-    this.outputZipPath = BuildTargets.getGenPath(
-        params.getBuildTarget(),
-        "%s.zip");
     this.bundledAssetCatalogs = ImmutableSet.copyOf(bundledAssetCatalogs);
     this.mergedAssetCatalog = mergedAssetCatalog;
     this.binaryName = getBinaryName(getBuildTarget());
@@ -153,7 +146,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   @Override
   @Nullable
   public Path getPathToOutputFile() {
-    return outputZipPath;
+    return bundleRoot;
   }
 
   public Path getUnzippedOutputFilePathToBinary() {
@@ -238,21 +231,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
     // Ensure the bundle directory is archived so we can fetch it later.
     buildableContext.recordArtifactsInDirectory(bundleRoot);
-    buildableContext.recordArtifact(outputZipPath);
 
-    // A bundle is a directory by definition, but a BuildRule has to
-    // output a single file.
-    //
-    // Create an uncompressed zip to hold the bundle directory so we
-    // can refer to the output of this rule elsewhere.
-    stepsBuilder.add(new RmStep(outputZipPath, /* shouldForceDeletion */ true));
-    stepsBuilder.add(
-        new ZipStep(
-            outputZipPath,
-            ImmutableSet.<Path>of(),
-            false, /* junkPaths */
-            ZipStep.MIN_COMPRESSION_LEVEL,
-            bundleRoot));
     return stepsBuilder.build();
   }
 
