@@ -16,14 +16,13 @@
 
 package com.facebook.buck.util.concurrent;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.ManagementFactory;
 
 /**
  * This class is like {@link ThreadPoolExecutor}, but tries to keep the total active work below the

@@ -24,7 +24,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -117,7 +116,6 @@ public class AndroidLibraryGraphEnhancer {
     actualDeps.addAll(pathResolver.filterBuildRuleInputs(javacOptions.getInputs()));
 
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
-        BuildRuleType.DUMMY_R_DOT_JAVA,
         dummyRDotJavaBuildTarget,
         Suppliers.ofInstance(actualDeps.build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

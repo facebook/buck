@@ -22,12 +22,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -57,28 +55,22 @@ public class TestCommandTest {
     TestCommand command = getCommand("--exclude", "linux", "windows");
 
     TestRule rule1 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     TestRule rule2 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("android")),
         BuildTargetFactory.newInstance("//:teh"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     TestRule rule3 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
 
@@ -95,20 +87,16 @@ public class TestCommandTest {
     TestCommand command = getCommand("--include", "windows+linux");
 
     TestRule rule1 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     TestRule rule2 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
@@ -125,20 +113,16 @@ public class TestCommandTest {
     TestCommand command = getCommand("--exclude", "windows+linux");
 
     TestRule rule1 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     TestRule rule2 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
@@ -154,15 +138,13 @@ public class TestCommandTest {
     TestCommand command = getCommand("--exclude", "c", "--include", "a+b");
 
     TestRule rule = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(
             Label.of("a"),
             Label.of("b"),
             Label.of("c")),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
@@ -178,15 +160,13 @@ public class TestCommandTest {
     TestCommand command = getCommand("--labels", "!c", "a+b");
 
     TestRule rule = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(
             Label.of("a"),
             Label.of("b"),
             Label.of("c")),
         BuildTargetFactory.newInstance("//:for"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
@@ -203,28 +183,22 @@ public class TestCommandTest {
     TestCommand command = getCommand("--exclude-transitive-tests", "//:wow");
 
     FakeTestRule rule1 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     FakeTestRule rule2 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(rule1)
-    );
+        ImmutableSortedSet.<BuildRule>of(rule1));
 
     FakeTestRule rule3 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("linux")),
         BuildTargetFactory.newInstance("//:wow"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(rule2)
-    );
+        ImmutableSortedSet.<BuildRule>of(rule2));
 
     List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2, rule3);
     Iterable<TestRule> filtered = command.filterTestRules(
@@ -243,20 +217,16 @@ public class TestCommandTest {
         "--exclude-transitive-tests", "//:for", "//:lulz");
 
     FakeTestRule rule1 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     FakeTestRule rule2 = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(rule1)
-    );
+        ImmutableSortedSet.<BuildRule>of(rule1));
 
     List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2);
     Iterable<TestRule> filtered = command.filterTestRules(
@@ -311,7 +281,6 @@ public class TestCommandTest {
     new AdditionalOptionsCmdLineParser(command).parseArgument("//example:test");
 
     FakeTestRule rule = new FakeTestRule(
-        BuildRuleType.of("java_test"),
         /* labels */ ImmutableSet.<Label>of(Label.of(excludedLabel)),
         BuildTargetFactory.newInstance("//example:test"),
         new SourcePathResolver(new BuildRuleResolver()),

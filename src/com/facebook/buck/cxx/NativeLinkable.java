@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
 
 /**
@@ -24,8 +23,6 @@ import com.google.common.base.Optional;
  * contribute to the top-level link of a native binary (e.g. C++ binary).
  */
 public interface NativeLinkable {
-
-  BuildRuleType NATIVE_LINKABLE_TYPE = BuildRuleType.of("link");
 
   NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,

@@ -27,7 +27,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -74,9 +73,6 @@ public class CxxDescriptionEnhancer {
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
   public static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
-
-  public static final BuildRuleType LEX_TYPE = BuildRuleType.of("lex");
-  public static final BuildRuleType YACC_TYPE = BuildRuleType.of("yacc");
 
   private CxxDescriptionEnhancer() {}
 
@@ -444,7 +440,6 @@ public class CxxDescriptionEnhancer {
       // Create the build rule to run lex on this source and add it to the resolver.
       Lex lex = new Lex(
           params.copyWithChanges(
-              LEX_TYPE,
               target,
               Suppliers.ofInstance(
                   ImmutableSortedSet.copyOf(
@@ -491,7 +486,6 @@ public class CxxDescriptionEnhancer {
       // Create the build rule to run yacc on this source and add it to the resolver.
       Yacc yacc = new Yacc(
           params.copyWithChanges(
-              YACC_TYPE,
               target,
               Suppliers.ofInstance(
                   ImmutableSortedSet.copyOf(
@@ -790,7 +784,6 @@ public class CxxDescriptionEnhancer {
     T args = node.getConstructorArg();
     return description.createBuildRule(
         params.copyWithChanges(
-            params.getBuildRuleType(),
             target,
             Suppliers.ofInstance(params.getDeclaredDeps()),
             Suppliers.ofInstance(params.getExtraDeps())),

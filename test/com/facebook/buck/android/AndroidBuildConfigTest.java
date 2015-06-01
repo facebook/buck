@@ -108,9 +108,7 @@ public class AndroidBuildConfigTest {
   private static AndroidBuildConfig createSimpleBuildConfigRule() {
     // First, create the BuildConfig object.
     BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "build_config").build();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setType(AndroidBuildConfigDescription.TYPE)
-        .build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     return new AndroidBuildConfig(
         params,
         new SourcePathResolver(new BuildRuleResolver()),

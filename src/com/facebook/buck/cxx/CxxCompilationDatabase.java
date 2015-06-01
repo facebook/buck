@@ -90,7 +90,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
         .build();
 
     return params.copyWithChanges(
-        params.getBuildRuleType(),
         target,
         Suppliers.ofInstance(params.getDeclaredDeps()),
         Suppliers.ofInstance(params.getExtraDeps()));

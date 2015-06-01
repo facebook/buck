@@ -21,10 +21,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
+import org.immutables.value.Value;
+
 import java.util.List;
 import java.util.concurrent.Callable;
-
-import org.immutables.value.Value;
 
 /**
  * Immutable value type holding data about the test(s) invoked by a {@link TestRule}.

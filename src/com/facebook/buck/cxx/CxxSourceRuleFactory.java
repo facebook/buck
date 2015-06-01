@@ -25,7 +25,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -50,10 +49,6 @@ import java.util.Set;
 public class CxxSourceRuleFactory {
 
   private static final Logger LOG = Logger.get(CxxSourceRuleFactory.class);
-  private static final BuildRuleType PREPROCESS_TYPE = BuildRuleType.of("preprocess");
-  private static final BuildRuleType COMPILE_TYPE = BuildRuleType.of("compile");
-  private static final BuildRuleType PREPROCESS_AND_COMPILE_TYPE =
-      BuildRuleType.of("preprocess_and_compile");
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
   private static final String PREPROCESS_FLAVOR_PREFIX = "preprocess-";
 
@@ -220,7 +215,6 @@ public class CxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result = CxxPreprocessAndCompile.preprocess(
         params.copyWithChanges(
-            PREPROCESS_TYPE,
             target,
             Suppliers.ofInstance(dependencies),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
@@ -373,7 +367,6 @@ public class CxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result = CxxPreprocessAndCompile.compile(
         params.copyWithChanges(
-            COMPILE_TYPE,
             target,
             Suppliers.ofInstance(dependencies),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
@@ -440,7 +433,6 @@ public class CxxSourceRuleFactory {
     // Build the CxxCompile rule and add it to our sorted set of build rules.
     CxxPreprocessAndCompile result = CxxPreprocessAndCompile.preprocessAndCompile(
         params.copyWithChanges(
-            PREPROCESS_AND_COMPILE_TYPE,
             target,
             Suppliers.ofInstance(dependencies),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),

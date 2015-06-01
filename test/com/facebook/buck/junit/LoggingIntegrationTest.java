@@ -16,11 +16,10 @@
 
 package com.facebook.buck.junit;
 
-import static org.junit.Assert.assertThat;
-
 import static org.hamcrest.Matchers.arrayWithSize;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;

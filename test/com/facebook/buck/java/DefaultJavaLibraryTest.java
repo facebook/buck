@@ -31,9 +31,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryBuilder;
-import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -48,7 +46,6 @@ import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -616,7 +613,6 @@ public class DefaultJavaLibraryTest {
 
     String javaAbiRuleKeyHash = Strings.repeat("b", 40);
     FakeJavaAbiRule fakeJavaAbiRule = new FakeJavaAbiRule(
-        AndroidResourceDescription.TYPE,
         BuildTargetFactory.newInstance("//:tinylibfakejavaabi"),
         javaAbiRuleKeyHash);
 
@@ -929,7 +925,6 @@ public class DefaultJavaLibraryTest {
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
         .setDeps(ImmutableSortedSet.copyOf(deps))
-        .setType(JavaLibraryDescription.TYPE)
         .build();
 
     return new DefaultJavaLibrary(
@@ -1377,7 +1372,6 @@ public class DefaultJavaLibraryTest {
 
       BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
           .setProjectFilesystem(projectFilesystem)
-          .setType(AndroidLibraryDescription.TYPE)
           .build();
 
       return new AndroidLibrary(
@@ -1412,8 +1406,8 @@ public class DefaultJavaLibraryTest {
   private static class FakeJavaAbiRule extends FakeBuildRule implements HasJavaAbi {
     private final String abiKeyHash;
 
-    public FakeJavaAbiRule(BuildRuleType type, BuildTarget buildTarget, String abiKeyHash) {
-      super(type, buildTarget, new SourcePathResolver(new BuildRuleResolver()));
+    public FakeJavaAbiRule(BuildTarget buildTarget, String abiKeyHash) {
+      super(buildTarget, new SourcePathResolver(new BuildRuleResolver()));
       this.abiKeyHash = abiKeyHash;
     }
 

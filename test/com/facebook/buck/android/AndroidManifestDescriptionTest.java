@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,7 +45,6 @@ public class AndroidManifestDescriptionTest {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
 
     BuildRule ruleWithOutput = new FakeBuildRule(
-        GenruleDescription.TYPE,
         BuildTargetFactory.newInstance("//foo:bar"),
         new SourcePathResolver(buildRuleResolver)) {
       @Override

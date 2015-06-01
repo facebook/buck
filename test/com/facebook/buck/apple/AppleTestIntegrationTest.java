@@ -16,13 +16,12 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
-
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -31,8 +30,8 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
 import org.junit.Test;

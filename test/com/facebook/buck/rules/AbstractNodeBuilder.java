@@ -95,7 +95,6 @@ public abstract class AbstractNodeBuilder<A> {
     // Not all rules have deps, but all rules call them deps. When they do, they're always optional.
     // Grab them in the unsafest way I know.
     FakeBuildRuleParamsBuilder builder = new FakeBuildRuleParamsBuilder(target)
-        .setType(description.getBuildRuleType())
         .setProjectFilesystem(filesystem)
         .setTargetGraph(targetGraph);
     try {

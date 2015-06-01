@@ -16,10 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 
 import java.util.concurrent.TimeUnit;
 

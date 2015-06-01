@@ -19,9 +19,9 @@ package com.facebook.buck.cli;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.LimitedThreadPoolExecutor;
+import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;

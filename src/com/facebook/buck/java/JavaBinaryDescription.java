@@ -109,7 +109,6 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
     // package it into the final fat JAR, so adjust it's params to use a flavored target.
     if (!nativeLibraries.isEmpty()) {
       binaryParams = params.copyWithChanges(
-          params.getBuildRuleType(),
           BuildTarget.builder(params.getBuildTarget()).addFlavors(FAT_JAR_INNER_JAR_FLAVOR).build(),
           Suppliers.ofInstance(params.getDeclaredDeps()),
           Suppliers.ofInstance(params.getExtraDeps()));

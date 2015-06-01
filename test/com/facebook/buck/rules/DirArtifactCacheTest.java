@@ -364,7 +364,6 @@ public class DirArtifactCacheTest {
   }
 
   private static class BuildRuleForTest extends FakeBuildRule {
-    private static final BuildRuleType TYPE = BuildRuleType.of("fake");
 
     @SuppressWarnings("PMD.UnusedPrivateField")
     @AddToRuleKey
@@ -372,7 +371,6 @@ public class DirArtifactCacheTest {
 
     private BuildRuleForTest(File file) {
       super(
-          TYPE,
           BuildTarget.builder("//foo", file.getName()).build(),
           new SourcePathResolver(new BuildRuleResolver()));
       this.file = file.toPath();

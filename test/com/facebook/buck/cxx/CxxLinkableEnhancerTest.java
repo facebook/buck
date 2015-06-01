@@ -16,15 +16,13 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-
-import static org.hamcrest.Matchers.hasItem;
-
-import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;

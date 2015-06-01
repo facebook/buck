@@ -23,7 +23,6 @@ import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -53,23 +52,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
       BuildTarget target,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
-    this(JavaLibraryDescription.TYPE,
-        target,
-        resolver,
-        deps
-    );
-  }
-
-  public FakeJavaLibrary(
-      BuildRuleType type,
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps) {
-    super(type, target, resolver, deps);
+    super(target, resolver, deps);
   }
 
   public FakeJavaLibrary(BuildTarget target, SourcePathResolver resolver) {
-    super(JavaLibraryDescription.TYPE, target, resolver);
+    super(target, resolver);
   }
 
   @Override

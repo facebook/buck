@@ -134,11 +134,11 @@ public class InstallCommand extends BuildCommand {
     ActionGraph graph = build.getActionGraph();
     BuildRule buildRule = Preconditions.checkNotNull(
         graph.findBuildRuleByTarget(getBuildTargets().get(0)));
-    if (buildRule == null || !(buildRule instanceof InstallableApk)) {
+    if (!(buildRule instanceof InstallableApk)) {
       params.getConsole().printBuildFailure(String.format(
               "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
               buildRule.getFullyQualifiedName(),
-              buildRule.getType().getName()));
+              buildRule.getType()));
       return 1;
     }
     InstallableApk installableApk = (InstallableApk) buildRule;

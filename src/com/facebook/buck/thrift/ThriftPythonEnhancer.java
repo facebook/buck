@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonLibrary;
-import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonUtil;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -128,7 +127,6 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
 
     // Create params which only use the language specific deps.
     BuildRuleParams langParams = params.copyWithChanges(
-        PythonLibraryDescription.TYPE,
         params.getBuildTarget(),
         Suppliers.ofInstance(deps),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

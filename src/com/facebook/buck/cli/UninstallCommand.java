@@ -132,12 +132,12 @@ public class UninstallCommand extends AbstractCommand {
     // Find the android_binary() rule from the parse.
     BuildRule buildRule = Preconditions.checkNotNull(
         actionGraph.findBuildRuleByTarget(buildTarget));
-    if (buildRule == null || !(buildRule instanceof InstallableApk)) {
+    if (!(buildRule instanceof InstallableApk)) {
       params.getConsole().printBuildFailure(
           String.format(
               "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
               buildRule.getFullyQualifiedName(),
-              buildRule.getType().getName()));
+              buildRule.getType()));
       return 1;
     }
     InstallableApk installableApk = (InstallableApk) buildRule;

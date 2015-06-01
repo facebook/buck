@@ -76,8 +76,6 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
   public static final BuildRuleType TYPE = BuildRuleType.of("ndk_library");
 
-  private static final BuildRuleType MAKEFILE_TYPE =
-      BuildRuleType.of("ndk_library_makefile");
   private static final Flavor MAKEFILE_FLAVOR = ImmutableFlavor.of("makefile");
 
   private static final Pattern EXTENSIONS_REGEX =
@@ -259,7 +257,6 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         .addFlavors(MAKEFILE_FLAVOR)
         .build();
     BuildRuleParams makefileParams = params.copyWithChanges(
-        MAKEFILE_TYPE,
         makefileTarget,
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

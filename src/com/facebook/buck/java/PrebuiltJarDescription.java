@@ -102,7 +102,6 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         projectFilesystem,
         ruleKeyBuilderFactory,
-        BuildRuleType.GWT_MODULE,
         targetGraph);
     BuildRule gwtModule = createGwtModule(params, new SourcePathResolver(ruleResolver), arg);
     ruleResolver.addToIndex(gwtModule);

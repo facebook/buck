@@ -62,8 +62,6 @@ public class ThriftLibraryDescription
   public static final BuildRuleType TYPE = BuildRuleType.of("thrift_library");
   private static final Flavor INCLUDE_SYMLINK_TREE_FLAVOR =
       ImmutableFlavor.of("include_symlink_tree");
-  private static final BuildRuleType INCLUDE_SYMLINK_TREE_TYPE =
-      BuildRuleType.of("include_symlink_tree");
 
   private final ThriftBuckConfig thriftBuckConfig;
   private final FlavorDomain<ThriftLanguageSpecificEnhancer> enhancers;
@@ -146,12 +144,6 @@ public class ThriftLibraryDescription
   }
 
   /**
-   * Build rule type to use for the rule which generates the language sources.
-   */
-  private static final BuildRuleType THRIFT_COMPILE_TYPE =
-      BuildRuleType.of("thrift_compile");
-
-  /**
    * Create the build rules which compile the input thrift sources into their respective
    * language specific sources.
    */
@@ -196,7 +188,6 @@ public class ThriftLibraryDescription
           name,
           new ThriftCompiler(
               params.copyWithChanges(
-                  THRIFT_COMPILE_TYPE,
                   target,
                   Suppliers.ofInstance(
                       ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -291,7 +282,6 @@ public class ThriftLibraryDescription
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
       SymlinkTree symlinkTree = new SymlinkTree(
           params.copyWithChanges(
-              INCLUDE_SYMLINK_TREE_TYPE,
               symlinkTreeTarget,
               Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
               Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),

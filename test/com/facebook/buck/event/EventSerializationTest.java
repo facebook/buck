@@ -18,7 +18,6 @@ package com.facebook.buck.event;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -122,9 +121,10 @@ public class EventSerializationTest {
     BuildRuleEvent.Started event = BuildRuleEvent.started(generateFakeBuildRule());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
-    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildRule\":{\"type\":{\"name\":\"java_library\",\"testRule\":false}," +
-        "\"name\":\"//fake:rule\"},\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleStarted\"}",
+    assertJsonEquals(
+        "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+            "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
+            "\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleStarted\"}",
         message);
   }
 
@@ -136,11 +136,13 @@ public class EventSerializationTest {
         Optional.<BuildRuleSuccessType>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
-    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{\"present\":" +
-        "false},\"cacheError\":{\"present\":false}},\"buildRule\":{\"type\":" +
-        "{\"name\":\"java_library\",\"testRule\":false},\"name\":\"//fake:rule\"}," +
-        "\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleFinished\"}", message);
+    assertJsonEquals(
+        "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+            "\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{" +
+            "\"present\":false},\"cacheError\":{\"present\":false}},\"buildRule\":{\"type\":" +
+            "\"fake_build_rule\",\"name\":\"//fake:rule\"},\"ruleKeySafe\":\"aaaa\"," +
+            "\"type\":\"BuildRuleFinished\"}",
+        message);
   }
 
   @Test
@@ -199,11 +201,9 @@ public class EventSerializationTest {
   private BuildRule generateFakeBuildRule() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:rule");
     FakeBuildRule result = new FakeBuildRule(
-        JavaLibraryDescription.TYPE,
         buildTarget,
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
     result.setRuleKey(new RuleKey("aaaa"));
     return result;
   }

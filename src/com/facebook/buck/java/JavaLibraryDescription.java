@@ -256,7 +256,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
             projectFilesystem,
             ruleKeyBuilderFactory,
-            BuildRuleType.GWT_MODULE,
             targetGraph),
         resolver,
         filesForGwtModule);

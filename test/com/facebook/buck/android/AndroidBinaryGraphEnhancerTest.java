@@ -108,7 +108,6 @@ public class AndroidBinaryGraphEnhancerTest {
         Suppliers.ofInstance(originalDeps),
         new FakeProjectFilesystem(),
         ruleKeyBuilderFactory,
-        AndroidBinaryDescription.TYPE,
         TargetGraph.EMPTY);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,

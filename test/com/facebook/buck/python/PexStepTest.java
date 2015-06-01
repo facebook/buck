@@ -18,8 +18,8 @@ package com.facebook.buck.python;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.startsWith;
 
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Joiner;

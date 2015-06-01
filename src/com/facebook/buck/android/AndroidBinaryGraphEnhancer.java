@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
-import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
+import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.JavaLibrary;
@@ -34,7 +34,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -176,7 +175,6 @@ public class AndroidBinaryGraphEnhancer {
 
     if (needsResourceFiltering) {
       BuildRuleParams paramsForResourcesFilter = buildRuleParams.copyWithChanges(
-          BuildRuleType.RESOURCES_FILTER,
           createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR),
           Suppliers.ofInstance(resourceRules),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
@@ -201,7 +199,6 @@ public class AndroidBinaryGraphEnhancer {
     // Create the AaptPackageResourcesBuildable.
     BuildTarget buildTargetForAapt = createBuildTargetWithFlavor(AAPT_PACKAGE_FLAVOR);
     BuildRuleParams paramsForAaptPackageResources = buildRuleParams.copyWithChanges(
-        BuildRuleType.AAPT_PACKAGE,
         buildTargetForAapt,
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -232,7 +229,6 @@ public class AndroidBinaryGraphEnhancer {
       BuildTarget buildTargetForPackageStringAssets =
           createBuildTargetWithFlavor(PACKAGE_STRING_ASSETS_FLAVOR);
       BuildRuleParams paramsForPackageStringAssets = buildRuleParams.copyWithChanges(
-          BuildRuleType.PACKAGE_STRING_ASSETS,
           buildTargetForPackageStringAssets,
           Suppliers.ofInstance(
               ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -351,7 +347,6 @@ public class AndroidBinaryGraphEnhancer {
     if (!packageableCollection.getNativeLibsDirectories().isEmpty() ||
         !nativeLinkableLibs.isEmpty()) {
       BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams.copyWithChanges(
-          BuildRuleType.COPY_NATIVE_LIBS,
           createBuildTargetWithFlavor(COPY_NATIVE_LIBS_FLAVOR),
           Suppliers.ofInstance(
               ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -374,7 +369,6 @@ public class AndroidBinaryGraphEnhancer {
     Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.absent();
     if (!exopackageModes.isEmpty()) {
       BuildRuleParams paramsForComputeExopackageAbi = buildRuleParams.copyWithChanges(
-          BuildRuleType.EXOPACKAGE_DEPS_ABI,
           createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR),
           Suppliers.ofInstance(enhancedDeps.build()),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
@@ -452,7 +446,6 @@ public class AndroidBinaryGraphEnhancer {
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           buildRuleParams.getProjectFilesystem(),
           buildRuleParams.getRuleKeyBuilderFactory(),
-          AndroidBuildConfigDescription.TYPE,
           buildRuleParams.getTargetGraph());
       JavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription.createBuildRule(
           buildConfigParams,
@@ -475,7 +468,6 @@ public class AndroidBinaryGraphEnhancer {
       if (shouldPreDex) {
         DexProducedFromJavaLibrary buildConfigDex = new DexProducedFromJavaLibrary(
             buildConfigParams.copyWithChanges(
-                BuildRuleType.PRE_DEX,
                 createBuildTargetWithFlavor(ImmutableFlavor.of("dex_" + flavor.getName())),
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary)),
                 /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
@@ -541,7 +533,6 @@ public class AndroidBinaryGraphEnhancer {
 
       // Create the IntermediateDexRule and add it to both the ruleResolver and preDexDeps.
       BuildRuleParams paramsForPreDex = buildRuleParams.copyWithChanges(
-          BuildRuleType.PRE_DEX,
           preDexTarget,
           Suppliers.ofInstance(
               ImmutableSortedSet.of(ruleResolver.getRule(javaLibrary.getBuildTarget()))),
@@ -555,7 +546,6 @@ public class AndroidBinaryGraphEnhancer {
     ImmutableSet<DexProducedFromJavaLibrary> allPreDexDeps = preDexDeps.build();
 
     BuildRuleParams paramsForPreDexMerge = buildRuleParams.copyWithChanges(
-        BuildRuleType.DEX_MERGE,
         createBuildTargetWithFlavor(DEX_MERGE_FLAVOR),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()

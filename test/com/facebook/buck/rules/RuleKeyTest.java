@@ -27,8 +27,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -545,7 +545,7 @@ public class RuleKeyTest {
           }
         };
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
-    BuildRule buildRule = new FakeBuildRule(BuildRuleType.of("example"), buildTarget, resolver);
+    BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
     return new FakeRuleKeyBuilderFactory(fileHashCache, resolver).newInstance(buildRule);
   }
 }

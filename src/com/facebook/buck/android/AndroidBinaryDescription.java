@@ -20,8 +20,8 @@ import static com.facebook.buck.android.AndroidBinaryGraphEnhancer.PACKAGE_STRIN
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
-import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
+import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.java.JavaLibrary;
@@ -139,7 +139,7 @@ public class AndroidBinaryDescription
           "In %s, keystore='%s' must be a keystore() but was %s().",
           params.getBuildTarget(),
           keystore.getFullyQualifiedName(),
-          keystore.getType().getName());
+          keystore.getType());
     }
 
     ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =

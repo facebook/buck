@@ -384,7 +384,6 @@ public class AppleDescriptions {
     Optional<AppleAssetCatalog> mergedAssetCatalog = Optional.absent();
     if (!mergeableAssetCatalogDirs.isEmpty()) {
       BuildRuleParams assetCatalogParams = params.copyWithChanges(
-          params.getBuildRuleType(),
           BuildTarget.builder(params.getBuildTarget())
               .addFlavors(AppleAssetCatalog.getFlavor(
                       ActoolStep.BundlingMode.MERGE_BUNDLES,
@@ -408,7 +407,6 @@ public class AppleDescriptions {
     for (Path assetDir : unmergeableAssetCatalogDirs) {
       String bundleName = getCatalogNameFromPath(assetDir);
       BuildRuleParams assetCatalogParams = params.copyWithChanges(
-          params.getBuildRuleType(),
           BuildTarget.builder(params.getBuildTarget())
               .addFlavors(AppleAssetCatalog.getFlavor(
                       ActoolStep.BundlingMode.SEPARATE_BUNDLES,

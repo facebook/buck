@@ -17,7 +17,6 @@
 package com.facebook.buck.thrift;
 
 import com.facebook.buck.java.DefaultJavaLibrary;
-import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -27,7 +26,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -47,8 +45,6 @@ import java.nio.file.Path;
 public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   private static final Flavor JAVA_FLAVOR = ImmutableFlavor.of("java");
-  private static final BuildRuleType SOURCE_ZIP_TYPE =
-      BuildRuleType.of("thrift-java-source-zip");
 
   private final ThriftBuckConfig thriftBuckConfig;
   private final JavacOptions templateOptions;
@@ -108,7 +104,6 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
       sourceZipsBuilder.add(
           new SrcZip(
               params.copyWithChanges(
-                  SOURCE_ZIP_TYPE,
                   sourceZipTarget,
                   Suppliers.ofInstance(ImmutableSortedSet.of(compilerRule)),
                   Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
@@ -121,7 +116,6 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
     // Create to main compile rule.
     BuildRuleParams javaParams = params.copyWithChanges(
-        JavaLibraryDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().getUnflavoredBuildTarget(),
             getFlavor()),

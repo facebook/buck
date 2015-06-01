@@ -126,7 +126,6 @@ public class CxxLinkableEnhancer {
     }
 
     BuildRuleParams linkParams = params.copyWithChanges(
-        NativeLinkable.NATIVE_LINKABLE_TYPE,
         target,
         // Add dependencies for build rules generating the object files and inputs from
         // dependencies.

@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.AppendableRuleKeyCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.AppendableRuleKeyCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeFileHashCache;

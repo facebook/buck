@@ -22,7 +22,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
@@ -41,9 +40,6 @@ import java.util.Collection;
 import java.util.Map;
 
 public class CxxPreprocessables {
-
-  private static final BuildRuleType HEADER_SYMLINK_TREE_TYPE =
-      BuildRuleType.of("header_symlink_tree");
 
   private CxxPreprocessables() {}
 
@@ -127,7 +123,6 @@ public class CxxPreprocessables {
 
     return new SymlinkTree(
         params.copyWithChanges(
-            HEADER_SYMLINK_TREE_TYPE,
             target,
             // Symlink trees never need to depend on anything.
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),

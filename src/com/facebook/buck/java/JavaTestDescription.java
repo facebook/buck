@@ -126,7 +126,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             "Specified source under test for %s is not a Java library: %s (%s).",
             owner,
             rule.getFullyQualifiedName(),
-            rule.getType().getName());
+            rule.getType());
       }
       sourceUnderTest.add(rule);
     }

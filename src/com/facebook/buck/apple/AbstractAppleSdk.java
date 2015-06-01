@@ -20,8 +20,8 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
 
-import java.util.Set;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Metadata about an Apple SDK.

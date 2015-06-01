@@ -156,7 +156,6 @@ public class ExportFileTest {
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     FakeBuildRule rule = new FakeBuildRule(
-        ExportFileDescription.TYPE,
         BuildTargetFactory.newInstance("//example:one"),
         new SourcePathResolver(ruleResolver));
 

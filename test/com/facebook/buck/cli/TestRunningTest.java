@@ -28,14 +28,13 @@ import static org.easymock.EasyMock.verify;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -45,8 +44,8 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.RuleKey;
@@ -373,12 +372,10 @@ public class TestRunningTest {
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
     FakeTestRule testRule = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
     BuildResult result = new BuildResult(testRule, FETCHED_FROM_CACHE, CacheResult.hit("dir"));
@@ -407,12 +404,10 @@ public class TestRunningTest {
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
     FakeTestRule testRule = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
     BuildResult result = new BuildResult(testRule, BUILT_LOCALLY, CacheResult.skip());
@@ -440,12 +435,10 @@ public class TestRunningTest {
     expect(executionContext.isDebugEnabled()).andReturn(false);
 
     FakeTestRule testRule = new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of()
-    ) {
+        ImmutableSortedSet.<BuildRule>of()) {
 
       @Override
       public boolean hasTestResultFiles(ExecutionContext context) {

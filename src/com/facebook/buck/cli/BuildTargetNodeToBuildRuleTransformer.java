@@ -56,7 +56,6 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
         Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
         ruleKeyBuilderFactory,
-        description.getBuildRuleType(),
         targetGraph);
     BuildRule buildRule = description.createBuildRule(params, ruleResolver, arg);
 

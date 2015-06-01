@@ -49,7 +49,7 @@ public class KeystoreTest {
   @Test
   public void testObservers() {
     Keystore keystore = createKeystoreRuleForTest();
-    assertEquals(KeystoreDescription.TYPE, keystore.getType());
+    assertEquals("keystore", keystore.getType());
 
     assertEquals(Paths.get("keystores/debug.keystore"), keystore.getPathToStore());
     assertEquals(Paths.get("keystores/debug.keystore.properties"),

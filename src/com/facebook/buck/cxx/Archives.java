@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Suppliers;
@@ -34,8 +33,6 @@ import java.nio.file.Path;
 public class Archives {
 
   private Archives() {}
-
-  private static final BuildRuleType ARCHIVE_TYPE = BuildRuleType.of("archive");
 
   /**
    * Construct an {@link com.facebook.buck.cxx.Archive} from a
@@ -55,7 +52,6 @@ public class Archives {
     // Convert the input build params into ones specialized for this archive build rule.
     // In particular, we only depend on BuildRules directly from the input file SourcePaths.
     BuildRuleParams archiveParams = originalParams.copyWithChanges(
-        ARCHIVE_TYPE,
         target,
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(

@@ -37,14 +37,12 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
   private RuleKey ruleKey;
 
   public FakeBuildRule(
-      BuildRuleType type,
       BuildTarget target,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
     this(
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(deps)
-            .setType(type)
             .build(), resolver);
   }
 
@@ -52,8 +50,8 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
     super(buildRuleParams, resolver);
   }
 
-  public FakeBuildRule(BuildRuleType type, BuildTarget buildTarget, SourcePathResolver resolver) {
-    this(new FakeBuildRuleParamsBuilder(buildTarget).setType(type).build(), resolver);
+  public FakeBuildRule(BuildTarget buildTarget, SourcePathResolver resolver) {
+    this(new FakeBuildRuleParamsBuilder(buildTarget).build(), resolver);
   }
 
   public FakeBuildRule(BuildTarget target, SourcePathResolver resolver, BuildRule... deps) {

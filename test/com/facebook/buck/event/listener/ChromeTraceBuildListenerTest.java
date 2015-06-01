@@ -44,7 +44,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -154,11 +153,9 @@ public class ChromeTraceBuildListenerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
 
     FakeBuildRule rule = new FakeBuildRule(
-        BuildRuleType.of("fake_rule"),
         target,
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
     RuleKey ruleKey = new RuleKey("abc123");
     rule.setRuleKey(ruleKey);
     String stepShortName = "fakeStep";

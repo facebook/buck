@@ -78,9 +78,7 @@ public class AppleBuildRulesTest {
   @Test
   public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
     BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build())
-            .setType(AppleLibraryDescription.TYPE)
-            .build();
+        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
     AppleNativeTargetDescriptionArg arg =
         createDescriptionArgWithDefaults(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
     BuildRule libraryRule =

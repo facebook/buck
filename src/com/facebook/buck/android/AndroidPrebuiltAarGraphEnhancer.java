@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.java.JarDirectoryStepHelper;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
-import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -33,7 +32,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
@@ -58,8 +56,6 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 class AndroidPrebuiltAarGraphEnhancer {
-
-  private static final BuildRuleType UNZIP_AAR_TYPE = BuildRuleType.of("unzip_aar");
 
   private static final Flavor AAR_UNZIP_FLAVOR = ImmutableFlavor.of("aar_unzip");
   private static final Flavor AAR_PREBUILT_JAR_FLAVOR = ImmutableFlavor.of("aar_prebuilt_jar");
@@ -93,7 +89,6 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     // unzip_aar
     BuildRuleParams unzipAarParams = originalBuildRuleParams.copyWithChanges(
-        UNZIP_AAR_TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_UNZIP_FLAVOR),
         Suppliers.ofInstance(originalBuildRuleParams.getDeclaredDeps()),
         Suppliers.ofInstance(originalBuildRuleParams.getExtraDeps()));
@@ -109,7 +104,6 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     // prebuilt_jar
     BuildRuleParams prebuiltJarParams = originalBuildRuleParams.copyWithChanges(
-        PrebuiltJarDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_PREBUILT_JAR_FLAVOR),
         /* declaredDeps */
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)),
@@ -132,7 +126,6 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     // android_resource
     BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
-        AndroidResourceDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
@@ -162,7 +155,6 @@ class AndroidPrebuiltAarGraphEnhancer {
 
     // android_library
     BuildRuleParams androidLibraryParams = originalBuildRuleParams.copyWithChanges(
-        AndroidLibraryDescription.TYPE,
         BuildTarget.of(originalBuildTarget),
         /* declaredDeps */ Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>of(

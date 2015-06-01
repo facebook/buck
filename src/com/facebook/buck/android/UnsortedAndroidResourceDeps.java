@@ -17,11 +17,10 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.java.JavaLibraryDescription;
-import com.facebook.buck.java.JavaTestDescription;
+import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
-import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -29,15 +28,16 @@ import java.util.Collection;
 
 public class UnsortedAndroidResourceDeps {
 
-  private static final ImmutableSet<BuildRuleType> TRAVERSABLE_TYPES = ImmutableSet.of(
-      AndroidBinaryDescription.TYPE,
-      AndroidInstrumentationApkDescription.TYPE,
-      AndroidLibraryDescription.TYPE,
-      AndroidResourceDescription.TYPE,
-      ApkGenruleDescription.TYPE,
-      JavaLibraryDescription.TYPE,
-      JavaTestDescription.TYPE,
-      RobolectricTestDescription.TYPE);
+  @SuppressWarnings("unchecked")
+  private static final ImmutableSet<Class<? extends BuildRule>> TRAVERSABLE_TYPES = ImmutableSet.of(
+      AndroidBinary.class,
+      AndroidInstrumentationApk.class,
+      AndroidLibrary.class,
+      AndroidResource.class,
+      ApkGenrule.class,
+      JavaLibrary.class,
+      JavaTest.class,
+      RobolectricTest.class);
 
   public interface Callback {
     public void onRuleVisited(BuildRule rule, ImmutableSet<BuildRule> depsToVisit);
@@ -81,10 +81,9 @@ public class UnsortedAndroidResourceDeps {
             }
 
             // Only certain types of rules should be considered as part of this traversal.
-            BuildRuleType type = rule.getType();
             ImmutableSet<BuildRule> depsToVisit = BuildRuleDependencyVisitors.maybeVisitAllDeps(
                 rule,
-                TRAVERSABLE_TYPES.contains(type));
+                TRAVERSABLE_TYPES.contains(rule.getClass()));
             if (callback.isPresent()) {
               callback.get().onRuleVisited(rule, depsToVisit);
             }

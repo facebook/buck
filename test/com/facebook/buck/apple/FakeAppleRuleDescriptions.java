@@ -28,9 +28,9 @@ import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Paths;
 

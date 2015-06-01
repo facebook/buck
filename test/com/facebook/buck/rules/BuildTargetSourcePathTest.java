@@ -39,7 +39,7 @@ public class BuildTargetSourcePathTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRule rule = new FakeBuildRule(BuildRuleType.of("example"), target, pathResolver);
+    BuildRule rule = new FakeBuildRule(target, pathResolver);
     resolver.addToIndex(rule);
     BuildTargetSourcePath path = new BuildTargetSourcePath(
         projectFilesystem,
@@ -58,7 +58,7 @@ public class BuildTargetSourcePathTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRule rule = new FakeBuildRule(BuildRuleType.of("example"), target, pathResolver) {
+    BuildRule rule = new FakeBuildRule(target, pathResolver) {
       @Override
       public Path getPathToOutput() {
         return Paths.get("cheese");
@@ -89,10 +89,7 @@ public class BuildTargetSourcePathTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(
-        BuildRuleType.of("example"),
-        target,
-        pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
     Path path = Paths.get("blah");
     BuildTargetSourcePath buildTargetSourcePath = new BuildTargetSourcePath(
         projectFilesystem,
@@ -107,10 +104,7 @@ public class BuildTargetSourcePathTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(
-        BuildRuleType.of("example"),
-        target,
-        pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
     BuildTargetSourcePath path1 =
         new BuildTargetSourcePath(
             projectFilesystem,

@@ -140,7 +140,7 @@ public class RuleKey {
    */
   public static Builder builder(
       BuildTarget name,
-      BuildRuleType type,
+      String type,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps,
       FileHashCache hashCache,
@@ -148,7 +148,7 @@ public class RuleKey {
     return new Builder(resolver, deps, hashCache, appendableRuleKeyCache)
         .setReflectively("name", name.getFullyQualifiedName())
         // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
-        .setReflectively("buck.type", type.getName());
+        .setReflectively("buck.type", type);
   }
 
   @VisibleForTesting

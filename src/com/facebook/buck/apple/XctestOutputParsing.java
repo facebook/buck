@@ -20,18 +20,18 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.BufferedReader;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class to parse the output from {@code xctest} and {@code otest}.

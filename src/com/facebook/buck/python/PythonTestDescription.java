@@ -17,8 +17,8 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -136,7 +136,6 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
     // Modify the build rule params to change the target, type, and remove all deps.
     BuildRuleParams newParams = params.copyWithChanges(
-        BuildRuleType.of("create_test_modules_list"),
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().checkUnflavored(),
             ImmutableFlavor.of("test_module")),
@@ -224,7 +223,6 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(
-        PythonBinaryDescription.TYPE,
         getBinaryBuildTarget(params.getBuildTarget()),
         Suppliers.ofInstance(PythonUtil.getDepsFromComponents(pathResolver, allComponents)),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

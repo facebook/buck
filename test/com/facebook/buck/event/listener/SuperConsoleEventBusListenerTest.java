@@ -38,7 +38,6 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
@@ -94,17 +93,13 @@ public class SuperConsoleEventBusListenerTest {
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
     FakeBuildRule fakeRule = new FakeBuildRule(
-        GenruleDescription.TYPE,
         fakeTarget,
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
     FakeBuildRule cachedRule = new FakeBuildRule(
-        GenruleDescription.TYPE,
         cachedTarget,
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
@@ -273,11 +268,9 @@ public class SuperConsoleEventBusListenerTest {
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
     FakeBuildRule fakeRule = new FakeBuildRule(
-        GenruleDescription.TYPE,
         fakeTarget,
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
     UUID stepUuid = UUID.randomUUID();

@@ -91,7 +91,7 @@ public class AndroidInstrumentationApkDescription
           "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
           params.getBuildTarget(),
           installableApk.getFullyQualifiedName(),
-          installableApk.getType().getName());
+          installableApk.getType());
     }
     AndroidBinary apkUnderTest = getUnderlyingApk((InstallableApk) installableApk);
 

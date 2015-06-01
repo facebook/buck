@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Suppliers;
@@ -32,8 +31,6 @@ import com.google.common.collect.ImmutableSortedSet;
  * how the C/C++ support lazily generates actions for the build rule.
  */
 public class ContainerBuildRule<T> extends NoopBuildRule {
-
-  private static final BuildRuleType TYPE = BuildRuleType.of("container");
 
   private final T item;
 
@@ -49,7 +46,6 @@ public class ContainerBuildRule<T> extends NoopBuildRule {
       T item) {
     return new ContainerBuildRule<>(
         params.copyWithChanges(
-            TYPE,
             target,
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),

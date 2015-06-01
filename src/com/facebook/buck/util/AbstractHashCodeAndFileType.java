@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;

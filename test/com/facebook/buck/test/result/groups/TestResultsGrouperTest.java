@@ -18,7 +18,6 @@ package com.facebook.buck.test.result.groups;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -78,11 +77,9 @@ public class TestResultsGrouperTest {
   private FakeTestRule getFakeTestRule(String suffix, BuildRule... dependencies) {
     String name = String.format("//:%s", suffix);
     return new FakeTestRule(
-        JavaTestDescription.TYPE,
         ImmutableSet.<Label>of(),
         BuildTargetFactory.newInstance(name),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.copyOf(dependencies)
-    );
+        ImmutableSortedSet.copyOf(dependencies));
   }
 }

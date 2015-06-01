@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import com.google.common.base.Optional;
 
 import org.immutables.value.Value;

@@ -19,9 +19,9 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.nio.file.Paths;
-
 import org.junit.Test;
+
+import java.nio.file.Paths;
 
 /**
  * Unit tests for {@link AppleBundleExtensions}.

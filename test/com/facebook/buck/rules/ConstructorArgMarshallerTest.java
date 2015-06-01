@@ -55,7 +55,6 @@ public class ConstructorArgMarshallerTest {
   private ConstructorArgMarshaller marshaller;
   private BuildRuleResolver ruleResolver;
   private ProjectFilesystem filesystem;
-  private BuildRuleType ruleType;
 
   @Before
   public void setUpInspector() {
@@ -63,7 +62,6 @@ public class ConstructorArgMarshallerTest {
     marshaller = new ConstructorArgMarshaller();
     ruleResolver = new BuildRuleResolver();
     filesystem = new FakeProjectFilesystem();
-    ruleType = BuildRuleType.of("example");
   }
 
   @Test
@@ -197,7 +195,6 @@ public class ConstructorArgMarshallerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
     FakeBuildRule rule = new FakeBuildRule(
-        ruleType,
         target,
         new SourcePathResolver(new BuildRuleResolver()));
     ruleResolver.addToIndex(rule);
@@ -461,7 +458,6 @@ public class ConstructorArgMarshallerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRule rule = new FakeBuildRule(
-        BuildRuleType.of("example"),
         BuildTargetFactory.newInstance("//will:happen"), pathResolver);
     ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
@@ -525,7 +521,6 @@ public class ConstructorArgMarshallerTest {
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FakeBuildRule expectedRule = new FakeBuildRule(
-        ruleType,
         BuildTargetFactory.newInstance("//example/path:path"),
         new SourcePathResolver(new BuildRuleResolver()));
     ruleResolver.addToIndex(expectedRule);
@@ -614,10 +609,7 @@ public class ConstructorArgMarshallerTest {
 
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:manifest");
-    BuildRule rule = new FakeBuildRule(
-        BuildRuleType.of("py"),
-        target,
-        new SourcePathResolver(resolver));
+    BuildRule rule = new FakeBuildRule(target, new SourcePathResolver(resolver));
     resolver.addToIndex(rule);
 
     Dto dto = new Dto();

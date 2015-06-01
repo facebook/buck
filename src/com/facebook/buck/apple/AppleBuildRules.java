@@ -18,11 +18,11 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.shell.GenruleDescription;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -54,8 +54,8 @@ public final class AppleBuildRules {
           AppleBundleDescription.TYPE,
           AppleTestDescription.TYPE);
 
-  private static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
-      ImmutableSet.of(AppleTestDescription.TYPE);
+  private static final ImmutableSet<Class<? extends BuildRule>> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
+      ImmutableSet.<Class<? extends BuildRule>>of(AppleTest.class);
 
   private static final ImmutableSet<BuildRuleType> RECURSIVE_DEPENDENCIES_STOP_AT_TYPES =
       ImmutableSet.of(
@@ -76,7 +76,7 @@ public final class AppleBuildRules {
    * Whether the build rule type is a test target.
    */
   public static boolean isXcodeTargetTestBuildRule(BuildRule rule) {
-    return XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(rule.getType());
+    return XCODE_TARGET_BUILD_RULE_TEST_TYPES.contains(rule.getClass());
   }
 
   /**

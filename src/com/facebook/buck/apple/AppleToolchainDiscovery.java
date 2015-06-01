@@ -21,8 +21,8 @@ import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 

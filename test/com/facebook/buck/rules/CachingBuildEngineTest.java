@@ -35,7 +35,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -875,7 +874,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
         .setDeps(sortedDeps)
-        .setType(JavaLibraryDescription.TYPE)
         .setFileHashCache(fileHashCache)
         .build();
 

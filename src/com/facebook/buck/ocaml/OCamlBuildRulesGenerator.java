@@ -19,7 +19,6 @@ package com.facebook.buck.ocaml;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -27,7 +26,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -54,15 +52,6 @@ import java.util.Map;
  */
 public class OCamlBuildRulesGenerator {
 
-  private static final BuildRuleType OCAML_C_COMPILE_TYPE =
-      BuildRuleType.of("ocaml_c_compile");
-  private static final BuildRuleType OCAML_BYTECODE_LINK =
-      BuildRuleType.of("ocaml_bytecode_link");
-  private static final BuildRuleType OCAML_DEBUG = BuildRuleType.of("ocaml_debug");
-  private static final BuildRuleType OCAML_ML_COMPILE_TYPE =
-      BuildRuleType.of("ocaml_ml_compile");
-  private static final BuildRuleType OCAML_ML_BYTECODE_COMPILE_TYPE =
-      BuildRuleType.of("ocaml_ml_bytecode_compile");
   private static final Flavor DEBUG_FLAVOR = ImmutableFlavor.of("debug");
 
   private final BuildRuleParams params;
@@ -172,7 +161,6 @@ public class OCamlBuildRulesGenerator {
           name);
 
       BuildRuleParams cCompileParams = params.copyWithChanges(
-          OCAML_C_COMPILE_TYPE,
           target,
         /* declaredDeps */ Suppliers.ofInstance(
               ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -222,7 +210,6 @@ public class OCamlBuildRulesGenerator {
 
   private BuildRule generateDebugLauncherRule() {
     BuildRuleParams debugParams = params.copyWithChanges(
-        OCAML_DEBUG,
         addDebugFlavor(params.getBuildTarget()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
@@ -243,7 +230,6 @@ public class OCamlBuildRulesGenerator {
 
   private BuildRule generateLinking(ImmutableList<SourcePath> allInputs) {
     BuildRuleParams linkParams = params.copyWithChanges(
-        NativeLinkable.NATIVE_LINKABLE_TYPE,
         params.getBuildTarget(),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -288,7 +274,6 @@ public class OCamlBuildRulesGenerator {
 
   private BuildRule generateBytecodeLinking(ImmutableList<SourcePath> allInputs) {
     BuildRuleParams linkParams = params.copyWithChanges(
-        OCAML_BYTECODE_LINK,
         addBytecodeFlavor(params.getBuildTarget()),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -462,7 +447,6 @@ public class OCamlBuildRulesGenerator {
         name);
 
     BuildRuleParams compileParams = params.copyWithChanges(
-        OCAML_ML_COMPILE_TYPE,
         buildTarget,
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -558,7 +542,6 @@ public class OCamlBuildRulesGenerator {
         name);
 
     BuildRuleParams compileParams = params.copyWithChanges(
-        OCAML_ML_BYTECODE_COMPILE_TYPE,
         buildTarget,
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()

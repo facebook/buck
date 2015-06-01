@@ -18,12 +18,12 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.java.JUnitStep;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTest;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildContext;

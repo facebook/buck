@@ -40,9 +40,7 @@ public class AndroidBuildConfigDescription
 
   public static final BuildRuleType TYPE = BuildRuleType.of("android_build_config");
 
-  private static final BuildRuleType GEN_JAVA_TYPE = BuildRuleType.of(
-      "gen_java_android_build_config");
-  private static final Flavor GEN_JAVA_FLAVOR = ImmutableFlavor.of(GEN_JAVA_TYPE.getName());
+  private static final Flavor GEN_JAVA_FLAVOR = ImmutableFlavor.of("gen_java_android_build_config");
   private final JavacOptions androidJavacOptions;
 
   public AndroidBuildConfigDescription(JavacOptions androidJavacOptions) {
@@ -127,7 +125,6 @@ public class AndroidBuildConfigDescription
 
     // Create one build rule to generate BuildConfig.java.
     BuildRuleParams buildConfigParams = params.copyWithChanges(
-        GEN_JAVA_TYPE,
         buildConfigBuildTarget,
         Suppliers.ofInstance(params.getDeclaredDeps()),
         /* extraDeps */ Suppliers.ofInstance(
@@ -146,7 +143,6 @@ public class AndroidBuildConfigDescription
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams = params.copyWithChanges(
-        TYPE,
         params.getBuildTarget(),
         /* declaredDeps */ Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>of(androidBuildConfig)),

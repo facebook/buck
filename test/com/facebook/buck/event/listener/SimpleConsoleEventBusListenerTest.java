@@ -35,7 +35,6 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -62,11 +61,9 @@ public class SimpleConsoleEventBusListenerTest {
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
     FakeBuildRule fakeRule = new FakeBuildRule(
-        GenruleDescription.TYPE,
         fakeTarget,
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<BuildRule>of()
-    );
+        ImmutableSortedSet.<BuildRule>of());
 
     SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(console, fakeClock);
     eventBus.register(listener);

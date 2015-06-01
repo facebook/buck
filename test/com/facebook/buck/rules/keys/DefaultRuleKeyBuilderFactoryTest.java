@@ -28,7 +28,6 @@ import com.facebook.buck.rules.AppendableRuleKeyCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.EmptyRuleKeyBuilder;
@@ -399,7 +398,6 @@ public class DefaultRuleKeyBuilderFactoryTest {
    */
   private static class EmptyRule implements BuildRule {
 
-    private static final BuildRuleType TYPE = BuildRuleType.of("empty");
     private final BuildTarget target;
 
     public EmptyRule(BuildTarget target) {
@@ -417,8 +415,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     }
 
     @Override
-    public BuildRuleType getType() {
-      return TYPE;
+    public String getType() {
+      return "empty";
     }
 
     @Override

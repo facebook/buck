@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 

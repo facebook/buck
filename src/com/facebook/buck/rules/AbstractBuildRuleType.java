@@ -24,21 +24,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractBuildRuleType {
-  // Internal rule types. Denoted by leading underscore.
-  public static final BuildRuleType AAPT_PACKAGE = BuildRuleType.of("_aapt_package");
-  public static final BuildRuleType COPY_NATIVE_LIBS =
-      BuildRuleType.of("_copy_native_libs");
-  public static final BuildRuleType EXOPACKAGE_DEPS_ABI =
-      BuildRuleType.of("_exopackage_deps_abi");
-  public static final BuildRuleType DUMMY_R_DOT_JAVA =
-      BuildRuleType.of("_dummy_r_dot_java");
-  public static final BuildRuleType GWT_MODULE = BuildRuleType.of("_gwt_module");
-  public static final BuildRuleType RESOURCES_FILTER =
-      BuildRuleType.of("_resources_filter");
-  public static final BuildRuleType PRE_DEX = BuildRuleType.of("_pre_dex");
-  public static final BuildRuleType DEX_MERGE = BuildRuleType.of("_dex_merge");
-  public static final BuildRuleType PACKAGE_STRING_ASSETS =
-      BuildRuleType.of("_package_string_assets");
 
   /**
    * @return the name as displayed in a build file, such as "java_library"

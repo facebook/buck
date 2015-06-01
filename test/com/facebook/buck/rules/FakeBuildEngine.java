@@ -21,8 +21,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.util.concurrent.ExecutionException;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Fake implementation of {@link BuildEngine} for use in tests.

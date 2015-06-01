@@ -174,7 +174,6 @@ public class AppleTestDescription implements
       testHostApp = Optional.of(
           appleBundleDescription.createBuildRule(
               params.copyWithChanges(
-                  AppleBundleDescription.TYPE,
                   BuildTarget.builder(args.testHostApp.get())
                       .addAllFlavors(nonLibraryFlavors)
                       .build(),
@@ -201,7 +200,6 @@ public class AppleTestDescription implements
 
     BuildRule library = appleLibraryDescription.createBuildRule(
         params.copyWithChanges(
-            AppleLibraryDescription.TYPE,
             BuildTarget.builder(params.getBuildTarget())
                 .addAllFlavors(extraFlavorsBuilder.build())
                 .build(),
@@ -265,7 +263,6 @@ public class AppleTestDescription implements
 
     AppleBundle bundle = new AppleBundle(
         params.copyWithChanges(
-            AppleBundleDescription.TYPE,
             BuildTarget.builder(params.getBuildTarget()).addFlavors(BUNDLE_FLAVOR).build(),
             // We have to add back the original deps here, since they're likely
             // stripped from the library link above (it doesn't actually depend on them).

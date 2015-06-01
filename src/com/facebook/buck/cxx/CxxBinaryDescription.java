@@ -116,7 +116,6 @@ public class CxxBinaryDescription implements
           .build();
       BuildRuleParams typeParams =
           params.copyWithChanges(
-              params.getBuildRuleType(),
               target,
               Suppliers.ofInstance(params.getDeclaredDeps()),
               Suppliers.ofInstance(params.getExtraDeps()));

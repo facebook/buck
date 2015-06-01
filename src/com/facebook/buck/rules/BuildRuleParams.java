@@ -38,7 +38,6 @@ public class BuildRuleParams {
   private final Supplier<ImmutableSortedSet<BuildRule>> totalDeps;
   private final ProjectFilesystem projectFilesystem;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
-  private final BuildRuleType buildRuleType;
   private final TargetGraph targetGraph;
 
   public BuildRuleParams(
@@ -47,14 +46,12 @@ public class BuildRuleParams {
       final Supplier<ImmutableSortedSet<BuildRule>> extraDeps,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
-      BuildRuleType buildRuleType,
       TargetGraph targetGraph) {
     this.buildTarget = buildTarget;
     this.declaredDeps = Suppliers.memoize(declaredDeps);
     this.extraDeps = Suppliers.memoize(extraDeps);
     this.projectFilesystem = projectFilesystem;
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
-    this.buildRuleType = buildRuleType;
     this.targetGraph = targetGraph;
 
     this.totalDeps = Suppliers.memoize(
@@ -97,15 +94,14 @@ public class BuildRuleParams {
   public BuildRuleParams copyWithDeps(
       Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
-    return copyWithChanges(buildRuleType, buildTarget, declaredDeps, extraDeps);
+    return copyWithChanges(buildTarget, declaredDeps, extraDeps);
   }
 
   public BuildRuleParams copyWithBuildTarget(BuildTarget target) {
-    return copyWithChanges(buildRuleType, target, declaredDeps, extraDeps);
+    return copyWithChanges(target, declaredDeps, extraDeps);
   }
 
   public BuildRuleParams copyWithChanges(
-      BuildRuleType buildRuleType,
       BuildTarget buildTarget,
       Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
@@ -115,7 +111,6 @@ public class BuildRuleParams {
         extraDeps,
         projectFilesystem,
         ruleKeyBuilderFactory,
-        buildRuleType,
         targetGraph);
   }
 
@@ -147,11 +142,8 @@ public class BuildRuleParams {
     return ruleKeyBuilderFactory;
   }
 
-  public BuildRuleType getBuildRuleType() {
-    return buildRuleType;
-  }
-
   public TargetGraph getTargetGraph() {
     return targetGraph;
   }
+
 }

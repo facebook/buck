@@ -26,7 +26,6 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -244,10 +243,7 @@ public class GenruleTest {
   public void testDepsEnvironmentVariableIsComplete() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget depTarget = BuildTarget.builder("//foo", "bar").build();
-    BuildRule dep = new FakeBuildRule(
-        JavaLibraryDescription.TYPE,
-        depTarget,
-        new SourcePathResolver(new BuildRuleResolver())) {
+    BuildRule dep = new FakeBuildRule(depTarget, new SourcePathResolver(new BuildRuleResolver())) {
       @Override
       public Path getPathToOutput() {
         return Paths.get("buck-out/gen/foo/bar.jar");

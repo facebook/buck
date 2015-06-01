@@ -22,9 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 
-import java.lang.reflect.Modifier;
-
 import org.junit.Test;
+
+import java.lang.reflect.Modifier;
 
 /**
  * Unit test for generated {@link Type} class.

@@ -18,12 +18,11 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
 import com.google.common.base.Optional;
 
-import java.util.Map;
-
 import org.immutables.value.Value;
+
+import java.util.Map;
 
 @Value.Immutable
 @BuckStyleImmutable

@@ -17,17 +17,17 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
-import java.nio.file.Path;
 
 /**
  * {@link ShellStep} implementation which runs {@code xctool} on

@@ -37,7 +37,6 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   private final Callable<TestResults> interpretedTestResults;
 
   public FakeTestRule(
-      BuildRuleType type,
       ImmutableSet<Label> labels,
       BuildTarget target,
       SourcePathResolver resolver,
@@ -45,7 +44,6 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
     this(
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(deps)
-            .setType(type)
             .build(),
         resolver,
         labels

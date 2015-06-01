@@ -31,7 +31,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
@@ -828,7 +827,7 @@ public class ProjectTest {
     EasyMock.replay(projectFilesystem);
 
     BuildTarget buildTarget = BuildTarget.builder("//", "base").build();
-    BuildRule buildRule = new FakeBuildRule(JavaLibraryDescription.TYPE, buildTarget, resolver);
+    BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
     SerializableModule module = new SerializableModule(buildRule, buildTarget);
 
     Project.addRootExcludes(module, buildRule, projectFilesystem);

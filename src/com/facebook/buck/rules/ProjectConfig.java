@@ -55,7 +55,7 @@ public class ProjectConfig extends NoopBuildRule {
     Preconditions.checkArgument(srcRule != null || testRule != null,
         "At least one of src_target or test_target must be specified in %s.",
         params.getBuildTarget().getFullyQualifiedName());
-    Preconditions.checkArgument(testRule == null || testRule.getType().isTestRule(),
+    Preconditions.checkArgument(testRule == null || testRule instanceof TestRule,
         "The test_target for a project_config() must correspond to a test rule, if specified, " +
         "but was %s.",
         testRule);

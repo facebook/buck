@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.model.BuildTarget;
@@ -30,7 +29,6 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -65,7 +63,6 @@ import java.util.List;
  */
 public class OCamlRuleBuilder {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("ocaml_library");
   private static final Flavor OCAML_STATIC_FLAVOR = ImmutableFlavor.of("static");
   private static final Flavor OCAML_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
@@ -201,7 +198,6 @@ public class OCamlRuleBuilder {
         isLibrary ? createStaticLibraryBuildTarget(params.getBuildTarget())
             : createOCamlLinkTarget(params.getBuildTarget());
     final BuildRuleParams compileParams = params.copyWithChanges(
-        NativeLinkable.NATIVE_LINKABLE_TYPE,
         buildTarget,
         /* declaredDeps */ Suppliers.ofInstance(allDeps),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
@@ -332,7 +328,6 @@ public class OCamlRuleBuilder {
             : createOCamlLinkTarget(params.getBuildTarget());
 
     final BuildRuleParams compileParams = params.copyWithChanges(
-        NativeLinkable.NATIVE_LINKABLE_TYPE,
         buildTarget,
         /* declaredDeps */ Suppliers.ofInstance(
             ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(allInputs))),

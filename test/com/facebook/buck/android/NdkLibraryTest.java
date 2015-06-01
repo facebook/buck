@@ -87,7 +87,7 @@ public class NdkLibraryTest {
             .setIsAsset(true)
             .build(ruleResolver, projectFilesystem);
 
-    assertEquals(NdkLibraryDescription.TYPE, ndkLibrary.getType());
+    assertEquals("ndk_library", ndkLibrary.getType());
 
     assertTrue(ndkLibrary.getProperties().is(ANDROID));
     assertTrue(ndkLibrary.isAsset());

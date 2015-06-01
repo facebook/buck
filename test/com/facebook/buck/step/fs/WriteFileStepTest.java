@@ -16,13 +16,12 @@
 
 package com.facebook.buck.step.fs;
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-
 import com.google.common.base.Optional;
 
 import org.junit.Test;

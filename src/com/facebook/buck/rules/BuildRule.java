@@ -46,7 +46,7 @@ public interface BuildRule extends Comparable<HasBuildTarget>, HasBuildTarget {
   public String getFullyQualifiedName();
 
   @JsonProperty("type")
-  public BuildRuleType getType();
+  public String getType();
 
   public BuildableProperties getProperties();
 

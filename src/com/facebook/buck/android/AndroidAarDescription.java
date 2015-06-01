@@ -97,7 +97,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     androidManifestArgs.deps = args.deps;
 
     BuildRuleParams androidManifestParams = originalBuildRuleParams.copyWithChanges(
-        AndroidManifestDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_MANIFEST_FLAVOR),
         Suppliers.ofInstance(originalBuildRuleParams.getDeclaredDeps()),
         Suppliers.ofInstance(originalBuildRuleParams.getExtraDeps()));
@@ -124,7 +123,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         AndroidResourceHelper.androidResOnly(originalBuildRuleParams.getExtraDeps());
 
     BuildRuleParams assembleAssetsParams = originalBuildRuleParams.copyWithChanges(
-        originalBuildRuleParams.getBuildRuleType(),
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_ASSETS_FLAVOR),
         Suppliers.ofInstance(androidResourceDeclaredDeps),
         Suppliers.ofInstance(androidResourceExtraDeps));
@@ -137,7 +135,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     depRules.add(resolver.addToIndex(assembleAssetsDirectories));
 
     BuildRuleParams assembleResourceParams = originalBuildRuleParams.copyWithChanges(
-        originalBuildRuleParams.getBuildRuleType(),
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ASSEMBLE_RESOURCE_FLAVOR),
         Suppliers.ofInstance(androidResourceDeclaredDeps),
         Suppliers.ofInstance(androidResourceExtraDeps));
@@ -151,7 +148,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
     /* android_resource */
     BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
-        AndroidLibraryDescription.TYPE,
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(
                 manifest,
@@ -184,7 +180,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             resolver));
 
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithChanges(
-        TYPE,
         BuildTarget.of(originalBuildTarget),
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(depRules.build())),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

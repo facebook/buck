@@ -19,8 +19,8 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.MorePathsForTests;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildTargetSourcePath;
