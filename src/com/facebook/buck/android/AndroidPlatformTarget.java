@@ -245,8 +245,13 @@ public class AndroidPlatformTarget {
     Path buildToolsDir = androidSdkDir.resolve("build-tools");
 
     // This is the relative path under the Android SDK directory to the directory that contains the
-    // aapt, aidl, and dx executables.
+    // dx script, jack, jill, and binaries.
     String buildToolsPath;
+
+    // This is the relative path under the Android SDK directory to the directory that contains the
+    // aapt, aidl, and zipalign binaries. Before Android SDK Build-tools 23.0.0_rc1, this was the
+    // same as buildToolsPath above.
+    String buildToolsBinPath;
 
     if (buildToolsDir.toFile().isDirectory()) {
       // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
@@ -270,16 +275,24 @@ public class AndroidPlatformTarget {
       } else {
         File newestBuildToolsDir = pickNewestBuildToolsDir(ImmutableSet.copyOf(directories));
         buildToolsPath = "build-tools/" + newestBuildToolsDir.getName();
+        if (androidSdkDir.resolve(buildToolsPath).resolve("bin").toFile().exists()) {
+          // Android SDK Build-tools >= 23.0.0_rc1 have executables under a new bin directory.
+          buildToolsBinPath = buildToolsPath + "/bin";
+        } else {
+          // Android SDK Build-tools < 23.0.0_rc1 have executables under the build-tools directory.
+          buildToolsBinPath = buildToolsPath;
+        }
       }
     } else {
       buildToolsPath = "platform-tools";
+      buildToolsBinPath = buildToolsPath;
     }
 
     Path zipAlignExecutable = androidSdkDir.resolve("tools/zipalign").toAbsolutePath();
     if (!zipAlignExecutable.toFile().exists()) {
       // Android SDK Build-tools >= 19.1.0 have zipalign under the build-tools directory.
       zipAlignExecutable =
-          androidSdkDir.resolve(buildToolsPath).resolve("zipalign").toAbsolutePath();
+          androidSdkDir.resolve(buildToolsBinPath).resolve("zipalign").toAbsolutePath();
     }
 
     Path androidFrameworkIdlFile = platformDirectory.resolve("framework.aidl");
@@ -292,9 +305,9 @@ public class AndroidPlatformTarget {
         name,
         androidJar.toAbsolutePath(),
         bootclasspathEntries,
-        aaptOverride.or(androidSdkDir.resolve(buildToolsPath).resolve("aapt").toAbsolutePath()),
+        aaptOverride.or(androidSdkDir.resolve(buildToolsBinPath).resolve("aapt").toAbsolutePath()),
         androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
-        androidSdkDir.resolve(buildToolsPath).resolve("aidl").toAbsolutePath(),
+        androidSdkDir.resolve(buildToolsBinPath).resolve("aidl").toAbsolutePath(),
         zipAlignExecutable,
         androidSdkDir.resolve(buildToolsPath).resolve(
             Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx").toAbsolutePath(),

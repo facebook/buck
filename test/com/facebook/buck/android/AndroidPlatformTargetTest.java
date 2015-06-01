@@ -16,8 +16,10 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -225,6 +227,52 @@ public class AndroidPlatformTargetTest {
         "17.0.0 should be used as the build directory",
         new File(androidSdkDir, "build-tools/17.0.0/aapt").toPath().toAbsolutePath(),
         androidPlatformTargetOption.get().getAaptExecutable());
+  }
+
+  @Test
+  public void testChoosesCorrectBuildToolsBinDirectory() throws IOException {
+    File androidSdkDir = tempDir.newFolder();
+    AndroidDirectoryResolver androidDirectoryResolver =
+        new FakeAndroidDirectoryResolver(
+            Optional.of(androidSdkDir.toPath()),
+            /* androidNdkDir */ Optional.<Path>absent(),
+            /* ndkVersion */ Optional.<String>absent());
+    File buildToolsDir = new File(androidSdkDir, "build-tools");
+    buildToolsDir.mkdir();
+
+    // Here is a number of subfolders in the build tools directory.
+    new File(buildToolsDir, "17.0.0").mkdir();
+    File buildToolsDir23 = new File(buildToolsDir, "23.0.0_rc1");
+    buildToolsDir23.mkdir();
+
+    // Create the bin directory that is found inside newer SDK build-tools folders.
+    new File(buildToolsDir23, "bin").mkdir();
+
+    Optional<AndroidPlatformTarget> androidPlatformTargetOption =
+        AndroidPlatformTarget.getTargetForId(
+            "android-17",
+            androidDirectoryResolver,
+            /* aaptOverride */ Optional.<Path>absent());
+    assertTrue(androidPlatformTargetOption.isPresent());
+
+    assertThat(
+        "aapt should be found in the bin directory",
+        androidPlatformTargetOption.get().getAaptExecutable(),
+        equalTo(new File(
+                androidSdkDir,
+                "build-tools/23.0.0_rc1/bin/aapt").toPath().toAbsolutePath()));
+    assertThat(
+        "aidl should be found in the bin directory",
+        androidPlatformTargetOption.get().getAidlExecutable(),
+        equalTo(new File(
+                androidSdkDir,
+                "build-tools/23.0.0_rc1/bin/aidl").toPath().toAbsolutePath()));
+    assertThat(
+        "zipalign should be found in the bin directory",
+        androidPlatformTargetOption.get().getZipalignExecutable(),
+        equalTo(new File(
+                androidSdkDir,
+                "build-tools/23.0.0_rc1/bin/zipalign").toPath().toAbsolutePath()));
   }
 
   @Test
