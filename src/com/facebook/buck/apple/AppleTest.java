@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
@@ -61,6 +60,9 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   private final Optional<Path> xctoolPath;
 
   @AddToRuleKey
+  private final Optional<BuildRule> xctoolZipRule;
+
+  @AddToRuleKey
   private final Tool xctest;
 
   @AddToRuleKey
@@ -71,9 +73,6 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
 
   @AddToRuleKey
   private final String platformName;
-
-  @AddToRuleKey
-  private final Optional<SourcePath> xctoolZipPath;
 
   @AddToRuleKey
   private final Optional<String> simulatorName;
@@ -94,7 +93,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
 
   AppleTest(
       Optional<Path> xctoolPath,
-      Optional<SourcePath> xctoolZipPath,
+      Optional<BuildRule> xctoolZipRule,
       Tool xctest,
       Tool otest,
       Boolean useXctest,
@@ -109,7 +108,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       ImmutableSet<Label> labels) {
     super(params, resolver);
     this.xctoolPath = xctoolPath;
-    this.xctoolZipPath = xctoolZipPath;
+    this.xctoolZipRule = xctoolZipRule;
     this.useXctest = useXctest;
     this.xctest = xctest;
     this.otest = otest;
@@ -183,7 +182,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     }
 
     if (!useXctest) {
-      if (!xctoolPath.isPresent() && !xctoolZipPath.isPresent()) {
+      if (!xctoolPath.isPresent() && !xctoolZipRule.isPresent()) {
         throw new HumanReadableException(
             "Set xctool_path = /path/to/xctool or xctool_zip_target = //path/to:xctool-zip " +
             "in the [apple] section of .buckconfig to run this test");
@@ -201,13 +200,15 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       }
 
       Path xctoolBinaryPath;
-      if (xctoolZipPath.isPresent()) {
+
+      if (xctoolZipRule.isPresent()) {
         Path resolvedXctoolUnzipDirectory = executionContext.getProjectFilesystem().resolve(
             xctoolUnzipDirectory);
         steps.add(new MakeCleanDirectoryStep(resolvedXctoolUnzipDirectory));
         steps.add(
             new UnzipStep(
-                getResolver().getPath(xctoolZipPath.get()),
+                // This is added as a runtime dependency via getRuntimeDeps() earlier.
+                xctoolZipRule.get().getPathToOutput(),
                 resolvedXctoolUnzipDirectory));
         xctoolBinaryPath = resolvedXctoolUnzipDirectory.resolve("bin/xctool");
       } else {
@@ -289,10 +290,16 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .add(testBundle)
-        .addAll(testHostApp.asSet())
-        .build();
+    ImmutableSortedSet.Builder<BuildRule> runtimeDepsBuilder =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .add(testBundle)
+            .addAll(testHostApp.asSet());
+
+    if (xctoolZipRule.isPresent()) {
+      runtimeDepsBuilder.add(xctoolZipRule.get());
+    }
+
+    return runtimeDepsBuilder.build();
   }
 
 }

@@ -295,20 +295,18 @@ public class AppleTestDescription implements
         ImmutableSortedSet.<BuildTarget>of());
 
 
-    Optional<SourcePath> xctoolZipPath;
+    Optional<BuildRule> xctoolZipBuildRule;
     if (appleConfig.getXctoolZipTarget().isPresent()) {
-      xctoolZipPath = Optional.<SourcePath>of(
-          new BuildTargetSourcePath(
-              params.getProjectFilesystem(),
-              appleConfig.getXctoolZipTarget().get()));
+      xctoolZipBuildRule = Optional.of(
+          resolver.getRule(appleConfig.getXctoolZipTarget().get()));
     } else {
-      xctoolZipPath = Optional.absent();
+      xctoolZipBuildRule = Optional.absent();
     }
 
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
     return new AppleTest(
         appleConfig.getXctoolPath(),
-        xctoolZipPath,
+        xctoolZipBuildRule,
         appleCxxPlatform.getXctest(),
         appleCxxPlatform.getOtest(),
         appleConfig.getXctestPlatformNames().contains(platformName),
@@ -329,6 +327,9 @@ public class AppleTestDescription implements
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       AppleTestDescription.Arg constructorArg) {
+    // TODO(user, coneko): This should technically only be a runtime dependency;
+    // doing this adds it to the extra deps in BuildRuleParams passed to
+    // the bundle and test rule.
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     Optional<BuildTarget> xctoolZipTarget = appleConfig.getXctoolZipTarget();
     if (xctoolZipTarget.isPresent()) {
