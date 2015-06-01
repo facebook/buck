@@ -436,13 +436,19 @@ public class ProjectGenerator {
                 .toList())
         .getOrCreateChildGroupByName(getXcodeTargetName(buildTarget));
     for (String configurationName : configs.keySet()) {
-      configurationList
+      XCBuildConfiguration configuration = configurationList
           .getBuildConfigurationsByName()
-          .getUnchecked(configurationName)
-          .setBaseConfigurationReference(
-              getConfigurationFileReference(
-                  group,
-                  getConfigurationNameToXcconfigPath(buildTarget).apply(configurationName)));
+          .getUnchecked(configurationName);
+      configuration.setBaseConfigurationReference(
+          getConfigurationFileReference(
+              group,
+              getConfigurationNameToXcconfigPath(buildTarget).apply(configurationName)));
+
+      NSDictionary inlineSettings = new NSDictionary();
+      inlineSettings.put("HEADER_SEARCH_PATHS", "");
+      inlineSettings.put("LIBRARY_SEARCH_PATHS", "");
+      inlineSettings.put("FRAMEWORK_SEARCH_PATHS", "");
+      configuration.setBuildSettings(inlineSettings);
     }
 
     PBXAggregateTarget aggregateTarget = new PBXAggregateTarget(productName);
