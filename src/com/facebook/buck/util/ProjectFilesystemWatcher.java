@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.event.BuckEventBus;
+
 import java.io.IOException;
 
 /**
@@ -27,8 +29,9 @@ public interface ProjectFilesystemWatcher {
 
   /**
    * Processes all pending file system events. These are generally posted to an EventBus passed
-   * to the ProjectFilesystemWatcher constructor.
+   * to the ProjectFilesystemWatcher constructor. The event bus in the parameter will be used to
+   * send console events in case there are warnings that need to be shown to the user.
    */
-  public void postEvents() throws IOException, InterruptedException;
+  public void postEvents(BuckEventBus buckEventBus) throws IOException, InterruptedException;
   public void close() throws IOException;
 }

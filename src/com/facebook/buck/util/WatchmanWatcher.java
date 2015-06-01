@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -61,7 +62,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
   private final Supplier<Process> watchmanProcessSupplier;
-  private final EventBus eventBus;
+  private final EventBus fileChangeEventBus;
   private final Clock clock;
   private final ObjectMapper objectMapper;
   private final String query;
@@ -107,7 +108,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                   long timeoutMillis,
                   String query) {
     this.watchmanProcessSupplier = processSupplier;
-    this.eventBus = fileChangeEventBus;
+    this.fileChangeEventBus = fileChangeEventBus;
     this.clock = clock;
     this.objectMapper = objectMapper;
     this.overflow = overflow;
@@ -204,7 +205,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
    * conservatively by subscribers then no other remedial action is required.
    */
   @Override
-  public void postEvents() throws IOException, InterruptedException {
+  public void postEvents(BuckEventBus buckEventBus) throws IOException, InterruptedException {
     Process watchmanProcess = watchmanProcessSupplier.get();
     try {
       LOG.debug("Writing query to Watchman: %s", query);
@@ -299,7 +300,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                 throw e;
               case "warning":
                 String message = jsonParser.nextTextValue();
-                eventBus.post(ConsoleEvent.warning("Watchman has produced a warning: %s", message));
+                buckEventBus.post(
+                    ConsoleEvent.warning("Watchman has produced a warning: %s", message));
 
                 LOG.warn("Watchman has produced a warning! Assuming the worst and posting an " +
                         "overflow event to flush the caches: %s", message);
@@ -349,7 +351,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
 
   private void postWatchEvent(WatchEvent<?> event) {
     LOG.verbose("Posting WatchEvent: %s", event);
-    eventBus.post(event);
+    fileChangeEventBus.post(event);
   }
 
   private WatchEvent<Object> createOverflowEvent() {

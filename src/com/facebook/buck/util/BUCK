@@ -94,6 +94,7 @@ java_library(
 )
 
 WATCHMAN_WATCHER_SRCS = [
+  'ProjectFilesystemWatcher.java',
   'WatchmanWatcher.java',
 ]
 java_library(

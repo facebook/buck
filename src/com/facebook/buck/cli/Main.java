@@ -297,7 +297,7 @@ public final class Main {
       synchronized (parser) {
         parser.recordParseStartTime(eventBus);
         fileEventBus.post(commandEvent);
-        filesystemWatcher.postEvents();
+        filesystemWatcher.postEvents(eventBus);
       }
     }
 
@@ -390,9 +390,9 @@ public final class Main {
   }
 
   @VisibleForTesting
-  static void watchFilesystem() throws IOException, InterruptedException {
+  static void watchFilesystem(BuckEventBus buckEventBus) throws IOException, InterruptedException {
     Preconditions.checkNotNull(daemon);
-    daemon.filesystemWatcher.postEvents();
+    daemon.filesystemWatcher.postEvents(buckEventBus);
   }
 
   @VisibleForTesting

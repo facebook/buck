@@ -31,6 +31,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
@@ -603,7 +604,7 @@ public class DaemonIntegrationTest {
     Watcher watcher = new Watcher(path);
     Main.registerFileWatcher(watcher);
     while (!watcher.watchedChange()) {
-      Main.watchFilesystem();
+      Main.watchFilesystem(new BuckEventBus(new FakeClock(0), new BuildId()));
     }
   }
 }
