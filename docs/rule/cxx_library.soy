@@ -73,7 +73,8 @@ while an Android APK will require a shared PIC-enabled build).
   {param name : 'supported_platforms_regex' /}
   {param default : 'None' /}
   {param desc}
-  If present, an un-anchored regex that matches all platforms that this library supports.
+  If present, an un-anchored regex (in java.util.regex.Pattern syntax)
+  that matches all platforms that this library supports.
   It will not be built for other platforms.
   (Currently, this is only respected by android_binary.)
   {/param}
