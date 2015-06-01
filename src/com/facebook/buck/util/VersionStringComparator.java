@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import java.util.Comparator;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -24,7 +25,10 @@ import java.util.regex.Pattern;
  */
 public class VersionStringComparator implements Comparator<String> {
 
-  private static final Pattern VERSION_STRING_PATTERN = Pattern.compile("(\\d+)(\\.\\d+)*?");
+  private static final Pattern VERSION_STRING_PATTERN =
+      Pattern.compile("(\\d+)(\\.\\d+)*?(_rc\\d+)*?$");
+
+  private static final Pattern VERSION_STRING_RC_PATTERN = Pattern.compile("_rc(\\d+)$");
 
   public static boolean isValidVersionString(String str) {
     return VERSION_STRING_PATTERN.matcher(str).matches();
@@ -40,8 +44,11 @@ public class VersionStringComparator implements Comparator<String> {
       throw new RuntimeException("Invalid version string: " + b);
     }
 
-    String[] partsA = a.split("\\.");
-    String[] partsB = b.split("\\.");
+    Matcher matcherA = VERSION_STRING_RC_PATTERN.matcher(a);
+    Matcher matcherB = VERSION_STRING_RC_PATTERN.matcher(b);
+
+    String[] partsA = matcherA.replaceFirst("").split("\\.");
+    String[] partsB = matcherB.replaceFirst("").split("\\.");
 
     for (int i = 0; i < partsA.length; i++) {
       if (i >= partsB.length) {
@@ -60,7 +67,17 @@ public class VersionStringComparator implements Comparator<String> {
     }
 
     if (partsA.length == partsB.length) {
-      return 0;
+      if (matcherA.find(0) && !matcherB.find(0)) {
+        return -1;
+      } else if (!matcherA.find(0) && matcherB.find(0)) {
+        return 1;
+      } else if (matcherA.find(0) && matcherB.find(0)){
+        int valueA = Integer.parseInt(matcherA.group(1));
+        int valueB = Integer.parseInt(matcherB.group(1));
+        return valueA - valueB;
+      } else {
+        return 0;
+      }
     } else {
       return -1;
     }

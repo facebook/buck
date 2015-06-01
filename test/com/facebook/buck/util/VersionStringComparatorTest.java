@@ -16,7 +16,9 @@
 
 package com.facebook.buck.util;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -31,6 +33,9 @@ public class VersionStringComparatorTest {
     assertTrue(VersionStringComparator.isValidVersionString("4"));
     assertTrue(VersionStringComparator.isValidVersionString("4.2"));
     assertTrue(VersionStringComparator.isValidVersionString("4.2.2"));
+    assertTrue(VersionStringComparator.isValidVersionString("4_rc1"));
+    assertTrue(VersionStringComparator.isValidVersionString("4.2_rc1"));
+    assertTrue(VersionStringComparator.isValidVersionString("4.2.2_rc1"));
   }
 
   @Test
@@ -48,6 +53,11 @@ public class VersionStringComparatorTest {
 
     assertEquals(-1, comparator.compare("4.2.3", "4.3.2"));
     assertEquals(1, comparator.compare("4.3.2", "4.2.3"));
+
+    assertThat(comparator.compare("4_rc1", "4"), equalTo(-1));
+    assertThat(comparator.compare("4", "4_rc1"), equalTo(1));
+    assertThat(comparator.compare("4.2.2_rc1", "4.2.2_rc2"), equalTo(-1));
+    assertThat(comparator.compare("4.2.2_rc2", "4.2.2"), equalTo(-1));
   }
 
   @Test(expected = RuntimeException.class)
