@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,191 +46,92 @@ public class NdkCxxPlatforms {
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() { }
 
-  /**
-   * The build toolchain, named (including compiler version) after the target platform/arch.
-   */
-  public static enum Toolchain {
 
-    X86_4_8("x86-4.8"),
-    ARM_LINUX_ADNROIDEABI_4_8("arm-linux-androideabi-4.8"),
-    ;
-
-    private final String value;
-
-    private Toolchain(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * The prefix used for tools built for the above toolchain.
-   */
-  public static enum ToolchainPrefix {
-
-    I686_LINUX_ANDROID("i686-linux-android"),
-    ARM_LINUX_ANDROIDEABI("arm-linux-androideabi"),
-    ;
-
-    private final String value;
-
-    private ToolchainPrefix(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * Name of the target CPU architecture.
-   */
-  public static enum TargetArch {
-
-    X86("x86"),
-    ARM("arm"),
-    ;
-
-    private final String value;
-
-    private TargetArch(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * Name of the target CPU + ABI.
-   */
-  public static enum TargetArchAbi {
-
-    X86("x86"),
-    ARMEABI("armeabi"),
-    ARMEABI_V7A("armeabi-v7a"),
-    ;
-
-    private final String value;
-
-    private TargetArchAbi(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * The OS and Architecture that we're building on.
-   */
-  public static enum Host {
-
-    DARWIN_X86_64("darwin-x86_64"),
-    LINUX_X86_64("linux-x86_64"),
-    WINDOWS_X86_64("windows-x86_64"),
-    ;
-
-    private final String value;
-
-    private Host(String value) {
-      this.value = Preconditions.checkNotNull(value);
-    }
-
-    @Override
-    public String toString() {
-      return value;
-    }
-
-  }
-
-  /**
-   * The C/C++ runtime library to link against.
-   */
-  public static enum CxxRuntime {
-
-    SYSTEM("system", "system"),
-    GABIXX("gabi++_shared", "gabi++_static"),
-    STLPORT("stlport_shared", "stlport_static"),
-    GNUSTL("gnustl_shared", "gnustl_static"),
-    ;
-
-    private final String sharedName;
-    private final String staticName;
-
-    private CxxRuntime(String sharedName, String staticName) {
-      this.sharedName = sharedName;
-      this.staticName = staticName;
-    }
-
-    public String getStaticName() {
-      return staticName;
-    }
-
-    public String getSharedName() {
-      return sharedName;
-    }
-
-    public String getSoname() {
-      return "lib" + sharedName + ".so";
-    }
-
-  }
-
-  /**
-   * A container for all configuration settings needed to define a build target.
-   */
-  public static class TargetConfiguration {
-
-    public final Toolchain toolchain;
-    public final ToolchainPrefix toolchainPrefix;
-    public final TargetArch targetArch;
-    public final TargetArchAbi targetArchAbi;
-    public final String targetAppPlatform;
-    public final String compilerVersion;
-    public final ImmutableList<String> compilerFlags;
-    public final ImmutableList<String> linkerFlags;
-
-    public TargetConfiguration(
-        Toolchain toolchain,
-        ToolchainPrefix toolchainPrefix,
-        TargetArch targetArch,
-        TargetArchAbi targetArchAbi,
-        String targetAppPlatform,
-        String compilerVersion,
-        ImmutableList<String> compilerFlags,
-        ImmutableList<String> linkerFlags) {
-      this.toolchain = Preconditions.checkNotNull(toolchain);
-      this.toolchainPrefix = Preconditions.checkNotNull(toolchainPrefix);
-      this.targetArch = Preconditions.checkNotNull(targetArch);
-      this.targetArchAbi = Preconditions.checkNotNull(targetArchAbi);
-      this.targetAppPlatform = Preconditions.checkNotNull(targetAppPlatform);
-      this.compilerVersion = Preconditions.checkNotNull(compilerVersion);
-      this.compilerFlags = Preconditions.checkNotNull(compilerFlags);
-      this.linkerFlags = Preconditions.checkNotNull(linkerFlags);
-    }
-
-  }
 
   private static final ImmutableMap<Platform, Host> BUILD_PLATFORMS =
       ImmutableMap.of(
           Platform.LINUX, Host.LINUX_X86_64,
           Platform.MACOS, Host.DARWIN_X86_64,
           Platform.WINDOWS, Host.WINDOWS_X86_64);
+
+  /**
+   * @return the map holding the available {@link NdkCxxPlatform}s.
+   */
+  public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+      Path ndkRoot,
+      String androidPlatform,
+      Platform platform) {
+
+    ImmutableMap.Builder<TargetCpuType, NdkCxxPlatform> ndkCxxPlatformBuilder =
+        ImmutableMap.builder();
+
+    NdkCxxPlatform armeabi =
+        build(
+            ImmutableFlavor.of("android-arm"),
+            platform,
+            ndkRoot,
+            new TargetConfiguration(
+                Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
+                ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
+                TargetArch.ARM,
+                TargetArchAbi.ARMEABI,
+                androidPlatform,
+                /* compilerVersion */ "4.8",
+                /* compilerFlags */ ImmutableList.of(
+                "-march=armv5te",
+                "-mtune=xscale",
+                "-msoft-float",
+                "-mthumb",
+                "-Os"),
+                /* linkerFlags */ ImmutableList.of(
+                "-march=armv5te",
+                "-Wl,--fix-cortex-a8")),
+            CxxRuntime.GNUSTL);
+    ndkCxxPlatformBuilder.put(TargetCpuType.ARM, armeabi);
+    NdkCxxPlatform armeabiv7 =
+        build(
+            ImmutableFlavor.of("android-armv7"),
+            platform,
+            ndkRoot,
+            new TargetConfiguration(
+                Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
+                ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
+                TargetArch.ARM,
+                TargetArchAbi.ARMEABI_V7A,
+                androidPlatform,
+                /* compilerVersion */ "4.8",
+                /* compilerFlags */ ImmutableList.of(
+                "-finline-limit=64",
+                "-march=armv7-a",
+                "-mfpu=vfpv3-d16",
+                "-mfloat-abi=softfp",
+                "-mthumb",
+                "-Os"),
+                /* linkerFlags */ ImmutableList.<String>of()),
+            CxxRuntime.GNUSTL);
+    ndkCxxPlatformBuilder.put(TargetCpuType.ARMV7, armeabiv7);
+    NdkCxxPlatform x86 =
+        build(
+            ImmutableFlavor.of("android-x86"),
+            platform,
+            ndkRoot,
+            new TargetConfiguration(
+                Toolchain.X86_4_8,
+                ToolchainPrefix.I686_LINUX_ANDROID,
+                TargetArch.X86,
+                TargetArchAbi.X86,
+                androidPlatform,
+                /* compilerVersion */ "4.8",
+                /* compilerFlags */ ImmutableList.of(
+                "-funswitch-loops",
+                "-finline-limit=300",
+                "-O2"),
+                /* linkerFlags */ ImmutableList.<String>of()),
+            CxxRuntime.GNUSTL);
+    ndkCxxPlatformBuilder.put(TargetCpuType.X86, x86);
+
+    return ndkCxxPlatformBuilder.build();
+  }
 
   public static NdkCxxPlatform build(
       Flavor flavor,
@@ -657,6 +559,186 @@ public class NdkCxxPlatforms {
     ARMV7,
     X86,
     MIPS,
+  }
+
+  /**
+   * The build toolchain, named (including compiler version) after the target platform/arch.
+   */
+  public enum Toolchain {
+
+    X86_4_8("x86-4.8"),
+    ARM_LINUX_ADNROIDEABI_4_8("arm-linux-androideabi-4.8"),
+    ;
+
+    private final String value;
+
+    Toolchain(String value) {
+      this.value = Preconditions.checkNotNull(value);
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+
+  /**
+   * The prefix used for tools built for the above toolchain.
+   */
+  public enum ToolchainPrefix {
+
+    I686_LINUX_ANDROID("i686-linux-android"),
+    ARM_LINUX_ANDROIDEABI("arm-linux-androideabi"),
+    ;
+
+    private final String value;
+
+    ToolchainPrefix(String value) {
+      this.value = Preconditions.checkNotNull(value);
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+
+  /**
+   * Name of the target CPU architecture.
+   */
+  public enum TargetArch {
+
+    X86("x86"),
+    ARM("arm"),
+    ;
+
+    private final String value;
+
+    TargetArch(String value) {
+      this.value = Preconditions.checkNotNull(value);
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+
+  /**
+   * Name of the target CPU + ABI.
+   */
+  public enum TargetArchAbi {
+
+    X86("x86"),
+    ARMEABI("armeabi"),
+    ARMEABI_V7A("armeabi-v7a"),
+    ;
+
+    private final String value;
+
+    TargetArchAbi(String value) {
+      this.value = Preconditions.checkNotNull(value);
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+
+  /**
+   * The OS and Architecture that we're building on.
+   */
+  public enum Host {
+
+    DARWIN_X86_64("darwin-x86_64"),
+    LINUX_X86_64("linux-x86_64"),
+    WINDOWS_X86_64("windows-x86_64"),
+    ;
+
+    private final String value;
+
+    Host(String value) {
+      this.value = Preconditions.checkNotNull(value);
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+
+  }
+
+  /**
+   * The C/C++ runtime library to link against.
+   */
+  public enum CxxRuntime {
+
+    SYSTEM("system", "system"),
+    GABIXX("gabi++_shared", "gabi++_static"),
+    STLPORT("stlport_shared", "stlport_static"),
+    GNUSTL("gnustl_shared", "gnustl_static"),
+    ;
+
+    private final String sharedName;
+    private final String staticName;
+
+    CxxRuntime(String sharedName, String staticName) {
+      this.sharedName = sharedName;
+      this.staticName = staticName;
+    }
+
+    public String getStaticName() {
+      return staticName;
+    }
+
+    public String getSharedName() {
+      return sharedName;
+    }
+
+    public String getSoname() {
+      return "lib" + sharedName + ".so";
+    }
+
+  }
+
+  /**
+   * A container for all configuration settings needed to define a build target.
+   */
+  public static class TargetConfiguration {
+
+    public final Toolchain toolchain;
+    public final ToolchainPrefix toolchainPrefix;
+    public final TargetArch targetArch;
+    public final TargetArchAbi targetArchAbi;
+    public final String targetAppPlatform;
+    public final String compilerVersion;
+    public final ImmutableList<String> compilerFlags;
+    public final ImmutableList<String> linkerFlags;
+
+    public TargetConfiguration(
+        Toolchain toolchain,
+        ToolchainPrefix toolchainPrefix,
+        TargetArch targetArch,
+        TargetArchAbi targetArchAbi,
+        String targetAppPlatform,
+        String compilerVersion,
+        ImmutableList<String> compilerFlags,
+        ImmutableList<String> linkerFlags) {
+      this.toolchain = Preconditions.checkNotNull(toolchain);
+      this.toolchainPrefix = Preconditions.checkNotNull(toolchainPrefix);
+      this.targetArch = Preconditions.checkNotNull(targetArch);
+      this.targetArchAbi = Preconditions.checkNotNull(targetArchAbi);
+      this.targetAppPlatform = Preconditions.checkNotNull(targetAppPlatform);
+      this.compilerVersion = Preconditions.checkNotNull(compilerVersion);
+      this.compilerFlags = Preconditions.checkNotNull(compilerFlags);
+      this.linkerFlags = Preconditions.checkNotNull(linkerFlags);
+    }
+
   }
 
 }

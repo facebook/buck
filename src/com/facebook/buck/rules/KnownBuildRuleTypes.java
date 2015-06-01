@@ -85,7 +85,6 @@ import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.ocaml.OCamlBinaryDescription;
 import com.facebook.buck.ocaml.OCamlBuckConfig;
 import com.facebook.buck.ocaml.OCamlLibraryDescription;
@@ -179,85 +178,6 @@ public class KnownBuildRuleTypes {
         pythonEnv).build();
   }
 
-  /**
-   * @return the map holding the available {@link NdkCxxPlatform}s.
-   */
-  private static ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms(
-      Path ndkRoot,
-      String androidPlatform,
-      Platform platform) {
-
-    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformBuilder =
-        ImmutableMap.builder();
-
-    NdkCxxPlatform armeabi =
-        NdkCxxPlatforms.build(
-            ImmutableFlavor.of("android-arm"),
-            platform,
-            ndkRoot,
-            new NdkCxxPlatforms.TargetConfiguration(
-                NdkCxxPlatforms.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
-                NdkCxxPlatforms.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
-                NdkCxxPlatforms.TargetArch.ARM,
-                NdkCxxPlatforms.TargetArchAbi.ARMEABI,
-                androidPlatform,
-                /* compilerVersion */ "4.8",
-                /* compilerFlags */ ImmutableList.of(
-                    "-march=armv5te",
-                    "-mtune=xscale",
-                    "-msoft-float",
-                    "-mthumb",
-                    "-Os"),
-                /* linkerFlags */ ImmutableList.of(
-                    "-march=armv5te",
-                    "-Wl,--fix-cortex-a8")),
-            NdkCxxPlatforms.CxxRuntime.GNUSTL);
-    ndkCxxPlatformBuilder.put(NdkCxxPlatforms.TargetCpuType.ARM, armeabi);
-    NdkCxxPlatform armeabiv7 =
-        NdkCxxPlatforms.build(
-            ImmutableFlavor.of("android-armv7"),
-            platform,
-            ndkRoot,
-            new NdkCxxPlatforms.TargetConfiguration(
-                NdkCxxPlatforms.Toolchain.ARM_LINUX_ADNROIDEABI_4_8,
-                NdkCxxPlatforms.ToolchainPrefix.ARM_LINUX_ANDROIDEABI,
-                NdkCxxPlatforms.TargetArch.ARM,
-                NdkCxxPlatforms.TargetArchAbi.ARMEABI_V7A,
-                androidPlatform,
-                /* compilerVersion */ "4.8",
-                /* compilerFlags */ ImmutableList.of(
-                    "-finline-limit=64",
-                    "-march=armv7-a",
-                    "-mfpu=vfpv3-d16",
-                    "-mfloat-abi=softfp",
-                    "-mthumb",
-                    "-Os"),
-                /* linkerFlags */ ImmutableList.<String>of()),
-            NdkCxxPlatforms.CxxRuntime.GNUSTL);
-    ndkCxxPlatformBuilder.put(NdkCxxPlatforms.TargetCpuType.ARMV7, armeabiv7);
-    NdkCxxPlatform x86 =
-        NdkCxxPlatforms.build(
-            ImmutableFlavor.of("android-x86"),
-            platform,
-            ndkRoot,
-            new NdkCxxPlatforms.TargetConfiguration(
-                NdkCxxPlatforms.Toolchain.X86_4_8,
-                NdkCxxPlatforms.ToolchainPrefix.I686_LINUX_ANDROID,
-                NdkCxxPlatforms.TargetArch.X86,
-                NdkCxxPlatforms.TargetArchAbi.X86,
-                androidPlatform,
-                /* compilerVersion */ "4.8",
-                /* compilerFlags */ ImmutableList.of(
-                    "-funswitch-loops",
-                    "-finline-limit=300",
-                    "-O2"),
-                /* linkerFlags */ ImmutableList.<String>of()),
-            NdkCxxPlatforms.CxxRuntime.GNUSTL);
-    ndkCxxPlatformBuilder.put(NdkCxxPlatforms.TargetCpuType.X86, x86);
-
-    return ndkCxxPlatformBuilder.build();
-  }
-
   private static void buildAppleCxxPlatforms(
       Supplier<Optional<Path>> appleDeveloperDirectorySupplier,
       ImmutableList<Path> extraToolchainPaths,
@@ -341,7 +261,8 @@ public class KnownBuildRuleTypes {
         ImmutableMap.builder();
     Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
     if (ndkRoot.isPresent()) {
-      ndkCxxPlatformsBuilder.putAll(getNdkCxxPlatforms(
+      ndkCxxPlatformsBuilder.putAll(
+          NdkCxxPlatforms.getPlatforms(
               ndkRoot.get(),
               androidConfig.getNdkAppPlatform().or("android-9"),
               platform));
