@@ -346,8 +346,12 @@ public class AndroidBinary extends AbstractBuildRule implements
       Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
       Path libSubdirectory = pathForNativeLibsAsAssets.resolve("assets").resolve("lib");
       steps.add(new MakeCleanDirectoryStep(libSubdirectory));
-      for (Path nativeLibDir : packageableCollection.getNativeLibAssetsDirectories()) {
-        CopyNativeLibraries.copyNativeLibrary(nativeLibDir, libSubdirectory, cpuFilters, steps);
+      for (SourcePath nativeLibDir : packageableCollection.getNativeLibAssetsDirectories()) {
+        CopyNativeLibraries.copyNativeLibrary(
+            getResolver().getPath(nativeLibDir),
+            libSubdirectory,
+            cpuFilters,
+            steps);
       }
       nativeLibraryAsAssetDirectories = ImmutableSet.of(pathForNativeLibsAsAssets);
     } else {

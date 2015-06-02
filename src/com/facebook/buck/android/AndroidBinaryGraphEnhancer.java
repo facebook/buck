@@ -205,6 +205,8 @@ public class AndroidBinaryGraphEnhancer {
                 // Add all deps with non-empty res dirs, since we at least need the R.txt file
                 // (even if we're filtering).
                 .addAll(getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir()))
+                .addAll(
+                    pathResolver.filterBuildRuleInputs(resourceDetails.getResourceDirectories()))
                 .addAll(getAdditionalAaptDeps(pathResolver, resourceRules, packageableCollection))
                 .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
@@ -351,6 +353,9 @@ public class AndroidBinaryGraphEnhancer {
           Suppliers.ofInstance(
               ImmutableSortedSet.<BuildRule>naturalOrder()
                   .addAll(getTargetsAsRules(packageableCollection.getNativeLibsTargets()))
+                  .addAll(
+                      pathResolver.filterBuildRuleInputs(
+                          packageableCollection.getNativeLibsDirectories()))
                   .addAll(pathResolver.filterBuildRuleInputs(nativeLinkableLibs.values()))
                   .build()),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

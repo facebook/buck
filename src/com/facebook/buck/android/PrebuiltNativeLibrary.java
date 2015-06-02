@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -98,9 +99,13 @@ public class PrebuiltNativeLibrary extends AbstractBuildRule
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     if (isAsset) {
-      collector.addNativeLibAssetsDirectory(getBuildTarget(), getLibraryPath());
+      collector.addNativeLibAssetsDirectory(
+          getBuildTarget(),
+          new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
     } else {
-      collector.addNativeLibsDirectory(getBuildTarget(), getLibraryPath());
+      collector.addNativeLibsDirectory(
+          getBuildTarget(),
+          new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
     }
   }
 }

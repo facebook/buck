@@ -169,7 +169,10 @@ class AndroidPrebuiltAarGraphEnhancer {
             unzipAar.getProjectFilesystem(),
             unzipAar.getBuildTarget(),
             unzipAar.getProguardConfig()),
-        unzipAar.getNativeLibsDirectory(),
+        new BuildTargetSourcePath(
+            unzipAar.getProjectFilesystem(),
+            unzipAar.getBuildTarget(),
+            unzipAar.getNativeLibsDirectory()),
         prebuiltJar,
         androidResource,
         javacOptions);

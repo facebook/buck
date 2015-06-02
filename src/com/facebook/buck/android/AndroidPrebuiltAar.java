@@ -20,6 +20,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -32,17 +33,19 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidResourceDeps {
+public class AndroidPrebuiltAar
+    extends AndroidLibrary
+    implements HasAndroidResourceDeps, HasRuntimeDeps {
 
   private final AndroidResource androidResource;
-  private final Path nativeLibsDirectory;
+  private final SourcePath nativeLibsDirectory;
   private final PrebuiltJar prebuiltJar;
 
   public AndroidPrebuiltAar(
       BuildRuleParams androidLibraryParams,
       SourcePathResolver resolver,
       SourcePath proguardConfig,
-      Path nativeLibsDirectory,
+      SourcePath nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       AndroidResource androidResource,
       JavacOptions javacOptions) {
@@ -101,6 +104,14 @@ public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidReso
 
   public Path getBinaryJar() {
     return prebuiltJar.getPathToOutput();
+  }
+
+  // This class is basically a wrapper around its android resource rule, since dependents will
+  // use this interface to access the underlying R.java package, so make sure it's available when
+  // a dependent is building against us.
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return ImmutableSortedSet.<BuildRule>of(androidResource);
   }
 
 }

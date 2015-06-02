@@ -29,7 +29,6 @@ import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -90,12 +89,12 @@ interface AbstractAndroidPackageableCollection {
   /**
    * Directories containing native libraries.
    */
-  Set<Path> getNativeLibsDirectories();
+  Set<SourcePath> getNativeLibsDirectories();
 
   /**
    * Directories containing native libraries to be used as assets.
    */
-  Set<Path> getNativeLibAssetsDirectories();
+  Set<SourcePath> getNativeLibAssetsDirectories();
 
   /**
    * Directories containing assets to be included directly in the apk,

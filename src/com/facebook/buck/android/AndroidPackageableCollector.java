@@ -35,7 +35,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -143,7 +142,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addNativeLibsDirectory(
       BuildTarget owner,
-      Path nativeLibDir) {
+      SourcePath nativeLibDir) {
     collectionBuilder.addNativeLibsTargets(owner);
     collectionBuilder.addNativeLibsDirectories(nativeLibDir);
     return this;
@@ -156,7 +155,7 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addNativeLibAssetsDirectory(
       BuildTarget owner,
-      Path assetsDir) {
+      SourcePath assetsDir) {
     // We need to build the native target in order to have the assets available still.
     collectionBuilder.addNativeLibsTargets(owner);
     collectionBuilder.addNativeLibAssetsDirectories(assetsDir);

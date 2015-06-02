@@ -223,11 +223,15 @@ public class AndroidBinaryDescription
             .filter(JavaLibrary.class)
             .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
 
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     return new AndroidBinary(
         params
             .copyWithExtraDeps(Suppliers.ofInstance(result.getFinalDeps()))
+            .appendExtraDeps(
+                pathResolver.filterBuildRuleInputs(
+                    result.getPackageableCollection().getProguardConfigs()))
             .appendExtraDeps(rulesToExcludeFromDex),
-        new SourcePathResolver(resolver),
+        pathResolver,
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
         (Keystore) keystore,

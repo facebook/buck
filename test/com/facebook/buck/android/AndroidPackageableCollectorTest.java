@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -159,13 +160,18 @@ public class AndroidPackageableCollectorTest {
     assertEquals(
         "Because a native library was declared as a dependency, it should be added to the " +
             "transitive dependencies.",
-        ImmutableSet.of(((NativeLibraryBuildRule) ndkLibrary).getLibraryPath()),
+        ImmutableSet.<SourcePath>of(
+            new PathSourcePath(
+                new FakeProjectFilesystem(),
+                ((NativeLibraryBuildRule) ndkLibrary).getLibraryPath())),
         packageableCollection.getNativeLibsDirectories());
     assertEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
-        ImmutableSet.of(((NativeLibraryBuildRule) prebuiltNativeLibraryBuild)
-            .getLibraryPath()),
+        ImmutableSet.<SourcePath>of(
+            new PathSourcePath(
+                new FakeProjectFilesystem(),
+                ((NativeLibraryBuildRule) prebuiltNativeLibraryBuild).getLibraryPath())),
         packageableCollection.getNativeLibAssetsDirectories());
     assertEquals(
         ImmutableSet.of(new TestSourcePath("debug.pro")),

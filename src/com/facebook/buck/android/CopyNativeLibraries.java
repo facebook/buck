@@ -64,7 +64,7 @@ import javax.annotation.Nullable;
  */
 public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyAppendable {
 
-  private final ImmutableSet<Path> nativeLibDirectories;
+  private final ImmutableSet<SourcePath> nativeLibDirectories;
   @AddToRuleKey
   private final ImmutableSet<TargetCpuType> cpuFilters;
 
@@ -79,7 +79,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
   protected CopyNativeLibraries(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      ImmutableSet<Path> nativeLibDirectories,
+      ImmutableSet<SourcePath> nativeLibDirectories,
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<Pair<TargetCpuType, String>, SourcePath> filteredNativeLibraries) {
@@ -132,8 +132,8 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
     final Path pathToNativeLibs = getPathToNativeLibsDir();
     steps.add(new MakeCleanDirectoryStep(pathToNativeLibs));
 
-    for (Path nativeLibDir : nativeLibDirectories.asList().reverse()) {
-      copyNativeLibrary(nativeLibDir, pathToNativeLibs, cpuFilters, steps);
+    for (SourcePath nativeLibDir : nativeLibDirectories.asList().reverse()) {
+      copyNativeLibrary(getResolver().getPath(nativeLibDir), pathToNativeLibs, cpuFilters, steps);
     }
 
     // Copy in the pre-filtered native libraries.
