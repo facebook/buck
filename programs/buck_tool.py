@@ -456,6 +456,10 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
 
 
 def is_java8():
-    output = check_output(['java', '-version'], stderr=subprocess.STDOUT)
-    version_line = output.strip().splitlines()[0]
-    return re.compile('(openjdk|java) version "1\.8\..*').match(version_line)
+    try:
+        output = check_output(['java', '-version'], stderr=subprocess.STDOUT)
+        version_line = output.strip().splitlines()[0]
+        return re.compile('(openjdk|java) version "1\.8\..*').match(version_line)
+    except CalledProcessError as e:
+        print(e.output, file=sys.stderr)
+        raise e
