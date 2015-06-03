@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.TargetDevice;
@@ -61,6 +63,8 @@ import javax.annotation.Nullable;
 public class TestCommand extends BuildCommand {
 
   public static final String USE_RESULTS_CACHE = "use_results_cache";
+
+  private static final Logger LOG = Logger.get(TestCommand.class);
 
   @Option(name = "--all",
           usage =
@@ -199,6 +203,7 @@ public class TestCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    LOG.debug("Running with arguments %s", getArguments());
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
     if (params.getParser().getParseStartTime().isPresent()) {
@@ -242,6 +247,7 @@ public class TestCommand extends BuildCommand {
         // Otherwise, the user specified specific test targets to build and run, so build a graph
         // around these.
       } else {
+        LOG.debug("Parsing graph for arguments %s", getArguments());
         Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
             .buildTargetGraphForTargetNodeSpecs(
                 parseArgumentsAsTargetNodeSpecs(
@@ -255,6 +261,30 @@ public class TestCommand extends BuildCommand {
                 getEnableProfiling());
         targetGraph = result.getSecond();
         explicitBuildTargets = result.getFirst();
+
+        LOG.debug("Got explicit build targets %s", explicitBuildTargets);
+        ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();
+        for (TargetNode<?> node : targetGraph.getAll(explicitBuildTargets)) {
+          ImmutableSortedSet<BuildTarget> nodeTests = TargetNodes.getTestTargetsForNode(node);
+          if (!nodeTests.isEmpty()) {
+            LOG.debug("Got tests for target %s: %s", node.getBuildTarget(), nodeTests);
+            testTargetsBuilder.addAll(nodeTests);
+          }
+        }
+        ImmutableSet<BuildTarget> testTargets = testTargetsBuilder.build();
+        if (!testTargets.isEmpty()) {
+          LOG.debug("Got related test targets %s, building new target graph...", testTargets);
+          targetGraph = params.getParser().buildTargetGraphForBuildTargets(
+              Iterables.concat(
+                  explicitBuildTargets,
+                  testTargets),
+              parserConfig,
+              params.getBuckEventBus(),
+              params.getConsole(),
+              params.getEnvironment(),
+              getEnableProfiling());
+          LOG.debug("Finished building new target graph with tests.");
+        }
       }
 
     } catch (BuildTargetException | BuildFileParseException e) {

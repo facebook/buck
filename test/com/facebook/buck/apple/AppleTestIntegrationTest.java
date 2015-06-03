@@ -369,6 +369,22 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void buckTestOnLibTargetRunsTestTarget() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_osx_logic_test", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:Lib");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   LibTest"));
+  }
+
+  @Test
   public void successOnOsxAppTestPassing() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -378,6 +394,22 @@ public class AppleTestIntegrationTest {
         TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
         Paths.get("xctool"));
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:AppTest");
+    result.assertSuccess();
+    assertThat(
+        result.getStderr(),
+        containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
+  }
+
+  @Test
+  public void buckTestOnAppTargetRunsTestTarget() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_osx_app_test", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:App");
     result.assertSuccess();
     assertThat(
         result.getStderr(),
