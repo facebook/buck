@@ -41,7 +41,10 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
@@ -65,6 +68,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 
@@ -419,6 +423,74 @@ public class AndroidBinaryGraphEnhancerTest {
         "PackageStringAssets must depend on AaptPackageResources",
         packageStringAssetsRule,
         resourcesFilter);
+  }
+
+  @Test
+  public void testResourceRulesDependOnRulesBehindResourceSourcePaths() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
+    FakeBuildRule resourcesDep =
+        ruleResolver.addToIndex(
+            new FakeBuildRule(
+                BuildTargetFactory.newInstance("//:resource_dep"),
+                pathResolver));
+
+    AndroidResource resource =
+        ruleResolver.addToIndex(
+          new AndroidResource(
+              BuildRuleParamsFactory.createTrivialBuildRuleParams(
+                  BuildTargetFactory.newInstance("//:resources"))
+                  .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
+              pathResolver,
+              ImmutableSortedSet.<BuildRule>of(),
+              new BuildTargetSourcePath(
+                  resourcesDep.getProjectFilesystem(),
+                  resourcesDep.getBuildTarget()),
+              ImmutableSortedSet.<Path>of(),
+              null,
+              null,
+              ImmutableSortedSet.<Path>of(),
+              new TestSourcePath("manifest"),
+              false));
+
+    // set it up.
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams originalParams =
+        new FakeBuildRuleParamsBuilder(target)
+            .setDeps(ImmutableSortedSet.<BuildRule>of(resource))
+            .build();
+    AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        originalParams,
+        ruleResolver,
+        ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
+        FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* locales */ ImmutableSet.<String>of(),
+        new TestSourcePath("AndroidManifest.xml"),
+        AndroidBinary.PackageType.DEBUG,
+        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        /* shouldBuildStringSourceMap */ false,
+        /* shouldPreDex */ false,
+        BuildTargets.getScratchPath(target, "%s/classes.dex"),
+        DexSplitMode.NO_SPLIT,
+        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
+        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        /* skipCrunchPngs */ false,
+        ANDROID_JAVAC_OPTIONS,
+        EnumSet.of(ExopackageMode.SECONDARY_DEX),
+        createNiceMock(Keystore.class),
+        /* buildConfigValues */ BuildConfigFields.empty(),
+        /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
+        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+        MoreExecutors.newDirectExecutorService());
+    graphEnhancer.createAdditionalBuildables();
+
+
+    ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
+    MoreAsserts.assertDepends(
+        "ResourcesFilter must depend on rules behind resources source paths",
+        resourcesFilter,
+        resourcesDep);
   }
 
   private <T extends BuildRule> T findRuleOfType(

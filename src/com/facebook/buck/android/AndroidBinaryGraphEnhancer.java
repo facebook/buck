@@ -174,10 +174,17 @@ public class AndroidBinaryGraphEnhancer {
         !locales.isEmpty();
 
     if (needsResourceFiltering) {
-      BuildRuleParams paramsForResourcesFilter = buildRuleParams.copyWithChanges(
-          createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR),
-          Suppliers.ofInstance(resourceRules),
-          /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+      BuildRuleParams paramsForResourcesFilter =
+          buildRuleParams.copyWithChanges(
+              createBuildTargetWithFlavor(RESOURCES_FILTER_FLAVOR),
+              Suppliers.ofInstance(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(resourceRules)
+                      .addAll(
+                          pathResolver.filterBuildRuleInputs(
+                              resourceDetails.getResourceDirectories()))
+                      .build()),
+              /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
       ResourcesFilter resourcesFilter = new ResourcesFilter(
           paramsForResourcesFilter,
           pathResolver,
