@@ -47,22 +47,22 @@ public class XctoolRunTestsStepTest {
         Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
-        Paths.get("/path/to/output.json"));
+        Paths.get("/path/to/output.json"),
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
                     "/path/to/xctool",
                     "-reporter",
-                    "json-stream:/path/to/output.json",
+                    "json-stream",
                     "-sdk",
                     "iphonesimulator",
                     "run-tests",
                     "-logicTest",
                     "/path/to/Foo.xctest"))
-            // This mimics the hard-coded behavior of ShellStep.
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
-            .setEnvironment(ImmutableMap.<String, String>of())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -88,14 +88,15 @@ public class XctoolRunTestsStepTest {
         ImmutableMap.of(
             Paths.get("/path/to/FooAppTest.xctest"),
             Paths.get("/path/to/Foo.app")),
-        Paths.get("/path/to/output.json"));
+        Paths.get("/path/to/output.json"),
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
                     "/path/to/xctool",
                     "-reporter",
-                    "json-stream:/path/to/output.json",
+                    "json-stream",
                     "-sdk",
                     "iphonesimulator",
                     "-destination",
@@ -103,9 +104,8 @@ public class XctoolRunTestsStepTest {
                     "run-tests",
                     "-appTest",
                     "/path/to/FooAppTest.xctest:/path/to/Foo.app"))
-            // This mimics the hard-coded behavior of ShellStep.
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
-            .setEnvironment(ImmutableMap.<String, String>of())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -132,14 +132,15 @@ public class XctoolRunTestsStepTest {
         ImmutableMap.of(
             Paths.get("/path/to/FooAppTest.xctest"),
             Paths.get("/path/to/Foo.app")),
-        Paths.get("/path/to/output.json"));
+        Paths.get("/path/to/output.json"),
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
                     "/path/to/xctool",
                     "-reporter",
-                    "json-stream:/path/to/output.json",
+                    "json-stream",
                     "-sdk",
                     "iphonesimulator",
                     "-destination",
@@ -149,9 +150,8 @@ public class XctoolRunTestsStepTest {
                     "/path/to/FooLogicTest.xctest",
                     "-appTest",
                     "/path/to/FooAppTest.xctest:/path/to/Foo.app"))
-            // This mimics the hard-coded behavior of ShellStep.
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
-            .setEnvironment(ImmutableMap.<String, String>of())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -175,22 +175,22 @@ public class XctoolRunTestsStepTest {
         Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
-        Paths.get("/path/to/output.json"));
+        Paths.get("/path/to/output.json"),
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
                     "/path/to/xctool",
                     "-reporter",
-                    "json-stream:/path/to/output.json",
+                    "json-stream",
                     "-sdk",
                     "iphonesimulator",
                     "run-tests",
                     "-logicTest",
                     "/path/to/Foo.xctest"))
-            // This mimics the hard-coded behavior of ShellStep.
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
-            .setEnvironment(ImmutableMap.<String, String>of())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(1, "", "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
@@ -214,22 +214,22 @@ public class XctoolRunTestsStepTest {
         Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
-        Paths.get("/path/to/output.json"));
+        Paths.get("/path/to/output.json"),
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
                 ImmutableList.of(
                     "/path/to/xctool",
                     "-reporter",
-                    "json-stream:/path/to/output.json",
+                    "json-stream",
                     "-sdk",
                     "iphonesimulator",
                     "run-tests",
                     "-logicTest",
                     "/path/to/Foo.xctest"))
-            // This mimics the hard-coded behavior of ShellStep.
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
-            .setEnvironment(ImmutableMap.<String, String>of())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(400, "", "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(

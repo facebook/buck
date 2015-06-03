@@ -30,6 +30,7 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
@@ -45,6 +46,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -91,6 +95,32 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
 
   private final String testBundleExtension;
 
+  private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
+
+  private static class AppleTestXctoolStdoutReader
+    implements XctoolRunTestsStep.StdoutReadingCallback {
+
+    private final TestCaseSummariesBuildingXctoolEventHandler xctoolEventHandler;
+
+    public AppleTestXctoolStdoutReader(TestRule.TestReportingCallback testReportingCallback) {
+      this.xctoolEventHandler = new TestCaseSummariesBuildingXctoolEventHandler(
+          testReportingCallback);
+    }
+
+    @Override
+    public void readStdout(InputStream stdout) throws IOException {
+      try (InputStreamReader stdoutReader =
+               new InputStreamReader(stdout, StandardCharsets.UTF_8);
+           BufferedReader bufferedReader = new BufferedReader(stdoutReader)) {
+        XctoolOutputParsing.streamOutputFromReader(bufferedReader, xctoolEventHandler);
+      }
+    }
+
+    public ImmutableList<TestCaseSummary> getTestCaseSummaries() {
+      return xctoolEventHandler.getTestCaseSummaries();
+    }
+  }
+
   AppleTest(
       Optional<Path> xctoolPath,
       Optional<BuildRule> xctoolZipRule,
@@ -123,6 +153,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
         params.getBuildTarget(),
         "__xctool_%s__");
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
+    this.xctoolStdoutReader = Optional.absent();
   }
 
   /**
@@ -160,7 +191,8 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       ExecutionContext executionContext,
       boolean isDryRun,
       boolean isShufflingTests,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      TestRule.TestReportingCallback testReportingCallback) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path resolvedTestBundleDirectory = executionContext.getProjectFilesystem().resolve(
         Preconditions.checkNotNull(testBundle.getPathToOutput()));
@@ -215,6 +247,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
         xctoolBinaryPath = xctoolPath.get();
       }
 
+      xctoolStdoutReader = Optional.of(new AppleTestXctoolStdoutReader(testReportingCallback));
       steps.add(
           new XctoolRunTestsStep(
               xctoolBinaryPath,
@@ -222,7 +255,8 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
               simulatorName,
               logicTestPathsBuilder.build(),
               appTestPathsToHostAppsBuilder.build(),
-              resolvedTestOutputPath));
+              resolvedTestOutputPath,
+              xctoolStdoutReader));
     } else {
       steps.add(
           new XctestRunTestsStep(
@@ -244,17 +278,30 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     return new Callable<TestResults>() {
       @Override
       public TestResults call() throws Exception {
-        Path resolvedOutputPath = executionContext.getProjectFilesystem().resolve(testOutputPath);
-        try (BufferedReader reader =
-            Files.newBufferedReader(resolvedOutputPath, StandardCharsets.UTF_8)) {
-          return new TestResults(
-            getBuildTarget(),
-            useXctest ?
-                XctestOutputParsing.parseOutputFromReader(reader) :
-                XctoolOutputParsing.parseOutputFromReader(reader),
-            contacts,
-            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+        List<TestCaseSummary> testCaseSummaries;
+        if (xctoolStdoutReader.isPresent()) {
+          // We've already run the tests with 'xctool' and parsed
+          // their output; no need to parse the same output again.
+          testCaseSummaries = xctoolStdoutReader.get().getTestCaseSummaries();
+        } else {
+          Path resolvedOutputPath = executionContext.getProjectFilesystem().resolve(testOutputPath);
+          try (BufferedReader reader =
+              Files.newBufferedReader(resolvedOutputPath, StandardCharsets.UTF_8)) {
+            if (useXctest) {
+              testCaseSummaries = XctestOutputParsing.parseOutputFromReader(reader);
+            } else {
+              TestCaseSummariesBuildingXctoolEventHandler xctoolEventHandler =
+                  new TestCaseSummariesBuildingXctoolEventHandler(NOOP_REPORTING_CALLBACK);
+              XctoolOutputParsing.streamOutputFromReader(reader, xctoolEventHandler);
+              testCaseSummaries = xctoolEventHandler.getTestCaseSummaries();
+            }
+          }
         }
+        return new TestResults(
+          getBuildTarget(),
+          testCaseSummaries,
+          contacts,
+          FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
       }
     };
   }

@@ -199,6 +199,7 @@ java_immutables_library(
     'TargetGraphAndTargets.java',
     'TestRule.java',
     'TestRunEvent.java',
+    'TestSummaryEvent.java',
   ],
   deps = [
     ':build_rule',

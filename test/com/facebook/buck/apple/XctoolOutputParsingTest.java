@@ -16,154 +16,191 @@
 
 package com.facebook.buck.apple;
 
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.test.TestCaseSummary;
-import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
-import org.hamcrest.Matcher;
 import org.junit.Test;
 
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class XctoolOutputParsingTest {
 
-  @Test
-  public void noTestCasesAndOcunitFailureReturnsFailedTestResultSummary() throws Exception {
-    Path jsonPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctool-output/ocunit-failure.json");
-    try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
-      List<TestCaseSummary> summaries = XctoolOutputParsing.parseOutputFromReader(jsonReader);
-      assertThat(summaries, hasSize(1));
-      Matcher<TestResultSummary> summaryMatcher =
-          allOf(
-              hasProperty(
-                  "type",
-                  equalTo(ResultType.FAILURE)),
-              hasProperty(
-                  "message",
-                  containsString(
-                      "dyld: app was built for iOS 8.3 which is newer than this simulator 8.1")));
-      assertThat(
-          summaries.get(0).getTestResults(),
-          contains(summaryMatcher));
-    }
+  private static final double EPSILON = 1e-6;
+
+  private static XctoolOutputParsing.XctoolEventCallback eventCallbackAddingEventsToList(
+      final List<Object> streamedObjects) {
+    return new XctoolOutputParsing.XctoolEventCallback() {
+        @Override
+        public void handleBeginOcunitEvent(XctoolOutputParsing.BeginOcunitEvent event) {
+          streamedObjects.add(event);
+        }
+
+        @Override
+        public void handleEndOcunitEvent(XctoolOutputParsing.EndOcunitEvent event) {
+          streamedObjects.add(event);
+        }
+
+        @Override
+        public void handleBeginTestSuiteEvent(XctoolOutputParsing.BeginTestSuiteEvent event) {
+          streamedObjects.add(event);
+        }
+
+        @Override
+        public void handleEndTestSuiteEvent(XctoolOutputParsing.EndTestSuiteEvent event) {
+          streamedObjects.add(event);
+        }
+
+        @Override
+        public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
+          streamedObjects.add(event);
+        }
+
+        @Override
+        public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {
+          streamedObjects.add(event);
+        }};
   }
 
   @Test
-  @SuppressWarnings("unchecked")
-  public void mixedPassAndFailReturnsMixedResultSummary() throws Exception {
+  public void streamingSimpleSuccess() throws Exception {
     Path jsonPath = TestDataHelper.getTestDataDirectory(this)
-        .resolve("xctool-output/mixed-pass-and-fail.json");
+        .resolve("xctool-output/simple-success.json");
+    final List<Object> streamedObjects = new ArrayList<>();
     try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
-      List<TestCaseSummary> summaries = XctoolOutputParsing.parseOutputFromReader(jsonReader);
-      assertThat(summaries, hasSize(2));
-
-      Matcher<TestResultSummary> isOtherTestsTestSomethingSuccess =
-          allOf(
-              hasProperty("testCaseName", equalTo("OtherTests")),
-              hasProperty("testName", equalTo("-[OtherTests testSomething]")),
-              hasProperty("type", equalTo(ResultType.SUCCESS)),
-              hasProperty("time", equalTo(3L)),
-              hasProperty("message", nullValue(String.class)),
-              hasProperty("stacktrace", nullValue(String.class)),
-              hasProperty("stdOut", nullValue(String.class)),
-              hasProperty("stdErr", nullValue(String.class)));
-
-      List<TestResultSummary> otherTestsResults = summaries.get(0).getTestResults();
-      assertThat(otherTestsResults, contains(isOtherTestsTestSomethingSuccess));
-
-      Matcher<TestResultSummary> isSomeTestsTestBacktraceOutputIsCaptured =
-          allOf(
-              hasProperty("testCaseName", equalTo("SomeTests")),
-              hasProperty("testName", equalTo("-[SomeTests testBacktraceOutputIsCaptured]")),
-              hasProperty("type", equalTo(ResultType.SUCCESS)),
-              hasProperty("time", equalTo(0L)),
-              hasProperty("message", nullValue(String.class)),
-              hasProperty("stacktrace", nullValue(String.class)),
-              hasProperty("stdOut", containsString("-[SenTestCase performTest:]")),
-              hasProperty("stdErr", nullValue(String.class)));
-
-      Matcher<TestResultSummary> isSomeTestsTestOutputMerging =
-          allOf(
-              hasProperty("testCaseName", equalTo("SomeTests")),
-              hasProperty("testName", equalTo("-[SomeTests testOutputMerging]")),
-              hasProperty("type", equalTo(ResultType.SUCCESS)),
-              hasProperty("time", equalTo(0L)),
-              hasProperty("message", nullValue(String.class)),
-              hasProperty("stacktrace", nullValue(String.class)),
-              hasProperty("stdOut", containsString("stdout-line1\nstderr-line1\n")),
-              hasProperty("stdErr", nullValue(String.class)));
-
-      Matcher<TestResultSummary> isSomeTestsTestPrintSDK =
-          allOf(
-              hasProperty("testCaseName", equalTo("SomeTests")),
-              hasProperty("testName", equalTo("-[SomeTests testPrintSDK]")),
-              hasProperty("type", equalTo(ResultType.SUCCESS)),
-              hasProperty("time", equalTo(1L)),
-              hasProperty("message", nullValue(String.class)),
-              hasProperty("stacktrace", nullValue(String.class)),
-              hasProperty("stdOut", containsString("SDK: 6.1")),
-              hasProperty("stdErr", nullValue(String.class)));
-
-      Matcher<TestResultSummary> isSomeTestsTestStream =
-          allOf(
-              hasProperty("testCaseName", equalTo("SomeTests")),
-              hasProperty("testName", equalTo("-[SomeTests testStream]")),
-              hasProperty("type", equalTo(ResultType.SUCCESS)),
-              hasProperty("time", equalTo(754L)),
-              hasProperty("message", nullValue(String.class)),
-              hasProperty("stacktrace", nullValue(String.class)),
-              hasProperty("stdOut", containsString(">>>> i = 0")),
-              hasProperty("stdErr", nullValue(String.class)));
-
-      Matcher<TestResultSummary> isSomeTestsTestWillFail =
-          allOf(
-              hasProperty("testCaseName", equalTo("SomeTests")),
-              hasProperty("testName", equalTo("-[SomeTests testWillFail]")),
-              hasProperty("type", equalTo(ResultType.FAILURE)),
-              hasProperty("time", equalTo(0L)),
-              hasProperty(
-                  "message",
-                  containsString("SomeTests.m:40: 'a' should be equal to 'b'")),
-              hasProperty("stacktrace", nullValue(String.class)),
-              hasProperty("stdOut", nullValue(String.class)),
-              hasProperty("stdErr", nullValue(String.class)));
-
-      Matcher<TestResultSummary> isSomeTestsTestWillPass =
-          allOf(
-              hasProperty("testCaseName", equalTo("SomeTests")),
-              hasProperty("testName", equalTo("-[SomeTests testWillPass]")),
-              hasProperty("type", equalTo(ResultType.SUCCESS)),
-              hasProperty("time", equalTo(0L)),
-              hasProperty("message", nullValue(String.class)),
-              hasProperty("stacktrace", nullValue(String.class)),
-              hasProperty("stdOut", nullValue(String.class)),
-              hasProperty("stdErr", nullValue(String.class)));
-
-      List<TestResultSummary> someTestsResults = summaries.get(1).getTestResults();
-      assertThat(
-          someTestsResults,
-          contains(
-              isSomeTestsTestBacktraceOutputIsCaptured,
-              isSomeTestsTestOutputMerging,
-              isSomeTestsTestPrintSDK,
-              isSomeTestsTestStream,
-              isSomeTestsTestWillFail,
-              isSomeTestsTestWillPass));
+      XctoolOutputParsing.streamOutputFromReader(
+          jsonReader,
+          eventCallbackAddingEventsToList(streamedObjects));
     }
+    assertThat(streamedObjects, hasSize(6));
+
+    assertThat(streamedObjects.get(0), instanceOf(XctoolOutputParsing.BeginOcunitEvent.class));
+    XctoolOutputParsing.BeginOcunitEvent beginOcunitEvent = (XctoolOutputParsing.BeginOcunitEvent)
+        streamedObjects.get(0);
+    assertThat(beginOcunitEvent.timestamp, closeTo(1432065854.07812, EPSILON));
+
+    assertThat(streamedObjects.get(1), instanceOf(XctoolOutputParsing.BeginTestSuiteEvent.class));
+    XctoolOutputParsing.BeginTestSuiteEvent beginTestSuiteEvent =
+        (XctoolOutputParsing.BeginTestSuiteEvent) streamedObjects.get(1);
+    assertThat(beginTestSuiteEvent.timestamp, closeTo(1432065854.736793, EPSILON));
+    assertThat(beginTestSuiteEvent.suite, equalTo("Toplevel Test Suite"));
+
+    assertThat(streamedObjects.get(2), instanceOf(XctoolOutputParsing.BeginTestEvent.class));
+    XctoolOutputParsing.BeginTestEvent beginTestEvent =
+        (XctoolOutputParsing.BeginTestEvent) streamedObjects.get(2);
+    assertThat(beginTestEvent.timestamp, closeTo(1432065854.739917, EPSILON));
+    assertThat(beginTestEvent.test, equalTo("-[FooXCTest testTwoPlusTwoEqualsFour]"));
+    assertThat(beginTestEvent.className, equalTo("FooXCTest"));
+    assertThat(beginTestEvent.methodName, equalTo("testTwoPlusTwoEqualsFour"));
+
+    assertThat(streamedObjects.get(3), instanceOf(XctoolOutputParsing.EndTestEvent.class));
+    XctoolOutputParsing.EndTestEvent endTestEvent =
+        (XctoolOutputParsing.EndTestEvent) streamedObjects.get(3);
+    assertThat(endTestEvent.timestamp, closeTo(1432065854.740184, EPSILON));
+    assertThat(endTestEvent.test, equalTo("-[FooXCTest testTwoPlusTwoEqualsFour]"));
+    assertThat(endTestEvent.className, equalTo("FooXCTest"));
+    assertThat(endTestEvent.methodName, equalTo("testTwoPlusTwoEqualsFour"));
+    assertThat(endTestEvent.succeeded, is(true));
+    assertThat(endTestEvent.exceptions, empty());
+    assertThat(endTestEvent.totalDuration, closeTo(0.003052949905395508, EPSILON));
+
+    assertThat(streamedObjects.get(4), instanceOf(XctoolOutputParsing.EndTestSuiteEvent.class));
+    XctoolOutputParsing.EndTestSuiteEvent endTestSuiteEvent =
+        (XctoolOutputParsing.EndTestSuiteEvent) streamedObjects.get(4);
+    assertThat(endTestSuiteEvent.timestamp, closeTo(1432065854.740343, EPSILON));
+    assertThat(endTestSuiteEvent.suite, equalTo("Toplevel Test Suite"));
+    assertThat(endTestSuiteEvent.testCaseCount, equalTo(1));
+    assertThat(endTestSuiteEvent.totalFailureCount, equalTo(0));
+    assertThat(endTestSuiteEvent.unexpectedExceptionCount, equalTo(0));
+    assertThat(endTestSuiteEvent.totalDuration, closeTo(0.003550052642822266, EPSILON));
+
+    assertThat(streamedObjects.get(5), instanceOf(XctoolOutputParsing.EndOcunitEvent.class));
+    XctoolOutputParsing.EndOcunitEvent endOcunitEvent =
+        (XctoolOutputParsing.EndOcunitEvent) streamedObjects.get(5);
+    assertThat(endOcunitEvent.timestamp, closeTo(1432065854.806839, EPSILON));
+    assertThat(endOcunitEvent.message, nullValue(String.class));
+    assertThat(endOcunitEvent.succeeded, is(true));
+  }
+
+  @Test
+  public void streamingSimpleFailure() throws Exception {
+    Path jsonPath = TestDataHelper.getTestDataDirectory(this)
+        .resolve("xctool-output/simple-failure.json");
+    final List<Object> streamedObjects = new ArrayList<>();
+    try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
+      XctoolOutputParsing.streamOutputFromReader(
+          jsonReader,
+          eventCallbackAddingEventsToList(streamedObjects));
+    }
+    assertThat(streamedObjects, hasSize(6));
+
+    assertThat(streamedObjects.get(0), instanceOf(XctoolOutputParsing.BeginOcunitEvent.class));
+    XctoolOutputParsing.BeginOcunitEvent beginOcunitEvent = (XctoolOutputParsing.BeginOcunitEvent)
+        streamedObjects.get(0);
+    assertThat(beginOcunitEvent.timestamp, closeTo(1432065859.006029, EPSILON));
+
+    assertThat(streamedObjects.get(1), instanceOf(XctoolOutputParsing.BeginTestSuiteEvent.class));
+    XctoolOutputParsing.BeginTestSuiteEvent beginTestSuiteEvent =
+        (XctoolOutputParsing.BeginTestSuiteEvent) streamedObjects.get(1);
+    assertThat(beginTestSuiteEvent.timestamp, closeTo(1432065859.681727, EPSILON));
+    assertThat(beginTestSuiteEvent.suite, equalTo("Toplevel Test Suite"));
+
+    assertThat(streamedObjects.get(2), instanceOf(XctoolOutputParsing.BeginTestEvent.class));
+    XctoolOutputParsing.BeginTestEvent beginTestEvent =
+        (XctoolOutputParsing.BeginTestEvent) streamedObjects.get(2);
+    assertThat(beginTestEvent.timestamp, closeTo(1432065859.684965, EPSILON));
+    assertThat(beginTestEvent.test, equalTo("-[FooXCTest testTwoPlusTwoEqualsFive]"));
+    assertThat(beginTestEvent.className, equalTo("FooXCTest"));
+    assertThat(beginTestEvent.methodName, equalTo("testTwoPlusTwoEqualsFive"));
+
+    assertThat(streamedObjects.get(3), instanceOf(XctoolOutputParsing.EndTestEvent.class));
+    XctoolOutputParsing.EndTestEvent endTestEvent =
+        (XctoolOutputParsing.EndTestEvent) streamedObjects.get(3);
+    assertThat(endTestEvent.timestamp, closeTo(1432065859.685524, EPSILON));
+    assertThat(endTestEvent.totalDuration, closeTo(0.003522038459777832, EPSILON));
+    assertThat(endTestEvent.test, equalTo("-[FooXCTest testTwoPlusTwoEqualsFive]"));
+    assertThat(endTestEvent.className, equalTo("FooXCTest"));
+    assertThat(endTestEvent.methodName, equalTo("testTwoPlusTwoEqualsFive"));
+    assertThat(endTestEvent.succeeded, is(false));
+    assertThat(endTestEvent.exceptions, hasSize(1));
+
+    XctoolOutputParsing.TestException testException = endTestEvent.exceptions.get(0);
+    assertThat(testException.lineNumber, equalTo(9));
+    assertThat(testException.filePathInProject, equalTo("FooXCTest.m"));
+    assertThat(
+        testException.reason,
+        equalTo(
+            "((2 + 2) equal to (5)) failed: (\"4\") is not equal to (\"5\") - Two plus two " +
+            "equals five"));
+
+    assertThat(streamedObjects.get(4), instanceOf(XctoolOutputParsing.EndTestSuiteEvent.class));
+    XctoolOutputParsing.EndTestSuiteEvent endTestSuiteEvent =
+        (XctoolOutputParsing.EndTestSuiteEvent) streamedObjects.get(4);
+    assertThat(endTestSuiteEvent.timestamp, closeTo(1432065859.685689, EPSILON));
+    assertThat(endTestSuiteEvent.suite, equalTo("Toplevel Test Suite"));
+    assertThat(endTestSuiteEvent.testCaseCount, equalTo(1));
+    assertThat(endTestSuiteEvent.totalFailureCount, equalTo(1));
+    assertThat(endTestSuiteEvent.unexpectedExceptionCount, equalTo(0));
+    assertThat(endTestSuiteEvent.totalDuration, closeTo(0.003962039947509766, EPSILON));
+
+    assertThat(streamedObjects.get(5), instanceOf(XctoolOutputParsing.EndOcunitEvent.class));
+    XctoolOutputParsing.EndOcunitEvent endOcunitEvent =
+        (XctoolOutputParsing.EndOcunitEvent) streamedObjects.get(5);
+    assertThat(endOcunitEvent.timestamp, closeTo(1432065859.751992, EPSILON));
+    assertThat(endOcunitEvent.message, nullValue(String.class));
+    assertThat(endOcunitEvent.succeeded, is(false));
   }
 }

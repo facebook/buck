@@ -19,18 +19,49 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
+import java.util.List;
 
 /**
  * A {@link BuildRule} that is designed to run tests.
  */
 public interface TestRule extends HasBuildTarget {
+
+  /**
+   * Callbacks to invoke during the test run to report information
+   * about test cases and/or tests.
+   */
+  public interface TestReportingCallback {
+    void testsDidBegin();
+    void testDidBegin(String testCaseName, String testName);
+    void testDidEnd(TestResultSummary testResultSummary);
+    void testsDidEnd(List<TestCaseSummary> testCaseSummaries);
+  }
+
+  /**
+   * Implementation of {@link TestReportingCallback} which does nothing.
+   */
+  public static final TestReportingCallback NOOP_REPORTING_CALLBACK = new TestReportingCallback() {
+    @Override
+    public void testsDidBegin() { }
+
+    @Override
+    public void testDidBegin(String testCaseName, String testName) { }
+
+    @Override
+    public void testDidEnd(TestResultSummary testResultSummary) { }
+
+    @Override
+    public void testsDidEnd(List<TestCaseSummary> testCaseSummaries) { }
+  };
 
   /**
    * Returns a boolean indicating whether the files that contain the test results for this rule are
@@ -64,7 +95,8 @@ public interface TestRule extends HasBuildTarget {
       ExecutionContext executionContext,
       boolean isDryRun,
       boolean isShufflingTests,
-      TestSelectorList testSelectorList);
+      TestSelectorList testSelectorList,
+      TestReportingCallback testReportingCallback);
 
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,

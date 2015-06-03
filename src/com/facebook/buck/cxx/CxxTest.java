@@ -104,7 +104,8 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
       ExecutionContext executionContext,
       boolean isDryRun,
       boolean isShufflingTests,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      TestRule.TestReportingCallback testReportingCallback) {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getPathToTestOutputDirectory()),
         new TouchStep(getPathToTestResults()),

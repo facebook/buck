@@ -208,7 +208,8 @@ public class DTest extends DLinkable implements TestRule {
       ExecutionContext executionContext,
       boolean isDryRun,
       boolean isShufflingTests,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      TestRule.TestReportingCallback testReportingCallback) {
     if (isDryRun) {
       return ImmutableList.of();
     } else {

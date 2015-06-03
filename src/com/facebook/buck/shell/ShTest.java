@@ -101,7 +101,8 @@ public class ShTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
       ExecutionContext executionContext,
       boolean isDryRun,
       boolean isShufflingTests,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      TestRule.TestReportingCallback testReportingCallback) {
     if (isDryRun) {
       // Stop now if we are a dry-run: sh-tests have no concept of dry-run inside the test itself.
       return ImmutableList.of();

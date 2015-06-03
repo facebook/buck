@@ -1,0 +1,10 @@
+{"scheme":null,"workspace":null,"timestamp":1432065858.25837,"event":"begin-action","project":null,"name":"run-tests"}
+{"message":"Collecting info for testables...","timestamp":1432065858.258645,"level":"Info","event":"begin-status"}
+{"message":"Collecting info for testables...","timestamp":1432065859.00568,"level":"Info","event":"end-status"}
+{"bundleName":"__test_bundle_foo__.xctest","deviceName":"iPhone 5s","event":"begin-ocunit","targetName":"\/private\/var\/folders\/6w\/n0_wyfrd1tx_wn69k_33sh64vkm1bl\/T\/junit5669773977606195942\/buck-out\/bin\/__test_bundle_foo__.xctest","testType":"logic-test","sdkName":"iphonesimulator8.3","timestamp":1432065859.006029}
+{"event":"begin-test-suite","suite":"Toplevel Test Suite","timestamp":1432065859.681727}
+{"test":"-[FooXCTest testTwoPlusTwoEqualsFive]","className":"FooXCTest","timestamp":1432065859.684965,"event":"begin-test","methodName":"testTwoPlusTwoEqualsFive"}
+{"result":"failure","output":"","test":"-[FooXCTest testTwoPlusTwoEqualsFive]","className":"FooXCTest","event":"end-test","methodName":"testTwoPlusTwoEqualsFive","succeeded":false,"exceptions":[{"lineNumber":9,"filePathInProject":"FooXCTest.m","reason":"((2 + 2) equal to (5)) failed: (\"4\") is not equal to (\"5\") - Two plus two equals five"}],"totalDuration":0.003522038459777832,"timestamp":1432065859.685524}
+{"suite":"Toplevel Test Suite","testCaseCount":1,"event":"end-test-suite","totalFailureCount":1,"totalDuration":0.003962039947509766,"unexpectedExceptionCount":0,"timestamp":1432065859.685689,"testDuration":0.003522038459777832}
+{"bundleName":"__test_bundle_foo__.xctest","deviceName":"iPhone 5s","succeeded":false,"event":"end-ocunit","message":null,"targetName":"\/private\/var\/folders\/6w\/n0_wyfrd1tx_wn69k_33sh64vkm1bl\/T\/junit5669773977606195942\/buck-out\/bin\/__test_bundle_foo__.xctest","testType":"logic-test","sdkName":"iphonesimulator8.3","timestamp":1432065859.751992}
+{"scheme":null,"succeeded":false,"event":"end-action","workspace":null,"project":null,"duration":1.493787823012099,"timestamp":1432065859.752166,"name":"run-tests"}

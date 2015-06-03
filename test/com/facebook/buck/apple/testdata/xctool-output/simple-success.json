@@ -1,0 +1,10 @@
+{"scheme":null,"workspace":null,"timestamp":1432065853.405789,"event":"begin-action","project":null,"name":"run-tests"}
+{"message":"Collecting info for testables...","timestamp":1432065853.406129,"level":"Info","event":"begin-status"}
+{"message":"Collecting info for testables...","timestamp":1432065854.077704,"level":"Info","event":"end-status"}
+{"bundleName":"__test_bundle_foo__.xctest","deviceName":"iPhone 5s","event":"begin-ocunit","targetName":"\/private\/var\/folders\/6w\/n0_wyfrd1tx_wn69k_33sh64vkm1bl\/T\/junit152029622976256544\/buck-out\/bin\/__test_bundle_foo__.xctest","testType":"logic-test","sdkName":"iphonesimulator8.3","timestamp":1432065854.07812}
+{"event":"begin-test-suite","suite":"Toplevel Test Suite","timestamp":1432065854.736793}
+{"test":"-[FooXCTest testTwoPlusTwoEqualsFour]","className":"FooXCTest","timestamp":1432065854.739917,"event":"begin-test","methodName":"testTwoPlusTwoEqualsFour"}
+{"result":"success","output":"","test":"-[FooXCTest testTwoPlusTwoEqualsFour]","className":"FooXCTest","event":"end-test","methodName":"testTwoPlusTwoEqualsFour","succeeded":true,"exceptions":[],"totalDuration":0.003052949905395508,"timestamp":1432065854.740184}
+{"suite":"Toplevel Test Suite","testCaseCount":1,"event":"end-test-suite","totalFailureCount":0,"totalDuration":0.003550052642822266,"unexpectedExceptionCount":0,"timestamp":1432065854.740343,"testDuration":0.003052949905395508}
+{"bundleName":"__test_bundle_foo__.xctest","deviceName":"iPhone 5s","succeeded":true,"event":"end-ocunit","message":null,"targetName":"\/private\/var\/folders\/6w\/n0_wyfrd1tx_wn69k_33sh64vkm1bl\/T\/junit152029622976256544\/buck-out\/bin\/__test_bundle_foo__.xctest","testType":"logic-test","sdkName":"iphonesimulator8.3","timestamp":1432065854.806839}
+{"scheme":null,"succeeded":true,"event":"end-action","workspace":null,"project":null,"duration":1.401253469986841,"timestamp":1432065854.80705,"name":"run-tests"}

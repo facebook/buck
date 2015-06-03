@@ -16,35 +16,46 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.io.TeeInputStream;
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.io.ByteStreams;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Map;
 
 /**
- * {@link ShellStep} implementation which runs {@code xctool} on
- * one or more logic tests and/or application tests (each paired with
- * a host application).
+ * Runs {@code xctool} on one or more logic tests and/or application
+ * tests (each paired with a host application).
  *
- * The output is written in streaming JSON format to {@code outputPath}
- * and can be parsed by {@link XctoolOutputParsing}.
+ * The output is written in streaming JSON format to stdout and is
+ * parsed by {@link XctoolOutputParsing}.
  */
-public class XctoolRunTestsStep extends ShellStep {
+public class XctoolRunTestsStep implements Step {
 
-  private final Path xctoolPath;
-  private final String sdkName;
-  private final Optional<String> simulatorName;
-  private final ImmutableSet<Path> logicTestBundlePaths;
-  private final ImmutableMap<Path, Path> appTestBundleToHostAppPaths;
+  public interface StdoutReadingCallback {
+    void readStdout(InputStream stdout) throws IOException;
+  }
+
+  private static final Logger LOG = Logger.get(XctoolRunTestsStep.class);
+
+  private final ImmutableList<String> command;
   private final Path outputPath;
+  private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
 
   public XctoolRunTestsStep(
       Path xctoolPath,
@@ -52,7 +63,8 @@ public class XctoolRunTestsStep extends ShellStep {
       Optional<String> simulatorName,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
-      Path outputPath) {
+      Path outputPath,
+      Optional<? extends StdoutReadingCallback> stdoutReadingCallback) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty() &&
           appTestBundleToHostAppPaths.isEmpty()),
@@ -73,12 +85,14 @@ public class XctoolRunTestsStep extends ShellStep {
         AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS,
         appTestBundleToHostAppPaths.keySet());
 
-    this.xctoolPath = xctoolPath;
-    this.sdkName = sdkName;
-    this.simulatorName = simulatorName;
-    this.logicTestBundlePaths = ImmutableSet.copyOf(logicTestBundlePaths);
-    this.appTestBundleToHostAppPaths = ImmutableMap.copyOf(appTestBundleToHostAppPaths);
+    this.command = createCommandArgs(
+        xctoolPath,
+        sdkName,
+        simulatorName,
+        logicTestBundlePaths,
+        appTestBundleToHostAppPaths);
     this.outputPath = outputPath;
+    this.stdoutReadingCallback = stdoutReadingCallback;
   }
 
   @Override
@@ -87,11 +101,71 @@ public class XctoolRunTestsStep extends ShellStep {
   }
 
   @Override
-  protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+  public int execute(ExecutionContext context) throws InterruptedException {
+    ProcessExecutorParams processExecutorParams = ProcessExecutorParams.builder()
+        .setCommand(command)
+        .setDirectory(context.getProjectDirectoryRoot().toAbsolutePath().toFile())
+        .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+        .build();
+
+    try {
+      LOG.debug("Running command: %s", processExecutorParams);
+
+      // Start the process.
+      ProcessExecutor.LaunchedProcess launchedProcess =
+          context.getProcessExecutor().launchProcess(processExecutorParams);
+
+      int exitCode;
+      try (OutputStream outputStream = context.getProjectFilesystem().newFileOutputStream(
+               outputPath);
+           TeeInputStream stdoutWrapperStream = new TeeInputStream(
+               launchedProcess.getInputStream(), outputStream)) {
+        if (stdoutReadingCallback.isPresent()) {
+          // The caller is responsible for reading all the data, which TeeInputStream will
+          // copy to outputStream.
+          stdoutReadingCallback.get().readStdout(stdoutWrapperStream);
+        } else {
+          // Nobody's going to read from stdoutWrapperStream, so close it and copy
+          // the process's stdout to outputPath directly.
+          stdoutWrapperStream.close();
+          ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+        }
+        exitCode = waitForProcessAndGetExitCode(context.getProcessExecutor(), launchedProcess);
+        LOG.debug("Finished running command, exit code %d", exitCode);
+      } finally {
+        context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
+        context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
+      }
+
+      if (exitCode != 0) {
+        LOG.warn("%s exited with error %d", command, exitCode);
+      }
+
+      return exitCode;
+
+    } catch (Exception e) {
+      LOG.error(e, "Exception while running %s", command);
+      MoreThrowables.propagateIfInterrupt(e);
+      context.getConsole().printBuildFailureWithStacktrace(e);
+      return 1;
+    }
+  }
+
+  @Override
+  public String getDescription(ExecutionContext context) {
+    return Joiner.on(' ').join(Iterables.transform(command, Escaper.SHELL_ESCAPER));
+  }
+
+  private static ImmutableList<String> createCommandArgs(
+      Path xctoolPath,
+      String sdkName,
+      Optional<String> simulatorName,
+      Collection<Path> logicTestBundlePaths,
+      Map<Path, Path> appTestBundleToHostAppPaths) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(xctoolPath.toString());
     args.add("-reporter");
-    args.add("json-stream:" + outputPath.toString());
+    args.add("json-stream");
     args.add("-sdk", sdkName);
     if (simulatorName.isPresent()) {
       args.add("-destination");
@@ -110,9 +184,11 @@ public class XctoolRunTestsStep extends ShellStep {
     return args.build();
   }
 
-  @Override
-  protected int getExitCodeFromResult(ExecutionContext context, ProcessExecutor.Result result) {
-    int processExitCode = result.getExitCode();
+  private static int waitForProcessAndGetExitCode(
+      ProcessExecutor processExecutor,
+      ProcessExecutor.LaunchedProcess launchedProcess)
+      throws InterruptedException {
+    int processExitCode = processExecutor.waitForLaunchedProcess(launchedProcess);
     if (processExitCode == 0 || processExitCode == 1) {
       // Test failure is denoted by xctool returning 1. Unfortunately, there's no way
       // to distinguish an internal xctool error from a test failure:

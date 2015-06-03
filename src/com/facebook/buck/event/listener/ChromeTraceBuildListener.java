@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
@@ -437,6 +438,28 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         event.getPhase(),
         event.getProperties(),
         event);
+  }
+
+  @Subscribe
+  public void testStartedEvent(TestSummaryEvent.Started started) {
+    writeChromeTraceEvent("buck",
+        "test",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "test_case_name", started.getTestCaseName(),
+            "test_name", started.getTestName()),
+        started);
+  }
+
+  @Subscribe
+  public void testFinishedEvent(TestSummaryEvent.Finished finished) {
+    writeChromeTraceEvent("buck",
+        "test",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "test_case_name", finished.getTestCaseName(),
+            "test_name", finished.getTestName()),
+        finished);
   }
 
   private void writeChromeTraceEvent(String category,

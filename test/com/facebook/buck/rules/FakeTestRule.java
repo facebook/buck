@@ -107,7 +107,8 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
       ExecutionContext executionContext,
       boolean isDryRun,
       boolean isShufflingTests,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      TestRule.TestReportingCallback testReportingCallback) {
     return testSteps;
   }
 

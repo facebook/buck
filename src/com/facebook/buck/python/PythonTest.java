@@ -98,7 +98,8 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
       ExecutionContext executionContext,
       boolean isDryRun,
       boolean isShufflingTests,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      TestRule.TestReportingCallback testReportingCallback) {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getPathToTestOutputDirectory()),
         getRunTestStep());

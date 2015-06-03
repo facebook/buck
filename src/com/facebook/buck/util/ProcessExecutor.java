@@ -18,14 +18,18 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Set;
 
@@ -55,6 +59,42 @@ public class ProcessExecutor {
      * to aid in debugging.
      */
     IS_SILENT,
+  }
+
+  /**
+   * Represents a running process returned by {@link #launchProcess(ProcessExecutorParams)}.
+   */
+  public interface LaunchedProcess {
+    OutputStream getOutputStream();
+    InputStream getInputStream();
+    InputStream getErrorStream();
+  }
+
+  /**
+   * Wraps a {@link Process} and exposes only its I/O streams, so callers have to pass it back
+   * to this class.
+   */
+  private static class LaunchedProcessImpl implements LaunchedProcess {
+    public final Process process;
+
+    public LaunchedProcessImpl(Process process) {
+      this.process = process;
+    }
+
+    @Override
+    public OutputStream getOutputStream() {
+      return process.getOutputStream();
+    }
+
+    @Override
+    public InputStream getInputStream() {
+      return process.getInputStream();
+    }
+
+    @Override
+    public InputStream getErrorStream() {
+      return process.getErrorStream();
+    }
   }
 
   private final PrintStream stdOutStream;
@@ -100,14 +140,19 @@ public class ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs) throws InterruptedException, IOException {
-    return execute(launchProcess(params), options, stdin, timeOutMs);
+    return execute(launchProcessInternal(params), options, stdin, timeOutMs);
   }
 
   /**
    * Launches a {@link java.lang.Process} given {@link ProcessExecutorParams}.
    */
-  Process launchProcess(ProcessExecutorParams params) throws IOException {
+  public LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
+    Process process = launchProcessInternal(params);
+    return new LaunchedProcessImpl(process);
+  }
 
+  @VisibleForTesting
+  Process launchProcessInternal(ProcessExecutorParams params) throws IOException {
     ImmutableList<String> command = params.getCommand();
     /* On Windows, we need to escape the arguments we hand off to `CreateProcess`.  See
      * http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
@@ -134,6 +179,27 @@ public class ProcessExecutor {
       pb.redirectError(params.getRedirectError().get());
     }
     return pb.start();
+  }
+
+  /**
+   * Terminates a process previously returned by {@link #launchProcess(ProcessExecutorParams)}.
+   */
+  public void destroyLaunchedProcess(LaunchedProcess launchedProcess) {
+    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
+    ((LaunchedProcessImpl) launchedProcess).process.destroy();
+  }
+
+  /**
+   * Blocks while waiting for a process previously returned by
+   * {@link #launchProcess(ProcessExecutorParams)} to exit, then returns the
+   * exit code of the process.
+   *
+   * After this method returns, the {@code launchedProcess} can no longer be passed
+   * to any methods of this object.
+   */
+  public int waitForLaunchedProcess(LaunchedProcess launchedProcess) throws InterruptedException {
+    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
+    return ((LaunchedProcessImpl) launchedProcess).process.waitFor();
   }
 
   /**

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -102,7 +103,8 @@ public class CxxTestTest {
         executionContext,
         /* isDryRun */ false,
         /* isShufflingTests */ false,
-        TestSelectorList.empty());
+        TestSelectorList.empty(),
+        FakeTestRule.NOOP_REPORTING_CALLBACK);
 
     CxxTestStep cxxTestStep = new CxxTestStep(
         command,

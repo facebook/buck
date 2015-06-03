@@ -17,23 +17,18 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonStreamParser;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -51,61 +46,90 @@ public class XctoolOutputParsing {
   // Checkstyle thinks any class named "*Exception" is an exception and
   // must only have final fields..
   @SuppressWarnings("checkstyle:mutableexception")
-  private static class TestException {
+  public static class TestException {
     public String filePathInProject = null;
     public int lineNumber = -1;
     public String reason = null;
   }
 
-  private static class EndTestEvent {
-    public String test = null;
-    public String className = null;
-    public String output = null;
-    public boolean succeeded = false;
-    public double totalDuration = -1;
-    public List<TestException> exceptions = new ArrayList<>();
+  public static class BeginOcunitEvent {
+    public double timestamp = -1;
   }
 
-  private static class EndOcunitEvent {
+  public static class EndOcunitEvent {
+    public double timestamp = -1;
     public String message = null;
     public boolean succeeded = false;
   }
 
-  /**
-   * Parses a stream of JSON objects as produced by {@code xctool -reporter json-stream}
-   * and converts them into {@link TestCaseSummary} objects.
-   */
-  public static List<TestCaseSummary> parseOutputFromReader(Reader reader)
-    throws IOException {
-    Gson gson = new Gson();
-    ImmutableListMultimap.Builder<String, TestResultSummary> testResultSummariesBuilder =
-        ImmutableListMultimap.builder();
+  public static class BeginTestSuiteEvent {
+    public double timestamp = -1;
+    public String suite = null;
+  }
 
+  public static class EndTestSuiteEvent {
+    public double timestamp = -1;
+    public double totalDuration = -1;
+    public double testDuration = -1;
+    public String suite = null;
+    public int testCaseCount = -1;
+    public int totalFailureCount = -1;
+    public int unexpectedExceptionCount = -1;
+    public boolean succeeded = false;
+  }
+
+  public static class BeginTestEvent {
+    public double timestamp = -1;
+    public String test = null;
+    public String className = null;
+    public String methodName = null;
+  }
+
+  public static class EndTestEvent {
+    public double totalDuration = -1;
+    public double timestamp = -1;
+    public String test = null;
+    public String className = null;
+    public String methodName = null;
+    public String output = null;
+    public boolean succeeded = false;
+    public List<TestException> exceptions = new ArrayList<>();
+  }
+
+  /**
+   * Callbacks invoked with events emitted by {@code xctool -reporter json-stream}.
+   */
+  public interface XctoolEventCallback {
+    void handleBeginOcunitEvent(BeginOcunitEvent event);
+    void handleEndOcunitEvent(EndOcunitEvent event);
+    void handleBeginTestSuiteEvent(BeginTestSuiteEvent event);
+    void handleEndTestSuiteEvent(EndTestSuiteEvent event);
+    void handleBeginTestEvent(BeginTestEvent event);
+    void handleEndTestEvent(EndTestEvent event);
+  }
+
+  /**
+   * Decodes a stream of JSON objects as produced by {@code xctool -reporter json-stream}
+   * and invokes the callbacks in {@code eventCallback} with each event in the stream.
+   */
+  public static void streamOutputFromReader(
+      Reader reader,
+      XctoolEventCallback eventCallback) {
+    Gson gson = new Gson();
     JsonStreamParser streamParser = new JsonStreamParser(reader);
     while (streamParser.hasNext()) {
       try {
-        handleEvent(gson, streamParser.next(), testResultSummariesBuilder);
+        dispatchEventCallback(gson, streamParser.next(), eventCallback);
       } catch (JsonParseException e) {
         LOG.warn(e, "Couldn't parse xctool JSON stream");
       }
     }
-
-    ImmutableList.Builder<TestCaseSummary> result = ImmutableList.builder();
-    for (Map.Entry<String, Collection<TestResultSummary>> testCaseSummary :
-             testResultSummariesBuilder.build().asMap().entrySet()) {
-      result.add(
-          new TestCaseSummary(
-              testCaseSummary.getKey(),
-              ImmutableList.copyOf(testCaseSummary.getValue())));
-    }
-
-    return result.build();
   }
 
-  private static void handleEvent(
+  private static void dispatchEventCallback(
       Gson gson,
       JsonElement element,
-      ImmutableListMultimap.Builder<String, TestResultSummary> testResultSummariesBuilder)
+      XctoolEventCallback eventCallback)
         throws JsonParseException {
     LOG.debug("Parsing xctool event: %s", element);
     if (!element.isJsonObject()) {
@@ -123,20 +147,28 @@ public class XctoolOutputParsing {
       return;
     }
     switch (event.getAsString()) {
-      case "end-test":
-        EndTestEvent endTestEvent = gson.fromJson(element, EndTestEvent.class);
-        handleEndTestEvent(endTestEvent, testResultSummariesBuilder);
+      case "begin-ocunit":
+        eventCallback.handleBeginOcunitEvent(gson.fromJson(element, BeginOcunitEvent.class));
         break;
       case "end-ocunit":
-        EndOcunitEvent endOcunitEvent = gson.fromJson(element, EndOcunitEvent.class);
-        handleEndOcunitEvent(endOcunitEvent, testResultSummariesBuilder);
+        eventCallback.handleEndOcunitEvent(gson.fromJson(element, EndOcunitEvent.class));
+        break;
+      case "begin-test-suite":
+        eventCallback.handleBeginTestSuiteEvent(gson.fromJson(element, BeginTestSuiteEvent.class));
+        break;
+      case "end-test-suite":
+        eventCallback.handleEndTestSuiteEvent(gson.fromJson(element, EndTestSuiteEvent.class));
+        break;
+      case "begin-test":
+        eventCallback.handleBeginTestEvent(gson.fromJson(element, BeginTestEvent.class));
+        break;
+      case "end-test":
+        eventCallback.handleEndTestEvent(gson.fromJson(element, EndTestEvent.class));
         break;
     }
   }
 
-  private static void handleEndTestEvent(
-      EndTestEvent endTestEvent,
-      ImmutableListMultimap.Builder<String, TestResultSummary> testResultSummariesBuilder) {
+  public static TestResultSummary testResultSummaryForEndTestEvent(EndTestEvent endTestEvent) {
     long timeMillis = (long) (endTestEvent.totalDuration * TimeUnit.SECONDS.toMillis(1));
     TestResultSummary testResultSummary = new TestResultSummary(
         endTestEvent.className,
@@ -149,7 +181,7 @@ public class XctoolOutputParsing {
         null // stdErr
     );
     LOG.debug("Test result summary: %s", testResultSummary);
-    testResultSummariesBuilder.put(endTestEvent.className, testResultSummary);
+    return testResultSummary;
   }
 
   @Nullable
@@ -182,13 +214,12 @@ public class XctoolOutputParsing {
     }
   }
 
-  private static void handleEndOcunitEvent(
-      EndOcunitEvent endOcunitEvent,
-      ImmutableListMultimap.Builder<String, TestResultSummary> testResultSummariesBuilder) {
+  public static Optional<TestResultSummary> internalErrorForEndOcunitEvent(
+      EndOcunitEvent endOcunitEvent) {
     if (endOcunitEvent.succeeded || endOcunitEvent.message == null) {
       // We only care about failures with a message. (Failures without a message always
       // happen with any random test failure.)
-      return;
+      return Optional.absent();
     }
 
     TestResultSummary testResultSummary = new TestResultSummary(
@@ -202,6 +233,6 @@ public class XctoolOutputParsing {
         null // stdErr
     );
     LOG.debug("OCUnit/XCTest internal failure: %s", testResultSummary);
-    testResultSummariesBuilder.put("Internal error from test runner", testResultSummary);
+    return Optional.of(testResultSummary);
   }
 }
