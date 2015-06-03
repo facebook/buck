@@ -132,7 +132,7 @@ public class SourcePathResolver {
       Iterable<T> objects,
       Function<T, SourcePath> objectSourcePathFunction) {
 
-    Map<String, T> resolved = Maps.newHashMap();
+    Map<String, T> resolved = Maps.newLinkedHashMap();
 
     for (T object : objects) {
       SourcePath path = objectSourcePathFunction.apply(object);
