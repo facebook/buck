@@ -189,9 +189,9 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         Iterables.transform(secondaryDexDirectories, Functions.toStringFunction()));
 
     buildableContext.recordArtifact(primaryDexPath);
-    buildableContext.recordArtifactsInDirectory(paths.jarfilesSubdir);
-    buildableContext.recordArtifactsInDirectory(paths.metadataSubdir);
-    buildableContext.recordArtifactsInDirectory(paths.successDir);
+    buildableContext.recordArtifact(paths.jarfilesSubdir);
+    buildableContext.recordArtifact(paths.metadataSubdir);
+    buildableContext.recordArtifact(paths.successDir);
 
     PreDexedFilesSorter preDexedFilesSorter = new PreDexedFilesSorter(
         aaptPackageResources.getRDotJavaDexWithClasses(),

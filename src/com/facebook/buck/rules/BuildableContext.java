@@ -48,5 +48,4 @@ public interface BuildableContext {
    */
   public void recordArtifact(Path pathToArtifact);
 
-  public void recordArtifactsInDirectory(Path pathToArtifactsDirectory);
 }

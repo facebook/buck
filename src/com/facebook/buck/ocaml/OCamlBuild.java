@@ -61,10 +61,10 @@ public class OCamlBuild extends AbstractBuildRule {
       BuildContext context,
       BuildableContext buildableContext) {
     Path baseArtifactDir = ocamlContext.getOutput().getParent();
-    buildableContext.recordArtifactsInDirectory(baseArtifactDir);
-    buildableContext.recordArtifactsInDirectory(
+    buildableContext.recordArtifact(baseArtifactDir);
+    buildableContext.recordArtifact(
         baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_DIR));
-    buildableContext.recordArtifactsInDirectory(
+    buildableContext.recordArtifact(
         baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_BYTECODE_DIR));
     return ImmutableList.of(
         new MakeCleanDirectoryStep(ocamlContext.getOutput().getParent()),

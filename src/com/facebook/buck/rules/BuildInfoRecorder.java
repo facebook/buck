@@ -27,11 +27,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
@@ -78,9 +78,7 @@ public class BuildInfoRecorder {
   /**
    * Every value in this set is a path relative to the project root.
    */
-  private final Set<Path> pathsToOutputFiles;
-
-  private final Set<Path> pathsToOutputDirectories;
+  private final Set<Path> pathsToOutputs;
 
   BuildInfoRecorder(BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -105,8 +103,7 @@ public class BuildInfoRecorder {
     metadataToWrite.put(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS,
         rukeKeyWithoutDeps.toString());
     this.ruleKey = ruleKey;
-    this.pathsToOutputFiles = Sets.newHashSet();
-    this.pathsToOutputDirectories = Sets.newHashSet();
+    this.pathsToOutputs = Sets.newHashSet();
   }
 
   /**
@@ -152,25 +149,28 @@ public class BuildInfoRecorder {
       return;
     }
 
-    ImmutableSet.Builder<Path> pathsToIncludeInZipBuilder = ImmutableSet.<Path>builder()
-        .addAll(Iterables.transform(metadataToWrite.keySet(),
+    ImmutableSet<Path> pathsToIncludeInZip = FluentIterable.from(metadataToWrite.keySet())
+        .transform(
             new Function<String, Path>() {
               @Override
               public Path apply(String key) {
                 return pathToMetadataDirectory.resolve(key);
               }
-            }))
-        .addAll(pathsToOutputFiles);
+            })
+        .append(pathsToOutputs)
+        .transformAndConcat(
+            new Function<Path, Iterable<Path>>() {
+              @Override
+              public Iterable<Path> apply(Path input) {
+                try {
+                  return getEntries(input);
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              }
+            })
+        .toSet();
 
-    try {
-      for (Path outputDirectory : pathsToOutputDirectories) {
-        pathsToIncludeInZipBuilder.addAll(getEntries(outputDirectory));
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    ImmutableSet<Path> pathsToIncludeInZip = pathsToIncludeInZipBuilder.build();
     eventBus.post(
         ArtifactCacheEvent.started(
             ArtifactCacheEvent.Operation.COMPRESS,
@@ -206,10 +206,10 @@ public class BuildInfoRecorder {
     zip.delete();
   }
 
-  private List<Path> getEntries(final Path outputDirectory) throws IOException {
+  private List<Path> getEntries(final Path outputPath) throws IOException {
     final ImmutableList.Builder<Path> entries = ImmutableList.builder();
     projectFilesystem.walkRelativeFileTree(
-        outputDirectory,
+        outputPath,
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(
@@ -249,16 +249,7 @@ public class BuildInfoRecorder {
         ABSOLUTE_PATH_ERROR_FORMAT,
         buildTarget,
         pathToArtifact);
-    pathsToOutputFiles.add(pathToArtifact);
-  }
-
-  public void recordArtifactsInDirectory(Path pathToArtifactsDirectory) {
-    Preconditions.checkArgument(
-        !pathToArtifactsDirectory.isAbsolute(),
-        ABSOLUTE_PATH_ERROR_FORMAT,
-        buildTarget,
-        pathToArtifactsDirectory);
-    pathsToOutputDirectories.add(pathToArtifactsDirectory);
+    pathsToOutputs.add(pathToArtifact);
   }
 
   @Nullable

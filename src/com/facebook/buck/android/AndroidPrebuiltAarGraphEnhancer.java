@@ -272,7 +272,7 @@ class AndroidPrebuiltAarGraphEnhancer {
         }
       });
 
-      buildableContext.recordArtifactsInDirectory(unpackDirectory);
+      buildableContext.recordArtifact(unpackDirectory);
       buildableContext.recordArtifact(uberClassesJar);
       return steps.build();
     }

@@ -485,7 +485,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       MakeCleanDirectoryStep mkdirGeneratedSources =
           new MakeCleanDirectoryStep(annotationGenFolder);
       steps.add(mkdirGeneratedSources);
-      buildableContext.recordArtifactsInDirectory(annotationGenFolder);
+      buildableContext.recordArtifact(annotationGenFolder);
     }
 
     // Always create the output directory, even if there are no .java files to compile because there

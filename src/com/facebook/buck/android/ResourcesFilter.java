@@ -157,7 +157,7 @@ public class ResourcesFilter extends AbstractBuildRule
 
     final ImmutableList<Path> filteredResDirectories = filteredResDirectoriesBuilder.build();
     for (Path outputResourceDir : filteredResDirectories) {
-      buildableContext.recordArtifactsInDirectory(outputResourceDir);
+      buildableContext.recordArtifact(outputResourceDir);
     }
 
     steps.add(new AbstractExecutionStep("record_build_output") {

@@ -230,7 +230,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
-    buildableContext.recordArtifactsInDirectory(bundleRoot);
+    buildableContext.recordArtifact(bundleRoot);
 
     return stepsBuilder.build();
   }

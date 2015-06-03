@@ -83,10 +83,25 @@ public class GenruleIntegrationTest {
         this, "genrule_directory_output", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:mkdir");
-    buildResult.assertSuccess();
+    workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
 
     assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/directory")), equalTo(true));
+    assertThat(
+        workspace.getFileContents("buck-out/gen/directory/file"),
+        equalTo("something\n"));
+
+    workspace.runBuckCommand("clean").assertSuccess();
+
+    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen")), equalTo(false));
+
+    // Retrieving the genrule output from the local cache should recreate the directory contents.
+    workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
+
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:mkdir");
+    assertThat(Files.isDirectory(workspace.resolve("buck-out/gen/directory")), equalTo(true));
+    assertThat(
+        workspace.getFileContents("buck-out/gen/directory/file"),
+        equalTo("something\n"));
   }
 
   @Test

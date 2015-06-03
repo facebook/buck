@@ -179,7 +179,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
           }
         });
 
-    buildableContext.recordArtifactsInDirectory(pathToNativeLibs);
+    buildableContext.recordArtifact(pathToNativeLibs);
     buildableContext.recordArtifact(pathToMetadataTxt);
 
     return steps.build();

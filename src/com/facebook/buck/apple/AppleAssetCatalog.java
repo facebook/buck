@@ -106,7 +106,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             getProjectFilesystem().resolve(outputDir),
             bundlingMode));
 
-    buildableContext.recordArtifactsInDirectory(getOutputDir());
+    buildableContext.recordArtifact(getOutputDir());
 
     return stepsBuilder.build();
   }

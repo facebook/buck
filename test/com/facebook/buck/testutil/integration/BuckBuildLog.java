@@ -72,6 +72,11 @@ public class BuckBuildLog {
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, logEntry.successType.get());
   }
 
+  public void assertTargetWasFetchedFromCache(String buildTargetRaw) {
+    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, logEntry.successType.get());
+  }
+
   public void assertTargetHadMatchingDepsAbi(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
     assertEquals(

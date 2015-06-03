@@ -1,0 +1,3 @@
+[cache]
+  mode = dir
+  dir_max_size = 1MB

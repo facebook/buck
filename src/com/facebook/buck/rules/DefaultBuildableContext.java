@@ -41,8 +41,4 @@ public class DefaultBuildableContext implements BuildableContext {
     recorder.recordArtifact(pathToArtifact);
   }
 
-  @Override
-  public void recordArtifactsInDirectory(Path pathToArtifactsDirectory) {
-    recorder.recordArtifactsInDirectory(pathToArtifactsDirectory);
-  }
 }

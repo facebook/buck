@@ -133,7 +133,7 @@ public class BuildInfoRecorderTest {
     Path dir = Paths.get("dir");
     filesystem.mkdirs(dir);
     filesystem.writeBytesToPath(contents, dir.resolve("file"));
-    buildInfoRecorder.recordArtifactsInDirectory(dir);
+    buildInfoRecorder.recordArtifact(dir);
 
     final AtomicBoolean stored = new AtomicBoolean(false);
     final ArtifactCache cache =

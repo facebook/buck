@@ -87,7 +87,7 @@ public class ThriftCompiler extends AbstractBuildRule {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    buildableContext.recordArtifactsInDirectory(outputDir);
+    buildableContext.recordArtifact(outputDir);
 
     return ImmutableList.of(
         new MakeCleanDirectoryStep(outputDir),

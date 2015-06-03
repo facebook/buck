@@ -124,7 +124,7 @@ public class DummyRDotJava extends AbstractBuildRule
             getBuildTarget(),
             getResolver());
     steps.add(javacStep);
-    buildableContext.recordArtifactsInDirectory(rDotJavaClassesFolder);
+    buildableContext.recordArtifact(rDotJavaClassesFolder);
 
     steps.add(new CalculateAbiStep(buildableContext, rDotJavaClassesFolder, pathToAbiOutputFile));
 
