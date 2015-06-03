@@ -25,8 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -183,14 +181,11 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseWithRepoName() {
-    ImmutableMap<Optional<String>, Optional<String>> canonicalRepoNamesMap =
-        ImmutableMap.of(Optional.of("localreponame"), Optional.of("canonicalname"));
-    BuildTargetParser parser = new BuildTargetParser(canonicalRepoNamesMap);
+    BuildTargetParser parser = new BuildTargetParser();
     String targetStr = "@localreponame//foo/bar:baz";
-    String canonicalStr = "@canonicalname//foo/bar:baz";
     BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser);
-    assertEquals(canonicalStr, buildTarget.getFullyQualifiedName());
-    assertEquals("canonicalname", buildTarget.getRepository().get());
+    assertEquals(targetStr, buildTarget.getFullyQualifiedName());
+    assertEquals("localreponame", buildTarget.getRepository().get());
   }
 
   @Test(expected = BuildTargetParseException.class)

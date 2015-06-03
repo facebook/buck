@@ -26,7 +26,6 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
@@ -71,21 +70,8 @@ abstract class AbstractRepository {
     return getKnownBuildRuleTypes().getAllDescriptions();
   }
 
-  @Value.Lazy
-  public ImmutableMap<Optional<String>, Optional<String>> getLocalToCanonicalRepoNamesMap() {
-    ImmutableMap.Builder<Optional<String>, Optional<String>> builder =
-        ImmutableMap.builder();
-
-    // Paths starting with "//" (i.e. no "@repo" prefix) always map to the name of the current
-    // repo. For the root repo where buck is invoked, there is no name, and this mapping is a
-    // no-op.
-    builder.put(Optional.<String>absent(), getName());
-
-    return builder.build();
-  }
-
   public BuildTargetParser getBuildTargetParser() {
-    return new BuildTargetParser(getLocalToCanonicalRepoNamesMap());
+    return new BuildTargetParser();
   }
 
   public Path getAbsolutePathToBuildFile(BuildTarget target)

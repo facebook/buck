@@ -20,11 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.HashSet;
@@ -39,27 +37,7 @@ public class BuildTargetParser {
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
   private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of("", ".", "..");
 
-  private final ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap;
   private final FlavorParser flavorParser = new FlavorParser();
-
-  public BuildTargetParser() {
-    // By default, use a canonical names map that only allows targets with no repo name.
-    this(ImmutableMap.of(Optional.<String>absent(), Optional.<String>absent()));
-  }
-
-  /**
-   *
-   * @param localToCanonicalRepoNamesMap
-   *          Internally, buck uses a unique, global name to refer to each repository.  All targets
-   *          that live in repo X are represented internally using this unique name. However, other
-   *          repos might have their own names for X, and rules inside of X will refer to each other
-   *          with no explicit repo at all. This map provides the translation from local repo names
-   *          used within the current repo to their unique, global repo names.
-   */
-  public BuildTargetParser(
-      ImmutableMap<Optional<String>, Optional<String>> localToCanonicalRepoNamesMap) {
-    this.localToCanonicalRepoNamesMap = localToCanonicalRepoNamesMap;
-  }
 
   /**
    * @param buildTargetName either a fully-qualified name or relative to the {@link BuildTargetPatternParser}.
@@ -103,13 +81,6 @@ public class BuildTargetParser {
       throw new BuildTargetParseException("Repo name must not be empty.");
     }
 
-    if (!localToCanonicalRepoNamesMap.containsKey(givenRepoName)) {
-      throw new HumanReadableException(String.format(
-          "In build target '%s', repo '%s' is not defined.",
-          buildTargetName,
-          givenRepoName));
-    }
-
     List<String> parts = BUILD_RULE_SEPARATOR_SPLITTER.splitToList(targetAfterRepo);
     if (parts.size() != 2) {
       throw new BuildTargetParseException(String.format(
@@ -133,11 +104,7 @@ public class BuildTargetParser {
 
     UnflavoredBuildTarget.Builder unflavoredBuilder =
         UnflavoredBuildTarget.builder(baseName, shortName);
-    Optional<String> canonicalRepoName = Preconditions.checkNotNull(
-        localToCanonicalRepoNamesMap.get(givenRepoName));
-    if (canonicalRepoName.isPresent()) {
-      unflavoredBuilder.setRepository(canonicalRepoName.get());
-    }
+    unflavoredBuilder.setRepository(givenRepoName);
     BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuilder.build());
     for (String flavor : flavorNames) {
       builder.addFlavors(ImmutableFlavor.of(flavor));
