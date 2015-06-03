@@ -40,6 +40,7 @@ java_library(
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/rules:types',
+    '//test/com/facebook/buck/file:file',
     '//test/com/facebook/buck/maven:maven',
   ],
 )

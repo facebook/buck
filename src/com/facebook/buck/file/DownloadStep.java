@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
@@ -51,7 +52,7 @@ public class DownloadStep implements Step {
       Path resolved = context.getProjectFilesystem().resolve(output);
       downloader.fetch(eventBus, url, resolved);
 
-      HashCode readHash = Files.asByteSource(output.toFile()).hash(Hashing.sha1());
+      HashCode readHash = Files.asByteSource(resolved.toFile()).hash(Hashing.sha1());
       if (!sha1.equals(readHash)) {
         eventBus.post(
             ConsoleEvent.severe(
@@ -61,9 +62,12 @@ public class DownloadStep implements Step {
                 readHash));
         return -1;
       }
-
     } catch (IOException e) {
       eventBus.post(ConsoleEvent.severe("Unable to download: %s", url));
+      return -1;
+    } catch (HumanReadableException e) {
+      eventBus.post(ConsoleEvent.severe(e.getHumanReadableErrorMessage(), e));
+      return -1;
     }
 
     return 0;
