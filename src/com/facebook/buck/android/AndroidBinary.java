@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExopackageInfo;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
@@ -47,6 +48,7 @@ import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.zip.RepackZipEntriesStep;
@@ -87,8 +89,9 @@ import java.util.Set;
  * )
  * </pre>
  */
-public class AndroidBinary extends AbstractBuildRule implements
-    AbiRule, HasClasspathEntries, InstallableApk {
+public class AndroidBinary
+    extends AbstractBuildRule
+    implements AbiRule, HasClasspathEntries, HasRuntimeDeps, InstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
@@ -321,6 +324,15 @@ public class AndroidBinary extends AbstractBuildRule implements
       BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    // The `InstallableApk` interface needs access to the manifest, so make sure we create our
+    // own copy of this so that we don't have a runtime dep on the `AaptPackageResources` step.
+    steps.add(new MkdirStep(getManifestPath().getParent()));
+    steps.add(
+        CopyStep.forFile(
+            enhancementResult.getAaptPackageResources().getAndroidManifestXml(),
+            getManifestPath()));
+    buildableContext.recordArtifact(getManifestPath());
 
     // Create the .dex files if we aren't doing pre-dexing.
     Path signedApkPath = getSignedApkPath();
@@ -877,7 +889,7 @@ public class AndroidBinary extends AbstractBuildRule implements
 
   @Override
   public Path getManifestPath() {
-    return enhancementResult.getAaptPackageResources().getAndroidManifestXml();
+    return BuildTargets.getGenPath(getBuildTarget(), "%s/AndroidManifest.xml");
   }
 
   boolean shouldSplitDex() {
@@ -924,6 +936,18 @@ public class AndroidBinary extends AbstractBuildRule implements
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     // This is used primarily for buck audit classpath.
     return Classpaths.getClasspathEntries(getClasspathDeps());
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
+      deps.addAll(enhancementResult.getCopyNativeLibraries().asSet());
+    }
+    if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
+      deps.addAll(enhancementResult.getPreDexMerge().asSet());
+    }
+    return deps.build();
   }
 
   /**
