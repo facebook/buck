@@ -53,6 +53,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -64,6 +65,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.SettableFakeClock;
@@ -2546,6 +2548,25 @@ public class ProjectGeneratorTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "foodir specified in the files parameter of //foo:res is not a regular file");
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(nodes);
+    projectGenerator.createXcodeProjects();
+  }
+
+  @Test
+  public void usingBuildTargetSourcePathInResourceDirsOrFilesDoesNotThrow() throws IOException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:rule");
+    SourcePath sourcePath = new BuildTargetSourcePath(fakeProjectFilesystem, buildTarget);
+    TargetNode<?> generatingTarget = GenruleBuilder.newGenruleBuilder(buildTarget)
+        .setCmd("echo HI")
+        .build();
+
+    ImmutableSet<TargetNode<?>> nodes = FluentIterable.from(
+        setupSimpleLibraryWithResources(
+            ImmutableSet.of(sourcePath),
+            ImmutableSet.of(sourcePath)))
+        .append(generatingTarget)
+        .toSet();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(nodes);
     projectGenerator.createXcodeProjects();

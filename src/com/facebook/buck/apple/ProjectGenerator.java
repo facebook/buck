@@ -523,20 +523,21 @@ public class ProjectGenerator {
       }
     } else if (targetNode.getType().equals(AppleResourceDescription.TYPE)) {
       // Check that the resource target node is referencing valid files or directories.
+      // If a SourcePath is a BuildTargetSourcePath (or some hypothetical future implementation of
+      // AbstractSourcePath), just assume it's the right type; we have no way of checking now as it
+      // may not exist yet.
       TargetNode<AppleResourceDescription.Arg> resource =
           (TargetNode<AppleResourceDescription.Arg>) targetNode;
       AppleResourceDescription.Arg arg = resource.getConstructorArg();
-      for (Path dir : Iterables.transform(arg.dirs, sourcePathResolver)) {
-        if (!projectFilesystem.isDirectory(dir)) {
+      for (SourcePath dir : arg.dirs) {
+        if (dir instanceof PathSourcePath &&
+            !projectFilesystem.isDirectory(sourcePathResolver.apply(dir))) {
           throw new HumanReadableException(
               "%s specified in the dirs parameter of %s is not a directory",
               dir.toString(), resource.toString());
         }
       }
       for (SourcePath file : arg.files) {
-        // If file is a BuildTargetSourcePath (or some hypothetical future implementation of
-        // AbstractSourcePath), just assume it's a file; we have no way of checking now as it
-        // may not exist yet.
         if (file instanceof PathSourcePath &&
             !projectFilesystem.isFile(sourcePathResolver.apply(file))) {
           throw new HumanReadableException(
