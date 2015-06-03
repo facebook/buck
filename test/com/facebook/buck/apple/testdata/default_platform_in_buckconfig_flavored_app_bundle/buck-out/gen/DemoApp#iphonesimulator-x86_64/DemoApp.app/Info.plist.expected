@@ -39,5 +39,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>DTPlatformName</key>
+	<string>iphonesimulator</string>
+	<key>DTSDKName</key>
+	<string>iphonesimulator</string>
 </dict>
 </plist>

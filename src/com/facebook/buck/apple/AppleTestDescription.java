@@ -261,6 +261,9 @@ public class AppleTestDescription implements
     ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs =
         collectedAssetCatalogs.getBundledAssetCatalogs();
 
+    String sdkName = appleCxxPlatform.getAppleSdk().getName();
+    String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
+
     AppleBundle bundle = new AppleBundle(
         params.copyWithChanges(
             BuildTarget.builder(params.getBuildTarget()).addFlavors(BUNDLE_FLAVOR).build(),
@@ -292,7 +295,9 @@ public class AppleTestDescription implements
         appleCxxPlatform.getDsymutil(),
         bundledAssetCatalogs,
         mergedAssetCatalog,
-        ImmutableSortedSet.<BuildTarget>of());
+        ImmutableSortedSet.<BuildTarget>of(),
+        platformName,
+        sdkName);
 
 
     Optional<BuildRule> xctoolZipBuildRule;
@@ -303,7 +308,6 @@ public class AppleTestDescription implements
       xctoolZipBuildRule = Optional.absent();
     }
 
-    String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
     return new AppleTest(
         appleConfig.getXctoolPath(),
         xctoolZipBuildRule,

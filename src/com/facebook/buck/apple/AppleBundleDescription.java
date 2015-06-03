@@ -174,7 +174,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         appleCxxPlatform.getDsymutil(),
         bundledAssetCatalogs,
         mergedAssetCatalog,
-        args.getTests());
+        args.getTests(),
+        appleCxxPlatform.getAppleSdk().getApplePlatform().getName(),
+        appleCxxPlatform.getAppleSdk().getName());
   }
 
   private static <A extends Arg> BuildRule getFlavoredBinaryRule(

@@ -46,6 +46,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
+import com.dd.plist.NSObject;
+import com.dd.plist.NSNumber;
+import com.dd.plist.NSString;
+
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Map;
@@ -89,6 +93,12 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   @AddToRuleKey
   private final ImmutableSortedSet<BuildTarget> tests;
 
+  @AddToRuleKey
+  private final String platformName;
+
+  @AddToRuleKey
+  private final String sdkName;
+
   private final ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs;
 
   private final Optional<AppleAssetCatalog> mergedAssetCatalog;
@@ -111,7 +121,9 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Tool dsymutil,
       Set<AppleAssetCatalog> bundledAssetCatalogs,
       Optional<AppleAssetCatalog> mergedAssetCatalog,
-      Set<BuildTarget> tests) {
+      Set<BuildTarget> tests,
+      String platformName,
+      String sdkName) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
@@ -131,6 +143,8 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.binaryPath = this.destinations.getExecutablesPath()
         .resolve(this.binaryName);
     this.tests = ImmutableSortedSet.copyOf(tests);
+    this.platformName = platformName;
+    this.sdkName = sdkName;
   }
 
   private static String getBinaryName(BuildTarget buildTarget) {
@@ -161,14 +175,19 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
     Path metadataPath = bundleRoot.resolve(this.destinations.getMetadataPath());
 
+    Path infoPlistInputPath = getResolver().getPath(infoPlist.get());
+    Path infoPlistSubstitutionTempPath =
+        BuildTargets.getScratchPath(getBuildTarget(), "%s.plist");
+    Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
+
     stepsBuilder.add(
         new MakeCleanDirectoryStep(bundleRoot),
         new MkdirStep(metadataPath),
         // TODO(user): This is only appropriate for .app bundles.
         new WriteFileStep("APPLWRUN", metadataPath.resolve("PkgInfo")),
         new FindAndReplaceStep(
-            getResolver().getPath(infoPlist.get()),
-            metadataPath.resolve("Info.plist"),
+            infoPlistInputPath,
+            infoPlistSubstitutionTempPath,
             InfoPlistSubstitution.createVariableExpansionFunction(
                 withDefaults(
                     infoPlistSubstitutions,
@@ -176,7 +195,12 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
                         "EXECUTABLE_NAME", binaryName,
                         "PRODUCT_NAME", binaryName
                     ))
-            )));
+            )),
+        new PlistProcessStep(
+            infoPlistSubstitutionTempPath,
+            infoPlistOutputPath,
+            getInfoPlistAdditionalKeys(platformName, sdkName),
+            getInfoPlistOverrideKeys(platformName)));
 
     if (binary.isPresent()) {
       stepsBuilder.add(
@@ -235,7 +259,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     return stepsBuilder.build();
   }
 
-  ImmutableMap<String, String> withDefaults(
+  static ImmutableMap<String, String> withDefaults(
       ImmutableMap<String, String> map,
       ImmutableMap<String, String> defaults) {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder()
@@ -246,6 +270,35 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       }
     }
     return builder.build();
+  }
+
+  static ImmutableMap<String, NSObject> getInfoPlistOverrideKeys(
+      String platformName) {
+    ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
+
+    if (platformName.contains("osx")) {
+      keys.put("LSRequiresIPhoneOS", new NSNumber(false));
+    } else {
+      keys.put("LSRequiresIPhoneOS", new NSNumber(true));
+    }
+
+    return keys.build();
+  }
+
+  static ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys(
+      String platformName,
+      String sdkName) {
+    ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
+
+    if (platformName.contains("osx")) {
+      keys.put("NSHighResolutionCapable", new NSNumber(true));
+      keys.put("NSSupportsAutomaticGraphicsSwitching", new NSNumber(true));
+    }
+
+    keys.put("DTPlatformName", new NSString(platformName));
+    keys.put("DTSDKName", new NSString(sdkName));
+
+    return keys.build();
   }
 
   private void addResourceProcessingSteps(
