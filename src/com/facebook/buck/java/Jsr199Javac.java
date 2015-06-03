@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -220,22 +221,21 @@ public class Jsr199Javac implements Javac {
         classNamesForAnnotationProcessing,
         compilationUnits);
 
+    boolean isSuccess = false;
     // Ensure annotation processors are loaded from their own classloader. If we don't do this,
     // then the evidence suggests that they get one polluted with Buck's own classpath, which
     // means that libraries that have dependencies on different versions of Buck's deps may choke
     // with novel errors that don't occur on the command line.
-    ProcessorBundle bundle = null;
-    boolean isSuccess;
-
-    try {
-      bundle = prepareProcessors(
-          compiler.getClass().getClassLoader(),
-          invokingRule,
-          options);
+    try (ProcessorBundle bundle = prepareProcessors(
+        compiler.getClass().getClassLoader(),
+        invokingRule,
+        options)) {
       compilationTask.setProcessors(bundle.processors);
 
       // Invoke the compilation and inspect the result.
       isSuccess = compilationTask.call();
+    } catch (IOException e) {
+      LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
     } finally {
       close(fileManager, compilationUnits);
     }
@@ -413,9 +413,16 @@ public class Jsr199Javac implements Javac {
     context.getBuckEventBus().post(event);
   }
 
-  private static class ProcessorBundle {
+  private static class ProcessorBundle implements Closeable {
     @Nullable
-    public ClassLoader classLoader;
+    public URLClassLoader classLoader;
     public List<Processor> processors = Lists.newArrayList();
+
+    @Override
+    public void close() throws IOException {
+      if (classLoader != null) {
+        classLoader.close();
+      }
+    }
   }
 }
