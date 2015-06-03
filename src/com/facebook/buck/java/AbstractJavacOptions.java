@@ -31,7 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
@@ -190,8 +190,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     return builder;
   }
 
-  public ImmutableSet<SourcePath> getInputs() {
-    return ImmutableSet.<SourcePath>builder()
+  public ImmutableSortedSet<SourcePath> getInputs() {
+    return ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(Optional.presentInstances(ImmutableList.of(getJavacJarPath())))
         .addAll(getAnnotationProcessingParams().getInputs())
         .build();
