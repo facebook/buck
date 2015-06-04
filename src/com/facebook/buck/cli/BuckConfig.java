@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -88,6 +89,8 @@ import javax.annotation.concurrent.Immutable;
 @Beta
 @Immutable
 public class BuckConfig {
+
+  private static final Logger LOG = Logger.get(BuckConfig.class);
 
   private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
   public static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
@@ -189,9 +192,9 @@ public class BuckConfig {
     }
 
     // Convert the Files to Readers.
-    ImmutableList.Builder<Reader> readers = ImmutableList.builder();
+    ImmutableMap.Builder<Path, Reader> readers = ImmutableMap.builder();
     for (File file : files) {
-      readers.add(Files.newReader(file, Charsets.UTF_8));
+      readers.put(file.toPath(), Files.newReader(file, Charsets.UTF_8));
     }
     return createFromReaders(
         readers.build(),
@@ -233,7 +236,7 @@ public class BuckConfig {
   @SafeVarargs
   @VisibleForTesting
   static BuckConfig createFromReaders(
-      Iterable<Reader> readers,
+      Map<Path, Reader> readers,
       ProjectFilesystem projectFilesystem,
       BuildTargetParser buildTargetParser,
       Platform platform,
@@ -242,10 +245,15 @@ public class BuckConfig {
   throws IOException {
     ImmutableList.Builder<ImmutableMap<String, ImmutableMap<String, String>>> builder =
         ImmutableList.builder();
-    for (Reader reader : readers) {
-      builder.add(Inis.read(reader));
+    for (Map.Entry<Path, Reader> entry : readers.entrySet()) {
+      Path filePath = entry.getKey();
+      Reader reader = entry.getValue();
+      ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration = Inis.read(reader);
+      LOG.debug("Loaded a configuration file %s: %s", filePath, parsedConfiguration);
+      builder.add(parsedConfiguration);
     }
     for (ImmutableMap<String, ImmutableMap<String, String>> configOverride : configOverrides) {
+      LOG.debug("Adding configuration overrides: %s", configOverride);
       builder.add(configOverride);
     }
     Config config = new Config(builder.build());

@@ -20,11 +20,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
@@ -56,7 +56,7 @@ public class BuckConfigTestUtils {
       ImmutableMap<String, String> environment)
       throws IOException {
     return BuckConfig.createFromReaders(
-        ImmutableList.of(reader),
+        ImmutableMap.of(Paths.get("FAKE.buckconfig"), reader),
         projectFilesystem,
         buildTargetParser,
         platform,
