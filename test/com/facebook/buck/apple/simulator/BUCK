@@ -1,0 +1,17 @@
+java_test(
+    name = 'simulator',
+    srcs = glob(['*Test.java']),
+    resources = glob(['testdata/**']),
+    source_under_test = [
+        '//src/com/facebook/buck/apple/simulator:simulator',
+    ],
+    deps = [
+        '//src/com/facebook/buck/apple/simulator:simulator',
+        '//src/com/facebook/buck/util:io',
+        '//test/com/facebook/buck/util:testutil',
+        '//third-party/java/dd-plist:dd-plist',
+        '//third-party/java/guava:guava',
+        '//third-party/java/hamcrest:hamcrest',
+        '//third-party/java/junit:junit',
+    ],
+)
