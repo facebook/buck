@@ -19,11 +19,13 @@ package com.facebook.buck.testutil.integration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.TestConsole;
@@ -48,6 +50,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -245,6 +248,11 @@ public class ProjectWorkspace {
 
   public ProcessResult runBuckdCommand(NGContext context, String... args)
       throws IOException {
+    assumeTrue(
+        "watchman must exist to run buckd",
+        new ExecutableFinder(Platform.detect()).getOptionalExecutable(
+            Paths.get("watchman"),
+            ImmutableMap.copyOf(System.getenv())).isPresent());
     return runBuckCommandWithEnvironmentAndContext(
         Optional.of(context),
         Optional.<BuckEventListener>absent(),
