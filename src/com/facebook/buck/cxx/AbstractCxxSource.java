@@ -36,23 +36,25 @@ abstract class AbstractCxxSource {
 
   public static enum Type {
 
-    C("c", "c"),
-    CXX("c++", "cc", "cp", "cxx", "cpp", "CPP", "c++", "C"),
-    OBJC("objective-c", "m"),
-    OBJCXX("objective-c++", "mm"),
-    C_CPP_OUTPUT("c-cpp-output", "i"),
-    CXX_CPP_OUTPUT("c++-cpp-output", "ii"),
-    OBJC_CPP_OUTPUT("objective-c-cpp-output", "mi"),
-    OBJCXX_CPP_OUTPUT("objective-c++-cpp-output", "mii"),
-    ASSEMBLER("assembler", "s"),
-    ASSEMBLER_WITH_CPP("assembler-with-cpp", "S"),
+    C("c", "cpp-output", "c"),
+    CXX("c++", "c++-cpp-output", "cc", "cp", "cxx", "cpp", "CPP", "c++", "C"),
+    OBJC("objective-c", "objective-c-cpp-output", "m"),
+    OBJCXX("objective-c++", "objective-c++-cpp-output", "mm"),
+    C_CPP_OUTPUT("cpp-output", "cpp-output", "i"),
+    CXX_CPP_OUTPUT("c++-cpp-output", "c++-cpp-output", "ii"),
+    OBJC_CPP_OUTPUT("objective-c-cpp-output", "objective-c-cpp-output", "mi"),
+    OBJCXX_CPP_OUTPUT("objective-c++-cpp-output", "objective-c++-cpp-output", "mii"),
+    ASSEMBLER("assembler", "assembler", "s"),
+    ASSEMBLER_WITH_CPP("assembler-with-cpp", "assembler", "S"),
     ;
 
     private final String language;
+    private final String preprocessedLanguage;
     private final ImmutableSet<String> extensions;
 
-    private Type(String language, String... extensions) {
+    private Type(String language, String preprocessedLanguage, String... extensions) {
       this.language = language;
+      this.preprocessedLanguage = preprocessedLanguage;
       this.extensions = ImmutableSet.copyOf(extensions);
     }
 
@@ -67,6 +69,10 @@ abstract class AbstractCxxSource {
 
     public String getLanguage() {
       return language;
+    }
+
+    public String getPreprocessedLanguage() {
+      return preprocessedLanguage;
     }
 
     public ImmutableSet<String> getExtensions() {

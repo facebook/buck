@@ -45,12 +45,6 @@ public class CxxPreprocessAndCompileStepTest {
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
 
-    ImmutableList.Builder<String> cmd = ImmutableList.builder();
-    cmd.addAll(compiler);
-    cmd.add(CxxPreprocessAndCompileStep.Operation.PREPROCESS.getFlag());
-    cmd.addAll(flags);
-    cmd.add(input.toString());
-
     Path compilationDirectory = Paths.get("compDir");
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         9,
@@ -64,7 +58,9 @@ public class CxxPreprocessAndCompileStepTest {
             CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             output,
             input,
-            cmd.build(),
+            CxxSource.Type.CXX,
+            compiler,
+            flags,
             replacementPaths,
             sanitizer);
 
@@ -96,12 +92,6 @@ public class CxxPreprocessAndCompileStepTest {
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
 
-    ImmutableList.Builder<String> cmd = ImmutableList.builder();
-    cmd.addAll(compiler);
-    cmd.add(CxxPreprocessAndCompileStep.Operation.COMPILE.getFlag());
-    cmd.add("-o", output.toString());
-    cmd.add(input.toString());
-
     ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of(original, replacement);
 
     Path compilationDirectory = Paths.get("compDir");
@@ -119,7 +109,9 @@ public class CxxPreprocessAndCompileStepTest {
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             output,
             input,
-            cmd.build(),
+            CxxSource.Type.CXX,
+            compiler,
+            ImmutableList.<String>of(),
             replacementPaths,
             sanitizer);
 

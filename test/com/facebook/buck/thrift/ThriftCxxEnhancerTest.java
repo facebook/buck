@@ -23,7 +23,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -69,7 +69,7 @@ public class ThriftCxxEnhancerTest {
       new CxxLibraryDescription(
           CXX_BUCK_CONFIG,
           CXX_PLATFORMS,
-          CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE);
+          CxxPreprocessMode.SEPARATE);
   private static final ThriftCxxEnhancer ENHANCER_CPP =
       new ThriftCxxEnhancer(
           THRIFT_BUCK_CONFIG,
@@ -585,7 +585,7 @@ public class ThriftCxxEnhancerTest {
         new CxxLibraryDescription(
             CXX_BUCK_CONFIG,
             CXX_PLATFORMS,
-            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE) {
+            CxxPreprocessMode.SEPARATE) {
           @Override
           public <A extends Arg> BuildRule createBuildRule(
               BuildRuleParams params,

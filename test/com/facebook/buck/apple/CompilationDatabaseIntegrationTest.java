@@ -193,9 +193,9 @@ public class CompilationDatabaseIntegrationTest {
         "-arch",
         "x86_64",
         "'-mios-simulator-version-min=8.0'",
-        "-c",
         "-x",
-        language);
+        language,
+        "-c");
     if (isLibrary) {
       commandArgs.add("-fPIC");
     }
@@ -206,6 +206,8 @@ public class CompilationDatabaseIntegrationTest {
 
     // TODO(user, jakubzika): It seems like a bug that this set of flags gets inserted twice.
     // Perhaps this has something to do with how the [cxx] section in .buckconfig is processed.
+    // (Err, it's probably adding both the preprocessor and regular rule command suffixes. Should
+    // be harmless.)
     commandArgs.add("'" + languageStandard + "'");
     commandArgs.add("-Wno-deprecated");
     commandArgs.add("-Wno-conversion");
@@ -220,9 +222,9 @@ public class CompilationDatabaseIntegrationTest {
       commandArgs.add(sdkRoot + framework);
     }
 
+    commandArgs.add(source);
     commandArgs.add("-o");
     commandArgs.add(output);
-    commandArgs.add(source);
     MoreAsserts.assertIterablesEquals(commandArgs, ImmutableList.copyOf(entry.command.split(" ")));
   }
 }

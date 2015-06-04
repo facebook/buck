@@ -51,8 +51,9 @@ import java.util.List;
 
 public class CxxCompilationDatabaseTest {
 
-  @Test
-  public void testCompilationDatabseWithCombinedPreprocessAndCompileStrategy() {
+  private void runCombinedTest(
+      CxxPreprocessMode strategy,
+      ImmutableList<String> expectedArguments) {
     BuildTarget testBuildTarget = BuildTarget
         .builder(BuildTargetFactory.newInstance("//foo:baz"))
         .addAllFlavors(
@@ -82,6 +83,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.<String>of(),
         Paths.get("test.o"),
         new TestSourcePath("test.cpp"),
+        CxxSource.Type.CXX,
         ImmutableList.of(
             Paths.get("foo/bar"),
             Paths.get("test")),
@@ -93,7 +95,7 @@ public class CxxCompilationDatabaseTest {
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
         testSourcePathResolver,
-        CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE,
+        strategy,
         ImmutableSortedSet.of(testCompileRule));
 
     assertEquals(
@@ -130,17 +132,42 @@ public class CxxCompilationDatabaseTest {
           new CxxCompilationDatabaseEntry(
               root + "/foo",
               root + "/test.cpp",
-              ImmutableList.of(
-                  "compiler",
-                  "-c",
-                  "-I",
-                  "foo/bar",
-                  "-I",
-                  "test",
-                  "-o",
-                  "test.o",
-                  "test.cpp")));
+              expectedArguments));
     MoreAsserts.assertIterablesEquals(observedEntries, expectedEntries);
+  }
+
+  @Test
+  public void testCompilationDatabseWithCombinedPreprocessAndCompileStrategy() {
+    runCombinedTest(CxxPreprocessMode.COMBINED,
+        ImmutableList.of(
+            "compiler",
+            "-x",
+            "c++",
+            "-c",
+            "-I",
+            "foo/bar",
+            "-I",
+            "test",
+            "test.cpp",
+            "-o",
+            "test.o"));
+  }
+
+  @Test
+  public void testCompilationDatabseWithPipedPreprocessAndCompileStrategy() {
+    runCombinedTest(CxxPreprocessMode.PIPED,
+        ImmutableList.of(
+            "compiler",
+            "-x",
+            "c++",
+            "-c",
+            "-I",
+            "foo/bar",
+            "-I",
+            "test",
+            "test.cpp",
+            "-o",
+            "test.o"));
   }
 
   @Test
@@ -174,6 +201,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.<String>of(),
         Paths.get("test.ii"),
         new TestSourcePath("test.cpp"),
+        CxxSource.Type.CXX_CPP_OUTPUT,
         ImmutableList.of(
             Paths.get("foo/bar"),
             Paths.get("test")),
@@ -198,6 +226,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.<String>of(),
         Paths.get("test.o"),
         new TestSourcePath("test.ii"),
+        CxxSource.Type.CXX_CPP_OUTPUT,
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
@@ -207,7 +236,7 @@ public class CxxCompilationDatabaseTest {
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
         testSourcePathResolver,
-        CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE,
+        CxxPreprocessMode.SEPARATE,
         ImmutableSortedSet.of(testPreprocessRule, testCompileRule));
 
     assertEquals(
@@ -246,6 +275,8 @@ public class CxxCompilationDatabaseTest {
                 root + "/test.cpp",
                 ImmutableList.of(
                     "compiler",
+                    "-x",
+                    "c++-cpp-output",
                     "-c",
                     "-I",
                     "foo/bar",

@@ -201,9 +201,6 @@ public class CxxSourceRuleFactory {
     // Build up the list of extra preprocessor flags for this rule.
     ImmutableList<String> args =
         ImmutableList.<String>builder()
-            // We explicitly identify our source rather then let the compiler guess based on the
-            // extension.
-            .add("-x", source.getType().getLanguage())
             // If we're using pic, add in the appropriate flag.
             .addAll(pic.getFlags())
             // Add in the source and platform specific preprocessor flags.
@@ -223,6 +220,7 @@ public class CxxSourceRuleFactory {
         args,
         getPreprocessOutputPath(target, source.getType(), name),
         source.getPath(),
+        source.getType(),
         ImmutableList.copyOf(cxxPreprocessorInput.getIncludeRoots()),
         ImmutableList.copyOf(cxxPreprocessorInput.getSystemIncludeRoots()),
         ImmutableList.copyOf(cxxPreprocessorInput.getFrameworkRoots()),
@@ -288,13 +286,6 @@ public class CxxSourceRuleFactory {
 
   private ImmutableList<String> getCompileFlags(CxxSource.Type type) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-
-    // TODO(#5393669): We need to handle compiler drivers that don't support certain language
-    // options (e.g. the android NDK compilers don't support "c-cpp-output", although they can
-    // auto-detect via the extension).  For the time being, we just fall back to the default
-    // of letting the compiler driver auto-detecting the language type via the extensions which
-    // should work, since we require proper extensions in the descriptions.
-    //args.add("-x", source.getType().getLanguage());
 
     // If we're dealing with a C source that can be compiled, add the platform C compiler flags.
     if (type == CxxSource.Type.C_CPP_OUTPUT ||
@@ -375,6 +366,7 @@ public class CxxSourceRuleFactory {
         args,
         getCompileOutputPath(target, name),
         source.getPath(),
+        source.getType(),
         cxxPlatform.getDebugPathSanitizer());
     resolver.addToIndex(result);
     return result;
@@ -389,7 +381,8 @@ public class CxxSourceRuleFactory {
       BuildRuleResolver resolver,
       String name,
       CxxSource source,
-      PicType pic) {
+      PicType pic,
+      CxxPreprocessMode strategy) {
 
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
@@ -415,9 +408,6 @@ public class CxxSourceRuleFactory {
     // Build up the list of compiler flags.
     ImmutableList<String> args =
         ImmutableList.<String>builder()
-            // We explicitly identify our source rather then let the compiler guess based on the
-            // extension.
-            .add("-x", source.getType().getLanguage())
             // If we're using pic, add in the appropriate flag.
             .addAll(pic.getFlags())
             // Add in preprocessor flags.
@@ -441,18 +431,20 @@ public class CxxSourceRuleFactory {
         args,
         getCompileOutputPath(target, name),
         source.getPath(),
+        source.getType(),
         ImmutableList.copyOf(cxxPreprocessorInput.getIncludeRoots()),
         ImmutableList.copyOf(cxxPreprocessorInput.getSystemIncludeRoots()),
         ImmutableList.copyOf(cxxPreprocessorInput.getFrameworkRoots()),
         cxxPreprocessorInput.getIncludes(),
-        cxxPlatform.getDebugPathSanitizer());
+        cxxPlatform.getDebugPathSanitizer(),
+        strategy);
     resolver.addToIndex(result);
     return result;
   }
 
   private ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       BuildRuleResolver resolver,
-      Strategy strategy,
+      CxxPreprocessMode strategy,
       ImmutableMap<String, CxxSource> sources,
       PicType pic) {
 
@@ -468,13 +460,14 @@ public class CxxSourceRuleFactory {
 
       switch (strategy) {
 
-        case COMBINED_PREPROCESS_AND_COMPILE: {
+        case PIPED:
+        case COMBINED: {
           CxxPreprocessAndCompile rule;
 
           // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
           // Otherwise, use a regular compile rule.
           if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-            rule = requirePreprocessAndCompileBuildRule(resolver, name, source, pic);
+            rule = requirePreprocessAndCompileBuildRule(resolver, name, source, pic, strategy);
           } else {
             rule = requireCompileBuildRule(resolver, name, source, pic);
           }
@@ -483,7 +476,7 @@ public class CxxSourceRuleFactory {
           break;
         }
 
-        case SEPARATE_PREPROCESS_AND_COMPILE: {
+        case SEPARATE: {
 
           // If this is a preprocessable source, first create the preprocess build rule and
           // update the source and name to represent its compilable output.
@@ -528,7 +521,7 @@ public class CxxSourceRuleFactory {
       CxxPlatform cxxPlatform,
       CxxPreprocessorInput cxxPreprocessorInput,
       ImmutableList<String> compilerFlags,
-      Strategy strategy,
+      CxxPreprocessMode strategy,
       ImmutableMap<String, CxxSource> sources,
       PicType pic) {
     CxxSourceRuleFactory factory =
@@ -540,18 +533,6 @@ public class CxxSourceRuleFactory {
             cxxPreprocessorInput,
             compilerFlags);
     return factory.requirePreprocessAndCompileRules(resolver, strategy, sources, pic);
-  }
-
-  public static enum Strategy {
-
-    // Preprocess and compile sources in a single rule.
-    COMBINED_PREPROCESS_AND_COMPILE,
-
-    // Preprocess and compile sources in separate build rules.
-    SEPARATE_PREPROCESS_AND_COMPILE,
-
-    ;
-
   }
 
   public static enum PicType {

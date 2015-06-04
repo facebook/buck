@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.Flavor;
@@ -105,7 +105,7 @@ public class FakeAppleRuleDescriptions {
         new CxxLibraryDescription(
             new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
-            CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
+            CxxPreprocessMode.COMBINED),
         DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
         DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
 
@@ -118,7 +118,7 @@ public class FakeAppleRuleDescriptions {
             new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_PLATFORM.getCxxPlatform(),
             DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
-            CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE),
+            CxxPreprocessMode.COMBINED),
         DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
         DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
 

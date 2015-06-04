@@ -30,7 +30,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.ByteArrayOutputStream;
@@ -40,6 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
 
 /**
  * A step that preprocesses and/or compiles C/C++ sources in a single step.
@@ -51,7 +52,9 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Operation operation;
   private final Path output;
   private final Path input;
-  private final ImmutableList<String> command;
+  private final CxxSource.Type inputType;
+  private final ImmutableList<String> commandPrefix;
+  private final ImmutableList<String> commandSuffix;
   private final ImmutableMap<Path, Path> replacementPaths;
   private final DebugPathSanitizer sanitizer;
 
@@ -66,13 +69,17 @@ public class CxxPreprocessAndCompileStep implements Step {
       Operation operation,
       Path output,
       Path input,
-      ImmutableList<String> command,
+      CxxSource.Type inputType,
+      ImmutableList<String> commandPrefix,
+      ImmutableList<String> commandSuffix,
       ImmutableMap<Path, Path> replacementPaths,
       DebugPathSanitizer sanitizer) {
     this.operation = operation;
     this.output = output;
     this.input = input;
-    this.command = command;
+    this.inputType = inputType;
+    this.commandPrefix = commandPrefix;
+    this.commandSuffix = commandSuffix;
     this.replacementPaths = replacementPaths;
     this.sanitizer = sanitizer;
   }
@@ -148,37 +155,191 @@ public class CxxPreprocessAndCompileStep implements Step {
         });
   }
 
-  @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
-    LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
-
+  /**
+   * Apply common settings for our subprocesses.
+   *
+   * @return Half-configured ProcessBuilder
+   */
+  private ProcessBuilder makeSubprocessBuilder(ExecutionContext context) {
     ProcessBuilder builder = new ProcessBuilder();
-    builder.command(command);
     builder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
     builder.redirectError(ProcessBuilder.Redirect.PIPE);
+    return builder;
+  }
 
-    // If we're preprocessing, file output goes through stdout, so we can postprocess it.
-    if (operation == Operation.PREPROCESS) {
-      builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
-    }
+  private ImmutableList<String> makePreprocessCommand() {
+    return ImmutableList.<String>builder()
+        .addAll(commandPrefix)
+        .add("-x", inputType.getLanguage())
+        .add("-E")
+        .addAll(commandSuffix)
+        .add(input.toString())
+        .build();
+  }
 
-    // A forced compilation directory is set in the constructor.  Now, we can't actually
-    // force the compiler to embed this into the binary -- all we can do set the PWD environment
-    // to variations of the actual current working directory (e.g. /actual/dir or /actual/dir////).
-    // So we use this knob to expand the space used to store the compilation directory to the
-    // size we need for the compilation directory we really want, then do an in-place
-    // find-and-replace to update the compilation directory after the fact.
-    if (operation == Operation.COMPILE) {
-      builder.environment().put(
-          "PWD",
-          sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()));
+  private ImmutableList<String> makeCompileCommand(
+      String inputFileName,
+      String inputLanguage) {
+    return ImmutableList.<String>builder()
+        .addAll(commandPrefix)
+        .add("-x", inputLanguage)
+        .add("-c")
+        .addAll(commandSuffix)
+        .add(inputFileName)
+        .add("-o")
+        .add(output.toString())
+        .build();
+  }
+
+  private void safeCloseProcessor(@Nullable FunctionLineProcessorThread processor) {
+    if (processor != null) {
+      try {
+        processor.close();
+      } catch (Exception ex) {
+        LOG.warn(ex, "error closing processor");
+      }
     }
+  }
+
+  private int executePiped(ExecutionContext context)
+      throws IOException, InterruptedException {
+    ByteArrayOutputStream preprocessError = new ByteArrayOutputStream();
+    ProcessBuilder preprocessBuilder = makeSubprocessBuilder(context);
+    preprocessBuilder.command(makePreprocessCommand());
+    preprocessBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+
+    ByteArrayOutputStream compileError = new ByteArrayOutputStream();
+    ProcessBuilder compileBuilder = makeSubprocessBuilder(context);
+    compileBuilder.command(
+        makeCompileCommand(
+            "-",
+            inputType.getPreprocessedLanguage()));
+    compileBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
+
+    Process preprocess = null;
+    Process compile = null;
+    FunctionLineProcessorThread errorProcessorPreprocess = null;
+    FunctionLineProcessorThread errorProcessorCompile = null;
+    FunctionLineProcessorThread lineDirectiveMunger = null;
 
     try {
       LOG.debug(
           "Running command (pwd=%s): %s",
+          preprocessBuilder.directory(),
+          getDescription(context));
+
+      preprocess = preprocessBuilder.start();
+      compile = compileBuilder.start();
+
+      errorProcessorPreprocess =
+          new FunctionLineProcessorThread(
+              preprocess.getErrorStream(),
+              preprocessError,
+              createErrorLineProcessor(context.getProjectDirectoryRoot()));
+      errorProcessorPreprocess.start();
+
+      errorProcessorCompile =
+          new FunctionLineProcessorThread(
+              compile.getErrorStream(),
+              compileError,
+              createErrorLineProcessor(context.getProjectDirectoryRoot()));
+      errorProcessorCompile.start();
+
+      lineDirectiveMunger =
+          new FunctionLineProcessorThread(
+              preprocess.getInputStream(),
+              compile.getOutputStream(),
+              createPreprocessOutputLineProcessor(context.getProjectDirectoryRoot()));
+      lineDirectiveMunger.start();
+
+      int compileStatus = compile.waitFor();
+      int preprocessStatus = preprocess.waitFor();
+
+      String preprocessErr = new String(preprocessError.toByteArray());
+      if (!preprocessErr.isEmpty()) {
+        context.getConsole().printErrorText(preprocessErr);
+      }
+
+      String compileErr = new String(compileError.toByteArray());
+      if (!compileErr.isEmpty()) {
+        context.getConsole().printErrorText(compileErr);
+      }
+
+      if (preprocessStatus != 0) {
+        LOG.warn("error %d %s(preprocess) %s: %s", preprocessStatus,
+            operation.toString().toLowerCase(), input, preprocessErr);
+      }
+
+      if (compileStatus != 0) {
+        LOG.warn("error %d %s(compile) %s: %s", compileStatus,
+            operation.toString().toLowerCase(), input, compileErr);
+      }
+
+      if (preprocessStatus != 0) {
+        return preprocessStatus;
+      }
+
+      if (compileStatus != 0) {
+        return compileStatus;
+      }
+
+      return 0;
+    } finally {
+      if (preprocess != null) {
+        preprocess.destroy();
+        preprocess.waitFor();
+      }
+
+      if (compile != null) {
+        compile.destroy();
+        compile.waitFor();
+      }
+
+      safeCloseProcessor(errorProcessorPreprocess);
+      safeCloseProcessor(errorProcessorCompile);
+      safeCloseProcessor(lineDirectiveMunger);
+    }
+  }
+
+  @Override
+  public int execute(ExecutionContext context) throws InterruptedException {
+    try {
+      LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
+
+      // We need completely different logic if we're piping from the preprocessor to the compiler.
+      if (operation == Operation.PIPED_PREPROCESS_AND_COMPILE) {
+        return executePiped(context);
+      }
+
+      ProcessBuilder builder = makeSubprocessBuilder(context);
+      // If we're preprocessing, file output goes through stdout, so we can postprocess it.
+      if (operation == Operation.PREPROCESS) {
+        builder.command(makePreprocessCommand());
+        builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+      } else {
+        builder.command(
+            makeCompileCommand(
+                input.toString(),
+                inputType.getLanguage()));
+
+        if (operation == Operation.COMPILE_MUNGE_DEBUGINFO) {
+          // A forced compilation directory is set in the constructor.  Now, we can't actually force
+          // the compiler to embed this into the binary -- all we can do set the PWD environment to
+          // variations of the actual current working directory (e.g. /actual/dir or
+          // /actual/dir////).  So we use this knob to expand the space used to store the
+          // compilation directory to the size we need for the compilation directory we really want,
+          // then do an in-place find-and-replace to update the compilation directory after
+          // the fact.
+          builder.environment().put(
+              "PWD",
+              sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()));
+        }
+      }
+
+      LOG.debug(
+          "Running command (pwd=%s): %s",
           builder.directory(),
-          Joiner.on(' ').join(Iterables.transform(builder.command(), Escaper.SHELL_ESCAPER)));
+          getDescription(context));
 
       // Start the process.
       Process process = builder.start();
@@ -223,10 +384,11 @@ public class CxxPreprocessAndCompileStep implements Step {
         context.getConsole().printErrorText(err);
       }
 
-      // If the compilation completed successfully, perform the in-place update of the compilation
-      // as per above.  This locates the relevant debug section and swaps out the expanded actual
+      // If the compilation completed successfully and we didn't effect debug-info normalization
+      // through #line directive modification, perform the in-place update of the compilation per
+      // above.  This locates the relevant debug section and swaps out the expanded actual
       // compilation directory with the one we really want.
-      if (exitCode == 0 && operation == Operation.COMPILE) {
+      if (exitCode == 0 && operation == Operation.COMPILE_MUNGE_DEBUGINFO) {
         try {
           sanitizer.restoreCompilationDirectory(
               context.getProjectDirectoryRoot().toAbsolutePath().resolve(output),
@@ -250,29 +412,54 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
   }
 
+  public ImmutableList<String> getCommand() {
+    switch (operation) {
+      case COMPILE:
+      case COMPILE_MUNGE_DEBUGINFO:
+        return makeCompileCommand(
+            input.toString(),
+            inputType.getLanguage());
+      case PREPROCESS:
+        return makePreprocessCommand();
+      // $CASES-OMITTED$
+      default:
+        throw new RuntimeException("invalid operation type");
+    }
+  }
+
+  public String getDescriptionNoContext() {
+    switch (operation) {
+      case PIPED_PREPROCESS_AND_COMPILE: {
+        return Joiner.on(' ').join(
+            FluentIterable.from(makePreprocessCommand())
+            .transform(Escaper.SHELL_ESCAPER)) +
+            " | " +
+            Joiner.on(' ').join(
+                FluentIterable.from(
+                    makeCompileCommand(
+                        "-",
+                        inputType.getPreprocessedLanguage()))
+                .transform(Escaper.SHELL_ESCAPER));
+
+      }
+      // $CASES-OMITTED$
+      default: {
+        return Joiner.on(' ').join(
+            FluentIterable.from(getCommand())
+            .transform(Escaper.SHELL_ESCAPER));
+      }
+    }
+  }
+
   @Override
   public String getDescription(ExecutionContext context) {
-    return Joiner.on(' ').join(
-        FluentIterable.from(command)
-            .transform(Escaper.SHELL_ESCAPER));
+    return getDescriptionNoContext();
   }
 
   public static enum Operation {
-
-    COMPILE("-c"),
-    PREPROCESS("-E"),
-    ;
-
-    private final String flag;
-
-    private Operation(String flag) {
-      this.flag = flag;
-    }
-
-    public String getFlag() {
-      return flag;
-    }
-
+    COMPILE,
+    COMPILE_MUNGE_DEBUGINFO,
+    PREPROCESS,
+    PIPED_PREPROCESS_AND_COMPILE,
   }
-
 }

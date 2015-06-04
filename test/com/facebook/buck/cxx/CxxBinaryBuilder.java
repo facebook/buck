@@ -31,7 +31,7 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<CxxBinaryDescript
             cxxBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms,
-            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE),
+            CxxPreprocessMode.SEPARATE),
         target);
   }
 

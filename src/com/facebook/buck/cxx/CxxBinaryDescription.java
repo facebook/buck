@@ -49,17 +49,17 @@ public class CxxBinaryDescription implements
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final CxxSourceRuleFactory.Strategy compileStrategy;
+  private final CxxPreprocessMode preprocessMode;
 
   public CxxBinaryDescription(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxSourceRuleFactory.Strategy compileStrategy) {
+      CxxPreprocessMode preprocessMode) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
-    this.compileStrategy = compileStrategy;
+    this.preprocessMode = preprocessMode;
   }
 
   /**
@@ -136,11 +136,11 @@ public class CxxBinaryDescription implements
               resolver,
               cxxPlatform,
               args,
-              compileStrategy);
+              preprocessMode);
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
           new SourcePathResolver(resolver),
-          compileStrategy,
+          preprocessMode,
           cxxLinkAndCompileRules.compileRules);
     }
 
@@ -150,7 +150,7 @@ public class CxxBinaryDescription implements
             resolver,
             cxxPlatform,
             args,
-            compileStrategy);
+            preprocessMode);
     CxxLink cxxLink = cxxLinkAndCompileRules.cxxLink;
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink

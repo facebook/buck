@@ -35,7 +35,7 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
         new CxxLibraryDescription(
             cxxBuckConfig,
             cxxPlatforms,
-            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE),
+            CxxPreprocessMode.SEPARATE),
         target);
   }
 

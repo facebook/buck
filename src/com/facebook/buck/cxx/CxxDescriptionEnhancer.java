@@ -681,7 +681,7 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
-      CxxSourceRuleFactory.Strategy compileStrategy) {
+      CxxPreprocessMode preprocessMode) {
 
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(params, resolver, args);
     ImmutableMap<Path, SourcePath> headers = parseHeaders(params, resolver, args);
@@ -744,7 +744,7 @@ public class CxxDescriptionEnhancer {
                 args.compilerFlags,
                 args.platformCompilerFlags,
                 cxxPlatform.getFlavor()),
-            compileStrategy,
+            preprocessMode,
             sources,
             CxxSourceRuleFactory.PicType.PDC);
 

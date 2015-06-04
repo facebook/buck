@@ -82,9 +82,9 @@ public class CxxCompilationDatabaseIntegrationTest {
         "foo.cpp",
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
-            .add("-c")
             .add("-x")
             .add("c++")
+            .add("-c")
             .add("-I")
             .add(binaryHeaderSymlinkTreeFolder)
             .add("-I")
@@ -123,9 +123,9 @@ public class CxxCompilationDatabaseIntegrationTest {
         "bar.cpp",
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
-            .add("-c")
             .add("-x")
             .add("c++")
+            .add("-c")
             .add("-fPIC")
             .add("-I")
             .add(headerSymlinkTreeFolder)

@@ -95,9 +95,7 @@ public class CxxTestDescription implements
         resolver,
         cxxPlatform,
         args,
-        cxxBuckConfig.useCombinedPreprocessAndCompile() ?
-            CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE :
-            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE)
+        cxxBuckConfig.getPreprocessMode())
         .cxxLink;
 
     // Construct the actual build params we'll use, notably with an added dependency on the

@@ -119,7 +119,8 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             name,
             cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxPreprocess.getDeps());
   }
 
@@ -169,7 +170,8 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             name,
             cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertNotEquals(
         -1,
         Collections.indexOfSubList(cxxPreprocessAndCompile.getFlags(), platformFlags));
@@ -242,7 +244,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             cSourceName,
             cSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(cPreprocessAndCompile.getFlags(), explicitCppflags);
     assertContains(cPreprocessAndCompile.getFlags(), cppflags);
     assertContains(cPreprocessAndCompile.getFlags(), perFileFlagsForTestC);
@@ -268,7 +271,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             cxxSourceName,
             cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(cxxPreprocessAndCompile.getFlags(), explicitCxxppflags);
     assertContains(cxxPreprocessAndCompile.getFlags(), cxxppflags);
     assertContains(cxxPreprocessAndCompile.getFlags(), perFileFlagsForTestCpp);
@@ -293,114 +297,10 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             assemblerWithCppSourceName,
             assemblerWithCppSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(assemblerWithCppPreprocessAndCompile.getFlags(), asppflags);
     assertContains(assemblerWithCppPreprocessAndCompile.getFlags(), perFileFlagsForTestS);
-  }
-
-  @Test
-  public void languageFlagsArePassedForPreprocessBuildRules() {
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
-    BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
-
-    CxxSourceRuleFactory cxxSourceRuleFactory =
-        new CxxSourceRuleFactory(
-            params,
-            buildRuleResolver,
-            pathResolver,
-            CXX_PLATFORM,
-            CxxPreprocessorInput.EMPTY,
-            ImmutableList.<String>of());
-
-    String name = "foo/bar.cpp";
-    SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    CxxSource cxxSource = CxxSource.of(
-        CxxSource.Type.CXX,
-        input,
-        ImmutableList.<String>of());
-
-    CxxPreprocessAndCompile cxxPreprocess =
-        cxxSourceRuleFactory.requirePreprocessBuildRule(
-            buildRuleResolver,
-            name,
-            cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
-    assertThat(cxxPreprocess.getFlags(), Matchers.contains("-x", "c++"));
-    CxxPreprocessAndCompile cxxPreprocessAndCompile =
-        cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
-            buildRuleResolver,
-            name,
-            cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
-    assertThat(cxxPreprocessAndCompile.getFlags(), Matchers.contains("-x", "c++"));
-
-    name = "foo/bar.m";
-    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = CxxSource.of(
-        CxxSource.Type.OBJC,
-        input,
-        ImmutableList.<String>of());
-
-    cxxPreprocess =
-        cxxSourceRuleFactory.requirePreprocessBuildRule(
-            buildRuleResolver,
-            name,
-            cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
-    assertThat(cxxPreprocess.getFlags(), Matchers.contains("-x", "objective-c"));
-    cxxPreprocessAndCompile =
-        cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
-            buildRuleResolver,
-            name,
-            cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
-    assertThat(cxxPreprocessAndCompile.getFlags(), Matchers.contains("-x", "objective-c"));
-
-    name = "foo/bar.mm";
-    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = CxxSource.of(
-        CxxSource.Type.OBJCXX,
-        input,
-        ImmutableList.<String>of());
-
-    cxxPreprocess =
-        cxxSourceRuleFactory.requirePreprocessBuildRule(
-            buildRuleResolver,
-            name,
-            cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
-    assertThat(cxxPreprocess.getFlags(), Matchers.contains("-x", "objective-c++"));
-    cxxPreprocessAndCompile =
-        cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
-            buildRuleResolver,
-            name,
-            cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
-    assertThat(cxxPreprocessAndCompile.getFlags(), Matchers.contains("-x", "objective-c++"));
-
-    name = "foo/bar.c";
-    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
-    cxxSource = CxxSource.of(
-        CxxSource.Type.C,
-        input,
-        ImmutableList.<String>of());
-
-    cxxPreprocess =
-        cxxSourceRuleFactory.requirePreprocessBuildRule(
-            buildRuleResolver,
-            name,
-            cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
-    assertThat(cxxPreprocess.getFlags(), Matchers.contains("-x", "c"));
-    cxxPreprocessAndCompile =
-        cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
-            buildRuleResolver,
-            name,
-            cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
-    assertThat(cxxPreprocessAndCompile.getFlags(), Matchers.contains("-x", "c"));
   }
 
   @Test
@@ -444,7 +344,8 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             namePreprocessAndCompile,
             cxxSourcePreprocessAndCompile,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxPreprocessAndCompile.getDeps());
   }
 
@@ -513,7 +414,8 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             name,
             cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertFalse(noPicPreprocessAndCompile.getFlags().contains("-fPIC"));
     assertEquals(
         cxxSourceRuleFactory.createCompileBuildTarget(
@@ -528,7 +430,8 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             name,
             cxxSource,
-            CxxSourceRuleFactory.PicType.PIC);
+            CxxSourceRuleFactory.PicType.PIC,
+            CxxPreprocessMode.SEPARATE);
     assertTrue(picPreprocessAndCompile.getFlags().contains("-fPIC"));
     assertEquals(
         cxxSourceRuleFactory.createCompileBuildTarget(
@@ -588,7 +491,8 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             name,
             cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertNotEquals(
         -1,
         Collections.indexOfSubList(cxxPreprocessAndCompile.getFlags(), platformFlags));
@@ -663,7 +567,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             cSourceName,
             cSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(cPreprocessAndCompile.getFlags(), explicitCompilerFlags);
     assertContains(cPreprocessAndCompile.getFlags(), cflags);
     assertContains(cPreprocessAndCompile.getFlags(), asflags);
@@ -698,7 +603,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             cxxSourceName,
             cxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(cxxPreprocessAndCompile.getFlags(), explicitCompilerFlags);
     assertContains(cxxPreprocessAndCompile.getFlags(), cxxflags);
     assertContains(cxxPreprocessAndCompile.getFlags(), asflags);
@@ -732,7 +638,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             cCppOutputSourceName,
             cCppOutputSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(cCppOutputPreprocessAndCompile.getFlags(), explicitCompilerFlags);
     assertContains(cCppOutputPreprocessAndCompile.getFlags(), cflags);
     assertContains(cCppOutputPreprocessAndCompile.getFlags(), asflags);
@@ -763,7 +670,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             assemblerSourceName,
             assemblerSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(assemblerPreprocessAndCompile.getFlags(), asflags);
     assertContains(assemblerPreprocessAndCompile.getFlags(), assemblerSourcePerFileFlags);
   }
@@ -880,7 +788,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             objcSourceName,
             objcSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(objcPreprocessAndCompile.getFlags(), explicitCompilerFlags);
 
     String objcxxSourceName = "test.mii";
@@ -906,7 +815,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             objcxxSourceName,
             objcxxSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
     assertContains(objcxxPreprocessAndCompile.getFlags(), explicitCompilerFlags);
   }
 
@@ -939,7 +849,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             objcSourceName,
             objcSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
 
     // Make sure we can get the same build rule twice.
     CxxPreprocessAndCompile objcCompile2 =
@@ -947,7 +858,8 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             objcSourceName,
             objcSource,
-            CxxSourceRuleFactory.PicType.PDC);
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
 
     assertEquals(objcCompile.getBuildTarget(), objcCompile2.getBuildTarget());
   }

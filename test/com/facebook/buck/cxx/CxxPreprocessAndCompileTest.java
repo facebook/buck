@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -52,6 +53,7 @@ public class CxxPreprocessAndCompileTest {
       ImmutableList.of("-fsanitize=address");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.cpp");
+  private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
   private static final CxxHeaders DEFAULT_INCLUDES =
       CxxHeaders.builder()
           .putNameToPathMap(Paths.get("test.h"), new TestSourcePath("foo/test.h"))
@@ -104,6 +106,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
@@ -121,6 +124,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
@@ -139,6 +143,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
@@ -157,6 +162,7 @@ public class CxxPreprocessAndCompileTest {
             ImmutableList.of("-different"),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
@@ -175,6 +181,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             new TestSourcePath("different"),
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
@@ -194,6 +201,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             ImmutableList.of(Paths.get("different")),
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
@@ -213,6 +221,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             ImmutableList.of(Paths.get("different")),
             DEFAULT_FRAMEWORK_ROOTS,
@@ -231,6 +240,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             ImmutableList.of(Paths.get("different")),
@@ -283,6 +293,7 @@ public class CxxPreprocessAndCompileTest {
             flags1,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
@@ -301,6 +312,7 @@ public class CxxPreprocessAndCompileTest {
             flags2,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS,
@@ -329,6 +341,7 @@ public class CxxPreprocessAndCompileTest {
         flags,
         output,
         new TestSourcePath(input.toString()),
+        DEFAULT_INPUT_TYPE,
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
@@ -337,12 +350,15 @@ public class CxxPreprocessAndCompileTest {
 
     ImmutableList<String> expectedCompileCommand = ImmutableList.<String>builder()
         .add("compiler")
+        .add("-x", "c++")
         .add("-c")
         .add("-ffunction-sections")
-        .add("-o", output.toString())
         .add(input.toString())
+        .add("-o", output.toString())
         .build();
-    ImmutableList<String> actualCompileCommand = buildRule.getCommand();
+    ImmutableList<String> actualCompileCommand =
+        ImmutableList.copyOf(
+            Splitter.on(' ').split(buildRule.getMainCommandDescription()));
     assertEquals(expectedCompileCommand, actualCompileCommand);
   }
 
@@ -365,6 +381,7 @@ public class CxxPreprocessAndCompileTest {
         flags,
         output,
         new TestSourcePath(input.toString()),
+        DEFAULT_INPUT_TYPE,
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
@@ -374,6 +391,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify it uses the expected command.
     ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
         .add("compiler")
+        .add("-x", "c++")
         .add("-E")
         .add("-Dtest=blah")
         .add(input.toString())

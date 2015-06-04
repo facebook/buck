@@ -52,14 +52,14 @@ import java.util.Set;
 public class CxxCompilationDatabase extends AbstractBuildRule {
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
 
-  private final CxxSourceRuleFactory.Strategy compileStrategy;
+  private final CxxPreprocessMode preprocessMode;
   private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
   private final Path outputJsonFile;
 
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
-      CxxSourceRuleFactory.Strategy compileStrategy,
+      CxxPreprocessMode preprocessMode,
       Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
@@ -77,7 +77,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
             Suppliers.ofInstance(params.getExtraDeps())),
         pathResolver,
         compileRules.build(),
-        compileStrategy);
+        preprocessMode);
   }
 
   static BuildRuleParams paramsWithoutCompilationDatabaseFlavor(BuildRuleParams params) {
@@ -99,10 +99,10 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
-      CxxSourceRuleFactory.Strategy compileStrategy) {
+      CxxPreprocessMode preprocessMode) {
     super(buildRuleParams, pathResolver);
     this.compileRules = compileRules;
-    this.compileStrategy = compileStrategy;
+    this.preprocessMode = preprocessMode;
     this.outputJsonFile = BuildTargets.getGenPath(
         buildRuleParams.getBuildTarget(),
         "__%s.json");
@@ -140,7 +140,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
       for (CxxPreprocessAndCompile compileRule : compileRules) {
         Optional<CxxPreprocessAndCompile> preprocessRule = Optional
             .<CxxPreprocessAndCompile>absent();
-        if (compileStrategy == CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE) {
+        if (preprocessMode == CxxPreprocessMode.SEPARATE) {
           for (BuildRule buildRule : compileRule.getDeclaredDeps()) {
             if (CxxSourceRuleFactory.isPreprocessFlavoredBuildTarget(buildRule.getBuildTarget())) {
               preprocessRule = Optional

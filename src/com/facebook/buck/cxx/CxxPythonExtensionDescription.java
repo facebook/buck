@@ -163,9 +163,7 @@ public class CxxPythonExtensionDescription implements
                 args.compilerFlags,
                 args.platformCompilerFlags,
                 cxxPlatform.getFlavor()),
-            cxxBuckConfig.useCombinedPreprocessAndCompile() ?
-                CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE :
-                CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE,
+            cxxBuckConfig.getPreprocessMode(),
             allSources,
             CxxSourceRuleFactory.PicType.PIC);
 

@@ -59,7 +59,6 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
-import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
@@ -337,22 +336,17 @@ public class KnownBuildRuleTypes {
     JavacOptions androidBinaryOptions = JavacOptions.builder(defaultJavacOptions)
         .build();
 
-    CxxSourceRuleFactory.Strategy compileStrategy =
-        cxxBuckConfig.useCombinedPreprocessAndCompile() ?
-            CxxSourceRuleFactory.Strategy.COMBINED_PREPROCESS_AND_COMPILE :
-            CxxSourceRuleFactory.Strategy.SEPARATE_PREPROCESS_AND_COMPILE;
-
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
             cxxBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms,
-            compileStrategy);
+            cxxBuckConfig.getPreprocessMode());
 
     CxxLibraryDescription cxxLibraryDescription = new CxxLibraryDescription(
         cxxBuckConfig,
         cxxPlatforms,
-        compileStrategy);
+        cxxBuckConfig.getPreprocessMode());
 
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(

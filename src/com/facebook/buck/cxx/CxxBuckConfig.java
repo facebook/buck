@@ -92,8 +92,20 @@ public class CxxBuckConfig {
     return Optional.of(split.build());
   }
 
-  public boolean useCombinedPreprocessAndCompile() {
-    return delegate.getBooleanValue("cxx", "combined_preprocess_and_compile", /* default*/ false);
-  }
+  public CxxPreprocessMode getPreprocessMode() {
+    Optional<CxxPreprocessMode> setting = delegate.getEnum(
+        "cxx", "preprocess_mode", CxxPreprocessMode.class);
 
+    if (setting.isPresent()) {
+      return setting.get();
+    }
+
+    // Support legacy configuration option
+    return delegate.getBooleanValue(
+            "cxx",
+            "combined_preprocess_and_compile",
+            /* default*/ false)
+        ? CxxPreprocessMode.COMBINED
+        : CxxPreprocessMode.SEPARATE;
+  }
 }
