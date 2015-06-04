@@ -9,6 +9,7 @@ java_test(
   source_under_test = [
     '//src/com/facebook/buck/apple:rules',
   ],
+  resources = glob(['testdata/**']),
   deps = [
     ':testutil',
     '//src/com/facebook/buck/apple:rules',
@@ -67,6 +68,7 @@ java_test(
   source_under_test = [
     '//src/com/facebook/buck/apple:rules',
   ],
+  resources = glob(['testdata/**']),
   deps = [
     ':testutil',
     '//src/com/facebook/buck/model:model',
