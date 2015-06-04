@@ -4,6 +4,7 @@ java_immutables_library(
     deps = [
         '//src/com/facebook/buck/log:api',
         '//src/com/facebook/buck/util:io',
+        '//third-party/java/dd-plist:dd-plist',
         '//third-party/java/guava:guava',
     ],
     visibility = ['PUBLIC'],
