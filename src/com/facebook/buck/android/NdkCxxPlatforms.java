@@ -46,7 +46,12 @@ public class NdkCxxPlatforms {
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() { }
 
-
+  /**
+   * Magic path prefix we use to denote the machine-specific location of the Android NDK.  Why "@"?
+   * It's uncommon enough to mark that path element as special while not being a metacharacter in
+   * either make, shell, or regular expression syntax.
+   */
+  public static final String ANDROID_NDK_ROOT = "@ANDROID_NDK_ROOT@";
 
   private static final ImmutableMap<Platform, Host> BUILD_PLATFORMS =
       ImmutableMap.of(
@@ -220,10 +225,8 @@ public class NdkCxxPlatforms {
                 File.separatorChar,
                 Paths.get("."),
                 ImmutableBiMap.of(
-                    getNdkToolRoot(ndkRoot, targetConfiguration, host),
-                    Paths.get("ANDROID_TOOLS_ROOT"),
                     ndkRoot,
-                    Paths.get("ANDROID_NDK_ROOT"))))
+                    Paths.get(ANDROID_NDK_ROOT))))
         .setSharedLibraryExtension("so");
 
     if (cxxRuntime != CxxRuntime.SYSTEM) {
