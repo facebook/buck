@@ -49,8 +49,8 @@ public class CxxPreprocessAndCompileStepTest {
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         9,
         File.separatorChar,
-        "PWD",
-        ImmutableBiMap.of(Paths.get("hello"), "SANITIZED"));
+        Paths.get("PWD"),
+        ImmutableBiMap.of(Paths.get("hello"), Paths.get("SANITIZED")));
 
     // Create our CxxPreprocessAndCompileStep to test.
     CxxPreprocessAndCompileStep cxxPreprocessStep =

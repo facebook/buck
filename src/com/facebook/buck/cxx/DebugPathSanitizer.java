@@ -35,7 +35,6 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -70,40 +69,14 @@ public class DebugPathSanitizer {
   }
 
   /**
-   * Constructs a {@link DebugPathSanitizer} using a string name for the compilation directory,
-   * which is padded with 'X' characters to {@code pathSize}.
+   * Return a new {@link DebugPathSanitizer} with a different pathSize setting.
    */
-  public DebugPathSanitizer(
-      int pathSize,
-      char separator,
-      String compilationDirectory,
-      ImmutableBiMap<Path, String> other) {
-    this(
-        pathSize,
+  public DebugPathSanitizer changePathSize(int newPathSize) {
+    return new DebugPathSanitizer(
+        newPathSize,
         separator,
-        getExpandedName(compilationDirectory, pathSize),
-        getExpandedNames(other, pathSize));
-  }
-
-  private static ImmutableBiMap<Path, Path> getExpandedNames(
-      ImmutableBiMap<Path, String> paths,
-      int size) {
-    ImmutableBiMap.Builder<Path, Path> replacements = ImmutableBiMap.builder();
-    for (Map.Entry<Path, String> entry : paths.entrySet()) {
-      replacements.put(
-          entry.getKey(),
-          getExpandedName(entry.getValue(), size));
-    }
-    return replacements.build();
-  }
-
-  /**
-   * @return a string formed by padding {@code name} on either side with 'X' characters to length
-   *     {@code size}, suitable to replace paths embedded in the debug section of a binary.
-   */
-  private static Path getExpandedName(String name, int size) {
-    Preconditions.checkArgument(size >= name.length());
-    return Paths.get(Strings.padEnd(name, size, 'X'));
+        compilationDirectory,
+        other);
   }
 
   /**
@@ -111,6 +84,10 @@ public class DebugPathSanitizer {
    *     {@code pathSize}.
    */
   public String getExpandedPath(Path path) {
+    if (pathSize == 0) {
+      return path.toString();
+    }
+
     Preconditions.checkArgument(path.toString().length() <= pathSize);
     return Strings.padEnd(path.toString(), pathSize, separator);
   }

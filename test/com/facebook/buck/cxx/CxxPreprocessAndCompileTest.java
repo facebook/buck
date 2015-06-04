@@ -273,13 +273,13 @@ public class CxxPreprocessAndCompileTest {
     DebugPathSanitizer sanitizer1 = new DebugPathSanitizer(
         pathSize,
         File.separatorChar,
-        "PWD",
-        ImmutableBiMap.of(Paths.get("something"), "A"));
+        Paths.get("PWD"),
+        ImmutableBiMap.of(Paths.get("something"), Paths.get("A")));
     DebugPathSanitizer sanitizer2 = new DebugPathSanitizer(
         pathSize,
         File.separatorChar,
-        "PWD",
-        ImmutableBiMap.of(Paths.get("different"), "A"));
+        Paths.get("PWD"),
+        ImmutableBiMap.of(Paths.get("different"), Paths.get("A")));
 
     // Generate a rule key for the defaults.
     ImmutableList<String> flags1 = ImmutableList.of("-Isomething/foo");
