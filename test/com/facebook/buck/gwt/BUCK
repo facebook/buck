@@ -5,4 +5,8 @@ java_test(
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/junit:junit',
   ],
+  # GwtBinaryIntegrationTest tends to time out when run in parallel
+  # on underpowered systems. Run it separately in serial at the end
+  # of the test run.
+  run_test_separately = True,
 )
