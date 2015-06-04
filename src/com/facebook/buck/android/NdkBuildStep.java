@@ -105,12 +105,19 @@ public class NdkBuildStep extends ShellStep {
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     Function<Path, Path> absolutifier = projectFilesystem.getAbsolutifier();
+
+    // We want relative, not absolute, paths in the debug-info for binaries we build using
+    // ndk_library.  Absolute paths are machine-specific, but relative ones should be the
+    // same everywhere.
+
+    Path relativePathToProject = absolutifier.apply(this.root)
+        .relativize(projectFilesystem.getRootPath());
     builder.add(
         "APP_PROJECT_PATH=" + absolutifier.apply(buildArtifactsDirectory) + File.separatorChar,
         "APP_BUILD_SCRIPT=" + absolutifier.apply(makefile),
         "NDK_OUT=" + absolutifier.apply(buildArtifactsDirectory) + File.separatorChar,
         "NDK_LIBS_OUT=" + projectFilesystem.resolve(binDirectory),
-        "BUCK_PROJECT_DIR=" + projectFilesystem.getRootPath());
+        "BUCK_PROJECT_DIR=" + relativePathToProject);
 
     // Suppress the custom build step messages (e.g. "Compile++ ...").
     if (Platform.detect() == Platform.WINDOWS) {
