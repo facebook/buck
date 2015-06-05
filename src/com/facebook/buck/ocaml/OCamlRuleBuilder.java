@@ -492,7 +492,8 @@ public class OCamlRuleBuilder {
         processBuilder.start(),
         options.build(),
         /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent());
+        /* timeOutMs */ Optional.<Long>absent(),
+        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
     if (result.getExitCode() != 0) {
       throw new HumanReadableException(stderr.getContentsAsString(StandardCharsets.UTF_8));
     }

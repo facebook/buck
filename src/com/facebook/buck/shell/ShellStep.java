@@ -160,7 +160,8 @@ public abstract class ShellStep implements Step {
         params,
         options.build(),
         getStdin(context),
-        getTimeout());
+        getTimeout(),
+        getTimeoutHandler(context));
     stdout = result.getStdout();
     stderr = result.getStderr();
 
@@ -317,4 +318,12 @@ public abstract class ShellStep implements Step {
     return Optional.absent();
   }
 
+  /**
+   * @return an optional timeout handler {@link Function} to do something before the process is
+   * killed.
+   */
+  @SuppressWarnings("unused")
+  protected Optional<Function<Process, Void>> getTimeoutHandler(ExecutionContext context) {
+    return Optional.absent();
+  }
 }

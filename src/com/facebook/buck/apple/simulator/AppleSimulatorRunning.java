@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -163,7 +164,8 @@ public class AppleSimulatorRunning {
         processExecutorParams,
         options,
         /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent());
+        /* timeOutMs */ Optional.<Long>absent(),
+        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
     if (result.getExitCode() != 0) {
       LOG.error(
           "Error %d launching bundle %s in simulator %s (command %s)",

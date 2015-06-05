@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +42,7 @@ public class ProcessExecutor {
   private static final Logger LOG = Logger.get(ProcessExecutor.class);
 
   /**
-   * Options for {@link ProcessExecutor#execute(Process, Set, Optional, Optional)}.
+   * Options for {@link ProcessExecutor#execute(Process, Set, Optional, Optional, Optional)}.
    */
   public static enum Option {
     PRINT_STD_OUT,
@@ -112,8 +113,9 @@ public class ProcessExecutor {
   }
 
   /**
-   * Convenience method for {@link #launchAndExecute(ProcessExecutorParams, Set, Optional, Optional)}
-   * with boolean values set to {@code false} and optional values set to absent.
+   * Convenience method for
+   * {@link #launchAndExecute(ProcessExecutorParams, Set, Optional, Optional, Optional)} with
+   * boolean values set to {@code false} and optional values set to absent.
    */
   public Result launchAndExecute(ProcessExecutorParams params)
       throws InterruptedException, IOException {
@@ -121,7 +123,8 @@ public class ProcessExecutor {
         params,
         ImmutableSet.<Option>of(),
         /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent());
+        /* timeOutMs */ Optional.<Long>absent(),
+        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
   }
 
   /**
@@ -139,8 +142,10 @@ public class ProcessExecutor {
       ProcessExecutorParams params,
       Set<Option> options,
       Optional<String> stdin,
-      Optional<Long> timeOutMs) throws InterruptedException, IOException {
-    return execute(launchProcessInternal(params), options, stdin, timeOutMs);
+      Optional<Long> timeOutMs,
+      Optional<Function<Process, Void>> timeOutHandler)
+      throws InterruptedException, IOException {
+    return execute(launchProcessInternal(params), options, stdin, timeOutMs, timeOutHandler);
   }
 
   /**
@@ -203,7 +208,7 @@ public class ProcessExecutor {
   }
 
   /**
-   * Convenience method for {@link #execute(Process, Set, Optional, Optional)}
+   * Convenience method for {@link #execute(Process, Set, Optional, Optional, Optional)}
    * with boolean values set to {@code false} and optional values set to absent.
    */
   public Result execute(Process process) throws InterruptedException {
@@ -211,7 +216,8 @@ public class ProcessExecutor {
         process,
         ImmutableSet.<Option>of(),
         /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent());
+        /* timeOutMs */ Optional.<Long>absent(),
+        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
   }
 
   /**
@@ -229,7 +235,10 @@ public class ProcessExecutor {
   /**
    * Waits up to {@code millis} milliseconds for the given process to finish.
    */
-  private void waitForTimeout(final Process process, long millis) throws InterruptedException {
+  private void waitForTimeout(
+      final Process process,
+      long millis,
+      final Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
     Thread waiter =
         new Thread(
             new Runnable() {
@@ -237,7 +246,15 @@ public class ProcessExecutor {
               public void run() {
                 try {
                   process.waitFor();
-                } catch (InterruptedException e) {}
+                } catch (InterruptedException e) {
+                  if (timeOutHandler.isPresent()) {
+                    try {
+                      timeOutHandler.get().apply(process);
+                    } catch (RuntimeException e2) {
+                      LOG.error(e2, "timeOutHandler threw an Exception!");
+                    }
+                  }
+                }
               }
             });
     waiter.start();
@@ -256,12 +273,14 @@ public class ProcessExecutor {
    * If {@code options} contains {@link Option#PRINT_STD_ERR}, then the stderr of the process will
    * be written directly to the stderr passed to the constructor of this executor. Otherwise,
    * the stderr of the process will be made available via {@link Result#getStderr()}.
+   * @param timeOutHandler If present, this method will be called before the process is killed.
    */
   public Result execute(
       Process process,
       Set<Option> options,
       Optional<String> stdin,
-      Optional<Long> timeOutMs) throws InterruptedException {
+      Optional<Long> timeOutMs,
+      Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
 
     // Read stdout/stderr asynchronously while running a Process.
     // See http://stackoverflow.com/questions/882772/capturing-stdout-when-calling-runtime-exec
@@ -310,7 +329,7 @@ public class ProcessExecutor {
       // for it to finish then force kill it.  If no timeout was given, just wait for it using
       // the regular `waitFor` method.
       if (timeOutMs.isPresent()) {
-        waitForTimeout(process, timeOutMs.get());
+        waitForTimeout(process, timeOutMs.get(), timeOutHandler);
         if (!finished(process)) {
           timedOut = true;
           process.destroy();
@@ -368,7 +387,7 @@ public class ProcessExecutor {
 
   /**
    * Values from the result of
-   * {@link ProcessExecutor#execute(Process, Set, Optional, Optional)}.
+   * {@link ProcessExecutor#execute(Process, Set, Optional, Optional, Optional)}.
    */
   public static class Result {
 

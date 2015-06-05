@@ -23,6 +23,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -151,7 +152,8 @@ public class PythonBuckConfig {
           ProcessExecutorParams.builder().addCommand(pythonPath.toString(), "-V").build(),
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_ERR),
           /* stdin */ Optional.<String>absent(),
-          /* timeOutMs */ Optional.<Long>absent());
+          /* timeOutMs */ Optional.<Long>absent(),
+          /* timeoutHandler */ Optional.<Function<Process, Void>>absent());
       return extractPythonVersion(pythonPath, versionResult);
     } catch (IOException e) {
       throw new HumanReadableException(

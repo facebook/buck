@@ -22,6 +22,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -89,9 +90,10 @@ public class XctestRunTestsStep implements Step {
       ProcessExecutor executor = context.getProcessExecutor();
       ProcessExecutor.Result result = executor.launchAndExecute(
           builder.build(),
-          ImmutableSet.<ProcessExecutor.Option>of(),
-          Optional.<String>absent(),
-          Optional.<Long>absent());
+          /* options */ ImmutableSet.<ProcessExecutor.Option>of(),
+          /* stdin */ Optional.<String>absent(),
+          /* timeOutMs */ Optional.<Long>absent(),
+          /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
       LOG.debug("xctest exit code: %d", result.getExitCode());
 
       // NOTE(grp): xctest always seems to have an exit code of 1.

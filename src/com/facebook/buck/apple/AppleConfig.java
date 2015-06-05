@@ -128,7 +128,8 @@ public class AppleConfig {
               processExecutorParams,
               options,
               /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>absent());
+              /* timeOutMs */ Optional.<Long>absent(),
+              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
         } catch (InterruptedException | IOException e) {
           LOG.warn("Could not execute xcode-select, continuing without developer dir.");
           return Optional.absent();

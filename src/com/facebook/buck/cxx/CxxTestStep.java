@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -80,7 +81,8 @@ public class CxxTestStep implements Step {
         process,
         options,
         /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent());
+        /* timeOutMs */ Optional.<Long>absent(),
+        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
 
     // Since test binaries return a non-zero exit code when unittests fail, save the exit code
     // to a file rather than signalling a step failure.
