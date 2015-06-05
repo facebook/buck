@@ -327,17 +327,21 @@ public class ProjectCommand extends BuildCommand {
         getTargetNodeSpecsForIde(
             getIde(params.getBuckConfig()),
             passedInTargetsSet,
-            params.getRepository().getFilesystem().getIgnorePaths()));
+            params.getRepository().getFilesystem().getIgnorePaths(),
+            isExperimentalIntelliJProjectGenerationEnabled()));
 
     ProjectPredicates projectPredicates = ProjectPredicates.forIde(getIde(params.getBuckConfig()));
 
     ImmutableSet<BuildTarget> graphRoots;
     if (!passedInTargetsSet.isEmpty()) {
-      // TODO(mkosiba): The generator should be able to do this without a dummy target.
-      ImmutableSet<BuildTarget> supplementalGraphRoots = getRootBuildTargetsForIntelliJ(
-          getIde(params.getBuckConfig()),
-          projectGraph,
-          projectPredicates);
+      ImmutableSet<BuildTarget> supplementalGraphRoots = ImmutableSet.of();
+      if (getIde(params.getBuckConfig()) == Ide.INTELLIJ &&
+          !isExperimentalIntelliJProjectGenerationEnabled()) {
+        supplementalGraphRoots = getRootBuildTargetsForIntelliJ(
+            getIde(params.getBuckConfig()),
+            projectGraph,
+            projectPredicates);
+      }
       graphRoots = Sets.union(passedInTargetsSet, supplementalGraphRoots).immutableCopy();
     } else {
       graphRoots = getRootsFromPredicate(
@@ -352,7 +356,8 @@ public class ProjectCommand extends BuildCommand {
         projectPredicates.getAssociatedProjectPredicate(),
         isWithTests(),
         getIde(params.getBuckConfig()),
-        params.getRepository().getFilesystem().getIgnorePaths());
+        params.getRepository().getFilesystem().getIgnorePaths(),
+        isExperimentalIntelliJProjectGenerationEnabled());
 
     if (getDryRun()) {
       for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
@@ -761,9 +766,10 @@ public class ProjectCommand extends BuildCommand {
   private static Iterable<? extends TargetNodeSpec> getTargetNodeSpecsForIde(
       ProjectCommand.Ide ide,
       Collection<BuildTarget> passedInBuildTargets,
-      ImmutableSet<Path> ignoreDirs
+      ImmutableSet<Path> ignoreDirs,
+      boolean experimentalProjectGenerationEnabled
   ) {
-    if (ide == ProjectCommand.Ide.XCODE &&
+    if ((ide == ProjectCommand.Ide.XCODE || experimentalProjectGenerationEnabled) &&
         !passedInBuildTargets.isEmpty()) {
       return Iterables.transform(
           passedInBuildTargets,
@@ -783,7 +789,8 @@ public class ProjectCommand extends BuildCommand {
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
       ProjectCommand.Ide ide,
-      ImmutableSet<Path> ignoreDirs
+      ImmutableSet<Path> ignoreDirs,
+      boolean experimentalProjectGenerationEnabled
   )
       throws IOException, InterruptedException {
 
@@ -799,7 +806,8 @@ public class ProjectCommand extends BuildCommand {
               getTargetNodeSpecsForIde(
                   ide,
                   Sets.union(graphRoots, explicitTestTargets),
-                  ignoreDirs));
+                  ignoreDirs,
+                  experimentalProjectGenerationEnabled));
     } else {
       resultProjectGraph = projectGraph;
       explicitTestTargets = ImmutableSet.of();

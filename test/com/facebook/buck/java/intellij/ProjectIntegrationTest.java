@@ -664,4 +664,22 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testExperimentalBuckProjectSlice() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "experimental_project_slice", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--experimental-ij-generation",
+        "--without-tests",
+        "modules/dep1:dep1");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+  }
 }
