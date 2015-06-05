@@ -20,7 +20,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.google.common.annotations.Beta;
 
 @Beta
-public class AndroidReactNativeLibraryDescription extends AbstractReactNativeLibaryDescription {
+public class AndroidReactNativeLibraryDescription extends AbstractReactNativeLibraryDescription {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("android_react_native_library");
 

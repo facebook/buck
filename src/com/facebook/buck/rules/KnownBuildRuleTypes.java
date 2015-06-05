@@ -81,7 +81,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.KeystoreDescription;
 import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
-import com.facebook.buck.js.IosReactNativeLibaryDescription;
+import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
@@ -418,7 +418,7 @@ public class KnownBuildRuleTypes {
     builder.register(new GenAidlDescription());
     builder.register(new GwtBinaryDescription());
     builder.register(new IosPostprocessResourcesDescription());
-    builder.register(new IosReactNativeLibaryDescription(reactNativeBuckConfig));
+    builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
     builder.register(new JavaTestDescription(defaultJavacOptions, testRuleTimeoutMs));

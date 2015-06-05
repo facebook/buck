@@ -18,11 +18,11 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.rules.BuildRuleType;
 
-public class IosReactNativeLibaryDescription extends AbstractReactNativeLibaryDescription {
+public class IosReactNativeLibraryDescription extends AbstractReactNativeLibraryDescription {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("ios_react_native_library");
 
-  public IosReactNativeLibaryDescription(ReactNativeBuckConfig buckConfig) {
+  public IosReactNativeLibraryDescription(ReactNativeBuckConfig buckConfig) {
     super(buckConfig, Platform.IOS);
   }
 

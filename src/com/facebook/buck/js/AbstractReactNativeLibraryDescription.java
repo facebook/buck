@@ -33,8 +33,8 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-public abstract class AbstractReactNativeLibaryDescription
-    implements Description<AbstractReactNativeLibaryDescription.Arg>, Flavored {
+public abstract class AbstractReactNativeLibraryDescription
+    implements Description<AbstractReactNativeLibraryDescription.Arg>, Flavored {
 
   public enum Platform {
     ANDROID("android"),
@@ -60,7 +60,7 @@ public abstract class AbstractReactNativeLibaryDescription
   private final ReactNativeBuckConfig buckConfig;
   private final Platform platform;
 
-  public AbstractReactNativeLibaryDescription(
+  public AbstractReactNativeLibraryDescription(
       ReactNativeBuckConfig buckConfig,
       Platform platform) {
     this.buckConfig = buckConfig;

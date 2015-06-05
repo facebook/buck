@@ -19,7 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.js.AbstractReactNativeLibaryDescription.Platform;
+import com.facebook.buck.js.AbstractReactNativeLibraryDescription.Platform;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
