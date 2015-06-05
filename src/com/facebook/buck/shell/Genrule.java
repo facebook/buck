@@ -224,7 +224,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       environmentVariablesBuilder.put("ZIPALIGN", android.getZipalignExecutable().toString());
     }
 
-    // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.
+    // TODO(user): This shouldn't be necessary. Speculatively disabling.
     environmentVariablesBuilder.put("NO_BUCKD", "1");
   }
 
@@ -238,7 +238,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
 
     Path output = rule.getPathToOutput();
     if (output != null) {
-      // TODO(t6405518): This is a giant hack and we should do away with $DEPS altogether.
+      // TODO(user): This is a giant hack and we should do away with $DEPS altogether.
       // There can be a lot of paths here and the filesystem location can be arbitrarily long.
       // We can easily hit the shell command character limit. What this does is find
       // BuckConstant.GEN_DIR (which should be the same for every path) and replaces
