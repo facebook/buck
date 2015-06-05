@@ -45,6 +45,22 @@ public class AndroidBuckConfig {
     return delegate.getValue("ndk", "app_platform");
   }
 
+  public Optional<NdkCxxPlatforms.Compiler.Type> getNdkCompiler() {
+    return delegate.getEnum("ndk", "compiler", NdkCxxPlatforms.Compiler.Type.class);
+  }
+
+  public Optional<String> getNdkGccVersion() {
+    return delegate.getValue("ndk", "gcc_version");
+  }
+
+  public Optional<String> getNdkClangVersion() {
+    return delegate.getValue("ndk", "clang_version");
+  }
+
+  public Optional<NdkCxxPlatforms.CxxRuntime> getNdkCxxRuntime() {
+    return delegate.getEnum("ndk", "cxx_runtime", NdkCxxPlatforms.CxxRuntime.class);
+  }
+
   /**
    * Returns the path to the platform specific aapt executable that is overridden by the current
    * project. If not specified, the Android platform aapt will be used.

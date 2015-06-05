@@ -83,7 +83,7 @@ public class CxxSourceRuleFactory {
       });
 
   @VisibleForTesting
-  CxxSourceRuleFactory(
+  public CxxSourceRuleFactory(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
@@ -170,7 +170,7 @@ public class CxxSourceRuleFactory {
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompile requirePreprocessBuildRule(
+  public CxxPreprocessAndCompile createPreprocessBuildRule(
       BuildRuleResolver resolver,
       String name,
       CxxSource source,
@@ -179,12 +179,6 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createPreprocessBuildTarget(name, source.getType(), pic);
-    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
-        target, CxxPreprocessAndCompile.class);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-
     Tool tool = CxxSourceTypes.getPreprocessor(cxxPlatform, source.getType());
 
     // Build up the list of dependencies for this rule.
@@ -228,6 +222,23 @@ public class CxxSourceRuleFactory {
         cxxPlatform.getDebugPathSanitizer());
     resolver.addToIndex(result);
     return result;
+  }
+
+  @VisibleForTesting
+  CxxPreprocessAndCompile requirePreprocessBuildRule(
+      BuildRuleResolver resolver,
+      String name,
+      CxxSource source,
+      PicType pic) {
+
+    BuildTarget target = createPreprocessBuildTarget(name, source.getType(), pic);
+    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+        target, CxxPreprocessAndCompile.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
+    return createPreprocessBuildRule(resolver, name, source, pic);
   }
 
   /**
@@ -319,7 +330,7 @@ public class CxxSourceRuleFactory {
    *    given {@link CxxSource}.
    */
   @VisibleForTesting
-  CxxPreprocessAndCompile requireCompileBuildRule(
+  public CxxPreprocessAndCompile createCompileBuildRule(
       BuildRuleResolver resolver,
       String name,
       CxxSource source,
@@ -328,12 +339,6 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name, pic);
-    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
-        target, CxxPreprocessAndCompile.class);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-
     Tool tool = getCompiler(source.getType());
 
     ImmutableSortedSet<BuildRule> dependencies =
@@ -372,12 +377,29 @@ public class CxxSourceRuleFactory {
     return result;
   }
 
+  @VisibleForTesting
+  CxxPreprocessAndCompile requireCompileBuildRule(
+      BuildRuleResolver resolver,
+      String name,
+      CxxSource source,
+      PicType pic) {
+
+    BuildTarget target = createCompileBuildTarget(name, pic);
+    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+        target, CxxPreprocessAndCompile.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
+    return createCompileBuildRule(resolver, name, source, pic);
+  }
+
   /**
    * @return a {@link CxxPreprocessAndCompile} rule that preprocesses, compiles, and assembles the
    *    given {@link CxxSource}.
    */
   @VisibleForTesting
-  CxxPreprocessAndCompile requirePreprocessAndCompileBuildRule(
+  public CxxPreprocessAndCompile createPreprocessAndCompileBuildRule(
       BuildRuleResolver resolver,
       String name,
       CxxSource source,
@@ -387,12 +409,6 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name, pic);
-    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
-        target, CxxPreprocessAndCompile.class);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-
     Tool tool = getCompiler(source.getType());
 
     ImmutableSortedSet<BuildRule> dependencies =
@@ -440,6 +456,24 @@ public class CxxSourceRuleFactory {
         strategy);
     resolver.addToIndex(result);
     return result;
+  }
+
+  @VisibleForTesting
+  CxxPreprocessAndCompile requirePreprocessAndCompileBuildRule(
+      BuildRuleResolver resolver,
+      String name,
+      CxxSource source,
+      PicType pic,
+      CxxPreprocessMode strategy) {
+
+    BuildTarget target = createCompileBuildTarget(name, pic);
+    Optional<CxxPreprocessAndCompile> existingRule = resolver.getRuleOptionalWithType(
+        target, CxxPreprocessAndCompile.class);
+    if (existingRule.isPresent()) {
+      return existingRule.get();
+    }
+
+    return createPreprocessAndCompileBuildRule(resolver, name, source, pic, strategy);
   }
 
   private ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
@@ -535,7 +569,7 @@ public class CxxSourceRuleFactory {
     return factory.requirePreprocessAndCompileRules(resolver, strategy, sources, pic);
   }
 
-  public static enum PicType {
+  public enum PicType {
 
     // Generate position-independent code (e.g. for use in shared libraries).
     PIC("-fPIC"),
@@ -545,7 +579,7 @@ public class CxxSourceRuleFactory {
 
     private final ImmutableList<String> flags;
 
-    private PicType(String... flags) {
+    PicType(String... flags) {
       this.flags = ImmutableList.copyOf(flags);
     }
 

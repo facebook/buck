@@ -385,6 +385,9 @@ inspection.
 
 {call .section}{param title: 'ndk' /}{/call}
 
+This section defines properties to configure building native code against
+the Android NDK.
+
 This section may define both <code>min_version</code> and{sp}
 <code>max_version</code> properties to enable Buck to check before building an{sp}
 {call buck.ndk_library /} that the project supports the configured NDK. Both
@@ -403,6 +406,28 @@ platform libraries should target.  This is equivalent to{sp}
  {literal}<pre class="prettyprint lang-ini">
 [ndk]
   app_platform = android-21
+</pre>{/literal}
+
+This section also supports parameters to control how {call buck.cxx_library /} rules
+build C/C++ for NDK platforms:
+{literal}<pre class="prettyprint lang-ini">
+[ndk]
+  # The compiler family to use, either "gcc" or "clang".  The default is "gcc".
+  compiler = gcc
+
+  # The version of GCC to use from the provided NDK.  This will be used whether
+  # "gcc" is selected above or not, as other compiler families still use tools
+  # from the "gcc" toolchain (e.g. `ar`).  The default is "4.8".
+  gcc_version = 4.8
+
+  # The version of Clang to use from the provided NDK when "clang" is selected
+  # above.  The default is "3.4".
+  clang_version = 3.4
+
+  # The variant of the C/C++ runtime to use, either "gnustl", "libcxx", "stlport",
+  # "gabixx", or "system" (http://www.kandroid.org/ndk/docs/CPLUSPLUS-SUPPORT.html).
+  # The default is "gnustl".
+  cxx_runtime = gnustl
 </pre>{/literal}
 
 {call .section}{param title: 'project' /}{/call}

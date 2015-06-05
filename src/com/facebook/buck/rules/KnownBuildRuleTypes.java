@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.GenAidlDescription;
+import com.facebook.buck.android.ImmutableNdkCxxPlatforms;
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.android.NdkLibraryDescription;
@@ -259,14 +260,28 @@ public class KnownBuildRuleTypes {
         platformFlavorsToAppleCxxPlatformsBuilder.build();
 
     // Setup the NDK C/C++ platforms.
+    Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
     ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
         ImmutableMap.builder();
-    Optional<Path> ndkRoot = androidDirectoryResolver.findAndroidNdkDir();
     if (ndkRoot.isPresent()) {
+      NdkCxxPlatforms.Compiler.Type compilerType =
+          androidConfig.getNdkCompiler().or(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
+      String gccVersion = androidConfig.getNdkGccVersion().or(NdkCxxPlatforms.DEFAULT_GCC_VERSION);
+      NdkCxxPlatforms.Compiler compiler =
+          ImmutableNdkCxxPlatforms.Compiler.builder()
+              .setType(compilerType)
+              .setVersion(
+                  compilerType == NdkCxxPlatforms.Compiler.Type.GCC ?
+                      gccVersion :
+                      androidConfig.getNdkClangVersion().or(NdkCxxPlatforms.DEFAULT_CLANG_VERSION))
+              .setGccVersion(gccVersion)
+              .build();
       ndkCxxPlatformsBuilder.putAll(
           NdkCxxPlatforms.getPlatforms(
-              ndkRoot.get(),
-              androidConfig.getNdkAppPlatform().or("android-9"),
+              new ProjectFilesystem(ndkRoot.get()),
+              compiler,
+              androidConfig.getNdkCxxRuntime().or(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
+              androidConfig.getNdkAppPlatform().or(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
               platform));
     }
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
