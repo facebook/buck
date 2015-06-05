@@ -157,6 +157,7 @@ public class AaptPackageResourcesTest {
     filesystem.touch(Paths.get("java/src/com/facebook/base/assets2/fonts/Theinhardt-Regular.otf"));
 
     // Some special files should be ignored.
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/.gitkeep"));
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/.svn"));
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/.git"));
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/.DS_Store"));
@@ -247,6 +248,7 @@ public class AaptPackageResourcesTest {
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"));
 
     // Some special files should be ignored and shouldn't cause conflicts.
+    filesystem.touch(Paths.get("facebook/base/assets1/fonts/.gitkeep"));
     filesystem.touch(Paths.get("facebook/base/assets1/fonts/.svn"));
     filesystem.touch(Paths.get("facebook/base/assets1/fonts/.git"));
     filesystem.touch(Paths.get("facebook/base/assets1/fonts/.DS_Store"));
@@ -256,6 +258,7 @@ public class AaptPackageResourcesTest {
     filesystem.touch(Paths.get("facebook/base/assets1/fonts/picasa.ini"));
     filesystem.touch(Paths.get("facebook/base/assets1/fonts/something~"));
 
+    filesystem.touch(Paths.get("facebook/base/assets2/fonts/.gitkeep"));
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/.svn"));
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/.git"));
     filesystem.touch(Paths.get("facebook/base/assets2/fonts/.DS_Store"));

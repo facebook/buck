@@ -44,6 +44,7 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFile("res/layout.xml");
     tmpFolder.newFile("res/_file");
 
+    tmpFolder.newFile("res/.gitkeep");
     tmpFolder.newFile("res/.svn");
     tmpFolder.newFile("res/.git");
     tmpFolder.newFile("res/.ds_store");
@@ -58,6 +59,8 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFile("res/dirs/values/strings.xml");
     tmpFolder.newFile("res/dirs/values/strings.xml.orig");
 
+    tmpFolder.newFolder("res/dirs/.gitkeep");
+    tmpFolder.newFile("res/dirs/.gitkeep/ignore");
     tmpFolder.newFolder("res/dirs/.svn");
     tmpFolder.newFile("res/dirs/.svn/ignore");
     tmpFolder.newFolder("res/dirs/.git");

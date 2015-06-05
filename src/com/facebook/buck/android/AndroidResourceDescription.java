@@ -51,8 +51,15 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
 
   public static final BuildRuleType TYPE = BuildRuleType.of("android_resource");
 
-  private static final ImmutableSet<String> NON_ASSET_FILENAMES =
-      ImmutableSet.of(".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
+  private static final ImmutableSet<String> NON_ASSET_FILENAMES = ImmutableSet.of(
+      ".gitkeep",
+      ".svn",
+      ".git",
+      ".ds_store",
+      ".scc",
+      "cvs",
+      "thumbs.db",
+      "picasa.ini");
 
   @Override
   public BuildRuleType getBuildRuleType() {
