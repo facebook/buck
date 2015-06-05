@@ -417,6 +417,7 @@ public class CxxLibraryDescription implements
     arg.soname = Optional.absent();
     arg.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
     arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.supportedPlatformsRegex = Optional.absent();
     return arg;
   }
 

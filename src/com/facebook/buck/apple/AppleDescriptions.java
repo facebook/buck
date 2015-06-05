@@ -279,6 +279,7 @@ public class AppleDescriptions {
     output.soname = Optional.absent();
     output.forceStatic = Optional.of(false);
     output.linkWhole = Optional.of(linkWhole);
+    output.supportedPlatformsRegex = Optional.absent();
   }
 
   @VisibleForTesting

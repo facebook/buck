@@ -36,6 +36,13 @@ import java.util.Map;
 @BuckStyleImmutable
 abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
+  private static final PythonPackageComponents EMPTY =
+      PythonPackageComponents.of(
+        /* modules */ ImmutableMap.<Path, SourcePath>of(),
+        /* resources */ ImmutableMap.<Path, SourcePath>of(),
+        /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of(),
+        /* zipSafe */ Optional.<Boolean>absent());
+
   // Python modules as map of their module name to location of the source.
   @Value.Parameter
   public abstract Map<Path, SourcePath> getModules();
@@ -68,6 +75,10 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
     }
 
     return builder;
+  }
+
+  public static PythonPackageComponents of() {
+    return EMPTY;
   }
 
   /**

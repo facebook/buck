@@ -78,4 +78,10 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     arg.tests = Optional.of(tests);
     return this;
   }
+
+  public CxxLibraryBuilder setSupportedPlatformsRegex(String regex) {
+    arg.supportedPlatformsRegex = Optional.of(regex);
+    return this;
+  }
+
 }

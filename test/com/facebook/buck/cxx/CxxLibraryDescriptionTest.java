@@ -854,4 +854,55 @@ public class CxxLibraryDescriptionTest {
         rule.getPythonPackageComponents(cxxPlatform));
   }
 
+  @Test
+  public void supportedPlatforms() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+
+    // First, make sure without any platform regex, we get something back for each of the interface
+    // methods.
+    CxxLibraryBuilder cxxLibraryBuilder =
+        (CxxLibraryBuilder) new CxxLibraryBuilder(target)
+            .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("test.c"))));
+    CxxLibrary cxxLibrary =
+        (CxxLibrary) cxxLibraryBuilder
+            .build(
+                new BuildRuleResolver(),
+                filesystem,
+                TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    assertThat(
+        cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
+        Matchers.not(Matchers.empty()));
+    assertThat(
+        cxxLibrary.getPythonPackageComponents(
+            CxxPlatformUtils.DEFAULT_PLATFORM).getNativeLibraries().entrySet(),
+        Matchers.not(Matchers.empty()));
+    assertThat(
+        cxxLibrary.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED).getArgs(),
+        Matchers.not(Matchers.empty()));
+
+    // Now, verify we get nothing when the supported platform regex excludes our platform.
+    cxxLibraryBuilder.setSupportedPlatformsRegex("nothing");
+    cxxLibrary =
+        (CxxLibrary) cxxLibraryBuilder
+            .build(
+                new BuildRuleResolver(),
+                filesystem,
+                TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    assertThat(
+        cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
+        Matchers.empty());
+    assertThat(
+        cxxLibrary.getPythonPackageComponents(
+            CxxPlatformUtils.DEFAULT_PLATFORM).getNativeLibraries().entrySet(),
+        Matchers.empty());
+    assertThat(
+        cxxLibrary.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED).getArgs(),
+        Matchers.empty());
+  }
+
 }

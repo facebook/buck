@@ -33,6 +33,11 @@ import java.util.List;
 @BuckStyleImmutable
 abstract class AbstractNativeLinkableInput {
 
+  private static final NativeLinkableInput EMPTY =
+      NativeLinkableInput.of(
+          ImmutableList.<SourcePath>of(),
+          ImmutableList.<String>of());
+
   // Inputs used by linker.
   @Value.Parameter
   public abstract List<SourcePath> getInputs();
@@ -57,6 +62,10 @@ abstract class AbstractNativeLinkableInput {
     return NativeLinkableInput.of(
         inputs.build(),
         args.build());
+  }
+
+  public static NativeLinkableInput of() {
+    return EMPTY;
   }
 
 }
