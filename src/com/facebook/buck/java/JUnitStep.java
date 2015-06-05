@@ -352,7 +352,7 @@ public class JUnitStep extends ShellStep {
             try {
               context.getProcessExecutor().launchAndExecute(
                   /* command */ ProcessExecutorParams.builder()
-                      .addCommand(jstack.get().toString(), "-F", "-l", pid.get().toString())
+                      .addCommand(jstack.get().toString(), "-l", pid.get().toString())
                       .setEnvironment(context.getEnvironment())
                       .build(),
                   /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
