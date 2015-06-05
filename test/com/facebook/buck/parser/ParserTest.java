@@ -47,6 +47,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
@@ -65,9 +66,11 @@ import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -374,8 +377,8 @@ public class ParserTest extends EasyMockSupport {
   @Test
   public void whenAllRulesRequestedWithTrueFilterThenMultipleRulesReturned()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    ImmutableSet<BuildTarget> targets = testParser.filterAllTargetsInProject(
-        filesystem,
+    ImmutableSet<BuildTarget> targets = filterAllTargetsInProject(
+        testParser, filesystem,
         new ParserConfig(new FakeBuckConfig()),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -398,16 +401,16 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
     BuckConfig config = new FakeBuckConfig();
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -427,8 +430,8 @@ public class ParserTest extends EasyMockSupport {
 
     // Call filterAllTargetsInProject to populate the cache.
     BuckConfig config = new FakeBuckConfig();
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -441,8 +444,8 @@ public class ParserTest extends EasyMockSupport {
     parser.onFileSystemChange(event);
 
     // Call filterAllTargetsInProject to request cached rules.
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -464,8 +467,8 @@ public class ParserTest extends EasyMockSupport {
     BuckConfig config = new FakeBuckConfig();
 
     // Call filterAllTargetsInProject to populate the cache.
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -477,8 +480,8 @@ public class ParserTest extends EasyMockSupport {
         false /* enableProfiling */);
 
     // Call filterAllTargetsInProject to request cached rules.
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -504,8 +507,8 @@ public class ParserTest extends EasyMockSupport {
     BuckConfig config = new FakeBuckConfig();
 
     // Call filterAllTargetsInProject to populate the cache.
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -514,8 +517,8 @@ public class ParserTest extends EasyMockSupport {
         false /* enableProfiling */);
 
     // Call filterAllTargetsInProject to request cached rules with identical environment.
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(new FakeBuckConfig()),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -1071,16 +1074,16 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
     BuckConfig config = new FakeBuckConfig();
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
         config.getEnvironment(),
         BuckEventBusFactory.newInstance(),
         false /* enableProfiling */);
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(
             new FakeBuckConfig(
                 ImmutableMap.of(
@@ -1103,8 +1106,8 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = createParser(emptyBuildTargets(), buildFileParserFactory);
 
     BuckConfig config = new FakeBuckConfig();
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -1139,8 +1142,8 @@ public class ParserTest extends EasyMockSupport {
         new TestConsole(),
         config.getEnvironment(),
         /* enableProfiling */ false);
-    parser.filterAllTargetsInProject(
-        filesystem,
+    filterAllTargetsInProject(
+        parser, filesystem,
         new ParserConfig(config),
         Predicates.<TargetNode<?>>alwaysTrue(),
         new TestConsole(),
@@ -1739,6 +1742,46 @@ public class ParserTest extends EasyMockSupport {
         return super.getAllRulesInternal(buildFile);
       }
     }
+  }
+
+
+  /**
+   * Populates the collection of known build targets that this Parser will use to construct an
+   * action graph using all build files inside the given project root and returns an optionally
+   * filtered set of build targets.
+   *
+   * @param filesystem The project filesystem.
+   * @param filter if specified, applied to each rule in rules. All matching rules will be included
+   *     in the List returned by this method. If filter is null, then this method returns null.
+   * @return The build targets in the project filtered by the given filter.
+   */
+  public static synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
+      Parser parser,
+      ProjectFilesystem filesystem,
+      ParserConfig parserConfig,
+      Predicate<TargetNode<?>> filter,
+      Console console,
+      ImmutableMap<String, String> environment,
+      BuckEventBus buckEventBus,
+      boolean enableProfiling)
+      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
+    return FluentIterable
+        .from(
+            parser.buildTargetGraphForTargetNodeSpecs(
+                ImmutableList.of(
+                    TargetNodePredicateSpec.of(
+                        filter,
+                        BuildFileSpec.fromRecursivePath(
+                            Paths.get(""),
+                            filesystem.getIgnorePaths()))),
+                parserConfig,
+                buckEventBus,
+                console,
+                environment,
+                enableProfiling).getSecond().getNodes())
+        .filter(filter)
+        .transform(HasBuildTarget.TO_TARGET)
+        .toSet();
   }
 
   /**

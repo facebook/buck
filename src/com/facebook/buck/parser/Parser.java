@@ -39,7 +39,6 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
@@ -63,8 +62,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -532,10 +529,6 @@ public class Parser {
     return new TargetGraph(graph);
   }
 
-  /**
-   * Note that if this Parser is populated via
-   * {@link #filterAllTargetsInProject}, then this method should not be called.
-   */
   private synchronized void parseBuildFileContainingTarget(
       BuildTarget buildTarget,
       ParserConfig parserConfig,
@@ -672,49 +665,6 @@ public class Parser {
     String basePath = (String) map.get("buck.base_path");
     String name = (String) map.get("name");
     return BuildTarget.builder(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath, name).build();
-  }
-
-  /**
-   * Populates the collection of known build targets that this Parser will use to construct an
-   * action graph using all build files inside the given project root and returns an optionally
-   * filtered set of build targets.
-   *
-   * @param filesystem The project filesystem.
-   * @param filter if specified, applied to each rule in rules. All matching rules will be included
-   *     in the List returned by this method. If filter is null, then this method returns null.
-   * @return The build targets in the project filtered by the given filter.
-   */
-  public synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
-      ProjectFilesystem filesystem,
-      ParserConfig parserConfig,
-      Predicate<TargetNode<?>> filter,
-      Console console,
-      ImmutableMap<String, String> environment,
-      BuckEventBus buckEventBus,
-      boolean enableProfiling)
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    ProjectFilesystem projectFilesystem = repository.getFilesystem();
-    if (!projectFilesystem.getRootPath().equals(filesystem.getRootPath())) {
-      throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
-          projectFilesystem.getRootPath(), filesystem.getRootPath()));
-    }
-    return FluentIterable
-        .from(
-            buildTargetGraphForTargetNodeSpecs(
-                ImmutableList.of(
-                    TargetNodePredicateSpec.of(
-                        filter,
-                        BuildFileSpec.fromRecursivePath(
-                            Paths.get(""),
-                            filesystem.getIgnorePaths()))),
-                parserConfig,
-                buckEventBus,
-                console,
-                environment,
-                enableProfiling).getSecond().getNodes())
-        .filter(filter)
-        .transform(HasBuildTarget.TO_TARGET)
-        .toSet();
   }
 
 
