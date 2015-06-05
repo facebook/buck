@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Optional;
@@ -146,8 +147,8 @@ public class PythonBuckConfig {
   private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {
     try {
-      ProcessExecutor.Result versionResult = processExecutor.execute(
-          Runtime.getRuntime().exec(new String[]{pythonPath.toString(), "-V"}),
+      ProcessExecutor.Result versionResult = processExecutor.launchAndExecute(
+          ProcessExecutorParams.builder().addCommand(pythonPath.toString(), "-V").build(),
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_ERR),
           /* stdin */ Optional.<String>absent(),
           /* timeOutMs */ Optional.<Long>absent());
