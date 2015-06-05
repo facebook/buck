@@ -16,14 +16,18 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.java.runner.FileClassPathRunner;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -35,12 +39,15 @@ import com.google.common.collect.Iterables;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class JUnitStep extends ShellStep {
+  private static final Logger LOG = Logger.get(JUnitStep.class);
 
   // Note that the default value is used when `buck test --all` is run on Buck itself.
   @VisibleForTesting
@@ -293,6 +300,83 @@ public class JUnitStep extends ShellStep {
   @Override
   protected Optional<Long> getTimeout() {
     return testRuleTimeoutMs;
+  }
+
+  @Override
+  protected Optional<Function<Process, Void>> getTimeoutHandler(final ExecutionContext context) {
+    return Optional.<Function<Process, Void>>of(
+        new Function<Process, Void>() {
+          @Override
+          public Void apply(Process process) {
+            Optional<Long> pid = Optional.absent();
+            try {
+              switch(context.getPlatform()) {
+                case LINUX:
+                case MACOS: {
+                  Field field = process.getClass().getDeclaredField("pid");
+                  field.setAccessible(true);
+                  try {
+                    pid = Optional.of((long) field.getInt(process));
+                  } catch (IllegalAccessException e) {
+                    LOG.error(e, "Failed to access `pid`.");
+                  }
+                  break;
+                }
+                case WINDOWS: {
+                  Field field = process.getClass().getDeclaredField("handle");
+                  field.setAccessible(true);
+                  try {
+                    pid = Optional.of(field.getLong(process));
+                  } catch (IllegalAccessException e) {
+                    LOG.error(e, "Failed to access `handle`.");
+                  }
+                  break;
+                }
+                case UNKNOWN:
+                  LOG.info("Unknown platform; unable to obtain the process id!");
+                  break;
+              }
+            } catch (NoSuchFieldException e) {
+              LOG.error(e);
+            }
+
+            Optional<Path> jstack = new ExecutableFinder(context.getPlatform())
+                .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
+            if (!pid.isPresent() || !jstack.isPresent()) {
+              LOG.info("Unable to print a stack trace for timed out test!");
+              return null;
+            }
+
+            context.getStdErr().print(
+                "Test has timed out!  Here is a trace of what it is currently doing:%n");
+            try {
+              context.getProcessExecutor().launchAndExecute(
+                  /* command */ ProcessExecutorParams.builder()
+                      .addCommand(jstack.get().toString(), "-F", "-l", pid.get().toString())
+                      .setEnvironment(context.getEnvironment())
+                      .build(),
+                  /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
+                      .add(ProcessExecutor.Option.PRINT_STD_OUT)
+                      .add(ProcessExecutor.Option.PRINT_STD_ERR)
+                      .build(),
+                  /* stdin */ Optional.<String>absent(),
+                  /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
+                  /* timeOutHandler */ Optional.<Function<Process, Void>>of(
+                      new Function<Process, Void>() {
+                        @Override
+                        public Void apply(Process input) {
+                          context.getStdErr().print(
+                              "Printing the stack took longer than 30 seconds. No longer trying.");
+                          return null;
+                        }
+                      }
+                  ));
+            } catch (Exception e) {
+              LOG.error(e);
+            }
+            return null;
+          }
+        });
   }
 
   @Override
