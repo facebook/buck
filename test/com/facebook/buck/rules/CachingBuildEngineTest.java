@@ -39,6 +39,7 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -58,6 +59,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -174,6 +177,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             anyObject(File.class),
             eq(artifactCache)))
         .andReturn(CacheResult.miss());
+    expect(buildInfoRecorder.getOutputSizeAndHash(anyObject(HashFunction.class)))
+        .andReturn(new Pair<>(0L, HashCode.fromInt(0)))
+        .anyTimes();
 
     // Set the requisite expectations to build the rule.
     expect(context.getEventBus()).andReturn(buckEventBus).anyTimes();
@@ -230,7 +236,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 ruleToTest,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
-                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         events.get(events.size() - 2));
   }
@@ -261,6 +269,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
            /* ruleKey */ anyObject(RuleKey.class),
            /* ruleKeyWithoutDeps */ anyObject(RuleKey.class)))
         .andReturn(buildInfoRecorder);
+    expect(buildInfoRecorder.getOutputSizeAndHash(anyObject(HashFunction.class)))
+        .andReturn(new Pair<>(0L, HashCode.fromInt(0)))
+        .anyTimes();
 
     // Populate the metadata that should be read from disk.
     OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo()
@@ -328,10 +339,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         eventIter.next());
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.finished(buildRule,
-            BuildRuleStatus.SUCCESS,
-            CacheResult.localKeyUnchangedHit(),
-            Optional.of(BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS)),
+            BuildRuleEvent.finished(
+                buildRule,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.localKeyUnchangedHit(),
+                Optional.of(BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         eventIter.next());
 
@@ -384,6 +398,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(buildInfoRecorder.fetchArtifactForBuildable(anyObject(File.class), eq(artifactCache)))
         .andReturn(CacheResult.miss());
 
+    expect(buildInfoRecorder.getOutputSizeAndHash(anyObject(HashFunction.class)))
+        .andReturn(new Pair<>(0L, HashCode.fromInt(0)))
+        .anyTimes();
+
     // Populate the metadata that should be read from disk.
     OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
 
@@ -431,10 +449,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         configureTestEvent(BuildRuleEvent.resumed(buildRule), buckEventBus),
         eventIter.next());
     assertEquals(
-        configureTestEvent(BuildRuleEvent.finished(buildRule,
-            BuildRuleStatus.SUCCESS,
-            CacheResult.miss(),
-            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
+        configureTestEvent(
+            BuildRuleEvent.finished(
+                buildRule,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.miss(),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         eventIter.next());
 
@@ -467,9 +489,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
            /* ruleKey */ anyObject(RuleKey.class),
            /* ruleKeyWithoutDeps */ anyObject(RuleKey.class)))
         .andReturn(buildInfoRecorder);
-
     expect(buildInfoRecorder.fetchArtifactForBuildable(anyObject(File.class), eq(artifactCache)))
         .andReturn(CacheResult.miss());
+    expect(buildInfoRecorder.getOutputSizeAndHash(anyObject(HashFunction.class)))
+        .andReturn(new Pair<>(0L, HashCode.fromInt(0)))
+        .anyTimes();
 
     // Populate the metadata that should be read from disk.
     OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
@@ -530,10 +554,13 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         eventIter.next().getEventName());
     assertEquals(
         configureTestEvent(
-            BuildRuleEvent.finished(buildRule,
+            BuildRuleEvent.finished(
+                buildRule,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
-                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus)
                 .getEventName(),
         eventIter.next().getEventName());
@@ -560,7 +587,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     StepRunner stepRunner = createStepRunner();
 
     // Mock out all of the disk I/O.
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    ProjectFilesystem projectFilesystem = createNiceMock(ProjectFilesystem.class);
     expect(projectFilesystem
         .readFileIfItExists(
             Paths.get("buck-out/bin/src/com/facebook/orca/.orca/metadata/RULE_KEY")))
@@ -621,7 +648,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     StepRunner stepRunner = createStepRunner(buckEventBus);
 
     // Mock out all of the disk I/O.
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    ProjectFilesystem projectFilesystem = createNiceMock(ProjectFilesystem.class);
     expect(projectFilesystem
             .readFileIfItExists(
                 Paths.get("buck-out/bin/src/com/facebook/orca/.orca/metadata/RULE_KEY")))
@@ -710,6 +737,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(context.createOnDiskBuildInfoFor(buildTarget))
         .andReturn(new FakeOnDiskBuildInfo().setRuleKey(ruleToTest.getRuleKey()));
     BuildInfoRecorder buildInfoRecorder = createNiceMock(BuildInfoRecorder.class);
+    expect(buildInfoRecorder.getOutputSizeAndHash(anyObject(HashFunction.class)))
+        .andReturn(new Pair<>(0L, HashCode.fromInt(0)))
+        .anyTimes();
     Capture<RuleKey> ruleKeyForRecorder = newCapture();
     expect(
         context.createBuildInfoRecorder(
@@ -755,7 +785,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 ruleToTest,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
-                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         eventIter.next());
   }
@@ -787,12 +819,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         .andReturn(new FakeOnDiskBuildInfo().setRuleKey(ruleToTest.getRuleKey()));
     expect(context.createOnDiskBuildInfoFor(dep.getBuildTarget()))
         .andReturn(new FakeOnDiskBuildInfo().setRuleKey(dep.getRuleKey()));
+    BuildInfoRecorder buildInfoRecorder = createNiceMock(BuildInfoRecorder.class);
+    expect(buildInfoRecorder.getOutputSizeAndHash(anyObject(HashFunction.class)))
+        .andReturn(new Pair<>(0L, HashCode.fromInt(0)))
+        .anyTimes();
     expect(
         context.createBuildInfoRecorder(
             anyObject(BuildTarget.class),
             anyObject(RuleKey.class),
             /* ruleKeyWithoutDepsForRecorder */ anyObject(RuleKey.class)))
-        .andReturn(createNiceMock(BuildInfoRecorder.class))
+        .andReturn(buildInfoRecorder)
         .anyTimes();
 
     // Create the build engine.
@@ -835,7 +871,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 dep,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
-                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         eventIter.next());
     assertEquals(
@@ -844,7 +882,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 ruleToTest,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
-                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         eventIter.next());
   }
@@ -893,12 +933,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(context.createOnDiskBuildInfoFor(transitiveRuntimeDep.getBuildTarget()))
         .andReturn(new FakeOnDiskBuildInfo().setRuleKey(transitiveRuntimeDep.getRuleKey()))
         .anyTimes();
+    BuildInfoRecorder buildInfoRecorder = createNiceMock(BuildInfoRecorder.class);
+    expect(buildInfoRecorder.getOutputSizeAndHash(anyObject(HashFunction.class)))
+        .andReturn(new Pair<>(0L, HashCode.fromInt(0)))
+        .anyTimes();
     expect(
         context.createBuildInfoRecorder(
             anyObject(BuildTarget.class),
             anyObject(RuleKey.class),
             /* ruleKeyWithoutDepsForRecorder */ anyObject(RuleKey.class)))
-        .andReturn(createNiceMock(BuildInfoRecorder.class))
+        .andReturn(buildInfoRecorder)
         .anyTimes();
 
     // Create the build engine.
@@ -932,7 +976,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 ruleToTest,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
-                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         eventIter.next());
     assertEquals(
@@ -950,7 +996,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 runtimeDep,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
-                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         eventIter.next());
     assertEquals(
@@ -968,7 +1016,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                 transitiveRuntimeDep,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.localKeyUnchangedHit(),
-                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY)),
+                Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             buckEventBus),
         eventIter.next());
   }

@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
+import com.google.common.hash.HashCode;
 
 import org.junit.Test;
 
@@ -183,10 +184,12 @@ public class SuperConsoleEventBusListenerTest {
         900L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
-          fakeRule,
-          BuildRuleStatus.SUCCESS,
-          CacheResult.miss(),
-          Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
+            fakeRule,
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss(),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            Optional.<HashCode>absent(),
+            Optional.<Long>absent()),
         1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 1000L, ImmutableList.of(parsingLine,
@@ -204,10 +207,12 @@ public class SuperConsoleEventBusListenerTest {
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.finished(
-          cachedRule,
-          BuildRuleStatus.SUCCESS,
-          CacheResult.miss(),
-          Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
+            cachedRule,
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss(),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            Optional.<HashCode>absent(),
+            Optional.<Long>absent()),
         1120L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
 
     rawEventBus.post(configureTestEventAtTime(
@@ -408,7 +413,9 @@ public class SuperConsoleEventBusListenerTest {
                 fakeRule,
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
-                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

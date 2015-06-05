@@ -51,6 +51,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -130,10 +131,14 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildRuleEventFinished() throws IOException {
-    BuildRuleEvent.Finished event = BuildRuleEvent.finished(generateFakeBuildRule(),
-        BuildRuleStatus.SUCCESS,
-        CacheResult.miss(),
-        Optional.<BuildRuleSuccessType>absent());
+    BuildRuleEvent.Finished event =
+        BuildRuleEvent.finished(
+            generateFakeBuildRule(),
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss(),
+            Optional.<BuildRuleSuccessType>absent(),
+            Optional.<HashCode>absent(),
+            Optional.<Long>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals(

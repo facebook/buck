@@ -67,6 +67,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
+import com.google.common.hash.HashCode;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -186,11 +187,14 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
 
     eventBus.post(StepEvent.finished(stepShortName, stepDescription, stepUuid, 0));
-    eventBus.post(BuildRuleEvent.finished(
-        rule,
-        BuildRuleStatus.SUCCESS,
-        CacheResult.miss(),
-        Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+    eventBus.post(
+        BuildRuleEvent.finished(
+            rule,
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss(),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            Optional.<HashCode>absent(),
+            Optional.<Long>absent()));
 
     try (TraceEventLogger ignored = TraceEventLogger.start(
         eventBus, "planning", ImmutableMap.of("nefarious", "true")

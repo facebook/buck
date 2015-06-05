@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
+import com.google.common.hash.HashCode;
 
 import org.junit.Test;
 
@@ -98,12 +99,18 @@ public class SimpleConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.started(fakeRule), 600L, TimeUnit.MILLISECONDS, threadId));
 
-    rawEventBus.post(configureTestEventAtTime(BuildRuleEvent.finished(
-        fakeRule,
-        BuildRuleStatus.SUCCESS,
-        CacheResult.miss(),
-        Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)),
-        1000L, TimeUnit.MILLISECONDS, threadId));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            BuildRuleEvent.finished(
+                fakeRule,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.miss(),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
+            1000L,
+            TimeUnit.MILLISECONDS,
+            threadId));
     rawEventBus.post(configureTestEventAtTime(
         BuildEvent.finished(buildArgs, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 

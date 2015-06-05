@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
@@ -37,6 +38,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -175,6 +178,77 @@ public class BuildInfoRecorderTest {
 
     buildInfoRecorder.performUploadToArtifactCache(cache, bus);
     assertTrue(stored.get());
+  }
+
+  @Test
+  public void testGetOutputSize() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
+
+    byte[] contents = "contents".getBytes();
+
+    Path file = Paths.get("file");
+    filesystem.writeBytesToPath(contents, file);
+    buildInfoRecorder.recordArtifact(file);
+
+    Path dir = Paths.get("dir");
+    filesystem.mkdirs(dir);
+    filesystem.writeBytesToPath(contents, dir.resolve("file1"));
+    filesystem.writeBytesToPath(contents, dir.resolve("file2"));
+    buildInfoRecorder.recordArtifact(dir);
+
+    assertEquals(
+        3 * contents.length,
+        (long) buildInfoRecorder.getOutputSizeAndHash(Hashing.md5()).getFirst());
+  }
+
+  @Test
+  public void testGetOutputHash() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
+
+    byte[] contents = "contents".getBytes();
+
+    Path file = Paths.get("file");
+    filesystem.writeBytesToPath(contents, file);
+    buildInfoRecorder.recordArtifact(file);
+
+    Path dir = Paths.get("dir");
+    filesystem.mkdirs(dir);
+    filesystem.writeBytesToPath(contents, dir.resolve("file1"));
+    filesystem.writeBytesToPath(contents, dir.resolve("file2"));
+    buildInfoRecorder.recordArtifact(dir);
+
+    HashCode current = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+
+    // Test that getting the hash again results in the same hashcode.
+    assertEquals(current, buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond());
+
+    // Verify that changing a file changes the hash.
+    filesystem.writeContentsToPath("something else", file);
+    HashCode updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    assertNotEquals(current, updated);
+
+    // Verify that changing a file under a directory changes the hash.
+    filesystem.writeContentsToPath("something else", dir.resolve("file1"));
+    current = updated;
+    updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    assertNotEquals(current, updated);
+
+    // Test that adding a file updates the hash.
+    Path added = Paths.get("added");
+    filesystem.writeBytesToPath(contents, added);
+    buildInfoRecorder.recordArtifact(added);
+    current = updated;
+    updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    assertNotEquals(current, updated);
+
+    // Test that adding a file under a recorded directory updates the hash.
+    Path addedUnderDir = dir.resolve("added");
+    filesystem.writeBytesToPath(contents, addedUnderDir);
+    current = updated;
+    updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    assertNotEquals(current, updated);
   }
 
   private static void assertOnDiskBuildInfoHasMetadata(

@@ -22,6 +22,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -37,6 +38,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -343,13 +346,24 @@ public class CachingBuildEngine implements BuildEngine {
                   }
                 }
 
+                // Calculate the hash and size of the rule outputs.
+                Pair<Long, HashCode> outputHashAndSize;
+                try {
+                  outputHashAndSize = buildInfoRecorder.getOutputSizeAndHash(Hashing.md5());
+                } catch (IOException e) {
+                  onFailure(e);
+                  return;
+                }
+
                 context.getEventBus().logVerboseAndPost(
                     LOG,
                     BuildRuleEvent.finished(
                         rule,
                         BuildRuleStatus.SUCCESS,
                         input.getCacheResult(),
-                        Optional.of(input.getSuccess())));
+                        Optional.of(input.getSuccess()),
+                        Optional.of(outputHashAndSize.getSecond()),
+                        Optional.of(outputHashAndSize.getFirst())));
               }
 
               @Override
@@ -377,7 +391,9 @@ public class CachingBuildEngine implements BuildEngine {
                         rule,
                         BuildRuleStatus.FAIL,
                         CacheResult.miss(),
-                        Optional.<BuildRuleSuccessType>absent()));
+                        Optional.<BuildRuleSuccessType>absent(),
+                        Optional.<HashCode>absent(),
+                        Optional.<Long>absent()));
 
                 // Reset interrupted flag once failure has been recorded.
                 if (thrown instanceof InterruptedException) {
