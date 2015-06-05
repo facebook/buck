@@ -109,8 +109,7 @@ public class IjProject {
         libraryFactory,
         moduleFactory);
     IjProjectWriter writer = new IjProjectWriter(
-        javaPackageFinder,
-        moduleGraph,
+        new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, projectFilesystem),
         projectFilesystem);
     writer.write();
     return requiredBuildTargets.build();

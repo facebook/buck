@@ -18,6 +18,7 @@ package com.facebook.buck.java.intellij;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.junit.Assert.assertEquals;
@@ -240,6 +241,40 @@ public class IjProjectDataPreparerTest {
   }
 
   @Test
+  public void testEmptyRootModule() throws Exception {
+    TargetNode<?> baseTargetNode = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addSrc(Paths.get("java/com/example/base/Base.java"))
+        .build();
+
+    IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
+        ImmutableSet.<TargetNode<?>>of(baseTargetNode));
+    IjProjectTemplateDataPreparer dataPreparer =
+        new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, filesystem);
+
+    assertThat(
+        dataPreparer.getModulesToBeWritten(),
+        containsInAnyOrder(
+            IjModule.builder()
+                .setModuleBasePath(Paths.get("java/com/example/base"))
+                .setTargets(ImmutableSet.<TargetNode<?>>of(baseTargetNode))
+                .addFolders(
+                    IjFolder.builder()
+                        .setType(AbstractIjFolder.Type.SOURCE_FOLDER)
+                        .setPath(Paths.get("java/com/example/base"))
+                        .setWantsPackagePrefix(true)
+                        .build())
+                .build(),
+            IjModule.builder()
+                .setModuleBasePath(Paths.get(""))
+                .setTargets(ImmutableSet.<TargetNode<?>>of())
+                .build()
+            )
+    );
+
+  }
+
+  @Test
   public void testModuleIndex() throws Exception {
     TargetNode<?> guavaTargetNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third-party/guava:guava"))
@@ -269,6 +304,10 @@ public class IjProjectDataPreparerTest {
     // Libraries don't go into the index.
     assertEquals(
         ImmutableSet.of(
+            ModuleIndexEntry.builder()
+                .setFileUrl("file://$PROJECT_DIR$/.idea/modules/project_root.iml")
+                .setFilePath(Paths.get(".idea/modules/project_root.iml"))
+                .build(),
             ModuleIndexEntry.builder()
                 .setGroup("modules")
                 .setFileUrl("file://$PROJECT_DIR$/.idea/modules/java_com_example_base.iml")

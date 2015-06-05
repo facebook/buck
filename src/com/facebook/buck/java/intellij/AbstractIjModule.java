@@ -19,6 +19,7 @@ package com.facebook.buck.java.intellij;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -36,6 +37,14 @@ import java.util.Map;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractIjModule implements IjProjectElement {
+
+  public static final Function<IjModule, Path> TO_MODULE_BASE_PATH =
+      new Function<IjModule, Path>() {
+        @Override
+        public Path apply(IjModule input) {
+          return input.getModuleBasePath();
+        }
+      };
 
   @Override
   @Value.Derived
@@ -76,11 +85,6 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Value.Derived
   public Path getModuleImlFilePath() {
     return getModuleBasePath().resolve(getName() + ".iml");
-  }
-
-  @Value.Check
-  protected void targetSetCantBeEmpty() {
-    Preconditions.checkArgument(!getTargets().isEmpty());
   }
 
   @Value.Check

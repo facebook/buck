@@ -17,7 +17,6 @@
 package com.facebook.buck.java.intellij;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaPackageFinder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
@@ -59,27 +58,22 @@ public class IjProjectWriter {
     }
   }
 
-  private IjModuleGraph moduleGraph;
+  private IjProjectTemplateDataPreparer projectDataPreparer;
   private ProjectFilesystem projectFilesystem;
-  private IjProjectTemplateDataPreparer projectWriterImpl;
 
   public IjProjectWriter(
-      JavaPackageFinder javaPackageFinder,
-      IjModuleGraph moduleGraph,
+      IjProjectTemplateDataPreparer projectDataPreparer,
       ProjectFilesystem projectFilesystem) {
-    this.moduleGraph = moduleGraph;
+    this.projectDataPreparer = projectDataPreparer;
     this.projectFilesystem = projectFilesystem;
-    this.projectWriterImpl =
-        new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, projectFilesystem);
   }
 
   public void write() throws IOException {
-    for (IjProjectElement element : moduleGraph.getNodes()) {
-      if (element instanceof IjModule) {
-        writeModule((IjModule) element);
-      } else {
-        writeLibrary((IjLibrary) element);
-      }
+    for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
+      writeModule(module);
+    }
+    for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
+      writeLibrary(library);
     }
     writeModulesIndex();
   }
@@ -92,8 +86,8 @@ public class IjProjectWriter {
 
     // TODO(mkosiba): support androidFacet.
     moduleContents.add("androidFacet", false);
-    moduleContents.add("contentRoot", projectWriterImpl.getContentRoot(module));
-    moduleContents.add("dependencies", projectWriterImpl.getDependencies(module));
+    moduleContents.add("contentRoot", projectDataPreparer.getContentRoot(module));
+    moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
 
     writeToFile(moduleContents, path);
   }
@@ -118,7 +112,7 @@ public class IjProjectWriter {
     Path path = IDEA_CONFIG_DIR_PREFIX.resolve("modules.xml");
 
     ST moduleIndexContents = getST(StringTemplateFile.MODULE_INDEX_TEMPLATE);
-    moduleIndexContents.add("modules", projectWriterImpl.getModuleIndexEntries());
+    moduleIndexContents.add("modules", projectDataPreparer.getModuleIndexEntries());
 
     writeToFile(moduleIndexContents, path);
   }
