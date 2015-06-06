@@ -192,22 +192,7 @@ public class CompilationDatabaseIntegrationTest {
         sdkRoot,
         "-arch",
         "x86_64",
-        "'-mios-simulator-version-min=8.0'",
-        "-x",
-        language,
-        "-c");
-    if (isLibrary) {
-      commandArgs.add("-fPIC");
-    }
-
-    commandArgs.add("'" + languageStandard + "'");
-    commandArgs.add("-Wno-deprecated");
-    commandArgs.add("-Wno-conversion");
-
-    // TODO(user, jakubzika): It seems like a bug that this set of flags gets inserted twice.
-    // Perhaps this has something to do with how the [cxx] section in .buckconfig is processed.
-    // (Err, it's probably adding both the preprocessor and regular rule command suffixes. Should
-    // be harmless.)
+        "'-mios-simulator-version-min=8.0'");
     commandArgs.add("'" + languageStandard + "'");
     commandArgs.add("-Wno-deprecated");
     commandArgs.add("-Wno-conversion");
@@ -222,6 +207,24 @@ public class CompilationDatabaseIntegrationTest {
       commandArgs.add(sdkRoot + framework);
     }
 
+    if (isLibrary) {
+      commandArgs.add("-fPIC");
+    }
+
+    // TODO(user, jakubzika): It seems like a bug that this set of flags gets inserted twice.
+    // Perhaps this has something to do with how the [cxx] section in .buckconfig is processed.
+    // (Err, it's probably adding both the preprocessor and regular rule command suffixes. Should
+    // be harmless.)
+    commandArgs.add("'" + languageStandard + "'");
+    commandArgs.add("-Wno-deprecated");
+    commandArgs.add("-Wno-conversion");
+    commandArgs.add("'" + languageStandard + "'");
+    commandArgs.add("-Wno-deprecated");
+    commandArgs.add("-Wno-conversion");
+
+    commandArgs.add("-x");
+    commandArgs.add(language);
+    commandArgs.add("-c");
     commandArgs.add(source);
     commandArgs.add("-o");
     commandArgs.add(output);

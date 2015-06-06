@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +42,6 @@ public class CxxPreprocessAndCompileStepTest {
 
     // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
     ImmutableList<String> compiler = ImmutableList.of("compiler");
-    ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
 
@@ -59,8 +59,8 @@ public class CxxPreprocessAndCompileStepTest {
             output,
             input,
             CxxSource.Type.CXX,
-            compiler,
-            flags,
+            Optional.of(compiler),
+            Optional.<ImmutableList<String>>absent(),
             replacementPaths,
             sanitizer);
 
@@ -110,8 +110,8 @@ public class CxxPreprocessAndCompileStepTest {
             output,
             input,
             CxxSource.Type.CXX,
-            compiler,
-            ImmutableList.<String>of(),
+            Optional.<ImmutableList<String>>absent(),
+            Optional.of(compiler),
             replacementPaths,
             sanitizer);
 

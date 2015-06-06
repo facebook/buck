@@ -422,17 +422,16 @@ public class CxxSourceRuleFactory {
             .build();
 
     // Build up the list of compiler flags.
-    ImmutableList<String> args =
-        ImmutableList.<String>builder()
-            // If we're using pic, add in the appropriate flag.
-            .addAll(pic.getFlags())
+    ImmutableList<String> compilerFlags = ImmutableList.<String>builder()
+        // If we're using pic, add in the appropriate flag.
+        .addAll(pic.getFlags())
             // Add in preprocessor flags.
-            .addAll(getPreprocessFlags(source.getType()))
+        .addAll(getPreprocessFlags(source.getType()))
             // Add in the platform and source specific compiler flags.
-            .addAll(getCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
+        .addAll(getCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
             // Add in per-source flags.
-            .addAll(source.getFlags())
-            .build();
+        .addAll(source.getFlags())
+        .build();
 
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
 
@@ -444,16 +443,16 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         tool,
-        args,
+        getPreprocessFlags(source.getType()),
+        tool,
+        compilerFlags,
         getCompileOutputPath(target, name),
         source.getPath(),
         source.getType(),
         ImmutableList.copyOf(cxxPreprocessorInput.getIncludeRoots()),
         ImmutableList.copyOf(cxxPreprocessorInput.getSystemIncludeRoots()),
         ImmutableList.copyOf(cxxPreprocessorInput.getFrameworkRoots()),
-        cxxPreprocessorInput.getIncludes(),
-        cxxPlatform.getDebugPathSanitizer(),
-        strategy);
+        cxxPreprocessorInput.getIncludes(), cxxPlatform.getDebugPathSanitizer(), strategy);
     resolver.addToIndex(result);
     return result;
   }

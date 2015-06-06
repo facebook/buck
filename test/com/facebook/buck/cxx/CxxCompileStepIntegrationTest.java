@@ -59,11 +59,12 @@ public class CxxCompileStepIntegrationTest {
     Path input = filesystem.resolve(relativeInput);
     filesystem.writeContentsToPath("int main() {}", relativeInput);
 
-    ImmutableList.Builder<String> cmdPrefix = ImmutableList.builder();
-    cmdPrefix.addAll(compiler);
+    ImmutableList.Builder<String> preprocessorCommand = ImmutableList.builder();
+    preprocessorCommand.addAll(compiler);
 
-    ImmutableList.Builder<String> cmdSuffix = ImmutableList.builder();
-    cmdSuffix.add("-g");
+    ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
+    compilerCommand.addAll(compiler);
+    compilerCommand.add("-g");
 
     DebugPathSanitizer sanitizer = new DebugPathSanitizer(
         200,
@@ -77,8 +78,8 @@ public class CxxCompileStepIntegrationTest {
         output,
         relativeInput,
         CxxSource.Type.C,
-        cmdPrefix.build(),
-        cmdSuffix.build(),
+        Optional.of(preprocessorCommand.build()),
+        Optional.of(compilerCommand.build()),
         ImmutableMap.<Path, Path>of(),
         sanitizer);
 

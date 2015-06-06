@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,8 +54,8 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Path output;
   private final Path input;
   private final CxxSource.Type inputType;
-  private final ImmutableList<String> commandPrefix;
-  private final ImmutableList<String> commandSuffix;
+  private final Optional<ImmutableList<String>> preprocessorCommand;
+  private final Optional<ImmutableList<String>> compilerCommand;
   private final ImmutableMap<Path, Path> replacementPaths;
   private final DebugPathSanitizer sanitizer;
 
@@ -70,16 +71,18 @@ public class CxxPreprocessAndCompileStep implements Step {
       Path output,
       Path input,
       CxxSource.Type inputType,
-      ImmutableList<String> commandPrefix,
-      ImmutableList<String> commandSuffix,
+      Optional<ImmutableList<String>> preprocessorCommand,
+      Optional<ImmutableList<String>> compilerCommand,
       ImmutableMap<Path, Path> replacementPaths,
       DebugPathSanitizer sanitizer) {
+    Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
+    Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
     this.operation = operation;
     this.output = output;
     this.input = input;
     this.inputType = inputType;
-    this.commandPrefix = commandPrefix;
-    this.commandSuffix = commandSuffix;
+    this.preprocessorCommand = preprocessorCommand;
+    this.compilerCommand = compilerCommand;
     this.replacementPaths = replacementPaths;
     this.sanitizer = sanitizer;
   }
@@ -169,10 +172,9 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private ImmutableList<String> makePreprocessCommand() {
     return ImmutableList.<String>builder()
-        .addAll(commandPrefix)
+        .addAll(preprocessorCommand.get())
         .add("-x", inputType.getLanguage())
         .add("-E")
-        .addAll(commandSuffix)
         .add(input.toString())
         .build();
   }
@@ -181,10 +183,9 @@ public class CxxPreprocessAndCompileStep implements Step {
       String inputFileName,
       String inputLanguage) {
     return ImmutableList.<String>builder()
-        .addAll(commandPrefix)
+        .addAll(compilerCommand.get())
         .add("-x", inputLanguage)
         .add("-c")
-        .addAll(commandSuffix)
         .add(inputFileName)
         .add("-o")
         .add(output.toString())
@@ -461,5 +462,19 @@ public class CxxPreprocessAndCompileStep implements Step {
     COMPILE_MUNGE_DEBUGINFO,
     PREPROCESS,
     PIPED_PREPROCESS_AND_COMPILE,
+    ;
+
+    public boolean isPreprocess() {
+      return this == COMPILE_MUNGE_DEBUGINFO ||
+          this == PREPROCESS ||
+          this == PIPED_PREPROCESS_AND_COMPILE;
+    }
+
+    public boolean isCompile() {
+      return this == COMPILE ||
+          this == COMPILE_MUNGE_DEBUGINFO ||
+          this == PIPED_PREPROCESS_AND_COMPILE;
+    }
+
   }
 }
