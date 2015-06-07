@@ -21,6 +21,7 @@ java_library(
     '//third-party/java/jsr:jsr305',
   ],
   visibility = [
+    '//src/com/facebook/buck/android:helpers',
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/event:event',

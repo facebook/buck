@@ -14,76 +14,73 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.event;
 
-import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.event.LeafEvent;
+import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEvent {
-  private final String packageName;
+public abstract class InstallEvent extends AbstractBuckEvent implements LeafEvent {
+  private final BuildTarget buildTarget;
 
-  public UninstallEvent(String packageName) {
-    this.packageName = packageName;
+  protected InstallEvent(BuildTarget buildTarget) {
+    this.buildTarget = buildTarget;
   }
 
-  public String getPackageName() {
-    return packageName;
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 
   @Override
   public String getCategory() {
-    return "uninstall_apk";
+    return "install_apk";
   }
 
   @Override
   protected String getValueString() {
-    return packageName;
+    return buildTarget.getFullyQualifiedName();
   }
 
   @Override
   public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof UninstallEvent)) {
+    if (!(event instanceof InstallEvent)) {
       return false;
     }
 
-    UninstallEvent that = (UninstallEvent) event;
+    InstallEvent that = (InstallEvent) event;
 
-    return Objects.equal(getPackageName(), that.getPackageName());
+    return Objects.equal(getBuildTarget(), that.getBuildTarget());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getPackageName());
+    return getBuildTarget().hashCode();
   }
 
-  public static Started started(String packageName) {
-    return new Started(packageName);
+  public static Started started(BuildTarget buildTarget) {
+    return new Started(buildTarget);
   }
 
-  public static Finished finished(String packageName, boolean success) {
-    return new Finished(packageName, success);
+  public static Finished finished(BuildTarget buildTarget, boolean success) {
+    return new Finished(buildTarget, success);
   }
 
-  public static class Started extends UninstallEvent {
-    protected Started(String packageName) {
-      super(packageName);
+  public static class Started extends InstallEvent {
+    protected Started(BuildTarget buildTarget) {
+      super(buildTarget);
     }
 
     @Override
     public String getEventName() {
-      return "UninstallStarted";
+      return "InstallStarted";
     }
   }
 
-  public static class Finished extends UninstallEvent {
+  public static class Finished extends InstallEvent {
     private final boolean success;
 
-    protected Finished(String packageName, boolean success) {
-      super(packageName);
-
+    protected Finished(BuildTarget buildTarget, boolean success) {
+      super(buildTarget);
       this.success = success;
     }
 
@@ -93,7 +90,7 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
 
     @Override
     public String getEventName() {
-      return "UninstallFinished";
+      return "InstallFinished";
     }
 
     @Override
@@ -108,7 +105,7 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getPackageName(), isSuccess());
+      return Objects.hashCode(getBuildTarget(), isSuccess());
     }
   }
 }

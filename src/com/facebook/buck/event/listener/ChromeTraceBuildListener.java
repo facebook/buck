@@ -17,13 +17,13 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.cli.CommandEvent;
-import com.facebook.buck.cli.InstallEvent;
-import com.facebook.buck.cli.StartActivityEvent;
-import com.facebook.buck.cli.UninstallEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
+import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.TraceEvent;
+import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.io.PathListing;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;

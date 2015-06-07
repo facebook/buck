@@ -28,17 +28,17 @@ import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
-public class TargetDeviceOptionsTest {
+public class TargetDeviceCommandLineOptionsTest {
   @Test
-  public void shouldReturnAnAbsentOptionalIfNoTargetDeviceOptionsSet() {
-    TargetDeviceOptions options = buildOptions();
+  public void shouldReturnAnAbsentOptionalIfNoTargetDeviceCommandLineOptionsSet() {
+    TargetDeviceCommandLineOptions options = buildOptions();
 
     assertFalse(options.getTargetDeviceOptional().isPresent());
   }
 
   @Test
   public void shouldReturnAnEmulatorIfOnlyEmulatorFlagSet() {
-    TargetDeviceOptions options = buildOptions("-e");
+    TargetDeviceCommandLineOptions options = buildOptions("-e");
 
     TargetDevice device = options.getTargetDeviceOptional().get();
 
@@ -48,7 +48,7 @@ public class TargetDeviceOptionsTest {
 
   @Test
   public void shouldReturnADeviceIfOnlyDeviceFlagSet() {
-    TargetDeviceOptions options = buildOptions("-d");
+    TargetDeviceCommandLineOptions options = buildOptions("-d");
 
     TargetDevice device = options.getTargetDeviceOptional().get();
 
@@ -58,7 +58,7 @@ public class TargetDeviceOptionsTest {
 
   @Test
   public void onlySettingTheSerialFlagAssumesTheTargetIsARealDevice() {
-    TargetDeviceOptions options = buildOptions("-s", "1234");
+    TargetDeviceCommandLineOptions options = buildOptions("-s", "1234");
 
     TargetDevice device = options.getTargetDeviceOptional().get();
 
@@ -68,7 +68,7 @@ public class TargetDeviceOptionsTest {
 
   @Test
   public void serialFlagOverridesEnvironment() {
-    TargetDeviceOptions options = new TargetDeviceOptions("1234");
+    TargetDeviceCommandLineOptions options = new TargetDeviceCommandLineOptions("1234");
 
     TargetDevice device = options.getTargetDeviceOptional().get();
 
@@ -85,8 +85,8 @@ public class TargetDeviceOptionsTest {
     assertEquals("5678", device.getIdentifier());
   }
 
-  private TargetDeviceOptions buildOptions(String... args) {
-    TargetDeviceOptions options = new TargetDeviceOptions();
+  private TargetDeviceCommandLineOptions buildOptions(String... args) {
+    TargetDeviceCommandLineOptions options = new TargetDeviceCommandLineOptions();
 
     try {
       new CmdLineParser(options).parseArgument(args);

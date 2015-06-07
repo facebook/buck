@@ -14,76 +14,83 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.event;
 
-import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 
+/**
+ * Events for timing the starting of android events.
+ */
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
-public abstract class InstallEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class StartActivityEvent extends AbstractBuckEvent implements LeafEvent {
   private final BuildTarget buildTarget;
+  private final String activityName;
 
-  protected InstallEvent(BuildTarget buildTarget) {
+  protected StartActivityEvent(BuildTarget buildTarget, String activityName) {
     this.buildTarget = buildTarget;
+    this.activityName = activityName;
   }
 
   public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 
+  public String getActivityName() {
+    return activityName;
+  }
+
   @Override
   public String getCategory() {
-    return "install_apk";
+    return "start_activity";
   }
 
   @Override
   protected String getValueString() {
-    return buildTarget.getFullyQualifiedName();
+    return String.format("%s %s", getBuildTarget().getFullyQualifiedName(), getActivityName());
   }
 
   @Override
   public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof InstallEvent)) {
+    if (!(event instanceof StartActivityEvent)) {
       return false;
     }
 
-    InstallEvent that = (InstallEvent) event;
+    StartActivityEvent that = (StartActivityEvent) event;
 
-    return Objects.equal(getBuildTarget(), that.getBuildTarget());
+    return Objects.equal(getBuildTarget(), that.getBuildTarget()) &&
+        Objects.equal(getActivityName(), that.getActivityName());
   }
 
   @Override
   public int hashCode() {
-    return getBuildTarget().hashCode();
+    return Objects.hashCode(getActivityName(), getBuildTarget());
   }
 
-  public static Started started(BuildTarget buildTarget) {
-    return new Started(buildTarget);
+  public static Started started(BuildTarget buildTarget, String activityName) {
+    return new Started(buildTarget, activityName);
   }
 
-  public static Finished finished(BuildTarget buildTarget, boolean success) {
-    return new Finished(buildTarget, success);
+  public static Finished finished(BuildTarget buildTarget, String activityName, boolean success) {
+    return new Finished(buildTarget, activityName, success);
   }
 
-  public static class Started extends InstallEvent {
-    protected Started(BuildTarget buildTarget) {
-      super(buildTarget);
+  public static class Started extends StartActivityEvent {
+    protected Started(BuildTarget buildTarget, String activityName) {
+      super(buildTarget, activityName);
     }
 
     @Override
     public String getEventName() {
-      return "InstallStarted";
+      return "StartActivityStarted";
     }
   }
 
-  public static class Finished extends InstallEvent {
+  public static class Finished extends StartActivityEvent {
     private final boolean success;
 
-    protected Finished(BuildTarget buildTarget, boolean success) {
-      super(buildTarget);
+    protected Finished(BuildTarget buildTarget, String activityName, boolean success) {
+      super(buildTarget, activityName);
       this.success = success;
     }
 
@@ -93,7 +100,7 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
 
     @Override
     public String getEventName() {
-      return "InstallFinished";
+      return "StartActivityFinished";
     }
 
     @Override
@@ -108,7 +115,7 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getBuildTarget(), isSuccess());
+      return Objects.hashCode(getActivityName(), getBuildTarget(), isSuccess());
     }
   }
 }
