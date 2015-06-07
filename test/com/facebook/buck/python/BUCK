@@ -38,6 +38,7 @@ java_test(
     '//test/com/facebook/buck/shell:testutil',
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
+    '//third-party/java/jackson:jackson',
     '//third-party/java/junit:junit',
     '//third-party/java/hamcrest:hamcrest',
   ],

@@ -186,6 +186,7 @@
             'prebuilt_native_library',
         ],
         'python': [
+            'prebuilt_python_library',
             'python_binary',
             'python_library',
             'python_test',
@@ -539,6 +540,11 @@
 /***/
 {template .project_config}
 {call .ruleLink}{param name : 'project_config' /}{/call}
+{/template}
+
+/***/
+{template .prebuilt_python_library}
+{call .ruleLink}{param name : 'prebuilt_python_library' /}{/call}
 {/template}
 
 /***/

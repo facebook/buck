@@ -21,9 +21,14 @@ class Link(object):
   class InvalidLink(Error): pass
   class UnreadableLink(Error): pass
 
+  @classmethod
+  def _normalize(cls, filename):
+    return 'file://' + os.path.realpath(os.path.expanduser(filename))
+
   def __init__(self, url, opener=None):
     self._url = urlparse.urlparse(url)
-    self._opener = opener
+    if self._url.scheme == '':
+      self._url = urlparse.urlparse(self._normalize(url), allow_fragments=False)
 
   def __eq__(self, link):
     return self.__class__ == link.__class__ and self._url == link._url

@@ -1,0 +1,11 @@
+# To regenerate the package, run python setup.py bdist_egg (you may need to install setuptools).
+prebuilt_python_library(
+    name='python_lib',
+    binary_src='dist/package-0.1-py2.7.egg',
+)
+
+python_binary(
+    name='main',
+    main='main.py',
+    deps=[':python_lib'],
+)

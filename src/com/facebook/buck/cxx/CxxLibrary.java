@@ -183,6 +183,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         /* modules */ ImmutableMap.<Path, SourcePath>of(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         /* nativeLibraries */ libs.build(),
+        /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
         /* zipSafe */ Optional.<Boolean>absent());
   }
 

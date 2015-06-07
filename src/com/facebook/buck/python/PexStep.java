@@ -21,6 +21,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.zip.Unzip;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +34,8 @@ import java.nio.file.Path;
 public class PexStep extends ShellStep {
   private static final String SRC_ZIP = ".src.zip";
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  @VisibleForTesting
+  static final ObjectMapper MAPPER = new ObjectMapper();
 
   // Path to the tool to generate the pex file.
   private final Path pathToPex;
@@ -55,6 +57,9 @@ public class PexStep extends ShellStep {
   // The map of native libraries to include in the PEX.
   private final ImmutableMap<Path, Path> nativeLibraries;
 
+  // The list of prebuilt python libraries to add to the PEX.
+  private final ImmutableList<Path> prebuiltLibraries;
+
   private final boolean zipSafe;
 
   public PexStep(
@@ -66,6 +71,7 @@ public class PexStep extends ShellStep {
       ImmutableMap<Path, Path> modules,
       ImmutableMap<Path, Path> resources,
       ImmutableMap<Path, Path> nativeLibraries,
+      ImmutableList<Path> prebuiltLibraries,
       boolean zipSafe) {
     this.pathToPex = pathToPex;
     this.pythonPath = pythonPath;
@@ -75,6 +81,7 @@ public class PexStep extends ShellStep {
     this.modules = modules;
     this.resources = resources;
     this.nativeLibraries = nativeLibraries;
+    this.prebuiltLibraries = prebuiltLibraries;
     this.zipSafe = zipSafe;
   }
 
@@ -110,11 +117,16 @@ public class PexStep extends ShellStep {
     for (ImmutableMap.Entry<Path, Path> ent : nativeLibraries.entrySet()) {
       nativeLibrariesBuilder.put(ent.getKey().toString(), ent.getValue().toString());
     }
+    ImmutableList.Builder<String> prebuiltLibrariesBuilder = ImmutableList.builder();
+    for (Path req : prebuiltLibraries) {
+      prebuiltLibrariesBuilder.add(req.toString());
+    }
     try {
       return Optional.of(MAPPER.writeValueAsString(ImmutableMap.of(
           "modules", modulesBuilder.build(),
           "resources", resourcesBuilder.build(),
-          "nativeLibraries", nativeLibrariesBuilder.build())));
+          "nativeLibraries", nativeLibrariesBuilder.build(),
+          "prebuiltLibraries", prebuiltLibrariesBuilder.build())));
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }

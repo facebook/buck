@@ -124,6 +124,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
         getResolver().getMappedPaths(components.getModules()),
         getResolver().getMappedPaths(components.getResources()),
         getResolver().getMappedPaths(components.getNativeLibraries()),
+        getResolver().getAllPaths(components.getPrebuiltLibraries()),
         components.isZipSafe().or(true)));
 
     // Record the executable package for caching.

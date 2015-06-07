@@ -37,6 +37,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -122,6 +123,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(getSharedLibrarySoname(arg)),
             new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
+        ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
@@ -168,6 +170,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
+        ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
@@ -214,6 +217,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
+        ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
@@ -262,6 +266,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(getSharedLibrarySoname(arg)),
             new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
+        ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
