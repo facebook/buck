@@ -327,6 +327,8 @@
         <include name="com/facebook/buck/util/ProcessManager.java" />
         <include name="com/facebook/buck/util/ProjectFilesystem.java" />
         <include name="com/facebook/buck/util/Threads.java" />
+        <include name="com/facebook/buck/util/UnixUserIdFetcher.java" />
+        <include name="com/facebook/buck/util/UserIdFetcher.java" />
         <include name="com/facebook/buck/util/Verbosity.java" />
 
         <!-- //src/com/facebook/buck/util:constants -->

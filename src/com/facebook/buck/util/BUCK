@@ -41,6 +41,8 @@ IO_SRCS = [
   'ProcessManager.java',
   'ProcessExecutor.java',
   'Threads.java',
+  'UserIdFetcher.java',
+  'UnixUserIdFetcher.java',
   'Verbosity.java',
 ]
 java_immutables_library(
