@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.sun.security.auth.module.UnixSystem;
+import java.lang.reflect.Method;
 
 /**
  * Fetches the user ID of the running process.
@@ -24,6 +24,13 @@ import com.sun.security.auth.module.UnixSystem;
 public class UnixUserIdFetcher implements UserIdFetcher {
   @Override
   public long getUserId() {
-    return new UnixSystem().getUid();
+    try {
+      Class<?> cls = Class.forName("com.sun.security.auth.module.UnixSystem", true, null);
+      Object unixSystem = cls.newInstance();
+      Method getUid = cls.getDeclaredMethod("getUid");
+      return (long) getUid.invoke(unixSystem);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 }
