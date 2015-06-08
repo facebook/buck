@@ -19,7 +19,6 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.js.AbstractReactNativeLibraryDescription.Platform;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -53,7 +52,7 @@ public class ReactNativeLibrary extends AbstractBuildRule
   private final SourcePath jsPackager;
 
   @AddToRuleKey
-  private final Platform platform;
+  private final ReactNativePlatform platform;
 
   private final ReactNativeDeps depsFinder;
   private final Path output;
@@ -65,7 +64,7 @@ public class ReactNativeLibrary extends AbstractBuildRule
       boolean isDevMode,
       String bundleName,
       SourcePath jsPackager,
-      Platform platform,
+      ReactNativePlatform platform,
       ReactNativeDeps depsFinder) {
     super(ruleParams, resolver);
     this.entryPath = entryPath;
@@ -119,13 +118,13 @@ public class ReactNativeLibrary extends AbstractBuildRule
   public Iterable<AndroidPackageable> getRequiredPackageables() {
     // TODO(natthu): Consider defining two build rules, and make only the Android build rule
     // implement AndroidPackageable.
-    Preconditions.checkState(platform == Platform.ANDROID);
+    Preconditions.checkState(platform == ReactNativePlatform.ANDROID);
     return AndroidPackageableCollector.getPackageableRules(getDeps());
   }
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    Preconditions.checkState(platform == Platform.ANDROID);
+    Preconditions.checkState(platform == ReactNativePlatform.ANDROID);
     collector.addAssetsDirectory(
         getBuildTarget(),
         new PathSourcePath(getProjectFilesystem(), output.getParent()));

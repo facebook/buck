@@ -64,7 +64,7 @@ public class ReactNativeDeps extends AbstractBuildRule
   private final SourcePath entryPath;
 
   @AddToRuleKey
-  private final AbstractReactNativeLibraryDescription.Platform platform;
+  private final ReactNativePlatform platform;
 
   @AddToRuleKey
   private final SourcePath jsPackager;
@@ -77,7 +77,7 @@ public class ReactNativeDeps extends AbstractBuildRule
       SourcePath jsPackager,
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath entryPath,
-      AbstractReactNativeLibraryDescription.Platform platform) {
+      ReactNativePlatform platform) {
     super(ruleParams, resolver);
     this.jsPackager = jsPackager;
     this.srcs = srcs;

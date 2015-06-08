@@ -16,18 +16,46 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Flavored;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Description;
+import com.google.common.collect.ImmutableSet;
 
-public class IosReactNativeLibraryDescription extends AbstractReactNativeLibraryDescription {
+public class IosReactNativeLibraryDescription
+    implements Description<ReactNativeLibraryArgs>, Flavored {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("ios_react_native_library");
 
+  private final ReactNativeLibraryGraphEnhancer enhancer;
+
   public IosReactNativeLibraryDescription(ReactNativeBuckConfig buckConfig) {
-    super(buckConfig, Platform.IOS);
+    this.enhancer = new ReactNativeLibraryGraphEnhancer(buckConfig);
   }
 
   @Override
   public BuildRuleType getBuildRuleType() {
     return TYPE;
+  }
+
+  @Override
+  public ReactNativeLibraryArgs createUnpopulatedConstructorArg() {
+    return new ReactNativeLibraryArgs();
+  }
+
+  @Override
+  public <A extends ReactNativeLibraryArgs> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args) {
+    return enhancer.enhance(params, resolver, args, ReactNativePlatform.IOS);
+  }
+
+  @Override
+  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return ReactNativeFlavors.validateFlavors(flavors);
   }
 }

@@ -18,78 +18,37 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-public abstract class AbstractReactNativeLibraryDescription
-    implements Description<AbstractReactNativeLibraryDescription.Arg>, Flavored {
-
-  public enum Platform {
-    ANDROID("android"),
-    IOS("ios"),
-    ;
-
-    private final String name;
-
-    Platform(String name) {
-      this.name = name;
-    }
-
-    @Override
-    public String toString() {
-      return name;
-    }
-  }
-
-  public static final Flavor DEV = ImmutableFlavor.of("dev");
+public class ReactNativeLibraryGraphEnhancer {
 
   private static final Flavor REACT_NATIVE_DEPS_FLAVOR = ImmutableFlavor.of("rn_deps");
 
   private final ReactNativeBuckConfig buckConfig;
-  private final Platform platform;
 
-  public AbstractReactNativeLibraryDescription(
-      ReactNativeBuckConfig buckConfig,
-      Platform platform) {
+  public ReactNativeLibraryGraphEnhancer(ReactNativeBuckConfig buckConfig) {
     this.buckConfig = buckConfig;
-    this.platform = platform;
   }
 
-  @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  protected SourcePath getPackager() {
-    Optional<SourcePath> packager = buckConfig.getPackager();
-    if (!packager.isPresent()) {
-      throw new HumanReadableException("In order to use a 'react_native_library' rule, please " +
-          "specify 'packager' in .buckconfig under the 'react-native' section.");
-    }
-    return packager.get();
-  }
-
-  @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public BuildRule enhance(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      ReactNativeLibraryArgs args,
+      ReactNativePlatform platform) {
     BuildTarget originalBuildTarget = params.getBuildTarget();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
-    boolean devMode = originalBuildTarget.getFlavors().contains(DEV);
+    boolean devMode = ReactNativeFlavors.isDevMode(originalBuildTarget);
+    SourcePath packager = getPackager();
 
     BuildTarget depsFinderTarget = BuildTarget.builder(originalBuildTarget)
         .addFlavors(REACT_NATIVE_DEPS_FLAVOR)
@@ -98,7 +57,7 @@ public abstract class AbstractReactNativeLibraryDescription
     ReactNativeDeps depsFinder = new ReactNativeDeps(
         paramsForDepsFinder,
         sourcePathResolver,
-        getPackager(),
+        packager,
         args.srcs.get(),
         args.entryPath,
         platform);
@@ -111,22 +70,17 @@ public abstract class AbstractReactNativeLibraryDescription
         args.entryPath,
         devMode,
         args.bundleName,
-        getPackager(),
+        packager,
         platform,
         depsFinder);
   }
 
-  @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return flavors.isEmpty() || flavors.equals(ImmutableSet.of(DEV));
-  }
-
-  @SuppressFieldNotInitialized
-  public static class Arg {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public SourcePath entryPath;
-    public String bundleName;
-
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+  private SourcePath getPackager() {
+    Optional<SourcePath> packager = buckConfig.getPackager();
+    if (!packager.isPresent()) {
+      throw new HumanReadableException("In order to use a 'react_native_library' rule, please " +
+          "specify 'packager' in .buckconfig under the 'react-native' section.");
+    }
+    return packager.get();
   }
 }
