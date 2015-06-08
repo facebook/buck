@@ -117,7 +117,6 @@ java_immutables_library(
     'BuildsAnnotationProcessor.java',
     'HasClasspathEntries.java',
     'HasJavaAbi.java',
-    'Javac.java',
     'JavaLibrary.java',
   ],
   deps = [
