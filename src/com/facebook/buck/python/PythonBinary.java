@@ -34,6 +34,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -124,6 +125,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
         getResolver().getMappedPaths(components.getModules()),
         getResolver().getMappedPaths(components.getResources()),
         getResolver().getMappedPaths(components.getNativeLibraries()),
+        ImmutableSet.copyOf(getResolver().getAllPaths(components.getPrebuiltLibraries())),
         components.isZipSafe().or(true)));
 
     // Record the executable package for caching.

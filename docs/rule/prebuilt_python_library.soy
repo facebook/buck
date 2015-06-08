@@ -1,0 +1,81 @@
+{namespace prebuilt_python_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_python_library()' /}
+    {param prettify: true /}
+    {param description}
+      A prebuilt_python_library() rule is used to include binary python packages (i.e. eggs).
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>prebuilt_python_library()</code> rule is used to include prebuilt python packages into the output of a
+top-level {call buck.python_binary /} or {call buck.python_test /} rule.
+
+To create an egg for a package, run <code>python setup.py bdist_egg</code> in the package source distribution.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'binary_src' /}
+  {param desc}
+  The path to the <code>.egg</code> to use. Note: <code>.egg</code> files have a very particular naming convention
+  that must be followed - otherwise pex will not find the dependency properly at runtime!
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Other <code>prebuilt_python_library()</code> rules which this library depends on. These may also
+  be <code>python_library</code> rules if you want to depend on a source-based copy of the library.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+# A simple prebuilt_python_library with no external dependencies.
+prebuilt_python_library(
+  name = 'requests',
+  binary_src = 'requests-2.7.0-py2.7.egg',
+)
+
+# A slightly more complex example
+prebuilt_python_library(
+  name = 'greenlet',
+  binary_src = 'greenlet-0.4.7-py2.7-macosx-10.10-x86_64.egg',
+)
+
+prebuilt_python_library(
+  name = 'gevent',
+  binary_src = 'gevent-1.0.2-py2.7-macosx-10.10-x86_64.egg',
+  deps = [
+    ':greenlet',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

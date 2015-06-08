@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -19,6 +19,7 @@ package com.facebook.buck.python;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -30,43 +31,36 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
-public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
+public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackagable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private final ImmutableMap<Path, SourcePath> srcs;
-  private final ImmutableMap<Path, SourcePath> resources;
-  private final Optional<Boolean> zipSafe;
+  @AddToRuleKey
+  private final SourcePath binarySrc;
 
-  public PythonLibrary(
+  public PrebuiltPythonLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableMap<Path, SourcePath> srcs,
-      ImmutableMap<Path, SourcePath> resources,
-      Optional<Boolean> zipSafe) {
+      SourcePath binarySrc) {
     super(params, resolver);
-    this.srcs = srcs;
-    this.resources = resources;
-    this.zipSafe = zipSafe;
+    this.binarySrc = binarySrc;
   }
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+    // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
+    // extension modules).
     return PythonPackageComponents.of(
-        srcs,
-        resources,
         ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSet.<SourcePath>of(),
-        zipSafe);
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableSet.of(binarySrc),
+        Optional.<Boolean>absent());
   }
 
   @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
-  }
-
-  public ImmutableMap<Path, SourcePath> getSrcs() {
-    return srcs;
   }
 
 }

@@ -37,6 +37,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,6 +77,7 @@ public class PythonBinaryTest {
                 Paths.get(mod2), new PathSourcePath(projectFilesystem, src2)),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
+            ImmutableSet.<SourcePath>of(),
             Optional.<Boolean>absent()));
 
     // Calculate and return the rule key.

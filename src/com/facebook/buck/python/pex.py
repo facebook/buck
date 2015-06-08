@@ -15,6 +15,12 @@ import zipfile
 # setuptools at runtime.  Also, locate the `pkg_resources` modules
 # via our local setuptools import.
 if not zipfile.is_zipfile(sys.argv[0]):
+    # Remove twitter.common.python from the import path - it may be eagerly
+    # loaded as part of site-packages.
+    sys.modules.pop('twitter', None)
+    sys.modules.pop('twitter.common', None)
+    sys.modules.pop('twitter.common.python', None)
+
     buck_root = os.sep.join(__file__.split(os.sep)[:-6])
     sys.path.insert(0, os.path.join(
         buck_root,
@@ -117,6 +123,15 @@ def main():
         for dst, src in manifest['resources'].iteritems():
             # NOTE(agallagher): see rationale above.
             pex_builder.add_resource(dereference_symlinks(src), dst)
+
+        # Add prebuilt libraries listed in the manifest.
+        for req in manifest.get('prebuiltLibraries', []):
+            try:
+                pex_builder.add_dist_location(req)
+            except Exception as e:
+                raise Exception("Failed to add {}: {}".format(req, e))
+
+        # TODO(mikekap): Do something about manifest['nativeLibraries'].
 
         # Generate the PEX file.
         pex_builder.build(output)

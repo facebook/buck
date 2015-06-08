@@ -119,6 +119,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         modules.build(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
         /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of(),
+        /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
         /* zipSafe */ args.zipSafe);
     PythonPackageComponents allPackageComponents = PythonUtil.getAllComponents(
         params,

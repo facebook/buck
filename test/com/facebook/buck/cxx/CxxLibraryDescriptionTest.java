@@ -158,6 +158,7 @@ public class CxxLibraryDescriptionTest {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
+            ImmutableSet.<SourcePath>of(),
             Optional.<Boolean>absent());
       }
 
@@ -557,6 +558,7 @@ public class CxxLibraryDescriptionTest {
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(sharedLibrarySoname),
                 new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput)),
+            ImmutableSet.<SourcePath>of(),
             Optional.<Boolean>absent());
       }
 
@@ -848,6 +850,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(
             Paths.get(CxxDescriptionEnhancer.getSharedLibrarySoname(target, cxxPlatform)),
             new BuildTargetSourcePath(projectFilesystem, sharedRule.getBuildTarget())),
+        ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
     assertEquals(
         expectedPythonPackageComponents,

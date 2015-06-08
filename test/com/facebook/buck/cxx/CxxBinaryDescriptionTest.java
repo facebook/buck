@@ -133,6 +133,7 @@ public class CxxBinaryDescriptionTest {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
+            ImmutableSet.<SourcePath>of(),
             Optional.<Boolean>absent());
       }
 

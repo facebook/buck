@@ -1,0 +1,14 @@
+# To regenerate the package, run python setup.py bdist_egg (you may need to install setuptools).
+# Then, rename it to dist/package-0.1-py2.6.egg (or update the integration test), and remove the
+# .pyc files from the zip so it is version agnostic:
+#  zip -d test/com/facebook/buck/python/testdata/prebuilt_package/dist/package-0.1-py2.6.egg \*.pyc
+prebuilt_python_library(
+    name='python_lib',
+    binary_src=glob(['dist/package-0.1-py*.egg'])[0],
+)
+
+python_binary(
+    name='main',
+    main='main.py',
+    deps=[':python_lib'],
+)

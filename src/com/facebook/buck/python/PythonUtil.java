@@ -89,6 +89,7 @@ public class PythonUtil {
         .addAll(resolver.filterBuildRuleInputs(components.getModules().values()))
         .addAll(resolver.filterBuildRuleInputs(components.getResources().values()))
         .addAll(resolver.filterBuildRuleInputs(components.getNativeLibraries().values()))
+        .addAll(resolver.filterBuildRuleInputs(components.getPrebuiltLibraries()))
         .build();
   }
 

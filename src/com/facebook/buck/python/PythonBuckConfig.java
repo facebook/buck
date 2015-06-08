@@ -53,6 +53,12 @@ public class PythonBuckConfig {
               "src/com/facebook/buck/python/pex.py"))
           .toAbsolutePath();
 
+  private static final Path DEFAULT_PATH_TO_TEST_MAIN =
+      Paths.get(
+          System.getProperty(
+              "buck.path_to_python_test_main",
+              "src/com/facebook/buck/python/__test_main__.py"))
+          .toAbsolutePath();
 
   private final BuckConfig delegate;
   private final ExecutableFinder exeFinder;
@@ -112,20 +118,8 @@ public class PythonBuckConfig {
     return new PythonEnvironment(pythonPath, pythonVersion);
   }
 
-  public Optional<Path> getPathToTestMain() {
-    Optional <Path> testMain = delegate.getPath(SECTION, "path_to_python_test_main");
-     if (testMain.isPresent()) {
-       return testMain;
-    }
-
-    // In some configs (particularly tests) it's possible that this variable will not be set.
-
-    String rawPath = System.getProperty("buck.path_to_python_test_main");
-    if (rawPath == null) {
-      return Optional.absent();
-    }
-
-    return Optional.of(Paths.get(rawPath));
+  public Path getPathToTestMain() {
+    return delegate.getPath(SECTION, "path_to_python_test_main").or(DEFAULT_PATH_TO_TEST_MAIN);
   }
 
   public Path getPathToPex() {

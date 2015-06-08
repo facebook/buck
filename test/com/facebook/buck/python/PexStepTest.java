@@ -19,16 +19,23 @@ package com.facebook.buck.python;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.startsWith;
 
 import com.facebook.buck.step.TestExecutionContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 
 public class PexStepTest {
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
@@ -37,13 +44,20 @@ public class PexStepTest {
   private static final Path DEST_PATH = Paths.get("/dest");
   private static final String ENTRY_POINT = "entry_point.main";
 
+  private static final ImmutableMap<Path, Path> MODULES = ImmutableMap.of(
+      Paths.get("m"), Paths.get("/src/m"));
+  private static final ImmutableMap<Path, Path> RESOURCES = ImmutableMap.of(
+      Paths.get("r"), Paths.get("/src/r"));
+  private static final ImmutableMap<Path, Path> NATIVE_LIBRARIES = ImmutableMap.of(
+      Paths.get("n.so"), Paths.get("/src/n.so"));
+  private static final ImmutableSet<Path> PREBUILT_LIBRARIES = ImmutableSet.of(
+      Paths.get("/src/p.egg"));
+
   @Test
   public void testCommandLine() {
     PexStep step = new PexStep(
         PEXPY_PATH, PYTHON_PATH, TEMP_PATH, DEST_PATH, ENTRY_POINT,
-        /* modules */ ImmutableMap.<Path, Path>of(),
-        /* resources */ ImmutableMap.<Path, Path>of(),
-        /* nativeLibraries */ ImmutableMap.<Path, Path>of(),
+        MODULES, RESOURCES, NATIVE_LIBRARIES, PREBUILT_LIBRARIES,
         /* zipSafe */ true);
     String command = Joiner.on(" ").join(
         step.getShellCommandInternal(TestExecutionContext.newInstance()));
@@ -58,14 +72,37 @@ public class PexStepTest {
   public void testCommandLineNoZipSafe() {
     PexStep step = new PexStep(
         PEXPY_PATH, PYTHON_PATH, TEMP_PATH, DEST_PATH, ENTRY_POINT,
-        /* modules */ ImmutableMap.<Path, Path>of(),
-        /* resources */ ImmutableMap.<Path, Path>of(),
-        /* nativeLibraries */ ImmutableMap.<Path, Path>of(),
+        MODULES, RESOURCES, NATIVE_LIBRARIES, PREBUILT_LIBRARIES,
         /* zipSafe */ false);
     String command = Joiner.on(" ").join(
         step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
     assertThat(command, containsString("--no-zip-safe"));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testCommandStdin() throws IOException {
+    PexStep step = new PexStep(
+        PEXPY_PATH, PYTHON_PATH, TEMP_PATH, DEST_PATH, ENTRY_POINT,
+        MODULES, RESOURCES, NATIVE_LIBRARIES, PREBUILT_LIBRARIES,
+        /* zipSafe */ true);
+
+    Map<String, Object> args = new ObjectMapper().readValue(
+        step.getStdin(TestExecutionContext.newInstance()).get(),
+        Map.class);
+    assertThat(
+        (Map<String, String>) args.get("modules"),
+        hasEntry(Paths.get("m").toString(), Paths.get("/src/m").toString()));
+    assertThat(
+        (Map<String, String>) args.get("resources"),
+        hasEntry(Paths.get("r").toString(), Paths.get("/src/r").toString()));
+    assertThat(
+        (Map<String, String>) args.get("nativeLibraries"),
+        hasEntry(Paths.get("n.so").toString(), Paths.get("/src/n.so").toString()));
+    assertThat(
+        (List<String>) args.get("prebuiltLibraries"),
+        hasItem(Paths.get("/src/p.egg").toString()));
   }
 
 }

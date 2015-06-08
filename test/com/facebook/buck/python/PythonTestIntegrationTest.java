@@ -29,8 +29,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Properties;
 
 public class PythonTestIntegrationTest {
 
@@ -40,21 +38,13 @@ public class PythonTestIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    Properties props = System.getProperties();
-    props.setProperty(
-        "buck.path_to_python_test_main",
-        Paths.get("src/com/facebook/buck/python/__test_main__.py").toAbsolutePath().toString());
-    props.setProperty(
-        "buck.path_to_pex",
-        Paths.get("src/com/facebook/buck/python/pex.py").toAbsolutePath().toString());
-
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "python_test", tmp);
     workspace.setUp();
   }
 
   @Test
-  public void testPullingJarFromCacheDoesNotResultInReportingStaleTestResults() throws IOException {
+  public void testPythonTest() throws IOException {
     // This test should pass.
     ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success");
     result1.assertSuccess();
