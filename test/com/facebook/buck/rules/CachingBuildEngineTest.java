@@ -1023,6 +1023,63 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         eventIter.next());
   }
 
+  @Test
+  public void matchingRuleKeyDoesNotRunPostBuildSteps() throws Exception {
+    ArtifactCache cache = new NoopArtifactCache();
+
+    // The EventBus should be updated with events indicating how the rule was built.
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
+    FakeBuckEventListener listener = new FakeBuckEventListener();
+    buckEventBus.register(listener);
+
+    // Add a post build step so we can verify that it's steps are executed.
+    Step failingStep =
+        new AbstractExecutionStep("test") {
+          @Override
+          public int execute(ExecutionContext context) throws IOException {
+            return 1;
+          }
+        };
+    BuildRule ruleToTest = createRule(
+        new SourcePathResolver(new BuildRuleResolver()),
+        /* deps */ ImmutableSet.<BuildRule>of(),
+        /* buildSteps */ ImmutableList.<Step>of(),
+        /* postBuildSteps */ ImmutableList.of(failingStep),
+        /* pathToOutputFile */ null);
+
+    // The BuildContext that will be used by the rule's build() method.
+    BuildContext context = createNiceMock(BuildContext.class);
+    expect(context.getArtifactCache()).andReturn(cache).anyTimes();
+    expect(context.getEventBus()).andReturn(buckEventBus).anyTimes();
+    expect(context.getStepRunner()).andReturn(createStepRunner(buckEventBus)).anyTimes();
+    expect(context.createOnDiskBuildInfoFor(buildTarget))
+        .andReturn(new FakeOnDiskBuildInfo().setRuleKey(ruleToTest.getRuleKey()))
+        .anyTimes();
+    BuildInfoRecorder buildInfoRecorder = createNiceMock(BuildInfoRecorder.class);
+    expect(buildInfoRecorder.getOutputSizeAndHash(anyObject(HashFunction.class)))
+        .andReturn(new Pair<>(0L, HashCode.fromInt(0)))
+        .anyTimes();
+    expect(
+        context.createBuildInfoRecorder(
+            anyObject(BuildTarget.class),
+            anyObject(RuleKey.class),
+            /* ruleKeyWithoutDepsForRecorder */ anyObject(RuleKey.class)))
+        .andReturn(buildInfoRecorder)
+        .anyTimes();
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            CachingBuildEngine.BuildMode.SHALLOW);
+
+    // Run the build.
+    replayAll();
+    BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
+    assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
+    verifyAll();
+  }
+
 
   // TODO(mbolin): Test that when the success files match, nothing is built and nothing is written
   // back to the cache.

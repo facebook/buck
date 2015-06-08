@@ -274,7 +274,9 @@ public class CachingBuildEngine implements BuildEngine {
 
             // The build has succeeded, whether we've getched from cache, or built locally.
             // So run the post-build steps.
-            if (rule instanceof HasPostBuildSteps) {
+            if (rule instanceof HasPostBuildSteps &&
+                (input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY ||
+                 input.getSuccess() == BuildRuleSuccessType.FETCHED_FROM_CACHE)) {
               executePostBuildSteps(
                   rule,
                   ((HasPostBuildSteps) rule).getPostBuildSteps(context, buildableContext),
