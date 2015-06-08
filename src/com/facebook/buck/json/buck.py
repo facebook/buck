@@ -486,14 +486,14 @@ def main():
     for build_file in args:
         build_file = cygwin_adjusted_path(build_file)
         values = buildFileProcessor.process(build_file)
-        to_parent.write(json.dumps(values))
+        to_parent.write(json.dumps(values, sort_keys=True))
         to_parent.flush()
 
     # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
     for build_file in iter(sys.stdin.readline, ''):
         build_file = cygwin_adjusted_path(build_file)
         values = buildFileProcessor.process(build_file.rstrip())
-        to_parent.write(json.dumps(values))
+        to_parent.write(json.dumps(values, sort_keys=True))
         to_parent.flush()
 
     # Python tries to flush/close stdout when it quits, and if there's a dead

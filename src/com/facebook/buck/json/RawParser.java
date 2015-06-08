@@ -19,7 +19,6 @@ package com.facebook.buck.json;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -29,6 +28,7 @@ import com.google.gson.stream.JsonReader;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -92,7 +92,7 @@ public class RawParser {
       }
       return out;
     } else if (json.isJsonObject()) {
-      Map<String, Object> out = Maps.newHashMap();
+      Map<String, Object> out = new LinkedHashMap<>(json.getAsJsonObject().entrySet().size());
       for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
         // On a large project, without invoking intern(), we have seen `buck targets` OOM. When this
         // happened, according to the .hprof file generated using -XX:+HeapDumpOnOutOfMemoryError,
