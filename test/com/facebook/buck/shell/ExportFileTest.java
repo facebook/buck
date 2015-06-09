@@ -199,8 +199,7 @@ public class ExportFileTest {
 
     RuleKey original = ruleKeyFactory
             .newInstance(rule)
-            .build()
-            .getTotalRuleKey();
+            .build();
 
     Files.write(temp, "I really like cheese".getBytes(UTF_8));
 
@@ -213,8 +212,7 @@ public class ExportFileTest {
     ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache, resolver);
     RuleKey refreshed = ruleKeyFactory
         .newInstance(rule)
-        .build()
-        .getTotalRuleKey();
+        .build();
 
     assertNotEquals(original, refreshed);
   }

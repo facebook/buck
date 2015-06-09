@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -72,7 +71,7 @@ public class NdkCxxPlatformTest {
   }
 
   // Create and return some rule keys from a dummy source for the given platforms.
-  private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKeyPair> constructCompileRuleKeys(
+  private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey> constructCompileRuleKeys(
       Operation operation,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
     BuildRuleResolver resolver = new BuildRuleResolver();
@@ -86,7 +85,7 @@ public class NdkCxxPlatformTest {
                     .build()),
             pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKeyPair> ruleKeys =
+    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys =
         ImmutableMap.builder();
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =
@@ -143,7 +142,7 @@ public class NdkCxxPlatformTest {
   }
 
   // Create and return some rule keys from a dummy source for the given platforms.
-  private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKeyPair> constructLinkRuleKeys(
+  private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey> constructLinkRuleKeys(
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -155,7 +154,7 @@ public class NdkCxxPlatformTest {
                     .build()),
             pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKeyPair> ruleKeys =
+    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys =
         ImmutableMap.builder();
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       BuildRule rule =
@@ -192,13 +191,13 @@ public class NdkCxxPlatformTest {
             new Pair<>(NdkCxxPlatforms.Compiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.GNUSTL),
             new Pair<>(NdkCxxPlatforms.Compiler.Type.CLANG, NdkCxxPlatforms.CxxRuntime.LIBCXX));
     for (Pair<NdkCxxPlatforms.Compiler.Type, NdkCxxPlatforms.CxxRuntime> config : configs) {
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKeyPair>>
+      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           preprocessAndCompileRukeKeys = Maps.newHashMap();
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKeyPair>>
+      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           preprocessRukeKeys = Maps.newHashMap();
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKeyPair>>
+      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           compileRukeKeys = Maps.newHashMap();
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKeyPair>>
+      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           linkRukeKeys = Maps.newHashMap();
 
       // Iterate building up rule keys for combinations of different platforms and NDK root

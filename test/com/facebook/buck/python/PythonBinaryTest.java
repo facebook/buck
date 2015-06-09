@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -53,7 +52,7 @@ public class PythonBinaryTest {
   @Rule
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
-  private RuleKeyPair getRuleKeyForModuleLayout(
+  private RuleKey getRuleKeyForModuleLayout(
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       SourcePathResolver resolver,
       String main, Path mainSrc,
@@ -113,25 +112,25 @@ public class PythonBinaryTest {
 
     // Calculate the rule keys for the various ways we can layout the source and modules
     // across different python libraries.
-    RuleKeyPair pair1 = getRuleKeyForModuleLayout(
+    RuleKey pair1 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
         resolver,
         "main.py", mainRelative,
         "module/one.py", source1Relative,
         "module/two.py", source2Relative);
-    RuleKeyPair pair2 = getRuleKeyForModuleLayout(
+    RuleKey pair2 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
         resolver,
         "main.py", mainRelative,
         "module/two.py", source2Relative,
         "module/one.py", source1Relative);
-    RuleKeyPair pair3 = getRuleKeyForModuleLayout(
+    RuleKey pair3 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
         resolver,
         "main.py", mainRelative,
         "module/one.py", source2Relative,
         "module/two.py", source1Relative);
-    RuleKeyPair pair4 = getRuleKeyForModuleLayout(
+    RuleKey pair4 = getRuleKeyForModuleLayout(
         ruleKeyBuilderFactory,
         resolver,
         "main.py", mainRelative,
@@ -140,9 +139,9 @@ public class PythonBinaryTest {
 
     // Make sure only cases where the actual module layouts are different result
     // in different rules keys.
-    assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
-    assertEquals(pair3.getTotalRuleKey(), pair4.getTotalRuleKey());
-    assertNotEquals(pair1.getTotalRuleKey(), pair3.getTotalRuleKey());
+    assertEquals(pair1, pair2);
+    assertEquals(pair3, pair4);
+    assertNotEquals(pair1, pair3);
   }
 
 }

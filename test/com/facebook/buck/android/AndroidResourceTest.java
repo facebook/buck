@@ -118,9 +118,9 @@ public class AndroidResourceTest {
                 )),
             pathResolver);
     RuleKey ruleKey1 =
-        factory.newInstance(androidResource1).build().getRuleKeyWithoutDeps();
+        factory.newInstance(androidResource1).build();
     RuleKey ruleKey2 =
-        factory.newInstance(androidResource2).build().getRuleKeyWithoutDeps();
+        factory.newInstance(androidResource2).build();
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.",

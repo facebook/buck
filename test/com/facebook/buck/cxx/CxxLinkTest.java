@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -54,7 +53,7 @@ public class CxxLinkTest {
       "/lib",
       "libc.a");
 
-  private RuleKeyPair generateRuleKey(
+  private RuleKey generateRuleKey(
       RuleKeyBuilderFactory factory,
       AbstractBuildRule rule) {
 
@@ -79,7 +78,7 @@ public class CxxLinkTest {
             pathResolver);
 
     // Generate a rule key for the defaults.
-    RuleKeyPair defaultRuleKey = generateRuleKey(
+    RuleKey defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxLink(
             params,
@@ -90,7 +89,7 @@ public class CxxLinkTest {
             DEFAULT_ARGS));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKeyPair linkerChange = generateRuleKey(
+    RuleKey linkerChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxLink(
             params,
@@ -102,7 +101,7 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
-    RuleKeyPair outputChange = generateRuleKey(
+    RuleKey outputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxLink(
             params,
@@ -114,7 +113,7 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
-    RuleKeyPair inputChange = generateRuleKey(
+    RuleKey inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxLink(
             params,
@@ -126,7 +125,7 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKeyPair flagsChange = generateRuleKey(
+    RuleKey flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxLink(
             params,

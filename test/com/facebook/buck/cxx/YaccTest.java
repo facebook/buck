@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -48,7 +47,7 @@ public class YaccTest {
   private static final Path DEFAULT_OUTPUT_PREFIX = Paths.get("output.prefix");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("input");
 
-  private RuleKeyPair generateRuleKey(
+  private RuleKey generateRuleKey(
       RuleKeyBuilderFactory factory,
       AbstractBuildRule rule) {
 
@@ -71,7 +70,7 @@ public class YaccTest {
             pathResolver);
 
     // Generate a rule key for the defaults.
-    RuleKeyPair defaultRuleKey = generateRuleKey(
+    RuleKey defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         new Yacc(
             params,
@@ -82,7 +81,7 @@ public class YaccTest {
             DEFAULT_INPUT));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKeyPair yaccChange = generateRuleKey(
+    RuleKey yaccChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new Yacc(
             params,
@@ -91,10 +90,10 @@ public class YaccTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_PREFIX,
             DEFAULT_INPUT));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), yaccChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, yaccChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKeyPair flagsChange = generateRuleKey(
+    RuleKey flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new Yacc(
             params,
@@ -103,10 +102,10 @@ public class YaccTest {
             ImmutableList.of("-different"),
             DEFAULT_OUTPUT_PREFIX,
             DEFAULT_INPUT));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), flagsChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the output prefix causes a rulekey change.
-    RuleKeyPair outputPrefixChange = generateRuleKey(
+    RuleKey outputPrefixChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new Yacc(
             params,
@@ -115,10 +114,10 @@ public class YaccTest {
             DEFAULT_FLAGS,
             Paths.get("different"),
             DEFAULT_INPUT));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), outputPrefixChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, outputPrefixChange);
 
     // Verify that changing the inputs causes a rulekey change.
-    RuleKeyPair inputChange = generateRuleKey(
+    RuleKey inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new Yacc(
             params,
@@ -127,7 +126,7 @@ public class YaccTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_PREFIX,
             new TestSourcePath("different")));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), inputChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, inputChange);
   }
 
 }

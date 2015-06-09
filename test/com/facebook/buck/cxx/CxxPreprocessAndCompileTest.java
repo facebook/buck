@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -68,7 +67,7 @@ public class CxxPreprocessAndCompileTest {
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
       CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
 
-  private RuleKeyPair generateRuleKey(
+  private RuleKey generateRuleKey(
       RuleKeyBuilderFactory factory,
       AbstractBuildRule rule) {
 
@@ -97,7 +96,7 @@ public class CxxPreprocessAndCompileTest {
             pathResolver);
 
     // Generate a rule key for the defaults.
-    RuleKeyPair defaultRuleKey = generateRuleKey(
+    RuleKey defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -115,7 +114,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
 
     // Verify that changing the compiler causes a rulekey change.
-    RuleKeyPair compilerChange = generateRuleKey(
+    RuleKey compilerChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -134,7 +133,7 @@ public class CxxPreprocessAndCompileTest {
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the operation causes a rulekey change.
-    RuleKeyPair operationChange = generateRuleKey(
+    RuleKey operationChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -153,7 +152,7 @@ public class CxxPreprocessAndCompileTest {
     assertNotEquals(defaultRuleKey, operationChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKeyPair flagsChange = generateRuleKey(
+    RuleKey flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -172,7 +171,7 @@ public class CxxPreprocessAndCompileTest {
     assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the input causes a rulekey change.
-    RuleKeyPair inputChange = generateRuleKey(
+    RuleKey inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -192,7 +191,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
-    RuleKeyPair includesChange = generateRuleKey(
+    RuleKey includesChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -212,7 +211,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the system includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
-    RuleKeyPair systemIncludesChange = generateRuleKey(
+    RuleKey systemIncludesChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -231,7 +230,7 @@ public class CxxPreprocessAndCompileTest {
     assertEquals(defaultRuleKey, systemIncludesChange);
 
     // Verify that changing the framework roots causes a rulekey change.
-    RuleKeyPair frameworkRootsChange = generateRuleKey(
+    RuleKey frameworkRootsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -285,7 +284,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Generate a rule key for the defaults.
     ImmutableList<String> flags1 = ImmutableList.of("-Isomething/foo");
-    RuleKeyPair ruleKey1 = generateRuleKey(
+    RuleKey ruleKey1 = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -304,7 +303,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Generate a rule key for the defaults.
     ImmutableList<String> flags2 = ImmutableList.of("-Idifferent/foo");
-    RuleKeyPair ruleKey2 = generateRuleKey(
+    RuleKey ruleKey2 = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,

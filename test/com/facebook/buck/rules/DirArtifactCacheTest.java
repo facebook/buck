@@ -89,8 +89,7 @@ public class DirArtifactCacheTest {
         inputRuleX)));
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
         .newInstance(inputRuleX)
-        .build()
-        .getTotalRuleKey();
+        .build();
 
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
   }
@@ -116,8 +115,7 @@ public class DirArtifactCacheTest {
         inputRuleX)));
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
         .newInstance(inputRuleX)
-        .build()
-        .getTotalRuleKey();
+        .build();
 
     dirArtifactCache.store(ruleKeyX, fileX);
 
@@ -152,8 +150,7 @@ public class DirArtifactCacheTest {
         inputRuleX)));
     RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
         .newInstance(inputRuleX)
-        .build()
-        .getTotalRuleKey();
+        .build();
 
     dirArtifactCache.store(ruleKeyX, fileX);
     dirArtifactCache.store(ruleKeyX, fileX); // Overwrite.
@@ -202,16 +199,13 @@ public class DirArtifactCacheTest {
 
     RuleKey ruleKeyX = fakeRuleKeyBuilderFactory
         .newInstance(inputRuleX)
-        .build()
-        .getTotalRuleKey();
+        .build();
     RuleKey ruleKeyY = fakeRuleKeyBuilderFactory
         .newInstance(inputRuleY)
-        .build()
-        .getTotalRuleKey();
+        .build();
     RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory
         .newInstance(inputRuleZ)
-        .build()
-        .getTotalRuleKey();
+        .build();
 
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
@@ -280,16 +274,13 @@ public class DirArtifactCacheTest {
 
     RuleKey ruleKeyX = fakeRuleKeyBuilderFactory
         .newInstance(inputRuleX)
-        .build()
-        .getTotalRuleKey();
+        .build();
     RuleKey ruleKeyY = fakeRuleKeyBuilderFactory
         .newInstance(inputRuleY)
-        .build()
-        .getTotalRuleKey();
+        .build();
     RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory
         .newInstance(inputRuleZ)
-        .build()
-        .getTotalRuleKey();
+        .build();
 
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());

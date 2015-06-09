@@ -23,7 +23,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.hash.AppendingHasher;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -32,14 +31,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Primitives;
-
-import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -126,7 +122,6 @@ public class RuleKey {
     private static final Logger logger = Logger.get(Builder.class);
 
     private final SourcePathResolver resolver;
-    private final ImmutableSortedSet<BuildRule> deps;
     private final Hasher hasher;
     private final FileHashCache hashCache;
     private final AppendableRuleKeyCache appendableRuleKeyCache;
@@ -135,11 +130,9 @@ public class RuleKey {
 
     public Builder(
         SourcePathResolver resolver,
-        ImmutableSortedSet<BuildRule> deps,
         FileHashCache hashCache,
         AppendableRuleKeyCache appendableRuleKeyCache) {
       this.resolver = resolver;
-      this.deps = deps;
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
       this.hashCache = hashCache;
       this.appendableRuleKeyCache = appendableRuleKeyCache;
@@ -345,38 +338,14 @@ public class RuleKey {
       return separate();
     }
 
-    @BuckStyleImmutable
-    @Value.Immutable
-    interface AbstractRuleKeyPair {
-
-      @Value.Parameter
-      RuleKey getTotalRuleKey();
-
-      @Value.Parameter
-      RuleKey getRuleKeyWithoutDeps();
-
+    public RuleKey build() {
+      RuleKey ruleKey = new RuleKey(hasher.hash());
+      if (logElms != null) {
+        logger.verbose("RuleKey %s=%s", ruleKey, Joiner.on("").join(logElms));
+      }
+      return ruleKey;
     }
 
-    public RuleKeyPair build() {
-      RuleKey ruleKeyWithoutDeps = new RuleKey(hasher.hash());
-
-      if (logElms != null) {
-        logger.verbose(
-            "RuleKey (without deps) %s=%s",
-            ruleKeyWithoutDeps,
-            Joiner.on("").join(logElms));
-      }
-
-      // Now introduce the deps into the RuleKey.
-      setReflectively("deps", deps);
-
-      RuleKey totalRuleKey = new RuleKey(hasher.hash());
-
-      if (logElms != null) {
-        logger.verbose("RuleKey %s=%s", totalRuleKey, Joiner.on("").join(logElms));
-      }
-
-      return RuleKeyPair.of(totalRuleKey, ruleKeyWithoutDeps);
-    }
   }
+
 }

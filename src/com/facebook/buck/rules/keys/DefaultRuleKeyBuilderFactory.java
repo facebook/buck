@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableCollection;
 
 import java.util.concurrent.ExecutionException;
 
-
 public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
   private final FileHashCache hashCache;
   private final SourcePathResolver pathResolver;
@@ -51,7 +50,6 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
     RuleKey.Builder builder =
         new RuleKey.Builder(
             pathResolver,
-            buildRule.getDeps(),
             hashCache,
             appendableRuleKeyCache);
     builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());

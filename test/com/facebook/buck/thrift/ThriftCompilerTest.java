@@ -29,7 +29,6 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -62,7 +61,7 @@ public class ThriftCompilerTest {
           Paths.get("something.thrift"),
           new TestSourcePath("blah/something.thrift"));
 
-  private RuleKeyPair generateRuleKey(
+  private RuleKey generateRuleKey(
       RuleKeyBuilderFactory factory,
       AbstractBuildRule rule) {
 
@@ -87,7 +86,7 @@ public class ThriftCompilerTest {
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
     // Generate a rule key for the defaults.
-    RuleKeyPair defaultRuleKey = generateRuleKey(
+    RuleKey defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -102,7 +101,7 @@ public class ThriftCompilerTest {
             DEFAULT_INCLUDES));
 
     // Verify that changing the compiler causes a rulekey change.
-    RuleKeyPair compilerChange = generateRuleKey(
+    RuleKey compilerChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -115,10 +114,10 @@ public class ThriftCompilerTest {
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), compilerChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKeyPair flagsChange = generateRuleKey(
+    RuleKey flagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -131,10 +130,10 @@ public class ThriftCompilerTest {
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), flagsChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKeyPair outputDirChange = generateRuleKey(
+    RuleKey outputDirChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -147,10 +146,10 @@ public class ThriftCompilerTest {
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), outputDirChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, outputDirChange);
 
     // Verify that changing the input causes a rulekey change.
-    RuleKeyPair inputChange = generateRuleKey(
+    RuleKey inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -163,10 +162,10 @@ public class ThriftCompilerTest {
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), inputChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the input causes a rulekey change.
-    RuleKeyPair languageChange = generateRuleKey(
+    RuleKey languageChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -179,10 +178,10 @@ public class ThriftCompilerTest {
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), languageChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, languageChange);
 
     // Verify that changing the input causes a rulekey change.
-    RuleKeyPair optionsChange = generateRuleKey(
+    RuleKey optionsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -195,11 +194,11 @@ public class ThriftCompilerTest {
             ImmutableSet.of("different"),
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_INCLUDES));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), optionsChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, optionsChange);
 
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
-    RuleKeyPair includeRootsChange = generateRuleKey(
+    RuleKey includeRootsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -212,10 +211,10 @@ public class ThriftCompilerTest {
             DEFAULT_OPTIONS,
             ImmutableList.of(Paths.get("different")),
             DEFAULT_INCLUDES));
-    assertEquals(defaultRuleKey.getTotalRuleKey(), includeRootsChange.getTotalRuleKey());
+    assertEquals(defaultRuleKey, includeRootsChange);
 
     // Verify that changing the name of the include causes a rulekey change.
-    RuleKeyPair includesKeyChange = generateRuleKey(
+    RuleKey includesKeyChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -230,10 +229,10 @@ public class ThriftCompilerTest {
             ImmutableMap.<Path, SourcePath>of(
                 DEFAULT_INCLUDES.entrySet().iterator().next().getKey(),
                 new TestSourcePath("different"))));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), includesKeyChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, includesKeyChange);
 
     // Verify that changing the contents of an include causes a rulekey change.
-    RuleKeyPair includesValueChange = generateRuleKey(
+    RuleKey includesValueChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new ThriftCompiler(
             params,
@@ -248,7 +247,7 @@ public class ThriftCompilerTest {
             ImmutableMap.of(
                 Paths.get("different"),
                 DEFAULT_INCLUDES.entrySet().iterator().next().getValue())));
-    assertNotEquals(defaultRuleKey.getTotalRuleKey(), includesValueChange.getTotalRuleKey());
+    assertNotEquals(defaultRuleKey, includesValueChange);
   }
 
   @Test

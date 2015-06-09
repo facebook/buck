@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -54,7 +53,7 @@ public class ArchiveTest {
           new TestSourcePath("b.o"),
           new TestSourcePath("c.o"));
 
-  private RuleKeyPair generateRuleKey(
+  private RuleKey generateRuleKey(
       RuleKeyBuilderFactory factory,
       AbstractBuildRule rule) {
 
@@ -79,7 +78,7 @@ public class ArchiveTest {
             pathResolver);
 
     // Generate a rule key for the defaults.
-    RuleKeyPair defaultRuleKey = generateRuleKey(
+    RuleKey defaultRuleKey = generateRuleKey(
         ruleKeyBuilderFactory,
         new Archive(
             params,
@@ -90,7 +89,7 @@ public class ArchiveTest {
             DEFAULT_INPUTS));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKeyPair archiverChange = generateRuleKey(
+    RuleKey archiverChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new Archive(
             params,
@@ -102,7 +101,7 @@ public class ArchiveTest {
     assertNotEquals(defaultRuleKey, archiverChange);
 
     // Verify that changing the output path causes a rulekey change.
-    RuleKeyPair outputChange = generateRuleKey(
+    RuleKey outputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new Archive(
             params,
@@ -114,7 +113,7 @@ public class ArchiveTest {
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
-    RuleKeyPair inputChange = generateRuleKey(
+    RuleKey inputChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new Archive(
             params,

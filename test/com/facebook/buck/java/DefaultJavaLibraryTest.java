@@ -55,7 +55,6 @@ import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -1096,10 +1095,9 @@ public class DefaultJavaLibraryTest {
 
     RuleKey.Builder builder1 = ruleKeyBuilderFactory1.newInstance(rule1);
     RuleKey.Builder builder2 = ruleKeyBuilderFactory2.newInstance(rule2);
-    RuleKeyPair pair1 = builder1.build();
-    RuleKeyPair pair2 = builder2.build();
-    assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
-    assertEquals(pair1.getRuleKeyWithoutDeps(), pair2.getRuleKeyWithoutDeps());
+    RuleKey key1 = builder1.build();
+    RuleKey key2 = builder2.build();
+    assertEquals(key1, key2);
   }
 
   @Test

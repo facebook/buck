@@ -30,7 +30,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FileHashCache;
-import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -89,21 +88,21 @@ public class RuleKeyTest {
 
   @Test
   public void ensureSimpleValuesCorrectRuleKeyChangesMade() {
-    RuleKeyPair reflective = createEmptyRuleKey(
+    RuleKey reflective = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
         .setReflectively("long", 42L)
         .setReflectively("boolean", true)
         .setReflectively("path", Paths.get("location", "of", "the", "rebel", "plans"))
         .build();
 
-    RuleKeyPair manual = createEmptyRuleKey(
+    RuleKey manual = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
         .setReflectively("long", 42L)
         .setReflectively("boolean", true)
         .setReflectively("path", Paths.get("location", "of", "the", "rebel", "plans"))
         .build();
 
-    assertEquals(manual.getTotalRuleKey(), reflective.getTotalRuleKey());
+    assertEquals(manual, reflective);
   }
 
   @Test
@@ -113,17 +112,17 @@ public class RuleKeyTest {
             new TestRuleKeyAppendable("foo"),
             new TestRuleKeyAppendable("bar"));
 
-    RuleKeyPair ruleKeyPairA = createEmptyRuleKey(
+    RuleKey ruleKeyPairA = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("ruleKeyAppendableList", ruleKeyAppendableList)
             .build();
 
-    RuleKeyPair ruleKeyPairB = createEmptyRuleKey(
+    RuleKey ruleKeyPairB = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("ruleKeyAppendableList", ruleKeyAppendableList)
             .build();
 
-    assertEquals(ruleKeyPairA.getTotalRuleKey(), ruleKeyPairB.getTotalRuleKey());
+    assertEquals(ruleKeyPairA, ruleKeyPairB);
   }
 
   @Test
@@ -138,17 +137,17 @@ public class RuleKeyTest {
             new TestRuleKeyAppendable("bar"),
             new TestRuleKeyAppendable("foo"));
 
-    RuleKeyPair ruleKeyPairA = createEmptyRuleKey(
+    RuleKey ruleKeyPairA = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("ruleKeyAppendableList", ruleKeyAppendableListA)
             .build();
 
-    RuleKeyPair ruleKeyPairB = createEmptyRuleKey(
+    RuleKey ruleKeyPairB = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("ruleKeyAppendableList", ruleKeyAppendableListB)
             .build();
 
-    assertNotEquals(ruleKeyPairA.getTotalRuleKey(), ruleKeyPairB.getTotalRuleKey());
+    assertNotEquals(ruleKeyPairA, ruleKeyPairB);
   }
 
   @Test
@@ -158,17 +157,17 @@ public class RuleKeyTest {
             "foo", new TestRuleKeyAppendable("foo"),
             "bar", new TestRuleKeyAppendable("bar"));
 
-    RuleKeyPair ruleKeyPairA = createEmptyRuleKey(
+    RuleKey ruleKeyPairA = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMap)
             .build();
 
-    RuleKeyPair ruleKeyPairB = createEmptyRuleKey(
+    RuleKey ruleKeyPairB = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMap)
             .build();
 
-    assertEquals(ruleKeyPairA.getTotalRuleKey(), ruleKeyPairB.getTotalRuleKey());
+    assertEquals(ruleKeyPairA, ruleKeyPairB);
   }
 
   @Test
@@ -183,17 +182,17 @@ public class RuleKeyTest {
             "bar", new TestRuleKeyAppendable("bar"),
             "foo", new TestRuleKeyAppendable("foo"));
 
-    RuleKeyPair ruleKeyPairA = createEmptyRuleKey(
+    RuleKey ruleKeyPairA = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMapA)
             .build();
 
-    RuleKeyPair ruleKeyPairB = createEmptyRuleKey(
+    RuleKey ruleKeyPairB = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("ruleKeyAppendableMap", ruleKeyAppendableMapB)
             .build();
 
-    assertNotEquals(ruleKeyPairA.getTotalRuleKey(), ruleKeyPairB.getTotalRuleKey());
+    assertNotEquals(ruleKeyPairA, ruleKeyPairB);
   }
 
   @Test
@@ -201,34 +200,34 @@ public class RuleKeyTest {
     ImmutableList<SourceRoot> sourceroots = ImmutableList.of(new SourceRoot("cake"));
     ImmutableList<String> strings = ImmutableList.of("one", "two");
 
-    RuleKeyPair reflective = createEmptyRuleKey(
+    RuleKey reflective = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
         .setReflectively("sourceroot", sourceroots)
         .setReflectively("strings", strings)
         .build();
 
-    RuleKeyPair manual = createEmptyRuleKey(
+    RuleKey manual = createEmptyRuleKey(
         new SourcePathResolver(new BuildRuleResolver()))
         .setReflectively("sourceroot", sourceroots)
         .setReflectively("strings", strings)
         .build();
 
-    assertEquals(manual.getTotalRuleKey(), reflective.getTotalRuleKey());
+    assertEquals(manual, reflective);
   }
 
   @Test
-  public void testRuleKeyPairEqualsAndHashCodeMethods() {
-    RuleKeyPair keyPair1 =
+  public void testRuleKeyEqualsAndHashCodeMethods() {
+    RuleKey keyPair1 =
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("something", "foo")
             .build();
-    RuleKeyPair keyPair2 =
+    RuleKey keyPair2 =
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("something", "foo")
             .build();
-    RuleKeyPair keyPair3 =
+    RuleKey keyPair3 =
         createEmptyRuleKey(
             new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("something", "bar")
@@ -377,7 +376,7 @@ public class RuleKeyTest {
         "boolean",
         true);
 
-    RuleKeyPair key =
+    RuleKey key =
         createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("map", map)
             .build();
@@ -391,7 +390,7 @@ public class RuleKeyTest {
         Paths.get("some/path"), "woohoo!",
         42L, "life, the universe and everything");
 
-    RuleKeyPair key =
+    RuleKey key =
         createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("map", map)
             .build();
@@ -401,7 +400,7 @@ public class RuleKeyTest {
 
   @Test
   public void canAddRuleKeyAppendable() {
-    RuleKeyPair key =
+    RuleKey key =
         createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("rule_key_appendable", new TestRuleKeyAppendable("foo"))
             .build();
@@ -413,7 +412,7 @@ public class RuleKeyTest {
     ImmutableList<TestRuleKeyAppendable> list = ImmutableList.of(
         new TestRuleKeyAppendable("foo"),
         new TestRuleKeyAppendable("bar"));
-    RuleKeyPair key =
+    RuleKey key =
         createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("list", list)
             .build();
@@ -425,7 +424,7 @@ public class RuleKeyTest {
     ImmutableMap<String, TestRuleKeyAppendable> map = ImmutableMap.of(
         "foo", new TestRuleKeyAppendable("foo"),
         "bar", new TestRuleKeyAppendable("bar"));
-    RuleKeyPair key =
+    RuleKey key =
         createEmptyRuleKey(new SourcePathResolver(new BuildRuleResolver()))
             .setReflectively("map", map)
             .build();
@@ -448,10 +447,8 @@ public class RuleKeyTest {
         "foo",
         "xyzzy");
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyPair ruleKey1 = factory.newInstance(buildRule1).build();
-    RuleKeyPair ruleKey2 = factory.newInstance(buildRule2).build();
+    RuleKey ruleKey1 = buildRule1.getRuleKey();
+    RuleKey ruleKey2 = buildRule2.getRuleKey();
 
     assertNotEquals(ruleKey1, ruleKey2);
   }
@@ -483,10 +480,8 @@ public class RuleKeyTest {
         .build();
     BuildRule parentRule2 = new NoopBuildRule(parentParams2, pathResolver);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), pathResolver);
-    RuleKeyPair ruleKey1 = factory.newInstance(parentRule1).build();
-    RuleKeyPair ruleKey2 = factory.newInstance(parentRule2).build();
+    RuleKey ruleKey1 = parentRule1.getRuleKey();
+    RuleKey ruleKey2 = parentRule2.getRuleKey();
 
     assertNotEquals(ruleKey1, ruleKey2);
   }

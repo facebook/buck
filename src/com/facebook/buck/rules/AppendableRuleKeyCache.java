@@ -20,7 +20,6 @@ import com.facebook.buck.util.FileHashCache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableSortedSet;
 
 public class AppendableRuleKeyCache {
 
@@ -50,11 +49,10 @@ public class AppendableRuleKeyCache {
     RuleKey.Builder subKeyBuilder =
         new RuleKey.Builder(
             pathResolver,
-            ImmutableSortedSet.<BuildRule>of(),
             fileHashCache,
             this);
     appendable.appendToRuleKey(subKeyBuilder);
-    return subKeyBuilder.build().getRuleKeyWithoutDeps();
+    return subKeyBuilder.build();
   }
 
 }

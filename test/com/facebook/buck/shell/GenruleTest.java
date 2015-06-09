@@ -41,7 +41,6 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyPair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
@@ -89,7 +88,7 @@ public class GenruleTest {
 
   private ProjectFilesystem fakeFilesystem;
 
-  private RuleKeyPair generateRuleKey(
+  private RuleKey generateRuleKey(
       RuleKeyBuilderFactory factory,
       AbstractBuildRule rule) {
 
@@ -475,13 +474,13 @@ public class GenruleTest {
 
     // Get a rule key for two genrules using two different output names, but are otherwise the
     // same.
-    RuleKeyPair key1 = generateRuleKey(
+    RuleKey key1 = generateRuleKey(
         ruleKeyBuilderFactory,
         (Genrule) GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule1"))
             .setOut("foo")
             .build(resolver));
-    RuleKeyPair key2 = generateRuleKey(
+    RuleKey key2 = generateRuleKey(
         ruleKeyBuilderFactory,
         (Genrule) GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
@@ -489,7 +488,7 @@ public class GenruleTest {
             .build(resolver));
 
     // Verify that just the difference in output name is enough to make the rule key different.
-    assertNotEquals(key1.getTotalRuleKey(), key2.getTotalRuleKey());
+    assertNotEquals(key1, key2);
   }
 
   private static String getAbsolutePathFor(String path) {

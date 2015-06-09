@@ -62,7 +62,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class KnownBuildRuleTypesTest {
 
   @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
@@ -218,8 +217,8 @@ public class KnownBuildRuleTypesTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), resolver);
-    RuleKey configuredKey = factory.newInstance(configuredRule).build().getTotalRuleKey();
-    RuleKey libraryKey = factory.newInstance(libraryRule).build().getTotalRuleKey();
+    RuleKey configuredKey = factory.newInstance(configuredRule).build();
+    RuleKey libraryKey = factory.newInstance(libraryRule).build();
 
     assertNotEquals(libraryKey, configuredKey);
   }

@@ -167,11 +167,9 @@ public class SymlinkTreeTest {
         symlinkTreeBuildRule);
     RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(
         modifiedSymlinkTreeBuildRule);
-    RuleKeyPair pair1 = builder1.build();
-    RuleKeyPair pair2 = builder2.build();
-    assertNotEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
-    assertNotEquals(pair1.getRuleKeyWithoutDeps(), pair2.getRuleKeyWithoutDeps());
-
+    RuleKey pair1 = builder1.build();
+    RuleKey pair2 = builder2.build();
+    assertNotEquals(pair1, pair2);
   }
 
   @Test
@@ -187,7 +185,7 @@ public class SymlinkTreeTest {
 
     // Calculate the rule key
     RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
-    RuleKeyPair pair1 = builder1.build();
+    RuleKey pair1 = builder1.build();
 
     // Change the contents of the target of the link.
     Path existingFile =
@@ -198,11 +196,10 @@ public class SymlinkTreeTest {
 
     // Re-calculate the rule key
     RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
-    RuleKeyPair pair2 = builder2.build();
+    RuleKey pair2 = builder2.build();
 
     // Verify that the rules keys are the same.
-    assertEquals(pair1.getTotalRuleKey(), pair2.getTotalRuleKey());
-    assertEquals(pair1.getRuleKeyWithoutDeps(), pair2.getRuleKeyWithoutDeps());
+    assertEquals(pair1, pair2);
 
   }
 

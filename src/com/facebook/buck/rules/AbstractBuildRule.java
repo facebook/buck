@@ -19,9 +19,12 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.Beta;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableSortedSet;
+
+import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
 
@@ -136,11 +139,27 @@ public abstract class AbstractBuildRule implements BuildRule {
       synchronized (this) {
         if (ruleKeyPair == null) {
           RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(this);
-          ruleKeyPair = builder.build();
+          RuleKey ruleKeyWithoutDeps = builder.build();
+          // Now introduce the deps into the RuleKey.
+          builder.setReflectively("deps", getDeps());
+          RuleKey totalRuleKey = builder.build();
+          ruleKeyPair = RuleKeyPair.of(totalRuleKey, ruleKeyWithoutDeps);
         }
       }
     }
     return ruleKeyPair;
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  public interface AbstractRuleKeyPair {
+
+    @Value.Parameter
+    RuleKey getTotalRuleKey();
+
+    @Value.Parameter
+    RuleKey getRuleKeyWithoutDeps();
+
   }
 
 }
