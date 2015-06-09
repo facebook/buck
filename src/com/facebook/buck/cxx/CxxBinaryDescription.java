@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -216,7 +217,14 @@ public class CxxBinaryDescription implements
     return flavors.isEmpty();
   }
 
+  public enum LinkStyle {
+    STATIC,
+    SHARED,
+  }
+
   @SuppressFieldNotInitialized
-  public static class Arg extends CxxConstructorArg {}
+  public static class Arg extends CxxConstructorArg {
+    public Optional<LinkStyle> linkStyle;
+  }
 
 }

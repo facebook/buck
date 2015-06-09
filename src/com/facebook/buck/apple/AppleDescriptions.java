@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxConstructorArg;
+import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
@@ -230,6 +231,22 @@ public class AppleDescriptions {
     output.headerNamespace = Optional.of("");
     output.tests = arg.tests;
     output.cxxRuntimeType = Optional.absent();
+  }
+
+  public static void populateCxxBinaryDescriptionArg(
+      SourcePathResolver resolver,
+      CxxBinaryDescription.Arg output,
+      AppleNativeTargetDescriptionArg arg,
+      BuildTarget buildTarget,
+      final Optional<AppleSdkPaths> appleSdkPaths)
+  {
+    populateCxxConstructorArg(
+        resolver,
+        output,
+        arg,
+        buildTarget,
+        appleSdkPaths);
+    output.linkStyle = Optional.<CxxBinaryDescription.LinkStyle>absent();
   }
 
   public static void populateCxxLibraryDescriptionArg(

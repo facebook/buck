@@ -80,6 +80,16 @@ while an Android APK will require a shared PIC-enabled build).
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name : 'link_style ' /}
+  {param default: 'static ' /}
+  {param desc}
+  Determines whether to build and link this library's
+  dependencies statically (the default)o or dynamically.  Can
+  be either 'static' or 'dynamic'.
+  {/param}
+{/call}
+
 {call buck.tests_arg /}
 
 {call buck.visibility_arg /}

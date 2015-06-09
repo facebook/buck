@@ -638,4 +638,13 @@ public class CxxBinaryIntegrationTest {
 
     result.assertSuccess();
   }
+
+  @Test
+  public void buildBinaryWithSharedDependencies() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "shared_library", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
+    result.assertSuccess();
+  }
 }

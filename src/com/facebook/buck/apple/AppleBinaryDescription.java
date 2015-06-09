@@ -107,7 +107,7 @@ public class AppleBinaryDescription
         });
     Optional<AppleSdkPaths> appleSdkPaths = appleCxxPlatform.transform(
         AppleCxxPlatform.TO_APPLE_SDK_PATHS);
-    AppleDescriptions.populateCxxConstructorArg(
+    AppleDescriptions.populateCxxBinaryDescriptionArg(
         pathResolver,
         delegateArg,
         args,

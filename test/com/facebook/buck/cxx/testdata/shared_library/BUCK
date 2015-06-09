@@ -1,0 +1,6 @@
+cxx_binary(
+  name = 'binary',
+  deps = ['//subdir:library'],
+  srcs = [ 'binary.cpp' ],
+  link_style = 'shared',
+)

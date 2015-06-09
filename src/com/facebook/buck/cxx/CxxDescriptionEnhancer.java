@@ -765,7 +765,10 @@ public class CxxDescriptionEnhancer {
         Optional.<String>absent(),
         output,
         objects.values(),
-        Linker.LinkableDepType.STATIC,
+        (args.linkStyle.or(CxxBinaryDescription.LinkStyle.STATIC) ==
+            CxxBinaryDescription.LinkStyle.STATIC)
+        ? Linker.LinkableDepType.STATIC
+        : Linker.LinkableDepType.SHARED,
         params.getDeps(),
         args.cxxRuntimeType,
         Optional.<SourcePath>absent());
