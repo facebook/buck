@@ -1,4 +1,8 @@
-from __future__ import with_statement
+# ProjectBuildFileParser adds:
+#
+# from __future__ import with_statement
+# import sys
+# sys.path.insert(0, "/path/to/pathlib")
 
 import __builtin__
 import __future__
@@ -11,7 +15,6 @@ import optparse
 import os
 import os.path
 import subprocess
-import sys
 
 
 # When build files are executed, the functions in this file tagged with

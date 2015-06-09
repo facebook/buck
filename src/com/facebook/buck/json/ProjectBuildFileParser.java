@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.NamedTemporaryFile;
@@ -156,14 +157,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ProcessBuilder processBuilder = new ProcessBuilder(buildArgs());
     processBuilder.environment().clear();
     processBuilder.environment().putAll(environment);
-    String pythonPath = environment.get("PYTHONPATH");
-    String pathlibPyDir = PATH_TO_PATHLIB_PY.getParent().toString();
-    if (pythonPath == null) {
-      pythonPath = pathlibPyDir;
-    } else {
-      pythonPath = pythonPath + ":" + pathlibPyDir;
-    }
-    processBuilder.environment().put("PYTHONPATH", pythonPath);
 
     LOG.debug(
         "Starting buck.py command: %s environment: %s",
@@ -400,6 +393,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     try (Writer out = Files.newBufferedWriter(buckDotPy, UTF_8)) {
       URL resource = Resources.getResource(BUCK_PY_RESOURCE);
+      String pathlibDir = PATH_TO_PATHLIB_PY.getParent().toString();
+      out.write(
+          "from __future__ import with_statement\n" +
+          "import sys\n" +
+          "sys.path.insert(0, \"" +
+              Escaper.escapeAsBashString(pathlibDir) + "\")\n");
       Resources.asCharSource(resource, UTF_8).copyTo(out);
       out.write("\n\n");
 
