@@ -38,6 +38,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -182,6 +183,9 @@ public class ProjectGenerator {
           return input.getConstructorArg().exportedPreprocessorFlags.get();
         }
       };
+
+  private static final ImmutableSet<CxxSource.Type> SUPPORTED_LANG_PREPROCESSOR_FLAG_TYPES =
+      ImmutableSet.of(CxxSource.Type.CXX, CxxSource.Type.OBJCXX);
 
   private final Function<SourcePath, Path> sourcePathResolver;
   private final TargetGraph targetGraph;
@@ -734,7 +738,6 @@ public class ProjectGenerator {
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e);
     }
-    PBXNativeTarget target = targetBuilderResult.target;
     PBXGroup targetGroup = targetBuilderResult.targetGroup;
 
     SourceTreePath buckFilePath = new SourceTreePath(
@@ -840,6 +843,38 @@ public class ProjectGenerator {
                         Iterables.concat(
                             targetNode.getConstructorArg().linkerFlags.get(),
                             collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode))))));
+
+    ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
+        targetNode.getConstructorArg().langPreprocessorFlags.get();
+
+    Sets.SetView<CxxSource.Type> unsupportedLangPreprocessorFlags =
+        Sets.difference(langPreprocessorFlags.keySet(), SUPPORTED_LANG_PREPROCESSOR_FLAG_TYPES);
+
+    if (!unsupportedLangPreprocessorFlags.isEmpty()) {
+      throw new HumanReadableException(
+          "%s: Xcode project generation does not support specified lang_preprocessor_flags keys: " +
+          "%s",
+          buildTarget,
+          unsupportedLangPreprocessorFlags);
+    }
+
+    ImmutableSet.Builder<String> allCxxFlagsBuilder = ImmutableSet.builder();
+    ImmutableList<String> cxxFlags = langPreprocessorFlags.get(CxxSource.Type.CXX);
+    if (cxxFlags != null) {
+      allCxxFlagsBuilder.addAll(cxxFlags);
+    }
+    ImmutableList<String> objcxxFlags = langPreprocessorFlags.get(CxxSource.Type.OBJCXX);
+    if (objcxxFlags != null) {
+      allCxxFlagsBuilder.addAll(objcxxFlags);
+    }
+    ImmutableSet<String> allCxxFlags = allCxxFlagsBuilder.build();
+    if (!allCxxFlags.isEmpty()) {
+      appendConfigsBuilder.put(
+          "OTHER_CPLUSPLUSFLAGS",
+          Joiner.on(' ').join(allCxxFlags));
+    }
+
+    PBXNativeTarget target = targetBuilderResult.target;
 
     setTargetBuildConfigurations(
         getConfigurationNameToXcconfigPath(buildTarget),

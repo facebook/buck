@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
@@ -53,6 +54,12 @@ public abstract class AbstractAppleNativeTargetBuilder<
 
   public BUILDER setPreprocessorFlags(Optional<ImmutableList<String>> preprocessorFlags) {
     arg.preprocessorFlags = preprocessorFlags;
+    return getThis();
+  }
+
+  public BUILDER setLangPreprocessorFlags(
+      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags) {
+    arg.langPreprocessorFlags = langPreprocessorFlags;
     return getThis();
   }
 

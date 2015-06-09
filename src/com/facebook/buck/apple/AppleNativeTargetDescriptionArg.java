@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.Hint;
@@ -52,6 +53,7 @@ public class AppleNativeTargetDescriptionArg implements HasTests {
   @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
   public Optional<ImmutableList<String>> preprocessorFlags;
   public Optional<ImmutableList<String>> exportedPreprocessorFlags;
+  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags;
   public Optional<ImmutableList<String>> compilerFlags;
   public Optional<ImmutableList<String>> linkerFlags;
   public Optional<ImmutableList<String>> exportedLinkerFlags;

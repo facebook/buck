@@ -51,6 +51,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -2884,6 +2885,69 @@ public class ProjectGeneratorTest {
     assertThat(
         shellScriptBuildPhase.getShellScript(),
         equalTo("buck build --flag 'value with spaces' " + binaryTarget.getFullyQualifiedName()));
+  }
+
+  @Test
+  public void cxxFlagsPropagatedToConfig() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setLangPreprocessorFlags(
+            Optional.of(
+                ImmutableMap.of(
+                    CxxSource.Type.CXX, ImmutableList.of("-std=c++11", "-stdlib=libc++"),
+                    CxxSource.Type.OBJCXX, ImmutableList.of("-std=c++11", "-stdlib=libc++"))))
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.mm")))))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("$(inherited) -std=c++11 -stdlib=libc++", settings.get("OTHER_CPLUSPLUSFLAGS"));
+  }
+
+  @Test
+  public void unsupportedLangPreprocessorFlagsThrows() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "//foo:lib: Xcode project generation does not support specified lang_preprocessor_flags " +
+        "keys: [ASSEMBLER]");
+
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setLangPreprocessorFlags(
+            Optional.of(
+                ImmutableMap.of(
+                    CxxSource.Type.ASSEMBLER, ImmutableList.of("-Xawesome"))))
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setSrcs(
+            Optional.of(
+                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.mm")))))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(

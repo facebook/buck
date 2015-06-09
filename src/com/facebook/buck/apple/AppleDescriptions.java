@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -211,7 +212,10 @@ public class AppleDescriptions {
     output.platformPreprocessorFlags =
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
     output.langPreprocessorFlags = Optional.of(
-        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
+        ImmutableMap.copyOf(
+            Maps.transformValues(
+                arg.langPreprocessorFlags.get(),
+                expandSdkVariableRefs)));
     if (appleSdkPaths.isPresent()) {
       output.frameworkSearchPaths = arg.frameworks.transform(
           frameworksToSearchPathsFunction(resolver, appleSdkPaths.get()));
