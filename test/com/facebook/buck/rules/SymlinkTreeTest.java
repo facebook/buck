@@ -181,7 +181,7 @@ public class SymlinkTreeTest {
         symlinkTreeBuildRule)));
 
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(
+        new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of()),
             resolver);
 

@@ -546,6 +546,6 @@ public class RuleKeyTest {
         };
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
     BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
-    return new FakeRuleKeyBuilderFactory(fileHashCache, resolver).newInstance(buildRule);
+    return new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).newInstance(buildRule);
   }
 }

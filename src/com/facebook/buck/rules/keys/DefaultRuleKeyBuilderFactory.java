@@ -48,11 +48,15 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
 
   @Override
   public RuleKey.Builder newInstance(BuildRule buildRule) {
-    RuleKey.Builder builder = RuleKey.builder(
-        buildRule,
-        pathResolver,
-        hashCache,
-        appendableRuleKeyCache);
+    RuleKey.Builder builder =
+        new RuleKey.Builder(
+            pathResolver,
+            buildRule.getDeps(),
+            hashCache,
+            appendableRuleKeyCache);
+    builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());
+    // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
+    builder.setReflectively("buck.type", buildRule.getType());
     builder.setReflectively("buckVersionUid", BuckVersion.getVersion());
 
     if (buildRule instanceof RuleKeyAppendable) {

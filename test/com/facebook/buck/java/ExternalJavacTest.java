@@ -24,7 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.EmptyRuleKeyBuilder;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyPair;
@@ -104,8 +104,8 @@ public class ExternalJavacTest extends EasyMockSupport {
         new AppendableRuleKeyCache(pathResolver, fileHashCache);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
-    FakeRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey javacKey = EmptyRuleKeyBuilder.newInstance(
         pathResolver,
@@ -140,8 +140,8 @@ public class ExternalJavacTest extends EasyMockSupport {
         new AppendableRuleKeyCache(pathResolver, fileHashCache);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
-    FakeRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey javacKey = EmptyRuleKeyBuilder.newInstance(
         pathResolver,

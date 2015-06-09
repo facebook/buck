@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKeyPair;
@@ -42,7 +42,7 @@ public class ToolTest {
   public void hashFileToolsCreatedWithTheSamePathAreEqual() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(
+        new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("path", Strings.repeat("a", 40))
@@ -93,7 +93,7 @@ public class ToolTest {
   public void customVersion() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(
+        new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>of()),
             pathResolver);
@@ -134,7 +134,7 @@ public class ToolTest {
 
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(
+        new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     // Note: the hashes of both files are the same

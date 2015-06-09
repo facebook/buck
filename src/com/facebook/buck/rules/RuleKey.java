@@ -118,48 +118,6 @@ public class RuleKey {
     return this.getHashCode().hashCode();
   }
 
-  /**
-   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
-   */
-  public static Builder builder(
-      BuildRule rule,
-      SourcePathResolver resolver,
-      FileHashCache hashCache,
-      AppendableRuleKeyCache appendableRuleKeyCache) {
-    return builder(
-        rule.getBuildTarget(),
-        rule.getType(),
-        resolver,
-        rule.getDeps(),
-        hashCache,
-        appendableRuleKeyCache);
-  }
-
-  /**
-   * Builder for a {@link RuleKey} that is a function of all of a {@link BuildRule}'s inputs.
-   */
-  public static Builder builder(
-      BuildTarget name,
-      String type,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps,
-      FileHashCache hashCache,
-      AppendableRuleKeyCache appendableRuleKeyCache) {
-    return new Builder(resolver, deps, hashCache, appendableRuleKeyCache)
-        .setReflectively("name", name.getFullyQualifiedName())
-        // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
-        .setReflectively("buck.type", type);
-  }
-
-  @VisibleForTesting
-  static Builder emptyBuilder(
-      SourcePathResolver resolver,
-      FileHashCache hashCache,
-      AppendableRuleKeyCache appendableRuleKeyCache) {
-    ImmutableSortedSet<BuildRule> noDeps = ImmutableSortedSet.of();
-    return new Builder(resolver, noDeps, hashCache, appendableRuleKeyCache);
-  }
-
   public static class Builder {
 
     @VisibleForTesting
@@ -175,7 +133,7 @@ public class RuleKey {
 
     @Nullable private List<String> logElms;
 
-    private Builder(
+    public Builder(
         SourcePathResolver resolver,
         ImmutableSortedSet<BuildRule> deps,
         FileHashCache hashCache,

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.FileHashCache;
+import com.google.common.collect.ImmutableSortedSet;
 
 public class EmptyRuleKeyBuilder {
 
@@ -26,7 +27,11 @@ public class EmptyRuleKeyBuilder {
       SourcePathResolver resolver,
       FileHashCache fileHashCache,
       AppendableRuleKeyCache appendableRuleKeyCache) {
-    return RuleKey.emptyBuilder(resolver, fileHashCache, appendableRuleKeyCache);
+    return new RuleKey.Builder(
+        resolver,
+        ImmutableSortedSet.<BuildRule>of(),
+        fileHashCache,
+        appendableRuleKeyCache);
   }
 
 }

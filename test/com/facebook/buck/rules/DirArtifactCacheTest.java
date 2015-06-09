@@ -21,11 +21,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
 import org.junit.After;
@@ -69,6 +73,10 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
+    fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(fileX.toPath(), HashCode.fromInt(0)));
+
     dirArtifactCache = new DirArtifactCache(
         "dir",
         cacheDir,
@@ -79,7 +87,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         inputRuleX)));
-    RuleKey ruleKeyX = new FakeRuleKeyBuilderFactory(fileHashCache, resolver)
+    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
         .newInstance(inputRuleX)
         .build()
         .getTotalRuleKey();
@@ -92,6 +100,10 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
+    fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(fileX.toPath(), HashCode.fromInt(0)));
+
     dirArtifactCache = new DirArtifactCache(
         "dir",
         cacheDir,
@@ -102,7 +114,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         inputRuleX)));
-    RuleKey ruleKeyX = new FakeRuleKeyBuilderFactory(fileHashCache, resolver)
+    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
         .newInstance(inputRuleX)
         .build()
         .getTotalRuleKey();
@@ -124,6 +136,10 @@ public class DirArtifactCacheTest {
     File cacheDir = tmpDir.newFolder();
     File fileX = tmpDir.newFile("x");
 
+    fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(fileX.toPath(), HashCode.fromInt(0)));
+
     dirArtifactCache = new DirArtifactCache(
         "dir",
         cacheDir,
@@ -134,7 +150,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         inputRuleX)));
-    RuleKey ruleKeyX = new FakeRuleKeyBuilderFactory(fileHashCache, resolver)
+    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
         .newInstance(inputRuleX)
         .build()
         .getTotalRuleKey();
@@ -152,6 +168,13 @@ public class DirArtifactCacheTest {
     File fileX = tmpDir.newFile("x");
     File fileY = tmpDir.newFile("y");
     File fileZ = tmpDir.newFile("z");
+
+    fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                fileX.toPath(), HashCode.fromInt(0),
+                fileY.toPath(), HashCode.fromInt(1),
+                fileZ.toPath(), HashCode.fromInt(2)));
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
@@ -174,8 +197,8 @@ public class DirArtifactCacheTest {
         inputRuleY,
         inputRuleZ)));
 
-    FakeRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(fileHashCache, resolver);
+    DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
 
     RuleKey ruleKeyX = fakeRuleKeyBuilderFactory
         .newInstance(inputRuleX)
@@ -224,6 +247,13 @@ public class DirArtifactCacheTest {
     File fileY = tmpDir.newFile("y");
     File fileZ = tmpDir.newFile("z");
 
+    fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                fileX.toPath(), HashCode.fromInt(0),
+                fileY.toPath(), HashCode.fromInt(1),
+                fileZ.toPath(), HashCode.fromInt(2)));
+
     dirArtifactCache = new DirArtifactCache(
         "dir",
         cacheDir,
@@ -245,8 +275,8 @@ public class DirArtifactCacheTest {
         inputRuleY,
         inputRuleZ)));
 
-    FakeRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
-        new FakeRuleKeyBuilderFactory(fileHashCache, resolver);
+    DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
 
     RuleKey ruleKeyX = fakeRuleKeyBuilderFactory
         .newInstance(inputRuleX)
