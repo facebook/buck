@@ -16,9 +16,8 @@
 
 package com.facebook.buck.testutil.integration;
 
-import static org.hamcrest.Matchers.in;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Preconditions;
@@ -49,11 +48,11 @@ public class ZipInspector {
   }
 
   public void assertFileExists(String pathRelativeToRoot) {
-    assertThat(pathRelativeToRoot, is(in(zipFileEntries)));
+    assertThat(zipFileEntries, hasItem(pathRelativeToRoot));
   }
 
   public void assertFileDoesNotExist(String pathRelativeToRoot) {
-    assertFalse(zipFileEntries.contains(pathRelativeToRoot));
+    assertThat(zipFileEntries, not(hasItem((pathRelativeToRoot))));
   }
 
   public void assertFilesDoNotExist(String...pathsRelativeToRoot) {
