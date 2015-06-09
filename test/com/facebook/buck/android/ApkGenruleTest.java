@@ -195,6 +195,7 @@ public class ApkGenruleTest {
         "First command should delete the output file to be written by the genrule.",
         ImmutableList.of(
             "rm",
+            "-r",
             "-f",
             apkGenrule.getPathToOutput().toString()),
         rmCommand.getShellCommand(executionContext));

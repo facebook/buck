@@ -725,7 +725,7 @@ public class MirrorTest {
                 "}")));
 
     Path classDir = temp.newFolder().toPath();
-    Unzip.extractZipFile(jar, classDir, true);
+    Unzip.extractZipFile(jar, classDir, Unzip.ExistingFileMode.OVERWRITE);
 
     new StubJar(classDir).writeTo(filesystem, stubJar);
 

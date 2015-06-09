@@ -191,7 +191,7 @@ public class ExternalJavac implements Javac {
         ImmutableList<Path> zipPaths = Unzip.extractZipFile(
             projectFilesystem.resolve(path),
             projectFilesystem.resolve(workingDirectory.get()),
-          /* overwriteExistingFiles */ true);
+            Unzip.ExistingFileMode.OVERWRITE);
         sources.addAll(
             FluentIterable.from(zipPaths)
                 .filter(

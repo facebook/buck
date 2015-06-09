@@ -64,7 +64,7 @@ public class UnzipTest {
     ImmutableList<Path> result = Unzip.extractZipFile(
         zipFile.toPath().toAbsolutePath(),
         extractFolder.toPath().toAbsolutePath(),
-        false);
+        Unzip.ExistingFileMode.OVERWRITE);
     assertTrue(new File(extractFolder.getAbsolutePath() + "/1.bin").exists());
     File bin2 = new File(extractFolder.getAbsolutePath() + "/subdir/2.bin");
     assertTrue(bin2.exists());
@@ -104,7 +104,7 @@ public class UnzipTest {
     ImmutableList<Path> result = Unzip.extractZipFile(
         zipFile.toPath().toAbsolutePath(),
         extractFolder.toPath().toAbsolutePath(),
-        false);
+        Unzip.ExistingFileMode.OVERWRITE);
     File exe = new File(extractFolder.getAbsoluteFile() + "/test.exe");
     assertTrue(exe.exists());
     assertTrue(exe.canExecute());

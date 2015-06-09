@@ -180,6 +180,7 @@ public class GenruleTest {
         "First command should delete the output file to be written by the genrule.",
         ImmutableList.of(
             "rm",
+            "-r",
             "-f",
             GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"),
         rmCommand.getShellCommand(executionContext));

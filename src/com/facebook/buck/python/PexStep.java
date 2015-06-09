@@ -163,7 +163,7 @@ public class PexStep extends ShellStep {
         ImmutableList<Path> zipPaths = Unzip.extractZipFile(
             projectFilesystem.resolve(ent.getValue()),
             destinationDirectory,
-            /* overwriteExistingFiles */ true);
+            Unzip.ExistingFileMode.OVERWRITE);
         for (Path path : zipPaths) {
           Path modulePath = destinationDirectory.relativize(path);
           sources.put(modulePath, path);

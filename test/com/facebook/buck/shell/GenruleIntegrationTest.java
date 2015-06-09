@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -102,6 +103,62 @@ public class GenruleIntegrationTest {
     assertThat(
         workspace.getFileContents("buck-out/gen/directory/file"),
         equalTo("something\n"));
+  }
+
+  @Test
+  public void genruleDirectoryOutputIsCleanedBeforeBuildAndCacheFetch() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "genrule_directory_output_cleaned", temporaryFolder);
+    workspace.setUp();
+
+    workspace.copyFile("BUCK.1", "BUCK");
+    workspace.runBuckCommand("build", "//:mkdir_another").assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:mkdir_another");
+    assertTrue(
+        "mkdir_another should be built",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/another_directory/file")));
+
+    workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:mkdir");
+    assertTrue(
+        "BUCK.1 should create its output",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/directory/one")));
+    assertFalse(
+        "BUCK.1 should not touch the output of BUCK.2",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/directory/two")));
+    assertTrue(
+        "output of mkdir_another should still exist",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/another_directory/file")));
+
+    workspace.copyFile("BUCK.2", "BUCK");
+    workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:mkdir");
+    assertFalse(
+        "Output of BUCK.1 should be deleted before output of BUCK.2 is built",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/directory/one")));
+    assertTrue(
+        "BUCK.2 should create its output",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/directory/two")));
+    assertTrue(
+        "output of mkdir_another should still exist",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/another_directory/file")));
+
+    workspace.copyFile("BUCK.1", "BUCK");
+    workspace.runBuckCommand("build", "//:mkdir").assertSuccess();
+
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:mkdir");
+    assertTrue(
+        "Output of BUCK.1 should be fetched from the cache",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/directory/one")));
+    assertFalse(
+        "Output of BUCK.2 should be deleted before output of BUCK.1 is fetched from cache",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/directory/two")));
+    assertTrue(
+        "output of mkdir_another should still exist",
+        Files.isRegularFile(workspace.resolve("buck-out/gen/another_directory/file")));
   }
 
   @Test

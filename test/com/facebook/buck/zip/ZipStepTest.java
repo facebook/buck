@@ -319,7 +319,7 @@ public class ZipStepTest {
     assertEquals(0, step.execute(executionContext));
 
     Path destination = tmp.newFolder("output").toPath();
-    Unzip.extractZipFile(outputZip, destination, false);
+    Unzip.extractZipFile(outputZip, destination, Unzip.ExistingFileMode.OVERWRITE);
     assertTrue(java.nio.file.Files.isExecutable(destination.resolve("foo.sh")));
   }
 }

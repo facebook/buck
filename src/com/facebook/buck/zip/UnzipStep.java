@@ -43,7 +43,7 @@ public class UnzipStep implements Step {
     Path out = filesystem.getPathForRelativeExistingPath(destinationDirectory).toAbsolutePath();
 
     try {
-      Unzip.extractZipFile(zip, out, true);
+      Unzip.extractZipFile(zip, out, Unzip.ExistingFileMode.OVERWRITE);
     } catch (IOException e) {
       LOG.warn(e, "Unable to unpack zip: %s", zipFile);
       return 1;

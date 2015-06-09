@@ -290,7 +290,11 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Delete the old output for this rule, if it exists.
-    commands.add(new RmStep(getPathToOutput(), true /* shouldForceDeletion */));
+    commands.add(
+        new RmStep(
+            getPathToOutput(),
+            /* shouldForceDeletion */ true,
+            /* shouldRecurse */ true));
 
     // Make sure that the directory to contain the output file exists. Rules get output to a
     // directory named after the base path, so we don't want to nuke the entire directory.

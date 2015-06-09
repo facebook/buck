@@ -37,6 +37,10 @@ public class Unzip {
   /** Utility class: do not instantiate. */
   private Unzip() {}
 
+  public enum ExistingFileMode {
+    OVERWRITE,
+    OVERWRITE_AND_CLEAN_DIRECTORIES,
+  }
 
   /**
    * Unzips a file to a destination and returns the paths of the written files.
@@ -44,7 +48,7 @@ public class Unzip {
   public static ImmutableList<Path> extractZipFile(
       Path zipFile,
       Path destination,
-      boolean overwriteExistingFiles) throws IOException {
+      ExistingFileMode existingFileMode) throws IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
 
@@ -55,8 +59,16 @@ public class Unzip {
         ZipArchiveEntry entry = entries.nextElement();
         String fileName = entry.getName();
         Path target = destination.resolve(fileName);
-        if (Files.exists(target) && !overwriteExistingFiles) {
-          continue;
+        if (Files.exists(target)) {
+          switch (existingFileMode) {
+            case OVERWRITE:
+              // Unpack the file or directory as usual, overwriting the file.
+              break;
+            case OVERWRITE_AND_CLEAN_DIRECTORIES:
+              // Delete the file or directory before unpacking it.
+              MoreFiles.rmdir(target);
+              break;
+          }
         }
 
         // TODO(mbolin): Keep track of which directories have already been written to avoid

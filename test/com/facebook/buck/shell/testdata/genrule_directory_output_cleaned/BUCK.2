@@ -1,0 +1,11 @@
+genrule(
+  name = 'mkdir',
+  cmd = 'mkdir $OUT && echo something > $OUT/two',
+  out = 'directory',
+)
+
+genrule(
+  name = 'mkdir_another',
+  cmd = 'mkdir $OUT && echo something > $OUT/file',
+  out = 'another_directory',
+)

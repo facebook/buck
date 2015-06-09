@@ -575,7 +575,7 @@ public class CachingBuildEngine implements BuildEngine {
     try {
       Unzip.extractZipFile(zipFile.toPath().toAbsolutePath(),
           projectRoot.toAbsolutePath(),
-          /* overwriteExistingFiles */ true);
+          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.
