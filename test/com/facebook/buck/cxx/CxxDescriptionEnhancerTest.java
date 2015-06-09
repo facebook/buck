@@ -244,8 +244,12 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget target1 = BuildTargetFactory.newInstance("//:rule#one");
     BuildTarget target2 = BuildTargetFactory.newInstance("//:rule#two");
     assertNotEquals(
-        CxxDescriptionEnhancer.getSharedLibrarySoname(target1, CxxPlatformUtils.DEFAULT_PLATFORM),
-        CxxDescriptionEnhancer.getSharedLibrarySoname(target2, CxxPlatformUtils.DEFAULT_PLATFORM));
+        CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
+            target1,
+            CxxPlatformUtils.DEFAULT_PLATFORM),
+        CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
+            target2,
+            CxxPlatformUtils.DEFAULT_PLATFORM));
   }
 
 }

@@ -294,10 +294,11 @@ public class CxxLibraryDescription implements
             cxxPlatform.getFlavor());
     String sharedLibrarySoname =
         soname.or(
-            CxxDescriptionEnhancer.getSharedLibrarySoname(params.getBuildTarget(), cxxPlatform));
+            CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
+                params.getBuildTarget(), cxxPlatform));
     Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
         params.getBuildTarget(),
-        soname,
+        sharedLibrarySoname,
         cxxPlatform);
     ImmutableList.Builder<String> extraCxxLdFlagsBuilder = ImmutableList.builder();
     extraCxxLdFlagsBuilder.addAll(

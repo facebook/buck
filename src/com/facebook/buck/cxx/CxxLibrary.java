@@ -145,9 +145,13 @@ public class CxxLibrary extends AbstractCxxLibrary {
         linkerArgsBuilder.add(staticLibraryPath.toString());
       }
     } else {
+      String sharedLibrarySoname =
+          soname.or(
+              CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
+                  params.getBuildTarget(), cxxPlatform));
       Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
           getBuildTarget(),
-          soname,
+          sharedLibrarySoname,
           cxxPlatform);
       libraryRule = CxxDescriptionEnhancer.requireBuildRule(
           params,
@@ -187,7 +191,10 @@ public class CxxLibrary extends AbstractCxxLibrary {
     }
     ImmutableMap.Builder<Path, SourcePath> libs = ImmutableMap.builder();
     String sharedLibrarySoname =
-        soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget(), cxxPlatform));
+        soname.or(
+            CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
+                getBuildTarget(),
+                cxxPlatform));
     BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
         params,
         ruleResolver,
@@ -229,7 +236,10 @@ public class CxxLibrary extends AbstractCxxLibrary {
     }
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
     String sharedLibrarySoname =
-        soname.or(CxxDescriptionEnhancer.getSharedLibrarySoname(getBuildTarget(), cxxPlatform));
+        soname.or(
+            CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
+                getBuildTarget(),
+                cxxPlatform));
     BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
         params,
         ruleResolver,

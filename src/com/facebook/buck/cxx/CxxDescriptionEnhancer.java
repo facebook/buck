@@ -627,7 +627,7 @@ public class CxxDescriptionEnhancer {
         .resolve(name);
   }
 
-  public static String getSharedLibrarySoname(BuildTarget target, CxxPlatform platform) {
+  public static String getDefaultSharedLibrarySoname(BuildTarget target, CxxPlatform platform) {
     String libName =
         Joiner.on('_').join(
             ImmutableList.builder()
@@ -646,13 +646,11 @@ public class CxxDescriptionEnhancer {
 
   public static Path getSharedLibraryPath(
       BuildTarget target,
-      Optional<String> soname,
+      String soname,
       CxxPlatform platform) {
-    String extension = platform.getSharedLibraryExtension();
-    String name = soname.or(String.format("lib%s.%s", target.getShortName(), extension));
     return BuildTargets.getGenPath(
         createSharedLibraryBuildTarget(target, platform.getFlavor()),
-        "%s/" + name);
+        "%s/" + soname);
   }
 
   @VisibleForTesting

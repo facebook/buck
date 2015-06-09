@@ -18,12 +18,14 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -80,5 +82,20 @@ public class CxxLibraryIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:bad-bin");
     result.assertFailure();
+  }
+
+  @Test
+  public void libraryBuildPathIsSoName() throws IOException {
+    Assume.assumeTrue(Platform.detect() == Platform.LINUX);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "shared_library", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
+    assertTrue(
+        workspace.getFile(
+            "buck-out/gen/subdir/" +
+            "library#default,shared/libsubdir_library.so")
+        .isFile());
+    result.assertSuccess();
   }
 }

@@ -848,7 +848,10 @@ public class CxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(
-            Paths.get(CxxDescriptionEnhancer.getSharedLibrarySoname(target, cxxPlatform)),
+            Paths.get(
+                CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
+                    target,
+                    cxxPlatform)),
             new BuildTargetSourcePath(projectFilesystem, sharedRule.getBuildTarget())),
         ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
