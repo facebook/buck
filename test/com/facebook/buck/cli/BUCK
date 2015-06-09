@@ -82,9 +82,38 @@ java_library(
   ],
 )
 
+APPLE_INTEGRATION_TEST_SRCS = [
+  'InstallCommandIntegrationTest.java',
+]
+
+java_test(
+  name = 'cli-apple-integration',
+  srcs = APPLE_INTEGRATION_TEST_SRCS,
+  # We run this test separately, since the Apple simulator tends to time out
+  # when the system is under load.
+  run_test_separately = True,
+  resources = glob(['testdata/**'], include_dotfiles=True),
+  source_under_test = [
+    '//src/com/facebook/buck/cli:cli',
+  ],
+  deps = [
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
+    '//src/com/facebook/buck/util/environment:platform',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/util:testutil',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/junit:junit',
+  ],
+)
+
 java_test(
   name = 'cli',
-  srcs = glob(STANDARD_TEST_SRCS),
+  srcs = glob(STANDARD_TEST_SRCS, excludes=APPLE_INTEGRATION_TEST_SRCS),
   resources = glob(['testdata/**'], include_dotfiles=True),
   source_under_test = [
     '//src/com/facebook/buck/cli:cli',

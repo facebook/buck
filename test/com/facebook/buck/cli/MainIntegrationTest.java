@@ -88,7 +88,7 @@ public class MainIntegrationTest {
         "  cache       makes calls to the artifact cache",
         "  clean       deletes any generated files",
         "  fetch       downloads remote resources to your local machine",
-        "  install     builds and installs an APK",
+        "  install     builds and installs an application",
         "  project     generates project configuration files for an IDE",
         "  quickstart  generates a default project directory",
         "  run         runs a target as a command",

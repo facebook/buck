@@ -163,8 +163,16 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     return bundleRoot;
   }
 
+  public Path getInfoPlistPath() {
+    return getMetadataPath().resolve("Info.plist");
+  }
+
   public Path getUnzippedOutputFilePathToBinary() {
     return this.binaryPath;
+  }
+
+  private Path getMetadataPath() {
+    return bundleRoot.resolve(destinations.getMetadataPath());
   }
 
   @Override
@@ -173,7 +181,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    Path metadataPath = bundleRoot.resolve(this.destinations.getMetadataPath());
+    Path metadataPath = getMetadataPath();
 
     Path infoPlistInputPath = getResolver().getPath(infoPlist.get());
     Path infoPlistSubstitutionTempPath =
