@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import java.nio.file.Paths;
+
 import org.junit.Test;
 
 /**
@@ -51,11 +53,13 @@ public class AppleSimulatorDiscoveryTest {
       FakeProcess fakeXcrunSimctlList = new FakeProcess(0, stdin, stdout, stderr);
       ProcessExecutorParams processExecutorParams =
           ProcessExecutorParams.builder()
-              .setCommand(ImmutableList.of("xcrun", "simctl", "list"))
+              .setCommand(ImmutableList.of("path/to/simctl", "list"))
               .build();
       FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
           ImmutableMap.of(processExecutorParams, fakeXcrunSimctlList));
-      simulators = AppleSimulatorDiscovery.discoverAppleSimulators(fakeProcessExecutor);
+      simulators = AppleSimulatorDiscovery.discoverAppleSimulators(
+          fakeProcessExecutor,
+          Paths.get("path/to/simctl"));
     }
 
     ImmutableSet<AppleSimulator> expected = ImmutableSet.<AppleSimulator>builder()

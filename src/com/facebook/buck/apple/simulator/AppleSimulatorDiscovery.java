@@ -47,11 +47,12 @@ public class AppleSimulatorDiscovery {
    * Discovers information about Apple simulators installed on the system.
    */
   public static ImmutableSet<AppleSimulator> discoverAppleSimulators(
-      ProcessExecutor processExecutor) throws InterruptedException, IOException {
+      ProcessExecutor processExecutor,
+      Path simctlPath) throws InterruptedException, IOException {
     LOG.debug("Running xcrun simctl list to get list of simulators");
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of("xcrun", "simctl", "list"))
+            .setCommand(ImmutableList.of(simctlPath.toString(), "list"))
             .build();
     ProcessExecutor.LaunchedProcess simctlListProcess = processExecutor.launchProcess(
         processExecutorParams);
