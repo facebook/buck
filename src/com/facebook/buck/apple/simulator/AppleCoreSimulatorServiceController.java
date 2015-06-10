@@ -56,6 +56,9 @@ public class AppleCoreSimulatorServiceController {
       "(?i:com\\.apple\\.iphonesimulator|UIKitApplication|SimulatorBridge|iOS Simulator|" +
       "com\\.apple\\.CoreSimulator)");
 
+  private static final int LAUNCHCTL_EXIT_SUCCESS = 0;
+  private static final int LAUNCHCTL_EXIT_NO_SUCH_PROCESS = 3;
+
   private final ProcessExecutor processExecutor;
 
   public AppleCoreSimulatorServiceController(ProcessExecutor processExecutor) {
@@ -183,11 +186,17 @@ public class AppleCoreSimulatorServiceController {
             .setCommand(launchctlRemoveCommand)
             .build();
     ProcessExecutor.Result result = processExecutor.launchAndExecute(launchctlRemoveParams);
-    if (result.getExitCode() != 0) {
-      LOG.error("Error %d running %s", result.getExitCode(), launchctlRemoveCommand);
-      return false;
+    int launchctlExitCode = result.getExitCode();
+    LOG.debug("Command %s exited with code %d", launchctlRemoveParams, launchctlExitCode);
+    switch (launchctlExitCode) {
+      case LAUNCHCTL_EXIT_SUCCESS:
+      case LAUNCHCTL_EXIT_NO_SUCH_PROCESS:
+        // The process could have exited by itself or already been terminated by the time
+        // we told it to die, so we have to treat "no such process" as success.
+        return true;
+      default:
+        LOG.error("Error %d running %s", result.getExitCode(), launchctlRemoveCommand);
+        return false;
     }
-
-    return true;
   }
 }
