@@ -17,16 +17,18 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class RmStep implements Step {
+
+  private static final Logger LOG = Logger.get(RmStep.class);
 
   private final Path toDelete;
   private final boolean shouldForceDeletion;
@@ -70,23 +72,25 @@ public class RmStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    if (shouldRecurse) {
-      // Delete a folder recursively
-      try {
-        projectFilesystem.deleteRecursivelyIfExists(toDelete);
-      } catch (IOException e) {
+    try {
+      if (shouldRecurse) {
+        // Delete a folder recursively
         if (shouldForceDeletion) {
-          return 0;
+          projectFilesystem.deleteRecursivelyIfExists(toDelete);
+        } else {
+          projectFilesystem.deleteRecursively(toDelete);
         }
-        e.printStackTrace(context.getStdErr());
-        return 1;
+      } else {
+        // Delete a single file
+        if (shouldForceDeletion) {
+          projectFilesystem.deleteFileAtPathIfExists(toDelete);
+        } else {
+          projectFilesystem.deleteFileAtPath(toDelete);
+        }
       }
-    } else {
-      // Delete a single file
-      File file = projectFilesystem.resolve(toDelete).toFile();
-      if (!file.delete() && !shouldForceDeletion) {
-        return 1;
-      }
+    } catch (IOException e) {
+      LOG.error(e);
+      return 1;
     }
     return 0;
   }
