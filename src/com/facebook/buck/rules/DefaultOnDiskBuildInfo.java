@@ -28,7 +28,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonStreamParser;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -131,13 +130,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void makeOutputFileExecutable(BuildRule buildRule) {
-    File file = projectFilesystem.getFileForRelativePath(buildRule.getPathToOutput());
-    file.setExecutable(true /* executable */, false /* ownerOnly */);
-  }
-
-  @Override
   public void deleteExistingMetadata() throws IOException {
     projectFilesystem.deleteRecursivelyIfExists(metadataDirectory);
   }
+
 }

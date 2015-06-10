@@ -94,11 +94,6 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void makeOutputFileExecutable(BuildRule buildRule) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public void deleteExistingMetadata() throws IOException {
     throw new UnsupportedOperationException();
   }

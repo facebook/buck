@@ -57,12 +57,5 @@ public interface OnDiskBuildInfo {
 
   public List<String> getOutputFileContentsByLine(Path path) throws IOException;
 
-  /**
-   * Sets the executable flag on the given buildable's output file. Used to work around an issue
-   * where executable flags aren't preserved when uploading to cache.
-   */
-  // TODO(task #3321496): Delete this part of the interface after zipping is fixed.
-  public void makeOutputFileExecutable(BuildRule buildRule) throws IOException;
-
   public void deleteExistingMetadata() throws IOException;
 }
