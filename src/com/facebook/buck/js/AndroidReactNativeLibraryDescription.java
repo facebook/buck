@@ -18,7 +18,6 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -49,11 +48,11 @@ public class AndroidReactNativeLibraryDescription
   }
 
   @Override
-  public <A extends ReactNativeLibraryArgs> BuildRule createBuildRule(
+  public <A extends ReactNativeLibraryArgs> AndroidReactNativeLibrary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return enhancer.enhance(params, resolver, args, ReactNativePlatform.ANDROID);
+    return enhancer.enhanceForAndroid(params, resolver, args);
   }
 
   @Override

@@ -67,7 +67,7 @@ public class ReactNativeLibraryIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//js:app#dev,rn_deps");
-    buildLog.assertTargetHadMatchingDepsAbi("//js:app#dev");
+    buildLog.assertTargetHadMatchingDepsAbi("//js:app#bundle,dev");
   }
 
   @Test
@@ -80,6 +80,6 @@ public class ReactNativeLibraryIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//js:app#dev,rn_deps");
-    buildLog.assertTargetBuiltLocally("//js:app#dev");
+    buildLog.assertTargetBuiltLocally("//js:app#bundle,dev");
   }
 }

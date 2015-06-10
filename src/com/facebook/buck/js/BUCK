@@ -3,6 +3,7 @@ java_library(
   srcs = glob(['*.java']),
   deps = [
     '//src/com/facebook/buck/android:packageable',
+    '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
