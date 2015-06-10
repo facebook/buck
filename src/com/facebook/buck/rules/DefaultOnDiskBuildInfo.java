@@ -105,19 +105,9 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public Optional<RuleKey> getRuleKey() {
+  public Optional<RuleKey> getRuleKey(String key) {
     try {
-      return getValue(BuildInfo.METADATA_KEY_FOR_RULE_KEY).transform(RuleKey.TO_RULE_KEY);
-    } catch (IllegalArgumentException ignored) {
-      return Optional.absent();
-    }
-  }
-
-  @Override
-  public Optional<RuleKey> getRuleKeyWithoutDeps() {
-    try {
-      return getValue(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS)
-          .transform(RuleKey.TO_RULE_KEY);
+      return getValue(key).transform(RuleKey.TO_RULE_KEY);
     } catch (IllegalArgumentException ignored) {
       return Optional.absent();
     }

@@ -28,34 +28,28 @@ public interface OnDiskBuildInfo {
   /**
    * @return the value associated with the specified key, if it exists.
    */
-  public Optional<String> getValue(String key);
+  Optional<String> getValue(String key);
 
   /**
    * @return the sequence of values associated with the specified key, if it exists.
    */
-  public Optional<ImmutableList<String>> getValues(String key);
+  Optional<ImmutableList<String>> getValues(String key);
 
   /**
    * @return Assuming the value associated with the specified key is a valid sha1 hash, returns it
    *     as a {@link Sha1HashCode}, if it exists.
    */
-  public Optional<Sha1HashCode> getHash(String key);
+  Optional<Sha1HashCode> getHash(String key);
 
   /**
    * Returns the {@link RuleKey} for the rule whose output is currently stored on disk.
    * <p>
    * This value would have been written the last time the rule was built successfully.
    */
-  public Optional<RuleKey> getRuleKey();
+  Optional<RuleKey> getRuleKey(String key);
 
-  /**
-   * Returns the {@link RuleKey} without deps for the rule whose output is currently stored on disk.
-   * <p>
-   * This value would have been written the last time the rule was built successfully.
-   */
-  public Optional<RuleKey> getRuleKeyWithoutDeps();
+  List<String> getOutputFileContentsByLine(Path path) throws IOException;
 
-  public List<String> getOutputFileContentsByLine(Path path) throws IOException;
+  void deleteExistingMetadata() throws IOException;
 
-  public void deleteExistingMetadata() throws IOException;
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -24,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -42,7 +43,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.of(""), onDiskBuildInfo.getValue("KEY"));
+    assertThat(
+        onDiskBuildInfo.getValue("KEY"),
+        Matchers.equalTo(Optional.of("")));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -58,8 +61,9 @@ public class DefaultOnDiskBuildInfoTest {
     BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(buildTarget,
         projectFilesystem);
-    assertEquals(Optional.of(ImmutableList.of("bar", "biz", "baz")),
-        onDiskBuildInfo.getValues("KEY"));
+    assertThat(
+        onDiskBuildInfo.getValues("KEY"),
+        Matchers.equalTo(Optional.of(ImmutableList.of("bar", "biz", "baz"))));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -75,7 +79,9 @@ public class DefaultOnDiskBuildInfoTest {
     BuildTarget buildTarget = BuildTarget.builder("//foo/bar", "baz").build();
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(buildTarget,
         projectFilesystem);
-    assertEquals(Optional.of(ImmutableList.of()), onDiskBuildInfo.getValues("KEY"));
+    assertThat(
+        onDiskBuildInfo.getValues("KEY"),
+        Matchers.equalTo(Optional.of(ImmutableList.<String>of())));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -92,7 +98,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.absent(), onDiskBuildInfo.getValues("KEY"));
+    assertThat(
+        onDiskBuildInfo.getValues("KEY"),
+        Matchers.equalTo(Optional.<ImmutableList<String>>absent()));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -109,7 +117,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.absent(), onDiskBuildInfo.getValues("KEY"));
+    assertThat(
+        onDiskBuildInfo.getValues("KEY"),
+        Matchers.equalTo(Optional.<ImmutableList<String>>absent()));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -127,7 +137,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.of(Sha1HashCode.of(hash)), onDiskBuildInfo.getHash("KEY"));
+    assertThat(
+        onDiskBuildInfo.getHash("KEY"),
+        Matchers.equalTo(Optional.of(Sha1HashCode.of(hash))));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -144,7 +156,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.absent(), onDiskBuildInfo.getHash("KEY"));
+    assertThat(
+        onDiskBuildInfo.getHash("KEY"),
+        Matchers.equalTo(Optional.<Sha1HashCode>absent()));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -161,7 +175,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.absent(), onDiskBuildInfo.getHash("KEY"));
+    assertThat(
+        onDiskBuildInfo.getHash("KEY"),
+        Matchers.equalTo(Optional.<Sha1HashCode>absent()));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -180,7 +196,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.of(new RuleKey(key)), onDiskBuildInfo.getRuleKey());
+    assertThat(
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
+        Matchers.equalTo(Optional.of(new RuleKey(key))));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -198,7 +216,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.absent(), onDiskBuildInfo.getRuleKey());
+    assertThat(
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
+        Matchers.equalTo(Optional.<RuleKey>absent()));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -216,7 +236,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.absent(), onDiskBuildInfo.getRuleKey());
+    assertThat(
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
+        Matchers.equalTo(Optional.<RuleKey>absent()));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -236,7 +258,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.of(new RuleKey(key)), onDiskBuildInfo.getRuleKeyWithoutDeps());
+    assertThat(
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS),
+        Matchers.equalTo(Optional.of(new RuleKey(key))));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -255,7 +279,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.absent(), onDiskBuildInfo.getRuleKeyWithoutDeps());
+    assertThat(
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS),
+        Matchers.equalTo(Optional.<RuleKey>absent()));
 
     EasyMock.verify(projectFilesystem);
   }
@@ -274,7 +300,9 @@ public class DefaultOnDiskBuildInfoTest {
     DefaultOnDiskBuildInfo onDiskBuildInfo = new DefaultOnDiskBuildInfo(
         buildTarget,
         projectFilesystem);
-    assertEquals(Optional.absent(), onDiskBuildInfo.getRuleKeyWithoutDeps());
+    assertThat(
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS),
+        Matchers.equalTo(Optional.<RuleKey>absent()));
 
     EasyMock.verify(projectFilesystem);
   }

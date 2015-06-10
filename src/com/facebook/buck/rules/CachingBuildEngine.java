@@ -139,7 +139,8 @@ public class CachingBuildEngine implements BuildEngine {
       throws InterruptedException {
 
     // 1. Check if it's already built.
-    Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey();
+    Optional<RuleKey> cachedRuleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
     if (cachedRuleKey.isPresent() && rule.getRuleKey().equals(cachedRuleKey.get())) {
       return Futures.immediateFuture(
           new BuildResult(
@@ -199,7 +200,8 @@ public class CachingBuildEngine implements BuildEngine {
             AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule(rule);
             if (abiRule != null) {
               RuleKey ruleKeyNoDeps = rule.getRuleKeyWithoutDeps();
-              Optional<RuleKey> cachedRuleKeyNoDeps = onDiskBuildInfo.getRuleKeyWithoutDeps();
+              Optional<RuleKey> cachedRuleKeyNoDeps =
+                  onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS);
               if (ruleKeyNoDeps.equals(cachedRuleKeyNoDeps.orNull())) {
                 // The RuleKey for the definition of this build rule and its input files has not
                 // changed.  Therefore, if the ABI of its deps has not changed, there is nothing to
