@@ -79,21 +79,28 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void createBuildRuleBaseModule() {
-    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleResolver resolver = new BuildRuleResolver();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxPythonExtensionBuilder.createDefaultPlatform();
 
+    // Create the python library dep.
+    GenruleBuilder pyDepBuilder =
+        GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET)
+            .setOut("out");
+    pyDepBuilder.build(resolver);
+
     // Verify we use the default base module when none is set.
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxPythonExtensionBuilder normalBuilder = getBuilder(target);
     CxxPythonExtensionDescription desc =
         (CxxPythonExtensionDescription) normalBuilder.build().getDescription();
     CxxPythonExtension normal = (CxxPythonExtension) normalBuilder
         .build(
-            new BuildRuleResolver(),
+            resolver,
             filesystem,
             TargetGraphFactory.newInstance(
                 normalBuilder.build(),
-                GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET).build()));
+                pyDepBuilder.build()));
     PythonPackageComponents normalComps = normal.getPythonPackageComponents(cxxPlatform);
     assertEquals(
         ImmutableSet.of(
@@ -101,13 +108,14 @@ public class CxxPythonExtensionDescriptionTest {
         normalComps.getModules().keySet());
 
     // Verify that explicitly setting works.
+    BuildTarget target2 = BuildTargetFactory.newInstance("//:target2");
     String name = "blah";
-    CxxPythonExtensionBuilder baseModuleBuilder = getBuilder(target)
+    CxxPythonExtensionBuilder baseModuleBuilder = getBuilder(target2)
         .setBaseModule(name);
     desc = (CxxPythonExtensionDescription) baseModuleBuilder.build().getDescription();
     CxxPythonExtension baseModule = (CxxPythonExtension) baseModuleBuilder
         .build(
-            new BuildRuleResolver(),
+            resolver,
             filesystem,
             TargetGraphFactory.newInstance(
                 baseModuleBuilder.build(),
@@ -115,7 +123,7 @@ public class CxxPythonExtensionDescriptionTest {
     PythonPackageComponents baseModuleComps = baseModule.getPythonPackageComponents(cxxPlatform);
     assertEquals(
         ImmutableSet.of(
-            Paths.get(name).resolve(desc.getExtensionName(target))),
+            Paths.get(name).resolve(desc.getExtensionName(target2))),
         baseModuleComps.getModules().keySet());
   }
 
@@ -195,6 +203,12 @@ public class CxxPythonExtensionDescriptionTest {
     };
     resolver.addAllToIndex(ImmutableList.of(sharedLibraryDep, dep));
 
+    // Create the python library dep.
+    GenruleBuilder pyDepBuilder =
+        GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET)
+            .setOut("out");
+    pyDepBuilder.build(resolver);
+
     // Create args with the above dep set and create the python extension.
     CxxPythonExtensionBuilder extensionBuilder = (CxxPythonExtensionBuilder) getBuilder(target)
         .setDeps(ImmutableSortedSet.of(depTarget));
@@ -205,7 +219,7 @@ public class CxxPythonExtensionDescriptionTest {
         new FakeProjectFilesystem(),
         TargetGraphFactory.newInstance(
             extensionBuilder.build(),
-            GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET).build(),
+            pyDepBuilder.build(),
             GenruleBuilder.newGenruleBuilder(depTarget).build()));
 
     // Verify that the shared library dep propagated to the link rule.
@@ -221,6 +235,13 @@ public class CxxPythonExtensionDescriptionTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleResolver resolver = new BuildRuleResolver();
+
+    // Create the python library dep.
+    GenruleBuilder pyDepBuilder =
+        GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET)
+            .setOut("out");
+    pyDepBuilder.build(resolver);
+
     CxxPlatform cxxPlatform = CxxPythonExtensionBuilder.createDefaultPlatform();
     CxxPythonExtensionBuilder extensionBuilder = getBuilder(target);
     CxxPythonExtensionDescription desc =
@@ -230,7 +251,7 @@ public class CxxPythonExtensionDescriptionTest {
         projectFilesystem,
         TargetGraphFactory.newInstance(
             extensionBuilder.build(),
-            GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET).build()));
+            pyDepBuilder.build()));
 
     // Verify that we get the expected view from the python packageable interface.
     PythonPackageComponents actualComponent = extension.getPythonPackageComponents(cxxPlatform);

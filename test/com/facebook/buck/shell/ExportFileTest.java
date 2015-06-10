@@ -155,9 +155,11 @@ public class ExportFileTest {
     assertIterablesEquals(singleton(Paths.get("chips")), exportFile.getSource());
 
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    FakeBuildRule rule = new FakeBuildRule(
-        BuildTargetFactory.newInstance("//example:one"),
-        new SourcePathResolver(ruleResolver));
+    FakeBuildRule rule =
+        ruleResolver.addToIndex(
+            new FakeBuildRule(
+                BuildTargetFactory.newInstance("//example:one"),
+                new SourcePathResolver(ruleResolver)));
 
     builder.setSrc(new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget()));
     exportFile = (ExportFile) builder.build(ruleResolver);

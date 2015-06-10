@@ -87,31 +87,17 @@ public abstract class AbstractNodeBuilder<A> {
     }
   }
 
-  @SuppressWarnings("unchecked")
   public BuildRuleParams createBuildRuleParams(
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem,
       TargetGraph targetGraph) {
-    // Not all rules have deps, but all rules call them deps. When they do, they're always optional.
-    // Grab them in the unsafest way I know.
-    FakeBuildRuleParamsBuilder builder = new FakeBuildRuleParamsBuilder(target)
+    TargetNode<?> node = build();
+    return new FakeBuildRuleParamsBuilder(target)
         .setProjectFilesystem(filesystem)
-        .setTargetGraph(targetGraph);
-    try {
-      Field depsField = arg.getClass().getField("deps");
-      Object optional = depsField.get(arg);
-
-      if (optional == null) {
-        return builder.build();
-      }
-      // Here's a whole series of assumptions in one lump of a Bad Idea.
-      ImmutableSortedSet<BuildTarget> deps =
-          (ImmutableSortedSet<BuildTarget>) ((Optional<?>) optional).get();
-      return builder.setDeps(resolver.getAllRules(deps)).build();
-    } catch (ReflectiveOperationException ignored) {
-      // Field doesn't exist: no deps.
-      return builder.build();
-    }
+        .setTargetGraph(targetGraph)
+        .setDeps(resolver.getAllRules(node.getDeps()))
+        .setExtraDeps(resolver.getAllRules(node.getExtraDeps()))
+        .build();
   }
 
   @SuppressWarnings("unchecked")
