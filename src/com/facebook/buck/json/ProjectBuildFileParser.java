@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
@@ -398,7 +399,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
           "from __future__ import with_statement\n" +
           "import sys\n" +
           "sys.path.insert(0, \"" +
-              Escaper.escapeAsBashString(pathlibDir) + "\")\n");
+              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pathlibDir)) + "\")\n");
       Resources.asCharSource(resource, UTF_8).copyTo(out);
       out.write("\n\n");
 
