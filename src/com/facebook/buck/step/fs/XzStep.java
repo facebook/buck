@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,6 +46,8 @@ import java.nio.file.Paths;
  * @see <a href="http://tukaani.org/xz/embedded.html">XZ Embedded</a>
  */
 public class XzStep implements Step {
+
+  private static final Logger LOG = Logger.get(XzStep.class);
 
   private final Path sourceFile;
   private final Path destinationFile;
@@ -106,11 +109,11 @@ public class XzStep implements Step {
     ) {
       ByteStreams.copy(in, xzOut);
       xzOut.finish();
+      if (!keep) {
+        context.getProjectFilesystem().deleteFileAtPath(sourceFile);
+      }
     } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return 1;
-    }
-    if (!keep && !context.getProjectFilesystem().deleteFileAtPath(sourceFile)) {
+      LOG.error(e);
       return 1;
     }
     return 0;

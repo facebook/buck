@@ -280,11 +280,22 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public boolean deleteFileAtPath(Path path) {
+  public void deleteFileAtPath(Path path) throws IOException {
     if (exists(path)) {
       rmFile(path);
+    } else {
+      throw new NoSuchFileException(path.toString());
     }
-    return true;
+  }
+
+  @Override
+  public boolean deleteFileAtPathIfExists(Path path) throws IOException {
+    if (exists(path)) {
+      rmFile(path);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @Override

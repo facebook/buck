@@ -84,10 +84,10 @@ public class FilterResourcesStepTest {
           }})
       .anyTimes();
     filesystem.createParentDirs(scaleDest);
-    EasyMock.expect(filesystem.deleteFileAtPath(scaleSource)).andReturn(true);
+    filesystem.deleteFileAtPath(scaleSource);
     Path scaleSourceDir = scaleSource.getParent();
     EasyMock.expect(filesystem.listFiles(scaleSourceDir)).andReturn(new File[0]);
-    EasyMock.expect(filesystem.deleteFileAtPath(scaleSourceDir)).andReturn(true);
+    filesystem.deleteFileAtPath(scaleSourceDir);
     EasyMock.replay(filesystem);
 
     // Mock an ExecutionContext.

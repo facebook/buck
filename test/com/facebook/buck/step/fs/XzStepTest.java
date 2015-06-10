@@ -66,7 +66,7 @@ public class XzStepTest {
         XZ.CHECK_CRC32);
 
     ProjectFilesystem fs = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(fs.deleteFileAtPath(sourceFile)).andReturn(true);
+    fs.deleteFileAtPath(sourceFile);
     EasyMock.replay(fs);
 
     ExecutionContext context = TestExecutionContext.newBuilder()

@@ -269,16 +269,21 @@ public class ProjectFilesystem {
 
   /**
    * Deletes a file specified by its path relative to the project root.
+   *
+   * Ignores the failure if the file does not exist.
    * @param pathRelativeToProjectRoot path to the file
-   * @return true if the file was successfully deleted, false otherwise
+   * @return {@code true} if the file was deleted, {@code false} if it did not exist
    */
-  public boolean deleteFileAtPath(Path pathRelativeToProjectRoot) {
-    try {
-      Files.delete(getPathForRelativePath(pathRelativeToProjectRoot));
-      return true;
-    } catch (IOException e) {
-      return false;
-    }
+  public boolean deleteFileAtPathIfExists(Path pathRelativeToProjectRoot) throws IOException {
+    return Files.deleteIfExists(getPathForRelativePath(pathRelativeToProjectRoot));
+  }
+
+  /**
+   * Deletes a file specified by its path relative to the project root.
+   * @param pathRelativeToProjectRoot path to the file
+   */
+  public void deleteFileAtPath(Path pathRelativeToProjectRoot) throws IOException {
+    Files.delete(getPathForRelativePath(pathRelativeToProjectRoot));
   }
 
   public Properties readPropertiesFile(Path pathToPropertiesFileRelativeToProjectRoot)

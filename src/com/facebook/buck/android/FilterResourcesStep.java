@@ -281,14 +281,12 @@ public class FilterResourcesStep implements Step {
         imageScaler.scale(factor, drawable, destination, context);
 
         // Delete source file.
-        if (!filesystem.deleteFileAtPath(drawable)) {
-          throw new HumanReadableException("Cannot delete file: " + drawable);
-        }
+        filesystem.deleteFileAtPath(drawable);
 
         // Delete newly-empty directories to prevent missing resources errors in apkbuilder.
         Path parent = drawable.getParent();
-        if (filesystem.listFiles(parent).length == 0 && !filesystem.deleteFileAtPath(parent)) {
-          throw new HumanReadableException("Cannot delete directory: " + parent);
+        if (filesystem.listFiles(parent).length == 0) {
+          filesystem.deleteFileAtPath(parent);
         }
 
       }
