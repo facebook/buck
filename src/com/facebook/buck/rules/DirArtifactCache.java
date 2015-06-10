@@ -25,6 +25,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.File;
@@ -80,31 +81,33 @@ public class DirArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void store(RuleKey ruleKey, File output) {
+  public void store(ImmutableSet<RuleKey> ruleKeys, File output) {
     if (!doStore) {
       return;
     }
-    File cacheEntry = new File(cacheDir, ruleKey.toString());
-    Path tmpCacheEntry = null;
-    try {
-      // Write to a temporary file and move the file to its final location atomically to protect
-      // against partial artifacts (whether due to buck interruption or filesystem failure) posing
-      // as valid artifacts during subsequent buck runs.
-      tmpCacheEntry = File.createTempFile(ruleKey.toString(), ".tmp", cacheDir).toPath();
-      Files.copy(output.toPath(), tmpCacheEntry, REPLACE_EXISTING);
-      Files.move(tmpCacheEntry, cacheEntry.toPath(), REPLACE_EXISTING);
-    } catch (IOException e) {
-      LOG.warn(
-          e,
-          "Artifact store(%s, %s) error",
-          ruleKey,
-          output.getPath());
-      if (tmpCacheEntry != null) {
-        try {
-          Files.deleteIfExists(tmpCacheEntry);
-        } catch (IOException ignored) {
-          // Unable to delete a temporary file. Nothing sane to do.
-          LOG.debug(ignored, "Unable to delete temp cache file");
+    for (RuleKey ruleKey : ruleKeys) {
+      File cacheEntry = new File(cacheDir, ruleKey.toString());
+      Path tmpCacheEntry = null;
+      try {
+        // Write to a temporary file and move the file to its final location atomically to protect
+        // against partial artifacts (whether due to buck interruption or filesystem failure) posing
+        // as valid artifacts during subsequent buck runs.
+        tmpCacheEntry = File.createTempFile(ruleKey.toString(), ".tmp", cacheDir).toPath();
+        Files.copy(output.toPath(), tmpCacheEntry, REPLACE_EXISTING);
+        Files.move(tmpCacheEntry, cacheEntry.toPath(), REPLACE_EXISTING);
+      } catch (IOException e) {
+        LOG.warn(
+            e,
+            "Artifact store(%s, %s) error",
+            ruleKey,
+            output.getPath());
+        if (tmpCacheEntry != null) {
+          try {
+            Files.deleteIfExists(tmpCacheEntry);
+          } catch (IOException ignored) {
+            // Unable to delete a temporary file. Nothing sane to do.
+            LOG.debug(ignored, "Unable to delete temp cache file");
+          }
         }
       }
     }

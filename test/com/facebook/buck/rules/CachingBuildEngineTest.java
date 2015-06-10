@@ -202,7 +202,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // These methods should be invoked after the rule is built locally.
     buildInfoRecorder.recordArtifact(Paths.get(pathToOutputFile));
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
-    buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
+    buildInfoRecorder.performUploadToArtifactCache(
+        ImmutableSet.of(ruleToTest.getRuleKey()),
+        artifactCache,
+        buckEventBus);
 
     // Attempting to build the rule should force a rebuild due to a cache miss.
     replayAll();
@@ -412,7 +415,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // These methods should be invoked after the rule is built locally.
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
-    buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
+    buildInfoRecorder.performUploadToArtifactCache(
+        ImmutableSet.of(buildRule.getRuleKey()),
+        artifactCache,
+        buckEventBus);
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
     expect(buildContext.getStepRunner()).andReturn(createStepRunner());
@@ -506,7 +512,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // These methods should be invoked after the rule is built locally.
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
-    buildInfoRecorder.performUploadToArtifactCache(artifactCache, buckEventBus);
+    buildInfoRecorder.performUploadToArtifactCache(
+        ImmutableSet.of(buildRule.getRuleKey()),
+        artifactCache,
+        buckEventBus);
     expectLastCall().andAnswer(
         new IAnswer<Object>() {
           @Override
@@ -1264,9 +1273,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
    * location of requested {@link File} and writes a zip file there with the entries specified to
    * its constructor.
    * <p>
-   * This makes it possible to react to a call to {@link ArtifactCache#store(RuleKey, File)} and
-   * ensure that there will be a zip file in place immediately after the captured method has been
-   * invoked.
+   * This makes it possible to react to a call to {@link ArtifactCache#store(ImmutableSet, File)}
+   * and ensure that there will be a zip file in place immediately after the captured method has
+   * been invoked.
    */
   private static class FakeArtifactCacheThatWritesAZipFile implements ArtifactCache {
 
@@ -1301,7 +1310,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public void store(RuleKey ruleKey, File output) throws InterruptedException {
+    public void store(ImmutableSet<RuleKey> ruleKeys, File output) {
       throw new UnsupportedOperationException();
     }
 

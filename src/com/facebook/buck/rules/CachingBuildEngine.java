@@ -35,6 +35,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -342,6 +343,7 @@ public class CachingBuildEngine implements BuildEngine {
                 if (success != null && success.shouldUploadResultingArtifact()) {
                   try {
                     buildInfoRecorder.performUploadToArtifactCache(
+                        ImmutableSet.of(rule.getRuleKey()),
                         context.getArtifactCache(),
                         context.getEventBus());
                   } catch (Throwable t) {
@@ -573,7 +575,7 @@ public class CachingBuildEngine implements BuildEngine {
     buildContext.getEventBus().post(
         ArtifactCacheEvent.started(
             ArtifactCacheEvent.Operation.DECOMPRESS,
-            rule.getRuleKey()));
+            ImmutableSet.of(rule.getRuleKey())));
     try {
       Unzip.extractZipFile(zipFile.toPath().toAbsolutePath(),
           projectRoot.toAbsolutePath(),
@@ -598,7 +600,7 @@ public class CachingBuildEngine implements BuildEngine {
       buildContext.getEventBus().post(
           ArtifactCacheEvent.finished(
               ArtifactCacheEvent.Operation.DECOMPRESS,
-              rule.getRuleKey()));
+              ImmutableSet.of(rule.getRuleKey())));
     }
 
     return cacheResult;

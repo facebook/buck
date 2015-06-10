@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
@@ -26,6 +27,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -37,6 +41,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -45,6 +50,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import okio.Buffer;
@@ -327,7 +334,7 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    cache.store(ruleKey, output);
+    cache.store(ImmutableSet.of(ruleKey), output);
     assertTrue(hasCalled.get());
     cache.close();
   }
@@ -352,7 +359,48 @@ public class HttpArtifactCacheTest {
             throw new IOException();
           }
         };
-    cache.store(new RuleKey("00000000000000000000000000000000"), output);
+    cache.store(ImmutableSet.of(new RuleKey("00000000000000000000000000000000")), output);
+    cache.close();
+  }
+
+  @Test
+  public void testStoreMultipleKeys() throws Exception {
+    final RuleKey ruleKey1 = new RuleKey("00000000000000000000000000000000");
+    final RuleKey ruleKey2 = new RuleKey("11111111111111111111111111111111");
+    final String data = "data";
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    File output = new File("output/file");
+    filesystem.writeContentsToPath(data, output.toPath());
+    final Set<RuleKey> stored = Sets.newHashSet();
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            "http",
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            filesystem,
+            BUCK_EVENT_BUS,
+            HASH_FUNCTION) {
+          @Override
+          protected Response storeCall(Request request) throws IOException {
+            Buffer buf = new Buffer();
+            request.body().writeTo(buf);
+            List<String> parts = Splitter.on('/').splitToList(request.uri().toASCIIString());
+            RuleKey ruleKey = new RuleKey(parts.get(parts.size() - 1));
+            stored.add(ruleKey);
+            assertArrayEquals(createArtifact(ruleKey.toString(), data), buf.readByteArray());
+            return new Response.Builder()
+                .code(HttpURLConnection.HTTP_ACCEPTED)
+                .protocol(Protocol.HTTP_1_1)
+                .request(request)
+                .build();
+          }
+        };
+    cache.store(ImmutableSet.of(ruleKey1, ruleKey2), output);
+    assertThat(
+        stored,
+        Matchers.containsInAnyOrder(ruleKey1, ruleKey2));
     cache.close();
   }
 

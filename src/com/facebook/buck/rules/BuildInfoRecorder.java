@@ -222,7 +222,10 @@ public class BuildInfoRecorder {
   /**
    * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
    */
-  public void performUploadToArtifactCache(ArtifactCache artifactCache, BuckEventBus eventBus)
+  public void performUploadToArtifactCache(
+      ImmutableSet<RuleKey> ruleKeys,
+      ArtifactCache artifactCache,
+      BuckEventBus eventBus)
       throws InterruptedException {
 
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
@@ -234,7 +237,7 @@ public class BuildInfoRecorder {
     eventBus.post(
         ArtifactCacheEvent.started(
             ArtifactCacheEvent.Operation.COMPRESS,
-            ruleKey));
+            ruleKeys));
 
     String additionalArtifactInfo =
         formatAdditionalArtifactInfo(
@@ -267,9 +270,9 @@ public class BuildInfoRecorder {
       eventBus.post(
           ArtifactCacheEvent.finished(
               ArtifactCacheEvent.Operation.COMPRESS,
-              ruleKey));
+              ruleKeys));
     }
-    artifactCache.store(ruleKey, zip);
+    artifactCache.store(ruleKeys, zip);
     zip.delete();
   }
 

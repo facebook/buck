@@ -146,7 +146,7 @@ public class BuildInfoRecorderTest {
             return true;
           }
           @Override
-          public void store(RuleKey ruleKey, File output) {
+          public void store(ImmutableSet<RuleKey> ruleKeys, File output) {
             stored.set(true);
             try (Zip zip = new Zip(output, /* forWriting */ false)) {
               assertEquals(
@@ -176,7 +176,7 @@ public class BuildInfoRecorderTest {
           }
         };
 
-    buildInfoRecorder.performUploadToArtifactCache(cache, bus);
+    buildInfoRecorder.performUploadToArtifactCache(ImmutableSet.of(new RuleKey("aa")), cache, bus);
     assertTrue(stored.get());
   }
 

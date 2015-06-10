@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 
@@ -47,8 +49,8 @@ public class MultiArtifactCacheTest {
     }
 
     @Override
-    public void store(RuleKey ruleKey, File output) {
-      storeKey = ruleKey;
+    public void store(ImmutableSet<RuleKey> ruleKeys, File output) {
+      storeKey = Iterables.getFirst(ruleKeys, null);
     }
 
     @Override
@@ -80,14 +82,14 @@ public class MultiArtifactCacheTest {
         CacheResult.Type.MISS,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
 
-    dummyArtifactCache1.store(dummyRuleKey, dummyFile);
+    dummyArtifactCache1.store(ImmutableSet.of(dummyRuleKey), dummyFile);
     assertEquals("Fetch should succeed after store",
         CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
 
     dummyArtifactCache1.reset();
     dummyArtifactCache2.reset();
-    dummyArtifactCache2.store(dummyRuleKey, dummyFile);
+    dummyArtifactCache2.store(ImmutableSet.of(dummyRuleKey), dummyFile);
     assertEquals("Fetch should succeed after store",
         CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT,
         multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
@@ -103,7 +105,7 @@ public class MultiArtifactCacheTest {
         dummyArtifactCache1,
         dummyArtifactCache2));
 
-    multiArtifactCache.store(dummyRuleKey, dummyFile);
+    multiArtifactCache.store(ImmutableSet.of(dummyRuleKey), dummyFile);
 
     assertEquals("MultiArtifactCache.store() should store to all contained ArtifactCaches",
         dummyArtifactCache1.storeKey,

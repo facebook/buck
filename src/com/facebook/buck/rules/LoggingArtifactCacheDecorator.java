@@ -16,6 +16,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,22 +38,27 @@ public class LoggingArtifactCacheDecorator {
       public CacheResult fetch(RuleKey ruleKey, File output)
           throws InterruptedException {
         eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH,
-            ruleKey));
+            ImmutableSet.of(ruleKey)));
         CacheResult fetchResult = delegate.fetch(ruleKey, output);
-        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.FETCH,
-            ruleKey,
-            fetchResult));
+        eventBus.post(ArtifactCacheEvent.finished(
+                ArtifactCacheEvent.Operation.FETCH,
+                ImmutableSet.of(ruleKey),
+                fetchResult));
         return fetchResult;
       }
 
       @Override
-      public void store(RuleKey ruleKey, File output)
+      public void store(ImmutableSet<RuleKey> ruleKeys, File output)
           throws InterruptedException {
-        eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.STORE,
-            ruleKey));
-        delegate.store(ruleKey, output);
-        eventBus.post(ArtifactCacheEvent.finished(ArtifactCacheEvent.Operation.STORE,
-            ruleKey));
+        eventBus.post(
+            ArtifactCacheEvent.started(
+                ArtifactCacheEvent.Operation.STORE,
+                ruleKeys));
+        delegate.store(ruleKeys, output);
+        eventBus.post(
+            ArtifactCacheEvent.finished(
+                ArtifactCacheEvent.Operation.STORE,
+                ruleKeys));
       }
 
       @Override

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.io.Closeable;
 import java.io.File;
 
@@ -29,7 +31,7 @@ public interface ArtifactCache extends Closeable {
    * @return whether it was a {@link AbstractCacheResult.Type#MISS} (indicating a failure) or some
    *     type of hit.
    */
-  public CacheResult fetch(RuleKey ruleKey, File output) throws InterruptedException;
+  CacheResult fetch(RuleKey ruleKey, File output) throws InterruptedException;
 
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched
@@ -38,14 +40,14 @@ public interface ArtifactCache extends Closeable {
    * <p>
    * This is a noop if {@link #isStoreSupported()} returns {@code false}.
    *
-   * @param ruleKey cache store key
+   * @param ruleKeys keys to store the artifact under
    * @param output path to read artifact from
    */
-  public void store(RuleKey ruleKey, File output) throws InterruptedException;
+  void store(ImmutableSet<RuleKey> ruleKeys, File output) throws InterruptedException;
 
   /**
    * This method must return the same value over the lifetime of this object.
    * @return whether this{@link ArtifactCache} supports storing artifacts.
    */
-  public boolean isStoreSupported();
+  boolean isStoreSupported();
 }

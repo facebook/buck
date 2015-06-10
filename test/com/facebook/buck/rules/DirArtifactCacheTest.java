@@ -117,7 +117,7 @@ public class DirArtifactCacheTest {
         .newInstance(inputRuleX)
         .build();
 
-    dirArtifactCache.store(ruleKeyX, fileX);
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), fileX);
 
     // Test that artifact overwrite works.
     assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
@@ -152,8 +152,8 @@ public class DirArtifactCacheTest {
         .newInstance(inputRuleX)
         .build();
 
-    dirArtifactCache.store(ruleKeyX, fileX);
-    dirArtifactCache.store(ruleKeyX, fileX); // Overwrite.
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), fileX);
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), fileX); // Overwrite.
 
     assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
@@ -211,9 +211,9 @@ public class DirArtifactCacheTest {
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
 
-    dirArtifactCache.store(ruleKeyX, fileX);
-    dirArtifactCache.store(ruleKeyY, fileY);
-    dirArtifactCache.store(ruleKeyZ, fileZ);
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), fileX);
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyY), fileY);
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyZ), fileZ);
 
     assertTrue(fileX.delete());
     assertTrue(fileY.delete());
@@ -286,9 +286,9 @@ public class DirArtifactCacheTest {
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
     assertEquals(CacheResult.Type.MISS, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
 
-    dirArtifactCache.store(ruleKeyX, fileX);
-    dirArtifactCache.store(ruleKeyY, fileY);
-    dirArtifactCache.store(ruleKeyZ, fileZ);
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), fileX);
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyY), fileY);
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyZ), fileZ);
 
     assertTrue(fileX.delete());
     assertTrue(fileY.delete());
@@ -382,6 +382,32 @@ public class DirArtifactCacheTest {
     dirArtifactCache.deleteOldFiles();
 
     assertEquals(ImmutableSet.of(fileZ, fileW), ImmutableSet.copyOf(cacheDir.listFiles()));
+  }
+
+  @Test
+  public void testCacheStoreMultipleKeys() throws IOException {
+    File cacheDir = tmpDir.newFolder();
+    File fileX = tmpDir.newFile("x");
+
+    fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(fileX.toPath(), HashCode.fromInt(0)));
+
+    dirArtifactCache = new DirArtifactCache(
+        "dir",
+        cacheDir,
+        /* doStore */ true,
+        /* maxCacheSizeBytes */ Optional.<Long>absent());
+
+    Files.write("x", fileX, Charsets.UTF_8);
+    RuleKey ruleKey1 = new RuleKey("aaaa");
+    RuleKey ruleKey2 = new RuleKey("bbbb");
+
+    dirArtifactCache.store(ImmutableSet.of(ruleKey1, ruleKey2), fileX);
+
+    // Test that artifact is available via both keys.
+    assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKey1, fileX).getType());
+    assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKey2, fileX).getType());
   }
 
   private static class BuildRuleForTest extends FakeBuildRule {

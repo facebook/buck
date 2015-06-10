@@ -393,7 +393,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         started.getCategory(),
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.of(
-            "rule_key", started.getRuleKey().toString()),
+            "rule_key", Joiner.on(", ").join(started.getRuleKeys())),
         started);
   }
 
@@ -401,7 +401,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   public void artifactFetchFinished(ArtifactCacheEvent.Finished finished) {
     ImmutableMap.Builder<String, String> argumentsBuilder = ImmutableMap.<String, String>builder()
         .put("success", Boolean.toString(finished.isSuccess()))
-        .put("rule_key", finished.getRuleKey().toString());
+        .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()));
     Optionals.putIfPresent(finished.getCacheResult().transform(Functions.toStringFunction()),
         "cache_result",
         argumentsBuilder);

@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -281,20 +282,22 @@ public class HttpArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void store(RuleKey ruleKey, File output) throws InterruptedException {
+  public void store(ImmutableSet<RuleKey> ruleKeys, File output) throws InterruptedException {
     if (!isStoreSupported()) {
       return;
     }
-    try {
-      storeImpl(ruleKey, output);
-    } catch (IOException e) {
-      reportFailure(
-          e,
-          "store(%s, %s): %s: %s",
-          url,
-          ruleKey,
-          e.getClass().getName(),
-          e.getMessage());
+    for (RuleKey ruleKey : ruleKeys) {
+      try {
+        storeImpl(ruleKey, output);
+      } catch (IOException e) {
+        reportFailure(
+            e,
+            "store(%s, %s): %s: %s",
+            url,
+            ruleKey,
+            e.getClass().getName(),
+            e.getMessage());
+      }
     }
   }
 
