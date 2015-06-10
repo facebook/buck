@@ -158,6 +158,24 @@ public class RuleKey {
       return separate().feed(sectionLabel.getBytes()).separate();
     }
 
+    protected Builder setSourcePath(SourcePath sourcePath) {
+      // And now we need to figure out what this thing is.
+      Optional<BuildRule> buildRule = resolver.getRule(sourcePath);
+      if (buildRule.isPresent()) {
+        feed(sourcePath.toString().getBytes()).separate();
+        return setSingleValue(buildRule.get());
+      } else {
+        Optional<Path> relativePath = resolver.getRelativePath(sourcePath);
+        Preconditions.checkState(relativePath.isPresent());
+        Path path = relativePath.get();
+        return setSingleValue(path);
+      }
+    }
+
+    protected Builder setBuildRule(BuildRule rule) {
+      return setSingleValue(rule.getRuleKey());
+    }
+
     public Builder setReflectively(String key, @Nullable Object val) {
       if (val instanceof RuleKeyAppendable) {
         setReflectively(
@@ -227,7 +245,7 @@ public class RuleKey {
       return setSingleValue(val);
     }
 
-    private Builder setSingleValue(@Nullable Object val) {
+    protected Builder setSingleValue(@Nullable Object val) {
 
       if (val == null) { // Null value first
         return separate();
@@ -289,7 +307,7 @@ public class RuleKey {
       // Buck types below here.
 
       else if (val instanceof BuildRule) {
-        return setSingleValue(((BuildRule) val).getRuleKey());
+        return setBuildRule((BuildRule) val);
       } else if (val instanceof BuildRuleType) {
         if (logElms != null) {
           logElms.add(String.format("ruleKeyType(%s):", val));
@@ -306,17 +324,7 @@ public class RuleKey {
         }
         feed(((HasBuildTarget) val).getBuildTarget().getFullyQualifiedName().getBytes());
       } else if (val instanceof SourcePath) {
-        // And now we need to figure out what this thing is.
-        Optional<BuildRule> buildRule = resolver.getRule((SourcePath) val);
-        if (buildRule.isPresent()) {
-          feed(val.toString().getBytes()).separate();
-          return setSingleValue(buildRule.get());
-        } else {
-          Optional<Path> relativePath = resolver.getRelativePath((SourcePath) val);
-          Preconditions.checkState(relativePath.isPresent());
-          Path path = relativePath.get();
-          return setSingleValue(path);
-        }
+        return setSourcePath((SourcePath) val);
       } else if (val instanceof SourceRoot) {
         if (logElms != null) {
           logElms.add(String.format("sourceroot(%s):", val));
