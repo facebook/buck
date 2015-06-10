@@ -17,6 +17,7 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -55,6 +56,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
 
   private final ReactNativeDeps depsFinder;
   private final Path jsOutput;
+  private final Path resource;
 
   protected ReactNativeBundle(
       BuildRuleParams ruleParams,
@@ -71,8 +73,9 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     this.jsPackager = jsPackager;
     this.platform = platform;
     this.depsFinder = depsFinder;
-    this.jsOutput = BuildTargets.getGenPath(ruleParams.getBuildTarget(), "__%s_js__/")
-        .resolve(bundleName);
+    BuildTarget buildTarget = ruleParams.getBuildTarget();
+    this.jsOutput = BuildTargets.getGenPath(buildTarget, "__%s_js__/").resolve(bundleName);
+    this.resource = BuildTargets.getGenPath(buildTarget, "__%s_res__/").resolve("res");
   }
 
   @Override
@@ -81,31 +84,39 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MakeCleanDirectoryStep(jsOutput.getParent()));
+    steps.add(new MakeCleanDirectoryStep(resource));
 
-    steps.add(new ShellStep() {
-      @Override
-      public String getShortName() {
-        return "bundle_react_native";
-      }
+    steps.add(
+        new ShellStep() {
+          @Override
+          public String getShortName() {
+            return "bundle_react_native";
+          }
 
-      @Override
-      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        ProjectFilesystem filesystem = context.getProjectFilesystem();
-        return ImmutableList.of(
-            getResolver().getPath(jsPackager).toString(),
-            "bundle",
-            "--entry-file", filesystem.resolve(getResolver().getPath(entryPath)).toString(),
-            "--platform", platform.toString(),
-            "--dev", isDevMode ? "true" : "false",
-            "--bundle-output", filesystem.resolve(jsOutput).toString());
-      }
-    });
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+            ProjectFilesystem filesystem = context.getProjectFilesystem();
+            return ImmutableList.of(
+                getResolver().getPath(jsPackager).toString(),
+                "bundle",
+                "--entry-file", filesystem.resolve(getResolver().getPath(entryPath)).toString(),
+                "--platform", platform.toString(),
+                "--dev", isDevMode ? "true" : "false",
+                "--bundle-output", filesystem.resolve(jsOutput).toString(),
+                "--assets-dest", filesystem.resolve(resource).toString());
+          }
+        });
     buildableContext.recordArtifact(jsOutput);
+    buildableContext.recordArtifact(resource);
     return steps.build();
   }
 
   public Path getPathToJSBundleDir() {
     return jsOutput.getParent();
+  }
+
+  public Path getPathToResources() {
+    return resource;
   }
 
   @Override

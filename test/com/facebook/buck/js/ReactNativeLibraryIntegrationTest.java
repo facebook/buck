@@ -50,11 +50,14 @@ public class ReactNativeLibraryIntegrationTest {
   }
 
   @Test
-  public void testApkContainsJSAsset() throws IOException {
+  public void testApkContainsJSAssetAndDrawables() throws IOException {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
         workspace.getFile("buck-out/gen/apps/sample/app.apk"));
     zipInspector.assertFileExists("assets/SampleBundle.js");
+    zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
+    zipInspector.assertFileExists("res/drawable-hdpi-v4/image.png");
+    zipInspector.assertFileExists("res/drawable-xhdpi-v4/image.png");
   }
 
   @Test

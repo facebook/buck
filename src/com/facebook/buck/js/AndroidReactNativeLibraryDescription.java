@@ -22,12 +22,15 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 @Beta
 public class AndroidReactNativeLibraryDescription
-    implements Description<ReactNativeLibraryArgs>, Flavored {
+    implements Description<AndroidReactNativeLibraryDescription.Args>, Flavored {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("android_react_native_library");
 
@@ -43,12 +46,12 @@ public class AndroidReactNativeLibraryDescription
   }
 
   @Override
-  public ReactNativeLibraryArgs createUnpopulatedConstructorArg() {
-    return new ReactNativeLibraryArgs();
+  public Args createUnpopulatedConstructorArg() {
+    return new Args();
   }
 
   @Override
-  public <A extends ReactNativeLibraryArgs> AndroidReactNativeLibrary createBuildRule(
+  public <A extends Args> AndroidReactNativeLibrary createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -58,5 +61,11 @@ public class AndroidReactNativeLibraryDescription
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return ReactNativeFlavors.validateFlavors(flavors);
+  }
+
+  @SuppressFieldNotInitialized
+  public static class Args extends ReactNativeLibraryArgs {
+    @Hint(name = "package")
+    public Optional<String> rDotJavaPackage;
   }
 }

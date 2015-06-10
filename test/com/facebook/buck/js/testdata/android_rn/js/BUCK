@@ -1,8 +1,9 @@
 android_react_native_library(
   name = 'app',
-  srcs = glob(['**/*.js']),
+  srcs = glob(['**/*.js', '**/*.png']),
   entry_path = 'app/sample.android.js',
   bundle_name = 'SampleBundle.js',
+  package = 'com.sample',
   deps = [],
   visibility = [
     'PUBLIC'

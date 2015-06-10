@@ -141,7 +141,7 @@ public class AndroidResource extends AbstractBuildRule
 
   private final AtomicReference<String> rDotJavaPackage;
 
-  protected AndroidResource(
+  public AndroidResource(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       final ImmutableSortedSet<BuildRule> deps,

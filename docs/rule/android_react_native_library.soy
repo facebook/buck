@@ -43,6 +43,19 @@ gets packaged as an asset in the <code>.apk</code> of the Android app.
   placed at <code>/assets/MyApp.js</code> inside the <code>.apk</code> file.
   {/param}
 {/call}
+
+/***/
+{call buck.arg}
+  {param name : 'package' /}
+  {param desc}
+  Java package for the <code>R.java</code> file that will be generated for
+  resources, which are included in <code>srcs</code> and are referenced by the
+  javascript code.
+  <br>
+  <strong>Note:</strong> If this parameter is unset, Buck will not package any
+  resources in the final APK.
+  {/param}
+{/call}
 {/param} // close args
 
 {/call} // close buck.rule

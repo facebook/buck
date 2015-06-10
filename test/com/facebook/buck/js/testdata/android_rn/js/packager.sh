@@ -2,16 +2,31 @@
 
 THIS_DIR=$(dirname "$0")
 THIS_DIR=$(pwd)/$THIS_DIR
-OUTPUT_FILE="${@: -1}"
+LAST_ARG="${@: -1}"
+SECOND_LAST_ARG="${@: -3:1}"
 
 case "$1" in
 'bundle')
+  OUTPUT_DIR="$LAST_ARG"
+  OUTPUT_FILE="$SECOND_LAST_ARG"
   cat $THIS_DIR/app/sample.android.js $THIS_DIR/app/helpers.js > $OUTPUT_FILE
+
+  mkdir $OUTPUT_DIR/drawable-mdpi
+  cp "$THIS_DIR/app/image@1.5x.png" $OUTPUT_DIR/drawable-mdpi/image.png
+  mkdir $OUTPUT_DIR/drawable-hdpi
+  cp "$THIS_DIR/app/image@2x.png" $OUTPUT_DIR/drawable-hdpi/image.png
+  mkdir $OUTPUT_DIR/drawable-xhdpi
+  cp "$THIS_DIR/app/image@3x.png" $OUTPUT_DIR/drawable-xhdpi/image.png
+
   exit 0
   ;;
 'list-dependencies')
+  OUTPUT_FILE="$LAST_ARG"
   echo $THIS_DIR/app/sample.android.js > $OUTPUT_FILE
   echo $THIS_DIR/app/helpers.js >> $OUTPUT_FILE
+  echo $THIS_DIR/app/image@1.5x.png >> $OUTPUT_FILE
+  echo $THIS_DIR/app/image@2x.png >> $OUTPUT_FILE
+  echo $THIS_DIR/app/image@3x.png >> $OUTPUT_FILE
   exit 0
   ;;
 *)

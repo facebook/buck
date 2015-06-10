@@ -16,12 +16,14 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -30,10 +32,13 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+
 public class ReactNativeLibraryGraphEnhancer {
 
   private static final Flavor REACT_NATIVE_DEPS_FLAVOR = ImmutableFlavor.of("rn_deps");
   private static final Flavor REACT_NATIVE_BUNDLE_FLAVOR = ImmutableFlavor.of("bundle");
+  private static final Flavor REACT_NATIVE_ANDROID_RES_FLAVOR = ImmutableFlavor.of("android_res");
 
   private final ReactNativeBuckConfig buckConfig;
 
@@ -67,7 +72,7 @@ public class ReactNativeLibraryGraphEnhancer {
   public AndroidReactNativeLibrary enhanceForAndroid(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      ReactNativeLibraryArgs args) {
+      AndroidReactNativeLibraryDescription.Args args) {
     ReactNativeDeps reactNativeDeps =
         createReactNativeDeps(params, resolver, args, ReactNativePlatform.ANDROID);
 
@@ -92,8 +97,35 @@ public class ReactNativeLibraryGraphEnhancer {
         reactNativeDeps);
     resolver.addToIndex(bundle);
 
+    ImmutableList.Builder<BuildRule> extraDeps = ImmutableList.builder();
+    extraDeps.add(bundle);
+    if (args.rDotJavaPackage.isPresent()) {
+      BuildRuleParams paramsForResource =
+          params.copyWithBuildTarget(
+              BuildTarget.builder(originalBuildTarget)
+                  .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
+                  .build())
+              .copyWithExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)));
+
+      // TODO(natthu): Either fix AndroidResource to accept sorted set of SourcePaths for resSrcs
+      // and assetsSrcs or, pass the hash from ReactNativeDeps to be included in getAbiKeyForDeps().
+      BuildRule resource = new AndroidResource(
+              paramsForResource,
+              sourcePathResolver,
+              /* deps */ ImmutableSortedSet.<BuildRule>of(),
+              new PathSourcePath(params.getProjectFilesystem(), bundle.getPathToResources()),
+              /* resSrcs */ ImmutableSortedSet.<Path>of(),
+              args.rDotJavaPackage.get(),
+              /* assets */ null,
+              /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+              /* manifest */ null,
+              /* hasWhitelistedStrings */ false);
+      resolver.addToIndex(resource);
+      extraDeps.add(resource);
+    }
+
     return new AndroidReactNativeLibrary(
-        params.appendExtraDeps(ImmutableList.of(bundle)),
+        params.appendExtraDeps(extraDeps.build()),
         sourcePathResolver,
         bundle);
   }
