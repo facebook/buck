@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class ReactNativeLibraryIntegrationTest {
+public class AndroidReactNativeLibraryIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
