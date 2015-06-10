@@ -82,7 +82,7 @@ public final class MoreFiles {
   /** Utility class: do not instantiate. */
   private MoreFiles() {}
 
-  public static void rmdir(Path path) throws IOException {
+  public static void deleteRecursivelyIfExists(Path path) throws IOException {
     try {
       deleteRecursively(path);
     } catch (NoSuchFileException e) {

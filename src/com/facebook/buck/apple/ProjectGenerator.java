@@ -1186,7 +1186,7 @@ public class ProjectGenerator {
           headerSymlinkTreeRoot,
           currentHashCode,
           newHashCode);
-      projectFilesystem.rmdir(headerSymlinkTreeRoot);
+      projectFilesystem.deleteRecursivelyIfExists(headerSymlinkTreeRoot);
       projectFilesystem.mkdirs(headerSymlinkTreeRoot);
       for (Map.Entry<Path, Path> entry : resolvedContents.entrySet()) {
         Path link = entry.getKey();

@@ -174,7 +174,7 @@ public class SmartDexingStep implements Step {
     for (Path secondaryOutput : projectFilesystem.getDirectoryContents(secondaryOutputDir)) {
       if (!producedArtifacts.contains(secondaryOutput) &&
           !secondaryOutput.getFileName().toString().endsWith(".meta")) {
-        projectFilesystem.rmdir(secondaryOutput);
+        projectFilesystem.deleteRecursivelyIfExists(secondaryOutput);
       }
     }
   }

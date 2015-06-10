@@ -404,7 +404,16 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public void rmdir(Path path) throws IOException {
+  public void deleteRecursively(Path path) throws IOException {
+    if (!exists(path)) {
+      throw new NoSuchFileException(path.toString());
+    }
+
+    deleteRecursivelyIfExists(path);
+  }
+
+  @Override
+  public void deleteRecursivelyIfExists(Path path) throws IOException {
     Path normalizedPath = MorePaths.normalize(path);
     for (Iterator<Path> iterator = fileContents.keySet().iterator(); iterator.hasNext();) {
       Path subPath = iterator.next();
@@ -635,7 +644,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       }
     } else {
       rmFile(symLink);
-      rmdir(symLink);
+      deleteRecursivelyIfExists(symLink);
     }
     symLinks.put(symLink, realFile);
   }

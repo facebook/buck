@@ -65,7 +65,7 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
 
     // Remove existing contents if any.
     if (filesystem.exists(destDir)) {
-      filesystem.rmdir(destDir);
+      filesystem.deleteRecursivelyIfExists(destDir);
     }
     filesystem.mkdirs(destDir);
 

@@ -66,7 +66,7 @@ public class Unzip {
               break;
             case OVERWRITE_AND_CLEAN_DIRECTORIES:
               // Delete the file or directory before unpacking it.
-              MoreFiles.rmdir(target);
+              MoreFiles.deleteRecursivelyIfExists(target);
               break;
           }
         }

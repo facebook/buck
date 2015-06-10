@@ -84,7 +84,7 @@ public class ShBinaryRuleIntegrationTest {
 
     // Now delete the buck-out directory (but not buck-cache).
     File buckOutDir = workspace.getFile("buck-out");
-    MoreFiles.rmdir(buckOutDir.toPath());
+    MoreFiles.deleteRecursivelyIfExists(buckOutDir.toPath());
 
     // Now run the genrule that depends on the sh_binary above. This will force buck to fetch the
     // sh_binary output from cache. If the executable flag is lost somewhere along the way, this

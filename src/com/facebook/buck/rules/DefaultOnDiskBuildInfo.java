@@ -138,6 +138,6 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public void deleteExistingMetadata() throws IOException {
-    projectFilesystem.rmdir(metadataDirectory);
+    projectFilesystem.deleteRecursivelyIfExists(metadataDirectory);
   }
 }

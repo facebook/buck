@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.util.BuckConstant;
 
@@ -40,7 +41,7 @@ public class CleanCommand extends AbstractCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException {
     // Ideally, we would like the implementation of this method to be as simple as:
     //
-    // getProjectFilesystem().rmdir(BuckConstant.BUCK_OUTPUT_DIRECTORY);
+    // getProjectFilesystem().deleteRecursivelyIfExists(BuckConstant.BUCK_OUTPUT_DIRECTORY);
     //
     // However, we want to avoid blowing away directories that IntelliJ indexes, because that tends
     // to make it angry. Currently, those directories are:
@@ -53,18 +54,19 @@ public class CleanCommand extends AbstractCommand {
     // directories itself so we can blow away BuckConstant.ANNOTATION_DIR as part of `buck clean`.
     // This will also reduce how long `buck project` takes.
     //
+    ProjectFilesystem projectFilesystem = params.getRepository().getFilesystem();
     if (isCleanBuckProjectFiles()) {
       // Delete directories that were created for the purpose of `buck project`.
       // TODO(mbolin): Unify these two directories under a single buck-ide directory,
       // which is distinct from the buck-out directory.
-      params.getRepository().getFilesystem().rmdir(Project.ANDROID_GEN_PATH);
-      params.getRepository().getFilesystem().rmdir(BuckConstant.ANNOTATION_PATH);
+      projectFilesystem.deleteRecursivelyIfExists(Project.ANDROID_GEN_PATH);
+      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.ANNOTATION_PATH);
     } else {
       // On Windows, you have to close all files that will be deleted.
       // Because buck clean will delete build.log, you must close it first.
       JavaUtilsLoggingBuildListener.closeLogFile();
-      params.getRepository().getFilesystem().rmdir(BuckConstant.SCRATCH_PATH);
-      params.getRepository().getFilesystem().rmdir(BuckConstant.GEN_PATH);
+      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.SCRATCH_PATH);
+      projectFilesystem.deleteRecursivelyIfExists(BuckConstant.GEN_PATH);
     }
 
     return 0;

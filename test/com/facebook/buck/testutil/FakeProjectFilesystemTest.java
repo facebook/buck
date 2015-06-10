@@ -247,7 +247,7 @@ public class FakeProjectFilesystemTest {
   public void testDirectoryDoesNotExistAfterRmdir() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(Paths.get("foo"));
-    filesystem.rmdir(Paths.get("foo"));
+    filesystem.deleteRecursivelyIfExists(Paths.get("foo"));
     assertFalse(filesystem.isDirectory(Paths.get("foo")));
   }
 

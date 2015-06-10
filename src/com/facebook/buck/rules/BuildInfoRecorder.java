@@ -124,7 +124,7 @@ public class BuildInfoRecorder {
    */
   public void writeMetadataToDisk(boolean clearExistingMetadata) throws IOException {
     if (clearExistingMetadata) {
-      projectFilesystem.rmdir(pathToMetadataDirectory);
+      projectFilesystem.deleteRecursivelyIfExists(pathToMetadataDirectory);
     }
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
