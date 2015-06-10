@@ -660,12 +660,13 @@ public class CxxLibraryDescription implements
 
     if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-
       // XXX: This needs bundleLoader for tests..
       return createCompilationDatabaseBuildRule(
           params,
           resolver,
-          platform.get().getValue(),
+          platform.isPresent()
+              ? platform.get().getValue()
+              : DefaultCxxPlatforms.build(cxxBuckConfig),
           args,
           preprocessMode);
     }
