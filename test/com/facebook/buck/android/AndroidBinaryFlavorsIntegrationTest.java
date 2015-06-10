@@ -59,7 +59,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
         "--show-output",
         "//apps/sample:app_comp_str#package_string_assets");
     String path =
-        "buck-out/bin/apps/sample/__strings_app_comp_str#package_string_assets__/string_assets.zip";
+        "buck-out/bin/apps/sample/__strings_app_comp_str#package_string_assets__/";
     result.assertSuccess();
     assertThat(
         result.getStdout().trim().split(" ")[1],
