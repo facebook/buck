@@ -33,11 +33,6 @@ public class AndroidResourceHelper {
    * case, if an {@code android_prebuilt_aar()} appears in the deps, the {@code android_resource()}
    * that corresponds to the AAR will also be included in the output.
    * <p>
-   * Note that if we allowed developers to depend on a flavored build target (in this case, the
-   * {@link AndroidPrebuiltAarGraphEnhancer#AAR_ANDROID_RESOURCE_FLAVOR} flavor), then we could
-   * require them to depend on the flavored dep explicitly in their build files. Then we could
-   * eliminate this special case, though it would be more burdensome for developers to have to
-   * keep track of when they could depend on an ordinary build rule vs. a flavored one.
    */
   public static ImmutableSortedSet<BuildRule> androidResOnly(ImmutableSortedSet<BuildRule> deps) {
     return FluentIterable
