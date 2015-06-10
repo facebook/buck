@@ -48,7 +48,8 @@ public class AndroidPrebuiltAar
       SourcePath nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       AndroidResource androidResource,
-      JavacOptions javacOptions) {
+      JavacOptions javacOptions,
+      Iterable<PrebuiltJar> exportedDeps) {
     super(
         androidLibraryParams,
         resolver,
@@ -56,7 +57,10 @@ public class AndroidPrebuiltAar
         /* resources */ ImmutableSortedSet.<SourcePath>of(),
         Optional.of(proguardConfig),
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
-        ImmutableSortedSet.<BuildRule>of(prebuiltJar),
+        /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
+            .add(prebuiltJar)
+            .addAll(exportedDeps)
+            .build(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions,

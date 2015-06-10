@@ -2,6 +2,9 @@ genrule(
   name = 'gen_aar',
   cmd = '$(exe :aar_generator) $TMP $OUT',
   out = 'the.aar',
+  visibility = [
+    'PUBLIC',
+  ],
 )
 
 python_binary(

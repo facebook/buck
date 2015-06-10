@@ -20,6 +20,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,6 +34,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -51,6 +53,8 @@ public class AndroidPrebuiltAarDescription
     implements Description<AndroidPrebuiltAarDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("android_prebuilt_aar");
+
+  private static final Flavor AAR_PREBUILT_JAR_FLAVOR = ImmutableFlavor.of("aar_prebuilt_jar");
 
   private final JavacOptions javacOptions;
 
@@ -77,8 +81,17 @@ public class AndroidPrebuiltAarDescription
     AndroidPrebuiltAarGraphEnhancer.UnzipAar unzipAar =
         AndroidPrebuiltAarGraphEnhancer.enhance(params, args.aar, buildRuleResolver);
 
+    Iterable<PrebuiltJar> javaDeps = Iterables.filter(
+        buildRuleResolver.getAllRules(
+            args.deps.or(ImmutableSortedSet.<BuildTarget>of())),
+        PrebuiltJar.class);
+
     PrebuiltJar prebuiltJar = buildRuleResolver.addToIndex(
-        createPrebuiltJar(unzipAar, params, pathResolver));
+        createPrebuiltJar(
+            unzipAar,
+            params,
+            pathResolver,
+            ImmutableSortedSet.<BuildRule>copyOf(javaDeps)));
     AndroidResource androidResource = buildRuleResolver.addToIndex(
         createAndroidResource(unzipAar, params, pathResolver));
     return buildRuleResolver.addToIndex(new AndroidPrebuiltAar(
@@ -98,18 +111,20 @@ public class AndroidPrebuiltAarDescription
             unzipAar.getNativeLibsDirectory()),
         /* prebuiltJar */ prebuiltJar,
         /* androidResource */ androidResource,
-        /* javacOptions */ javacOptions));
+        /* javacOptions */ javacOptions,
+        /* exportedDeps */ javaDeps));
   }
 
   private PrebuiltJar createPrebuiltJar(
       AndroidPrebuiltAarGraphEnhancer.UnzipAar unzipAar,
       BuildRuleParams params,
-      SourcePathResolver resolver) {
+      SourcePathResolver resolver,
+      ImmutableSortedSet<BuildRule> deps) {
     BuildRuleParams buildRuleParams = params.copyWithChanges(
         /* buildTarget */ BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().checkUnflavored(),
-            ImmutableFlavor.of("aar_prebuilt_jar")),
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            AAR_PREBUILT_JAR_FLAVOR),
+        /* declaredDeps */ Suppliers.ofInstance(deps),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)));
     return new PrebuiltJar(
         /* params */ buildRuleParams,
