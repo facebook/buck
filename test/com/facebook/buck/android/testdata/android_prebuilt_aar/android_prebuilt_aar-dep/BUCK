@@ -1,0 +1,18 @@
+android_prebuilt_aar(
+  name = 'aar',
+  aar = '//:gen_aar',
+  deps = [
+    ':aar-with-libs',
+  ],
+)
+
+android_prebuilt_aar(
+  name = 'aar-with-libs',
+  aar = '//:gen_aar-with-jsr',
+)
+
+android_library(
+  name = 'lib',
+  srcs = [ 'ExampleActivity.java' ],
+  deps = [ ':aar' ],
+)

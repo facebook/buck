@@ -63,4 +63,9 @@ public class AndroidPrebuiltAarIntegrationTest {
   public void testPrebuiltJarInDepsIsExported() throws IOException {
     workspace.runBuckBuild("//prebuilt_jar-dep:lib").assertSuccess();
   }
+
+  @Test
+  public void testAndroidPrebuiltAarInDepsIsExported() throws IOException {
+    workspace.runBuckBuild("//android_prebuilt_aar-dep:lib").assertSuccess();
+  }
 }

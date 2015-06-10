@@ -31,6 +31,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
@@ -81,10 +82,20 @@ public class AndroidPrebuiltAarDescription
     AndroidPrebuiltAarGraphEnhancer.UnzipAar unzipAar =
         AndroidPrebuiltAarGraphEnhancer.enhance(params, args.aar, buildRuleResolver);
 
-    Iterable<PrebuiltJar> javaDeps = Iterables.filter(
-        buildRuleResolver.getAllRules(
-            args.deps.or(ImmutableSortedSet.<BuildTarget>of())),
-        PrebuiltJar.class);
+    Iterable<PrebuiltJar> javaDeps = Iterables.concat(
+        Iterables.filter(
+            buildRuleResolver.getAllRules(args.deps.get()),
+            PrebuiltJar.class),
+        Iterables.transform(
+            Iterables.filter(
+                buildRuleResolver.getAllRules(args.deps.get()),
+                AndroidPrebuiltAar.class),
+            new Function<AndroidPrebuiltAar, PrebuiltJar>() {
+              @Override
+              public PrebuiltJar apply(AndroidPrebuiltAar input) {
+                return input.getPrebuiltJar();
+              }
+            }));
 
     PrebuiltJar prebuiltJar = buildRuleResolver.addToIndex(
         createPrebuiltJar(

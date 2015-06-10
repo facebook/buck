@@ -7,6 +7,16 @@ genrule(
   ],
 )
 
+genrule(
+  name = 'gen_aar-with-jsr',
+  cmd = '$(exe :aar_generator) ' +
+    '--lib $(location //third-party/jsr:jsr) $TMP $OUT',
+  out = 'jsr.aar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 python_binary(
   name = 'aar_generator',
   main = 'gen_aar.py',

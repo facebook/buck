@@ -106,6 +106,10 @@ public class AndroidPrebuiltAar
     collector.addNativeLibsDirectory(getBuildTarget(), nativeLibsDirectory);
   }
 
+  public PrebuiltJar getPrebuiltJar() {
+    return prebuiltJar;
+  }
+
   public Path getBinaryJar() {
     return prebuiltJar.getPathToOutput();
   }

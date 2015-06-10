@@ -16,12 +16,17 @@ import contextlib
 import os
 import shutil
 import subprocess
-import sys
 import zipfile
 
+from optparse import OptionParser
+
+
 if __name__ == "__main__":
-    tmp = sys.argv[1]
-    output = sys.argv[2]
+    parser = OptionParser()
+    parser.add_option("--lib", action="store", dest="lib", default="")
+    (options, args) = parser.parse_args()
+    tmp = args[0]
+    output = args[1]
 
     # Write out AndroidManifest.xml
     with open(os.path.join(tmp, "AndroidManifest.xml"), "w") as f:
@@ -60,6 +65,11 @@ public class Utils {
     os.makedirs(os.path.join(tmp, "jni", "x86"))
     with open(os.path.join(tmp, "jni", "x86", "liba.so"), "w") as f:
         f.write("Empty")
+
+    if options.lib:
+        dir = os.path.join(tmp, "libs")
+        os.makedirs(dir)
+        shutil.copyfile(options.lib, os.path.join(dir, "lib.jar"))
 
     # Note that we do not include an R.txt file, even though it is required by the .aar spec.
     # Currently, Buck does not check for its existence.
