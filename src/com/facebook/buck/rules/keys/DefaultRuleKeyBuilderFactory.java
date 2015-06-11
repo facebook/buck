@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableCollection;
 import java.util.concurrent.ExecutionException;
 
 public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
+
   private final FileHashCache hashCache;
   private final SourcePathResolver pathResolver;
   private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
@@ -45,13 +46,26 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
     appendableRuleKeyCache = new AppendableRuleKeyCache(pathResolver, hashCache);
   }
 
+  /**
+   * @return a new {@link com.facebook.buck.rules.RuleKey.Builder} to be used throughout in this
+   *     class.  Sub-classes can use this method to substitute in their own implementations.
+   */
+  @SuppressWarnings("unused")
+  protected RuleKey.Builder newBuilder(
+      BuildRule rule,
+      SourcePathResolver pathResolver,
+      FileHashCache hashCache,
+      AppendableRuleKeyCache appendableRuleKeyCache) {
+    return new RuleKey.Builder(
+        pathResolver,
+        hashCache,
+        appendableRuleKeyCache);
+  }
+
   @Override
   public RuleKey.Builder newInstance(BuildRule buildRule) {
     RuleKey.Builder builder =
-        new RuleKey.Builder(
-            pathResolver,
-            hashCache,
-            appendableRuleKeyCache);
+        newBuilder(buildRule, pathResolver, hashCache, appendableRuleKeyCache);
     builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());
     // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
     builder.setReflectively("buck.type", buildRule.getType());
