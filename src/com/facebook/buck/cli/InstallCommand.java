@@ -167,11 +167,15 @@ public class InstallCommand extends BuildCommand {
           build.getExecutionContext());
     } else if (buildRule instanceof AppleBundle) {
       AppleBundle appleBundle = (AppleBundle) buildRule;
-      return installAppleBundle(
+      params.getBuckEventBus().post(InstallEvent.started(appleBundle.getBuildTarget()));
+      exitCode = installAppleBundle(
           params,
           appleBundle,
           build.getExecutionContext().getProjectFilesystem(),
           build.getExecutionContext().getProcessExecutor());
+      params.getBuckEventBus().post(
+          InstallEvent.finished(appleBundle.getBuildTarget(), exitCode == 0));
+      return exitCode;
     } else {
       params.getConsole().printBuildFailure(String.format(
               "Specified rule %s must be of type android_binary() or apk_genrule() or " +
