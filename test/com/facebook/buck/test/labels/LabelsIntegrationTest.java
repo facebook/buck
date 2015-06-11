@@ -103,7 +103,7 @@ public class LabelsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(args);
     result.assertTestFailure();
     assertThat(result.getStderr(), containsString("Earth should be flat!"));
-    assertThat(result.getStderr(), containsString("TESTS FAILED: 1 Failures"));
+    assertThat(result.getStderr(), containsString("TESTS FAILED: 1 FAILURE"));
   }
 
   private void assertTestsPass(String... args) throws IOException {

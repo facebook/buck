@@ -53,7 +53,7 @@ public class TestSelectorsIntegrationTest {
   public void shouldFailWithoutAnySelectors() throws IOException {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "--all");
     result.assertTestFailure("Some tests fail");
-    assertThat(result.getStderr(), containsString("TESTS FAILED: 1 Failures"));
+    assertThat(result.getStderr(), containsString("TESTS FAILED: 1 FAILURE"));
   }
 
   @Test

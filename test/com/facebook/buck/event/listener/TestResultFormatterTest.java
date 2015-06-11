@@ -167,7 +167,39 @@ public class TestResultFormatterTest {
     formatter.runComplete(builder, ImmutableList.of(results));
 
     String expectedOutput = Joiner.on('\n').join(
-        "TESTS FAILED: 1 Failures",
+        "TESTS FAILED: 1 FAILURE",
+        "Failed target: //foo:bar",
+        "FAIL com.example.FooTest");
+    assertEquals(expectedOutput, toString(builder));
+  }
+
+  @Test
+  public void shouldReportTheNumberOfFailingTestsWithMoreThanOneTest() {
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest",
+        ImmutableList.of(
+            successTest,
+            failingTest,
+            new TestResultSummary(
+                "com.example.FooTest",
+                "anotherFail",
+                ResultType.FAILURE,
+                200,
+                "Unexpected fnord found",
+                null,
+                null,
+                null)));
+    TestResults results = new TestResults(
+        BuildTargetFactory.newInstance("//foo:bar"),
+        ImmutableList.of(summary),
+        /* contacts */ ImmutableSet.<String>of(),
+        /* labels */ ImmutableSet.<String>of());
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.runComplete(builder, ImmutableList.of(results));
+
+    String expectedOutput = Joiner.on('\n').join(
+        "TESTS FAILED: 2 FAILURES",
         "Failed target: //foo:bar",
         "FAIL com.example.FooTest");
     assertEquals(expectedOutput, toString(builder));

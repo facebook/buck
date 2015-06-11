@@ -153,7 +153,8 @@ public class TestResultFormatter {
       }
     } else {
       addTo.add(ansi.asHighlightedFailureText(
-          String.format("TESTS FAILED: %d Failures", numFailures)));
+          String.format(
+              "TESTS FAILED: %d %s", numFailures, numFailures == 1 ? "FAILURE" : "FAILURES")));
       for (TestResults results : failingTests.keySet()) {
         addTo.add("Failed target: " + results.getBuildTarget().getFullyQualifiedName());
         for (TestCaseSummary summary : failingTests.get(results)) {
