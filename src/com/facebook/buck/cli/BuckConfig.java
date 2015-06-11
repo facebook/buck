@@ -113,7 +113,7 @@ public class BuckConfig {
 
   private static final String DEFAULT_HTTP_URL = "http://localhost:8080";
   private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
-  private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "10";
+  private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "3";
 
   private final Config config;
 
