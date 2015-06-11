@@ -232,6 +232,28 @@ public class AdbHelper {
     return isAdbInitialized(adb) ? adb : null;
   }
 
+  public List<IDevice> getDevices() throws InterruptedException {
+    List<IDevice> devices;
+
+    // Initialize adb connection.
+    AndroidDebugBridge adb = createAdb(context);
+    if (adb == null) {
+      console.printBuildFailure("Failed to create adb connection.");
+      return null;
+    }
+
+    // Build list of matching devices.
+    devices = filterDevices(adb.getDevices());
+    if (devices == null) {
+      if (restartAdbOnFailure) {
+        console.printErrorText("No devices found with adb, restarting adb-server.");
+        adb.restart();
+        devices = filterDevices(adb.getDevices());
+      }
+    }
+    return devices;
+  }
+
   /**
    * Execute an {@link AdbCallable} for all matching devices. This functions performs device
    * filtering based on three possible arguments:
@@ -249,26 +271,9 @@ public class AdbHelper {
     List<IDevice> devices;
 
     try (TraceEventLogger ignored = TraceEventLogger.start(buckEventBus, "set_up_adb_call")) {
-
-      // Initialize adb connection.
-      AndroidDebugBridge adb = createAdb(context);
-      if (adb == null) {
-        console.printBuildFailure("Failed to create adb connection.");
-        return false;
-      }
-
-      // Build list of matching devices.
-      devices = filterDevices(adb.getDevices());
+      devices = getDevices();
       if (devices == null) {
-        if (restartAdbOnFailure) {
-          console.printErrorText("No devices found with adb, restarting adb-server.");
-          adb.restart();
-          devices = filterDevices(adb.getDevices());
-        }
-
-        if (devices == null) {
-            return false;
-        }
+        return false;
       }
     }
 
