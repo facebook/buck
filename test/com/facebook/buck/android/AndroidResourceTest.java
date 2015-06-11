@@ -39,10 +39,13 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -171,6 +174,42 @@ public class AndroidResourceTest {
 
     Sha1HashCode expectedSha1 = HasAndroidResourceDeps.ABI_HASHER.apply(
         ImmutableList.of((HasAndroidResourceDeps) resourceRule1));
+    buildableContext.assertContainsMetadataMapping(
+        AndroidResource.METADATA_KEY_FOR_ABI,
+        expectedSha1.getHash());
+  }
+
+  @Test
+  public void testAdditionalAbiKey() throws IOException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/example:res2");
+    String additionalAbiKey = Strings.repeat("d", 40);
+    BuildRule resourceRule2 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
+            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
+            .setAdditionalAbiKey(
+                Optional.of(Suppliers.ofInstance(Sha1HashCode.of(additionalAbiKey))))
+            .setBuildRuleParams(
+                new FakeBuildRuleParamsBuilder(target).build())
+            .build());
+
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    assertTrue(
+        resourceRule2
+            .getBuildSteps(
+                EasyMock.createMock(BuildContext.class),
+                buildableContext)
+            .isEmpty());
+
+    Sha1HashCode expectedSha1 = Sha1HashCode.fromHashCode(
+        Hashing.sha1().newHasher()
+            .putUnencodedChars(Hashing.sha1().newHasher().hash().toString())
+            .putUnencodedChars(additionalAbiKey)
+            .hash());
+
     buildableContext.assertContainsMetadataMapping(
         AndroidResource.METADATA_KEY_FOR_ABI,
         expectedSha1.getHash());

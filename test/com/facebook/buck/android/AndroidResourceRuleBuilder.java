@@ -20,8 +20,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -48,6 +51,7 @@ public class AndroidResourceRuleBuilder {
     private ImmutableSortedSet<Path> assetsSrcs = ImmutableSortedSet.of();
     private SourcePath manifest;
     private boolean hasWhitelistedStrings = false;
+    private Optional<Supplier<Sha1HashCode>> additionalAbiKey = Optional.absent();
 
     public AndroidResource build() {
       return new AndroidResource(
@@ -60,7 +64,8 @@ public class AndroidResourceRuleBuilder {
           assets,
           assetsSrcs,
           manifest,
-          hasWhitelistedStrings);
+          hasWhitelistedStrings,
+          additionalAbiKey);
     }
 
     public Builder setBuildRuleParams(BuildRuleParams params) {
@@ -115,6 +120,11 @@ public class AndroidResourceRuleBuilder {
 
     public Builder setHasWhitelistedStrings(boolean hasWhitelistedStrings) {
       this.hasWhitelistedStrings = hasWhitelistedStrings;
+      return this;
+    }
+
+    public Builder setAdditionalAbiKey(Optional<Supplier<Sha1HashCode>> additionalAbiKey) {
+      this.additionalAbiKey = additionalAbiKey;
       return this;
     }
   }

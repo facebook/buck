@@ -51,6 +51,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -116,6 +117,21 @@ public class AndroidResource extends AbstractBuildRule
 
   private final ImmutableSortedSet<BuildRule> deps;
 
+  /**
+   * For an {@code android_react_native_library} rule, we create an {@code android_resource} rule
+   * which operates on the output of {@link com.facebook.buck.js.ReactNativeBundle}. We do not know
+   * the exact input sources to this rule at parse time, because users generally over specify the
+   * sources to {@code android_react_native_library} rule.
+   *
+   * Since we pass empty {@link #resSrcs} to this rule, its rule-key-without-deps does not
+   * incorporate any source files at all, which means editing one of its actual sources would not
+   * trigger a re-build of this rule. In order to fix that, we indirectly incorporate the hashes
+   * of actual source files through this supplier. See
+   * {@link com.facebook.buck.js.ReactNativeLibraryGraphEnhancer} to find out more about where this
+   * hash comes from.
+   */
+  private final Optional<Supplier<Sha1HashCode>> additionalAbiKey;
+
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   /**
@@ -152,6 +168,32 @@ public class AndroidResource extends AbstractBuildRule
       ImmutableSortedSet<Path> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings) {
+    this(
+        buildRuleParams,
+        resolver,
+        deps,
+        res,
+        resSrcs,
+        rDotJavaPackageArgument,
+        assets,
+        assetsSrcs,
+        manifestFile,
+        hasWhitelistedStrings,
+        Optional.<Supplier<Sha1HashCode>>absent());
+  }
+
+  public AndroidResource(
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
+      final ImmutableSortedSet<BuildRule> deps,
+      @Nullable final SourcePath res,
+      ImmutableSortedSet<Path> resSrcs,
+      @Nullable String rDotJavaPackageArgument,
+      @Nullable SourcePath assets,
+      ImmutableSortedSet<Path> assetsSrcs,
+      @Nullable SourcePath manifestFile,
+      boolean hasWhitelistedStrings,
+      Optional<Supplier<Sha1HashCode>> additionalAbiKey) {
     super(buildRuleParams, resolver);
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
@@ -177,6 +219,8 @@ public class AndroidResource extends AbstractBuildRule
     }
 
     this.deps = deps;
+
+    this.additionalAbiKey = additionalAbiKey;
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
 
@@ -319,9 +363,18 @@ public class AndroidResource extends AbstractBuildRule
 
   @Override
   public Sha1HashCode getAbiKeyForDeps() {
-    return HasAndroidResourceDeps.ABI_HASHER.apply(
+    Sha1HashCode abiKey = HasAndroidResourceDeps.ABI_HASHER.apply(
         FluentIterable.from(getNonEmptyResourceDeps())
             .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR));
+    if (!additionalAbiKey.isPresent()) {
+      return abiKey;
+    }
+
+    return Sha1HashCode.fromHashCode(
+        Hashing.sha1().newHasher()
+            .putUnencodedChars(abiKey.getHash())
+            .putUnencodedChars(additionalAbiKey.get().get().getHash())
+            .hash());
   }
 
   private Iterable<HasAndroidResourceDeps> getNonEmptyResourceDeps() {
