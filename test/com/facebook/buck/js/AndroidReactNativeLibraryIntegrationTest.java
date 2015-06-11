@@ -25,7 +25,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -87,7 +86,6 @@ public class AndroidReactNativeLibraryIntegrationTest {
     buildLog.assertTargetBuiltLocally("//js:app#bundle,dev");
   }
 
-  @Ignore("Fix ABI key for android resource created by ReactNativeLibraryGraphEnhancer.")
   @Test
   public void testEditingImageRebuildsAndroidResource() throws IOException {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
