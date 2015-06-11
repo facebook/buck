@@ -18,16 +18,18 @@ package com.facebook.buck.zip;
 
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Enumeration;
 import java.util.Set;
@@ -47,10 +49,8 @@ public class Unzip {
    */
   public static ImmutableList<Path> extractZipFile(
       Path zipFile,
-      Path destination,
+      ProjectFilesystem filesystem,
       ExistingFileMode existingFileMode) throws IOException {
-    // Create output directory if it does not exist
-    Files.createDirectories(destination);
 
     ImmutableList.Builder<Path> filesWritten = ImmutableList.builder();
     try (ZipFile zip = new ZipFile(zipFile.toFile())) {
@@ -58,15 +58,15 @@ public class Unzip {
       while (entries.hasMoreElements()) {
         ZipArchiveEntry entry = entries.nextElement();
         String fileName = entry.getName();
-        Path target = destination.resolve(fileName);
-        if (Files.exists(target)) {
+        Path target = Paths.get(fileName);
+        if (filesystem.exists(target)) {
           switch (existingFileMode) {
             case OVERWRITE:
               // Unpack the file or directory as usual, overwriting the file.
               break;
             case OVERWRITE_AND_CLEAN_DIRECTORIES:
               // Delete the file or directory before unpacking it.
-              MoreFiles.deleteRecursivelyIfExists(target);
+              filesystem.deleteRecursivelyIfExists(target);
               break;
           }
         }
@@ -77,14 +77,14 @@ public class Unzip {
 
         if (entry.isDirectory()) {
           // Create the directory and all its parent directories
-          Files.createDirectories(target);
+          filesystem.mkdirs(target);
         } else {
           // Create parent folder
-          Files.createDirectories(target.getParent());
+          filesystem.createParentDirs(target);
 
-          filesWritten.add(target);
+          filesWritten.add(filesystem.resolve(target));
           // Write file
-          try (FileOutputStream out = new FileOutputStream(target.toFile())) {
+          try (OutputStream out = filesystem.newFileOutputStream(target)) {
             ByteStreams.copy(zip.getInputStream(entry), out);
           }
 
@@ -162,13 +162,22 @@ public class Unzip {
           Set<PosixFilePermission> permissions =
               MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
           if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
-            MoreFiles.makeExecutable(target.toFile());
+            MoreFiles.makeExecutable(filesystem.resolve(target).toFile());
           }
 
         }
       }
     }
     return filesWritten.build();
+  }
+
+  public static ImmutableList<Path> extractZipFile(
+      Path zipFile,
+      Path destination,
+      ExistingFileMode existingFileMode) throws IOException {
+    // Create output directory if it does not exist
+    Files.createDirectories(destination);
+    return extractZipFile(zipFile, new ProjectFilesystem(destination), existingFileMode);
   }
 
 }

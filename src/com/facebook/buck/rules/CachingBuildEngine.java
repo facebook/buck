@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
@@ -51,7 +52,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -156,7 +156,7 @@ public class CachingBuildEngine implements BuildEngine {
             rule,
             buildInfoRecorder,
             context.getArtifactCache(),
-            context.getProjectRoot(),
+            context.getProjectFilesystem(),
             context);
     if (cacheResult.getType().isSuccess()) {
       return Futures.immediateFuture(
@@ -535,7 +535,7 @@ public class CachingBuildEngine implements BuildEngine {
       BuildRule rule,
       BuildInfoRecorder buildInfoRecorder,
       ArtifactCache artifactCache,
-      Path projectRoot,
+      ProjectFilesystem filesystem,
       BuildContext buildContext) throws InterruptedException {
 
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
@@ -577,8 +577,9 @@ public class CachingBuildEngine implements BuildEngine {
             ArtifactCacheEvent.Operation.DECOMPRESS,
             ImmutableSet.of(rule.getRuleKey())));
     try {
-      Unzip.extractZipFile(zipFile.toPath().toAbsolutePath(),
-          projectRoot.toAbsolutePath(),
+      Unzip.extractZipFile(
+          zipFile.toPath().toAbsolutePath(),
+          filesystem,
           Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it

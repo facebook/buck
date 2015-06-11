@@ -34,7 +34,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -47,6 +46,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.DefaultClock;
@@ -156,8 +156,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context = createMock(BuildContext.class);
+    expect(context.getProjectFilesystem()).andReturn(new FakeProjectFilesystem());
     expect(context.getArtifactCache()).andReturn(artifactCache).times(2);
-    expect(context.getProjectRoot()).andReturn(createMock(Path.class));
 
     // Configure the OnDiskBuildInfo.
     OnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
@@ -267,6 +267,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildContext buildContext = createMock(BuildContext.class);
 
     BuildInfoRecorder buildInfoRecorder = createNiceMock(BuildInfoRecorder.class);
+    expect(buildContext.getProjectFilesystem()).andReturn(new FakeProjectFilesystem());
     expect(buildContext.createBuildInfoRecorder(
            eq(buildTarget),
            /* ruleKey */ anyObject(RuleKey.class),
@@ -302,7 +303,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     expect(buildContext.createOnDiskBuildInfoFor(buildTarget)).andReturn(onDiskBuildInfo);
     expect(buildContext.getArtifactCache()).andStubReturn(new NoopArtifactCache());
-    expect(buildContext.getProjectRoot()).andReturn(createMock(Path.class));
     expect(buildContext.getEventBus()).andReturn(buckEventBus).anyTimes();
 
     replayAll();
@@ -386,10 +386,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     buckEventBus.register(listener);
 
     BuildContext buildContext = createMock(BuildContext.class);
-    expect(buildContext.getProjectRoot()).andReturn(createMock(Path.class));
     NoopArtifactCache artifactCache = new NoopArtifactCache();
     expect(buildContext.getArtifactCache()).andStubReturn(artifactCache);
     expect(buildContext.getStepRunner()).andStubReturn(null);
+    expect(buildContext.getProjectFilesystem()).andReturn(new FakeProjectFilesystem());
 
     BuildInfoRecorder buildInfoRecorder = createNiceMock(BuildInfoRecorder.class);
     expect(buildContext.createBuildInfoRecorder(
@@ -484,7 +484,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     buckEventBus.register(listener);
 
     BuildContext buildContext = createMock(BuildContext.class);
-    expect(buildContext.getProjectRoot()).andReturn(createMock(Path.class));
+    expect(buildContext.getProjectFilesystem()).andReturn(new FakeProjectFilesystem());
     NoopArtifactCache artifactCache = new NoopArtifactCache();
     expect(buildContext.getArtifactCache()).andStubReturn(artifactCache);
     expect(buildContext.getStepRunner()).andStubReturn(null);
@@ -595,14 +595,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     StepRunner stepRunner = createStepRunner();
 
-    // Mock out all of the disk I/O.
-    ProjectFilesystem projectFilesystem = createNiceMock(ProjectFilesystem.class);
-    expect(projectFilesystem
-        .readFileIfItExists(
-            Paths.get("buck-out/bin/src/com/facebook/orca/.orca/metadata/RULE_KEY")))
-        .andReturn(Optional.<String>absent());
-    expect(projectFilesystem.getRootPath()).andReturn(tmp.getRoot().toPath());
-
     // Simulate successfully fetching the output file from the ArtifactCache.
     ArtifactCache artifactCache = createMock(ArtifactCache.class);
     Map<String, String> desiredZipEntries = ImmutableMap.of(
@@ -612,13 +604,15 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         artifactCache.fetch(
             eq(buildRule.getRuleKey()),
             isA(File.class)))
-        .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
+        .andDelegateTo(
+            new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
         .setStepRunner(stepRunner)
-        .setProjectFilesystem(projectFilesystem)
+        .setProjectFilesystem(filesystem)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
         .setArtifactCache(artifactCache)
@@ -646,7 +640,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
     assertTrue(
         "The entries in the zip should be extracted as a result of building the rule.",
-        new File(tmp.getRoot(), "buck-out/gen/src/com/facebook/orca/orca.jar").isFile());
+        filesystem.exists(Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar")));
   }
 
   @Test
@@ -655,14 +649,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     StepRunner stepRunner = createStepRunner(buckEventBus);
-
-    // Mock out all of the disk I/O.
-    ProjectFilesystem projectFilesystem = createNiceMock(ProjectFilesystem.class);
-    expect(projectFilesystem
-            .readFileIfItExists(
-                Paths.get("buck-out/bin/src/com/facebook/orca/.orca/metadata/RULE_KEY")))
-        .andReturn(Optional.<String>absent());
-    expect(projectFilesystem.getRootPath()).andReturn(tmp.getRoot().toPath());
 
     // Add a post build step so we can verify that it's steps are executed.
     Step buildStep = createMock(Step.class);
@@ -688,12 +674,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         artifactCache.fetch(
             eq(buildRule.getRuleKey()),
             isA(File.class)))
-        .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
+        .andDelegateTo(
+            new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
         .setStepRunner(stepRunner)
-        .setProjectFilesystem(projectFilesystem)
+        .setProjectFilesystem(filesystem)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
         .setArtifactCache(artifactCache)
@@ -717,7 +705,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         ((BuildableAbstractCachingBuildRule) buildRule).isInitializedFromDisk());
     assertTrue(
         "The entries in the zip should be extracted as a result of building the rule.",
-        new File(tmp.getRoot(), "buck-out/gen/src/com/facebook/orca/orca.jar").isFile());
+        filesystem.exists(Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar")));
   }
 
   @Test
