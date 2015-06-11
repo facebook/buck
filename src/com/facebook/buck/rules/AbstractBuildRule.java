@@ -38,6 +38,7 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;
   private final ImmutableSortedSet<BuildRule> declaredDeps;
+  private final ImmutableSortedSet<BuildRule> extraDeps;
   private final ImmutableSortedSet<BuildRule> deps;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final SourcePathResolver resolver;
@@ -47,6 +48,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
+    this.extraDeps = buildRuleParams.getExtraDeps();
     this.deps = buildRuleParams.getDeps();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
     this.resolver = resolver;
@@ -75,6 +77,10 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   public final ImmutableSortedSet<BuildRule> getDeclaredDeps() {
     return declaredDeps;
+  }
+
+  private ImmutableSortedSet<BuildRule> getExtraDeps() {
+    return extraDeps;
   }
 
   @Override
@@ -141,7 +147,8 @@ public abstract class AbstractBuildRule implements BuildRule {
           RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(this);
           RuleKey ruleKeyWithoutDeps = builder.build();
           // Now introduce the deps into the RuleKey.
-          builder.setReflectively("deps", getDeps());
+          builder.setReflectively("deps", getDeclaredDeps());
+          builder.setReflectively("buck.extraDeps", getExtraDeps());
           RuleKey totalRuleKey = builder.build();
           ruleKeyPair = RuleKeyPair.of(totalRuleKey, ruleKeyWithoutDeps);
         }
