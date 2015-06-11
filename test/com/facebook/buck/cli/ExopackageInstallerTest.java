@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.cli.ExopackageInstaller.NATIVE_LIB_PATTERN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -82,9 +81,8 @@ public class ExopackageInstallerTest {
   }
 
   @Test
-  public void testParsePathAndPackageInfo() {
+  public void testParsePackageInfo() {
     String lines =
-        "package:/data/app/com.facebook.katana-1.apk\r\n" +
         "  Package [com.facebook.katana] (4229ce68):\r\n" +
         "    userId=10145 gids=[1028, 1015, 3003]\r\n" +
         "    pkg=Package{42690b80 com.facebook.katana}\r\n" +
@@ -94,8 +92,9 @@ public class ExopackageInstallerTest {
         "    versionCode=1640376 targetSdk=14\r\n" +
         "    versionName=8.0.0.0.23\r\n" +
         "";
-    Optional<ExopackageInstaller.PackageInfo> optionalInfo =
-        ExopackageInstaller.parsePathAndPackageInfo("com.facebook.katana", lines);
+    Optional<ExopackageInstaller.PackageInfo> optionalInfo = ExopackageInstaller.parsePackageInfo(
+        "com.facebook.katana",
+        lines);
 
     assertTrue(optionalInfo.isPresent());
     ExopackageInstaller.PackageInfo info = optionalInfo.get();
@@ -106,9 +105,8 @@ public class ExopackageInstallerTest {
   }
 
   @Test
-  public void testParsePathAndPackageInfoOnLollipop() {
+  public void testParsePackageInfoOnLollipop() {
     String lines =
-        "package:/data/app/com.facebook.buck.android.agent-1.apk\r\n" +
         "  Package [com.facebook.buck.android.agent] (3f784d07):\r\n" +
         "    userId=10062 gids=[]\r\n" +
         "    pkg=Package{81b1e34 com.facebook.buck.android.agent}\r\n" +
@@ -120,8 +118,9 @@ public class ExopackageInstallerTest {
         "    versionCode=3 targetSdk=19\r\n" +
         "    versionName=3\r\n" +
         "";
-    Optional<ExopackageInstaller.PackageInfo> optionalInfo =
-        ExopackageInstaller.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
+    Optional<ExopackageInstaller.PackageInfo> optionalInfo = ExopackageInstaller.parsePackageInfo(
+        "com.facebook.buck.android.agent",
+        lines);
 
     assertTrue(optionalInfo.isPresent());
     ExopackageInstaller.PackageInfo info = optionalInfo.get();
@@ -129,24 +128,6 @@ public class ExopackageInstallerTest {
     assertEquals("/data/app/com.facebook.buck.android.agent-1/base.apk", info.apkPath);
     assertEquals("/data/app/com.facebook.buck.android.agent-1/lib", info.nativeLibPath);
     assertEquals("3", info.versionCode);
-  }
-
-  @Test
-  public void testParseOnlyPackageInfo() {
-    String lines =
-        "  Package [com.facebook.katana] (4229ce68):\r\n" +
-            "    userId=10145 gids=[1028, 1015, 3003]\r\n" +
-            "    pkg=Package{42690b80 com.facebook.katana}\r\n" +
-            "    codePath=/data/app/com.facebook.katana-1.apk\r\n" +
-            "    resourcePath=/data/app/com.facebook.katana-1.apk\r\n" +
-            "    nativeLibraryPath=/data/app-lib/com.facebook.katana-1\r\n" +
-            "    versionCode=1640376 targetSdk=14\r\n" +
-            "    versionName=8.0.0.0.23\r\n" +
-            "";
-    Optional<ExopackageInstaller.PackageInfo> optionalInfo =
-        ExopackageInstaller.parsePathAndPackageInfo("com.facebook.katana", lines);
-
-    assertFalse(optionalInfo.isPresent());
   }
 
   @Test

@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -369,7 +368,7 @@ public class ExopackageInstaller {
           "get_package_info",
           ImmutableMap.of("package", packageName))) {
 
-        /* "dumpsys package <package>" produces output that looks like
+        /* This produces output that looks like
 
           Package [com.facebook.katana] (4229ce68):
             userId=10145 gids=[1028, 1015, 3003]
@@ -383,14 +382,10 @@ public class ExopackageInstaller {
             ...
 
          */
-        // We call "pm path" because "dumpsys package" returns valid output if an app has been
-        // uninstalled using the "--keepdata" option. "pm path", on the other hand, returns an empty
-        // output in that case.
         String lines = AdbHelper.executeCommandWithErrorChecking(
-            device,
-            String.format("pm path %s && dumpsys package %s", packageName, packageName));
+            device, "dumpsys package " + packageName);
 
-        return parsePathAndPackageInfo(packageName, lines);
+        return parsePackageInfo(packageName, lines);
       }
     }
 
@@ -723,14 +718,7 @@ public class ExopackageInstaller {
   }
 
   @VisibleForTesting
-  static Optional<PackageInfo> parsePathAndPackageInfo(String packageName, String rawOutput) {
-    Iterable<String> lines = Splitter.on("\r\n").omitEmptyStrings().split(rawOutput);
-    String pmPathPrefix = "package:";
-    String pmPath = Iterables.getFirst(lines, null);
-    if (pmPath == null || !pmPath.startsWith(pmPathPrefix)) {
-      return Optional.absent();
-    }
-
+  static Optional<PackageInfo> parsePackageInfo(String packageName, String lines) {
     final String packagePrefix = "  Package [" + packageName + "] (";
     final String otherPrefix = "  Package [";
     boolean sawPackageLine = false;
@@ -741,7 +729,7 @@ public class ExopackageInstaller {
     String nativeLibPath = null;
     String versionCode = null;
 
-    for (String line : lines) {
+    for (String line : Splitter.on("\r\n").split(lines)) {
       // Just ignore everything until we see the line that says we are in the right package.
       if (line.startsWith(packagePrefix)) {
         sawPackageLine = true;
