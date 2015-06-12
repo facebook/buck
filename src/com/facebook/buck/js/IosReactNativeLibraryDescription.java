@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSet;
 public class IosReactNativeLibraryDescription
     implements Description<ReactNativeLibraryArgs>, Flavored {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("ios_react_native_library");
+  public static final BuildRuleType TYPE = BuildRuleType.of("ios_react_native_library");
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
 

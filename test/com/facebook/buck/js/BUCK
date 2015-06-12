@@ -5,6 +5,7 @@ java_test(
     '//src/com/facebook/buck/js:js',
   ],
   deps = [
+    '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/android:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',

@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -64,8 +63,6 @@ public class AppleTestDescription implements
     ImplicitDepsInferringDescription<AppleTestDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_test");
-
-  private static final Logger LOG = Logger.get(AppleTestDescription.class);
 
   /**
    * Flavors for the additional generated build rules.
@@ -237,17 +234,19 @@ public class AppleTestDescription implements
             appleCxxPlatform.getAppleSdk().getApplePlatform());
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    ImmutableSet<AppleResourceDescription.Arg> resourceDescriptions =
-        AppleResources.collectRecursiveResources(
-            params.getTargetGraph(),
-            ImmutableSet.of(params.getTargetGraph().get(params.getBuildTarget())));
-    LOG.debug("Got resource nodes %s", resourceDescriptions);
     ImmutableSet.Builder<SourcePath> resourceDirsBuilder = ImmutableSet.builder();
-    AppleResources.addResourceDirsToBuilder(resourceDirsBuilder, resourceDescriptions);
-    ImmutableSet<SourcePath> resourceDirs = resourceDirsBuilder.build();
-
+    ImmutableSet.Builder<SourcePath> dirsContainingResourceDirsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> resourceFilesBuilder = ImmutableSet.builder();
-    AppleResources.addResourceFilesToBuilder(resourceFilesBuilder, resourceDescriptions);
+    AppleResources.collectResourceDirsAndFiles(
+        params.getTargetGraph(),
+        Preconditions.checkNotNull(params.getTargetGraph().get(params.getBuildTarget())),
+        params.getProjectFilesystem(),
+        resourceDirsBuilder,
+        dirsContainingResourceDirsBuilder,
+        resourceFilesBuilder);
+
+    ImmutableSet<SourcePath> resourceDirs = resourceDirsBuilder.build();
+    ImmutableSet<SourcePath> dirsContainingResourceDirs = dirsContainingResourceDirsBuilder.build();
     ImmutableSet<SourcePath> resourceFiles = resourceFilesBuilder.build();
 
     CollectedAssetCatalogs collectedAssetCatalogs =
@@ -280,7 +279,10 @@ public class AppleTestDescription implements
                             params.getBuildTarget(),
                             resolver,
                             SourcePaths.filterBuildTargetSourcePaths(
-                                Iterables.concat(resourceFiles, resourceDirs))))
+                                Iterables.concat(
+                                    resourceFiles,
+                                    resourceDirs,
+                                    dirsContainingResourceDirs))))
                     .build()),
             Suppliers.ofInstance(params.getExtraDeps())),
         sourcePathResolver,
@@ -291,6 +293,7 @@ public class AppleTestDescription implements
         destinations,
         resourceDirs,
         resourceFiles,
+        dirsContainingResourceDirsBuilder.build(),
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         bundledAssetCatalogs,

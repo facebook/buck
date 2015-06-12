@@ -114,7 +114,7 @@ public class ReactNativeLibraryGraphEnhancer {
               paramsForResource,
               sourcePathResolver,
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
-              new PathSourcePath(params.getProjectFilesystem(), bundle.getPathToResources()),
+              new PathSourcePath(params.getProjectFilesystem(), bundle.getResources()),
               /* resSrcs */ ImmutableSortedSet.<Path>of(),
               args.rDotJavaPackage.get(),
               /* assets */ null,

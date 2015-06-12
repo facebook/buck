@@ -36,6 +36,8 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 /**
  * Responsible for running the React Native JS packager in order to generate a single {@code .js}
  * bundle along with resources referenced by the javascript code.
@@ -54,8 +56,11 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   @AddToRuleKey
   private final ReactNativePlatform platform;
 
+  @AddToRuleKey
+  private final String bundleName;
+
   private final ReactNativeDeps depsFinder;
-  private final Path jsOutput;
+  private final Path jsOutputDir;
   private final Path resource;
 
   protected ReactNativeBundle(
@@ -70,12 +75,13 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     super(ruleParams, resolver);
     this.entryPath = entryPath;
     this.isDevMode = isDevMode;
+    this.bundleName = bundleName;
     this.jsPackager = jsPackager;
     this.platform = platform;
     this.depsFinder = depsFinder;
     BuildTarget buildTarget = ruleParams.getBuildTarget();
-    this.jsOutput = BuildTargets.getGenPath(buildTarget, "__%s_js__/").resolve(bundleName);
-    this.resource = BuildTargets.getGenPath(buildTarget, "__%s_res__/").resolve("res");
+    this.jsOutputDir = getPathToJSBundleDir(buildTarget);
+    this.resource = getPathToResources(buildTarget);
   }
 
   @Override
@@ -83,6 +89,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       BuildContext context,
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    final Path jsOutput = jsOutputDir.resolve(bundleName);
     steps.add(new MakeCleanDirectoryStep(jsOutput.getParent()));
     steps.add(new MakeCleanDirectoryStep(resource));
 
@@ -106,22 +113,31 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
                 "--assets-dest", filesystem.resolve(resource).toString());
           }
         });
-    buildableContext.recordArtifact(jsOutput);
+    buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
     return steps.build();
   }
 
-  public Path getPathToJSBundleDir() {
-    return jsOutput.getParent();
+  public Path getJSBundleDir() {
+    return jsOutputDir;
   }
 
-  public Path getPathToResources() {
+  public Path getResources() {
     return resource;
   }
 
+  public static Path getPathToJSBundleDir(BuildTarget target) {
+    return BuildTargets.getGenPath(target, "__%s_js__/");
+  }
+
+  public static Path getPathToResources(BuildTarget target) {
+    return BuildTargets.getGenPath(target, "__%s_res__/");
+  }
+
   @Override
+  @Nullable
   public Path getPathToOutput() {
-    return jsOutput;
+    return null;
   }
 
   @Override

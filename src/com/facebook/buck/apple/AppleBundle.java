@@ -85,6 +85,9 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final Set<SourcePath> resourceFiles;
 
   @AddToRuleKey
+  private final Set<SourcePath> dirsContainingResourceDirs;
+
+  @AddToRuleKey
   private final Tool ibtool;
 
   @AddToRuleKey
@@ -117,6 +120,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       AppleBundleDestinations destinations,
       Set<SourcePath> resourceDirs,
       Set<SourcePath> resourceFiles,
+      Set<SourcePath> dirsContainingResourceDirs,
       Tool ibtool,
       Tool dsymutil,
       Set<AppleAssetCatalog> bundledAssetCatalogs,
@@ -134,6 +138,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.destinations = destinations;
     this.resourceDirs = resourceDirs;
     this.resourceFiles = resourceFiles;
+    this.dirsContainingResourceDirs = dirsContainingResourceDirs;
     this.ibtool = ibtool;
     this.dsymutil = dsymutil;
     this.bundledAssetCatalogs = ImmutableSet.copyOf(bundledAssetCatalogs);
@@ -226,8 +231,8 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
                   bundleBinaryPath.getFileName().toString() + ".dSYM")));
     }
 
+    Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     for (SourcePath dir : resourceDirs) {
-      Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
       stepsBuilder.add(new MkdirStep(bundleDestinationPath));
       stepsBuilder.add(
           CopyStep.forDirectory(
@@ -235,8 +240,15 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
               bundleDestinationPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
+    for (SourcePath dir : dirsContainingResourceDirs) {
+      stepsBuilder.add(new MkdirStep(bundleDestinationPath));
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              getResolver().getPath(dir),
+              bundleDestinationPath,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
     for (SourcePath file : resourceFiles) {
-      Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
       stepsBuilder.add(new MkdirStep(bundleDestinationPath));
       Path resolvedFilePath = getResolver().getPath(file);
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());

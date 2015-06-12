@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 public class AndroidReactNativeLibrary extends AbstractBuildRule implements AndroidPackageable {
 
   private final ReactNativeBundle bundle;
@@ -50,7 +52,7 @@ public class AndroidReactNativeLibrary extends AbstractBuildRule implements Andr
   public void addToCollector(AndroidPackageableCollector collector) {
     collector.addAssetsDirectory(
         getBuildTarget(),
-        new PathSourcePath(getProjectFilesystem(), bundle.getPathToJSBundleDir()));
+        new PathSourcePath(getProjectFilesystem(), bundle.getJSBundleDir()));
   }
 
   @Override
@@ -61,6 +63,7 @@ public class AndroidReactNativeLibrary extends AbstractBuildRule implements Andr
   }
 
   @Override
+  @Nullable
   public Path getPathToOutput() {
     return bundle.getPathToOutput();
   }
