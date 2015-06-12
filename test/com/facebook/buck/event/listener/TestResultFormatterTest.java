@@ -80,7 +80,8 @@ public class TestResultFormatterTest {
         false,
         TestSelectorList.empty(),
         false,
-        ImmutableSet.of("//:example", "//foo:bar"));
+        ImmutableSet.of("//:example", "//foo:bar"),
+        TestResultFormatter.FormatMode.BEFORE_TEST_RUN);
 
     assertEquals("TESTING //:example //foo:bar", toString(builder));
   }
@@ -95,7 +96,13 @@ public class TestResultFormatterTest {
 
     ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
 
-    formatter.runStarted(builder, false, testSelectorList, false, targetNames);
+    formatter.runStarted(
+        builder,
+        false,
+        testSelectorList,
+        false,
+        targetNames,
+        TestResultFormatter.FormatMode.BEFORE_TEST_RUN);
 
     assertEquals("TESTING SELECTED TESTS", toString(builder));
   }
@@ -111,7 +118,13 @@ public class TestResultFormatterTest {
     ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
     boolean shouldExplain = true;
 
-    formatter.runStarted(builder, false, testSelectorList, shouldExplain, targetNames);
+    formatter.runStarted(
+        builder,
+        false,
+        testSelectorList,
+        shouldExplain,
+        targetNames,
+        TestResultFormatter.FormatMode.BEFORE_TEST_RUN);
 
     String expected = "TESTING SELECTED TESTS\n" +
         "include class:com.example.clown.Car$ method:<any>\n" +
@@ -127,9 +140,31 @@ public class TestResultFormatterTest {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
 
-    formatter.runStarted(builder, true, TestSelectorList.empty(), false, targetNames);
+    formatter.runStarted(
+        builder,
+        true,
+        TestSelectorList.empty(),
+        false,
+        targetNames,
+        TestResultFormatter.FormatMode.BEFORE_TEST_RUN);
 
     assertEquals("TESTING ALL TESTS", toString(builder));
+  }
+
+  @Test
+  public void shouldShowThatAllTestAreBeingRunWhenRunIsStartedWithFormatModeAfterTestRun() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
+
+    formatter.runStarted(
+        builder,
+        true,
+        TestSelectorList.empty(),
+        false,
+        targetNames,
+        TestResultFormatter.FormatMode.AFTER_TEST_RUN);
+
+    assertEquals("RESULTS FOR ALL TESTS", toString(builder));
   }
 
   @Test

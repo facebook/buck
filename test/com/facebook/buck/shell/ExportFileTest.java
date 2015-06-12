@@ -258,7 +258,8 @@ public class ExportFileTest {
                   List<Step> steps,
                   Callable<T> interpretResults,
                   Optional<BuildTarget> buildTarget,
-                  ListeningExecutorService service) {
+                  ListeningExecutorService service,
+                  StepRunner.StepRunningCallback callback) {
                 return null;
               }
 
@@ -266,7 +267,8 @@ public class ExportFileTest {
               public void runStepsInParallelAndWait(
                   List<Step> steps,
                   Optional<BuildTarget> target,
-                  ListeningExecutorService service)
+                  ListeningExecutorService service,
+                  StepRunner.StepRunningCallback callback)
                   throws StepFailedException {
                 // Do nothing.
               }

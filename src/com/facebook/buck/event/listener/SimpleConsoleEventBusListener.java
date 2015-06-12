@@ -104,7 +104,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         event.isRunAllTests(),
         event.getTestSelectorList(),
         event.shouldExplainTestSelectorList(),
-        event.getTargetNames());
+        event.getTargetNames(),
+        TestResultFormatter.FormatMode.BEFORE_TEST_RUN);
     printLines(lines);
   }
 

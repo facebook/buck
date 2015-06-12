@@ -44,6 +44,7 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.result.groups.TestResultsGrouper;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.BuckConstant;
@@ -291,13 +292,31 @@ public class TestRunning {
       }
     }
 
+    final StepRunner.StepRunningCallback testStepRunningCallback =
+        new StepRunner.StepRunningCallback() {
+          @Override
+          public void stepsWillRun(Optional<BuildTarget> buildTarget) {
+            Preconditions.checkState(buildTarget.isPresent());
+            LOG.debug("Test steps will run for %s", buildTarget);
+            params.getBuckEventBus().post(TestRuleEvent.started(buildTarget.get()));
+          }
+
+          @Override
+          public void stepsDidRun(Optional<BuildTarget> buildTarget) {
+            Preconditions.checkState(buildTarget.isPresent());
+            LOG.debug("Test steps did run for %s", buildTarget);
+            params.getBuckEventBus().post(TestRuleEvent.finished(buildTarget.get()));
+          }
+        };
+
     for (TestRun testRun : parallelTestRuns) {
       ListenableFuture<TestResults> testResults =
           stepRunner.runStepsAndYieldResult(
               testRun.getSteps(),
               testRun.getTestResultsCallable(),
               Optional.of(testRun.getTest().getBuildTarget()),
-              service);
+              service,
+              testStepRunningCallback);
         results.add(
             transformTestResults(
                 params,
@@ -332,7 +351,8 @@ public class TestRunning {
                           testRun.getSteps(),
                           testRun.getTestResultsCallable(),
                           Optional.of(testRun.getTest().getBuildTarget()),
-                          directExecutorService),
+                          directExecutorService,
+                          testStepRunningCallback),
                       grouper,
                       testRun.getTest(),
                       testTargets,

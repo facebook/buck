@@ -79,15 +79,18 @@ public final class DefaultStepRunner implements StepRunner {
       final List<Step> steps,
       final Callable<T> interpretResults,
       final Optional<BuildTarget> buildTarget,
-      ListeningExecutorService listeningExecutorService) {
+      ListeningExecutorService listeningExecutorService,
+      final StepRunningCallback callback) {
     Preconditions.checkState(!listeningExecutorService.isShutdown());
     Callable<T> callable = new Callable<T>() {
 
       @Override
       public T call() throws Exception {
+        callback.stepsWillRun(buildTarget);
         for (Step step : steps) {
           runStepForBuildTarget(step, buildTarget);
         }
+        callback.stepsDidRun(buildTarget);
 
         return interpretResults.call();
       }
@@ -107,7 +110,8 @@ public final class DefaultStepRunner implements StepRunner {
   public void runStepsInParallelAndWait(
       final List<Step> steps,
       final Optional<BuildTarget> target,
-      ListeningExecutorService listeningExecutorService)
+      ListeningExecutorService listeningExecutorService,
+      final StepRunningCallback callback)
       throws StepFailedException, InterruptedException {
     List<Callable<Void>> callables = Lists.transform(steps,
         new Function<Step, Callable<Void>>() {
@@ -124,7 +128,9 @@ public final class DefaultStepRunner implements StepRunner {
     });
 
     try {
+      callback.stepsWillRun(target);
       MoreFutures.getAll(listeningExecutorService, callables);
+      callback.stepsDidRun(target);
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
       Throwables.propagateIfInstanceOf(cause, StepFailedException.class);

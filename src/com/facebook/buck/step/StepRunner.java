@@ -35,6 +35,19 @@ public interface StepRunner {
   public void runStepForBuildTarget(Step step, Optional<BuildTarget> buildTarget)
       throws StepFailedException, InterruptedException;
 
+  public interface StepRunningCallback {
+    void stepsWillRun(Optional<BuildTarget> buildTarget);
+    void stepsDidRun(Optional<BuildTarget> buildTarget);
+  }
+
+  public static final StepRunningCallback NOOP_CALLBACK = new StepRunningCallback() {
+      @Override
+      public void stepsWillRun(Optional<BuildTarget> buildTarget) { }
+
+      @Override
+      public void stepsDidRun(Optional<BuildTarget> buildTarget) { }
+  };
+
   /**
    * In a new thread, executes of the list of commands and then invokes {@code interpretResults} to
    * return a value that represents the output of the commands.
@@ -43,12 +56,14 @@ public interface StepRunner {
       List<Step> steps,
       Callable<T> interpretResults,
       Optional<BuildTarget> buildTarget,
-      ListeningExecutorService service);
+      ListeningExecutorService service,
+      StepRunningCallback callback);
 
   public void runStepsInParallelAndWait(
       List<Step> steps,
       Optional<BuildTarget> target,
-      ListeningExecutorService service)
+      ListeningExecutorService service,
+      StepRunningCallback callback)
       throws StepFailedException, InterruptedException;
 
   /**

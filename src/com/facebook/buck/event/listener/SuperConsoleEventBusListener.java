@@ -24,9 +24,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.CacheResult;
-import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.test.TestRuleEvent;
+import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResults;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
@@ -45,6 +48,7 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -71,11 +75,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
 
   private final Optional<WebServer> webServer;
-  private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>> threadsToRunningEvent;
+  private final ConcurrentMap<Long, Optional<? extends BuildRuleEvent>>
+      threadsToRunningBuildRuleEvent;
+  private final ConcurrentMap<Long, Optional<? extends TestRuleEvent>>
+      threadsToRunningTestRuleEvent;
+  private final ConcurrentMap<Long, Optional<? extends TestSummaryEvent>>
+      threadsToRunningTestSummaryEvent;
   private final ConcurrentMap<Long, Optional<? extends LeafEvent>> threadsToRunningStep;
 
   // Time previously suspended runs of this rule.
-  private final ConcurrentMap<BuildTarget, AtomicLong> accumulatedBuildRuleTime;
+  private final ConcurrentMap<BuildTarget, AtomicLong> accumulatedRuleTime;
 
   // Counts the rules that have updated rule keys.
   private final AtomicInteger updated = new AtomicInteger(0);
@@ -91,6 +100,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final TestResultFormatter testFormatter;
 
+  private final AtomicInteger testPasses = new AtomicInteger(0);
+  private final AtomicInteger testFailures = new AtomicInteger(0);
+  private final AtomicInteger testSkips = new AtomicInteger(0);
+
+  private final AtomicReference<TestRunEvent.Started> testRunStarted;
+  private final AtomicReference<TestRunEvent.Finished> testRunFinished;
+
+  private final ImmutableList.Builder<String> testReportBuilder = ImmutableList.builder();
+
   private int lastNumLinesPrinted;
 
   public SuperConsoleEventBusListener(
@@ -100,15 +118,22 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Optional<WebServer> webServer) {
     super(console, clock);
     this.webServer = webServer;
-    this.threadsToRunningEvent = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
+    this.threadsToRunningBuildRuleEvent = new ConcurrentHashMap<>(
+        executionEnvironment.getAvailableCores());
+    this.threadsToRunningTestRuleEvent = new ConcurrentHashMap<>(
+        executionEnvironment.getAvailableCores());
+    this.threadsToRunningTestSummaryEvent = new ConcurrentHashMap<>(
+        executionEnvironment.getAvailableCores());
     this.threadsToRunningStep = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
-    this.accumulatedBuildRuleTime = new ConcurrentHashMap<>();
+    this.accumulatedRuleTime = new ConcurrentHashMap<>();
 
     this.logEvents = new ConcurrentLinkedQueue<>();
 
     this.renderScheduler = Executors.newScheduledThreadPool(1,
         new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
     this.testFormatter = new TestResultFormatter(console.getAnsi(), console.getVerbosity());
+    this.testRunStarted = new AtomicReference<>();
+    this.testRunFinished = new AtomicReference<>();
   }
 
   /**
@@ -238,6 +263,19 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         renderRules(currentTimeMillis, lines);
       }
 
+      long testRunTime = logEventPair(
+          "TESTING",
+          renderTestSuffix(),
+          currentTimeMillis,
+          0,
+          testRunStarted.get(),
+          testRunFinished.get(),
+          lines);
+
+      if (testRunTime == UNFINISHED_EVENT_PAIR) {
+        renderTestRun(currentTimeMillis, lines);
+      }
+
       logEventPair("INSTALLING",
           /* suffix */ Optional.<String>absent(),
           currentTimeMillis,
@@ -273,7 +311,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private void renderRules(long currentMillis, ImmutableList.Builder<String> lines) {
     // Sort events by thread id.
     ImmutableList<Map.Entry<Long, Optional<? extends BuildRuleEvent>>> eventsByThread =
-        FluentIterable.from(threadsToRunningEvent.entrySet())
+        FluentIterable.from(threadsToRunningBuildRuleEvent.entrySet())
           .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends BuildRuleEvent>>>() {
             @Override
             public int compare(Map.Entry<Long, Optional<? extends BuildRuleEvent>> a,
@@ -291,7 +329,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         threadLine += "IDLE";
         threadLine = ansi.asSubtleText(threadLine);
       } else {
-        AtomicLong accumulatedTime = accumulatedBuildRuleTime.get(
+        AtomicLong accumulatedTime = accumulatedRuleTime.get(
             startedEvent.get().getBuildRule().getBuildTarget());
         long elapsedTimeMs =
             (currentMillis - startedEvent.get().getTimestamp()) +
@@ -327,6 +365,96 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   /**
+   * Adds lines for rendering the rules that are currently running.
+   * @param currentMillis The time in ms to use when computing elapsed times.
+   * @param lines Builder of lines to render this frame.
+   */
+  private void renderTestRun(long currentMillis, ImmutableList.Builder<String> lines) {
+    // Sort events by thread id.
+    ImmutableList<Map.Entry<Long, Optional<? extends TestRuleEvent>>> eventsByThread =
+        FluentIterable.from(threadsToRunningTestRuleEvent.entrySet())
+          .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends TestRuleEvent>>>() {
+            @Override
+            public int compare(Map.Entry<Long, Optional<? extends TestRuleEvent>> a,
+                               Map.Entry<Long, Optional<? extends TestRuleEvent>> b) {
+              return Long.signum(a.getKey() - b.getKey());
+            }
+          });
+
+    // For each thread that has ever run a rule, render information about that thread.
+    for (Map.Entry<Long, Optional<? extends TestRuleEvent>> entry : eventsByThread) {
+      String threadLine = " |=> ";
+      Optional<? extends TestRuleEvent> startedEvent = entry.getValue();
+
+      if (!startedEvent.isPresent()) {
+        threadLine += "IDLE";
+        threadLine = ansi.asSubtleText(threadLine);
+      } else {
+        AtomicLong accumulatedTime = accumulatedRuleTime.get(
+            startedEvent.get().getBuildTarget());
+        long elapsedTimeMs =
+            (currentMillis - startedEvent.get().getTimestamp()) +
+            (accumulatedTime != null ? accumulatedTime.get() : 0);
+
+        threadLine += String.format("%s...  %s",
+            startedEvent.get().getBuildTarget(),
+            formatElapsedTime(elapsedTimeMs));
+
+        Optional<? extends TestSummaryEvent> summaryEvent = threadsToRunningTestSummaryEvent.get(
+            entry.getKey());
+        Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
+        String eventName;
+        long eventTime;
+        if (summaryEvent != null && summaryEvent.isPresent()) {
+          eventName = summaryEvent.get().getTestName();
+          eventTime = summaryEvent.get().getTimestamp();
+        } else if (leafEvent != null && leafEvent.isPresent()) {
+          eventName = leafEvent.get().getCategory();
+          eventTime = leafEvent.get().getTimestamp();
+        } else {
+          eventName = null;
+          eventTime = 0;
+        }
+        if (eventName != null) {
+          threadLine += String.format(
+              " (running %s[%s])",
+              eventName,
+              formatElapsedTime(currentMillis - eventTime));
+        }
+
+        if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
+          if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
+            threadLine = ansi.asErrorText(threadLine);
+          } else {
+            threadLine = ansi.asWarningText(threadLine);
+          }
+        }
+      }
+      lines.add(threadLine);
+    }
+  }
+
+  private Optional<String> renderTestSuffix() {
+    int testPassesVal = testPasses.get();
+    int testFailuresVal = testFailures.get();
+    int testSkipsVal = testSkips.get();
+    if (testSkipsVal > 0) {
+      return Optional.of(
+          String.format(
+              "(%d PASS/%d SKIP/%d FAIL)",
+              testPassesVal,
+              testSkipsVal,
+              testFailuresVal));
+    } else {
+      return Optional.of(
+          String.format(
+              "(%d PASS/%d FAIL)",
+              testPassesVal,
+              testFailuresVal));
+    }
+  }
+
+  /**
    * @return A string of ansi characters that will clear the last set of lines printed by
    *     {@link SuperConsoleEventBusListener#createRenderLinesAtTime(long)}.
    */
@@ -341,14 +469,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
-    threadsToRunningEvent.put(started.getThreadId(), Optional.of(started));
-    accumulatedBuildRuleTime.put(started.getBuildRule().getBuildTarget(), new AtomicLong(0));
+    threadsToRunningBuildRuleEvent.put(started.getThreadId(), Optional.of(started));
+    accumulatedRuleTime.put(started.getBuildRule().getBuildTarget(), new AtomicLong(0));
   }
 
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
-    threadsToRunningEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
-    accumulatedBuildRuleTime.remove(finished.getBuildRule().getBuildTarget());
+    threadsToRunningBuildRuleEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
+    accumulatedRuleTime.remove(finished.getBuildRule().getBuildTarget());
     CacheResult cacheResult = finished.getCacheResult();
     if (cacheResult.getType() != CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT) {
       updated.incrementAndGet();
@@ -359,10 +487,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
     Optional<? extends BuildRuleEvent> started =
         Preconditions.checkNotNull(
-            threadsToRunningEvent.put(suspended.getThreadId(), Optional.<BuildRuleEvent>absent()));
+            threadsToRunningBuildRuleEvent.put(
+                suspended.getThreadId(),
+                Optional.<BuildRuleEvent>absent()));
     Preconditions.checkState(started.isPresent());
     Preconditions.checkState(suspended.getBuildRule().equals(started.get().getBuildRule()));
-    AtomicLong current = accumulatedBuildRuleTime.get(suspended.getBuildRule().getBuildTarget());
+    AtomicLong current = accumulatedRuleTime.get(suspended.getBuildRule().getBuildTarget());
     // It's technically possible that another thread receives resumed and finished events
     // while we're processing this one, so we have to check that the current counter exists.
     if (current != null) {
@@ -372,7 +502,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    threadsToRunningEvent.put(resumed.getThreadId(), Optional.of(resumed));
+    threadsToRunningBuildRuleEvent.put(resumed.getThreadId(), Optional.of(resumed));
   }
 
   @Subscribe
@@ -406,36 +536,80 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void testRunStarted(TestRunEvent.Started event) {
+    boolean set = testRunStarted.compareAndSet(null, event);
+    Preconditions.checkState(set, "Test run should not start while test run in progress");
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     testFormatter.runStarted(builder,
-        event.isRunAllTests(),
-        event.getTestSelectorList(),
-        event.shouldExplainTestSelectorList(),
-        event.getTargetNames());
-    logEvents.add(ConsoleEvent.info(Joiner.on('\n').join(builder.build())));
-  }
-
-  @Subscribe
-  public void testResultsAvailable(IndividualTestEvent.Finished event) {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    testFormatter.reportResult(builder, event.getResults());
-
-    // We could just format as if this was a log entry, but doing so causes the console to flicker
-    // obscenely and isn't conducive to running tests. Since this is the last step of the build, the
-    // output will still render just fine if we write directly to stderr.
-    ImmutableList<String> lines = builder.build();
-    // When using TestSelectors, we may have a target that produces no test results and therefore
-    // no lines of output, so we should not print anything at all.
-    if (!lines.isEmpty()) {
-      console.getStdErr().println(Joiner.on('\n').join(lines));
+                             event.isRunAllTests(),
+                             event.getTestSelectorList(),
+                             event.shouldExplainTestSelectorList(),
+                             event.getTargetNames(),
+                             TestResultFormatter.FormatMode.AFTER_TEST_RUN);
+    synchronized (testReportBuilder) {
+      testReportBuilder.addAll(builder.build());
     }
   }
 
   @Subscribe
-  public void testRunComplete(TestRunEvent.Finished event) {
+  public void testRunFinished(TestRunEvent.Finished finished) {
+    boolean set = testRunFinished.compareAndSet(null, finished);
+    Preconditions.checkState(set, "Test run should not finish after test run already finished");
+
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    testFormatter.runComplete(builder, event.getResults());
-    console.getStdErr().println(Joiner.on('\n').join(builder.build()));
+    for (TestResults results : finished.getResults()) {
+      testFormatter.reportResult(builder, results);
+    }
+    testFormatter.runComplete(builder, finished.getResults());
+    synchronized (testReportBuilder) {
+      testReportBuilder.addAll(builder.build());
+      logEvents.add(ConsoleEvent.info(Joiner.on('\n').join(testReportBuilder.build())));
+    }
+  }
+
+  @Subscribe
+  public void testRuleStarted(TestRuleEvent.Started started) {
+    threadsToRunningTestRuleEvent.put(started.getThreadId(), Optional.of(started));
+    accumulatedRuleTime.put(started.getBuildTarget(), new AtomicLong(0));
+  }
+
+  @Subscribe
+  public void testRuleFinished(TestRuleEvent.Finished finished) {
+    threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.<TestRuleEvent>absent());
+    accumulatedRuleTime.remove(finished.getBuildTarget());
+  }
+
+  @Subscribe
+  public void testSummaryStarted(TestSummaryEvent.Started started) {
+    threadsToRunningTestSummaryEvent.put(started.getThreadId(), Optional.of(started));
+  }
+
+  @Subscribe
+  public void testSummaryFinished(TestSummaryEvent.Finished finished) {
+    threadsToRunningTestSummaryEvent.put(
+        finished.getThreadId(),
+        Optional.<TestSummaryEvent>absent());
+    TestResultSummary testResult = finished.getTestResultSummary();
+    switch (testResult.getType()) {
+      case SUCCESS:
+        testPasses.incrementAndGet();
+        break;
+      case FAILURE:
+        testFailures.incrementAndGet();
+        // We don't use TestResultFormatter.reportResultSummary() here since that also
+        // includes the stack trace and stdout/stderr.
+        logEvents.add(
+            ConsoleEvent.severe(
+                String.format("%s %s: %s",
+                              testResult.getType().toString(),
+                              testResult.getTestName(),
+                              testResult.getMessage())));
+        break;
+      case ASSUMPTION_VIOLATION:
+        testSkips.incrementAndGet();
+        break;
+      case DRY_RUN:
+        break;
+    }
   }
 
   @Subscribe

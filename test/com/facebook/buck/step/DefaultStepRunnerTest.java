@@ -103,7 +103,11 @@ public class DefaultStepRunnerTest {
     ListeningExecutorService service =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
     DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance());
-    runner.runStepsInParallelAndWait(steps.build(), Optional.<BuildTarget>absent(), service);
+    runner.runStepsInParallelAndWait(
+        steps.build(),
+        Optional.<BuildTarget>absent(),
+        service,
+        StepRunner.NOOP_CALLBACK);
 
     // Success if the test timeout is not reached.
   }

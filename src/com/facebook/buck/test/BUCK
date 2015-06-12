@@ -15,6 +15,7 @@ java_library(
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/util:io',

@@ -38,7 +38,15 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.test.TestCaseSummary;
+import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.TestRuleEvent;
+import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -259,6 +267,801 @@ public class SuperConsoleEventBusListenerTest {
     assertEquals("After stderr is written to by someone other than SuperConsole, rendering " +
         "should be a noop.",
         beforeStderrWrite + "ROFLCOPTER", console.getTextWrittenToStdErr());
+  }
+
+  @Test
+  public void testSimpleTest() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
+    ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
+    Iterable<String> testArgs = Iterables.transform(testTargets, Functions.toStringFunction());
+    FakeBuildRule testBuildRule = new FakeBuildRule(
+        testTarget,
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of());
+
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            new DefaultExecutionEnvironment(
+                new FakeProcessExecutor(),
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+        Optional.<WebServer>absent());
+    eventBus.register(listener);
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Started(),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(console, listener, 0L, ImmutableList.of(
+        formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.0)));
+
+    validateConsole(
+        console, listener, 100L, ImmutableList.of(
+            formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Finished(),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(
+        console, listener, 200L, ImmutableList.of(
+            formatConsoleTimes("[-] PARSING BUCK FILES...FINISHED %s", 0.2)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            BuildEvent.started(testArgs),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(configureTestEventAtTime(
+        ParseEvent.started(testTargets),
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 300L, ImmutableList.of(
+        formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(ParseEvent.finished(testTargets,
+                                                     Optional.<TargetGraph>absent()),
+        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(),
+            400L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String parsingLine = formatConsoleTimes("[-] PROCESSING BUCK FILES...FINISHED %s", 0.2);
+
+    validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
+        formatConsoleTimes("[+] BUILDING...%s", 0.1)));
+
+    rawEventBus.post(configureTestEventAtTime(
+        BuildRuleEvent.started(testBuildRule),
+        600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+
+    validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
+        formatConsoleTimes("[+] BUILDING...%s", 0.4),
+        formatConsoleTimes(" |=> //:test...  %s (checking local cache)", 0.2)));
+
+    rawEventBus.post(configureTestEventAtTime(
+        BuildRuleEvent.finished(
+            testBuildRule,
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss(),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            Optional.<HashCode>absent(),
+            Optional.<Long>absent()),
+        1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    rawEventBus.post(configureTestEventAtTime(
+                         BuildEvent.finished(testArgs, 0),
+                         1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    final String buildingLine = formatConsoleTimes("[-] BUILDING...FINISHED %s", 0.8);
+
+    validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine, buildingLine));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRunEvent.started(
+                true, // isRunAllTests
+                TestSelectorList.empty(),
+                false, // shouldExplainTestSelectorList
+                ImmutableSet.copyOf(testArgs)),
+            2500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3000L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.5)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRuleEvent.started(testTarget),
+            3100L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3200L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.7),
+            formatConsoleTimes(" |=> //:test...  %s", 0.1)));
+
+    UUID stepUuid = new UUID(0, 1);
+    rawEventBus.post(
+        configureTestEventAtTime(
+            StepEvent.started(
+                "step_name",
+                "step_desc",
+                stepUuid),
+            3300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3400L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.9),
+            formatConsoleTimes(" |=> //:test...  %s (running step_name[%s])", 0.3, 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            StepEvent.finished(
+                "step_name",
+                "step_desc",
+                stepUuid,
+                0),
+            3500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3600L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.1),
+            formatConsoleTimes(" |=> //:test...  %s", 0.5)));
+
+    UUID testUUID = new UUID(2, 3);
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestSummaryEvent.started(testUUID, "TestClass", "TestClass.Foo"),
+            3700L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3800L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.3),
+            formatConsoleTimes(" |=> //:test...  %s (running TestClass.Foo[%s])", 0.7, 0.1)));
+
+    TestResultSummary testResultSummary =
+        new TestResultSummary(
+            "TestClass",
+            "TestClass.Foo",
+            ResultType.SUCCESS,
+            0L, // time
+            null, // message
+            null, // stacktrace
+            null, // stdOut
+            null); // stdErr
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestSummaryEvent.finished(
+                testUUID,
+                testResultSummary),
+            3900L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        4000L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (1 PASS/0 FAIL)", 1.5),
+            formatConsoleTimes(" |=> //:test...  %s", 0.9)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRunEvent.finished(
+                ImmutableSet.copyOf(testArgs),
+                ImmutableList.of(
+                    new TestResults(
+                        testTarget,
+                        ImmutableList.of(
+                            new TestCaseSummary(
+                                "TestClass",
+                                ImmutableList.of(
+                                    testResultSummary))),
+                        ImmutableSet.<String>of(), // contacts
+                        ImmutableSet.<String>of()))), // labels
+            4100L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String testingLine = formatConsoleTimes("[-] TESTING...FINISHED %s (1 PASS/0 FAIL)", 1.6);
+
+    validateConsole(
+        console,
+        listener,
+        4200L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            testingLine,
+            "Log:",
+            "RESULTS FOR ALL TESTS",
+            "PASS    <100ms  1 Passed   0 Skipped   0 Failed   TestClass",
+            "TESTS PASSED"));
+  }
+
+  @Test
+  public void testSkippedTest() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
+    ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
+    Iterable<String> testArgs = Iterables.transform(testTargets, Functions.toStringFunction());
+    FakeBuildRule testBuildRule = new FakeBuildRule(
+        testTarget,
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of());
+
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            new DefaultExecutionEnvironment(
+                new FakeProcessExecutor(),
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+        Optional.<WebServer>absent());
+    eventBus.register(listener);
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Started(),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(console, listener, 0L, ImmutableList.of(
+        formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.0)));
+
+    validateConsole(
+        console, listener, 100L, ImmutableList.of(
+            formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Finished(),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(
+        console, listener, 200L, ImmutableList.of(
+            formatConsoleTimes("[-] PARSING BUCK FILES...FINISHED %s", 0.2)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            BuildEvent.started(testArgs),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(configureTestEventAtTime(
+        ParseEvent.started(testTargets),
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 300L, ImmutableList.of(
+        formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(ParseEvent.finished(testTargets,
+                                                     Optional.<TargetGraph>absent()),
+        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(),
+            400L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String parsingLine = formatConsoleTimes("[-] PROCESSING BUCK FILES...FINISHED %s", 0.2);
+
+    validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
+        formatConsoleTimes("[+] BUILDING...%s", 0.1)));
+
+    rawEventBus.post(configureTestEventAtTime(
+        BuildRuleEvent.started(testBuildRule),
+        600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+
+    validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
+        formatConsoleTimes("[+] BUILDING...%s", 0.4),
+        formatConsoleTimes(" |=> //:test...  %s (checking local cache)", 0.2)));
+
+    rawEventBus.post(configureTestEventAtTime(
+        BuildRuleEvent.finished(
+            testBuildRule,
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss(),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            Optional.<HashCode>absent(),
+            Optional.<Long>absent()),
+        1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    rawEventBus.post(configureTestEventAtTime(
+                         BuildEvent.finished(testArgs, 0),
+                         1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    final String buildingLine = formatConsoleTimes("[-] BUILDING...FINISHED %s", 0.8);
+
+    validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine, buildingLine));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRunEvent.started(
+                true, // isRunAllTests
+                TestSelectorList.empty(),
+                false, // shouldExplainTestSelectorList
+                ImmutableSet.copyOf(testArgs)),
+            2500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3000L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.5)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRuleEvent.started(testTarget),
+            3100L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3200L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.7),
+            formatConsoleTimes(" |=> //:test...  %s", 0.1)));
+
+    UUID stepUuid = new UUID(0, 1);
+    rawEventBus.post(
+        configureTestEventAtTime(
+            StepEvent.started(
+                "step_name",
+                "step_desc",
+                stepUuid),
+            3300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3400L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.9),
+            formatConsoleTimes(" |=> //:test...  %s (running step_name[%s])", 0.3, 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            StepEvent.finished(
+                "step_name",
+                "step_desc",
+                stepUuid,
+                0),
+            3500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3600L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.1),
+            formatConsoleTimes(" |=> //:test...  %s", 0.5)));
+
+    UUID testUUID = new UUID(2, 3);
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestSummaryEvent.started(testUUID, "TestClass", "TestClass.Foo"),
+            3700L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3800L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.3),
+            formatConsoleTimes(" |=> //:test...  %s (running TestClass.Foo[%s])", 0.7, 0.1)));
+
+    TestResultSummary testResultSummary =
+        new TestResultSummary(
+            "TestClass",
+            "TestClass.Foo",
+            ResultType.ASSUMPTION_VIOLATION,
+            0L, // time
+            null, // message
+            null, // stacktrace
+            null, // stdOut
+            null); // stdErr
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestSummaryEvent.finished(
+                testUUID,
+                testResultSummary),
+            3900L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        4000L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/1 SKIP/0 FAIL)", 1.5),
+            formatConsoleTimes(" |=> //:test...  %s", 0.9)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRunEvent.finished(
+                ImmutableSet.copyOf(testArgs),
+                ImmutableList.of(
+                    new TestResults(
+                        testTarget,
+                        ImmutableList.of(
+                            new TestCaseSummary(
+                                "TestClass",
+                                ImmutableList.of(
+                                    testResultSummary))),
+                        ImmutableSet.<String>of(), // contacts
+                        ImmutableSet.<String>of()))), // labels
+            4100L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String testingLine = formatConsoleTimes(
+        "[-] TESTING...FINISHED %s (0 PASS/1 SKIP/0 FAIL)",
+        1.6);
+
+    validateConsole(
+        console,
+        listener,
+        4200L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            testingLine,
+            "Log:",
+            "RESULTS FOR ALL TESTS",
+            "ASSUME  <100ms  0 Passed   1 Skipped   0 Failed   TestClass",
+            "TESTS PASSED (with some assumption violations)"));
+  }
+
+  @Test
+  public void testFailingTest() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
+    ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
+    Iterable<String> testArgs = Iterables.transform(testTargets, Functions.toStringFunction());
+    FakeBuildRule testBuildRule = new FakeBuildRule(
+        testTarget,
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of());
+
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            new DefaultExecutionEnvironment(
+                new FakeProcessExecutor(),
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+        Optional.<WebServer>absent());
+    eventBus.register(listener);
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Started(),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(console, listener, 0L, ImmutableList.of(
+        formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.0)));
+
+    validateConsole(
+        console, listener, 100L, ImmutableList.of(
+            formatConsoleTimes("[+] PARSING BUCK FILES...%s", 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectBuildFileParseEvents.Finished(),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(
+        console, listener, 200L, ImmutableList.of(
+            formatConsoleTimes("[-] PARSING BUCK FILES...FINISHED %s", 0.2)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            BuildEvent.started(testArgs),
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(configureTestEventAtTime(
+        ParseEvent.started(testTargets),
+        200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 300L, ImmutableList.of(
+        formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(ParseEvent.finished(testTargets,
+                                                     Optional.<TargetGraph>absent()),
+        300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(),
+            400L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String parsingLine = formatConsoleTimes("[-] PROCESSING BUCK FILES...FINISHED %s", 0.2);
+
+    validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
+        formatConsoleTimes("[+] BUILDING...%s", 0.1)));
+
+    rawEventBus.post(configureTestEventAtTime(
+        BuildRuleEvent.started(testBuildRule),
+        600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+
+    validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
+        formatConsoleTimes("[+] BUILDING...%s", 0.4),
+        formatConsoleTimes(" |=> //:test...  %s (checking local cache)", 0.2)));
+
+    rawEventBus.post(configureTestEventAtTime(
+        BuildRuleEvent.finished(
+            testBuildRule,
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss(),
+            Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+            Optional.<HashCode>absent(),
+            Optional.<Long>absent()),
+        1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    rawEventBus.post(configureTestEventAtTime(
+                         BuildEvent.finished(testArgs, 0),
+                         1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    final String buildingLine = formatConsoleTimes("[-] BUILDING...FINISHED %s", 0.8);
+
+    validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine, buildingLine));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRunEvent.started(
+                true, // isRunAllTests
+                TestSelectorList.empty(),
+                false, // shouldExplainTestSelectorList
+                ImmutableSet.copyOf(testArgs)),
+            2500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3000L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.5)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRuleEvent.started(testTarget),
+            3100L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3200L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.7),
+            formatConsoleTimes(" |=> //:test...  %s", 0.1)));
+
+    UUID stepUuid = new UUID(0, 1);
+    rawEventBus.post(
+        configureTestEventAtTime(
+            StepEvent.started(
+                "step_name",
+                "step_desc",
+                stepUuid),
+            3300L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3400L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.9),
+            formatConsoleTimes(" |=> //:test...  %s (running step_name[%s])", 0.3, 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            StepEvent.finished(
+                "step_name",
+                "step_desc",
+                stepUuid,
+                0),
+            3500L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3600L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.1),
+            formatConsoleTimes(" |=> //:test...  %s", 0.5)));
+
+    UUID testUUID = new UUID(2, 3);
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestSummaryEvent.started(testUUID, "TestClass", "TestClass.Foo"),
+            3700L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        3800L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.3),
+            formatConsoleTimes(" |=> //:test...  %s (running TestClass.Foo[%s])", 0.7, 0.1)));
+
+    TestResultSummary testResultSummary =
+        new TestResultSummary(
+            "TestClass",
+            "TestClass.Foo",
+            ResultType.FAILURE,
+            0L, // time
+            "Foo.java:47: Assertion failure: 'foo' != 'bar'", // message
+            null, // stacktrace
+            "Message on stdout", // stdOut
+            "Message on stderr"); // stdErr
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestSummaryEvent.finished(
+                testUUID,
+                testResultSummary),
+            3900L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(
+        console,
+        listener,
+        4000L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            formatConsoleTimes("[+] TESTING...%s (0 PASS/1 FAIL)", 1.5),
+            formatConsoleTimes(" |=> //:test...  %s", 0.9),
+            "Log:",
+            "FAILURE TestClass.Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'"));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            TestRunEvent.finished(
+                ImmutableSet.copyOf(testArgs),
+                ImmutableList.of(
+                    new TestResults(
+                        testTarget,
+                        ImmutableList.of(
+                            new TestCaseSummary(
+                                "TestClass",
+                                ImmutableList.of(
+                                    testResultSummary))),
+                        ImmutableSet.<String>of(), // contacts
+                        ImmutableSet.<String>of()))), // labels
+            4100L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String testingLine = formatConsoleTimes("[-] TESTING...FINISHED %s (0 PASS/1 FAIL)", 1.6);
+
+    validateConsole(
+        console,
+        listener,
+        4200L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            testingLine,
+            "Log:",
+            "FAILURE TestClass.Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
+            "RESULTS FOR ALL TESTS",
+            "FAIL    <100ms  0 Passed   0 Skipped   1 Failed   TestClass",
+            "FAILURE TestClass.Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
+            "====STANDARD OUT====",
+            "Message on stdout",
+            "====STANDARD ERR====",
+            "Message on stderr",
+            "TESTS FAILED: 1 FAILURE",
+            "Failed target: //:test",
+            "FAIL TestClass"));
   }
 
   @Test

@@ -36,6 +36,11 @@ public class TestResultFormatter {
   private final Ansi ansi;
   private final Verbosity verbosity;
 
+  public enum FormatMode {
+      BEFORE_TEST_RUN,
+      AFTER_TEST_RUN
+  }
+
   public TestResultFormatter(
       Ansi ansi,
       Verbosity verbosity) {
@@ -48,16 +53,23 @@ public class TestResultFormatter {
       boolean isRunAllTests,
       TestSelectorList testSelectorList,
       boolean shouldExplainTestSelectorList,
-      ImmutableSet<String> targetNames) {
+      ImmutableSet<String> targetNames,
+      FormatMode formatMode) {
+    String prefix;
+    if (formatMode == FormatMode.BEFORE_TEST_RUN) {
+      prefix = "TESTING";
+    } else {
+      prefix = "RESULTS FOR";
+    }
     if (!testSelectorList.isEmpty()) {
-      addTo.add("TESTING SELECTED TESTS");
+      addTo.add(prefix + " SELECTED TESTS");
       if (shouldExplainTestSelectorList) {
         addTo.addAll(testSelectorList.getExplanation());
       }
     } else if (isRunAllTests) {
-      addTo.add("TESTING ALL TESTS");
+      addTo.add(prefix + " ALL TESTS");
     } else {
-      addTo.add("TESTING " + Joiner.on(' ').join(targetNames));
+      addTo.add(prefix + " " + Joiner.on(' ').join(targetNames));
     }
   }
 
