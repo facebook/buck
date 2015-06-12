@@ -105,7 +105,9 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
     if (args.main.isPresent()) {
-      LOG.warn("%s: parameter `main` is deprecated, please use `main_module` instead.");
+      LOG.warn(
+          "%s: parameter `main` is deprecated, please use `main_module` instead.",
+          params.getBuildTarget());
       String mainName = pathResolver.getSourcePathName(params.getBuildTarget(), args.main.get());
       Path main = baseModule.resolve(mainName);
       modules.put(baseModule.resolve(mainName), args.main.get());
