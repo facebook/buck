@@ -72,6 +72,7 @@ public class CxxPlatforms {
       Tool cxxld,
       Optional<CxxPlatform.LinkerType> linkerType,
       Tool ld,
+      Iterable<String> ldFlags,
       Tool ar,
       byte[] expectedGlobalHeader,
       Optional<Tool> lex,
@@ -89,6 +90,7 @@ public class CxxPlatforms {
         .setCxxpp(getTool(flavor, "cxxpp", config).or(cxxpp))
         .setCxxld(getTool(flavor, "cxxld", config).or(cxxld))
         .setLd(getLd(flavor, platform, config, linkerType, getTool(flavor, "ld", config).or(ld)))
+        .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).or(ar))
         .setArExpectedGlobalHeader(expectedGlobalHeader)
         .setLex(getTool(flavor, "lex", config).or(lex))

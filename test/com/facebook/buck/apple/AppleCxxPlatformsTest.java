@@ -132,7 +132,11 @@ public class AppleCxxPlatformsTest {
     assertThat(
         cxxPlatform.getCc().getCommandPrefix(resolver),
         hasConsecutiveItems("-mios-version-min=7.0"));
-
+    assertThat(
+        cxxPlatform.getLdflags(),
+        hasConsecutiveItems(
+            "-sdk_version",
+            "8.0"));
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
         cxxPlatform.getCxx().getCommandPrefix(resolver).get(0));

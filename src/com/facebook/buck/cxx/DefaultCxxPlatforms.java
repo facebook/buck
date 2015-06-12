@@ -22,6 +22,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,6 +74,7 @@ public class DefaultCxxPlatforms {
         new HashedFileTool(DEFAULT_CXXLD),
         Optional.<CxxPlatform.LinkerType>absent(),
         new HashedFileTool(DEFAULT_LD),
+        ImmutableList.<String>of(),
         new HashedFileTool(DEFAULT_AR),
         DEFAULT_EXPECTED_GLOBAL_HEADER,
         Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),

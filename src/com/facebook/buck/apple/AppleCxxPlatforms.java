@@ -53,13 +53,13 @@ public class AppleCxxPlatforms {
 
   public static AppleCxxPlatform build(
       AppleSdk targetSdk,
-      String targetVersion,
+      String minVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
       BuckConfig buckConfig) {
     return buildWithExecutableChecker(
         targetSdk,
-        targetVersion,
+        minVersion,
         targetArchitecture,
         sdkPaths,
         buckConfig,
@@ -69,7 +69,7 @@ public class AppleCxxPlatforms {
   @VisibleForTesting
   static AppleCxxPlatform buildWithExecutableChecker(
       AppleSdk targetSdk,
-      String targetVersion,
+      String minVersion,
       String targetArchitecture,
       AppleSdkPaths sdkPaths,
       BuckConfig buckConfig,
@@ -95,19 +95,21 @@ public class AppleCxxPlatforms {
     cflagsBuilder.add("-arch", targetArchitecture);
     switch (targetSdk.getApplePlatform().getName()) {
       case ApplePlatform.Name.IPHONEOS:
-        cflagsBuilder.add("-mios-version-min=" + targetVersion);
+        cflagsBuilder.add("-mios-version-min=" + minVersion);
         break;
       case ApplePlatform.Name.IPHONESIMULATOR:
-        cflagsBuilder.add("-mios-simulator-version-min=" + targetVersion);
+        cflagsBuilder.add("-mios-simulator-version-min=" + minVersion);
         break;
       default:
         // For Mac builds, -mmacosx-version-min=<version>.
         cflagsBuilder.add(
-            "-m" + targetSdk.getApplePlatform().getName() + "-version-min=" + targetVersion);
+            "-m" + targetSdk.getApplePlatform().getName() + "-version-min=" + minVersion);
         break;
     }
     // TODO(user): Add more and better cflags.
     ImmutableList<String> cflags = cflagsBuilder.build();
+
+    ImmutableList<String> ldflags = ImmutableList.of("-sdk_version", targetSdk.getVersion());
 
     ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
     versionsBuilder.add(targetSdk.getVersion());
@@ -196,6 +198,7 @@ public class AppleCxxPlatforms {
         clangXxPath,
         Optional.of(CxxPlatform.LinkerType.DARWIN),
         clangXxPath,
+        ldflags,
         ar,
         "!<arch>\n".getBytes(Charsets.US_ASCII),
         getOptionalTool("lex", toolSearchPaths, executableFinder, version),
