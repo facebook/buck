@@ -248,8 +248,6 @@ public class CxxSourceRuleFactoryTest {
             cSource,
             CxxSourceRuleFactory.PicType.PDC,
             CxxPreprocessMode.SEPARATE);
-    assertContains(cPreprocessAndCompile.getCompilerFlags().get(), explicitCppflags);
-    assertContains(cPreprocessAndCompile.getCompilerFlags().get(), cppflags);
     assertContains(cPreprocessAndCompile.getCompilerFlags().get(), perFileFlagsForTestC);
 
     String cxxSourceName = "test.cpp";
@@ -275,8 +273,6 @@ public class CxxSourceRuleFactoryTest {
             cxxSource,
             CxxSourceRuleFactory.PicType.PDC,
             CxxPreprocessMode.SEPARATE);
-    assertContains(cxxPreprocessAndCompile.getCompilerFlags().get(), explicitCxxppflags);
-    assertContains(cxxPreprocessAndCompile.getCompilerFlags().get(), cxxppflags);
     assertContains(cxxPreprocessAndCompile.getCompilerFlags().get(), perFileFlagsForTestCpp);
 
     String assemblerWithCppSourceName = "test.S";
@@ -301,7 +297,6 @@ public class CxxSourceRuleFactoryTest {
             assemblerWithCppSource,
             CxxSourceRuleFactory.PicType.PDC,
             CxxPreprocessMode.SEPARATE);
-    assertContains(assemblerWithCppPreprocessAndCompile.getCompilerFlags().get(), asppflags);
     assertContains(
         assemblerWithCppPreprocessAndCompile.getCompilerFlags().get(),
         perFileFlagsForTestS);

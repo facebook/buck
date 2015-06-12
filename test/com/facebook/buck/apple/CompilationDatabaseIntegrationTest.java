@@ -218,9 +218,6 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("'" + languageStandard + "'");
     commandArgs.add("-Wno-deprecated");
     commandArgs.add("-Wno-conversion");
-    commandArgs.add("'" + languageStandard + "'");
-    commandArgs.add("-Wno-deprecated");
-    commandArgs.add("-Wno-conversion");
 
     commandArgs.add("-x");
     commandArgs.add(language);

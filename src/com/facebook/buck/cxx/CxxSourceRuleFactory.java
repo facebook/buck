@@ -425,8 +425,6 @@ public class CxxSourceRuleFactory {
     ImmutableList<String> compilerFlags = ImmutableList.<String>builder()
         // If we're using pic, add in the appropriate flag.
         .addAll(pic.getFlags())
-            // Add in preprocessor flags.
-        .addAll(getPreprocessFlags(source.getType()))
             // Add in the platform and source specific compiler flags.
         .addAll(getCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
             // Add in per-source flags.
