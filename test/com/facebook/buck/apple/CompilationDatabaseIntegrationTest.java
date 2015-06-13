@@ -211,6 +211,13 @@ public class CompilationDatabaseIntegrationTest {
       commandArgs.add("-fPIC");
     }
 
+    // TODO(user): these arguments seem to be inserted for preprocessor and compiler
+    commandArgs.add("-isysroot");
+    commandArgs.add(sdkRoot);
+    commandArgs.add("-arch");
+    commandArgs.add("x86_64");
+    commandArgs.add("'-mios-simulator-version-min=8.0'");
+
     // TODO(user, jakubzika): It seems like a bug that this set of flags gets inserted twice.
     // Perhaps this has something to do with how the [cxx] section in .buckconfig is processed.
     // (Err, it's probably adding both the preprocessor and regular rule command suffixes. Should

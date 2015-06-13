@@ -122,15 +122,15 @@ public class AppleCxxPlatformsTest {
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
         cxxPlatform.getCc().getCommandPrefix(resolver).get(0));
     assertThat(
-        cxxPlatform.getCc().getCommandPrefix(resolver),
+        cxxPlatform.getCflags(),
         hasConsecutiveItems(
             "-isysroot",
             Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk").toString()));
     assertThat(
-        cxxPlatform.getCc().getCommandPrefix(resolver),
+        cxxPlatform.getCflags(),
         hasConsecutiveItems("-arch", "armv7"));
     assertThat(
-        cxxPlatform.getCc().getCommandPrefix(resolver),
+        cxxPlatform.getCflags(),
         hasConsecutiveItems("-mios-version-min=7.0"));
     assertThat(
         cxxPlatform.getLdflags(),
@@ -344,12 +344,11 @@ public class AppleCxxPlatformsTest {
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     assertThat(
-        cxxPlatform.getCc().getCommandPrefix(resolver),
+        cxxPlatform.getCflags(),
         hasItem("-mios-simulator-version-min=7.0"));
     assertThat(
-        cxxPlatform.getCxxld().getCommandPrefix(resolver),
+        cxxPlatform.getCxxldflags(),
         hasItem("-mios-simulator-version-min=7.0"));
   }
 }

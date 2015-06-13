@@ -75,11 +75,14 @@ public class CxxPlatforms {
       Iterable<String> ldFlags,
       Tool ar,
       byte[] expectedGlobalHeader,
+      ImmutableList<String> cflags,
+      ImmutableList<String> cppflags,
       Optional<Tool> lex,
       Optional<Tool> yacc,
       Optional<DebugPathSanitizer> debugPathSanitizer) {
     // TODO(user, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
+
     builder
         .setFlavor(flavor)
         .setAs(getTool(flavor, "as", config).or(as))
@@ -97,6 +100,11 @@ public class CxxPlatforms {
         .setYacc(getTool(flavor, "yacc", config).or(yacc))
         .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))
         .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
+    builder.addAllCflags(cflags);
+    builder.addAllCxxflags(cflags);
+    builder.addAllCppflags(cppflags);
+    builder.addAllCxxppflags(cppflags);
+    builder.addAllCxxldflags(cflags);
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
     return builder.build();
   }

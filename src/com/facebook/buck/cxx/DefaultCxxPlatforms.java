@@ -59,7 +59,6 @@ public class DefaultCxxPlatforms {
 
   public static CxxPlatform build(
       Platform platform,
-
       CxxBuckConfig config) {
     return CxxPlatforms.build(
         FLAVOR,
@@ -77,6 +76,8 @@ public class DefaultCxxPlatforms {
         ImmutableList.<String>of(),
         new HashedFileTool(DEFAULT_AR),
         DEFAULT_EXPECTED_GLOBAL_HEADER,
+        ImmutableList.<String>of(),
+        ImmutableList.<String>of(),
         Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
         Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)),
         Optional.<DebugPathSanitizer>absent());
