@@ -14,34 +14,24 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.event;
 
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.model.BuildTargetFactory;
-
 import org.junit.Test;
 
-public class InstallEventTest {
+public class UninstallEventTest {
   @Test
   public void testEquals() throws Exception {
-    InstallEvent started = configureTestEvent(
-        InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
-    InstallEvent startedTwo = configureTestEvent(
-        InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
-    InstallEvent finished = configureTestEvent(
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:bar"), true));
-    InstallEvent finishedDifferentEvent = configureTestEvent(
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:raz"), true));
-    InstallEvent finishedFail = configureTestEvent(
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:bar"), false));
+    UninstallEvent started = configureTestEvent(UninstallEvent.started("com.foo.bar"));
+    UninstallEvent startedTwo = configureTestEvent(UninstallEvent.started("com.foo.bar"));
+    UninstallEvent finished = configureTestEvent(UninstallEvent.finished("com.foo.bar", true));
+    UninstallEvent finishedFail = configureTestEvent(UninstallEvent.finished("com.foo.bar", false));
 
     assertEquals(started, startedTwo);
-    assertNotEquals(finished, finishedDifferentEvent);
     assertNotEquals(started, finished);
     assertNotEquals(finished, finishedFail);
-
   }
 }

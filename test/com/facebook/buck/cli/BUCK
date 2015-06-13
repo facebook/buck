@@ -122,6 +122,7 @@ java_test(
     ':FakeBuckConfig',
     ':testutil',
     '//src/com/facebook/buck/android:exceptions',
+    '//src/com/facebook/buck/android:helpers',
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:utils',

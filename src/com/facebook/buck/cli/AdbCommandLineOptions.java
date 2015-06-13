@@ -16,11 +16,12 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AdbOptions;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.kohsuke.args4j.Option;
 
-public class AdbOptions {
+public class AdbCommandLineOptions {
 
   @VisibleForTesting static final String ADB_THREADS_LONG_ARG = "--adb-threads";
   @VisibleForTesting static final String ADB_THREADS_SHORT_ARG = "-T";
@@ -41,12 +42,10 @@ public class AdbOptions {
   )
   private boolean multiInstallMode;
 
-  public int getAdbThreadCount() {
-    return adbThreadCount;
-  }
-
-  public boolean isMultiInstallModeEnabled() {
-    return multiInstallMode;
+  public AdbOptions getAdbOptions() {
+    return new AdbOptions(
+        adbThreadCount,
+        multiInstallMode);
   }
 
 }

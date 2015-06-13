@@ -23,8 +23,12 @@ import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
+import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.AdbOptions;
+import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
@@ -79,11 +83,11 @@ public class InstallCommand extends BuildCommand {
 
   @AdditionalOptions
   @SuppressFieldNotInitialized
-  private AdbOptions adbOptions;
+  private AdbCommandLineOptions adbOptions;
 
   @AdditionalOptions
   @SuppressFieldNotInitialized
-  private TargetDeviceOptions deviceOptions;
+  private TargetDeviceCommandLineOptions deviceOptions;
 
   @Option(
       name = RUN_LONG_ARG,
@@ -112,11 +116,11 @@ public class InstallCommand extends BuildCommand {
   private String activity = null;
 
   public AdbOptions adbOptions() {
-    return adbOptions;
+    return adbOptions.getAdbOptions();
   }
 
   public TargetDeviceOptions targetDeviceOptions() {
-    return deviceOptions;
+    return deviceOptions.getTargetDeviceOptions();
   }
 
   public UninstallOptions uninstallOptions() {
@@ -196,14 +200,14 @@ public class InstallCommand extends BuildCommand {
         executionContext,
         params.getConsole(),
         params.getBuckEventBus(),
-        params.getBuckConfig());
+        params.getBuckConfig().getRestartAdbOnFailure());
 
     // Uninstall the app first, if requested.
     if (shouldUninstallFirst()) {
       String packageName = AdbHelper.tryToExtractPackageNameFromManifest(
           installableApk,
           executionContext);
-      adbHelper.uninstallApp(packageName, uninstallOptions());
+      adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
@@ -216,7 +220,7 @@ public class InstallCommand extends BuildCommand {
           installableApk)
           .install();
     } else {
-      installSuccess = adbHelper.installApk(installableApk, this);
+      installSuccess = adbHelper.installApk(installableApk, shouldInstallViaSd());
     }
     if (!installSuccess) {
       return 1;

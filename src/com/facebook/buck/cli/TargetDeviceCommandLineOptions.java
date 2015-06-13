@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -24,7 +25,7 @@ import org.kohsuke.args4j.Option;
 
 import javax.annotation.Nullable;
 
-public class TargetDeviceOptions {
+public class TargetDeviceCommandLineOptions {
 
   @VisibleForTesting public static final String EMULATOR_MODE_SHORT_ARG = "-e";
   @VisibleForTesting static final String EMULATOR_MODE_LONG_ARG = "--emulator";
@@ -54,11 +55,11 @@ public class TargetDeviceOptions {
   @Nullable
   private String serialNumber;
 
-  public TargetDeviceOptions() {
+  public TargetDeviceCommandLineOptions() {
   }
 
   @VisibleForTesting
-  TargetDeviceOptions(String serial) {
+  TargetDeviceCommandLineOptions(String serial) {
     this.serialNumber = serial;
   }
 
@@ -89,4 +90,12 @@ public class TargetDeviceOptions {
         getSerialNumber());
     return Optional.of(device);
   }
+
+  public TargetDeviceOptions getTargetDeviceOptions() {
+    return new TargetDeviceOptions(
+        useEmulatorsOnlyMode,
+        useRealDevicesOnlyMode,
+        serialNumber);
+  }
+
 }

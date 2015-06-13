@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.android;
 
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.Client;
