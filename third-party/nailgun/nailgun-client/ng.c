@@ -36,6 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #define NAILGUN_VERSION "0.9.0"
 
@@ -54,6 +55,12 @@
 	#define FILE_SEPARATOR '/'
 	typedef int HANDLE;
 	typedef unsigned int SOCKET;
+#endif
+
+#ifdef __APPLE__
+  #define SEND_FLAGS 0
+#else
+  #define SEND_FLAGS MSG_NOSIGNAL
 #endif
 
 #ifndef MIN
@@ -191,9 +198,9 @@ int sendAll(SOCKET s, char *buf, int len) {
   int total = 0;      
   int bytesleft = len; 
   int n = 0;
-    
+
   while(total < len) {
-    n = send(s, buf+total, bytesleft, 0);
+    n = send(s, buf+total, bytesleft, SEND_FLAGS);
     
     if (n == -1) { 
       break;
@@ -235,7 +242,7 @@ void sendChunk(unsigned int size, char chunkType, char* buf) {
   bytesSent = sendAll(nailgunsocket, header, CHUNK_HEADER_LEN);
   if (bytesSent != 0 && size > 0) {
     bytesSent = sendAll(nailgunsocket, buf, size);
-  } else if (bytesSent == 0) {
+  } else if (bytesSent == 0 && (chunkType != CHUNKTYPE_HEARTBEAT || errno != EPIPE)) {
     perror("send");
     handleSocketClose();
   }
