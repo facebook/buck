@@ -34,6 +34,9 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -1075,6 +1078,42 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
     assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
     verifyAll();
+  }
+
+  @Test
+  public void testBuildRuleLocallyWithCacheError() throws Exception {
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    // Create an artifact cache that always errors out.
+    ArtifactCache cache =
+        new NoopArtifactCache() {
+          @Override
+          public CacheResult fetch(RuleKey ruleKey, File output) {
+            return CacheResult.error("cache", "error");
+          }
+        };
+
+    // Use the artifact cache when running a simple rule that will build locally.
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder(filesystem)
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
+            .build();
+    BuildRule rule =
+        new NoopBuildRule(
+            BuildRuleParamsFactory.createTrivialBuildRuleParams(
+                BuildTargetFactory.newInstance("//:rule")),
+            resolver);
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            CachingBuildEngine.BuildMode.SHALLOW);
+
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertThat(result.getSuccess(), Matchers.equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
+    assertThat(result.getCacheResult().getType(), Matchers.equalTo(CacheResult.Type.ERROR));
   }
 
 

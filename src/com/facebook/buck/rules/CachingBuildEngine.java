@@ -151,7 +151,7 @@ public class CachingBuildEngine implements BuildEngine {
     }
 
     // 2. Rule key cache lookup.
-    CacheResult cacheResult =
+    final CacheResult cacheResult =
         tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
             rule,
             buildInfoRecorder,
@@ -224,7 +224,7 @@ public class CachingBuildEngine implements BuildEngine {
             executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
 
             return Futures.immediateFuture(
-                new BuildResult(rule, BuildRuleSuccessType.BUILT_LOCALLY, CacheResult.miss()));
+                new BuildResult(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
           }
         },
         service);
