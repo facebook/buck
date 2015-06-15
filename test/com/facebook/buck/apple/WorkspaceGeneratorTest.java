@@ -18,11 +18,17 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasXPath;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThat;
 
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSNumber;
+import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListParser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -194,5 +200,20 @@ public class WorkspaceGeneratorTest {
           projectFilesystem.getLastModifiedTime(workspacePath2.resolve("contents.xcworkspacedata")),
           equalTo(49152L));
     }
+  }
+
+  @Test
+  public void workspaceDisablesSchemeAutoCreation() throws Exception {
+    Path workspacePath = generator.writeWorkspace();
+    Optional<String> settings = projectFilesystem.readFileIfItExists(
+        workspacePath.resolve(
+            "xcshareddata/WorkspaceSettings.xcsettings"));
+    assertThat(settings.isPresent(), equalTo(true));
+    NSObject object = PropertyListParser.parse(settings.get().getBytes(Charsets.UTF_8));
+    assertThat(object, instanceOf(NSDictionary.class));
+    NSObject autocreate = ((NSDictionary) object).get(
+        "IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded");
+    assertThat(autocreate, instanceOf(NSNumber.class));
+    assertThat((NSNumber) autocreate, equalTo(new NSNumber(false)));
   }
 }

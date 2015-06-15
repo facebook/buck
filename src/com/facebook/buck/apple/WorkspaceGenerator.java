@@ -268,6 +268,19 @@ public class WorkspaceGenerator {
     } catch (TransformerException e) {
       throw new RuntimeException(e);
     }
+    Path xcshareddata = projectWorkspaceDir.resolve("xcshareddata");
+    projectFilesystem.mkdirs(xcshareddata);
+    Path workspaceSettingsPath = xcshareddata.resolve("WorkspaceSettings.xcsettings");
+    String workspaceSettings = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+        "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\"" +
+        " \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
+        "<plist version=\"1.0\">\n" +
+        "<dict>\n" +
+        "\t<key>IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded</key>\n" +
+        "\t<false/>\n" +
+        "</dict>\n" +
+        "</plist>";
+    projectFilesystem.writeContentsToPath(workspaceSettings, workspaceSettingsPath);
     return projectWorkspaceDir;
   }
 }
