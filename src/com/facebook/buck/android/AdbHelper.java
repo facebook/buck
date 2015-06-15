@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.android;
 
 import static com.facebook.buck.util.concurrent.MoreExecutors.newMultiThreadExecutor;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
@@ -28,11 +28,12 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.NullOutputReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
-import com.facebook.buck.android.AndroidManifestReader;
-import com.facebook.buck.android.DefaultAndroidManifestReader;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.TraceEventLogger;
+import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
@@ -74,7 +75,7 @@ public class AdbHelper {
   /**
    * Pattern that matches safe package names.  (Must be a full string match).
    */
-  static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
+  public static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
 
   /**
    * If this environment variable is set, the device with the specified serial
@@ -93,7 +94,7 @@ public class AdbHelper {
   private final ExecutionContext context;
   private final Console console;
   private final BuckEventBus buckEventBus;
-  private final BuckConfig buckConfig;
+  private final boolean restartAdbOnFailure;
 
   public AdbHelper(
       AdbOptions adbOptions,
@@ -101,13 +102,13 @@ public class AdbHelper {
       ExecutionContext context,
       Console console,
       BuckEventBus buckEventBus,
-      BuckConfig buckConfig) {
+      boolean restartAdbOnFailure) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.context = context;
     this.console = console;
     this.buckEventBus = buckEventBus;
-    this.buckConfig = buckConfig;
+    this.restartAdbOnFailure = restartAdbOnFailure;
   }
 
   private BuckEventBus getBuckEventBus() {
@@ -259,7 +260,7 @@ public class AdbHelper {
       // Build list of matching devices.
       devices = filterDevices(adb.getDevices());
       if (devices == null) {
-        if (buckConfig.getRestartAdbOnFailure()) {
+        if (restartAdbOnFailure) {
           console.printErrorText("No devices found with adb, restarting adb-server.");
           adb.restart();
           devices = filterDevices(adb.getDevices());
@@ -493,11 +494,10 @@ public class AdbHelper {
    */
   public boolean installApk(
       InstallableApk installableApk,
-      InstallCommand command) throws InterruptedException {
+      final boolean installViaSd) throws InterruptedException {
     getBuckEventBus().post(InstallEvent.started(installableApk.getBuildTarget()));
 
     final File apk = installableApk.getApkPath().toFile();
-    final boolean installViaSd = command.shouldInstallViaSd();
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
           @Override
@@ -763,11 +763,11 @@ public class AdbHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(com.facebook.buck.rules.InstallableApk, InstallCommand)
+   * @see #installApk(InstallableApk, boolean)
    */
   public boolean uninstallApp(
       final String packageName,
-      final UninstallCommand.UninstallOptions uninstallOptions) throws InterruptedException {
+      final boolean shouldKeepUserData) throws InterruptedException {
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
     getBuckEventBus().post(UninstallEvent.started(packageName));
@@ -778,7 +778,7 @@ public class AdbHelper {
         // Remove any exopackage data as well.  GB doesn't support "rm -f", so just ignore output.
         device.executeShellCommand("rm -r /data/local/tmp/exopackage/" + packageName,
             NullOutputReceiver.getReceiver());
-        return uninstallApkFromDevice(device, packageName, uninstallOptions.shouldKeepUserData());
+        return uninstallApkFromDevice(device, packageName, shouldKeepUserData);
       }
 
       @Override
@@ -792,8 +792,8 @@ public class AdbHelper {
 
   /**
    * Uninstalls apk from specific device. Reports success or failure to console.
-   * It's currently here because it's used both by {@link InstallCommand} and
-   * {@link UninstallCommand}.
+   * It's currently here because it's used both by {@link com.facebook.buck.cli.InstallCommand} and
+   * {@link com.facebook.buck.cli.UninstallCommand}.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
   private boolean uninstallApkFromDevice(IDevice device, String packageName, boolean keepData) {

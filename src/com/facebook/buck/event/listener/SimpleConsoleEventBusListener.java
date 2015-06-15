@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.cli.InstallEvent;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;

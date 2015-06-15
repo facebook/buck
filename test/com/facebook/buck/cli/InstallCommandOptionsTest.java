@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AdbOptions;
+import com.facebook.buck.android.TargetDeviceOptions;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -82,11 +85,11 @@ public class InstallCommandOptionsTest {
   public void testInstallCommandOptionsEmulatorMode() throws CmdLineException {
     // Short form.
     TargetDeviceOptions options =
-        getTargetDeviceOptions(TargetDeviceOptions.EMULATOR_MODE_SHORT_ARG);
+        getTargetDeviceOptions(TargetDeviceCommandLineOptions.EMULATOR_MODE_SHORT_ARG);
     assertTrue(options.isEmulatorsOnlyModeEnabled());
 
     // Long form.
-    options = getTargetDeviceOptions(TargetDeviceOptions.EMULATOR_MODE_LONG_ARG);
+    options = getTargetDeviceOptions(TargetDeviceCommandLineOptions.EMULATOR_MODE_LONG_ARG);
     assertTrue(options.isEmulatorsOnlyModeEnabled());
 
     // Is off by default.
@@ -97,11 +100,12 @@ public class InstallCommandOptionsTest {
   @Test
   public void testInstallCommandOptionsDeviceMode() throws CmdLineException {
     // Short form.
-    TargetDeviceOptions options = getTargetDeviceOptions(TargetDeviceOptions.DEVICE_MODE_SHORT_ARG);
+    TargetDeviceOptions options = getTargetDeviceOptions(
+        TargetDeviceCommandLineOptions.DEVICE_MODE_SHORT_ARG);
     assertTrue(options.isRealDevicesOnlyModeEnabled());
 
     // Long form.
-    options = getTargetDeviceOptions(TargetDeviceOptions.DEVICE_MODE_LONG_ARG);
+    options = getTargetDeviceOptions(TargetDeviceCommandLineOptions.DEVICE_MODE_LONG_ARG);
     assertTrue(options.isRealDevicesOnlyModeEnabled());
 
     // Is off by default.
@@ -114,12 +118,12 @@ public class InstallCommandOptionsTest {
     String serial = "some-random-serial-number";
     // Short form.
     TargetDeviceOptions options = getTargetDeviceOptions(
-        TargetDeviceOptions.SERIAL_NUMBER_SHORT_ARG, serial);
+        TargetDeviceCommandLineOptions.SERIAL_NUMBER_SHORT_ARG, serial);
     assertTrue(options.hasSerialNumber());
     assertEquals(serial, options.getSerialNumber());
 
     // Long form.
-    options = getTargetDeviceOptions(TargetDeviceOptions.SERIAL_NUMBER_LONG_ARG, serial);
+    options = getTargetDeviceOptions(TargetDeviceCommandLineOptions.SERIAL_NUMBER_LONG_ARG, serial);
     assertTrue(options.hasSerialNumber());
     assertEquals(serial, options.getSerialNumber());
 
@@ -132,11 +136,11 @@ public class InstallCommandOptionsTest {
   @Test
   public void testInstallCommandOptionsMultiInstallMode() throws CmdLineException {
     // Short form.
-    AdbOptions options = getAdbOptions(AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG);
+    AdbOptions options = getAdbOptions(AdbCommandLineOptions.MULTI_INSTALL_MODE_SHORT_ARG);
     assertTrue(options.isMultiInstallModeEnabled());
 
     // Long form.
-    options = getAdbOptions(AdbOptions.MULTI_INSTALL_MODE_LONG_ARG);
+    options = getAdbOptions(AdbCommandLineOptions.MULTI_INSTALL_MODE_LONG_ARG);
     assertTrue(options.isMultiInstallModeEnabled());
 
     // Is off by default.
@@ -147,11 +151,11 @@ public class InstallCommandOptionsTest {
   @Test
   public void testInstallCommandOptionsAdbThreads() throws CmdLineException {
     // Short form.
-    AdbOptions options = getAdbOptions(AdbOptions.ADB_THREADS_SHORT_ARG, "4");
+    AdbOptions options = getAdbOptions(AdbCommandLineOptions.ADB_THREADS_SHORT_ARG, "4");
     assertEquals(4, options.getAdbThreadCount());
 
     // Long form.
-    options = getAdbOptions(AdbOptions.ADB_THREADS_LONG_ARG, "4");
+    options = getAdbOptions(AdbCommandLineOptions.ADB_THREADS_LONG_ARG, "4");
     assertEquals(4, options.getAdbThreadCount());
 
     // Is zero by default and overridden when creating the thread pool.

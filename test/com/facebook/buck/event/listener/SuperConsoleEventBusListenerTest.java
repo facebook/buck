@@ -18,7 +18,7 @@ package com.facebook.buck.event.listener;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.InstallEvent;
+import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;

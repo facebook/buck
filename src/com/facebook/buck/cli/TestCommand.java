@@ -135,7 +135,7 @@ public class TestCommand extends BuildCommand {
 
   @AdditionalOptions
   @SuppressFieldNotInitialized
-  private TargetDeviceOptions targetDeviceOptions;
+  private TargetDeviceCommandLineOptions targetDeviceOptions;
 
   @AdditionalOptions
   @SuppressFieldNotInitialized

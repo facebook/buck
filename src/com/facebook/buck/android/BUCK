@@ -160,6 +160,37 @@ java_library(
   ],
 )
 
+HELPERS_SRCS = [
+  'AdbHelper.java',
+  'AdbOptions.java',
+  'TargetDeviceOptions.java',
+]
+
+java_library(
+  name = 'helpers',
+  srcs = HELPERS_SRCS,
+  deps = [
+    ':exceptions',
+    ':steps',
+    ':utils',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
+    '//third-party/java/ddmlib:ddmlib',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = ['PUBLIC'],
+)
+
 UTILS_SRCS = [
   'AndroidPlatformTarget.java',
   'AndroidManifestReader.java',
@@ -185,7 +216,8 @@ java_library(
 java_immutables_library(
   name = 'steps',
   srcs = glob(['*.java'],
-              excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS + UTILS_SRCS),
+              excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS +
+	                 UTILS_SRCS + HELPERS_SRCS),
   deps = [
     ':exceptions',
     ':split_dex',

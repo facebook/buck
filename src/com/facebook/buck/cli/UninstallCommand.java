@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.AdbOptions;
+import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -63,11 +66,11 @@ public class UninstallCommand extends AbstractCommand {
 
   @AdditionalOptions
   @SuppressFieldNotInitialized
-  private AdbOptions adbOptions;
+  private AdbCommandLineOptions adbOptions;
 
   @AdditionalOptions
   @SuppressFieldNotInitialized
-  private TargetDeviceOptions deviceOptions;
+  private TargetDeviceCommandLineOptions deviceOptions;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -86,11 +89,11 @@ public class UninstallCommand extends AbstractCommand {
   }
 
   public AdbOptions adbOptions() {
-    return adbOptions;
+    return adbOptions.getAdbOptions();
   }
 
   public TargetDeviceOptions targetDeviceOptions() {
-    return deviceOptions;
+    return deviceOptions.getTargetDeviceOptions();
   }
 
   @Override
@@ -150,13 +153,13 @@ public class UninstallCommand extends AbstractCommand {
           context,
           params.getConsole(),
           params.getBuckEventBus(),
-          params.getBuckConfig());
+          params.getBuckConfig().getRestartAdbOnFailure());
 
       // Find application package name from manifest and uninstall from matching devices.
       String appId = AdbHelper.tryToExtractPackageNameFromManifest(installableApk, context);
       return adbHelper.uninstallApp(
           appId,
-          uninstallOptions()
+          uninstallOptions().shouldKeepUserData()
       ) ? 0 : 1;
     }
   }
