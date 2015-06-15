@@ -189,9 +189,9 @@ public class PythonBuckConfigTest {
 
   @Test
   public void whenMultiplePythonExecutablesOnPathFirstIsUsed() throws IOException {
-    File pythonA = temporaryFolder.newFile("python");
+    File pythonA = temporaryFolder.newFile("python2");
     assertTrue("Should be able to set file executable", pythonA.setExecutable(true));
-    File pythonB = temporaryFolder2.newFile("python");
+    File pythonB = temporaryFolder2.newFile("python2");
     assertTrue("Should be able to set file executable", pythonB.setExecutable(true));
     String path = temporaryFolder.getRoot().getAbsolutePath() +
         File.pathSeparator +
