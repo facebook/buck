@@ -16,13 +16,22 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
+import com.google.common.collect.ImmutableMap;
+
 /**
  * An interface that represents a {@link com.facebook.buck.rules.BuildRule} which can contribute
  * components (e.g. header files, preprocessor macros) to the preprocessing of some top-level
  * file (e.g. a C++ source from a C++ library rule).
  */
 public interface CxxPreprocessorDep {
+
   CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility);
+
+  ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility);
+
 }

@@ -75,7 +75,7 @@ public class CxxPreprocessables {
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
     // target.
-    final Map<BuildTarget, CxxPreprocessorInput> deps = Maps.newTreeMap();
+    final Map<BuildTarget, CxxPreprocessorInput> deps = Maps.newLinkedHashMap();
 
     // Build up the map of all C/C++ preprocessable dependencies.
     AbstractBreadthFirstTraversal<BuildRule> visitor =
@@ -84,12 +84,9 @@ public class CxxPreprocessables {
           public ImmutableSet<BuildRule> visit(BuildRule rule) {
             if (rule instanceof CxxPreprocessorDep) {
               CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-              Preconditions.checkState(!deps.containsKey(rule.getBuildTarget()));
-              deps.put(
-                  rule.getBuildTarget(),
-                  dep.getCxxPreprocessorInput(
-                      cxxPlatform,
-                      HeaderVisibility.PUBLIC));
+              deps.putAll(
+                  dep.getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+              return ImmutableSet.of();
             }
             return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
           }
@@ -106,7 +103,7 @@ public class CxxPreprocessables {
     return getTransitiveCxxPreprocessorInput(
         cxxPlatform,
         inputs,
-        Predicates.instanceOf(CxxPreprocessorDep.class));
+        Predicates.alwaysTrue());
   }
 
   /**

@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
@@ -32,9 +33,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
@@ -50,6 +53,10 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   private final boolean headerOnly;
   private final boolean linkWhole;
   private final boolean provided;
+
+
+  private final Map<Pair<Flavor, HeaderVisibility>, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
+      cxxPreprocessorInputCache = Maps.newHashMap();
 
   public PrebuiltCxxLibrary(
       BuildRuleParams params,
@@ -128,6 +135,31 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     // We explicitly don't put this in a default statement because we
     // want the compiler to warn if someone modifies the HeaderVisibility enum.
     throw new RuntimeException("Invalid header visibility: " + headerVisibility);
+  }
+
+
+  @Override
+  public ImmutableMap<BuildTarget, CxxPreprocessorInput>
+      getTransitiveCxxPreprocessorInput(
+          CxxPlatform cxxPlatform,
+          HeaderVisibility headerVisibility) {
+    Pair<Flavor, HeaderVisibility> key = new Pair<>(cxxPlatform.getFlavor(), headerVisibility);
+    ImmutableMap<BuildTarget, CxxPreprocessorInput> result = cxxPreprocessorInputCache.get(key);
+    if (result == null) {
+      Map<BuildTarget, CxxPreprocessorInput> builder = Maps.newLinkedHashMap();
+      builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+      for (BuildRule dep : getDeps()) {
+        if (dep instanceof CxxPreprocessorDep) {
+          builder.putAll(
+              ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
+                  cxxPlatform,
+                  headerVisibility));
+        }
+      }
+      result = ImmutableMap.copyOf(builder);
+      cxxPreprocessorInputCache.put(key, result);
+    }
+    return result;
   }
 
   @Override

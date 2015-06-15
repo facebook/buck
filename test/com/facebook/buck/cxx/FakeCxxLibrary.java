@@ -102,6 +102,22 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
+  public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
+    ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder = ImmutableMap.builder();
+    builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+    for (BuildRule dep : getDeps()) {
+      if (dep instanceof CxxPreprocessorDep) {
+        builder.putAll(
+            ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
+                cxxPlatform,
+                headerVisibility));
+      }
+    }
+    return builder.build();
+  }
+
+  @Override
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
