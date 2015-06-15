@@ -92,7 +92,6 @@ public final class TestNGRunner extends BaseRunner {
   private XmlSuite createXmlSuite(Class<?> c) {
     XmlSuite xmlSuite = new XmlSuite();
     xmlSuite.setName("TmpSuite");
-    xmlSuite.setTimeOut(String.valueOf(defaultTestTimeoutMillis));
     XmlTest xmlTest = new XmlTest(xmlSuite);
     xmlTest.setName("TmpTest");
     xmlTest.setXmlClasses(Collections.singletonList(new XmlClass(c)));
@@ -217,7 +216,9 @@ public final class TestNGRunner extends BaseRunner {
     }
 
     @Override
-    public void onTestSkipped(ITestResult result) {}
+    public void onTestSkipped(ITestResult result) {
+      recordResult(result, ResultType.FAILURE, result.getThrowable());
+    }
 
     @Override
     public void onTestFailure(ITestResult result) {
