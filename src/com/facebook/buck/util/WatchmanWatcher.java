@@ -296,7 +296,10 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
               case "error":
                 WatchmanWatcherException e = new WatchmanWatcherException(
                     jsonParser.nextTextValue());
-                LOG.error(e, "Error in Watchman output");
+                LOG.error(
+                    e,
+                    "Error in Watchman output. Posting an overflow event to flush the caches");
+                postWatchEvent(createOverflowEvent());
                 throw e;
               case "warning":
                 String message = jsonParser.nextTextValue();

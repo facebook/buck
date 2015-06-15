@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.createStrictMock;
@@ -326,6 +327,7 @@ public class WatchmanWatcherTest {
         "\"error\": \"" + watchmanError + "\"",
         "}");
     EventBus eventBus = createStrictMock(EventBus.class);
+    eventBus.post(anyObject());
     Process process = createWaitForProcessMock(watchmanOutput);
     replay(eventBus, process);
     WatchmanWatcher watcher = createWatcher(
@@ -340,6 +342,33 @@ public class WatchmanWatcherTest {
       assertThat("Should contain watchman error.",
           e.getMessage(),
           Matchers.containsString(watchmanError));
+    }
+  }
+
+  @Test(expected = WatchmanWatcherException.class)
+  public void whenQueryResultContainsErrorThenOverflowEventGenerated()
+      throws IOException, InterruptedException {
+    String watchmanOutput = Joiner.on('\n').join(
+        "{",
+        "\"version\": \"2.9.2\",",
+        "\"error\": \"Watch does not exist.\"",
+        "}");
+    Capture<WatchEvent<Path>> eventCapture = newCapture();
+    EventBus eventBus = createStrictMock(EventBus.class);
+    eventBus.post(capture(eventCapture));
+    Process process = createWaitForProcessMock(watchmanOutput);
+    replay(eventBus, process);
+    WatchmanWatcher watcher = createWatcher(
+        eventBus,
+        process,
+        new IncrementingFakeClock(),
+        new ObjectMapper());
+    try {
+      watcher.postEvents(new BuckEventBus(new FakeClock(0), new BuildId()));
+    } finally {
+      assertEquals("Should be overflow event.",
+        StandardWatchEventKinds.OVERFLOW,
+        eventCapture.getValue().kind());
     }
   }
 
