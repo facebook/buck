@@ -48,8 +48,10 @@ public class CxxPreprocessAndCompileTest {
 
   private static final Tool DEFAULT_PREPROCESSOR = new HashedFileTool(Paths.get("preprocessor"));
   private static final Tool DEFAULT_COMPILER = new HashedFileTool(Paths.get("compiler"));
-  private static final ImmutableList<String> DEFAULT_FLAGS =
+  private static final ImmutableList<String> DEFAULT_PLATFORM_FLAGS =
       ImmutableList.of("-fsanitize=address");
+  private static final ImmutableList<String> DEFAULT_RULE_FLAGS =
+      ImmutableList.of("-O3");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
@@ -105,8 +107,10 @@ public class CxxPreprocessAndCompileTest {
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             Optional.<Tool>absent(),
             Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_FLAGS),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -125,8 +129,10 @@ public class CxxPreprocessAndCompileTest {
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             Optional.<Tool>absent(),
             Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.<Tool>of(new HashedFileTool(Paths.get("different"))),
-            Optional.of(DEFAULT_FLAGS),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -143,8 +149,10 @@ public class CxxPreprocessAndCompileTest {
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             Optional.of(DEFAULT_PREPROCESSOR),
-            Optional.of(DEFAULT_FLAGS),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(DEFAULT_RULE_FLAGS),
             Optional.<Tool>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -154,8 +162,8 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, operationChange);
 
-    // Verify that changing the flags causes a rulekey change.
-    RuleKey flagsChange = generateRuleKey(
+    // Verify that changing the platform flags causes a rulekey change.
+    RuleKey platformFlagsChange = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
             params,
@@ -163,15 +171,38 @@ public class CxxPreprocessAndCompileTest {
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             Optional.<Tool>absent(),
             Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
             Optional.of(ImmutableList.of("-different")),
+            Optional.of(DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
-    assertNotEquals(defaultRuleKey, flagsChange);
+    assertNotEquals(defaultRuleKey, platformFlagsChange);
+
+    // Verify that changing the rule flags causes a rulekey change.
+    RuleKey ruleFlagsChange = generateRuleKey(
+        ruleKeyBuilderFactory,
+        new CxxPreprocessAndCompile(
+            params,
+            pathResolver,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
+            Optional.<Tool>absent(),
+            Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
+            Optional.of(DEFAULT_COMPILER),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(ImmutableList.of("-other", "flags")),
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
+            DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+    assertNotEquals(defaultRuleKey, ruleFlagsChange);
 
     // Verify that changing the input causes a rulekey change.
     RuleKey inputChange = generateRuleKey(
@@ -182,8 +213,10 @@ public class CxxPreprocessAndCompileTest {
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             Optional.<Tool>absent(),
             Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_FLAGS),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             new TestSourcePath("different"),
             DEFAULT_INPUT_TYPE,
@@ -202,8 +235,10 @@ public class CxxPreprocessAndCompileTest {
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             Optional.<Tool>absent(),
             Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_FLAGS),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -222,8 +257,10 @@ public class CxxPreprocessAndCompileTest {
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             Optional.<Tool>absent(),
             Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_FLAGS),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -241,8 +278,10 @@ public class CxxPreprocessAndCompileTest {
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             Optional.<Tool>absent(),
             Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_FLAGS),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -286,7 +325,8 @@ public class CxxPreprocessAndCompileTest {
         ImmutableBiMap.of(Paths.get("different"), Paths.get("A")));
 
     // Generate a rule key for the defaults.
-    ImmutableList<String> flags1 = ImmutableList.of("-Isomething/foo");
+    ImmutableList<String> platformFlags1 = ImmutableList.of("-Isomething/foo");
+    ImmutableList<String> ruleFlags1 = ImmutableList.of("-Isomething/bar");
     RuleKey ruleKey1 = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
@@ -294,8 +334,10 @@ public class CxxPreprocessAndCompileTest {
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             Optional.of(DEFAULT_PREPROCESSOR),
-            Optional.of(flags1),
+            Optional.of(platformFlags1),
+            Optional.of(ruleFlags1),
             Optional.<Tool>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -305,7 +347,8 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, sanitizer1));
 
     // Generate a rule key for the defaults.
-    ImmutableList<String> flags2 = ImmutableList.of("-Idifferent/foo");
+    ImmutableList<String> platformFlags2 = ImmutableList.of("-Idifferent/foo");
+    ImmutableList<String> ruleFlags2 = ImmutableList.of("-Idifferent/bar");
     RuleKey ruleKey2 = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxPreprocessAndCompile(
@@ -313,8 +356,10 @@ public class CxxPreprocessAndCompileTest {
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             Optional.of(DEFAULT_PREPROCESSOR),
-            Optional.of(flags2),
+            Optional.of(platformFlags2),
+            Optional.of(ruleFlags2),
             Optional.<Tool>absent(),
+            Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
@@ -333,7 +378,8 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
-    ImmutableList<String> flags = ImmutableList.of("-ffunction-sections");
+    ImmutableList<String> platformFlags = ImmutableList.of("-ffunction-sections");
+    ImmutableList<String> ruleFlags = ImmutableList.of("-O3");
     Path output = Paths.get("test.o");
     Path input = Paths.get("test.ii");
 
@@ -343,8 +389,10 @@ public class CxxPreprocessAndCompileTest {
         CxxPreprocessAndCompileStep.Operation.COMPILE,
         Optional.<Tool>absent(),
         Optional.<ImmutableList<String>>absent(),
+        Optional.<ImmutableList<String>>absent(),
         Optional.of(DEFAULT_COMPILER),
-        Optional.of(flags),
+        Optional.of(platformFlags),
+        Optional.of(ruleFlags),
         output,
         new TestSourcePath(input.toString()),
         DEFAULT_INPUT_TYPE,
@@ -357,6 +405,7 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> expectedCompileCommand = ImmutableList.<String>builder()
         .add("compiler")
         .add("-ffunction-sections")
+        .add("-O3")
         .add("-x", "c++")
         .add("-c")
         .add(input.toString())
@@ -373,7 +422,8 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
-    ImmutableList<String> flags = ImmutableList.of("-Dtest=blah");
+    ImmutableList<String> platformFlags = ImmutableList.of("-Dtest=blah");
+    ImmutableList<String> ruleFlags = ImmutableList.of("-Dfoo=bar");
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
 
@@ -382,8 +432,10 @@ public class CxxPreprocessAndCompileTest {
         pathResolver,
         CxxPreprocessAndCompileStep.Operation.PREPROCESS,
         Optional.of(DEFAULT_PREPROCESSOR),
-        Optional.of(flags),
+        Optional.of(platformFlags),
+        Optional.of(ruleFlags),
         Optional.<Tool>absent(),
+        Optional.<ImmutableList<String>>absent(),
         Optional.<ImmutableList<String>>absent(),
         output,
         new TestSourcePath(input.toString()),
@@ -398,6 +450,7 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
         .add("preprocessor")
         .add("-Dtest=blah")
+        .add("-Dfoo=bar")
         .add("-x", "c++")
         .add("-E")
         .add(input.toString())

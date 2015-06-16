@@ -51,10 +51,12 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   private final CxxPreprocessAndCompileStep.Operation operation;
   @AddToRuleKey
   private final Optional<Tool> preprocessor;
-  private final Optional<ImmutableList<String>> preprocessorFlags;
+  private final Optional<ImmutableList<String>> platformPreprocessorFlags;
+  private final Optional<ImmutableList<String>> rulePreprocessorFlags;
   @AddToRuleKey
   private final Optional<Tool> compiler;
-  private final Optional<ImmutableList<String>> compilerFlags;
+  private final Optional<ImmutableList<String>> platformCompilerFlags;
+  private final Optional<ImmutableList<String>> ruleCompilerFlags;
   @AddToRuleKey(stringify = true)
   private final Path output;
   @AddToRuleKey
@@ -73,9 +75,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       SourcePathResolver resolver,
       CxxPreprocessAndCompileStep.Operation operation,
       Optional<Tool> preprocessor,
-      Optional<ImmutableList<String>> preprocessorFlags,
+      Optional<ImmutableList<String>> platformPreprocessorFlags,
+      Optional<ImmutableList<String>> rulePreprocessorFlags,
       Optional<Tool> compiler,
-      Optional<ImmutableList<String>> compilerFlags,
+      Optional<ImmutableList<String>> platformCompilerFlags,
+      Optional<ImmutableList<String>> ruleCompilerFlags,
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
@@ -86,14 +90,18 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       DebugPathSanitizer sanitizer) {
     super(params, resolver);
     Preconditions.checkState(operation.isPreprocess() == preprocessor.isPresent());
-    Preconditions.checkState(operation.isPreprocess() == preprocessorFlags.isPresent());
+    Preconditions.checkState(operation.isPreprocess() == platformPreprocessorFlags.isPresent());
+    Preconditions.checkState(operation.isPreprocess() == rulePreprocessorFlags.isPresent());
     Preconditions.checkState(operation.isCompile() == compiler.isPresent());
-    Preconditions.checkState(operation.isCompile() == compilerFlags.isPresent());
+    Preconditions.checkState(operation.isCompile() == platformCompilerFlags.isPresent());
+    Preconditions.checkState(operation.isCompile() == ruleCompilerFlags.isPresent());
     this.operation = operation;
     this.preprocessor = preprocessor;
-    this.preprocessorFlags = preprocessorFlags;
+    this.platformPreprocessorFlags = platformPreprocessorFlags;
+    this.rulePreprocessorFlags = rulePreprocessorFlags;
     this.compiler = compiler;
-    this.compilerFlags = compilerFlags;
+    this.platformCompilerFlags = platformCompilerFlags;
+    this.ruleCompilerFlags = ruleCompilerFlags;
     this.output = output;
     this.input = input;
     this.inputType = inputType;
@@ -111,7 +119,8 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool compiler,
-      ImmutableList<String> flags,
+      ImmutableList<String> platformFlags,
+      ImmutableList<String> ruleFlags,
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
@@ -122,8 +131,10 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
         CxxPreprocessAndCompileStep.Operation.COMPILE,
         Optional.<Tool>absent(),
         Optional.<ImmutableList<String>>absent(),
+        Optional.<ImmutableList<String>>absent(),
         Optional.of(compiler),
-        Optional.of(flags),
+        Optional.of(platformFlags),
+        Optional.of(ruleFlags),
         output,
         input,
         inputType,
@@ -141,7 +152,8 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool preprocessor,
-      ImmutableList<String> flags,
+      ImmutableList<String> platformFlags,
+      ImmutableList<String> ruleFlags,
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
@@ -155,8 +167,10 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
         resolver,
         CxxPreprocessAndCompileStep.Operation.PREPROCESS,
         Optional.of(preprocessor),
-        Optional.of(flags),
+        Optional.of(platformFlags),
+        Optional.of(ruleFlags),
         Optional.<Tool>absent(),
+        Optional.<ImmutableList<String>>absent(),
         Optional.<ImmutableList<String>>absent(),
         output,
         input,
@@ -175,9 +189,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool preprocessor,
-      ImmutableList<String> preprocessorFlags,
+      ImmutableList<String> platformPreprocessorFlags,
+      ImmutableList<String> rulePreprocessorFlags,
       Tool compiler,
-      ImmutableList<String> compilerFlags,
+      ImmutableList<String> platformCompilerFlags,
+      ImmutableList<String> ruleCompilerFlags,
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
@@ -194,9 +210,11 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
             ? CxxPreprocessAndCompileStep.Operation.PIPED_PREPROCESS_AND_COMPILE
             : CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO),
         Optional.of(preprocessor),
-        Optional.of(preprocessorFlags),
+        Optional.of(platformPreprocessorFlags),
+        Optional.of(rulePreprocessorFlags),
         Optional.of(compiler),
-        Optional.of(compilerFlags),
+        Optional.of(platformCompilerFlags),
+        Optional.of(ruleCompilerFlags),
         output,
         input,
         inputType,
@@ -213,14 +231,10 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
-    ImmutableList<String> flags = ImmutableList.<String>builder()
-        .addAll(this.preprocessorFlags.or(ImmutableList.<String>of()))
-        .addAll(this.compilerFlags.or(ImmutableList.<String>of()))
-        .build();
-    flags = FluentIterable.from(flags)
-        .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
-        .toList();
-    builder.setReflectively("flags", flags);
+    builder.setReflectively("platformPreprocessorFlags", sanitizeFlags(platformPreprocessorFlags));
+    builder.setReflectively("rulePreprocessorFlags", sanitizeFlags(rulePreprocessorFlags));
+    builder.setReflectively("platformCompilerFlags", sanitizeFlags(platformCompilerFlags));
+    builder.setReflectively("ruleCompilerFlags", sanitizeFlags(ruleCompilerFlags));
     ImmutableList<String> frameworkRoots = FluentIterable.from(this.frameworkRoots)
         .transform(Functions.toStringFunction())
         .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
@@ -234,6 +248,12 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
     }
 
     return builder;
+  }
+
+  private ImmutableList<String> sanitizeFlags(Optional<ImmutableList<String>> flags) {
+    return FluentIterable.from(flags.or(ImmutableList.<String>of()))
+        .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
+        .toList();
   }
 
   @VisibleForTesting
@@ -257,6 +277,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       preprocessorCommand = Optional.of(
           ImmutableList.<String>builder()
               .addAll(preprocessor.get().getCommandPrefix(getResolver()))
+              .addAll(getPreprocessorPlatformPrefix())
               .addAll(getPreprocessorSuffix())
               .build());
     } else {
@@ -268,6 +289,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       compilerCommand = Optional.of(
           ImmutableList.<String>builder()
               .addAll(compiler.get().getCommandPrefix(getResolver()))
+              .addAll(getCompilerPlatformPrefix())
               .addAll(getCompilerSuffix())
               .build());
     } else {
@@ -295,6 +317,21 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
         makeMainStep());
   }
 
+  private ImmutableList<String> getPreprocessorPlatformPrefix() {
+    Preconditions.checkState(operation.isPreprocess());
+    return platformPreprocessorFlags.get();
+  }
+
+  private ImmutableList<String> getCompilerPlatformPrefix() {
+    Preconditions.checkState(operation.isCompile());
+    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
+      flags.addAll(getPreprocessorPlatformPrefix());
+    }
+    flags.addAll(platformCompilerFlags.get());
+    return flags.build();
+  }
+
   private ImmutableList<String> getPreprocessorSuffix() {
     Preconditions.checkState(operation.isPreprocess());
     ImmutableSet.Builder<SourcePath> prefixHeaders = ImmutableSet.builder();
@@ -302,7 +339,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       prefixHeaders.addAll(cxxHeaders.getPrefixHeaders());
     }
     return ImmutableList.<String>builder()
-        .addAll(preprocessorFlags.get())
+        .addAll(rulePreprocessorFlags.get())
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
@@ -330,7 +367,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
       suffix.addAll(getPreprocessorSuffix());
     }
-    suffix.addAll(compilerFlags.get());
+    suffix.addAll(ruleCompilerFlags.get());
     return suffix.build();
   }
 
@@ -345,10 +382,12 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
     }
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
     cmd.addAll(compiler.get().getCommandPrefix(getResolver()));
-    cmd.add("-x", preprocessBuildRule.inputType.getLanguage());
-    cmd.add("-c");
+    cmd.addAll(preprocessBuildRule.getPreprocessorPlatformPrefix());
+    cmd.addAll(getCompilerPlatformPrefix());
     cmd.addAll(preprocessBuildRule.getPreprocessorSuffix());
     cmd.addAll(getCompilerSuffix());
+    cmd.add("-x", preprocessBuildRule.inputType.getLanguage());
+    cmd.add("-c");
     cmd.add("-o", output.toString());
     cmd.add(getResolver().getPath(preprocessBuildRule.input).toString());
     return cmd.build();
@@ -367,13 +406,23 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   }
 
   @VisibleForTesting
-  Optional<ImmutableList<String>> getPreprocessorFlags() {
-    return preprocessorFlags;
+  Optional<ImmutableList<String>> getRulePreprocessorFlags() {
+    return rulePreprocessorFlags;
   }
 
   @VisibleForTesting
-  Optional<ImmutableList<String>> getCompilerFlags() {
-    return compilerFlags;
+  Optional<ImmutableList<String>> getPlatformPreprocessorFlags() {
+    return platformPreprocessorFlags;
+  }
+
+  @VisibleForTesting
+  Optional<ImmutableList<String>> getRuleCompilerFlags() {
+    return ruleCompilerFlags;
+  }
+
+  @VisibleForTesting
+  Optional<ImmutableList<String>> getPlatformCompilerFlags() {
+    return platformCompilerFlags;
   }
 
   public Path getOutput() {

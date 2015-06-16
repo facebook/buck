@@ -144,7 +144,6 @@ public class CxxSourceRuleFactory {
                 @Override
                 public ImmutableList<String> load(@Nonnull CxxSource.Type type) {
                   ImmutableList.Builder<String> builder = ImmutableList.builder();
-                  builder.addAll(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, type));
                   for (CxxPreprocessorInput input : cxxPreprocessorInput) {
                     builder.addAll(input.getPreprocessorFlags().get(type));
                   }
@@ -256,11 +255,17 @@ public class CxxSourceRuleFactory {
             .build();
 
     // Build up the list of extra preprocessor flags for this rule.
-    ImmutableList<String> args =
+    ImmutableList<String> platformFlags =
         ImmutableList.<String>builder()
             // If we're using pic, add in the appropriate flag.
             .addAll(pic.getFlags())
-            // Add in the source and platform specific preprocessor flags.
+            // Add in platform specific preprocessor flags.
+            .addAll(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, source.getType()))
+            .build();
+
+    ImmutableList<String> ruleFlags =
+        ImmutableList.<String>builder()
+            // Add custom preprocessor flags.
             .addAll(preprocessorFlags.getUnchecked(source.getType()))
             // Add custom per-file flags.
             .addAll(source.getFlags())
@@ -274,7 +279,8 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         tool,
-        args,
+        platformFlags,
+        ruleFlags,
         getPreprocessOutputPath(target, source.getType(), name),
         source.getPath(),
         source.getType(),
@@ -358,7 +364,7 @@ public class CxxSourceRuleFactory {
       cxxPlatform.getCc();
   }
 
-  private ImmutableList<String> getCompileFlags(CxxSource.Type type) {
+  private ImmutableList<String> getPlatformCompileFlags(CxxSource.Type type) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     // If we're dealing with a C source that can be compiled, add the platform C compiler flags.
@@ -374,6 +380,15 @@ public class CxxSourceRuleFactory {
       args.addAll(cxxPlatform.getCxxflags());
     }
 
+    // All source types require assembling, so add in platform-specific assembler flags.
+    args.addAll(iXassembler(cxxPlatform.getAsflags()));
+
+    return args.build();
+  }
+
+  private ImmutableList<String> getRuleCompileFlags(CxxSource.Type type) {
+    ImmutableList.Builder<String> args = ImmutableList.builder();
+
     // Add in explicit additional compiler flags, if we're compiling.
     if (type == CxxSource.Type.C_CPP_OUTPUT ||
         type == CxxSource.Type.OBJC_CPP_OUTPUT ||
@@ -381,9 +396,6 @@ public class CxxSourceRuleFactory {
         type == CxxSource.Type.OBJCXX_CPP_OUTPUT) {
       args.addAll(compilerFlags);
     }
-
-    // All source types require assembling, so add in platform-specific assembler flags.
-    args.addAll(iXassembler(cxxPlatform.getAsflags()));
 
     return args.build();
   }
@@ -413,13 +425,19 @@ public class CxxSourceRuleFactory {
             .build();
 
     // Build up the list of compiler flags.
-    ImmutableList<String> args =
+    ImmutableList<String> platformFlags =
         ImmutableList.<String>builder()
             // If we're using pic, add in the appropriate flag.
             .addAll(pic.getFlags())
-            // Add in the platform and source specific compiler flags.
-            .addAll(getCompileFlags(source.getType()))
-            // Add in per-source flags.
+            // Add in the platform specific compiler flags.
+            .addAll(getPlatformCompileFlags(source.getType()))
+            .build();
+
+    ImmutableList<String> ruleFlags =
+        ImmutableList.<String>builder()
+            // Add custom compiler flags.
+            .addAll(getRuleCompileFlags(source.getType()))
+            // Add custom per-file flags.
             .addAll(source.getFlags())
             .build();
 
@@ -431,7 +449,8 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         tool,
-        args,
+        platformFlags,
+        ruleFlags,
         getCompileOutputPath(target, name),
         source.getPath(),
         source.getType(),
@@ -485,12 +504,17 @@ public class CxxSourceRuleFactory {
             .build();
 
     // Build up the list of compiler flags.
-    ImmutableList<String> compilerFlags = ImmutableList.<String>builder()
+    ImmutableList<String> platformCompilerFlags = ImmutableList.<String>builder()
         // If we're using pic, add in the appropriate flag.
         .addAll(pic.getFlags())
-        // Add in the platform and source specific compiler flags.
-        .addAll(getCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
-        // Add in per-source flags.
+        // Add in the platform specific compiler flags.
+        .addAll(getPlatformCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
+        .build();
+
+    ImmutableList<String> ruleCompilerFlags = ImmutableList.<String>builder()
+        // Add custom compiler flags.
+        .addAll(getRuleCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
+        // Add custom per-file flags.
         .addAll(source.getFlags())
         .build();
 
@@ -504,9 +528,11 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
         tool,
+        CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, source.getType()),
         preprocessorFlags.getUnchecked(source.getType()),
         tool,
-        compilerFlags,
+        platformCompilerFlags,
+        ruleCompilerFlags,
         getCompileOutputPath(target, name),
         source.getPath(),
         source.getType(),

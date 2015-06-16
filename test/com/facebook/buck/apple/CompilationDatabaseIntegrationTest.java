@@ -197,16 +197,6 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-Wno-deprecated");
     commandArgs.add("-Wno-conversion");
 
-    for (String include : includes) {
-      commandArgs.add("-I");
-      commandArgs.add(include);
-    }
-
-    for (String framework : additionalFrameworks) {
-      commandArgs.add("-F");
-      commandArgs.add(sdkRoot + framework);
-    }
-
     if (isLibrary) {
       commandArgs.add("-fPIC");
     }
@@ -225,6 +215,16 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("'" + languageStandard + "'");
     commandArgs.add("-Wno-deprecated");
     commandArgs.add("-Wno-conversion");
+
+    for (String include : includes) {
+      commandArgs.add("-I");
+      commandArgs.add(include);
+    }
+
+    for (String framework : additionalFrameworks) {
+      commandArgs.add("-F");
+      commandArgs.add(sdkRoot + framework);
+    }
 
     commandArgs.add("-x");
     commandArgs.add(language);
