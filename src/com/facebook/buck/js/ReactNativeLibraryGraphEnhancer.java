@@ -107,7 +107,8 @@ public class ReactNativeLibraryGraphEnhancer {
               BuildTarget.builder(originalBuildTarget)
                   .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
                   .build())
-              .copyWithExtraDeps(Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)));
+              .copyWithExtraDeps(Suppliers.ofInstance(
+                      ImmutableSortedSet.<BuildRule>of(bundle, reactNativeDeps)));
 
       BuildRule resource = new AndroidResource(
               paramsForResource,
