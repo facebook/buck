@@ -42,6 +42,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Option;
 
@@ -49,6 +50,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -88,6 +90,13 @@ public class InstallCommand extends BuildCommand {
   @AdditionalOptions
   @SuppressFieldNotInitialized
   private TargetDeviceCommandLineOptions deviceOptions;
+
+  @Option(
+      name = "--",
+      usage = "Arguments passed when running with -r. Only valid for Apple targets.",
+      handler = ConsumeAllOptionsHandler.class,
+      depends = "-r")
+  private List<String> runArgs = Lists.newArrayList();
 
   @Option(
       name = RUN_LONG_ARG,
@@ -181,9 +190,10 @@ public class InstallCommand extends BuildCommand {
           InstallEvent.finished(appleBundle.getBuildTarget(), exitCode == 0));
       return exitCode;
     } else {
-      params.getConsole().printBuildFailure(String.format(
+      params.getConsole().printBuildFailure(
+          String.format(
               "Specified rule %s must be of type android_binary() or apk_genrule() or " +
-              "apple_bundle() but was %s().\n",
+                  "apple_bundle() but was %s().\n",
               buildRule.getFullyQualifiedName(),
               buildRule.getType()));
       return 1;
@@ -415,7 +425,8 @@ public class InstallCommand extends BuildCommand {
         appleSimulator.getUdid(),
         appleBundleId.get(),
         waitForDebugger ? AppleSimulatorController.LaunchBehavior.WAIT_FOR_DEBUGGER :
-            AppleSimulatorController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER);
+            AppleSimulatorController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER,
+        runArgs);
     if (!launchedPid.isPresent()) {
       params.getConsole().printBuildFailure(
           String.format(

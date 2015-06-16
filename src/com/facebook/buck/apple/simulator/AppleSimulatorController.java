@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 import java.util.regex.Matcher;
@@ -269,13 +270,15 @@ public class AppleSimulatorController {
   public Optional<Long> launchInstalledBundleInSimulator(
       String simulatorUdid,
       String bundleID,
-      LaunchBehavior launchBehavior) throws IOException, InterruptedException {
+      LaunchBehavior launchBehavior,
+      List<String> args) throws IOException, InterruptedException {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder.add(simctlPath.toString(), "launch");
     if (launchBehavior == LaunchBehavior.WAIT_FOR_DEBUGGER) {
       commandBuilder.add("-w");
     }
     commandBuilder.add(simulatorUdid, bundleID);
+    commandBuilder.addAll(args);
     ImmutableList<String> command = commandBuilder.build();
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
