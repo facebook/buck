@@ -92,7 +92,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   // Counts the number of cache hits and errors, respectively.
   private final AtomicInteger cacheHits = new AtomicInteger(0);
   private final AtomicInteger cacheErrors = new AtomicInteger(0);
-  private final AtomicInteger cacheFetches = new AtomicInteger(0);
 
   private final ConcurrentLinkedQueue<ConsoleEvent> logEvents;
 
@@ -218,16 +217,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         List<String> columns = Lists.newArrayList();
         columns.add(String.format("%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
         columns.add(String.format("%d UPDATED", updated.get()));
-        if (cacheFetches.get() > 0) {
+        if (updated.get() > 0) {
           columns.add(
               String.format(
                   "%.1f%% CACHE HITS",
-                  100 * (double) cacheHits.get() / cacheFetches.get()));
+                  100 * (double) cacheHits.get() / updated.get()));
           if (cacheErrors.get() > 0) {
             columns.add(
                 String.format(
                     "%.1f%% CACHE ERRORS",
-                    100 * (double) cacheErrors.get() / cacheFetches.get()));
+                    100 * (double) cacheErrors.get() / updated.get()));
           }
         }
         jobSummary = "(" + Joiner.on(", ").join(columns) + ")";
@@ -480,6 +479,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     CacheResult cacheResult = finished.getCacheResult();
     if (cacheResult.getType() != CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT) {
       updated.incrementAndGet();
+      if (cacheResult.getType() == CacheResult.Type.HIT) {
+        cacheHits.incrementAndGet();
+      } else if (cacheResult.getType() == CacheResult.Type.ERROR) {
+        cacheErrors.incrementAndGet();
+      }
     }
   }
 
@@ -523,15 +527,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void artifactFinished(ArtifactCacheEvent.Finished finished) {
     threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
-    if (finished.getOperation() == ArtifactCacheEvent.Operation.FETCH) {
-      Preconditions.checkState(finished.getCacheResult().isPresent());
-      cacheFetches.incrementAndGet();
-      if (finished.getCacheResult().get().getType() == CacheResult.Type.HIT) {
-        cacheHits.incrementAndGet();
-      } else if (finished.getCacheResult().get().getType() == CacheResult.Type.ERROR) {
-        cacheErrors.incrementAndGet();
-      }
-    }
   }
 
   @Subscribe
