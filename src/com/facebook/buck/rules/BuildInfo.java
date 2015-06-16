@@ -37,6 +37,11 @@ class BuildInfo {
   static final String METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS = "RULE_KEY_NO_DEPS";
 
   /**
+   * Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule.
+   */
+  static final String METADATA_KEY_FOR_INPUT_BASED_RULE_KEY = "INPUT_BASED_RULE_KEY";
+
+  /**
    * Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule.
    */
   static final String METADATA_KEY_FOR_TARGET = "TARGET";

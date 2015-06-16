@@ -24,6 +24,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -40,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.AsyncFunction;
@@ -53,6 +55,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -87,12 +90,15 @@ public class CachingBuildEngine implements BuildEngine {
 
   private final ListeningExecutorService service;
   private final BuildMode buildMode;
+  private final RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
 
   public CachingBuildEngine(
       ListeningExecutorService service,
-      BuildMode buildMode) {
+      BuildMode buildMode,
+      RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory) {
     this.service = service;
     this.buildMode = buildMode;
+    this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;
   }
 
   @VisibleForTesting
@@ -154,6 +160,7 @@ public class CachingBuildEngine implements BuildEngine {
     final CacheResult cacheResult =
         tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
             rule,
+            rule.getRuleKey(),
             buildInfoRecorder,
             context.getArtifactCache(),
             context.getProjectFilesystem(),
@@ -176,6 +183,44 @@ public class CachingBuildEngine implements BuildEngine {
 
             // Log to the event bus.
             context.getEventBus().logVerboseAndPost(LOG, BuildRuleEvent.resumed(rule));
+
+            // Input-based rule keys.
+            if (rule instanceof SupportsInputBasedRuleKey) {
+
+              // Calculate the input-based rule key and record it in the metadata.
+              RuleKey inputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+              buildInfoRecorder.addMetadata(
+                  BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
+                  inputRuleKey.toString());
+
+              // Check the input-based rule key says we're already built.
+              Optional<RuleKey> lastInputRuleKey =
+                  onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
+              if (lastInputRuleKey.isPresent() && lastInputRuleKey.get().equals(inputRuleKey)) {
+                return Futures.immediateFuture(
+                    new BuildResult(
+                        rule,
+                        BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
+                        CacheResult.localKeyUnchangedHit()));
+              }
+
+              // Try to fetch the artifact using the input-based rule key.
+              CacheResult cacheResult =
+                  tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                      rule,
+                      inputRuleKey,
+                      buildInfoRecorder,
+                      context.getArtifactCache(),
+                      context.getProjectFilesystem(),
+                      context);
+              if (cacheResult.getType().isSuccess()) {
+                return Futures.immediateFuture(
+                    new BuildResult(
+                        rule,
+                        BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
+                        cacheResult));
+              }
+            }
 
             // 4. ABI check
             // Deciding whether we need to rebuild is tricky business. We want to rebuild as little
@@ -273,13 +318,14 @@ public class CachingBuildEngine implements BuildEngine {
           public ListenableFuture<BuildResult> apply(@Nonnull BuildResult input) throws Exception {
 
             // We shouldn't see any build fail result at this point.
-            Preconditions.checkState(input.getStatus() != BuildRuleStatus.FAIL);
+            BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
 
-            // The build has succeeded, whether we've getched from cache, or built locally.
+            // The build has succeeded, whether we've fetched from cache, or built locally.
             // So run the post-build steps.
             if (rule instanceof HasPostBuildSteps &&
-                (input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY ||
-                 input.getSuccess() == BuildRuleSuccessType.FETCHED_FROM_CACHE)) {
+                (success == BuildRuleSuccessType.BUILT_LOCALLY ||
+                 success == BuildRuleSuccessType.FETCHED_FROM_CACHE ||
+                 success == BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED)) {
               executePostBuildSteps(
                   rule,
                   ((HasPostBuildSteps) rule).getPostBuildSteps(context, buildableContext),
@@ -288,7 +334,6 @@ public class CachingBuildEngine implements BuildEngine {
 
             // Make sure that all of the local files have the same values they would as if the
             // rule had been built locally.
-            BuildRuleSuccessType success = input.getSuccess();
             buildInfoRecorder.addMetadata(
                 BuildInfo.METADATA_KEY_FOR_TARGET,
                 rule.getBuildTarget().toString());
@@ -333,17 +378,34 @@ public class CachingBuildEngine implements BuildEngine {
               public void onSuccess(BuildResult input) {
 
                 // We should only see build successes at this point.
-                Preconditions.checkNotNull(input.getSuccess());
+                BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
 
                 // Only now that the rule should be in a completely valid state, resolve the future.
                 result.set(input);
 
-                // Finally, upload to the artifact cache.
-                BuildRuleSuccessType success = input.getSuccess();
-                if (success != null && success.shouldUploadResultingArtifact()) {
+                // Collect up all the rule keys we have index the artifact in the cache with.
+                Set<RuleKey> ruleKeys = Sets.newHashSet();
+
+                // If the rule key has changed (and is not already in the cache), we need to push
+                // the artifact to cache using the new key.
+                if (success.shouldUploadResultingArtifact()) {
+                  ruleKeys.add(rule.getRuleKey());
+                }
+
+                // If the input-based rule key has changed, we need to push the artifact to cache
+                // using the new key.
+                if (rule instanceof SupportsInputBasedRuleKey &&
+                    success.shouldUploadResultingArtifactInputBased()) {
+                  ruleKeys.add(
+                      onDiskBuildInfo.getRuleKey(
+                          BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY).get());
+                }
+
+                // If we have any rule keys to push to the cache with, do the upload now.
+                if (!ruleKeys.isEmpty()) {
                   try {
                     buildInfoRecorder.performUploadToArtifactCache(
-                        ImmutableSet.of(rule.getRuleKey()),
+                        ImmutableSet.copyOf(ruleKeys),
                         context.getArtifactCache(),
                         context.getEventBus());
                   } catch (Throwable t) {
@@ -533,6 +595,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private CacheResult tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
       BuildRule rule,
+      RuleKey ruleKey,
       BuildInfoRecorder buildInfoRecorder,
       ArtifactCache artifactCache,
       ProjectFilesystem filesystem,
@@ -552,7 +615,8 @@ public class CachingBuildEngine implements BuildEngine {
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
-    CacheResult cacheResult = buildInfoRecorder.fetchArtifactForBuildable(zipFile, artifactCache);
+    CacheResult cacheResult =
+        buildInfoRecorder.fetchArtifactForBuildable(ruleKey, zipFile, artifactCache);
     if (!cacheResult.getType().isSuccess()) {
       try {
         Files.delete(zipFile.toPath());
@@ -575,7 +639,7 @@ public class CachingBuildEngine implements BuildEngine {
     buildContext.getEventBus().post(
         ArtifactCacheEvent.started(
             ArtifactCacheEvent.Operation.DECOMPRESS,
-            ImmutableSet.of(rule.getRuleKey())));
+            ImmutableSet.of(ruleKey)));
     try {
       Unzip.extractZipFile(
           zipFile.toPath().toAbsolutePath(),

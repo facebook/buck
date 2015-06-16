@@ -12,6 +12,7 @@ java_library(
     'FakeExportDependenciesRule.java',
     'FakeOnDiskBuildInfo.java',
     'FakeTestRule.java',
+    'InMemoryArtifactCache.java',
     'NonCheckingBuildRuleFactoryParams.java',
     'ProjectConfigBuilder.java',
     'RetainOrderComparator.java',

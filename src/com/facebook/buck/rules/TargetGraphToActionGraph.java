@@ -38,6 +38,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
   @Nullable
   private volatile ActionGraph actionGraph;
   private volatile int hashOfTargetGraph;
+  private final BuildRuleResolver ruleResolver = new BuildRuleResolver();
 
   public TargetGraphToActionGraph(
       BuckEventBus eventBus,
@@ -66,7 +67,6 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
   private ActionGraph createActionGraph(final TargetGraph targetGraph) {
     eventBus.post(ActionGraphEvent.started());
 
-    final BuildRuleResolver ruleResolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     final RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         fileHashCache,
@@ -112,4 +112,9 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     eventBus.post(ActionGraphEvent.finished());
     return result;
   }
+
+  public BuildRuleResolver getRuleResolver() {
+    return ruleResolver;
+  }
+
 }

@@ -30,6 +30,7 @@ public enum BuildRuleSuccessType {
   /** Built by executing the {@link Step}s for the rule. */
   BUILT_LOCALLY(
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
+      Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED,
       Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK
   ),
 
@@ -39,6 +40,18 @@ public enum BuildRuleSuccessType {
 
   /** Computed {@link RuleKey} matches the one on disk. */
   MATCHING_RULE_KEY(
+  ),
+
+  /** Fetched via the {@link ArtifactCache} using an input-based rule key. */
+  FETCHED_FROM_CACHE_INPUT_BASED(
+      Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
+      Property.SHOULD_UPDATE_METADATA_ON_DISK
+  ),
+
+  /** Computed input-based {@link RuleKey} matches the one on disk. */
+  MATCHING_INPUT_BASED_RULE_KEY(
+      Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
+      Property.SHOULD_UPDATE_METADATA_ON_DISK
   ),
 
   /**
@@ -74,8 +87,13 @@ public enum BuildRuleSuccessType {
     return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT);
   }
 
+  public boolean shouldUploadResultingArtifactInputBased() {
+    return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED);
+  }
+
   private enum Property {
     SHOULD_UPLOAD_RESULTING_ARTIFACT,
+    SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED,
     SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK,
     SHOULD_UPDATE_METADATA_ON_DISK,
   }

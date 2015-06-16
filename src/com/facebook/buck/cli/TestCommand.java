@@ -29,11 +29,13 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.test.CoverageReportFormat;
@@ -292,10 +294,12 @@ public class TestCommand extends BuildCommand {
       return 1;
     }
 
-    ActionGraph graph = new TargetGraphToActionGraph(
-        params.getBuckEventBus(),
-        new BuildTargetNodeToBuildRuleTransformer(),
-        params.getFileHashCache()).apply(targetGraph);
+    TargetGraphToActionGraph targetGraphToActionGraph =
+        new TargetGraphToActionGraph(
+            params.getBuckEventBus(),
+            new BuildTargetNodeToBuildRuleTransformer(),
+            params.getFileHashCache());
+    ActionGraph graph = targetGraphToActionGraph.apply(targetGraph);
 
     // Look up all of the test rules in the action graph.
     Iterable<TestRule> testRules = Iterables.filter(graph.getNodes(), TestRule.class);
@@ -315,7 +319,10 @@ public class TestCommand extends BuildCommand {
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),
-              getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()));
+              getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+              new InputBasedRuleKeyBuilderFactory(
+                  params.getFileHashCache(),
+                  new SourcePathResolver(targetGraphToActionGraph.getRuleResolver())));
       try (Build build = createBuild(
           params.getBuckConfig(),
           graph,

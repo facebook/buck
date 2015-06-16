@@ -29,8 +29,10 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.TargetDevice;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -94,7 +96,10 @@ public class FetchCommand extends BuildCommand {
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),
-                 getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode())),
+                 getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+                 new InputBasedRuleKeyBuilderFactory(
+                     params.getFileHashCache(),
+                     new SourcePathResolver(transformer.getRuleResolver()))),
              getArtifactCache(params),
              params.getConsole(),
              params.getBuckEventBus(),
