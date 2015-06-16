@@ -27,7 +27,6 @@ import com.facebook.buck.java.JavaTestBuilder;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
@@ -53,7 +52,7 @@ public class AuditClasspathCommandTest {
   private TestConsole console;
   private AuditClasspathCommand auditClasspathCommand;
   private CommandRunnerParams params;
-  private TargetGraphTransformer<ActionGraph> targetGraphTransformer;
+  private TargetGraphTransformer targetGraphTransformer;
 
   @Before
   public void setUp() throws IOException, InterruptedException {

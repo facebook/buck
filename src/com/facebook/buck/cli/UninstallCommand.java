@@ -115,7 +115,7 @@ public class UninstallCommand extends AbstractCommand {
               params.getEnvironment(),
               getEnableProfiling());
       buildTargets = result.getFirst();
-      TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(
+      TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
           params.getBuckEventBus(),
           new BuildTargetNodeToBuildRuleTransformer(),
           params.getFileHashCache());

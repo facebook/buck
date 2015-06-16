@@ -606,7 +606,7 @@ public class TargetsCommand extends AbstractCommand {
     } else {
       Optional<ActionGraph> actionGraph;
       if (isShowRuleKey() || isShowOutput()) {
-        TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(
+        TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
             params.getBuckEventBus(),
             new BuildTargetNodeToBuildRuleTransformer(),
             params.getFileHashCache());

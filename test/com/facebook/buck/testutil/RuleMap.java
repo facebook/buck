@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testutil;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -37,14 +36,7 @@ public class RuleMap {
   }
 
   private static ActionGraph createGraphFromBuildRules(Iterable<BuildRule> rules) {
-    MutableDirectedGraph<BuildRule> graph = new MutableDirectedGraph<BuildRule>();
-    for (BuildRule rule : rules) {
-      graph.addNode(rule);
-      for (BuildRule dep : rule.getDeps()) {
-        graph.addEdge(rule, dep);
-      }
-    }
-    return new ActionGraph(graph);
+    return new ActionGraph(rules);
   }
 
 }

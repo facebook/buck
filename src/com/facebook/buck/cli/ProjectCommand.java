@@ -423,7 +423,8 @@ public class ProjectCommand extends BuildCommand {
         params.getBuckEventBus(),
         new BuildTargetNodeToBuildRuleTransformer(),
         params.getFileHashCache()).apply(targetGraphAndTargets.getTargetGraph());
-    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(actionGraph.getNodes());
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(ImmutableSet.copyOf(actionGraph.getNodes()));
     SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
 
     IjProject project = new IjProject(
@@ -468,7 +469,8 @@ public class ProjectCommand extends BuildCommand {
 
     try (ExecutionContext executionContext = createExecutionContext(params)) {
       Project project = new Project(
-          new SourcePathResolver(new BuildRuleResolver(actionGraph.getNodes())),
+          new SourcePathResolver(
+              new BuildRuleResolver(ImmutableSet.copyOf(actionGraph.getNodes()))),
           FluentIterable
               .from(actionGraph.getNodes())
               .filter(ProjectConfig.class)

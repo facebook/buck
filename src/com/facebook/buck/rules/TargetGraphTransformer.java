@@ -16,16 +16,15 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.google.common.base.Function;
 
 /**
  * Responsible for converting a {@link TargetGraph} to a graph of some other type, typically of
  * {@link BuildRule}s, but there's not requirement for this to be the case.
  */
-public interface TargetGraphTransformer<T extends DirectedAcyclicGraph<?>>
-    extends Function<TargetGraph, T> {
+public interface TargetGraphTransformer extends Function<TargetGraph, ActionGraph> {
 
-    @Override
-    T apply(TargetGraph input);
+  @Override
+  ActionGraph apply(TargetGraph input);
+
 }

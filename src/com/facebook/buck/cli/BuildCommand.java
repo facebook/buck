@@ -324,7 +324,7 @@ public class BuildCommand extends AbstractCommand {
       BuildTargetParser parser = new BuildTargetParser();
       BuildTarget explicitTarget =
           parser.parse(justBuildTarget, BuildTargetPatternParser.fullyQualified(parser));
-      ImmutableSet<BuildRule> actionGraphRules = Preconditions.checkNotNull(actionGraph.getNodes());
+      Iterable<BuildRule> actionGraphRules = Preconditions.checkNotNull(actionGraph.getNodes());
       ImmutableSet<BuildTarget> actionGraphTargets =
           ImmutableSet.copyOf(Iterables.transform(actionGraphRules, HasBuildTarget.TO_TARGET));
       if (!actionGraphTargets.contains(explicitTarget)) {

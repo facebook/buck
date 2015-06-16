@@ -21,8 +21,8 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -629,24 +630,36 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    */
   @VisibleForTesting
   Optional<JavacStep.SuggestBuildRules> createSuggestBuildFunction(
-      BuildContext context,
-      ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries,
-      ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
+      final BuildContext context,
+      final ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries,
+      final ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
       final JarResolver jarResolver) {
+
     if (context.getBuildDependencies() != BuildDependencies.WARN_ON_TRANSITIVE) {
       return Optional.absent();
     }
-    final Set<JavaLibrary> transitiveNotDeclaredDeps = Sets.difference(
-        transitiveClasspathEntries.keySet(),
-        Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
 
-    TraversableGraph<BuildRule> graph = context.getActionGraph();
-    final ImmutableList<JavaLibrary> sortedTransitiveNotDeclaredDeps = FluentIterable
-        .from(TopologicalSort.sort(graph, Predicates.<BuildRule>alwaysTrue()))
-        .filter(JavaLibrary.class)
-        .filter(Predicates.in(transitiveNotDeclaredDeps))
-        .toList()
-        .reverse();
+    final Supplier<ImmutableList<JavaLibrary>> sortedTransitiveNotDeclaredDeps =
+        Suppliers.memoize(
+            new Supplier<ImmutableList<JavaLibrary>>() {
+              @Override
+              public ImmutableList<JavaLibrary> get() {
+                Set<JavaLibrary> transitiveNotDeclaredDeps = Sets.difference(
+                    transitiveClasspathEntries.keySet(),
+                    Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
+                DirectedAcyclicGraph<BuildRule> graph =
+                    BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
+                        context.getActionGraph().getNodes(),
+                        Predicates.instanceOf(JavaLibrary.class),
+                        Predicates.instanceOf(JavaLibrary.class));
+                return FluentIterable
+                    .from(TopologicalSort.sort(graph, Predicates.<BuildRule>alwaysTrue()))
+                    .filter(JavaLibrary.class)
+                    .filter(Predicates.in(transitiveNotDeclaredDeps))
+                    .toList()
+                    .reverse();
+              }
+            });
 
     JavacStep.SuggestBuildRules suggestBuildRuleFn =
         new JavacStep.SuggestBuildRules() {
@@ -657,7 +670,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
         Set<String> remainingImports = Sets.newHashSet(failedImports);
 
-        for (JavaLibrary transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps) {
+        for (JavaLibrary transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps.get()) {
           if (isMissingBuildRule(filesystem,
                   transitiveNotDeclaredDep,
                   remainingImports,

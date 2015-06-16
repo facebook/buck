@@ -130,7 +130,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       return 1;
     }
 
-    TargetGraphTransformer<ActionGraph> targetGraphTransformer = new TargetGraphToActionGraph(
+    TargetGraphTransformer targetGraphTransformer = new TargetGraphToActionGraph(
         params.getBuckEventBus(),
         new BuildTargetNodeToBuildRuleTransformer(),
         params.getFileHashCache());
@@ -173,7 +173,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   int printClasspath(
       CommandRunnerParams params,
       TargetGraph targetGraph,
-      TargetGraphTransformer<ActionGraph> targetGraphTransformer,
+      TargetGraphTransformer targetGraphTransformer,
       ImmutableSet<BuildTarget> targets) {
     ActionGraph graph = targetGraphTransformer.apply(targetGraph);
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
@@ -200,7 +200,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   int printJsonClasspath(
       CommandRunnerParams params,
       TargetGraph targetGraph,
-      TargetGraphTransformer<ActionGraph> targetGraphTransformer,
+      TargetGraphTransformer targetGraphTransformer,
       ImmutableSet<BuildTarget> targets)
       throws IOException {
     ActionGraph graph = targetGraphTransformer.apply(targetGraph);

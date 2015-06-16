@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -243,7 +242,7 @@ public class ExportFileTest {
                 return null;
               }
             })
-        .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
+        .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
         .setStepRunner(
             new StepRunner() {
 

@@ -34,7 +34,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaPackageFinder;
@@ -1099,7 +1098,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         FakeBuildContext.newBuilder(filesystem)
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
-            .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
             .build();
     BuildRule rule =
         new NoopBuildRule(

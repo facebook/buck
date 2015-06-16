@@ -16,8 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 
@@ -25,20 +23,25 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class ActionGraph extends DefaultDirectedAcyclicGraph<BuildRule> {
+public class ActionGraph {
 
   @Nullable
   private Map<BuildTarget, BuildRule> index;
+  private final Iterable<BuildRule> nodes;
 
-  public ActionGraph(MutableDirectedGraph<BuildRule> graph) {
-    super(graph);
+  public ActionGraph(Iterable<BuildRule> nodes) {
+    this.nodes = nodes;
+  }
+
+  public Iterable<BuildRule> getNodes() {
+    return nodes;
   }
 
   @Nullable
   public BuildRule findBuildRuleByTarget(BuildTarget buildTarget) {
     if (index == null) {
       ImmutableMap.Builder<BuildTarget, BuildRule> builder = ImmutableMap.builder();
-      for (BuildRule rule : getNodes()) {
+      for (BuildRule rule : nodes) {
         builder.put(rule.getBuildTarget(), rule);
       }
       index = builder.build();
@@ -46,4 +49,5 @@ public class ActionGraph extends DefaultDirectedAcyclicGraph<BuildRule> {
 
     return index.get(buildTarget);
   }
+
 }

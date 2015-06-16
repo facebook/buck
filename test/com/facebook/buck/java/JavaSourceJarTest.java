@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
@@ -87,7 +86,7 @@ public class JavaSourceJarTest {
         ImmutableSortedSet.of(fileBased, ruleBased));
 
     BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
-        .setActionGraph(new ActionGraph(new MutableDirectedGraph<BuildRule>()))
+        .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
         .setJavaPackageFinder(finderStub)
         .build();
     ImmutableList<Step> steps = rule.getBuildSteps(
