@@ -203,8 +203,8 @@ public class CxxLibraryDescription implements
             headers,
             HeaderVisibility.PRIVATE);
 
-    CxxPreprocessorInput cxxPreprocessorInputFromDependencies =
-        CxxDescriptionEnhancer.combineCxxPreprocessorInput(
+    ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromDependencies =
+        CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             params,
             cxxPlatform,
             preprocessorFlags,

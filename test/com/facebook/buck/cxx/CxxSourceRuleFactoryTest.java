@@ -97,7 +97,7 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             pathResolver,
             CXX_PLATFORM,
-            cxxPreprocessorInput,
+            ImmutableList.of(cxxPreprocessorInput),
             ImmutableList.<String>of());
 
     String name = "foo/bar.cpp";
@@ -146,7 +146,7 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             pathResolver,
             platform,
-            cxxPreprocessorInput,
+            ImmutableList.of(cxxPreprocessorInput),
             ImmutableList.<String>of());
 
     String name = "source.cpp";
@@ -222,7 +222,7 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             sourcePathResolver,
             platform,
-            cxxPreprocessorInput,
+            ImmutableList.of(cxxPreprocessorInput),
             ImmutableList.<String>of());
 
     String cSourceName = "test.c";
@@ -317,7 +317,7 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             new SourcePathResolver(resolver),
             CXX_PLATFORM,
-            CxxPreprocessorInput.EMPTY,
+            ImmutableList.<CxxPreprocessorInput>of(),
             ImmutableList.<String>of());
 
     String nameCompile = "foo/bar.ii";
@@ -361,7 +361,7 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             new SourcePathResolver(resolver),
             CXX_PLATFORM,
-            CxxPreprocessorInput.EMPTY,
+            ImmutableList.<CxxPreprocessorInput>of(),
             ImmutableList.<String>of());
 
     String name = "foo/bar.ii";
@@ -458,7 +458,7 @@ public class CxxSourceRuleFactoryTest {
             resolver,
             new SourcePathResolver(resolver),
             platform,
-            CxxPreprocessorInput.EMPTY,
+            ImmutableList.<CxxPreprocessorInput>of(),
             ImmutableList.<String>of());
 
     String name = "source.ii";
@@ -538,7 +538,7 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             sourcePathResolver,
             platform,
-            CxxPreprocessorInput.EMPTY,
+            ImmutableList.<CxxPreprocessorInput>of(),
             explicitCompilerFlags);
 
     String cSourceName = "test.i";
@@ -769,7 +769,7 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             new SourcePathResolver(buildRuleResolver),
             platform,
-            CxxPreprocessorInput.EMPTY,
+            ImmutableList.<CxxPreprocessorInput>of(),
             explicitCompilerFlags);
 
     String objcSourceName = "test.mi";
@@ -843,7 +843,7 @@ public class CxxSourceRuleFactoryTest {
             buildRuleResolver,
             new SourcePathResolver(buildRuleResolver),
             platform,
-            CxxPreprocessorInput.EMPTY,
+            ImmutableList.<CxxPreprocessorInput>of(),
             ImmutableList.<String>of());
 
     String objcSourceName = "test.m";

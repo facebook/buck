@@ -54,7 +54,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -524,7 +523,7 @@ public class CxxDescriptionEnhancer {
         lexYaccCxxSourcesBuilder.build());
   }
 
-  public static CxxPreprocessorInput combineCxxPreprocessorInput(
+  public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
@@ -584,15 +583,11 @@ public class CxxDescriptionEnhancer {
             .addAllFrameworkRoots(frameworkSearchPaths)
             .build();
 
-    try {
-      return CxxPreprocessorInput.concat(
-          Iterables.concat(
-              Collections.singleton(localPreprocessorInput),
-              cxxPreprocessorInputFromDeps,
-              cxxPreprocessorInputFromTestedRules));
-    } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
-    }
+    return ImmutableList.<CxxPreprocessorInput>builder()
+        .add(localPreprocessorInput)
+        .addAll(cxxPreprocessorInputFromDeps)
+        .addAll(cxxPreprocessorInputFromTestedRules)
+        .build();
   }
 
   public static BuildTarget createStaticLibraryBuildTarget(
@@ -703,8 +698,8 @@ public class CxxDescriptionEnhancer {
         yaccSrcs,
         headers,
         HeaderVisibility.PRIVATE);
-    CxxPreprocessorInput cxxPreprocessorInput =
-        combineCxxPreprocessorInput(
+    ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
+        collectCxxPreprocessorInput(
             params,
             cxxPlatform,
             CxxFlags.getLanguageFlags(

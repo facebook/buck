@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -126,7 +127,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       case PUBLIC:
         return CxxPreprocessorInput.builder()
             // Just pass the include dirs as system includes.
-            .addAllSystemIncludeRoots(includeDirs)
+            .setSystemIncludeRoots(ImmutableSortedSet.copyOf(includeDirs))
             .build();
       case PRIVATE:
         return CxxPreprocessorInput.EMPTY;

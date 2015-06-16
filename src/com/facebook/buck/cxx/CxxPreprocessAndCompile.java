@@ -36,6 +36,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
@@ -63,7 +64,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   private final ImmutableList<Path> systemIncludeRoots;
   private final ImmutableList<Path> frameworkRoots;
   @AddToRuleKey
-  private final CxxHeaders includes;
+  private final ImmutableList<CxxHeaders> includes;
   private final DebugPathSanitizer sanitizer;
 
   @VisibleForTesting
@@ -81,7 +82,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots,
       ImmutableList<Path> frameworkRoots,
-      CxxHeaders includes,
+      ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer) {
     super(params, resolver);
     Preconditions.checkState(operation.isPreprocess() == preprocessor.isPresent());
@@ -129,7 +130,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        CxxHeaders.builder().build(),
+        ImmutableList.<CxxHeaders>of(),
         sanitizer);
   }
 
@@ -147,7 +148,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots,
       ImmutableList<Path> frameworkRoots,
-      CxxHeaders includes,
+      ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
         params,
@@ -183,7 +184,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       ImmutableList<Path> includeRoots,
       ImmutableList<Path> systemIncludeRoots,
       ImmutableList<Path> frameworkRoots,
-      CxxHeaders includes,
+      ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer,
       CxxPreprocessMode strategy) {
     return new CxxPreprocessAndCompile(
@@ -241,8 +242,13 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
     // Resolve the map of symlinks to real paths to hand off the preprocess step.  If we're
     // compiling, this will just be empty.
     ImmutableMap.Builder<Path, Path> replacementPathsBuilder = ImmutableMap.builder();
-    for (Map.Entry<Path, SourcePath> entry : includes.getFullNameToPathMap().entrySet()) {
-      replacementPathsBuilder.put(entry.getKey(), getResolver().getPath(entry.getValue()));
+    try {
+      for (Map.Entry<Path, SourcePath> entry :
+           CxxHeaders.concat(includes).getFullNameToPathMap().entrySet()) {
+        replacementPathsBuilder.put(entry.getKey(), getResolver().getPath(entry.getValue()));
+      }
+    } catch (CxxHeaders.ConflictingHeadersException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
     }
     ImmutableMap<Path, Path> replacementPaths = replacementPathsBuilder.build();
 
@@ -291,12 +297,16 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
 
   private ImmutableList<String> getPreprocessorSuffix() {
     Preconditions.checkState(operation.isPreprocess());
+    ImmutableSet.Builder<SourcePath> prefixHeaders = ImmutableSet.builder();
+    for (CxxHeaders cxxHeaders : includes) {
+      prefixHeaders.addAll(cxxHeaders.getPrefixHeaders());
+    }
     return ImmutableList.<String>builder()
         .addAll(preprocessorFlags.get())
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
-                FluentIterable.from(includes.getPrefixHeaders())
+                FluentIterable.from(prefixHeaders.build())
                     .transform(getResolver().getPathFunction())
                     .transform(Functions.toStringFunction())))
         .addAll(
@@ -374,7 +384,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
     return input;
   }
 
-  public CxxHeaders getIncludes() {
+  public ImmutableList<CxxHeaders> getIncludes() {
     return includes;
   }
 

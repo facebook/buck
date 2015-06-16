@@ -102,7 +102,7 @@ public class CxxCompilationDatabaseTest {
                 Paths.get("test")),
             ImmutableList.<Path>of(),
             ImmutableList.<Path>of(),
-            CxxHeaders.builder().build(),
+            ImmutableList.<CxxHeaders>of(),
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
@@ -137,7 +137,7 @@ public class CxxCompilationDatabaseTest {
                 Paths.get("test")),
             ImmutableList.<Path>of(),
             ImmutableList.<Path>of(),
-            CxxHeaders.builder().build(),
+            ImmutableList.<CxxHeaders>of(),
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
 
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
@@ -257,7 +257,7 @@ public class CxxCompilationDatabaseTest {
             Paths.get("test")),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        CxxHeaders.builder().build(),
+        ImmutableList.<CxxHeaders>of(),
         CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
 
     BuildTarget compileTarget = BuildTarget
@@ -282,7 +282,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        CxxHeaders.builder().build(),
+        ImmutableList.<CxxHeaders>of(),
         CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
 
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(

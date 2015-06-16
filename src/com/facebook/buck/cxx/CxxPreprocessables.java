@@ -31,6 +31,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -151,8 +152,9 @@ public class CxxPreprocessables {
         .putAllPreprocessorFlags(exportedPreprocessorFlags)
         .setIncludes(
             CxxHeaders.builder()
-                .putAllNameToPathMap(symlinkTree.getLinks())
-                .putAllFullNameToPathMap(symlinkTree.getFullLinks())
+                .setPrefixHeaders(ImmutableSortedSet.<SourcePath>of())
+                .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
+                .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))
                 .build())
         .addIncludeRoots(symlinkTree.getRoot())
         .addAllFrameworkRoots(frameworkSearchPaths)

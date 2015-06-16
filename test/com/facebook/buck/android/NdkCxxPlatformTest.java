@@ -94,7 +94,7 @@ public class NdkCxxPlatformTest {
               resolver,
               pathResolver,
               entry.getValue().getCxxPlatform(),
-              CxxPreprocessorInput.EMPTY,
+              ImmutableList.<CxxPreprocessorInput>of(),
               ImmutableList.<String>of());
       CxxPreprocessAndCompile rule;
       switch (operation) {

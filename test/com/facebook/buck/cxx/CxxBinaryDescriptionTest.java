@@ -190,7 +190,7 @@ public class CxxBinaryDescriptionTest {
             resolver,
             pathResolver,
             cxxPlatform,
-            CxxPreprocessorInput.EMPTY,
+            ImmutableList.<CxxPreprocessorInput>of(),
             ImmutableList.<String>of());
 
     // Check that link rule has the expected deps: the object files for our sources and the

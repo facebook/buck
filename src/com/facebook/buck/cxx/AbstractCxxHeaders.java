@@ -16,11 +16,15 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
 
@@ -60,4 +64,56 @@ abstract class AbstractCxxHeaders implements RuleKeyAppendable {
 
     return builder;
   }
+
+  public static void addAllEntriesToIncludeMap(
+      Map<Path, SourcePath> destination,
+      Map<Path, SourcePath> source)
+      throws ConflictingHeadersException {
+    for (Map.Entry<Path, SourcePath> entry : source.entrySet()) {
+      SourcePath original = destination.put(entry.getKey(), entry.getValue());
+      if (original != null && !original.equals(entry.getValue())) {
+        throw new ConflictingHeadersException(entry.getKey(), original, entry.getValue());
+      }
+    }
+  }
+
+  public static CxxHeaders concat(Iterable<CxxHeaders> headerGroup)
+      throws ConflictingHeadersException {
+
+    ImmutableList.Builder<SourcePath> prefixHeaders = ImmutableList.builder();
+    Map<Path, SourcePath> nameToPathMap = Maps.newLinkedHashMap();
+    Map<Path, SourcePath> fullNameToPathMap = Maps.newLinkedHashMap();
+
+    for (CxxHeaders headers : headerGroup) {
+      prefixHeaders.addAll(headers.getPrefixHeaders());
+      addAllEntriesToIncludeMap(nameToPathMap, headers.getNameToPathMap());
+      addAllEntriesToIncludeMap(fullNameToPathMap, headers.getFullNameToPathMap());
+    }
+
+    return CxxHeaders.builder()
+        .setPrefixHeaders(prefixHeaders.build())
+        .setNameToPathMap(nameToPathMap)
+        .setFullNameToPathMap(fullNameToPathMap)
+        .build();
+  }
+
+  @SuppressWarnings("serial")
+  public static class ConflictingHeadersException extends Exception {
+    public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
+      super(
+          String.format(
+              "'%s' maps to both %s.",
+              key,
+              ImmutableSortedSet.of(value1, value2)));
+    }
+
+    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
+      return new HumanReadableException(
+          this,
+          "Target '%s' uses conflicting header file mappings. %s",
+          buildTarget,
+          getMessage());
+    }
+  }
+
 }

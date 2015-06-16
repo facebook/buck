@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -182,7 +183,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
                 cxxPlatform,
                 params.getDeps(),
                 Predicates.instanceOf(NdkLibrary.class)));
-      } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
+      } catch (CxxHeaders.ConflictingHeadersException e) {
         throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
       }
 

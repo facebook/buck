@@ -18,12 +18,11 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 
 import org.immutables.value.Value;
@@ -40,6 +39,38 @@ import java.util.Set;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxPreprocessorInput {
+
+  public static final Function<CxxPreprocessorInput, CxxHeaders> GET_INCLUDES =
+      new Function<CxxPreprocessorInput, CxxHeaders>() {
+        @Override
+        public CxxHeaders apply(CxxPreprocessorInput input) {
+          return input.getIncludes();
+        }
+      };
+
+  public static final Function<CxxPreprocessorInput, ImmutableList<Path>> GET_INCLUDE_ROOTS =
+      new Function<CxxPreprocessorInput, ImmutableList<Path>>() {
+        @Override
+        public ImmutableList<Path> apply(CxxPreprocessorInput input) {
+          return input.getIncludeRoots();
+        }
+      };
+
+  public static final Function<CxxPreprocessorInput, ImmutableList<Path>> GET_SYSTEM_INCLUDE_ROOTS =
+      new Function<CxxPreprocessorInput, ImmutableList<Path>>() {
+        @Override
+        public ImmutableList<Path> apply(CxxPreprocessorInput input) {
+          return input.getSystemIncludeRoots();
+        }
+      };
+
+  public static final Function<CxxPreprocessorInput, ImmutableList<Path>> GET_FRAMEWORK_ROOTS =
+      new Function<CxxPreprocessorInput, ImmutableList<Path>>() {
+        @Override
+        public ImmutableList<Path> apply(CxxPreprocessorInput input) {
+          return input.getFrameworkRoots();
+        }
+      };
 
   // The build rules which produce headers found in the includes below.
   @Value.Parameter
@@ -72,19 +103,8 @@ abstract class AbstractCxxPreprocessorInput {
     return CxxPreprocessorInput.builder();
   }
 
-  private static void addAllEntriesToIncludeMap(
-      Map<Path, SourcePath> destination,
-      Map<Path, SourcePath> source) throws ConflictingHeadersException {
-    for (Map.Entry<Path, SourcePath> entry : source.entrySet()) {
-      SourcePath original = destination.put(entry.getKey(), entry.getValue());
-      if (original != null && !original.equals(entry.getValue())) {
-        throw new ConflictingHeadersException(entry.getKey(), original, entry.getValue());
-      }
-    }
-  }
-
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs)
-      throws ConflictingHeadersException {
+      throws AbstractCxxHeaders.ConflictingHeadersException {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
     ImmutableMultimap.Builder<CxxSource.Type, String> preprocessorFlags =
       ImmutableMultimap.builder();
@@ -99,10 +119,10 @@ abstract class AbstractCxxPreprocessorInput {
       rules.addAll(input.getRules());
       preprocessorFlags.putAll(input.getPreprocessorFlags());
       prefixHeaders.addAll(input.getIncludes().getPrefixHeaders());
-      addAllEntriesToIncludeMap(
+      CxxHeaders.addAllEntriesToIncludeMap(
           includeNameToPathMap,
           input.getIncludes().getNameToPathMap());
-      addAllEntriesToIncludeMap(
+      CxxHeaders.addAllEntriesToIncludeMap(
           includeFullNameToPathMap,
           input.getIncludes().getFullNameToPathMap());
       includeRoots.addAll(input.getIncludeRoots());
@@ -121,25 +141,6 @@ abstract class AbstractCxxPreprocessorInput {
         includeRoots.build(),
         systemIncludeRoots.build(),
         frameworkRoots.build());
-  }
-
-  @SuppressWarnings("serial")
-  public static class ConflictingHeadersException extends Exception {
-    public ConflictingHeadersException(Path key, SourcePath value1, SourcePath value2) {
-      super(
-          String.format(
-              "'%s' maps to both %s.",
-              key,
-              ImmutableSortedSet.of(value1, value2)));
-    }
-
-    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
-      return new HumanReadableException(
-          this,
-          "Target '%s' uses conflicting header file mappings. %s",
-          buildTarget,
-          getMessage());
-    }
   }
 
 }

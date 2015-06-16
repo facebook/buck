@@ -299,7 +299,7 @@ public class CxxPreprocessablesTest {
         .build();
     BuildRule top = createFakeCxxPreprocessorDep("//:top", pathResolver, topInput, bottom);
 
-    exception.expect(CxxPreprocessorInput.ConflictingHeadersException.class);
+    exception.expect(CxxHeaders.ConflictingHeadersException.class);
     exception.expectMessage(String.format(
             "'%s' maps to both [%s, %s].",
             Paths.get("prefix/file.h"),

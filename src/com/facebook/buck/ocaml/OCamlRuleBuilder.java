@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -163,7 +164,7 @@ public class OCamlRuleBuilder {
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
-    } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
+    } catch (CxxHeaders.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }
 
@@ -295,7 +296,7 @@ public class OCamlRuleBuilder {
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
-    } catch (CxxPreprocessorInput.ConflictingHeadersException e) {
+    } catch (CxxHeaders.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }
 

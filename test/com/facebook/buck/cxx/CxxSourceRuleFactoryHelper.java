@@ -33,7 +33,7 @@ public class CxxSourceRuleFactoryHelper {
         resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        CxxPreprocessorInput.EMPTY,
+        ImmutableList.<CxxPreprocessorInput>of(),
         ImmutableList.<String>of());
   }
 

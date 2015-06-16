@@ -53,10 +53,11 @@ public class CxxPreprocessAndCompileTest {
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
-  private static final CxxHeaders DEFAULT_INCLUDES =
-      CxxHeaders.builder()
-          .putNameToPathMap(Paths.get("test.h"), new TestSourcePath("foo/test.h"))
-          .build();
+  private static final ImmutableList<CxxHeaders> DEFAULT_INCLUDES =
+      ImmutableList.of(
+          CxxHeaders.builder()
+              .putNameToPathMap(Paths.get("test.h"), new TestSourcePath("foo/test.h"))
+              .build());
   private static final ImmutableList<Path> DEFAULT_INCLUDE_ROOTS = ImmutableList.of(
       Paths.get("foo/bar"),
       Paths.get("test"));
@@ -111,7 +112,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
 
     // Verify that changing the compiler causes a rulekey change.
     RuleKey compilerChange = generateRuleKey(
@@ -347,7 +350,9 @@ public class CxxPreprocessAndCompileTest {
         DEFAULT_INPUT_TYPE,
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        DEFAULT_FRAMEWORK_ROOTS, CxxHeaders.builder().build(), DEFAULT_SANITIZER);
+        DEFAULT_FRAMEWORK_ROOTS,
+        ImmutableList.of(CxxHeaders.builder().build()),
+        DEFAULT_SANITIZER);
 
     ImmutableList<String> expectedCompileCommand = ImmutableList.<String>builder()
         .add("compiler")
@@ -385,7 +390,9 @@ public class CxxPreprocessAndCompileTest {
         DEFAULT_INPUT_TYPE,
         ImmutableList.<Path>of(),
         ImmutableList.<Path>of(),
-        DEFAULT_FRAMEWORK_ROOTS, CxxHeaders.builder().build(), DEFAULT_SANITIZER);
+        DEFAULT_FRAMEWORK_ROOTS,
+        ImmutableList.of(CxxHeaders.builder().build()),
+        DEFAULT_SANITIZER);
 
     // Verify it uses the expected command.
     ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()

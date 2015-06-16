@@ -133,8 +133,8 @@ public class CxxPythonExtensionDescription implements
         yaccSrcs,
         headers,
         HeaderVisibility.PRIVATE);
-    CxxPreprocessorInput cxxPreprocessorInput =
-        CxxDescriptionEnhancer.combineCxxPreprocessorInput(
+    ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
+        CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             params,
             cxxPlatform,
             CxxFlags.getLanguageFlags(
