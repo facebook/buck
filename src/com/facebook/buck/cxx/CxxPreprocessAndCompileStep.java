@@ -323,19 +323,23 @@ public class CxxPreprocessAndCompileStep implements Step {
                 input.toString(),
                 inputType.getLanguage()));
 
-        if (operation == Operation.COMPILE_MUNGE_DEBUGINFO) {
-          // A forced compilation directory is set in the constructor.  Now, we can't actually force
-          // the compiler to embed this into the binary -- all we can do set the PWD environment to
-          // variations of the actual current working directory (e.g. /actual/dir or
-          // /actual/dir////).  So we use this knob to expand the space used to store the
-          // compilation directory to the size we need for the compilation directory we really want,
-          // then do an in-place find-and-replace to update the compilation directory after
-          // the fact.
-          builder.environment().put(
-              "PWD",
-              sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()));
-        }
       }
+
+      // A forced compilation directory is set in the constructor.  Now, we can't actually force
+      // the compiler to embed this into the binary -- all we can do set the PWD environment to
+      // variations of the actual current working directory (e.g. /actual/dir or
+      // /actual/dir////).  This adjustment serves two purposes:
+      //
+      //   1) it makes the compiler's current-directory line directive output agree with its cwd,
+      //      given by getProjectDirectoryRoot.  (If PWD and cwd are different names for the same
+      //      directory, the compiler prefers PWD, but we expect cwd for DebugPathSanitizer.)
+      //
+      //   2) in the case where we're using post-linkd debug path replacement, we reserve room
+      //      to expand the path later.
+      //
+      builder.environment().put(
+          "PWD",
+          sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()));
 
       LOG.debug(
           "Running command (pwd=%s): %s",
