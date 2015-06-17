@@ -37,6 +37,7 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -161,6 +162,12 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash());
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
+    if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
+      throw new HumanReadableException(
+          "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
+          params.getBuildTarget(),
+          out);
+    }
 
     this.pathToTmpDirectory = Paths.get(
         BuckConstant.GEN_DIR,

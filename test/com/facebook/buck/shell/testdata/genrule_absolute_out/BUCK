@@ -1,0 +1,5 @@
+genrule(
+  name = 'genrule',
+  cmd = 'echo something > $OUT',
+  out = '/tmp/file',
+)

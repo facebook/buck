@@ -355,8 +355,8 @@ public class GenruleTest {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     Genrule genrule = (Genrule) GenruleBuilder
         .newGenruleBuilder(target)
-        .setBash("true")
-        .setOut("/dev/null")
+        .setBash("echo something > $OUT")
+        .setOut("file")
         .build(resolver);
 
     ExecutionContext context = TestExecutionContext.newBuilder()
@@ -378,8 +378,8 @@ public class GenruleTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     Genrule genrule = (Genrule) GenruleBuilder.newGenruleBuilder(target)
-        .setBash("true")
-        .setOut("/dev/null")
+        .setBash("echo something > $OUT")
+        .setOut("file")
         .build(resolver);
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

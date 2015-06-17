@@ -26,10 +26,12 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,6 +40,9 @@ public class GenruleIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
 
   // When these tests fail, the failures contain buck output that is easy to confuse with the output
   // of the instance of buck that's running the test. This prepends each line with "> ".
@@ -76,6 +81,33 @@ public class GenruleIntegrationTest {
     assertTrue(
         "Unexpected output:\n" + quoteOutput(buildResult.getStderr()),
         buildResult.getStderr().matches(outputPattern));
+  }
+
+  @Test
+  public void genruleWithEmptyOutParameterFails() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "genrule_empty_out", temporaryFolder);
+    workspace.setUp();
+
+    exception.expect(HumanReadableException.class);
+    exception.expectMessage(
+        "The 'out' parameter of genrule //:genrule is '', which is not a valid file name.");
+
+    workspace.runBuckCommand("build", "//:genrule");
+  }
+
+  @Test
+  public void genruleWithAbsoluteOutParameterFails() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "genrule_absolute_out", temporaryFolder);
+    workspace.setUp();
+
+    exception.expect(HumanReadableException.class);
+    exception.expectMessage(
+        "The 'out' parameter of genrule //:genrule is '/tmp/file', " +
+            "which is not a valid file name.");
+
+    workspace.runBuckCommand("build", "//:genrule");
   }
 
   @Test
