@@ -1642,6 +1642,68 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testAppleBundleRuleWithPreBuildScriptDependency() throws IOException {
+    BuildTarget scriptTarget = BuildTarget.builder("//foo", "pre_build_script").build();
+    TargetNode<?> scriptNode = XcodePrebuildScriptBuilder
+        .createBuilder(scriptTarget)
+        .setCmd("script.sh")
+        .build();
+
+    BuildTarget resourceTarget = BuildTarget.builder("//foo", "resource").build();
+    TargetNode<?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
+        .setDirs(ImmutableSet.<SourcePath>of())
+        .build();
+
+    BuildTarget sharedLibraryTarget = BuildTarget
+        .builder("//dep", "shared")
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(sharedLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
+
+    BuildTarget bundleTarget = BuildTarget.builder("//foo", "bundle").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.BUNDLE))
+        .setBinary(sharedLibraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(scriptTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(scriptNode, resourceNode, sharedLibraryNode, bundleNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        project, "//foo:bundle");
+    assertThat(target.getName(), equalTo("//foo:bundle"));
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+
+    PBXShellScriptBuildPhase shellScriptBuildPhase =
+        getSingletonPhaseByType(
+            target,
+            PBXShellScriptBuildPhase.class);
+
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        equalTo("script.sh"));
+
+    // Assert that the pre-build script phase comes before resources are copied.
+    assertThat(
+        target.getBuildPhases().get(0),
+        instanceOf(PBXShellScriptBuildPhase.class));
+
+    assertThat(
+        target.getBuildPhases().get(1),
+        instanceOf(PBXResourcesBuildPhase.class));
+  }
+
+  @Test
   public void testAppleBundleRuleWithPostBuildScriptDependency() throws IOException {
     BuildTarget scriptTarget = BuildTarget.builder("//foo", "post_build_script").build();
     TargetNode<?> scriptNode = XcodePostbuildScriptBuilder

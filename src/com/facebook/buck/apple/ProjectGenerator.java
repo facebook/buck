@@ -1149,7 +1149,9 @@ public class ProjectGenerator {
     for (TargetNode<?> targetNode : targetNodes) {
       if (targetNode.getType().equals(XcodePostbuildScriptDescription.TYPE)) {
         postRules.add(targetNode);
-      } else if (targetNode.getType().equals(GenruleDescription.TYPE)) {
+      } else if (
+          targetNode.getType().equals(XcodePrebuildScriptDescription.TYPE) ||
+          targetNode.getType().equals(GenruleDescription.TYPE)) {
         preRules.add(targetNode);
       }
     }
