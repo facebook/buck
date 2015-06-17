@@ -38,9 +38,9 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.SourceWithFlagsList;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -561,10 +561,7 @@ public class ThriftCxxEnhancerTest {
     arg.cppOptions = Optional.absent();
     arg.cppDeps = Optional.absent();
     arg.cppHeaderNamespace = Optional.of(cppHeaderNamespace);
-    arg.cppExportedHeaders =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-                cppHeaders));
+    arg.cppExportedHeaders = Optional.of(SourceList.ofNamedSources(cppHeaders));
     arg.cppSrcs = Optional.of(SourceWithFlagsList.ofNamedSources(cppSrcs));
 
     ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source", pathResolver);
@@ -592,7 +589,7 @@ public class ThriftCxxEnhancerTest {
             assertThat(args.headerNamespace, Matchers.equalTo(Optional.of(cppHeaderNamespace)));
             for (Map.Entry<String, SourcePath> header : cppHeaders.entrySet()) {
               assertThat(
-                  args.exportedHeaders.get().getRight().get(header.getKey()),
+                  args.exportedHeaders.get().getNamedSources().get().get(header.getKey()),
                   Matchers.equalTo(header.getValue()));
             }
             for (Map.Entry<String, SourceWithFlags> source : cppSrcs.entrySet()) {

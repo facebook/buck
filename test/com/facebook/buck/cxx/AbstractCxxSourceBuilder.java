@@ -19,9 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.SourceWithFlagsList;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,22 +52,17 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
     return this;
   }
 
-  public AbstractCxxSourceBuilder<T> setHeaders(ImmutableList<SourcePath> headers)  {
-    arg.headers =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(headers));
+  public AbstractCxxSourceBuilder<T> setHeaders(ImmutableSortedSet<SourcePath> headers)  {
+    arg.headers = Optional.of(SourceList.ofUnnamedSources(headers));
     return this;
   }
 
   public AbstractCxxSourceBuilder<T> setHeaders(ImmutableMap<String, SourcePath> headers)  {
-    arg.headers =
-        Optional.of(
-            Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(headers));
+    arg.headers = Optional.of(SourceList.ofNamedSources(headers));
     return this;
   }
 
-  public AbstractCxxSourceBuilder<T> setHeaders(
-      Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>> headers)  {
+  public AbstractCxxSourceBuilder<T> setHeaders(SourceList headers)  {
     arg.headers = Optional.of(headers);
     return this;
   }

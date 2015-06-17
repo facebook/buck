@@ -30,8 +30,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -55,8 +55,8 @@ import java.util.Set;
  */
 public class AppleDescriptions {
 
-  private static final Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>
-      EMPTY_HEADERS = Either.ofLeft(ImmutableSortedSet.<SourcePath>of());
+  private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
+      ImmutableSortedSet.<SourcePath>of());
 
   static final String XCASSETS_DIRECTORY_EXTENSION = ".xcassets";
   private static final String MERGED_ASSET_CATALOG_NAME = "Merged";
@@ -122,25 +122,31 @@ public class AppleDescriptions {
   static ImmutableMap<String, SourcePath> parseAppleHeadersForUseFromOtherTargets(
       Function<SourcePath, Path> pathResolver,
       Path headerPathPrefix,
-      Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>> headers) {
-    if (headers.isLeft()) {
+      SourceList headers) {
+    if (headers.getUnnamedSources().isPresent()) {
       // The user specified a set of header files. For use from other targets, prepend their names
       // with the header path prefix.
-      return convertToFlatCxxHeaders(headerPathPrefix, pathResolver, headers.getLeft());
+      return convertToFlatCxxHeaders(
+          headerPathPrefix,
+          pathResolver,
+          headers.getUnnamedSources().get());
     } else {
       // The user specified a map from include paths to header files. Just use the specified map.
-      return headers.getRight();
+      return headers.getNamedSources().get();
     }
   }
 
   @VisibleForTesting
   static ImmutableMap<String, SourcePath> parseAppleHeadersForUseFromTheSameTarget(
       Function<SourcePath, Path> pathResolver,
-      Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>> headers) {
-    if (headers.isLeft()) {
+      SourceList headers) {
+    if (headers.getUnnamedSources().isPresent()) {
       // The user specified a set of header files. Headers can be included from the same target
       // using only their file name without a prefix.
-      return convertToFlatCxxHeaders(Paths.get(""), pathResolver, headers.getLeft());
+      return convertToFlatCxxHeaders(
+          Paths.get(""),
+          pathResolver,
+          headers.getUnnamedSources().get());
     } else {
       // The user specified a map from include paths to header files. There is nothing we need to
       // add on top of the exported headers.
@@ -192,9 +198,7 @@ public class AppleDescriptions {
     }
 
     output.srcs = Optional.of(SourceWithFlagsList.ofUnnamedSources(arg.srcs.get()));
-    output.headers = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-            headerMap));
+    output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
     output.compilerFlags = arg.compilerFlags.transform(expandSdkVariableRefs);
 
@@ -270,7 +274,7 @@ public class AppleDescriptions {
     }
 
     output.headers = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
+        SourceList.ofNamedSources(
             convertAppleHeadersToPrivateCxxHeaders(
                 resolver.getPathFunction(),
                 headerPathPrefix,
@@ -278,7 +282,7 @@ public class AppleDescriptions {
     output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags.transform(
         expandSdkVariableRefs);
     output.exportedHeaders = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
+        SourceList.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
                 resolver.getPathFunction(),
                 headerPathPrefix,

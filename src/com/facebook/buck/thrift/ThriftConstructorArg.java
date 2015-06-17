@@ -18,7 +18,7 @@ package com.facebook.buck.thrift;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -39,8 +39,7 @@ public class ThriftConstructorArg {
   public Optional<ImmutableSet<String>> javaOptions;
 
   public Optional<String> cppHeaderNamespace;
-  public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>>
-      cppExportedHeaders;
+  public Optional<SourceList> cppExportedHeaders;
   public Optional<SourceWithFlagsList> cppSrcs;
   public Optional<ImmutableSortedSet<BuildTarget>> cppDeps;
   public Optional<ImmutableSortedSet<BuildTarget>> cpp2Deps;

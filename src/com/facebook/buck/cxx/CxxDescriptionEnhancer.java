@@ -33,7 +33,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -245,17 +245,17 @@ public class CxxDescriptionEnhancer {
       BuildTarget buildTarget,
       Optional<String> headerNamespace,
       String parameterName,
-      Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> parameter) {
+      Optional<SourceList> parameter) {
     ImmutableMap<String, SourcePath> headers;
     if (!parameter.isPresent()) {
       headers = ImmutableMap.of();
-    } else if (parameter.get().isRight()) {
-      headers = parameter.get().getRight();
+    } else if (parameter.get().getNamedSources().isPresent()) {
+      headers = parameter.get().getNamedSources().get();
     } else {
       headers = pathResolver.getSourcePathNames(
           buildTarget,
           parameterName,
-          parameter.get().getLeft());
+          parameter.get().getUnnamedSources().get());
     }
     return CxxPreprocessables.resolveHeaderMap(
         headerNamespace.transform(MorePaths.TO_PATH)

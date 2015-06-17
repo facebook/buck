@@ -201,12 +201,11 @@ public class CxxLibraryDescriptionTest {
     String privateHeaderName = "test/bar_private.h";
     CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
         .setExportedHeaders(
-            ImmutableList.<SourcePath>of(
+            ImmutableSortedSet.<SourcePath>of(
                 new TestSourcePath(headerName),
                 new BuildTargetSourcePath(projectFilesystem, genHeaderTarget)))
         .setHeaders(
-            ImmutableList.<SourcePath>of(
-                new TestSourcePath(privateHeaderName)))
+            ImmutableSortedSet.<SourcePath>of(new TestSourcePath(privateHeaderName)))
         .setSrcs(
             ImmutableList.of(
                 SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),

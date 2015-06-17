@@ -31,9 +31,9 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.coercer.Either;
-import com.facebook.buck.rules.coercer.SourceWithFlagsList;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -449,12 +449,9 @@ public class CxxLibraryDescription implements
     arg.srcs = Optional.of(
         SourceWithFlagsList.ofUnnamedSources(ImmutableList.<SourceWithFlags>of()));
     arg.prefixHeaders = Optional.of(ImmutableList.<SourcePath>of());
-    arg.headers = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.<SourcePath>of()));
+    arg.headers = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
     arg.exportedHeaders = Optional.of(
-        Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableList.<SourcePath>of()));
+        SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
     arg.compilerFlags = Optional.of(ImmutableList.<String>of());
     arg.platformCompilerFlags =
         Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
@@ -866,8 +863,7 @@ public class CxxLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
-    public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>>
-        exportedHeaders;
+    public Optional<SourceList> exportedHeaders;
     public Optional<ImmutableList<String>> exportedPreprocessorFlags;
     public Optional<ImmutableList<Pair<String, ImmutableList<String>>>>
         exportedPlatformPreprocessorFlags;

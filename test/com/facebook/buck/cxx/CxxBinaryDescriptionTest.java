@@ -178,7 +178,7 @@ public class CxxBinaryDescriptionTest {
                               projectFilesystem,
                               genSource.getBuildTarget()))))
               .setHeaders(
-                  ImmutableList.<SourcePath>of(
+                  ImmutableSortedSet.<SourcePath>of(
                       new TestSourcePath("test/bar.h"),
                       new BuildTargetSourcePath(projectFilesystem, genHeader.getBuildTarget())))
               .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));

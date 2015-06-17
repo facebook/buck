@@ -21,7 +21,7 @@ import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -35,7 +35,7 @@ import java.nio.file.Path;
 public class CxxConstructorArg implements HasTests {
 
   public Optional<SourceWithFlagsList> srcs;
-  public Optional<Either<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>> headers;
+  public Optional<SourceList> headers;
   public Optional<ImmutableList<SourcePath>> prefixHeaders;
   public Optional<ImmutableList<String>> compilerFlags;
   public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformCompilerFlags;

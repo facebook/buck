@@ -26,8 +26,8 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +53,7 @@ public class AppleDescriptionsTest {
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
             new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
             Paths.get("prefix"),
-            Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+            SourceList.ofUnnamedSources(
                 ImmutableSortedSet.<SourcePath>of(
                     new TestSourcePath("path/to/some_file.h"),
                     new TestSourcePath("path/to/another_file.h"),
@@ -71,7 +71,7 @@ public class AppleDescriptionsTest {
             "file.h", new TestSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
             new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
-            Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+            SourceList.ofUnnamedSources(
                 ImmutableSortedSet.<SourcePath>of(
                     new TestSourcePath("path/to/some_file.h"),
                     new TestSourcePath("path/to/another_file.h"),
@@ -91,8 +91,7 @@ public class AppleDescriptionsTest {
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
             new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
             Paths.get("prefix"),
-            Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-                headerMap)));
+            SourceList.ofNamedSources(headerMap)));
   }
 
   @Test
@@ -106,8 +105,7 @@ public class AppleDescriptionsTest {
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
             new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
-            Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
-                headerMap)));
+            SourceList.ofNamedSources(headerMap)));
   }
 
   @Test

@@ -55,6 +55,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
@@ -946,13 +947,13 @@ public class ProjectGenerator {
   }
 
   private Iterable<SourcePath> getHeaderSourcePaths(
-      Optional<Either<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>> headers) {
+      Optional<SourceList> headers) {
     if (!headers.isPresent()) {
       return ImmutableList.of();
-    } else if (headers.get().isLeft()) {
-      return headers.get().getLeft();
+    } else if (headers.get().getUnnamedSources().isPresent()) {
+      return headers.get().getUnnamedSources().get();
     } else {
-      return headers.get().getRight().values();
+      return headers.get().getNamedSources().get().values();
     }
   }
 

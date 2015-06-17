@@ -36,7 +36,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -75,7 +75,7 @@ public class PythonTestDescriptionTest {
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.srcs = Optional.of(
-        Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
+        SourceList.ofUnnamedSources(
             ImmutableSortedSet.<SourcePath>of(new TestSourcePath("blah.py"))));
     arg.resources = Optional.absent();
     arg.baseModule = Optional.absent();
@@ -120,9 +120,7 @@ public class PythonTestDescriptionTest {
     arg.contacts = Optional.absent();
     arg.labels = Optional.absent();
     arg.sourceUnderTest = Optional.absent();
-    arg.srcs = Optional.of(
-        Either.<ImmutableSortedSet<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
-            ImmutableSortedSet.of(source)));
+    arg.srcs = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)));
     arg.zipSafe = Optional.absent();
 
     // Run without a base module set and verify it defaults to using the build target
