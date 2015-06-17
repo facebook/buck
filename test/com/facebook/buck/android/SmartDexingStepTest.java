@@ -118,8 +118,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
+            "(cd / && " +
             Paths.get("/usr/bin/dx") + " " + xmx +
-                "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar",
+                "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar)",
             "repack classes.dex.tmp.jar in classes.dex.jar",
             "rm -f classes.dex.tmp.jar",
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
@@ -140,8 +141,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
+        "(cd / && " +
         Paths.get("/usr/bin/dx") + " " + xmx +
-            "--dex --output classes.dex foo.dex.jar bar.dex.jar",
+            "--dex --output classes.dex foo.dex.jar bar.dex.jar)",
         dxStep.getDescription(createMockedExecutionContext()));
     verifyAll();
   }
@@ -156,8 +158,9 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
+        "(cd / && " +
         Paths.get("/usr/bin/dx") + " " + xmx + "--dex --output classes.dex.jar " +
-        "foo.dex.jar bar.dex.jar && dex_meta dexPath:classes.dex.jar " +
+        "foo.dex.jar bar.dex.jar) && dex_meta dexPath:classes.dex.jar " +
         "dexMetaPath:classes.dex.jar.meta",
         dxStep.getDescription(createMockedExecutionContext()));
     verifyAll();
@@ -176,6 +179,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    expect(projectFilesystem.getRootPath()).andReturn(Paths.get("/"));
     expect(projectFilesystem.resolve(anyObject(Path.class))).andAnswer(
         new IAnswer<Path>() {
           @Override

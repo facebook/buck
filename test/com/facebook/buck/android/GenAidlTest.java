@@ -79,6 +79,7 @@ public class GenAidlTest {
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
+    expect(executionContext.getProjectDirectoryRoot()).andReturn(Paths.get("/"));
     expect(executionContext.getProjectFilesystem()).andReturn(
         new ProjectFilesystem(Paths.get(".")) {
           @Override
@@ -104,7 +105,7 @@ public class GenAidlTest {
     ShellStep aidlStep = (ShellStep) steps.get(2);
     assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
-        String.format("%s -b -p%s -I%s -o%s %s",
+        String.format("(cd / && %s -b -p%s -I%s -o%s %s)",
             pathToAidlExecutable,
             pathToFrameworkAidl,
             importPath,

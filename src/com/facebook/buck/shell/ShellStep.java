@@ -92,21 +92,26 @@ public abstract class ShellStep implements Step {
     return workingDirectory;
   }
 
+  private File getFinalWorkingDirectory(ExecutionContext context) {
+    if (workingDirectory != null) {
+      return workingDirectory;
+    }
+
+    return context.getProjectDirectoryRoot().toAbsolutePath().toFile();
+  }
+
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
     // Kick off a Process in which this ShellCommand will be run.
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
 
+    File workDir = getFinalWorkingDirectory(context);
+
     builder.setCommand(getShellCommand(context));
     Map<String, String> environment = Maps.newHashMap();
-    setProcessEnvironment(context, environment);
+    setProcessEnvironment(context, environment, workDir);
     builder.setEnvironment(environment);
-
-    if (workingDirectory != null) {
-      builder.setDirectory(workingDirectory);
-    } else {
-      builder.setDirectory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
-    }
+    builder.setDirectory(workDir);
 
     Optional<String> stdin = getStdin(context);
     if (stdin.isPresent()) {
@@ -128,11 +133,18 @@ public abstract class ShellStep implements Step {
   }
 
   @VisibleForTesting
-  void setProcessEnvironment(ExecutionContext context, Map<String, String> environment) {
+  void setProcessEnvironment(
+      ExecutionContext context,
+      Map<String, String> environment,
+      File workDir) {
 
     // Replace environment with client environment.
     environment.clear();
     environment.putAll(context.getEnvironment());
+
+    // Make sure the special PWD variable matches the working directory
+    // of the process (unless otherwise set).
+    environment.put("PWD", workDir.toString());
 
     // Add extra environment variables for step, if appropriate.
     if (!getEnvironmentVariables(context).isEmpty()) {
@@ -234,16 +246,14 @@ public abstract class ShellStep implements Step {
     Iterable<String> cmd = Iterables.transform(getShellCommand(context), Escaper.SHELL_ESCAPER);
 
     String shellCommand = Joiner.on(" ").join(Iterables.concat(env, cmd));
-    if (getWorkingDirectory() == null) {
-      return shellCommand;
-    } else {
-      // If the ShellCommand has a specific working directory, set through ProcessBuilder, then
-      // this is what the user might type in a shell to get the same behavior. The (...) syntax
-      // introduces a subshell in which the command is only executed if cd was successful.
-      return String.format("(cd %s && %s)",
-          Escaper.escapeAsBashString(Preconditions.checkNotNull(workingDirectory).getPath()),
-          shellCommand);
-    }
+    // This is what the user might type in a shell to set the working directory correctly. The (...)
+    // syntax introduces a subshell in which the command is only executed if cd was successful.
+    // Note that we shouldn't add a special case for workingDirectory==null, because we always
+    // resolve symbolic links in this case, and the default PWD might leave symbolic links
+    // unresolved.  We try to make PWD match, and cd sets PWD.
+    return String.format("(cd %s && %s)",
+        Escaper.escapeAsBashString(getFinalWorkingDirectory(context).getPath()),
+        shellCommand);
   }
 
   /**

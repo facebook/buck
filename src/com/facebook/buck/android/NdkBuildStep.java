@@ -27,7 +27,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
@@ -134,17 +133,6 @@ public class NdkBuildStep extends ShellStep {
       builder.add("--silent");
     }
 
-    return builder.build();
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    ImmutableMap<String, String> base = super.getEnvironmentVariables(context);
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-
-    // Ensure the external environment gets superceded by internal mappings.
-    builder.putAll(context.getEnvironment());
-    builder.putAll(base);
     return builder.build();
   }
 

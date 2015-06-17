@@ -102,6 +102,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     expect(androidPlatformTarget.getDxExecutable()).andReturn(Paths.get("/usr/bin/dx"));
 
     ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
+    expect(projectFilesystem.getRootPath()).andReturn(Paths.get("/"));
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo")))
         .andStubReturn(Paths.get("/home/user/buck-out/gen/foo"));
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar#dex.dex.jar")))
@@ -126,7 +127,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
           String.format("rm -f %s", Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar")),
           String.format("mkdir -p %s", Paths.get("/home/user/buck-out/gen/foo")),
           "estimate_linear_alloc",
-          expectedDxCommand,
+          "(cd / && " + expectedDxCommand + ")",
           "record_dx_success"),
         steps,
         executionContext);
