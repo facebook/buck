@@ -50,9 +50,8 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return
-      sourcePathTypeCoercer.hasElementClass(types) ||
-      flagsTypeCoercer.hasElementClass(types);
+    return sourcePathTypeCoercer.hasElementClass(types) ||
+        flagsTypeCoercer.hasElementClass(types);
   }
 
   @Override

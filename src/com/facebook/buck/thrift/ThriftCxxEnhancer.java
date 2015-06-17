@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -235,10 +236,10 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     ImmutableMap.Builder<String, SourceWithFlags> srcsBuilder = ImmutableMap.builder();
     srcsBuilder.putAll(spec.getSources());
     if (args.cppSrcs.isPresent()) {
-      if (args.cppSrcs.get().isRight()) {
-        srcsBuilder.putAll(args.cppSrcs.get().getRight());
+      if (args.cppSrcs.get().getNamedSources().isPresent()) {
+        srcsBuilder.putAll(args.cppSrcs.get().getNamedSources().get());
       } else {
-        for (SourceWithFlags sourceWithFlags : args.cppSrcs.get().getLeft()) {
+        for (SourceWithFlags sourceWithFlags : args.cppSrcs.get().getUnnamedSources().get()) {
           srcsBuilder.put(
               pathResolver.getSourcePathName(
                   params.getBuildTarget(),
@@ -252,10 +253,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     // Construct the C/C++ library description argument to pass to the
     CxxLibraryDescription.Arg langArgs = CxxLibraryDescription.createEmptyConstructorArg();
     langArgs.headerNamespace = args.cppHeaderNamespace;
-    langArgs.srcs =
-        Optional.of(
-            Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofRight(
-                srcs));
+    langArgs.srcs = Optional.of(SourceWithFlagsList.ofNamedSources(srcs));
     langArgs.exportedHeaders =
         Optional.of(
             Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(headers));

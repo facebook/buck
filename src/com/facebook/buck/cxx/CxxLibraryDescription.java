@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
@@ -446,8 +447,7 @@ public class CxxLibraryDescription implements
     Arg arg = new Arg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.srcs = Optional.of(
-        Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofLeft(
-            ImmutableList.<SourceWithFlags>of()));
+        SourceWithFlagsList.ofUnnamedSources(ImmutableList.<SourceWithFlags>of()));
     arg.prefixHeaders = Optional.of(ImmutableList.<SourcePath>of());
     arg.headers = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofLeft(
@@ -794,12 +794,17 @@ public class CxxLibraryDescription implements
     // I'm not proud of this.
     boolean hasObjects = false;
     if (args.srcs.isPresent()) {
-      Either<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>> either =
-          args.srcs.get();
-      if (either.isLeft()) {
-        hasObjects = !either.getLeft().isEmpty();
-      } else {
-        hasObjects = !either.getRight().isEmpty();
+      SourceWithFlagsList sourceWithFlagsList = args.srcs.get();
+      switch (sourceWithFlagsList.getType()) {
+        case UNNAMED:
+          hasObjects = !sourceWithFlagsList.getUnnamedSources().get().isEmpty();
+          break;
+        case NAMED:
+          hasObjects = !sourceWithFlagsList.getNamedSources().get().isEmpty();
+          break;
+        default:
+          throw new RuntimeException(
+              String.format("Unsupported type: %s", sourceWithFlagsList.getType()));
       }
     }
     hasObjects |=

@@ -306,14 +306,14 @@ public class CxxDescriptionEnhancer {
     ImmutableMap<String, SourceWithFlags> sources;
     if (!args.srcs.isPresent()) {
       sources = ImmutableMap.of();
-    } else if (args.srcs.get().isRight()) {
-      sources = args.srcs.get().getRight();
+    } else if (args.srcs.get().getNamedSources().isPresent()) {
+      sources = args.srcs.get().getNamedSources().get();
     } else {
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
       sources = pathResolver.getSourcePathNames(
           params.getBuildTarget(),
           "srcs",
-          args.srcs.get().getLeft(),
+          args.srcs.get().getUnnamedSources().get(),
           SourceWithFlags.TO_SOURCE_PATH);
     }
     return CxxCompilableEnhancer.resolveCxxSources(sources);

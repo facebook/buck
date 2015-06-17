@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -564,10 +565,7 @@ public class ThriftCxxEnhancerTest {
         Optional.of(
             Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
                 cppHeaders));
-    arg.cppSrcs =
-        Optional.of(
-            Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofRight(
-                cppSrcs));
+    arg.cppSrcs = Optional.of(SourceWithFlagsList.ofNamedSources(cppSrcs));
 
     ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source", pathResolver);
     resolver.addToIndex(thrift);
@@ -599,7 +597,7 @@ public class ThriftCxxEnhancerTest {
             }
             for (Map.Entry<String, SourceWithFlags> source : cppSrcs.entrySet()) {
               assertThat(
-                  args.srcs.get().getRight().get(source.getKey()),
+                  args.srcs.get().getNamedSources().get().get(source.getKey()),
                   Matchers.equalTo(source.getValue()));
             }
             return super.createBuildRule(params, resolver, args);

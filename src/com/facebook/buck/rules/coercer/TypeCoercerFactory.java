@@ -42,42 +42,37 @@ import java.nio.file.Path;
  * types.
  */
 public class TypeCoercerFactory {
-  private final TypeCoercer<Label> labelTypeCoercer = new LabelTypeCoercer();
-  private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
-  private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
-
-  // This has no implementation, but is here so that constructor succeeds so that it can be queried.
-  // This is only used for the visibility field, which is not actually handled by the coercer.
-  private final TypeCoercer<BuildTargetPattern> buildTargetPatternTypeCoercer =
-      new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
-        @Override
-        public BuildTargetPattern coerce(
-            BuildTargetParser buildTargetParser,
-            ProjectFilesystem filesystem,
-            Path pathRelativeToProjectRoot,
-            Object object)
-            throws CoerceFailedException {
-          throw new UnsupportedOperationException();
-        }
-      };
-
-  private final TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
-
-  private final TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer;
-
-  private final TypeCoercer<OCamlSource> ocamlSourceTypeCoercer;
-
-  private final TypeCoercer<?>[] nonContainerTypeCoercers;
+  private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
 
   public TypeCoercerFactory() {
-    buildTargetTypeCoercer = new BuildTargetTypeCoercer();
-    sourcePathTypeCoercer = new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
-    sourceWithFlagsTypeCoercer = new SourceWithFlagsTypeCoercer(
+    TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);
+    TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
+    TypeCoercer<Label> labelTypeCoercer = new LabelTypeCoercer();
+    // This has no implementation, but is here so that constructor succeeds so that it can be
+    // queried. This is only used for the visibility field, which is not actually handled by the
+    // coercer.
+    TypeCoercer<BuildTargetPattern> buildTargetPatternTypeCoercer =
+        new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
+          @Override
+          public BuildTargetPattern coerce(
+              BuildTargetParser buildTargetParser,
+              ProjectFilesystem filesystem,
+              Path pathRelativeToProjectRoot,
+              Object object)
+              throws CoerceFailedException {
+            throw new UnsupportedOperationException();
+          }
+        };
+    TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
+    TypeCoercer<SourcePath> sourcePathTypeCoercer = new SourcePathTypeCoercer(
+        buildTargetTypeCoercer,
+        pathTypeCoercer);
+    TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer = new SourceWithFlagsTypeCoercer(
         sourcePathTypeCoercer,
         new ListTypeCoercer<>(stringTypeCoercer));
-    ocamlSourceTypeCoercer = new OCamlSourceTypeCoercer(sourcePathTypeCoercer);
-    nonContainerTypeCoercers = new TypeCoercer<?>[] {
+    TypeCoercer<OCamlSource> ocamlSourceTypeCoercer = new OCamlSourceTypeCoercer(
+        sourcePathTypeCoercer);
+    nonParameterizedTypeCoercers = new TypeCoercer<?>[] {
         // special classes
         labelTypeCoercer,
         pathTypeCoercer,
@@ -103,6 +98,7 @@ public class TypeCoercerFactory {
         new BuildConfigFieldsTypeCoercer(),
         new UriTypeCoercer(),
         new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
+        new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
     };
   }
 
@@ -129,7 +125,7 @@ public class TypeCoercerFactory {
       }
 
       TypeCoercer<?> selectedTypeCoercer = null;
-      for (TypeCoercer<?> typeCoercer : nonContainerTypeCoercers) {
+      for (TypeCoercer<?> typeCoercer : nonParameterizedTypeCoercers) {
         if (rawClass.isAssignableFrom(typeCoercer.getOutputClass())) {
           if (selectedTypeCoercer == null) {
             selectedTypeCoercer = typeCoercer;

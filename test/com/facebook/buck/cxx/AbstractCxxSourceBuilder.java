@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -37,23 +38,16 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
   }
 
   public AbstractCxxSourceBuilder<T> setSrcs(ImmutableList<SourceWithFlags> srcs)  {
-    arg.srcs =
-        Optional.of(
-            Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofLeft(
-                srcs));
+    arg.srcs = Optional.of(SourceWithFlagsList.ofUnnamedSources(srcs));
     return this;
   }
 
   public AbstractCxxSourceBuilder<T> setSrcs(ImmutableMap<String, SourceWithFlags> srcs)  {
-    arg.srcs =
-        Optional.of(
-            Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofRight(
-                srcs));
+    arg.srcs = Optional.of(SourceWithFlagsList.ofNamedSources(srcs));
     return this;
   }
 
-  public AbstractCxxSourceBuilder<T> setSrcs(
-      Either<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>> srcs)  {
+  public AbstractCxxSourceBuilder<T> setSrcs(SourceWithFlagsList srcs)  {
     arg.srcs = Optional.of(srcs);
     return this;
   }

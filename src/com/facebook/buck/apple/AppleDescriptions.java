@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
@@ -32,7 +32,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -191,9 +191,7 @@ public class AppleDescriptions {
       expandSdkVariableRefs = Functions.identity();
     }
 
-    output.srcs = Optional.of(
-        Either.<ImmutableList<SourceWithFlags>, ImmutableMap<String, SourceWithFlags>>ofLeft(
-            arg.srcs.get()));
+    output.srcs = Optional.of(SourceWithFlagsList.ofUnnamedSources(arg.srcs.get()));
     output.headers = Optional.of(
         Either.<ImmutableList<SourcePath>, ImmutableMap<String, SourcePath>>ofRight(
             headerMap));
