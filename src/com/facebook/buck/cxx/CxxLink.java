@@ -21,15 +21,19 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
-public class CxxLink extends AbstractBuildRule {
+public class CxxLink extends AbstractBuildRule implements RuleKeyAppendable {
 
   @AddToRuleKey
   private final Tool linker;
@@ -38,8 +42,10 @@ public class CxxLink extends AbstractBuildRule {
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final ImmutableList<SourcePath> inputs;
-  @AddToRuleKey
+  // We need to make sure we sanitize paths in the arguments, so add them to the rule key
+  // in `appendToRuleKey` where we can first filter the args through the sanitizer.
   private final ImmutableList<String> args;
+  private final DebugPathSanitizer sanitizer;
 
   public CxxLink(
       BuildRuleParams params,
@@ -47,12 +53,23 @@ public class CxxLink extends AbstractBuildRule {
       Tool linker,
       Path output,
       ImmutableList<SourcePath> inputs,
-      ImmutableList<String> args) {
+      ImmutableList<String> args,
+      DebugPathSanitizer sanitizer) {
     super(params, resolver);
     this.linker = linker;
     this.output = output;
     this.inputs = inputs;
     this.args = args;
+    this.sanitizer = sanitizer;
+  }
+
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder.setReflectively(
+        "args",
+        FluentIterable.from(args)
+            .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
+            .toList());
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.model.BuildTarget;
@@ -32,11 +33,13 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -52,6 +55,8 @@ public class CxxLinkTest {
       "-rpath",
       "/lib",
       "libc.a");
+  private static final DebugPathSanitizer DEFAULT_SANITIZER =
+      CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
 
   private RuleKey generateRuleKey(
       RuleKeyBuilderFactory factory,
@@ -86,7 +91,8 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS,
-            DEFAULT_ARGS));
+            DEFAULT_ARGS,
+            DEFAULT_SANITIZER));
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey linkerChange = generateRuleKey(
@@ -97,7 +103,8 @@ public class CxxLinkTest {
             new HashedFileTool(Paths.get("different")),
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS,
-            DEFAULT_ARGS));
+            DEFAULT_ARGS,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
@@ -109,7 +116,8 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             Paths.get("different"),
             DEFAULT_INPUTS,
-            DEFAULT_ARGS));
+            DEFAULT_ARGS,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
@@ -121,7 +129,8 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             ImmutableList.<SourcePath>of(new TestSourcePath("different")),
-            DEFAULT_ARGS));
+            DEFAULT_ARGS,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the flags causes a rulekey change.
@@ -133,9 +142,71 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS,
-            ImmutableList.of("-different")));
+            ImmutableList.of("-different"),
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, flagsChange);
 
+  }
+
+  @Test
+  public void sanitizedPathsInFlagsDoNotAffectRuleKey() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(
+                ImmutableMap.of(
+                    "ld", Strings.repeat("0", 40),
+                    "a.o", Strings.repeat("a", 40),
+                    "b.o", Strings.repeat("b", 40),
+                    "libc.a", Strings.repeat("c", 40),
+                    "different", Strings.repeat("d", 40))),
+            pathResolver);
+
+    // Set up a map to sanitize the differences in the flags.
+    int pathSize = 10;
+    DebugPathSanitizer sanitizer1 =
+        new DebugPathSanitizer(
+            pathSize,
+            File.separatorChar,
+            Paths.get("PWD"),
+            ImmutableBiMap.of(Paths.get("something"), Paths.get("A")));
+    DebugPathSanitizer sanitizer2 =
+        new DebugPathSanitizer(
+            pathSize,
+            File.separatorChar,
+            Paths.get("PWD"),
+            ImmutableBiMap.of(Paths.get("different"), Paths.get("A")));
+
+    // Generate a rule with a path we need to sanitize to a consistent value.
+    ImmutableList<String> args1 = ImmutableList.of("-Lsomething/foo");
+    RuleKey ruleKey1 = generateRuleKey(
+        ruleKeyBuilderFactory,
+        new CxxLink(
+            params,
+            pathResolver,
+            DEFAULT_LINKER,
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUTS,
+            args1,
+            sanitizer1));
+
+    // Generate another rule with a different path we need to sanitize to the
+    // same consistent value as above.
+    ImmutableList<String> args2 = ImmutableList.of("-Ldifferent/foo");
+    RuleKey ruleKey2 = generateRuleKey(
+        ruleKeyBuilderFactory,
+        new CxxLink(
+            params,
+            pathResolver,
+            DEFAULT_LINKER,
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUTS,
+            args2,
+            sanitizer2));
+
+    assertEquals(ruleKey1, ruleKey2);
   }
 
 }

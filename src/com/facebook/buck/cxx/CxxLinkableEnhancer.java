@@ -181,7 +181,8 @@ public class CxxLinkableEnhancer {
         cxxPlatform.getCxxld(),
         output,
         allInputs,
-        args);
+        args,
+        cxxPlatform.getDebugPathSanitizer());
   }
 
 }
