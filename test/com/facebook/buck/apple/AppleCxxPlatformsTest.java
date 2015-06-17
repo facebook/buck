@@ -24,22 +24,49 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPreprocessAndCompile;
+import com.facebook.buck.cxx.CxxPreprocessMode;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Map;
 
 /**
  * Unit tests for {@link AppleCxxPlatforms}.
@@ -122,7 +149,10 @@ public class AppleCxxPlatformsTest {
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
         cxxPlatform.getCc().getCommandPrefix(resolver).get(0));
     assertThat(
-        cxxPlatform.getCflags(),
+        ImmutableList.<String>builder()
+            .addAll(cxxPlatform.getCc().getCommandPrefix(resolver))
+            .addAll(cxxPlatform.getCflags())
+            .build(),
         hasConsecutiveItems(
             "-isysroot",
             Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk").toString()));
@@ -351,4 +381,204 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCxxldflags(),
         hasItem("-mios-simulator-version-min=7.0"));
   }
+
+  enum Operation {
+    PREPROCESS,
+    COMPILE,
+    PREPROCESS_AND_COMPILE,
+  }
+
+  // Create and return some rule keys from a dummy source for the given platforms.
+  private ImmutableMap<Flavor, RuleKey> constructCompileRuleKeys(
+      Operation operation,
+      ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    String source = "source.cpp";
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(
+                ImmutableMap.<String, String>builder()
+                    .put("source.cpp", Strings.repeat("a", 40))
+                    .build()),
+            pathResolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    ImmutableMap.Builder<Flavor, RuleKey> ruleKeys =
+        ImmutableMap.builder();
+    for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {
+      CxxSourceRuleFactory cxxSourceRuleFactory =
+          new CxxSourceRuleFactory(
+              BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+              resolver,
+              pathResolver,
+              entry.getValue().getCxxPlatform(),
+              ImmutableList.<CxxPreprocessorInput>of(),
+              ImmutableList.<String>of());
+      CxxPreprocessAndCompile rule;
+      switch (operation) {
+        case PREPROCESS_AND_COMPILE:
+          rule =
+              cxxSourceRuleFactory.createPreprocessAndCompileBuildRule(
+                  resolver,
+                  source,
+                  CxxSource.of(
+                      CxxSource.Type.CXX,
+                      new TestSourcePath(source),
+                      ImmutableList.<String>of()),
+                  CxxSourceRuleFactory.PicType.PIC,
+                  CxxPreprocessMode.COMBINED);
+          break;
+        case PREPROCESS:
+          rule =
+              cxxSourceRuleFactory.createPreprocessBuildRule(
+                  resolver,
+                  source,
+                  CxxSource.of(
+                      CxxSource.Type.CXX,
+                      new TestSourcePath(source),
+                      ImmutableList.<String>of()),
+                  CxxSourceRuleFactory.PicType.PIC);
+          break;
+        case COMPILE:
+          rule =
+              cxxSourceRuleFactory.createCompileBuildRule(
+                  resolver,
+                  source,
+                  CxxSource.of(
+                      CxxSource.Type.CXX_CPP_OUTPUT,
+                      new TestSourcePath(source),
+                      ImmutableList.<String>of()),
+                  CxxSourceRuleFactory.PicType.PIC);
+          break;
+        default:
+          throw new IllegalStateException();
+      }
+      RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(rule);
+      ruleKeys.put(entry.getKey(), builder.build());
+    }
+    return ruleKeys.build();
+  }
+
+  // Create and return some rule keys from a dummy source for the given platforms.
+  private ImmutableMap<Flavor, RuleKey> constructLinkRuleKeys(
+      ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(
+                ImmutableMap.<String, String>builder()
+                    .put("input.o", Strings.repeat("a", 40))
+                    .build()),
+            pathResolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    ImmutableMap.Builder<Flavor, RuleKey> ruleKeys =
+        ImmutableMap.builder();
+    for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {
+      BuildRule rule =
+          CxxLinkableEnhancer.createCxxLinkableBuildRule(
+              entry.getValue().getCxxPlatform(),
+              BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+              pathResolver,
+              ImmutableList.<String>of(),
+              ImmutableList.<String>of(),
+              target,
+              Linker.LinkType.EXECUTABLE,
+              Optional.<String>absent(),
+              Paths.get("output"),
+              ImmutableList.<SourcePath>of(new TestSourcePath("input.o")),
+              Linker.LinkableDepType.SHARED,
+              ImmutableList.<BuildRule>of(),
+              Optional.<Linker.CxxRuntimeType>absent(),
+              Optional.<SourcePath>absent());
+      RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(rule);
+      ruleKeys.put(entry.getKey(), builder.build());
+    }
+    return ruleKeys.build();
+  }
+
+  private AppleCxxPlatform buildAppleCxxPlatform(Path root) {
+    AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
+        .setDeveloperPath(root)
+        .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
+        .setSdkPath(
+            root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
+        .build();
+    AppleToolchain toolchain = AppleToolchain.builder()
+        .setIdentifier("com.apple.dt.XcodeDefault")
+        .setPath(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+        .setVersion("1")
+        .build();
+    AppleSdk targetSdk = AppleSdk.builder()
+        .setApplePlatform(
+            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONESIMULATOR).build())
+        .setName("iphonesimulator8.0")
+        .setVersion("8.0")
+        .setToolchains(ImmutableList.of(toolchain))
+        .build();
+    return AppleCxxPlatforms.buildWithExecutableChecker(
+        targetSdk,
+        "7.0",
+        "armv7",
+        appleSdkPaths,
+        new FakeBuckConfig(),
+        new AlwaysFoundExecutableFinder());
+  }
+
+  // The important aspects we check for in rule keys is that the host platform and the path
+  // to the NDK don't cause changes.
+  @Test
+  public void checkRootAndPlatformDoNotAffectRuleKeys() throws IOException {
+    Map<String, ImmutableMap<Flavor, RuleKey>> preprocessAndCompileRukeKeys = Maps.newHashMap();
+    Map<String, ImmutableMap<Flavor, RuleKey>> preprocessRukeKeys = Maps.newHashMap();
+    Map<String, ImmutableMap<Flavor, RuleKey>> compileRukeKeys = Maps.newHashMap();
+    Map<String, ImmutableMap<Flavor, RuleKey>> linkRukeKeys = Maps.newHashMap();
+
+    // Iterate building up rule keys for combinations of different platforms and NDK root
+    // directories.
+    for (String dir : ImmutableList.of("something", "something else")) {
+      AppleCxxPlatform platform = buildAppleCxxPlatform(Paths.get(dir));
+      preprocessAndCompileRukeKeys.put(
+          String.format("AppleCxxPlatform(%s)", dir),
+          constructCompileRuleKeys(
+              Operation.PREPROCESS_AND_COMPILE,
+              ImmutableMap.of(platform.getCxxPlatform().getFlavor(), platform)));
+      preprocessRukeKeys.put(
+          String.format("AppleCxxPlatform(%s)", dir),
+          constructCompileRuleKeys(
+              Operation.PREPROCESS,
+              ImmutableMap.of(platform.getCxxPlatform().getFlavor(), platform)));
+      compileRukeKeys.put(
+          String.format("AppleCxxPlatform(%s)", dir),
+          constructCompileRuleKeys(
+              Operation.COMPILE,
+              ImmutableMap.of(platform.getCxxPlatform().getFlavor(), platform)));
+      linkRukeKeys.put(
+          String.format("AppleCxxPlatform(%s)", dir),
+          constructLinkRuleKeys(
+              ImmutableMap.of(platform.getCxxPlatform().getFlavor(), platform)));
+    }
+
+    // If everything worked, we should be able to collapse all the generated rule keys down
+    // to a singleton set.
+    assertThat(
+        Arrays.toString(preprocessAndCompileRukeKeys.entrySet().toArray()),
+        Sets.newHashSet(preprocessAndCompileRukeKeys.values()),
+        Matchers.hasSize(1));
+    assertThat(
+        Arrays.toString(preprocessRukeKeys.entrySet().toArray()),
+        Sets.newHashSet(preprocessRukeKeys.values()),
+        Matchers.hasSize(1));
+    assertThat(
+        Arrays.toString(compileRukeKeys.entrySet().toArray()),
+        Sets.newHashSet(compileRukeKeys.values()),
+        Matchers.hasSize(1));
+    assertThat(
+        Arrays.toString(linkRukeKeys.entrySet().toArray()),
+        Sets.newHashSet(linkRukeKeys.values()),
+        Matchers.hasSize(1));
+
+  }
+
 }
