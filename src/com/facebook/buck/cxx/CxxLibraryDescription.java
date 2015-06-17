@@ -54,6 +54,7 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
@@ -872,7 +873,7 @@ public class CxxLibraryDescription implements
     public Optional<ImmutableList<String>> exportedLinkerFlags;
     public Optional<ImmutableList<Pair<String, ImmutableList<String>>>>
         exportedPlatformLinkerFlags;
-    public Optional<String> supportedPlatformsRegex;
+    public Optional<Pattern> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<Boolean> forceStatic;
     public Optional<Boolean> linkWhole;

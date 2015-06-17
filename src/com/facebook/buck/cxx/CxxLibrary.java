@@ -40,6 +40,7 @@ import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * An action graph representation of a C/C++ library from the target graph, providing the
@@ -53,7 +54,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
-  private final Optional<String> supportedPlatformsRegex;
+  private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableList<Path> frameworkSearchPaths;
   private final Linkage linkage;
   private final boolean linkWhole;
@@ -71,7 +72,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
-      Optional<String> supportedPlatformsRegex,
+      Optional<Pattern> supportedPlatformsRegex,
       ImmutableList<Path> frameworkSearchPaths,
       Linkage linkage,
       boolean linkWhole,
@@ -92,9 +93,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
-    return
-        !supportedPlatformsRegex.isPresent() ||
-        CxxFlags.compilePlatformRegex(supportedPlatformsRegex.get())
+    return !supportedPlatformsRegex.isPresent() ||
+        supportedPlatformsRegex.get()
             .matcher(cxxPlatform.getFlavor().toString())
             .find();
   }

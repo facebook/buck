@@ -24,6 +24,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.regex.Pattern;
+
 public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> {
 
   public CxxLibraryBuilder(
@@ -73,7 +75,7 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     return this;
   }
 
-  public CxxLibraryBuilder setSupportedPlatformsRegex(String regex) {
+  public CxxLibraryBuilder setSupportedPlatformsRegex(Pattern regex) {
     arg.supportedPlatformsRegex = Optional.of(regex);
     return this;
   }

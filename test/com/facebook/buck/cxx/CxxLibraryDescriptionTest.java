@@ -59,6 +59,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class CxxLibraryDescriptionTest {
 
@@ -909,7 +910,7 @@ public class CxxLibraryDescriptionTest {
         Matchers.not(Matchers.empty()));
 
     // Now, verify we get nothing when the supported platform regex excludes our platform.
-    cxxLibraryBuilder.setSupportedPlatformsRegex("nothing");
+    cxxLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
     cxxLibrary =
         (CxxLibrary) cxxLibraryBuilder
             .build(

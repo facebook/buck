@@ -49,6 +49,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public class CxxLibraryTest {
 
@@ -187,7 +188,7 @@ public class CxxLibraryTest {
         /* headerOnly */ false,
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         Functions.constant(ImmutableList.<String>of()),
-        /* supportedPlatformsRegex */ Optional.<String>absent(),
+        /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
         ImmutableList.<Path>of(),
         CxxLibrary.Linkage.STATIC,
         /* linkWhole */ false,
