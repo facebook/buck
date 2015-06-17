@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.base.Optional;
 
 public class IosPostprocessResourcesBuilder
     extends AbstractNodeBuilder<IosPostprocessResourcesDescription.Arg> {
@@ -31,7 +30,7 @@ public class IosPostprocessResourcesBuilder
     return new IosPostprocessResourcesBuilder(target);
   }
 
-  public IosPostprocessResourcesBuilder setCmd(Optional<String> cmd) {
+  public IosPostprocessResourcesBuilder setCmd(String cmd) {
     arg.cmd = cmd;
     return this;
   }

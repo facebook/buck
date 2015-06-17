@@ -1646,7 +1646,7 @@ public class ProjectGeneratorTest {
     BuildTarget scriptTarget = BuildTarget.builder("//foo", "post_build_script").build();
     TargetNode<?> scriptNode = IosPostprocessResourcesBuilder
         .createBuilder(scriptTarget)
-        .setCmd(Optional.of("script.sh"))
+        .setCmd("script.sh")
         .build();
 
     BuildTarget resourceTarget = BuildTarget.builder("//foo", "resource").build();

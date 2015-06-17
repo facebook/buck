@@ -577,9 +577,7 @@ public class NewNativeTargetProjectMutator {
       } else if (IosPostprocessResourcesDescription.TYPE.equals(node.getType())) {
         IosPostprocessResourcesDescription.Arg arg =
             (IosPostprocessResourcesDescription.Arg) node.getConstructorArg();
-        if (arg.cmd.isPresent()) {
-          shellScriptBuildPhase.setShellScript(arg.cmd.get());
-        }
+        shellScriptBuildPhase.setShellScript(arg.cmd);
       } else {
         // unreachable
         throw new IllegalStateException("Invalid rule type for shell script build phase");

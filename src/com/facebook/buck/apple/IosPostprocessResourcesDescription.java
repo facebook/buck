@@ -16,37 +16,34 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.macros.ExecutableMacroExpander;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Description for an ios_postprocess_resources rule which runs a shell script
  * after the 'copy resources' phase has run.
+ * <p>
+ * Example rule:
+ * <pre>
+ * ios_postprocess_resources(
+ *   name = 'pngcrush',
+ *   cmd = '../Tools/pngcrush.sh',
+ * )
+ * </pre>
+ * </p>
+ * This rule is a hack and in the long-term should be replaced with a rule
+ * which operates similarly to apk_genrule, or should be removed entirely
+ * if possible. Those rules do nothing when building with Buck.
  */
 public class IosPostprocessResourcesDescription
   implements Description<IosPostprocessResourcesDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("ios_postprocess_resources");
-
-  private static final BuildTargetParser BUILD_TARGET_PARSER = new BuildTargetParser();
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
-              "exe", new ExecutableMacroExpander(BUILD_TARGET_PARSER),
-              "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -59,24 +56,15 @@ public class IosPostprocessResourcesDescription
   }
 
   @Override
-  public <A extends Arg> IosPostprocessResources createBuildRule(
+  public <A extends Arg> NoopBuildRule createBuildRule(
     BuildRuleParams params,
     BuildRuleResolver resolver,
     A args) {
-    return new IosPostprocessResources(
-      params,
-      new SourcePathResolver(resolver),
-      /* srcs */ ImmutableList.<SourcePath>of(),
-      MACRO_HANDLER.getExpander(params.getBuildTarget(), resolver, params.getProjectFilesystem()),
-      args.cmd,
-      /* bash */ Optional.<String>absent(),
-      /* cmdExe */ Optional.<String>absent(),
-      /* out */ "",
-      params.getPathAbsolutifier());
+    return new NoopBuildRule(params, new SourcePathResolver(resolver));
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Optional<String> cmd;
+    public String cmd;
   }
 }
