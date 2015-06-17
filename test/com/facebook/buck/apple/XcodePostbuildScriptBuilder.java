@@ -19,18 +19,18 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 
-public class IosPostprocessResourcesBuilder
-    extends AbstractNodeBuilder<IosPostprocessResourcesDescription.Arg> {
+public class XcodePostbuildScriptBuilder
+    extends AbstractNodeBuilder<XcodePostbuildScriptDescription.Arg> {
 
-  protected IosPostprocessResourcesBuilder(BuildTarget target) {
-    super(new IosPostprocessResourcesDescription(), target);
+  protected XcodePostbuildScriptBuilder(BuildTarget target) {
+    super(new XcodePostbuildScriptDescription(), target);
   }
 
-  public static IosPostprocessResourcesBuilder createBuilder(BuildTarget target) {
-    return new IosPostprocessResourcesBuilder(target);
+  public static XcodePostbuildScriptBuilder createBuilder(BuildTarget target) {
+    return new XcodePostbuildScriptBuilder(target);
   }
 
-  public IosPostprocessResourcesBuilder setCmd(String cmd) {
+  public XcodePostbuildScriptBuilder setCmd(String cmd) {
     arg.cmd = cmd;
     return this;
   }

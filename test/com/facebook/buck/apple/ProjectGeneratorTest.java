@@ -1644,7 +1644,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testAppleBundleRuleWithPostBuildScriptDependency() throws IOException {
     BuildTarget scriptTarget = BuildTarget.builder("//foo", "post_build_script").build();
-    TargetNode<?> scriptNode = IosPostprocessResourcesBuilder
+    TargetNode<?> scriptNode = XcodePostbuildScriptBuilder
         .createBuilder(scriptTarget)
         .setCmd("script.sh")
         .build();

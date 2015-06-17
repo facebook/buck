@@ -1147,7 +1147,7 @@ public class ProjectGenerator {
       ImmutableList.Builder<TargetNode<?>> preRules,
       ImmutableList.Builder<TargetNode<?>> postRules) {
     for (TargetNode<?> targetNode : targetNodes) {
-      if (targetNode.getType().equals(IosPostprocessResourcesDescription.TYPE)) {
+      if (targetNode.getType().equals(XcodePostbuildScriptDescription.TYPE)) {
         postRules.add(targetNode);
       } else if (targetNode.getType().equals(GenruleDescription.TYPE)) {
         preRules.add(targetNode);

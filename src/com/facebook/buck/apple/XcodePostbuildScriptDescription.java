@@ -25,12 +25,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 /**
- * Description for an ios_postprocess_resources rule which runs a shell script
+ * Description for an xcode_postbuild_script rule which runs a shell script
  * after the 'copy resources' phase has run.
  * <p>
  * Example rule:
  * <pre>
- * ios_postprocess_resources(
+ * xcode_postbuild_script(
  *   name = 'pngcrush',
  *   cmd = '../Tools/pngcrush.sh',
  * )
@@ -40,10 +40,10 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
  * which operates similarly to apk_genrule, or should be removed entirely
  * if possible. Those rules do nothing when building with Buck.
  */
-public class IosPostprocessResourcesDescription
-  implements Description<IosPostprocessResourcesDescription.Arg> {
+public class XcodePostbuildScriptDescription
+  implements Description<XcodePostbuildScriptDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("ios_postprocess_resources");
+  public static final BuildRuleType TYPE = BuildRuleType.of("xcode_postbuild_script");
 
   @Override
   public BuildRuleType getBuildRuleType() {

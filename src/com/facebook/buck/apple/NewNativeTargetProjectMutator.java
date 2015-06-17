@@ -574,9 +574,9 @@ public class NewNativeTargetProjectMutator {
         if (!arg.out.isEmpty()) {
           shellScriptBuildPhase.getOutputPaths().add(arg.out);
         }
-      } else if (IosPostprocessResourcesDescription.TYPE.equals(node.getType())) {
-        IosPostprocessResourcesDescription.Arg arg =
-            (IosPostprocessResourcesDescription.Arg) node.getConstructorArg();
+      } else if (XcodePostbuildScriptDescription.TYPE.equals(node.getType())) {
+        XcodePostbuildScriptDescription.Arg arg =
+            (XcodePostbuildScriptDescription.Arg) node.getConstructorArg();
         shellScriptBuildPhase.setShellScript(arg.cmd);
       } else {
         // unreachable
