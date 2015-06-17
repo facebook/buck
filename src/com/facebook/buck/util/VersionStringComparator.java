@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 public class VersionStringComparator implements Comparator<String> {
 
   private static final Pattern VERSION_STRING_PATTERN =
-      Pattern.compile("(\\d+)(\\.\\d+)*?(_rc\\d+)*?$");
+      Pattern.compile("(\\d+)(\\.\\d+)*?(_rc\\d+)*?(?:-preview)?$");
 
   private static final Pattern VERSION_STRING_RC_PATTERN = Pattern.compile("_rc(\\d+)$");
 
