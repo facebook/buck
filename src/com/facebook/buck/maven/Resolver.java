@@ -126,86 +126,121 @@ public class Resolver {
 
     Map<Path, SortedSet<Prebuilt>> buckFiles = new HashMap<>();
 
-    for (Artifact root : graph.getNodes()) {
-      int index = root.getGroupId().lastIndexOf('.');
-      String projectName = root.getGroupId();
-      if (index != -1) {
-        projectName = projectName.substring(index + 1);
-      }
-      Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
-      Files.createDirectories(project);
+    for (Artifact artifact : graph.getNodes()) {
+      downloadArtifact(artifact, repoSys, session, buckFiles, graph);
+    }
 
-      SortedSet<Prebuilt> libs = buckFiles.get(project);
-      if (libs == null) {
-        libs = new TreeSet<>();
-        buckFiles.put(project, libs);
-      }
+    createBuckFiles(buckFiles);
+  }
 
-      Artifact jar = new DefaultArtifact(
-          root.getGroupId(),
-          root.getArtifactId(),
-          "jar",
-          root.getVersion());
-      Artifact srcs = new SubArtifact(jar, "sources", "jar");
+  private void downloadArtifact(
+      final Artifact artifactToDownload,
+      RepositorySystem repoSys,
+      RepositorySystemSession session,
+      Map<Path, SortedSet<Prebuilt>> buckFiles,
+      MutableDirectedGraph<Artifact> graph)
+      throws IOException, ArtifactResolutionException {
+    String projectName = getProjectName(artifactToDownload);
+    Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
+    Files.createDirectories(project);
 
-      ArtifactResult result = repoSys.resolveArtifact(
-          session,
-          new ArtifactRequest(jar, repos, null));
-      Path relativePath = copy(result, project);
+    SortedSet<Prebuilt> libs = buckFiles.get(project);
+    if (libs == null) {
+      libs = new TreeSet<>();
+      buckFiles.put(project, libs);
+    }
 
-      Prebuilt library = new Prebuilt(jar.getArtifactId(), relativePath);
-      libs.add(library);
+    Prebuilt library = resolveLib(artifactToDownload, repoSys, session, project);
+    libs.add(library);
 
-      try {
-        result = repoSys.resolveArtifact(session, new ArtifactRequest(srcs, repos, null));
-        relativePath = copy(result, project);
-        library.setSourceJar(relativePath);
-      } catch (ArtifactResolutionException e) {
-        System.err.println("Skipping sources for: " + srcs);
-      }
-
-      Iterable<Artifact> incoming = graph.getIncomingNodesFor(root);
-      for (Artifact artifact : incoming) {
-        index = artifact.getGroupId().lastIndexOf('.');
-        String groupName = artifact.getGroupId();
-        if (index != -1) {
-          groupName = groupName.substring(index + 1);
-        }
-        if (projectName.equals(groupName)) {
-          library.addDep(String.format(":%s", artifact.getArtifactId()));
-        } else {
-          library.addDep(
-              String.format(
-                  "//%s/%s:%s",
-                  buckThirdPartyRelativePath,
-                  groupName,
-                  artifact.getArtifactId()));
-        }
-      }
-
-      Iterable<Artifact> outgoing = graph.getOutgoingNodesFor(root);
-      for (Artifact artifact : outgoing) {
-        index = artifact.getGroupId().lastIndexOf('.');
-        String groupName = artifact.getGroupId();
-        if (index != -1) {
-          groupName = groupName.substring(index + 1);
-        }
-        if (!groupName.equals(projectName)) {
-          library.addVisibility(
-              String.format(
-                  "//%s/%s:%s",
-                  buckThirdPartyRelativePath,
-                  groupName,
-                  artifact.getArtifactId()));
-        }
+    // Populate deps
+    Iterable<Artifact> incoming = graph.getIncomingNodesFor(artifactToDownload);
+    for (Artifact artifact : incoming) {
+      String groupName = getProjectName(artifact);
+      if (projectName.equals(groupName)) {
+        library.addDep(String.format(":%s", artifact.getArtifactId()));
+      } else {
+        library.addDep(buckThirdPartyRelativePath, artifact);
       }
     }
 
+    // Populate visibility
+    Iterable<Artifact> outgoing = graph.getOutgoingNodesFor(artifactToDownload);
+    for (Artifact artifact : outgoing) {
+      String groupName = getProjectName(artifact);
+      if (!groupName.equals(projectName)) {
+        library.addVisibility(buckThirdPartyRelativePath, artifact);
+      }
+    }
+  }
+
+  private Prebuilt resolveLib(
+      Artifact artifact,
+      RepositorySystem repoSys,
+      RepositorySystemSession session,
+      Path project) throws ArtifactResolutionException, IOException {
+    Artifact jar = new DefaultArtifact(
+        artifact.getGroupId(),
+        artifact.getArtifactId(),
+        "jar",
+        artifact.getVersion());
+
+    Path relativePath = resolveArtifact(jar, repoSys, session, project);
+
+    Prebuilt library = new Prebuilt(jar.getArtifactId(), relativePath);
+
+    downloadSources(jar, repoSys, session, project, library);
+    return library;
+  }
+
+  /**
+   * @return {@link Path} to the file
+   */
+  private Path resolveArtifact(
+      Artifact artifact,
+      RepositorySystem repoSys,
+      RepositorySystemSession session,
+      Path project)
+      throws ArtifactResolutionException, IOException {
+    ArtifactResult result = repoSys.resolveArtifact(
+        session,
+        new ArtifactRequest(artifact, repos, null));
+    return copy(result, project);
+  }
+
+  private void downloadSources(
+      Artifact artifact,
+      RepositorySystem repoSys,
+      RepositorySystemSession session,
+      Path project,
+      Prebuilt library) throws IOException {
+    Artifact srcs = new SubArtifact(artifact, "sources", "jar");
+    try {
+      Path relativePath = resolveArtifact(srcs, repoSys, session, project);
+      library.setSourceJar(relativePath);
+    } catch (ArtifactResolutionException e) {
+      System.err.println("Skipping sources for: " + srcs);
+    }
+  }
+
+  /**
+   *  com.example:foo:1.0 -> "example"
+   */
+  private static String getProjectName(Artifact artifact) {
+    int index = artifact.getGroupId().lastIndexOf('.');
+    String projectName = artifact.getGroupId();
+    if (index != -1) {
+      projectName = projectName.substring(index + 1);
+    }
+    return projectName;
+  }
+
+  private void createBuckFiles(Map<Path, SortedSet<Prebuilt>> buckFilesData) throws IOException {
     URL templateUrl = Resources.getResource(TEMPLATE);
     String template = Resources.toString(templateUrl, UTF_8);
     STGroupString groups = new STGroupString("prebuilt-template", template);
 
-    for (Map.Entry<Path, SortedSet<Prebuilt>> entry : buckFiles.entrySet()) {
+    for (Map.Entry<Path, SortedSet<Prebuilt>> entry : buckFilesData.entrySet()) {
       Path buckFile = entry.getKey().resolve("BUCK");
       if (Files.exists(buckFile)) {
         Files.delete(buckFile);
@@ -379,6 +414,9 @@ public class Resolver {
         .resolve(coords);
   }
 
+  /**
+   * Holds data for creation of a BUCK file for a given dependency
+   */
   private static class Prebuilt implements Comparable<Prebuilt> {
 
     private final String name;
@@ -415,6 +453,10 @@ public class Resolver {
       this.deps.add(dep);
     }
 
+    public void addDep(Path buckThirdPartyRelativePath, Artifact artifact) {
+      this.addDep(formatDep(buckThirdPartyRelativePath, artifact));
+    }
+
     @SuppressWarnings("unused") // This method is read reflectively.
     public SortedSet<String> getDeps() {
       return deps;
@@ -422,6 +464,17 @@ public class Resolver {
 
     public void addVisibility(String dep) {
       this.visibilities.add(dep);
+    }
+    public void addVisibility(Path buckThirdPartyRelativePath, Artifact artifact) {
+      this.addVisibility(formatDep(buckThirdPartyRelativePath, artifact));
+    }
+
+    private String formatDep(Path buckThirdPartyRelativePath, Artifact artifact) {
+      return String.format(
+          "//%s/%s:%s",
+          buckThirdPartyRelativePath,
+          getProjectName(artifact),
+          artifact.getArtifactId());
     }
 
     @SuppressWarnings("unused") // This method is read reflectively.

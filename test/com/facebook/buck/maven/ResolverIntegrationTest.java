@@ -55,7 +55,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,6 +74,7 @@ public class ResolverIntegrationTest {
   private Path thirdParty;
   private Path thirdPartyRelative;
   private Path localRepo;
+  private Resolver resolver;
 
   @BeforeClass
   public static void setUpFakeMavenRepo() throws Exception {
@@ -135,21 +135,20 @@ public class ResolverIntegrationTest {
   }
 
   @Before
-  public void setUpRepos() throws IOException {
+  public void setUpRepos() throws Exception {
     buckRepoRoot = temp.newFolder().toPath();
     thirdPartyRelative = Paths.get("third-party").resolve("java");
     thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
     localRepo = temp.newFolder().toPath();
-  }
-
-  @Test
-  public void shouldSetUpAPrivateLibraryIfGivenAMavenCoordWithoutDeps() throws Exception {
-    Resolver resolver = new Resolver(
+    resolver = new Resolver(
         buckRepoRoot,
         thirdPartyRelative,
         localRepo,
         httpd.getUri("/").toString());
+  }
 
+  @Test
+  public void shouldSetUpAPrivateLibraryIfGivenAMavenCoordWithoutDeps() throws Exception {
     resolver.resolve("com.example:no-deps:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
@@ -184,12 +183,6 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldIncludeSourceJarIfOneIsPresent() throws Exception {
-    Resolver resolver = new Resolver(
-        buckRepoRoot,
-        thirdPartyRelative,
-        localRepo,
-        httpd.getUri("/").toString());
-
     resolver.resolve("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
@@ -201,12 +194,6 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldSetVisibilityOfTargetToGiveDependenciesAccess() throws Exception {
-    Resolver resolver = new Resolver(
-        buckRepoRoot,
-        thirdPartyRelative,
-        localRepo,
-        httpd.getUri("/").toString());
-
     resolver.resolve("com.example:with-deps:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
@@ -231,12 +218,6 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldOmitTargetsInTheSameBuildFileInVisibilityArguments() throws Exception {
-    Resolver resolver = new Resolver(
-        buckRepoRoot,
-        thirdPartyRelative,
-        localRepo,
-        httpd.getUri("/").toString());
-
     resolver.resolve("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
