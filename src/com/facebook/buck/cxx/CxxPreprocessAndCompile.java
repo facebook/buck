@@ -179,7 +179,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
         systemIncludeRoots,
         frameworkRoots,
         includes,
-        sanitizer);
+        sanitizer.changePathSize(0));
   }
 
   /**
