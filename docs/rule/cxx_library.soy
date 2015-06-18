@@ -159,13 +159,61 @@ cxx_library(
   srcs = [
     'fileutil.cpp',
   ],
-  headers = [
+  exported_headers = [
     'fileutil.h',
   ],
   compiler_flags = [
     '-fno-omit-frame-pointer',
   ],
 )
+
+# A rule that defines explicit names for its headers
+cxx_library(
+  name = 'mathutils',
+  header_namespace = 'math',
+  srcs = [
+    'trig/src/cos.cpp',
+    'trig/src/tan.cpp',
+  ],
+  exported_headers = {
+    # These are included as &lt;math/trig/cos.h&gt; and &lt;math/trig/tan.h&gt;
+    'trig/cos.h': 'trig/include/cos.h',
+    'trig/tan.h': 'trig/include/tan.h',
+  },
+  compiler_flags = [
+    '-fno-omit-frame-pointer',
+  ],
+)
+
+# A rule that uses different headers and sources per platform
+cxx_library(
+  name = 'vector',
+  # Because of platform_headers, this file can include "config.h"
+  # and get the architecture specific header
+  srcs = ['vector.cpp'],
+  platform_srcs = [
+    ('.*armv7$', 'armv7.S'),
+    ('.*x86_64$', 'x86_64.S'),
+  ],
+  exported_headers = [
+    'vector.h',
+  ],
+  platform_headers = [
+    (
+      '.*armv7$',
+      {
+        'config.h': 'config-armv7.h',
+      }
+    ),
+    (
+      '.*x86_64$',
+      {
+        'config.h': 'config-armv7.h',
+      }
+    ),
+  ],
+)
+
 </pre>{/literal}
 {/param}
 
