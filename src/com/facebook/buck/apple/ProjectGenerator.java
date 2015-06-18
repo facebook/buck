@@ -20,6 +20,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
+import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
@@ -86,7 +87,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -216,7 +216,7 @@ public class ProjectGenerator {
   private final ImmutableMultimap.Builder<TargetNode<?>, PBXTarget>
       targetNodeToGeneratedProjectTargetBuilder;
   private boolean projectGenerated;
-  private List<Path> headerSymlinkTrees;
+  private final List<Path> headerSymlinkTrees;
   private final ImmutableSet.Builder<PBXTarget> buildableCombinedTestTargets =
       ImmutableSet.builder();
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
@@ -811,13 +811,14 @@ public class ProjectGenerator {
     }
 
     ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
+
     appendConfigsBuilder
         .put(
             "HEADER_SEARCH_PATHS",
             Joiner.on(' ').join(
-                Iterators.concat(
-                    collectRecursiveHeaderSearchPaths(targetNode).iterator(),
-                    collectRecursiveHeaderSymlinkTrees(targetNode).iterator())))
+                Iterables.concat(
+                    collectRecursiveHeaderSearchPaths(targetNode),
+                    collectRecursiveHeaderMaps(targetNode))))
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(
@@ -1176,6 +1177,8 @@ public class ProjectGenerator {
     }
     ImmutableSortedMap<Path, Path> resolvedContents = resolvedContentsBuilder.build();
 
+    Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
+
     Path hashCodeFilePath = headerSymlinkTreeRoot.resolve(".contents-hash");
     Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
     String newHashCode = getHeaderSymlinkTreeHashCode(resolvedContents).toString();
@@ -1199,6 +1202,14 @@ public class ProjectGenerator {
         projectFilesystem.createSymLink(link, existing, /* force */ false);
       }
       projectFilesystem.writeContentsToPath(newHashCode, hashCodeFilePath);
+
+      HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
+      for (Map.Entry<String, SourcePath> entry : contents.entrySet()) {
+        headerMapBuilder.add(
+            entry.getKey(),
+            projectFilesystem.resolve(headerSymlinkTreeRoot).resolve(entry.getKey()));
+      }
+      projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
   }
@@ -1406,7 +1417,7 @@ public class ProjectGenerator {
   /**
    * @param targetNode Must have a header symlink tree or an exception will be thrown.
    */
-  private String getHeaderSymlinkTreeRelativePath(
+  private Path getHeaderSymlinkTreeRelativePath(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderVisibility headerVisibility) {
     Optional<Path> treeRoot = AppleDescriptions.getPathToHeaderSymlinkTree(
@@ -1416,7 +1427,11 @@ public class ProjectGenerator {
         treeRoot.isPresent(),
         "%s does not have a header symlink tree.",
         targetNode);
-    return pathRelativizer.outputDirToRootRelative(treeRoot.get()).toString();
+    return pathRelativizer.outputDirToRootRelative(treeRoot.get());
+  }
+
+  private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
+    return headerSymlinkTreeRoot.resolve(".tree.hmap");
   }
 
   private String getHeaderSearchPath(TargetNode<?> targetNode) {
@@ -1526,9 +1541,20 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  private ImmutableSet<String> collectRecursiveHeaderSymlinkTrees(
+  private ImmutableSet<Path> collectRecursiveHeaderMaps(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+
+    for (Path headerSymlinkTreePath : collectRecursiveHeaderSymlinkTrees(targetNode)) {
+      builder.add(getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreePath));
+    }
+
+    return builder.build();
+  }
+
+  private ImmutableSet<Path> collectRecursiveHeaderSymlinkTrees(
+      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
     if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
       builder.add(getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PRIVATE));
@@ -1558,7 +1584,7 @@ public class ProjectGenerator {
 
   private void addHeaderSymlinkTreesForSourceUnderTest(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      ImmutableSet.Builder<String> headerSymlinkTreesBuilder,
+      ImmutableSet.Builder<Path> headerSymlinkTreesBuilder,
       HeaderVisibility headerVisibility) {
     ImmutableSet<TargetNode<?>> directDependencies = ImmutableSet.copyOf(
         targetGraph.getAll(targetNode.getDeps()));

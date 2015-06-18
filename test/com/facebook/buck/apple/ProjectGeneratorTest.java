@@ -35,6 +35,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -84,6 +85,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.io.ByteStreams;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -93,6 +95,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
@@ -556,10 +559,10 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers " +
             "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test-private-header-symlink-tree " +
-            "../buck-out/gen/foo/test-public-header-symlink-tree " +
-            "../buck-out/gen/foo/lib-public-header-symlink-tree " +
-            "../buck-out/gen/foo/lib-private-header-symlink-tree",
+            "../buck-out/gen/foo/test-private-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/test-public-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/lib-public-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/lib-private-header-symlink-tree/.tree.hmap",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -620,10 +623,10 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers " +
             "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test-private-header-symlink-tree " +
-            "../buck-out/gen/foo/test-public-header-symlink-tree " +
-            "../buck-out/gen/foo/lib-public-header-symlink-tree " +
-            "../buck-out/gen/foo/lib-private-header-symlink-tree",
+            "../buck-out/gen/foo/test-private-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/test-public-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/lib-public-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/lib-private-header-symlink-tree/.tree.hmap",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -684,10 +687,10 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers " +
             "of the tested binary in HEADER_SEARCH_PATHS",
         "$(inherited) " +
-            "../buck-out/gen/foo/test-private-header-symlink-tree " +
-            "../buck-out/gen/foo/test-public-header-symlink-tree " +
-            "../buck-out/gen/foo/bin-public-header-symlink-tree " +
-            "../buck-out/gen/foo/bin-private-header-symlink-tree",
+            "../buck-out/gen/foo/test-private-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/test-public-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/bin-public-header-symlink-tree/.tree.hmap " +
+            "../buck-out/gen/foo/bin-private-header-symlink-tree/.tree.hmap",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -704,6 +707,21 @@ public class ProjectGeneratorTest {
       assertEquals(
           target,
           projectFilesystem.readSymLink(link));
+    }
+
+    // Check the tree's header map.
+    byte[] headerMapBytes;
+    try (InputStream headerMapInputStream =
+             projectFilesystem.newFileInputStream(root.resolve(".tree.hmap"))) {
+      headerMapBytes = ByteStreams.toByteArray(headerMapInputStream);
+    }
+    HeaderMap headerMap = HeaderMap.deserialize(headerMapBytes);
+    assertNotNull(headerMap);
+    assertThat(headerMap.getNumEntries(), equalTo(content.size()));
+    for (String key : content.keySet()) {
+      assertThat(
+          headerMap.lookup(key),
+          equalTo(projectFilesystem.resolve(root).resolve(key).toString()));
     }
   }
 
