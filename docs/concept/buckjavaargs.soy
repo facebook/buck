@@ -1,0 +1,32 @@
+{namespace buck.buckjavaargs}
+
+/***/
+{template .soyweb}
+
+{call buck.header}
+  {param title: '.buckjavaargs' /}
+  {param description}
+    An optional file that specifies additional java command line arguments to pass to Buck.
+  {/param}
+{/call}
+
+<div class="{css overview}">
+
+The root of your project may contain a configuration file named <code>.buckjavaargs</code>. If
+present, Buck will read this file and append any flags specified in it when launching its java
+process. Note the flags are only used when launching the main Buck java process, and not any other
+java tools Buck will invoke.
+
+<p>
+
+For example, to specify a larger heap size:
+
+{literal}<pre>
+-Xmx2g</pre>{/literal}
+
+
+</div> // close overview
+
+{call buck.footer /}
+
+{/template}
