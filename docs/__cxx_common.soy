@@ -39,10 +39,14 @@
   {param name : 'headers' /}
   {param default : '[]' /}
   {param desc}
-  The set of header files that are available for inclusion to the above sources. These headers are
-  not made available to dependents. Header files listed here are included in code using their
-  project-relative path on the filesystem (e.g. header <code>bar.h</code> listed in <code>foo/BUCK
-  </code> is included with <code>#include "foo/bar.h"</code>).
+  The set of header files that are made available for inclusion to the source files in the
+  target and all targets that transitively depend on it. These should be specified as either a list
+  of header files or a dictionary of header names to header files. The header name can contain
+  forward slashes (<code>/</code>).  The headers can be included with <code>#include
+  "$HEADER_NAMESPACE/$HEADER_NAME"</code> or <code>#include &lt;$HEADER_NAMESPACE/$HEADER_NAME&gt;
+  </code>, where <code>$HEADER_NAMESPACE</code> is the value of the target's <code>header_namespace
+  </code> attribute, and <code>$HEADER_NAME</code> is the header name if specified, and the filename
+  of the header file otherwise. See <code>header_namespace</code> for more information.
   {/param}
 {/call}
 {/template}
@@ -58,6 +62,19 @@
   name is matched, and the second element is either a list of header files or a dictionary of
   header names to header files that will be made available for inclusion to the source files in the
   target if the platform matches the regex. See <code>headers</code> for more information.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .header_namespace_arg}
+{call buck.arg}
+  {param name : 'header_namespace' /}
+  {param default : 'name' /}
+  {param desc}
+  A path prefix when including headers of this target. Defaults to the name of the target. Can
+  contain forward slashes (<code>/</code>), but cannot start with one. See <code>headers</code> for
+  more information.
   {/param}
 {/call}
 {/template}
