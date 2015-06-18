@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasTests;
@@ -1204,6 +1205,7 @@ public class ProjectGenerator {
 
   private HashCode getHeaderSymlinkTreeHashCode(ImmutableSortedMap<Path, Path> contents) {
     Hasher hasher = Hashing.sha1().newHasher();
+    hasher.putBytes(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
     for (Map.Entry<Path, Path> entry : contents.entrySet()) {
       byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);
       byte[] value = entry.getValue().toString().getBytes(Charsets.UTF_8);
