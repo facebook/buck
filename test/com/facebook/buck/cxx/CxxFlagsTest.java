@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +40,7 @@ public class CxxFlagsTest {
     assertThat(
         CxxFlags.getLanguageFlags(
             Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<Pair<String, ImmutableList<String>>>>absent(),
+            Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
             Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent(),
             CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()).entries(),
         empty());
@@ -51,7 +51,7 @@ public class CxxFlagsTest {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
             Optional.of(ImmutableList.of("flag")),
-            Optional.<ImmutableList<Pair<String, ImmutableList<String>>>>absent(),
+            Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
             Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent(),
             CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     assertThat(
@@ -65,7 +65,7 @@ public class CxxFlagsTest {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
             Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<Pair<String, ImmutableList<String>>>>absent(),
+            Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
             Optional.of(
                 ImmutableMap.of(
                     CxxSource.Type.C, ImmutableList.of("foo", "bar"),
@@ -86,7 +86,7 @@ public class CxxFlagsTest {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
             Optional.of(ImmutableList.of("common")),
-            Optional.<ImmutableList<Pair<String, ImmutableList<String>>>>absent(),
+            Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
             Optional.of(
                 ImmutableMap.of(
                     CxxSource.Type.C, ImmutableList.of("foo", "bar"),

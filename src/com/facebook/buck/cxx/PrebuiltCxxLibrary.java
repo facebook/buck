@@ -29,12 +29,14 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,7 +51,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   private final Optional<String> libDir;
   private final Optional<String> libName;
   private final ImmutableList<String> exportedLinkerFlags;
-  private final ImmutableList<Pair<String, ImmutableList<String>>> exportedPlatformLinkerFlags;
+  private final PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags;
   private final Optional<String> soname;
   private final boolean headerOnly;
   private final boolean linkWhole;
@@ -67,7 +69,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       Optional<String> libDir,
       Optional<String> libName,
       ImmutableList<String> exportedLinkerFlags,
-      ImmutableList<Pair<String, ImmutableList<String>>> exportedPlatformLinkerFlags,
+      PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags,
       Optional<String> soname,
       boolean headerOnly,
       boolean linkWhole,
@@ -174,9 +176,8 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(exportedLinkerFlags);
     linkerArgsBuilder.addAll(
-        CxxDescriptionEnhancer.getPlatformFlags(
-            exportedPlatformLinkerFlags,
-            cxxPlatform.getFlavor().toString()));
+        Iterables.concat(
+            exportedPlatformLinkerFlags.getMatchingValues(cxxPlatform.getFlavor().toString())));
     if (!headerOnly) {
       if (provided || type == Linker.LinkableDepType.SHARED) {
         SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);

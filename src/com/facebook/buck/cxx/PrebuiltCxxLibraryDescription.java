@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -30,6 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroFinder;
 import com.facebook.buck.rules.macros.MacroReplacer;
@@ -283,7 +283,7 @@ public class PrebuiltCxxLibraryDescription
     public Optional<Boolean> provided;
     public Optional<Boolean> linkWhole;
     public Optional<ImmutableList<String>> exportedLinkerFlags;
-    public Optional<ImmutableList<Pair<String, ImmutableList<String>>>> exportedPlatformLinkerFlags;
+    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
     public Optional<String> soname;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }

@@ -24,12 +24,12 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
@@ -201,19 +201,17 @@ public class AppleDescriptions {
     output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
     output.compilerFlags = arg.compilerFlags.transform(expandSdkVariableRefs);
-
-    output.platformCompilerFlags =
-        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    output.platformCompilerFlags = Optional.of(
+        PatternMatchedCollection.<ImmutableList<String>>of());
     output.linkerFlags = Optional.of(
         FluentIterable
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
             .append(arg.linkerFlags.transform(expandSdkVariableRefs).get())
             .toList());
-    output.platformLinkerFlags = Optional.of(
-        ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    output.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     output.preprocessorFlags = arg.preprocessorFlags.transform(expandSdkVariableRefs);
-    output.platformPreprocessorFlags =
-        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    output.platformPreprocessorFlags = Optional.of(
+        PatternMatchedCollection.<ImmutableList<String>>of());
     output.langPreprocessorFlags = Optional.of(
         ImmutableMap.copyOf(
             Maps.transformValues(
@@ -288,8 +286,8 @@ public class AppleDescriptions {
                 headerPathPrefix,
                 arg)));
     output.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
-    output.exportedPlatformPreprocessorFlags =
-        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    output.exportedPlatformPreprocessorFlags = Optional.of(
+        PatternMatchedCollection.<ImmutableList<String>>of());
     output.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     output.exportedLinkerFlags = Optional.of(
@@ -297,8 +295,8 @@ public class AppleDescriptions {
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
             .append(arg.exportedLinkerFlags.transform(expandSdkVariableRefs).get())
             .toList());
-    output.exportedPlatformLinkerFlags =
-        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    output.exportedPlatformLinkerFlags = Optional.of(
+        PatternMatchedCollection.<ImmutableList<String>>of());
     output.soname = Optional.absent();
     output.forceStatic = Optional.of(false);
     output.linkWhole = Optional.of(linkWhole);

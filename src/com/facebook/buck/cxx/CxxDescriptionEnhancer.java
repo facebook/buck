@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -841,21 +840,4 @@ public class CxxDescriptionEnhancer {
     };
   }
 
-  public static ImmutableList<String> getPlatformFlags(
-      ImmutableList<Pair<String, ImmutableList<String>>> platformFlags,
-      String platform) {
-
-    ImmutableList.Builder<String> platformFlagsBuilder = ImmutableList.builder();
-
-    for (Pair<String, ImmutableList<String>> pair : platformFlags) {
-      Pattern pattern = Pattern.compile(pair.getFirst());
-      Matcher matcher = pattern.matcher(platform);
-      if (matcher.find()) {
-        platformFlagsBuilder.addAll(pair.getSecond());
-        break;
-      }
-    }
-
-    return platformFlagsBuilder.build();
-  }
 }

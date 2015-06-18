@@ -17,57 +17,29 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.base.Optional;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.common.collect.Iterables;
 
 public class CxxFlags {
 
-  private static final LoadingCache<String, Pattern> patternCache =
-      CacheBuilder.newBuilder()
-      .build(
-          new CacheLoader<String, Pattern>() {
-            @Override
-            public Pattern load(String regex) throws Exception {
-              return Pattern.compile(regex);
-            }
-          });
-
   private CxxFlags() {}
-
-  /**
-   * Compiles {@code regex} using {@link Pattern#compile(String)}, caching the result.
-   * Should only be used with patterns meant to match CxxPlatform names.
-   */
-  public static Pattern compilePlatformRegex(String regex) {
-    return patternCache.getUnchecked(regex);
-  }
 
   public static ImmutableList<String> getFlags(
       Optional<ImmutableList<String>> flags,
-      Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformFlags,
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
       Flavor platform) {
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
 
     flagsBuilder.addAll(flags.or(ImmutableList.<String>of()));
-
-    for (Pair<String, ImmutableList<String>> pair :
-        platformFlags.or(ImmutableList.<Pair<String, ImmutableList<String>>>of())) {
-      Pattern pattern = patternCache.getUnchecked(pair.getFirst());
-      Matcher matcher = pattern.matcher(platform.toString());
-      if (matcher.find()) {
-        flagsBuilder.addAll(pair.getSecond());
-        break;
-      }
-    }
+    flagsBuilder.addAll(
+        Iterables.concat(
+            platformFlags
+                .or(PatternMatchedCollection.<ImmutableList<String>>of())
+                .getMatchingValues(platform.toString())));
 
     return flagsBuilder.build();
   }
@@ -86,7 +58,7 @@ public class CxxFlags {
 
   public static ImmutableMultimap<CxxSource.Type, String> getLanguageFlags(
       Optional<ImmutableList<String>> flags,
-      Optional<ImmutableList<Pair<String, ImmutableList<String>>>> platformFlags,
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
       Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> languageFlags,
       Flavor platform) {
 

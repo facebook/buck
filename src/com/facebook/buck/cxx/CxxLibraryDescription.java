@@ -21,7 +21,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -31,6 +30,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
@@ -455,22 +455,22 @@ public class CxxLibraryDescription implements
         SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
     arg.compilerFlags = Optional.of(ImmutableList.<String>of());
     arg.platformCompilerFlags =
-        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+        Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     arg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     arg.exportedPlatformPreprocessorFlags =
-        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+        Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     arg.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     arg.preprocessorFlags = Optional.of(ImmutableList.<String>of());
     arg.platformPreprocessorFlags =
-        Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+        Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     arg.langPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     arg.linkerFlags = Optional.of(ImmutableList.<String>of());
     arg.exportedLinkerFlags = Optional.of(ImmutableList.<String>of());
-    arg.platformLinkerFlags = Optional.of(ImmutableList.<Pair<String, ImmutableList<String>>>of());
+    arg.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     arg.exportedPlatformLinkerFlags = Optional.of(
-        ImmutableList.<Pair<String, ImmutableList<String>>>of());
+        PatternMatchedCollection.<ImmutableList<String>>of());
     arg.cxxRuntimeType = Optional.absent();
     arg.forceStatic = Optional.absent();
     arg.linkWhole = Optional.absent();
@@ -866,13 +866,12 @@ public class CxxLibraryDescription implements
   public static class Arg extends CxxConstructorArg {
     public Optional<SourceList> exportedHeaders;
     public Optional<ImmutableList<String>> exportedPreprocessorFlags;
-    public Optional<ImmutableList<Pair<String, ImmutableList<String>>>>
+    public Optional<PatternMatchedCollection<ImmutableList<String>>>
         exportedPlatformPreprocessorFlags;
     public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
         exportedLangPreprocessorFlags;
     public Optional<ImmutableList<String>> exportedLinkerFlags;
-    public Optional<ImmutableList<Pair<String, ImmutableList<String>>>>
-        exportedPlatformLinkerFlags;
+    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<Boolean> forceStatic;

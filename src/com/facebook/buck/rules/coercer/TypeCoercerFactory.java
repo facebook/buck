@@ -36,12 +36,16 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 /**
  * Create {@link TypeCoercer}s that can convert incoming java structures (from json) into particular
  * types.
  */
 public class TypeCoercerFactory {
+
+  private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
+
   private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
 
   public TypeCoercerFactory() {
@@ -100,7 +104,7 @@ public class TypeCoercerFactory {
         new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
         new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
         new SourceListTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
-        new PatternTypeCoercer(),
+        patternTypeCoercer,
     };
   }
 
@@ -191,6 +195,10 @@ public class TypeCoercerFactory {
             typeCoercerForComparableType(parameterizedType.getActualTypeArguments()[0]),
             typeCoercerForType(parameterizedType.getActualTypeArguments()[1]));
         return sortedMapTypeCoercer;
+      } else if (rawClass.isAssignableFrom(PatternMatchedCollection.class)) {
+        return new PatternMatchedCollectionTypeCoercer<>(
+            patternTypeCoercer,
+            typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
       } else {
         throw new IllegalArgumentException("Unhandled type: " + type);
       }
