@@ -40,6 +40,8 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -500,7 +502,7 @@ public class CxxLibraryDescription implements
         /* includeLexYaccHeaders */ true,
         CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
         CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PRIVATE);
   }
 
@@ -520,7 +522,7 @@ public class CxxLibraryDescription implements
         /* includeLexYaccHeaders */ false,
         ImmutableMap.<String, SourcePath>of(),
         ImmutableMap.<String, SourcePath>of(),
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC);
   }
 
@@ -552,13 +554,13 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags,
             cxxPlatform.getFlavor()),
         args.prefixHeaders.get(),
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
             cxxPlatform.getFlavor()),
-        CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
+        CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
         args.frameworkSearchPaths.get(),
         preprocessMode,
         pic);
@@ -608,13 +610,13 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags,
             cxxPlatform.getFlavor()),
         args.prefixHeaders.get(),
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
             cxxPlatform.getFlavor()),
-        CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
+        CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
         linkerFlags.build(),
         args.frameworkSearchPaths.get(),
         args.soname,
@@ -653,13 +655,13 @@ public class CxxLibraryDescription implements
             args.exportedLangPreprocessorFlags,
             cxxPlatform.getFlavor()),
         args.prefixHeaders.get(),
-        CxxDescriptionEnhancer.parseHeaders(params, resolver, args),
-        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, args),
+        CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
+        CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
             cxxPlatform.getFlavor()),
-        CxxDescriptionEnhancer.parseCxxSources(params, resolver, args),
+        CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
         args.frameworkSearchPaths.get(),
         preprocessMode);
   }
@@ -789,25 +791,35 @@ public class CxxLibraryDescription implements
       }
     }
 
-    // I'm not proud of this.
-    boolean hasObjects = false;
-    if (args.srcs.isPresent()) {
-      SourceWithFlagsList sourceWithFlagsList = args.srcs.get();
-      switch (sourceWithFlagsList.getType()) {
-        case UNNAMED:
-          hasObjects = !sourceWithFlagsList.getUnnamedSources().get().isEmpty();
-          break;
-        case NAMED:
-          hasObjects = !sourceWithFlagsList.getNamedSources().get().isEmpty();
-          break;
-        default:
-          throw new RuntimeException(
-              String.format("Unsupported type: %s", sourceWithFlagsList.getType()));
-      }
+    boolean hasObjectsForAnyPlatform;
+    SourceWithFlagsList sourceWithFlagsList = args.srcs.get();
+    switch (sourceWithFlagsList.getType()) {
+      case UNNAMED:
+        hasObjectsForAnyPlatform = !sourceWithFlagsList.getUnnamedSources().get().isEmpty();
+        break;
+      case NAMED:
+        hasObjectsForAnyPlatform = !sourceWithFlagsList.getNamedSources().get().isEmpty();
+        break;
+      default:
+        throw new RuntimeException(
+            String.format("Unsupported type: %s", sourceWithFlagsList.getType()));
     }
-    hasObjects |=
+    hasObjectsForAnyPlatform |=
           !args.lexSrcs.get().isEmpty() ||
           !args.yaccSrcs.get().isEmpty();
+    Predicate<CxxPlatform> hasObjects;
+    if (hasObjectsForAnyPlatform) {
+      hasObjects = Predicates.alwaysTrue();
+    } else {
+      hasObjects = new Predicate<CxxPlatform>() {
+        @Override
+        public boolean apply(CxxPlatform input) {
+          return !args.platformSrcs.get().getMatchingValues(input.getFlavor().toString()).isEmpty();
+        }
+      };
+    }
+
+
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
@@ -816,7 +828,7 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         pathResolver,
-        !hasObjects,
+        Predicates.not(hasObjects),
         new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
           @Override
           public ImmutableMultimap<CxxSource.Type, String> apply(CxxPlatform input) {
@@ -865,6 +877,7 @@ public class CxxLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
     public Optional<SourceList> exportedHeaders;
+    public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders;
     public Optional<ImmutableList<String>> exportedPreprocessorFlags;
     public Optional<PatternMatchedCollection<ImmutableList<String>>>
         exportedPlatformPreprocessorFlags;

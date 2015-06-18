@@ -35,7 +35,9 @@ import java.nio.file.Path;
 public class CxxConstructorArg implements HasTests {
 
   public Optional<SourceWithFlagsList> srcs;
+  public Optional<PatternMatchedCollection<SourceWithFlagsList>> platformSrcs;
   public Optional<SourceList> headers;
+  public Optional<PatternMatchedCollection<SourceList>> platformHeaders;
   public Optional<ImmutableList<SourcePath>> prefixHeaders;
   public Optional<ImmutableList<String>> compilerFlags;
   public Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags;

@@ -1,0 +1,52 @@
+cxx_binary(
+  name = 'binary_matches_default_exactly',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_headers = [
+    ('nomatch', {'header.hpp': 'empty.hpp'}),
+    ('default', {'header.hpp': 'lib.hpp'}),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_matches_default',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_headers = [
+    ('nomatch', {'header.hpp': 'empty.hpp'}),
+    ('def.*', {'header.hpp': 'lib.hpp'}),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_no_match',
+  srcs = [
+    'bin.cpp',
+  ],
+  platform_headers = [
+    ('nomatch', {'header.hpp': 'empty.hpp'}),
+  ],
+)
+
+cxx_binary(
+  name = 'binary_with_library_matches_default',
+  srcs = [
+    'bin.cpp',
+  ],
+  deps = [
+    ':library_matches_default',
+  ],
+)
+
+cxx_library(
+  name = 'library_matches_default',
+  srcs = [
+    'lib.cpp',
+  ],
+  exported_platform_headers = [
+    ('nomatch', {'header.hpp': 'empty.hpp'}),
+    ('def.*', {'header.hpp': 'lib.hpp'}),
+  ],
+)

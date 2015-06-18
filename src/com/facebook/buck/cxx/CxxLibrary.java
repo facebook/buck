@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -50,7 +51,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final boolean headerOnly;
+  private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
@@ -68,7 +69,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
-      boolean headerOnly,
+      Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
@@ -141,7 +142,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
 
-    if (headerOnly) {
+    if (headerOnly.apply(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
 
@@ -211,7 +212,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
-    if (headerOnly) {
+    if (headerOnly.apply(cxxPlatform)) {
       return PythonPackageComponents.of();
     }
     if (linkage == Linkage.STATIC) {
@@ -256,7 +257,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-    if (headerOnly) {
+    if (headerOnly.apply(cxxPlatform)) {
       return ImmutableMap.of();
     }
     if (linkage == Linkage.STATIC) {

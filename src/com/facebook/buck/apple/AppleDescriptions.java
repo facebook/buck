@@ -29,8 +29,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.annotations.VisibleForTesting;
@@ -198,7 +198,9 @@ public class AppleDescriptions {
     }
 
     output.srcs = Optional.of(SourceWithFlagsList.ofUnnamedSources(arg.srcs.get()));
+    output.platformSrcs = Optional.of(PatternMatchedCollection.<SourceWithFlagsList>of());
     output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
+    output.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
     output.compilerFlags = arg.compilerFlags.transform(expandSdkVariableRefs);
     output.platformCompilerFlags = Optional.of(
@@ -285,6 +287,7 @@ public class AppleDescriptions {
                 resolver.getPathFunction(),
                 headerPathPrefix,
                 arg)));
+    output.exportedPlatformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     output.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     output.exportedPlatformPreprocessorFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());

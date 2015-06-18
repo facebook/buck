@@ -616,6 +616,34 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void platformHeaders() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "platform_headers", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath("[cxx]\n  cxxflags = -Wall -Werror", ".buckconfig");
+    workspace.runBuckBuild("//:binary_matches_default_exactly").assertSuccess();
+    workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
+    result.assertFailure();
+    assertThat(result.getStderr(), Matchers.containsString("header.hpp"));
+    workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
+  }
+
+  @Test
+  public void platformSources() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "platform_sources", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath("[cxx]\n  cxxflags = -Wall -Werror", ".buckconfig");
+    workspace.runBuckBuild("//:binary_matches_default_exactly").assertSuccess();
+    workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
+    result.assertFailure();
+    assertThat(result.getStderr(), Matchers.containsString("answer()"));
+    workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
+  }
+
+  @Test
   public void buildABinaryIfACxxLibraryDepOnlyDeclaresHeaders() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "cxx_binary_headers_only", tmp);
