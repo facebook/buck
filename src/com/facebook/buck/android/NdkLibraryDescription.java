@@ -289,6 +289,12 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               "$(BUCK_PROJECT_DIR)$(patsubst $(abspath $(BUCK_PROJECT_DIR))%,%,$(__dir)),\\",
               "$(__dir))))",
               "endif", // !already hooked
+              // Now add a toolchain directory to replace.  GCC's debug path replacement evaluates
+              // candidate replaces last-first (because it internally pushes them all onto a stack
+              // and scans the stack first-match-wins), so only add them after the more
+              // generic paths.
+              "NDK_APP_CFLAGS += -fdebug-prefix-map=$(TOOLCHAIN_PREBUILT_ROOT)/=" +
+              "@ANDROID_NDK_ROOT@/toolchains/$(TOOLCHAIN_NAME)/prebuilt/@BUILD_HOST@/",
             }));
 
     outputLinesBuilder.add("include Android.mk");
