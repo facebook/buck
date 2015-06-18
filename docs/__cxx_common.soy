@@ -6,16 +6,29 @@
   {param name : 'srcs' /}
   {param default : '[]' /}
   {param desc}
-  The set of C, C++, or assembler source files to be preprocessed, compiled,
-  and assembled by this rule.  We determine which stages to run on each input
-  source based on it's file extension.
-  See the <a href="https://gcc.gnu.org/onlinedocs/gcc/Overall-Options.html">GCC documentation</a> for more detail
-  on how file extensions are interpreted.
-  Each element can be either a string specifying a source file (e.g. <code>'foo/bar.c'</code>) or
-  a tuple of a string specifying a source file and a list of compilation flags
-  (e.g. <code>('foo/bar.c', ['-Wall', '-Werror'])</code>).
-  In the latter case the specified flags will be used in addition to the rule's
-  other flags when preprocessing and compiling that file (if applicable).
+  The set of C, C++, or assembler source files to be preprocessed, compiled, and assembled by this
+  rule.  We determine which stages to run on each input source based on it's file extension. See the
+  {sp}<a href="https://gcc.gnu.org/onlinedocs/gcc/Overall-Options.html">GCC documentation</a>{sp}
+  for more detail on how file extensions are interpreted. Each element can be either a string
+  specifying a source file (e.g. <code>'foo/bar.c'</code>) or a tuple of a string specifying a
+  source file and a list of compilation flags (e.g. <code>('foo/bar.c', ['-Wall', '-Werror'])
+  </code>). In the latter case the specified flags will be used in addition to the rule's other
+  flags when preprocessing and compiling that file (if applicable).
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .platform_srcs_arg}
+{call buck.arg}
+  {param name : 'platform_srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific source files. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+  name is matched, and the second element is either a list of source files or a list of tuples of
+  source files and a list of compilation flags to be preprocessed, compiled and assembled if the
+  platform matches the regex. See <code>srcs</code> for more information.
   {/param}
 {/call}
 {/template}
@@ -26,10 +39,25 @@
   {param name : 'headers' /}
   {param default : '[]' /}
   {param desc}
-  The set of header files that are available for inclusion for the above sources.
-  These headers are never made available to dependents.
-  Header files listed here are included in code using their project-relative path on the filesystem
-  (e.g. header <code>bar.h</code> listed in <code>foo/BUCK</code> is included with <code>#include "foo/bar.h"</code>).
+  The set of header files that are available for inclusion to the above sources. These headers are
+  not made available to dependents. Header files listed here are included in code using their
+  project-relative path on the filesystem (e.g. header <code>bar.h</code> listed in <code>foo/BUCK
+  </code> is included with <code>#include "foo/bar.h"</code>).
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .platform_headers_arg}
+{call buck.arg}
+  {param name : 'platform_headers' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific header files. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+  name is matched, and the second element is either a list of header files or a dictionary of
+  header names to header files that will be made available for inclusion to the source files in the
+  target if the platform matches the regex. See <code>headers</code> for more information.
   {/param}
 {/call}
 {/template}
@@ -46,6 +74,20 @@
 {/template}
 
 /***/
+{template .platform_preprocessor_flags_arg}
+{call buck.arg}
+  {param name : 'platform_preprocessor_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific preprocessor flags. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+  name is matched, and the second element is a list of flags to use when preprocessing the target's
+  sources. See <code>preprocessor_flags</code> for more information.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .compiler_flags_arg}
 {call buck.arg}
   {param name : 'compiler_flags' /}
@@ -57,12 +99,41 @@
 {/template}
 
 /***/
+{template .platform_compiler_flags_arg}
+{call buck.arg}
+  {param name : 'platform_compiler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific compiler flags. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+  name is matched, and the second element is a list of flags to use when compiling the target's
+  sources. See <code>compiler_flags</code> for more information.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .linker_flags_arg}
 {call buck.arg}
   {param name : 'linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Flags to use whenever this rule is involed in a link operation (e.g linked into an executable or shared library).
+  Flags to use whenever this rule is involved in a link operation (e.g linked into an executable or
+  shared library).
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .platform_linker_flags_arg}
+{call buck.arg}
+  {param name : 'platform_linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific linker flags. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+  name is matched, and the second element is a list of flags to use when this target is involved in
+  a link operation. See <code>linker_flags</code> for more information.
   {/param}
 {/call}
 {/template}

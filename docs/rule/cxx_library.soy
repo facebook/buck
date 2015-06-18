@@ -13,13 +13,11 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-A cxx_library() rule represents a set of C/C++ source files and provides
-various flags to control how they get built.
-Other than that, C/C++ libraries by themselves are relatively abstract,
-and it's dependent on the various top-level targets (e.g. C/C++ binary, Android APK)
-that transitively depend on this rule how this library actually gets built
-(e.g. a C/C++ binary will require a static non-PIC build of the library,
-while an Android APK will require a shared PIC-enabled build).
+A cxx_library() rule represents a set of C/C++ source files and provides various flags to control
+how they get built. Other than that, C/C++ libraries by themselves are relatively abstract, and it's
+dependent on the various top-level targets (e.g. C/C++ binary, Android APK) that transitively depend
+on this rule how this library actually gets built (e.g. a C/C++ binary will require a static non-PIC
+build of the library, while an Android APK will require a shared PIC-enabled build).
 {/param}
 
 {param args}
@@ -33,33 +31,70 @@ while an Android APK will require a shared PIC-enabled build).
 
 {call cxx_common.srcs_arg /}
 
+{call cxx_common.platform_srcs_arg /}
+
 {call cxx_common.headers_arg /}
+
+{call cxx_common.platform_headers_arg /}
 
 {call buck.arg}
   {param name : 'exported_headers' /}
   {param default : '[]' /}
   {param desc}
-  The set of header files that are available for inclusion for the above sources and all dependents of this library.
-  Header files listed here are included in code using their project-relative path on the filesystem
-  (e.g. header <code>bar.h</code> listed in <code>foo/BUCK</code> is included with <code>#include "foo/bar.h"</code>).
+  The set of header files that are available for inclusion for the above sources and all dependents
+  of this library. Header files listed here are included in code using their project-relative path
+  on the filesystem (e.g. header <code>bar.h</code> listed in <code>foo/BUCK</code> is included with
+  <code>#include "foo/bar.h"</code>).
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'platform_exported_headers' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific header files. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+  name is matched, and the second element is either a list of header files or a dictionary of
+  header names to header files that will be made available for inclusion to the source files in the
+  target and all targets that transitively depend on it if the platform matches the regex. See
+  <code>headers</code> for more information.
   {/param}
 {/call}
 
 {call cxx_common.preprocessor_flags_arg /}
 
+{call cxx_common.platform_preprocessor_flags_arg /}
+
 {call buck.arg}
-  {param name : 'exported_preprocess_flags' /}
+  {param name : 'exported_preprocessor_flags' /}
   {param default : '[]' /}
   {param desc}
-  Just as <code>preprocessor_flags</code>, flags to use when preprocessing any of the above sources (which require preprocessing).
-  However, unlike <code>preprocessor_flags</code>, these preprocessor flags are also used by rules that
-  transitively depend on this rule when preprocessing their own sources.
+  Just as <code>preprocessor_flags</code>, flags to use when preprocessing any of the above sources
+  (which require preprocessing). However, unlike <code>preprocessor_flags</code>, these preprocessor
+  flags are also used by rules that transitively depend on this rule when preprocessing their own
+  sources.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'exported_platform_preprocessor_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific exported preprocessor flags. These should be specified as a list of pairs where
+  the first element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the
+  platform name is matched, and the second element is a list of flags to use when preprocessing the
+  source files in the target and all targets that transitively depend on it if the platform matches
+  the regex. See <code>exported_preprocessor_flags</code> for more information.
   {/param}
 {/call}
 
 {call cxx_common.compiler_flags_arg /}
 
+{call cxx_common.platform_compiler_flags_arg /}
+
 {call cxx_common.linker_flags_arg /}
+
+{call cxx_common.platform_linker_flags_arg /}
 
 {call buck.arg}
   {param name : 'exported_linker_flags' /}
@@ -70,13 +105,24 @@ while an Android APK will require a shared PIC-enabled build).
 {/call}
 
 {call buck.arg}
+  {param name : 'exported_platform_linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific linker flags. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+  name is matched, and the second element is a list of flags to use when the target and all targets
+  that transitively depend on it are involved in a link operation if the platform matches the regex.
+  See <code>exported_linker_flags</code> for more information.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'supported_platforms_regex' /}
   {param default : 'None' /}
   {param desc}
-  If present, an un-anchored regex (in java.util.regex.Pattern syntax)
-  that matches all platforms that this library supports.
-  It will not be built for other platforms.
-  (Currently, this is only respected by android_binary and ndk_library.)
+  If present, an un-anchored regex (in java.util.regex.Pattern syntax) that matches all platforms
+  that this library supports. It will not be built for other platforms. (Currently, this is only
+  respected by android_binary and ndk_library.)
   {/param}
 {/call}
 
@@ -84,9 +130,8 @@ while an Android APK will require a shared PIC-enabled build).
   {param name : 'link_style ' /}
   {param default: 'static ' /}
   {param desc}
-  Determines whether to build and link this library's
-  dependencies statically (the default)o or dynamically.  Can
-  be either 'static' or 'dynamic'.
+  Determines whether to build and link this library's dependencies statically (the default) or
+  dynamically. Can be either 'static' or 'dynamic'.
   {/param}
 {/call}
 
