@@ -240,7 +240,6 @@ public class JavacStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return getJavac().getDescription(
-        context,
         getOptions(context, getClasspathEntries()),
         javaSourceFilePaths,
         pathToSrcsList);

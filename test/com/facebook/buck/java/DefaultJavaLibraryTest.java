@@ -1157,10 +1157,9 @@ public class DefaultJavaLibraryTest {
     List<Step> steps = stepsBuilder.build();
     assertEquals(steps.size(), 3);
     assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
-    Jsr199Javac jsrJavac = ((Jsr199Javac) (((JavacStep) steps.get(2)).getJavac()));
-    assertTrue(jsrJavac.getJavacJar().isPresent());
+    JarBackedJavac jsrJavac = ((JarBackedJavac) (((JavacStep) steps.get(2)).getJavac()));
     assertEquals(
-        jsrJavac.getJavacJar().get(),
+        jsrJavac.getJavacJar(),
         new BuildTargetSourcePath(javac.getProjectFilesystem(), javac.getBuildTarget()));
   }
 

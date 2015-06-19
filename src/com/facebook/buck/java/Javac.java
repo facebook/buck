@@ -52,7 +52,6 @@ public interface Javac extends RuleKeyAppendable {
       Optional<Path> workingDirectory) throws InterruptedException;
 
   String getDescription(
-      ExecutionContext context,
       ImmutableList<String> options,
       ImmutableSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList);

@@ -19,13 +19,9 @@ package com.facebook.buck.java;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -63,7 +59,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
 /**
  * Command used to compile java libraries with a variety of ways to handle dependencies.
@@ -78,7 +73,7 @@ import javax.tools.ToolProvider;
  * {@code transitiveClasspathEntries} but warn the developer about which dependencies were in
  * the transitive classpath but not in the declared classpath.
  */
-public class Jsr199Javac implements Javac {
+public abstract class Jsr199Javac implements Javac {
 
   private static final Logger LOG = Logger.get(Jsr199Javac.class);
   private static final JavacVersion VERSION = JavacVersion.of("in memory");
@@ -88,25 +83,8 @@ public class Jsr199Javac implements Javac {
     return VERSION;
   }
 
-  private final Optional<SourcePath> javacJar;
-
-  /**
-   * @param javacJar If absent, use the system compiler.  Otherwise, load the compiler from this
-   *                 path.
-   */
-  Jsr199Javac(Optional<SourcePath> javacJar) {
-    // XXX: maybe we can accept a Provider<JavaCompiler> or just a JavaCompiler instance.
-    this.javacJar = javacJar;
-  }
-
-  @VisibleForTesting
-  public Optional<SourcePath> getJavacJar() {
-    return javacJar;
-  }
-
   @Override
   public String getDescription(
-      ExecutionContext context,
       ImmutableList<String> options,
       ImmutableSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList) {
@@ -133,12 +111,9 @@ public class Jsr199Javac implements Javac {
     return false;
   }
 
-  @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("javac", "jsr199")
-        .setReflectively("javac.version", "in-memory")
-        .setReflectively("javacjar", javacJar);
-  }
+  protected abstract JavaCompiler createCompiler(
+      ExecutionContext context,
+      SourcePathResolver resolver);
 
   @Override
   public int buildWithClasspath(
@@ -149,33 +124,7 @@ public class Jsr199Javac implements Javac {
       ImmutableSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
       Optional<Path> workingDirectory) {
-    JavaCompiler compiler;
-
-    if (javacJar.isPresent()) {
-      ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
-      ClassLoader compilerClassLoader = classLoaderCache.getClassLoaderForClassPath(
-          ClassLoader.getSystemClassLoader(),
-          ImmutableList.of(resolver.getPath(javacJar.get())));
-      try {
-        compiler = (JavaCompiler)
-            compilerClassLoader.loadClass("com.sun.tools.javac.api.JavacTool")
-            .newInstance();
-      } catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
-        throw new RuntimeException(ex);
-      }
-    } else {
-      synchronized (ToolProvider.class) {
-        // ToolProvider has no synchronization internally, so if we don't synchronize from the
-        // outside we could wind up loading the compiler classes multiple times from different
-        // class loaders.
-        compiler = ToolProvider.getSystemJavaCompiler();
-      }
-
-      if (compiler == null) {
-        throw new HumanReadableException(
-            "No system compiler found. Did you install the JRE instead of the JDK?");
-      }
-    }
+    JavaCompiler compiler = createCompiler(context, resolver);
 
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
     Iterable<? extends JavaFileObject> compilationUnits = ImmutableSet.of();

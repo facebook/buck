@@ -85,8 +85,10 @@ java_immutables_library(
   srcs = [
     'AbstractJavacVersion.java',
     'ExternalJavac.java',
+    'JarBackedJavac.java',
     'Javac.java',
     'JavacErrorParser.java',
+    'JdkProvidedInMemoryJavac.java',
     'Jsr199Javac.java',
     'ZipEntryJavaFileObject.java',
   ],

@@ -22,14 +22,12 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * A java-specific "view" of BuckConfig.
@@ -46,13 +44,9 @@ public class JavaBuckConfig {
   public JavacOptions getDefaultJavacOptions(ProcessExecutor processExecutor) {
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
     Optional<String> targetLevel = delegate.getValue("java", "target_level");
-    Optional<String> extraArgumentsString = delegate.getValue("java", "extra_arguments");
-
-    ImmutableList<String> extraArguments =
-        ImmutableList.copyOf(
-            Splitter.on(Pattern.compile("[ ,]+"))
-            .omitEmptyStrings()
-            .split(extraArgumentsString.or("")));
+    ImmutableList<String> extraArguments = delegate.getListWithoutComments(
+        "java",
+        "extra_arguments");
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
     ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();

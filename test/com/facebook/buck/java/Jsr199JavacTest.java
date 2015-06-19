@@ -19,9 +19,6 @@ package com.facebook.buck.java;
 import static com.facebook.buck.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -39,8 +36,6 @@ public class Jsr199JavacTest extends EasyMockSupport {
 
   @Test
   public void testJavacCommand() {
-    ExecutionContext context = TestExecutionContext.newInstance();
-
     Jsr199Javac firstOrder = createTestStep();
     Jsr199Javac warn = createTestStep();
     Jsr199Javac transitive = createTestStep();
@@ -49,7 +44,6 @@ public class Jsr199JavacTest extends EasyMockSupport {
         String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
         firstOrder.getDescription(
-            context,
             getArgs().add("foo.jar").build(),
             SOURCE_FILES,
             Optional.of(PATH_TO_SRCS_LIST)));
@@ -57,7 +51,6 @@ public class Jsr199JavacTest extends EasyMockSupport {
         String.format("javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
         warn.getDescription(
-            context,
             getArgs().add("foo.jar").build(),
             SOURCE_FILES,
             Optional.of(PATH_TO_SRCS_LIST)));
@@ -65,14 +58,13 @@ public class Jsr199JavacTest extends EasyMockSupport {
         String.format("javac -source %s -target %s -g -d . -classpath bar.jar%sfoo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, File.pathSeparator, PATH_TO_SRCS_LIST),
         transitive.getDescription(
-            context,
             getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
             SOURCE_FILES,
             Optional.of(PATH_TO_SRCS_LIST)));
   }
 
   private Jsr199Javac createTestStep() {
-    return new Jsr199Javac(Optional.<SourcePath>absent());
+    return new JdkProvidedInMemoryJavac();
   }
 
   private ImmutableList.Builder<String> getArgs() {

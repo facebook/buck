@@ -56,7 +56,6 @@ public class ExternalJavac implements Javac {
 
   @Override
   public String getDescription(
-      ExecutionContext context,
       ImmutableList<String> options,
       ImmutableSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList) {

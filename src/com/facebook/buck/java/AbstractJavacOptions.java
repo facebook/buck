@@ -108,7 +108,13 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       }
       return new ExternalJavac(externalJavac.get(), version);
     }
-    return new Jsr199Javac(getJavacJarPath());
+
+    Optional<SourcePath> javacJarPath = getJavacJarPath();
+    if (javacJarPath.isPresent()) {
+      return new JarBackedJavac(javacJarPath.get());
+    }
+
+    return new JdkProvidedInMemoryJavac();
   }
 
   public void appendOptionsToList(

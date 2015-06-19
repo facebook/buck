@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.ExecutionContext;
@@ -79,7 +80,6 @@ public class Jsr199JavacIntegrationTest {
   @Test
   public void testGetDescription() throws IOException {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
-    ExecutionContext executionContext = createExecutionContext();
     String pathToOutputDir = new File(tmp.getRoot(), "out").getAbsolutePath();
 
     assertEquals(
@@ -91,7 +91,6 @@ public class Jsr199JavacIntegrationTest {
             JavaBuckConfig.TARGETED_JAVA_VERSION,
             pathToOutputDir),
         javac.getDescription(
-            executionContext,
             ImmutableList.of(
                 "-source", JavaBuckConfig.TARGETED_JAVA_VERSION,
                 "-target", JavaBuckConfig.TARGETED_JAVA_VERSION,
@@ -263,8 +262,14 @@ public class Jsr199JavacIntegrationTest {
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
-    return new Jsr199Javac(
-        javacJar.transform(SourcePaths.toSourcePath(new FakeProjectFilesystem())));
+
+    Optional<SourcePath> jar = javacJar.transform(
+        SourcePaths.toSourcePath(new FakeProjectFilesystem()));
+    if (jar.isPresent()) {
+      return new JarBackedJavac(jar.get());
+    }
+
+    return new JdkProvidedInMemoryJavac();
   }
 
   private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
