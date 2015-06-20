@@ -167,7 +167,7 @@ public class CompileStringsStep implements Step {
     for (String locale : filesByLocale.keySet()) {
       try {
         filesystem.writeBytesToPath(
-            resourcesByLocale.get(locale).getBinaryFileContent(),
+            Preconditions.checkNotNull(resourcesByLocale.get(locale)).getBinaryFileContent(),
             pathBuilder.apply(locale));
       } catch (IOException e) {
         context.logError(e, "Error creating binary file for locale: %s", locale);
