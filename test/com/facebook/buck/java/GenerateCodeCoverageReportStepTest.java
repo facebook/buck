@@ -57,7 +57,7 @@ public class GenerateCodeCoverageReportStepTest {
       String outputDirectory) {
     GenerateCodeCoverageReportStep step = new GenerateCodeCoverageReportStep(
         sourceDirectories, classesDirectories,
-        Paths.get(outputDirectory), CoverageReportFormat.HTML);
+        Paths.get(outputDirectory), CoverageReportFormat.HTML, "TitleFoo");
 
     ExecutionContext context = createMock(ExecutionContext.class);
     expect(
@@ -77,6 +77,7 @@ public class GenerateCodeCoverageReportStepTest {
         String.format("-Djacoco.output.dir=%s", outputDirectory),
         String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE),
         "-Djacoco.format=html",
+        "-Djacoco.title=TitleFoo",
         String.format("-Dclasses.dir=%s",
             String.format("%s%c%s:%s%c%s",
                 new File(".").getAbsoluteFile().toPath().normalize(),

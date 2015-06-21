@@ -33,16 +33,19 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   private final Set<Path> classesDirectories;
   private final Path outputDirectory;
   private CoverageReportFormat format;
+  private final String title;
 
   public GenerateCodeCoverageReportStep(
       Set<String> sourceDirectories,
       Set<Path> classesDirectories,
       Path outputDirectory,
-      CoverageReportFormat format) {
+      CoverageReportFormat format,
+      String title) {
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
     this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
     this.outputDirectory = outputDirectory;
     this.format = format;
+    this.title = title;
   }
 
   @Override
@@ -60,6 +63,8 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     args.add(String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE));
 
     args.add(String.format("-Djacoco.format=%s", format.toString().toLowerCase()));
+
+    args.add(String.format("-Djacoco.title=%s", title));
 
     args.add(String.format("-Dclasses.dir=%s",
         Joiner.on(":").join(Iterables.transform(classesDirectories,

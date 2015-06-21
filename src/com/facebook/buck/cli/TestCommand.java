@@ -80,6 +80,9 @@ public class TestCommand extends BuildCommand {
   @Option(name = "--code-coverage-format", usage = "Format to be used for coverage")
   private CoverageReportFormat coverageReportFormat = CoverageReportFormat.HTML;
 
+  @Option(name = "--code-coverage-title", usage = "Title used for coverage")
+  private String coverageReportTitle = "Code-Coverage Analysis";
+
   @Option(name = "--debug",
           usage = "Whether the test will start suspended with a JDWP debug port of 5005")
   private boolean isDebugEnabled = false;
@@ -374,6 +377,7 @@ public class TestCommand extends BuildCommand {
               .setShufflingTests(isShufflingTests)
               .setPathToXmlTestOutput(Optional.fromNullable(pathToXmlTestOutput))
               .setCoverageReportFormat(coverageReportFormat)
+              .setCoverageReportTitle(coverageReportTitle)
               .build();
           return TestRunning.runTests(
               params,

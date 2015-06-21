@@ -56,7 +56,7 @@ public class ReportGenerator {
          */
         public ReportGenerator() {
                 String jacocoOutputDir = System.getProperty("jacoco.output.dir");
-                this.title = "Code-Coverage Analysis";
+                this.title = System.getProperty("jacoco.title");
                 this.executionDataFile = new File(
                     jacocoOutputDir, System.getProperty("jacoco.exec.data.file"));
                 this.execFileLoader = new ExecFileLoader();
