@@ -221,13 +221,12 @@ public class AdbHelper {
     return isAdbInitialized(adb) ? adb : null;
   }
 
-  @Nullable
   public List<IDevice> getDevices() throws InterruptedException {
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
     if (adb == null) {
       console.printBuildFailure("Failed to create adb connection.");
-      return null;
+      return Lists.newArrayList();
     }
 
     // Build list of matching devices.
@@ -239,7 +238,7 @@ public class AdbHelper {
             String.format("%d device(s) matches specified device filter (1 expected).\n" +
                 "Either disconnect other devices or enable multi-install mode (%s).",
                 devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
-        return null;
+        return Lists.newArrayList();
       }
       // Report if multiple devices are matching the filter.
       console.getStdOut().printf("Found " + devices.size() + " matching devices.\n");
@@ -249,6 +248,9 @@ public class AdbHelper {
       console.printErrorText("No devices found with adb, restarting adb-server.");
       adb.restart();
       devices = filterDevices(adb.getDevices());
+    }
+    if (devices == null) {
+      return Lists.newArrayList();
     }
     return devices;
   }
@@ -271,7 +273,7 @@ public class AdbHelper {
 
     try (TraceEventLogger ignored = TraceEventLogger.start(buckEventBus, "set_up_adb_call")) {
       devices = getDevices();
-      if (devices == null) {
+      if (devices.size() == 0) {
         return false;
       }
     }
