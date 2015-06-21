@@ -426,7 +426,8 @@ public class TestRunning {
                 defaultJavaPackageFinderOptional,
                 params.getRepository().getFilesystem(),
                 JUnitStep.JACOCO_OUTPUT_DIR,
-                options.getCoverageReportFormat()),
+                options.getCoverageReportFormat(),
+                options.getCoverageReportTitle()),
             Optional.<BuildTarget>absent());
       } catch (StepFailedException e) {
         params.getConsole().printBuildFailureWithoutStacktrace(e);
@@ -712,7 +713,8 @@ public class TestRunning {
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       ProjectFilesystem filesystem,
       Path outputDirectory,
-      CoverageReportFormat format) {
+      CoverageReportFormat format,
+      String title) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
     ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
 
@@ -734,7 +736,8 @@ public class TestRunning {
         srcDirectories.build(),
         pathsToClasses.build(),
         outputDirectory,
-        format);
+        format,
+        title);
   }
 
   /**

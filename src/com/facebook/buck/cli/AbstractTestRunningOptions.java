@@ -78,4 +78,9 @@ abstract class AbstractTestRunningOptions {
   public CoverageReportFormat getCoverageReportFormat() {
     return CoverageReportFormat.HTML;
   }
+
+  @Value.Default
+  public String getCoverageReportTitle() {
+    return "Code-Coverage Analysis";
+  }
 }
