@@ -411,7 +411,8 @@ public class MiniAapt implements Step {
         String rawRType = resourceName.substring(1, slashPosition);
         String name = resourceName.substring(slashPosition + 1);
 
-        if (name.startsWith("android:")) {
+        String nodeName = nodesUsingIds.item(i).getNodeName();
+        if (name.startsWith("android:") || nodeName.startsWith("tools:")) {
           continue;
         }
         if (!RESOURCE_TYPES.containsKey(rawRType)) {
