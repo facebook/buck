@@ -401,7 +401,9 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
             elif dep_type == 'inheritedJdk':
                 xml += '\n    <orderEntry type="inheritedJdk" />'
             elif dep_type == 'jdk':
-                xml += '\n    <orderEntry type="jdk" jdkName="%s" jdkType="%s" />' % (dep['jdkName'], dep['jdkType'])
+                jdkName = dep.get('jdkName', '1.7')
+                jdkType = dep.get('jdkType', 'JavaSDK')
+                xml += '\n    <orderEntry type="jdk" jdkName="%s" jdkType="%s" />' % (jdkName, jdkType)
             elif dep_type == 'sourceFolder':
                 xml += '\n    <orderEntry type="sourceFolder" forTests="false" />'
 

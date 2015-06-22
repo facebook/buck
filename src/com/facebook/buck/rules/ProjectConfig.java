@@ -47,6 +47,12 @@ public class ProjectConfig extends NoopBuildRule {
   @Nullable
   private final ImmutableList<SourceRoot> testsResourceRoots;
 
+  @Nullable
+  private final String jdkName;
+
+  @Nullable
+  private final String jdkType;
+
   private final boolean isIntelliJPlugin;
 
   protected ProjectConfig(
@@ -58,6 +64,8 @@ public class ProjectConfig extends NoopBuildRule {
       @Nullable BuildRule testRule,
       @Nullable List<String> testRoots,
       @Nullable List<String> testResourceRoots,
+      @Nullable String jdkName,
+      @Nullable String jdkType,
       boolean isIntelliJPlugin) {
     super(params, resolver);
     Preconditions.checkArgument(srcRule != null || testRule != null,
@@ -104,6 +112,8 @@ public class ProjectConfig extends NoopBuildRule {
       this.testsResourceRoots = null;
     }
 
+    this.jdkName = jdkName;
+    this.jdkType = jdkType;
     this.isIntelliJPlugin = isIntelliJPlugin;
   }
 
@@ -154,4 +164,11 @@ public class ProjectConfig extends NoopBuildRule {
     return isIntelliJPlugin;
   }
 
+  public String getJdkName() {
+    return jdkName;
+  }
+
+  public String getJdkType() {
+    return jdkType;
+  }
 }
