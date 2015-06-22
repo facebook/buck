@@ -215,7 +215,11 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
             getInfoPlistAdditionalKeys(platformName, sdkName),
             getInfoPlistOverrideKeys(platformName)));
 
-    if (binary.isPresent()) {
+    // TODO(jakubzika):
+    // Checking whether the output path is not null only serves as a workaround if the binary is
+    // an unflavored CxxLibrary and does not have any output. The correct fix would be using
+    // the correctly flavored version of the rule to make sure that it always has output.
+    if (binary.isPresent() && binary.get().getPathToOutput() != null) {
       stepsBuilder.add(
           new MkdirStep(bundleRoot.resolve(this.destinations.getExecutablesPath())));
       Path bundleBinaryPath = bundleRoot.resolve(binaryPath);
