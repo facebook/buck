@@ -167,16 +167,24 @@ final class SerializableModule {
     private final boolean isTestSource;
 
     @JsonProperty
+    private final boolean isResource;
+
+    @JsonProperty
     @Nullable
     private final String packagePrefix;
 
     SourceFolder(String url, boolean isTestSource) {
-      this(url, isTestSource, null /* packagePrefix */);
+      this(url, isTestSource, false, null /* packagePrefix */);
     }
 
     SourceFolder(String url, boolean isTestSource, @Nullable String packagePrefix) {
+      this(url, isTestSource, false, packagePrefix);
+    }
+
+    SourceFolder(String url, boolean isTestSource, boolean isResource, @Nullable String packagePrefix) {
       this.url = url;
       this.isTestSource = isTestSource;
+      this.isResource = isResource;
       this.packagePrefix = packagePrefix;
     }
 
@@ -192,12 +200,13 @@ final class SerializableModule {
       SourceFolder that = (SourceFolder) obj;
       return Objects.equal(this.url, that.url) &&
           Objects.equal(this.isTestSource, that.isTestSource) &&
+          Objects.equal(this.isResource, that.isResource) &&
           Objects.equal(this.packagePrefix, that.packagePrefix);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(url, isTestSource, packagePrefix);
+      return Objects.hashCode(url, isTestSource, isResource, packagePrefix);
     }
 
     @Override
@@ -205,6 +214,7 @@ final class SerializableModule {
       return MoreObjects.toStringHelper(SourceFolder.class)
           .add("url", url)
           .add("isTestSource", isTestSource)
+          .add("isResource", isResource)
           .add("packagePrefix", packagePrefix)
           .toString();
     }

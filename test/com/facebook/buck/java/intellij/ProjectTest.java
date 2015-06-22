@@ -271,7 +271,7 @@ public class ProjectTest {
         ImmutableList.of(
             SerializableDependentModule.newSourceFolder(),
             guavaAsProvidedDep,
-            SerializableDependentModule.newStandardJdk()),
+            SerializableDependentModule.newInheritedJdk()),
         javaLibraryModule.getDependencies());
 
     // Check the values of the module that corresponds to the android_library.
@@ -505,12 +505,16 @@ public class ProjectTest {
         .addDep(guava.getBuildTarget())
         .build(ruleResolver);
 
+    String jdkName = "1.8";
+    String jdkType = "JavaSDK";
     ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule.getBuildTarget())
         .setTestRule(testBuildRule.getBuildTarget())
         .setTestRoots(ImmutableList.of("tests"))
+        .setJdkName(jdkName)
+        .setJdkType(jdkType)
         .build(ruleResolver);
 
     ProjectWithModules projectWithModules = getModulesForActionGraph(
@@ -527,7 +531,7 @@ public class ProjectTest {
             SerializableDependentModule.newLibrary(
                 guava.getBuildTarget(),
                 "buck_out_gen_third_party_java_guava_guava_jar"),
-            SerializableDependentModule.newStandardJdk()),
+            SerializableDependentModule.newStandardJdk(jdkName, jdkType)),
         comExampleBaseModule.getDependencies());
   }
 
@@ -594,7 +598,7 @@ public class ProjectTest {
                 "buck_out_gen_third_party_java_httpcore_httpcore_jar"),
             SerializableDependentModule.newModule(
                 supportV4.getBuildTarget(), "module_java_com_android_support_v4"),
-            SerializableDependentModule.newStandardJdk()),
+            SerializableDependentModule.newInheritedJdk()),
         robolectricModule.getDependencies());
   }
 

@@ -27,14 +27,17 @@ public class SerializableIntellijSettings {
   @JsonProperty @Nullable private final String languageLevel;
   @JsonProperty @Nullable private final String jdkName;
   @JsonProperty @Nullable private final String jdkType;
+  @JsonProperty @Nullable private final String outputUrl;
 
   private SerializableIntellijSettings(
       @Nullable String languageLevel,
       @Nullable String jdkName,
-      @Nullable String jdkType) {
+      @Nullable String jdkType,
+      @Nullable String outputUrl) {
     this.languageLevel = languageLevel;
     this.jdkName = jdkName;
     this.jdkType = jdkType;
+    this.outputUrl = outputUrl;
   }
 
   public static SerializableIntellijSettings createSerializableIntellijSettings(
@@ -42,7 +45,8 @@ public class SerializableIntellijSettings {
     return new SerializableIntellijSettings(
         intellijConfig.getLanguageLevel().orNull(),
         intellijConfig.getJdkName().orNull(),
-        intellijConfig.getJdkType().orNull());
+        intellijConfig.getJdkType().orNull(),
+        intellijConfig.getOutputUrl().orNull());
   }
 
   @Override
@@ -51,6 +55,7 @@ public class SerializableIntellijSettings {
         .add("languageLevel", languageLevel)
         .add("jdkName", jdkName)
         .add("jdkType", jdkType)
+        .add("outputUrl", outputUrl)
         .toString();
   }
 }

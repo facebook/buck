@@ -16,7 +16,9 @@ MISC_XML = """<?xml version="1.0" encoding="UTF-8"?>
     assert-keyword="true"
     jdk-15="true"
     project-jdk-name="%(project_jdk_name)s"
-    project-jdk-type="%(project_jdk_type)s" />
+    project-jdk-type="%(project_jdk_type)s">
+    %(project_output_url)s
+  </component>
 </project>"""
 
 MODULE_XML_START = """<?xml version="1.0" encoding="UTF-8"?>
@@ -268,7 +270,7 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
         # <content> element for the buck-out/android/gen folder should be
         # listed before the other source folders.
         num_source_folders = len(module['sourceFolders'])
-        if num_source_folders > 1:
+        if num_source_folders > 1 and module['hasAndroidFacet']:
             xml = add_buck_android_source_folder(xml, module)
 
         # Source folders.
@@ -278,11 +280,19 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
                 package_prefix = 'packagePrefix="%s" ' % source_folder['packagePrefix']
             else:
                 package_prefix = ''
-            xml += '\n      <sourceFolder url="%(url)s" isTestSource="%(is_test_source)s" %(package_prefix)s/>' % {
-                'url': source_folder['url'],
-                'is_test_source': str(source_folder['isTestSource']).lower(),
-                'package_prefix': package_prefix
-            }
+            if source_folder['isResource']:
+                resource_folder_type = 'java-test-resource' if source_folder['isTestSource'] else 'java-resource'
+                xml += '\n      <sourceFolder url="%(url)s" type="%(resource_folder_type)s" %(package_prefix)s/>' % {
+                    'url': source_folder['url'],
+                    'resource_folder_type': resource_folder_type,
+                    'package_prefix': package_prefix
+                }
+            else:
+                xml += '\n      <sourceFolder url="%(url)s" isTestSource="%(is_test_source)s" %(package_prefix)s/>' % {
+                    'url': source_folder['url'],
+                    'is_test_source': str(source_folder['isTestSource']).lower(),
+                    'package_prefix': package_prefix
+                }
         for exclude_folder in module['excludeFolders']:
             xml += '\n      <excludeFolder url="%s" />' % exclude_folder['url']
         for exclude_folder in sorted(additional_excludes[module['pathToImlFile']]):
@@ -296,7 +306,7 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
         # Empirically, if there is one source folder, then the <content>
         # element for the buck-out/android/gen folder should be listed after
         # the other source folders.
-        if num_source_folders <= 1:
+        if num_source_folders <= 1 and module['hasAndroidFacet']:
             xml = add_buck_android_source_folder(xml, module)
 
         # Dependencies.
@@ -391,7 +401,9 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
             elif dep_type == 'inheritedJdk':
                 xml += '\n    <orderEntry type="inheritedJdk" />'
             elif dep_type == 'jdk':
-                xml += '\n    <orderEntry type="jdk" jdkName="%s" jdkType="%s" />' % (dep['jdkName'], dep['jdkType'])
+                jdkName = dep.get('jdkName', '1.7')
+                jdkType = dep.get('jdkType', 'JavaSDK')
+                xml += '\n    <orderEntry type="jdk" jdkName="%s" jdkType="%s" />' % (jdkName, jdkType)
             elif dep_type == 'sourceFolder':
                 xml += '\n    <orderEntry type="sourceFolder" forTests="false" />'
 
@@ -459,10 +471,13 @@ def write_all_modules(modules):
 
 def write_misc_file(java_settings):
     """Writes a misc.xml file to define some settings specific to the project."""
+    output_url = '<output url="file://$PROJECT_DIR$/' + \
+        java_settings.get('outputUrl', 'build-ij/classes') + '" />'
     xml = MISC_XML % {
         'java_language_level': java_settings.get('languageLevel', 'JDK_1_6'),
         'project_jdk_name': java_settings.get('jdkName', 'Android API 21 Platform'),
         'project_jdk_type': java_settings.get('jdkType', 'Android SDK'),
+        'project_output_url': output_url
     }
 
     write_file_if_changed('.idea/misc.xml', xml)
