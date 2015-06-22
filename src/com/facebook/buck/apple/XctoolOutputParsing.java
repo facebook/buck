@@ -20,6 +20,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -47,8 +48,10 @@ public class XctoolOutputParsing {
   // must only have final fields..
   @SuppressWarnings("checkstyle:mutableexception")
   public static class TestException {
+    @Nullable
     public String filePathInProject = null;
     public int lineNumber = -1;
+    @Nullable
     public String reason = null;
   }
 
@@ -58,12 +61,14 @@ public class XctoolOutputParsing {
 
   public static class EndOcunitEvent {
     public double timestamp = -1;
+    @Nullable
     public String message = null;
     public boolean succeeded = false;
   }
 
   public static class BeginTestSuiteEvent {
     public double timestamp = -1;
+    @Nullable
     public String suite = null;
   }
 
@@ -71,6 +76,7 @@ public class XctoolOutputParsing {
     public double timestamp = -1;
     public double totalDuration = -1;
     public double testDuration = -1;
+    @Nullable
     public String suite = null;
     public int testCaseCount = -1;
     public int totalFailureCount = -1;
@@ -80,17 +86,24 @@ public class XctoolOutputParsing {
 
   public static class BeginTestEvent {
     public double timestamp = -1;
+    @Nullable
     public String test = null;
+    @Nullable
     public String className = null;
+    @Nullable
     public String methodName = null;
   }
 
   public static class EndTestEvent {
     public double totalDuration = -1;
     public double timestamp = -1;
+    @Nullable
     public String test = null;
+    @Nullable
     public String className = null;
+    @Nullable
     public String methodName = null;
+    @Nullable
     public String output = null;
     public boolean succeeded = false;
     public List<TestException> exceptions = new ArrayList<>();
@@ -171,8 +184,8 @@ public class XctoolOutputParsing {
   public static TestResultSummary testResultSummaryForEndTestEvent(EndTestEvent endTestEvent) {
     long timeMillis = (long) (endTestEvent.totalDuration * TimeUnit.SECONDS.toMillis(1));
     TestResultSummary testResultSummary = new TestResultSummary(
-        endTestEvent.className,
-        endTestEvent.test,
+        Preconditions.checkNotNull(endTestEvent.className),
+        Preconditions.checkNotNull(endTestEvent.test),
         endTestEvent.succeeded ? ResultType.SUCCESS : ResultType.FAILURE,
         timeMillis,
         formatTestMessage(endTestEvent),

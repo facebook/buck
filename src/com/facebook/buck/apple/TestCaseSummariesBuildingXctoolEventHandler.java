@@ -86,14 +86,18 @@ public class TestCaseSummariesBuildingXctoolEventHandler
 
   @Override
   public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
-    testReportingCallback.testDidBegin(event.className, event.test);
+    testReportingCallback.testDidBegin(
+        Preconditions.checkNotNull(event.className),
+        Preconditions.checkNotNull(event.test));
   }
 
   @Override
   public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {
     TestResultSummary testResultSummary =
         XctoolOutputParsing.testResultSummaryForEndTestEvent(event);
-    testResultSummariesBuilder.put(event.className, testResultSummary);
+    testResultSummariesBuilder.put(
+        Preconditions.checkNotNull(event.className),
+        testResultSummary);
     testReportingCallback.testDidEnd(testResultSummary);
   }
 
