@@ -606,17 +606,56 @@
 
       <formatter type="plain" usefile="false" />
 
+      <!-- Java and android -->
+      <batchtest fork="yes">
+        <fileset dir="${test.dir}">
+          <include name="com/facebook/buck/java/**/*${test.class}.java" />
+          <include name="com/facebook/buck/android/**/*${test.class}.java" />
+          <include name="com/facebook/buck/dalvik/**/*${test.class}.java" />
+
+          <exclude name="**/testdata/**" />
+        </fileset>
+      </batchtest>
+
+      <!-- iOS -->
+      <batchtest fork="yes">
+        <fileset dir="${test.dir}">
+          <include name="com/facebook/buck/apple/**/*${test.class}.java" />
+          <include name="com/facebook/buck/ddplist/**/*${test.class}.java" />
+
+          <exclude name="**/testdata/**" />
+        </fileset>
+      </batchtest>
+
+      <!-- C++ and it's ilk -->
+      <batchtest fork="yes">
+        <fileset dir="${test.dir}">
+          <include name="com/facebook/buck/cxx/**/*${test.class}.java" />
+
+          <exclude name="**/testdata/**" />
+        </fileset>
+      </batchtest>
+
+      <!-- Catch-all test group -->
       <batchtest fork="yes">
         <fileset dir="${test.dir}">
           <!--
-            Do not exclude tests that start with "Abstract", as there are some tests for abstract
-            classes.
+          Do not exclude tests that start with "Abstract", as there are some tests for abstract
+          classes.
           -->
           <include name="**/*${test.class}.java" />
+
           <exclude name="**/testdata/**" />
           <exclude name="com/facebook/buck/maven/**" />
+          <exclude name="com/facebook/buck/java/**" />
+          <exclude name="com/facebook/buck/android/**" />
+          <exclude name="com/facebook/buck/dalvik/**" />
+          <exclude name="com/facebook/buck/apple/**" />
+          <exclude name="com/facebook/buck/ddplist/**" />
+          <exclude name="com/facebook/buck/cxx/**" />
         </fileset>
       </batchtest>
+
       <classpath refid="tests.classpath" />
     </junit>
     <fail if="hasFailingTests" />
