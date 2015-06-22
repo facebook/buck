@@ -24,6 +24,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -130,10 +131,10 @@ class SchemeGenerator {
           outputDirectory.getParent().relativize(
               targetToProjectPathMap.get(target)
           ).toString(),
-          target.getGlobalID(),
+          Preconditions.checkNotNull(target.getGlobalID()),
           target.getProductReference() != null
               ? target.getProductReference().getName()
-              : target.getProductName(),
+              : Preconditions.checkNotNull(target.getProductName()),
           blueprintName);
       buildTargetToBuildableReferenceMap.put(target , buildableReference);
     }
@@ -160,7 +161,7 @@ class SchemeGenerator {
     }
 
     XCScheme.TestAction testAction = new XCScheme.TestAction(
-        actionConfigNames.get(SchemeActionType.TEST));
+        Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.TEST)));
     for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
           buildTargetToBuildableReferenceMap.get(target);
@@ -179,18 +180,19 @@ class SchemeGenerator {
         launchAction = Optional.of(
             new XCScheme.LaunchAction(
                 primaryBuildableReference,
-                actionConfigNames.get(SchemeActionType.LAUNCH),
+                Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.LAUNCH)),
                 runnablePath,
                 remoteRunnablePath));
-        profileAction = Optional.of(new XCScheme.ProfileAction(
-            primaryBuildableReference,
-            actionConfigNames.get(SchemeActionType.PROFILE)));
+        profileAction = Optional.of(
+            new XCScheme.ProfileAction(
+                primaryBuildableReference,
+                Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.PROFILE))));
       }
     }
     XCScheme.AnalyzeAction analyzeAction = new XCScheme.AnalyzeAction(
-        actionConfigNames.get(SchemeActionType.ANALYZE));
+        Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ANALYZE)));
     XCScheme.ArchiveAction archiveAction = new XCScheme.ArchiveAction(
-        actionConfigNames.get(SchemeActionType.ARCHIVE));
+        Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ARCHIVE)));
 
     XCScheme scheme = new XCScheme(
         schemeName,
