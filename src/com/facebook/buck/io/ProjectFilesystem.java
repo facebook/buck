@@ -817,6 +817,9 @@ public class ProjectFilesystem {
         }
         CustomZipEntry entry = new CustomZipEntry(entryName);
 
+        // We want deterministic ZIPs, so avoid mtimes.
+        entry.setTime(0);
+
         // Support executable files.  If we detect this file is executable, store this
         // information as 0100 in the field typically used in zip implementations for
         // POSIX file permissions.  We'll use this information when unzipping.
