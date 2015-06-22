@@ -15,10 +15,10 @@
 {param status: 'UNFROZEN' /}
 {param overview}
 A <code>project_config()</code> rule is used to specify the information needed
-to generate the configuration files for an IDE so the primary build target 
+to generate the configuration files for an IDE so the primary build target
 (and optionally its tests) of a BUCK file can be built using that IDE.
 
-<p>Note that there may only be one <code>project_config()</code> rule per 
+<p>Note that there may only be one <code>project_config()</code> rule per
 BUCK file.</p>
 {/param}
 
@@ -27,15 +27,15 @@ BUCK file.</p>
 {call buck.arg}
   {param name: 'src_target' /}
   {param desc}
-  A build rule that will serve as the basis of the generated project. 
-  Currently, it must be one of: <code>java_library()</code>, 
-  {sp}<code>java_test()</code>, <code>android_library()</code>, or 
-  {sp}<code>android_binary()</code>. The generated IDE project will be of a 
+  A build rule that will serve as the basis of the generated project.
+  Currently, it must be one of: <code>java_library()</code>,
+  {sp}<code>java_test()</code>, <code>android_library()</code>, or
+  {sp}<code>android_binary()</code>. The generated IDE project will be of a
   type that corresponds to the type of the rule.
 
-  <p>Also, the <code>deps</code> of this rule will determine the other IDE 
-  projects on which the IDE project for this rule depends. 
-  Note that this is a heuristic, but it appears to work reasonably well, 
+  <p>Also, the <code>deps</code> of this rule will determine the other IDE
+  projects on which the IDE project for this rule depends.
+  Note that this is a heuristic, but it appears to work reasonably well,
   in practice.</p>
   {/param}
 {/call}
@@ -44,30 +44,30 @@ BUCK file.</p>
   {param name : 'src_roots' /}
   {param default : '[]' /}
   {param desc}
-  The root directories of the source code that correspond to 
-  {sp}<code>src_target</code>. 
+  The root directories of the source code that correspond to
+  {sp}<code>src_target</code>.
   Values may include:
   <ul>
     <li>
-      <code>None</code> There are no source roots. This could happen if 
-      {sp}<code>src_target</code> identifies an Android library project that 
+      <code>None</code> There are no source roots. This could happen if
+      {sp}<code>src_target</code> identifies an Android library project that
       is purely resources and no Java code.
     </li>
     <li>
-      <code>[]</code> The directory that contains the build file is a Java 
-      package. In this case, the root of the package must be one of the 
-      ancestor directories. 
-      Buck can deduce where the root of the package is by using the 
-      {sp}<code>src_roots</code> property in the <code>[java]</code> section 
+      <code>[]</code> The directory that contains the build file is a Java
+      package. In this case, the root of the package must be one of the
+      ancestor directories.
+      Buck can deduce where the root of the package is by using the
+      {sp}<code>src_roots</code> property in the <code>[java]</code> section
       of the <a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code>
       </a>.
     </li>
     <li>
-      <code>['src']</code>  The <code>src</code> directory under the build file 
-      directory is a source root. This list may contain multiple elements, but 
-      in practice, it should almost always contain at most one element. 
+      <code>['src']</code>  The <code>src</code> directory under the build file
+      directory is a source root. This list may contain multiple elements, but
+      in practice, it should almost always contain at most one element.
       This option supports a list to allow generated source code to be checked in
-      alongside the hand-written source of imported projects. 
+      alongside the hand-written source of imported projects.
       In this case, <code>src_roots</code> would be
       {sp}<code>['src', 'src-gen']</code>.
     </li>
@@ -79,10 +79,10 @@ BUCK file.</p>
   {param name : 'test_target' /}
   {param default : 'None' /}
   {param desc}
-  If specified, a complementary tests project for <code>src_target</code>. 
-  In IntelliJ, source and test code can be grouped together in the same module 
-  while having different classpaths. 
-  In Eclipse, source and test code are often in separate projects because they 
+  If specified, a complementary tests project for <code>src_target</code>.
+  In IntelliJ, source and test code can be grouped together in the same module
+  while having different classpaths.
+  In Eclipse, source and test code are often in separate projects because they
   need to have different classpaths.
   {/param}
 {/call}
@@ -92,6 +92,24 @@ BUCK file.</p>
   {param default : '[]' /}
   {param desc}
   Same as <code>src_roots</code>, but for <code>test_target</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'jdk_name' /}
+  {param default : 'inherited' from the IDE setting /}
+  {param desc}
+  The JDK name to be used for the project, e.g., 1.8. The option shall be
+  specified together with the <code>jdk_type<code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'jdk_type' /}
+  {param default : 'inherited' from the IDE setting /}
+  {param desc}
+  The JDK type to be used for the project, e.g., JavaSDK. the option shall
+  be specified together with the <code>jdk_name<code>.
   {/param}
 {/call}
 

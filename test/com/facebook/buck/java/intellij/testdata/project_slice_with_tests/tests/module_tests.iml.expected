@@ -7,6 +7,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="buck_out_gen_libs_junit_jar" level="project" />
     <orderEntry type="module" module-name="module_modules_dep1" />
-    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
+    <orderEntry type="inheritedJdk" />
   </component>
 </module>

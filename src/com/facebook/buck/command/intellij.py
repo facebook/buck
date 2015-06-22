@@ -401,7 +401,9 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
             elif dep_type == 'inheritedJdk':
                 xml += '\n    <orderEntry type="inheritedJdk" />'
             elif dep_type == 'jdk':
-                xml += '\n    <orderEntry type="jdk" jdkName="%s" jdkType="%s" />' % (dep['jdkName'], dep['jdkType'])
+                jdkName = dep.get('jdkName', '1.7')
+                jdkType = dep.get('jdkType', 'JavaSDK')
+                xml += '\n    <orderEntry type="jdk" jdkName="%s" jdkType="%s" />' % (jdkName, jdkType)
             elif dep_type == 'sourceFolder':
                 xml += '\n    <orderEntry type="sourceFolder" forTests="false" />'
 
@@ -474,7 +476,6 @@ def write_misc_file(java_settings):
     xml = MISC_XML % {
         'java_language_level': java_settings.get('languageLevel', 'JDK_1_6'),
         'project_jdk_name': java_settings.get('jdkName', 'Android API 21 Platform'),
-        'project_jdk_type': java_settings.get('jdkType', 'Android SDK'),
         'project_jdk_type': java_settings.get('jdkType', 'Android SDK'),
         'project_output_url': output_url
     }

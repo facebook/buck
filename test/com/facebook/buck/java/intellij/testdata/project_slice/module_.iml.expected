@@ -13,6 +13,6 @@
       <excludeFolder url="file://$MODULE_DIR$/modules/tip" />
       <excludeFolder url="file://$MODULE_DIR$/tests" />
     </content>
-    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
+    <orderEntry type="inheritedJdk" />
   </component>
 </module>

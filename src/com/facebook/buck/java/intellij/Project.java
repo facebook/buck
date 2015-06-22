@@ -468,7 +468,12 @@ public class Project {
       if (module.isIntelliJPlugin()) {
         jdkDependency = SerializableDependentModule.newIntelliJPluginJdk();
       } else {
-        jdkDependency = SerializableDependentModule.newStandardJdk();
+        if (projectConfig.getJdkName() == null || projectConfig.getJdkType() == null) {
+          jdkDependency = SerializableDependentModule.newInheritedJdk();
+        } else {
+          jdkDependency = SerializableDependentModule.newStandardJdk(
+              projectConfig.getJdkName(), projectConfig.getJdkType());
+        }
       }
     }
 
