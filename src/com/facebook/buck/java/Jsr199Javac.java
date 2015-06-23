@@ -239,7 +239,7 @@ public abstract class Jsr199Javac implements Javac {
 
   private ProcessorBundle prepareProcessors(
       ClassLoader compilerClassLoader,
-      @Nullable BuildTarget target,
+      BuildTarget target,
       List<String> options) {
     String processorClassPath = null;
     String processorNames = null;
@@ -305,7 +305,7 @@ public abstract class Jsr199Javac implements Javac {
         // If this happens, then the build is really in trouble. Better warn the user.
         throw new HumanReadableException(
             "%s: javac unable to load annotation processor: %s",
-            target != null ? target.getFullyQualifiedName() : "unknown target",
+            target.getFullyQualifiedName(),
             name);
       }
     }
