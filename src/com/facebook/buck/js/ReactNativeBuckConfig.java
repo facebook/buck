@@ -18,6 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 
 /**
@@ -36,7 +37,12 @@ public class ReactNativeBuckConfig {
    *
    * @return Path to the react native javascript packager.
    */
-  public Optional<SourcePath> getPackager() {
-    return delegate.getSourcePath("react-native", "packager");
+  public SourcePath getPackager() {
+    Optional<SourcePath> packager = delegate.getSourcePath("react-native", "packager");
+    if (!packager.isPresent()) {
+      throw new HumanReadableException("In order to use a 'react_native_library' rule, please " +
+          "specify 'packager' in .buckconfig under the 'react-native' section.");
+    }
+    return packager.get();
   }
 }

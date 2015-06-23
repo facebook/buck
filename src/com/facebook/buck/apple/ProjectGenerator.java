@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
@@ -1150,11 +1151,13 @@ public class ProjectGenerator {
       ImmutableList.Builder<TargetNode<?>> preRules,
       ImmutableList.Builder<TargetNode<?>> postRules) {
     for (TargetNode<?> targetNode : targetNodes) {
-      if (targetNode.getType().equals(XcodePostbuildScriptDescription.TYPE)) {
+      BuildRuleType type = targetNode.getType();
+      if (type.equals(XcodePostbuildScriptDescription.TYPE) ||
+          type.equals(IosReactNativeLibraryDescription.TYPE)) {
         postRules.add(targetNode);
       } else if (
-          targetNode.getType().equals(XcodePrebuildScriptDescription.TYPE) ||
-          targetNode.getType().equals(GenruleDescription.TYPE)) {
+          type.equals(XcodePrebuildScriptDescription.TYPE) ||
+          type.equals(GenruleDescription.TYPE)) {
         preRules.add(targetNode);
       }
     }

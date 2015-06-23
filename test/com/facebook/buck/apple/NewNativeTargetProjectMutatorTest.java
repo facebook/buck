@@ -22,6 +22,7 @@ import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertTargetExis
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.getSingletonPhaseByType;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.IsNot.not;
@@ -48,9 +49,16 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.ReactNativeBuckConfig;
+import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
@@ -58,11 +66,14 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.AllExistingProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -420,6 +431,42 @@ public class NewNativeTargetProjectMutatorTest {
         "should set script correctly",
         "echo \"hello world!\"",
         phase.getShellScript());
+  }
+
+  @Test
+  public void testScriptBuildPhaseWithReactNative() throws NoSuchBuildTargetException {
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
+
+    BuildTarget depBuildTarget = BuildTarget.builder("//foo", "dep").build();
+    ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(new FakeBuckConfig(
+        ImmutableMap.of("react-native", ImmutableMap.of("packager", "react-native/packager.sh")),
+        new AllExistingProjectFilesystem()));
+    TargetNode<?> reactNativeNode =
+        new AbstractNodeBuilder<ReactNativeLibraryArgs>(
+            new IosReactNativeLibraryDescription(buckConfig),
+            depBuildTarget) {
+
+          @Override
+          public TargetNode<ReactNativeLibraryArgs> build() {
+            ProjectFilesystem filesystem = new FakeProjectFilesystem();
+            arg.bundleName = "Apps/Foo/FooBundle.js";
+            arg.entryPath = new PathSourcePath(filesystem, Paths.get("js/FooApp.js"));
+            return super.build();
+          }
+
+        }.build();
+
+    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(reactNativeNode));
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject);
+
+    PBXShellScriptBuildPhase phase =
+        getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
+    String shellScript = phase.getShellScript();
+    assertThat(
+        shellScript,
+        startsWith("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}" +
+        " && JS_OUT=${BASE_DIR}/Apps/Foo/FooBundle.js && mkdir -p `dirname ${JS_OUT}`"));
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {

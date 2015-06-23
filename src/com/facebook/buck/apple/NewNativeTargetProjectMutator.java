@@ -35,6 +35,12 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.ReactNativeBundle;
+import com.facebook.buck.js.ReactNativeFlavors;
+import com.facebook.buck.js.ReactNativeLibraryArgs;
+import com.facebook.buck.js.ReactNativePlatform;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
@@ -45,6 +51,7 @@ import com.facebook.buck.shell.GenruleDescription;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -582,10 +589,36 @@ public class NewNativeTargetProjectMutator {
         XcodePostbuildScriptDescription.Arg arg =
             (XcodePostbuildScriptDescription.Arg) node.getConstructorArg();
         shellScriptBuildPhase.setShellScript(arg.cmd);
+      } else if (IosReactNativeLibraryDescription.TYPE.equals(node.getType())) {
+        shellScriptBuildPhase.setShellScript(generateXcodeShellScript(node));
       } else {
         // unreachable
         throw new IllegalStateException("Invalid rule type for shell script build phase");
       }
     }
+  }
+
+  private String generateXcodeShellScript(TargetNode<?> targetNode) {
+    Preconditions.checkArgument(targetNode.getConstructorArg() instanceof ReactNativeLibraryArgs);
+
+    ProjectFilesystem filesystem = targetNode.getRuleFactoryParams().getProjectFilesystem();
+    ReactNativeLibraryArgs args = (ReactNativeLibraryArgs) targetNode.getConstructorArg();
+    IosReactNativeLibraryDescription description =
+        (IosReactNativeLibraryDescription) targetNode.getDescription();
+    ImmutableList.Builder<String> script = ImmutableList.builder();
+    script.add("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}");
+    script.add("JS_OUT=${BASE_DIR}/" + args.bundleName);
+    script.add("mkdir -p `dirname ${JS_OUT}`");
+
+    script.add(Joiner.on(" ").join(
+            ReactNativeBundle.getBundleScript(
+                filesystem.resolve(sourcePathResolver.apply(description.getReactNativePackager())),
+                filesystem.resolve(sourcePathResolver.apply(args.entryPath)),
+                ReactNativePlatform.IOS,
+                ReactNativeFlavors.isDevMode(targetNode.getBuildTarget()),
+                "${JS_OUT}",
+                "${BASE_DIR}")));
+
+    return Joiner.on(" && ").join(script.build());
   }
 }

@@ -103,14 +103,13 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             ProjectFilesystem filesystem = context.getProjectFilesystem();
-            return ImmutableList.of(
-                getResolver().getPath(jsPackager).toString(),
-                "bundle",
-                "--entry-file", filesystem.resolve(getResolver().getPath(entryPath)).toString(),
-                "--platform", platform.toString(),
-                "--dev", isDevMode ? "true" : "false",
-                "--bundle-output", filesystem.resolve(jsOutput).toString(),
-                "--assets-dest", filesystem.resolve(resource).toString());
+            return getBundleScript(
+                getResolver().getPath(jsPackager),
+                filesystem.resolve(getResolver().getPath(entryPath)),
+                platform,
+                isDevMode,
+                filesystem.resolve(jsOutput).toString(),
+                filesystem.resolve(resource).toString());
           }
         });
     buildableContext.recordArtifact(jsOutputDir);
@@ -143,5 +142,22 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   @Override
   public Sha1HashCode getAbiKeyForDeps() {
     return depsFinder.getInputsHash();
+  }
+
+  public static ImmutableList<String> getBundleScript(
+      Path jsPackager,
+      Path absoluteEntryPath,
+      ReactNativePlatform platform,
+      boolean isDevMode,
+      String absoluteBundleOutputPath,
+      String absoluteResourceOutputPath) {
+    return ImmutableList.of(
+        jsPackager.toString(),
+        "bundle",
+        "--entry-file", absoluteEntryPath.toString(),
+        "--platform", platform.toString(),
+        "--dev", isDevMode ? "true" : "false",
+        "--bundle-output", absoluteBundleOutputPath,
+        "--assets-dest", absoluteResourceOutputPath);
   }
 }

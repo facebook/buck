@@ -25,9 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -64,7 +62,7 @@ public class ReactNativeLibraryGraphEnhancer {
     ReactNativeDeps depsFinder = new ReactNativeDeps(
         paramsForDepsFinder,
         sourcePathResolver,
-        getPackager(),
+        buckConfig.getPackager(),
         args.srcs.get(),
         args.entryPath,
         platform);
@@ -94,7 +92,7 @@ public class ReactNativeLibraryGraphEnhancer {
         args.entryPath,
         ReactNativeFlavors.isDevMode(originalBuildTarget),
         args.bundleName,
-        getPackager(),
+        buckConfig.getPackager(),
         ReactNativePlatform.ANDROID,
         reactNativeDeps);
     resolver.addToIndex(bundle);
@@ -152,17 +150,8 @@ public class ReactNativeLibraryGraphEnhancer {
         args.entryPath,
         ReactNativeFlavors.isDevMode(params.getBuildTarget()),
         args.bundleName,
-        getPackager(),
+        buckConfig.getPackager(),
         ReactNativePlatform.IOS,
         reactNativeDeps);
-  }
-
-  private SourcePath getPackager() {
-    Optional<SourcePath> packager = buckConfig.getPackager();
-    if (!packager.isPresent()) {
-      throw new HumanReadableException("In order to use a 'react_native_library' rule, please " +
-          "specify 'packager' in .buckconfig under the 'react-native' section.");
-    }
-    return packager.get();
   }
 }
