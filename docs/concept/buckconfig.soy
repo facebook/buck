@@ -289,6 +289,17 @@ It also configures configures the default flags to pass to all invocations of sa
   yaccflags =
 </pre>{/literal}
 
+Adding a section with header [cxx#<i>flavor</i>] to the .buckconfig will add 
+an alternate cxx section. This cxx section will be used instead of [cxx]
+if the compilation flavor is invoked by appending <i>#flavor</i> to a build
+target. So to build with [cxx#example] rather than [cxx] use
+
+<p>
+
+{literal}<pre class="prettyprint">
+$ buck build app#example
+</pre>{/literal}
+
 {call .section}{param title: 'java' /}{/call}
 
 This section may define a <code>src_roots</code> property that specifies

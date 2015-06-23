@@ -317,6 +317,24 @@ public class KnownBuildRuleTypes {
         cxxPlatformsMap,
         systemDefaultCxxPlatform);
 
+    // Add platforms for each cxx flavor obtained from the buck config files
+    // from sections of the form cxx#{flavor name}
+    ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
+    for (Flavor flavor: cxxFlavors) {
+      CxxBuckConfig flavoredCxxBuckConfig =  new CxxBuckConfig(config, flavor);
+      CxxPlatform defaultPlatformForFlavor = CxxPlatforms.getConfigDefaultCxxPlatform(
+          flavoredCxxBuckConfig,
+          cxxPlatformsMap,
+          systemDefaultCxxPlatform);
+      cxxPlatformsBuilder.put(flavor, CxxPlatforms.copyPlatformWithFlavorAndConfig(
+          defaultPlatformForFlavor,
+          flavoredCxxBuckConfig,
+          flavor));
+    }
+
+    cxxPlatformsMap = cxxPlatformsBuilder.build();
+
+
     // Build up the final list of C/C++ platforms.
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(
         "C/C++ platform",

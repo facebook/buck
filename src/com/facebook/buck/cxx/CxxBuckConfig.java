@@ -18,9 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
@@ -29,59 +32,89 @@ import java.nio.file.Path;
  */
 public class CxxBuckConfig {
 
+  private static final String FLAVORED_CXX_SECTION_PREFIX = "cxx#";
+  private static final String UNFLAVORED_CXX_SECTION_PREFIX = "cxx";
+
   private final BuckConfig delegate;
+  private final String cxxSection;
+
+  /**
+   * Constructs set of flavors given in a .buckconfig file, as is specified by section names
+   * of the form cxx#{flavor name}.
+   */
+  public static ImmutableSet<Flavor> getCxxFlavors(BuckConfig config) {
+    ImmutableSet.Builder<Flavor> builder = ImmutableSet.builder();
+    ImmutableSet<String> sections = config.getSections();
+    for (String section: sections) {
+      if (section.startsWith(FLAVORED_CXX_SECTION_PREFIX)) {
+        builder.add(ImmutableFlavor.of(section.substring(FLAVORED_CXX_SECTION_PREFIX.length())));
+      }
+    }
+    return builder.build();
+  }
 
   public CxxBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
+    this.cxxSection = UNFLAVORED_CXX_SECTION_PREFIX;
+  }
+
+  /*
+   * A special constructor for a section of the form cxx#{flavor name}
+   * which represents a generated flavor that uses the cxx options defined
+   * in that section.
+   */
+  public CxxBuckConfig(BuckConfig delegate, Flavor flavor) {
+    this.delegate = delegate;
+    this.cxxSection = FLAVORED_CXX_SECTION_PREFIX + flavor.getName();
   }
 
   /**
    * @return the {@link BuildTarget} which represents the lex library.
    */
   public BuildTarget getLexDep() {
-    return delegate.getRequiredBuildTarget("cxx", "lex_dep");
+    return delegate.getRequiredBuildTarget(cxxSection, "lex_dep");
   }
 
   /**
    * @return the {@link BuildTarget} which represents the python library.
    */
   public BuildTarget getPythonDep() {
-    return delegate.getRequiredBuildTarget("cxx", "python_dep");
+    return delegate.getRequiredBuildTarget(cxxSection, "python_dep");
   }
 
   /**
    * @return the {@link BuildTarget} which represents the gtest library.
    */
   public BuildTarget getGtestDep() {
-    return delegate.getRequiredBuildTarget("cxx", "gtest_dep");
+    return delegate.getRequiredBuildTarget(cxxSection, "gtest_dep");
   }
 
   /**
    * @return the {@link BuildTarget} which represents the boost testing library.
    */
   public BuildTarget getBoostTestDep() {
-    return delegate.getRequiredBuildTarget("cxx", "boost_test_dep");
+    return delegate.getRequiredBuildTarget(cxxSection, "boost_test_dep");
   }
 
   public Optional<Path> getPath(String flavor, String name) {
     return delegate
-        .getPath("cxx", flavor + "_" + name)
-        .or(delegate.getPath("cxx", name));
+        .getPath(cxxSection, flavor + "_" + name)
+        .or(delegate.getPath(cxxSection, name));
   }
 
   public Optional<String> getDefaultPlatform() {
-    return delegate.getValue("cxx", "default_platform");
+    return delegate.getValue(cxxSection, "default_platform");
   }
 
   public <T extends Enum<T>> Optional<T> getLinkerType(String flavor, Class<T> clazz) {
     return delegate
-        .getEnum("cxx", flavor + "_ld_type", clazz)
-        .or(delegate.getEnum("cxx", "ld_type", clazz));
+        .getEnum(cxxSection, flavor + "_ld_type", clazz)
+        .or(delegate.getEnum(cxxSection, "ld_type", clazz));
   }
 
   public Optional<ImmutableList<String>> getFlags(
       String field) {
-    Optional<String> value = delegate.getValue("cxx", field);
+    Optional<String> value = delegate.getValue(cxxSection, field);
     if (!value.isPresent()) {
       return Optional.absent();
     }
@@ -94,7 +127,7 @@ public class CxxBuckConfig {
 
   public CxxPreprocessMode getPreprocessMode() {
     Optional<CxxPreprocessMode> setting = delegate.getEnum(
-        "cxx", "preprocess_mode", CxxPreprocessMode.class);
+      cxxSection, "preprocess_mode", CxxPreprocessMode.class);
 
     if (setting.isPresent()) {
       return setting.get();
@@ -102,7 +135,7 @@ public class CxxBuckConfig {
 
     // Support legacy configuration option
     return delegate.getBooleanValue(
-            "cxx",
+            cxxSection,
             "combined_preprocess_and_compile",
             /* default*/ false)
         ? CxxPreprocessMode.COMBINED

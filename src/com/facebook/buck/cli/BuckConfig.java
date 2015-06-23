@@ -829,4 +829,8 @@ public class BuckConfig {
         environment,
         configOverrides);
   }
+
+  public ImmutableSet<String> getSections() {
+    return config.getSectionToEntries().keySet();
+  }
 }

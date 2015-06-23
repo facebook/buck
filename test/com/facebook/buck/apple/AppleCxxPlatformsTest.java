@@ -23,9 +23,12 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -291,6 +294,89 @@ public class AppleCxxPlatformsTest {
     assertThat(
         cxxPlatform.getCxxppflags(),
         hasItems("-std=c++11", "-DCXXTHING"));
+  }
+
+  @Test
+  public void cxxToolParamsReadFromBuckConfigWithGenFlavor() throws Exception {
+AppleSdkPaths appleSdkPaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(Paths.get("."))
+            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(Paths.get("Platforms/iPhoneOS.platform"))
+            .setSdkPath(Paths.get("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .build();
+
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
+        .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/xctest"))
+        .add(Paths.get("Tools/otest"))
+        .build();
+
+    AppleToolchain toolchain = AppleToolchain.builder()
+        .setIdentifier("com.apple.dt.XcodeDefault")
+        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setVersion("1")
+        .build();
+
+    AppleSdk targetSdk = AppleSdk.builder()
+        .setApplePlatform(
+            ApplePlatform.builder().setName(ApplePlatform.Name.IPHONEOS).build())
+        .setName("iphoneos8.0")
+        .setVersion("8.0")
+        .setToolchains(ImmutableList.of(toolchain))
+        .build();
+
+
+    Flavor testFlavor = ImmutableFlavor.of("test-flavor");
+
+    BuckConfig config = new FakeBuckConfig(
+                ImmutableMap.of(
+                    "cxx", ImmutableMap.of(
+                        "cflags", "-std=gnu11",
+                        "cppflags", "-DCTHING",
+                        "cxxflags", "-std=c++11",
+                        "cxxppflags", "-DCXXTHING"),
+                    "cxx#" + testFlavor.toString(), ImmutableMap.of(
+                        "cflags", "-Wnoerror",
+                        "cppflags", "-DCTHING2",
+                        "cxxflags", "-Woption",
+                        "cxxppflags", "-DCXXTHING2",
+                        "default_platform", "iphoneos8.0-armv7")));
+
+    AppleCxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.buildWithExecutableChecker(
+            targetSdk,
+            "7.0",
+            "armv7",
+            appleSdkPaths,
+            config,
+            new FakeExecutableFinder(paths));
+
+    CxxPlatform defaultCxxPlatform = appleCxxPlatform.getCxxPlatform();
+
+    CxxPlatform cxxPlatform = CxxPlatforms.copyPlatformWithFlavorAndConfig(
+      defaultCxxPlatform,
+        new CxxBuckConfig(config, testFlavor),
+        testFlavor);
+
+    assertThat(
+        cxxPlatform.getCflags(),
+        hasItems("-std=gnu11", "-Wnoerror"));
+    assertThat(
+        cxxPlatform.getCppflags(),
+        hasItems("-std=gnu11",  "-Wnoerror", "-DCTHING", "-DCTHING2"));
+    assertThat(
+        cxxPlatform.getCxxflags(),
+        hasItems("-std=c++11", "-Woption"));
+    assertThat(
+        cxxPlatform.getCxxppflags(),
+        hasItems("-std=c++11", "-Woption", "-DCXXTHING", "-DCXXTHING2"));
   }
 
   @Test

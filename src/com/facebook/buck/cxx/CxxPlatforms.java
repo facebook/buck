@@ -109,6 +109,48 @@ public class CxxPlatforms {
     return builder.build();
   }
 
+  /**
+   * Creates a CxxPlatform with a defined flavor for a CxxBuckConfig with default values
+   * provided from another default CxxPlatform
+   */
+  public static CxxPlatform copyPlatformWithFlavorAndConfig(
+    CxxPlatform defaultPlatform,
+    CxxBuckConfig config,
+    Flavor flavor
+  ) {
+    Platform platform = Platform.detect();
+    Optional<CxxPlatform.LinkerType> linkerType = Optional.absent();
+    CxxPlatform.Builder builder = CxxPlatform.builder();
+    builder
+      .setFlavor(flavor)
+      .setAs(getTool(flavor, "as", config).or(defaultPlatform.getAs()))
+      .setAspp(getTool(flavor, "aspp", config).or(defaultPlatform.getAspp()))
+      .setCc(getTool(flavor, "cc", config).or(defaultPlatform.getCc()))
+      .setCxx(getTool(flavor, "cxx", config).or(defaultPlatform.getCxx()))
+      .setCpp(getTool(flavor, "cpp", config).or(defaultPlatform.getCpp()))
+      .setCxxpp(getTool(flavor, "cxxpp", config).or(defaultPlatform.getCxxpp()))
+      .setCxxld(getTool(flavor, "cxxld", config).or(defaultPlatform.getCxxld()))
+      .setLd(
+        getLd(
+          flavor, platform, config, linkerType, getTool(flavor, "ld", config)
+            .or(defaultPlatform.getLd().getTool())
+        )
+      )
+      .setAr(getTool(flavor, "ar", config).or(defaultPlatform.getAr()))
+      .setArExpectedGlobalHeader(defaultPlatform.getArExpectedGlobalHeader())
+      .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
+      .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
+      .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))
+      .setDebugPathSanitizer(defaultPlatform.getDebugPathSanitizer());
+
+    if (config.getDefaultPlatform().isPresent()) {
+      // Try to add the tool flags from the default platform
+      CxxPlatforms.addToolFlagsFromCxxPlatform(builder, defaultPlatform);
+    }
+    CxxPlatforms.addToolFlagsFromConfig(config, builder);
+    return builder.build();
+  }
+
   private static String getSharedLibraryExtension(Platform platform) {
     switch (platform) {
       case MACOS:
@@ -179,6 +221,26 @@ public class CxxPlatforms {
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
         .addAllLexFlags(config.getFlags("lexflags").or(DEFAULT_LEX_FLAGS))
         .addAllYaccFlags(config.getFlags("yaccflags").or(DEFAULT_YACC_FLAGS));
+  }
+
+  public static void addToolFlagsFromCxxPlatform(
+    CxxPlatform.Builder builder,
+    CxxPlatform platform) {
+    builder
+        .addAllAsflags(platform.getAsflags())
+        .addAllAsppflags(platform.getAsppflags())
+        .addAllAsppflags(platform.getAsflags())
+        .addAllCflags(platform.getCflags())
+        .addAllCxxflags(platform.getCxxflags())
+        .addAllCppflags(platform.getCppflags())
+        .addAllCppflags(platform.getCflags())
+        .addAllCxxppflags(platform.getCxxflags())
+        .addAllCxxppflags(platform.getCxxppflags())
+        .addAllCxxldflags(platform.getCxxldflags())
+        .addAllLdflags(platform.getLdflags())
+        .addAllArflags(platform.getArflags())
+        .addAllLexFlags(platform.getLexFlags())
+        .addAllYaccFlags(platform.getYaccFlags());
   }
 
   public static CxxPlatform getConfigDefaultCxxPlatform(
