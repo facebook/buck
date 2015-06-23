@@ -13,6 +13,7 @@ java_library(
     '//third-party/java/aether:aether-transport-http',
     '//third-party/java/aether:aether-util',
     '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
     '//third-party/java/maven:maven-aether-provider',
     '//third-party/java/stringtemplate:stringtemplate',
   ],

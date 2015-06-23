@@ -21,10 +21,17 @@ import static org.eclipse.aether.repository.RepositoryPolicy.CHECKSUM_POLICY_FAI
 import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Resources;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -57,6 +64,10 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.artifact.SubArtifact;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.eclipse.aether.util.version.GenericVersionScheme;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.eclipse.aether.version.Version;
+import org.eclipse.aether.version.VersionScheme;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroupString;
 
@@ -71,17 +82,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
 
 public class Resolver {
 
   private static final String TEMPLATE =
       Resolver.class.getPackage().getName().replace(".", "/") + "/build-file.st";
+  public static final String ARTIFACT_FILE_NAME_FORMAT = "%s-%s.%s";
+  public static final String ARTIFACT_FILE_NAME_REGEX_FORMAT =
+      ARTIFACT_FILE_NAME_FORMAT.replace(".", "\\.");
+  public static final String VERSION_REGEX_GROUP = "([^-]+)";
 
   private final Path buckRepoRoot;
   private final Path buckThirdPartyRelativePath;
   private final LocalRepository localRepo;
   private final ImmutableList<RemoteRepository> repos;
   private final ServiceLocator locator;
+  private final VersionScheme versionScheme = new GenericVersionScheme();
 
   public Resolver(
       Path buckRepoRoot,
@@ -139,7 +159,7 @@ public class Resolver {
       RepositorySystemSession session,
       Map<Path, SortedSet<Prebuilt>> buckFiles,
       MutableDirectedGraph<Artifact> graph)
-      throws IOException, ArtifactResolutionException {
+      throws IOException, ArtifactResolutionException, InvalidVersionSpecificationException {
     String projectName = getProjectName(artifactToDownload);
     Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
     Files.createDirectories(project);
@@ -202,10 +222,70 @@ public class Resolver {
       RepositorySystemSession session,
       Path project)
       throws ArtifactResolutionException, IOException {
+    Optional<Path> newerVersionFile = getNewerVersionFile(artifact, project);
+    if (newerVersionFile.isPresent()) {
+      return newerVersionFile.get();
+    }
     ArtifactResult result = repoSys.resolveArtifact(
         session,
         new ArtifactRequest(artifact, repos, null));
     return copy(result, project);
+  }
+
+  /**
+   * @return {@link Path} to the file in {@code project} with filename consistent with the given
+   * {@link Artifact}, but with a newer version. If no such file exists, {@link Optional#absent} is
+   * returned. If multiple such files are present one with the newest version will be returned.
+   */
+  @VisibleForTesting
+  Optional<Path> getNewerVersionFile(
+      final Artifact artifactToDownload,
+      Path project) throws IOException {
+    final Version artifactToDownloadVersion;
+    try {
+      artifactToDownloadVersion = versionScheme.parseVersion(artifactToDownload.getVersion());
+    } catch (InvalidVersionSpecificationException e) {
+      throw Throwables.propagate(e);
+    }
+
+    final Pattern versionExtractor = Pattern.compile(
+        String.format(
+            ARTIFACT_FILE_NAME_REGEX_FORMAT,
+            artifactToDownload.getArtifactId(),
+            VERSION_REGEX_GROUP,
+            artifactToDownload.getExtension()));
+    Iterable<Version> versionsPresent = FluentIterable
+        .from(Files.newDirectoryStream(project))
+        .transform(new Function<Path, Version>() {
+          @Nullable
+          @Override
+          public Version apply(Path input) {
+            Matcher matcher = versionExtractor.matcher(input.getFileName().toString());
+            if (matcher.matches()) {
+              try {
+                return versionScheme.parseVersion(matcher.group(1));
+              } catch (InvalidVersionSpecificationException e) {
+                throw Throwables.propagate(e);
+              }
+            } else {
+              return null;
+            }
+          }
+        })
+        .filter(Predicates.notNull());
+
+    List<Version> newestPresent = Ordering.natural().greatestOf(versionsPresent, 1);
+    if (newestPresent.isEmpty() || newestPresent.get(0).compareTo(artifactToDownloadVersion) <= 0) {
+      return Optional.absent();
+    } else {
+      return Optional.of(
+          project.resolve(
+              String.format(
+                  ARTIFACT_FILE_NAME_FORMAT,
+                  artifactToDownload.getArtifactId(),
+                  newestPresent.get(0).toString(),
+                  artifactToDownload.getExtension())));
+    }
   }
 
   private void downloadSources(
@@ -269,14 +349,13 @@ public class Resolver {
       Map<String, Artifact> knownDeps) throws ArtifactDescriptorException {
     MutableDirectedGraph<Artifact> graph;
     graph = new MutableDirectedGraph<>();
-    for (Artifact dep : knownDeps.values()) {
-      String key = buildKey(dep);
+    for (Map.Entry<String, Artifact> entry : knownDeps.entrySet()) {
+      String key = entry.getKey();
+      Artifact artifact = entry.getValue();
 
-      Preconditions.checkNotNull(knownDeps.get(key));
+      graph.addNode(artifact);
 
-      graph.addNode(dep);
-
-      List<Dependency> dependencies = getDependenciesOf(repoSys, session, dep);
+      List<Dependency> dependencies = getDependenciesOf(repoSys, session, artifact);
 
       for (Dependency dependency : dependencies) {
         if (dependency.getArtifact() == null) {
@@ -299,9 +378,11 @@ public class Resolver {
 //          continue;
 //        }
 
-        Preconditions.checkNotNull(actualDep, key + " -> " + dep + " in " + knownDeps.keySet());
+        Preconditions.checkNotNull(
+            actualDep,
+            key + " -> " + artifact + " in " + knownDeps.keySet());
         graph.addNode(actualDep);
-        graph.addEdge(actualDep, dep);
+        graph.addEdge(actualDep, artifact);
       }
     }
     return graph;
