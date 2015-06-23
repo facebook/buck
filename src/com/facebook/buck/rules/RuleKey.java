@@ -302,11 +302,7 @@ public class RuleKey {
           logElms.add(String.format("string(\"%s\"):", val));
         }
         feed(((String) val).getBytes());
-      }
-
-      // Buck types below here.
-
-      else if (val instanceof BuildRule) {
+      } else if (val instanceof BuildRule) {
         return setBuildRule((BuildRule) val);
       } else if (val instanceof BuildRuleType) {
         if (logElms != null) {

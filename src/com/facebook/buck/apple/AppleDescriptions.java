@@ -240,8 +240,7 @@ public class AppleDescriptions {
       CxxBinaryDescription.Arg output,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget,
-      final Optional<AppleSdkPaths> appleSdkPaths)
-  {
+      final Optional<AppleSdkPaths> appleSdkPaths) {
     populateCxxConstructorArg(
         resolver,
         output,

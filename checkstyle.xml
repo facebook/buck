@@ -54,6 +54,8 @@ page at http://checkstyle.sourceforge.net/config.html -->
     IMPORT CHECKS
 
     -->
+    
+    <module name="FileContentsHolder"/>
 
     <module name="AvoidStarImport" />
 
@@ -321,4 +323,11 @@ page at http://checkstyle.sourceforge.net/config.html -->
   </module>
 
   <module name="SuppressWarningsFilter" />
+
+  <module name="SuppressionCommentFilter">
+    <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
+    <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
+    <property name="checkFormat" value="$1"/>
+  </module>
+
 </module>

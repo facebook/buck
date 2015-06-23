@@ -55,7 +55,7 @@ public class AndroidPlatformTarget {
    * {@link Supplier} for an {@link AndroidPlatformTarget} that always throws a
    * {@link NoAndroidSdkException}.
    */
-  public static final Supplier<AndroidPlatformTarget> explodingAndroidPlatformTargetSupplier =
+  public static final Supplier<AndroidPlatformTarget> EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER =
       new Supplier<AndroidPlatformTarget>() {
         @Override
         public AndroidPlatformTarget get() {

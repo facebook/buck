@@ -40,6 +40,8 @@ import java.util.List;
  */
 public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
+  private static final Logger LOG = Logger.get(DefaultOnDiskBuildInfo.class);
+
   private static final Function<String, ImmutableList<String>> TO_STRINGS =
       new Function<String, ImmutableList<String>>() {
     @Override
@@ -59,12 +61,10 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     }
   };
 
-  private final Logger LOG;
   private final ProjectFilesystem projectFilesystem;
   private final Path metadataDirectory;
 
   public DefaultOnDiskBuildInfo(BuildTarget target, ProjectFilesystem projectFilesystem) {
-    LOG = Logger.get(DefaultOnDiskBuildInfo.class);
     this.projectFilesystem = projectFilesystem;
     this.metadataDirectory = BuildInfo.getPathToMetadataDirectory(target);
   }

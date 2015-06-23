@@ -22,6 +22,8 @@ import java.nio.ByteOrder;
 /**
  * Encapsulate the data found in an ELF header.
  */
+// CHECKSTYLE.OFF: LocalVariableName
+// CHECKSTYLE.OFF: ParameterName
 public class ElfHeader {
 
   public static final int EI_MAG0 = 0;
@@ -39,6 +41,7 @@ public class ElfHeader {
   public static final byte ELFMAG2 = 'L';
   public static final byte ELFMAG3 = 'F';
 
+  // CHECKSTYLE.OFF: MemberName
   public final EIClass ei_class;
   public final EIData ei_data;
   public final short e_type;
@@ -54,6 +57,7 @@ public class ElfHeader {
   public final short e_shentsize;
   public final short e_shnum;
   public final short e_shstrndx;
+  // CHECKSTYLE.ON: MemberName
 
   ElfHeader(
       EIClass ei_class,
@@ -224,3 +228,6 @@ public class ElfHeader {
   }
 
 }
+
+// CHECKSTYLE.ON: ParameterName
+// CHECKSTYLE.ON: LocalVariableName

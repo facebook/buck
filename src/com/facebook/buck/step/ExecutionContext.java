@@ -184,7 +184,7 @@ public abstract class ExecutionContext implements Closeable {
     @Nullable private ProjectFilesystem projectFilesystem = null;
     @Nullable private Console console = null;
     private Supplier<AndroidPlatformTarget> androidPlatformTarget =
-        AndroidPlatformTarget.explodingAndroidPlatformTargetSupplier;
+        AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     private Optional<TargetDevice> targetDevice = Optional.absent();
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;

@@ -21,6 +21,8 @@ import java.nio.ByteBuffer;
 /**
  * Encapsulates the header information and raw body of an ELF section.
  */
+// CHECKSTYLE.OFF: LocalVariableName
+// CHECKSTYLE.OFF: ParameterName
 public class ElfSection {
 
   public final ElfSectionHeader header;
@@ -65,3 +67,6 @@ public class ElfSection {
   }
 
 }
+
+// CHECKSTYLE.ON: ParameterName
+// CHECKSTYLE.ON: LocalVariableName

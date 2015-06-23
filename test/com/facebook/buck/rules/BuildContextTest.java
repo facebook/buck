@@ -132,7 +132,7 @@ public class BuildContextTest {
     // Set to value that throws if executed.
     builder.setAndroidBootclasspathSupplier(
         BuildContext.createBootclasspathSupplier(
-            AndroidPlatformTarget.explodingAndroidPlatformTargetSupplier));
+            AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER));
 
     BuildContext context = builder.build();
     Supplier<String> androidBootclasspathSupplier = context.getAndroidBootclasspathSupplier();

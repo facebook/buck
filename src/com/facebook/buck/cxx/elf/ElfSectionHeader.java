@@ -21,8 +21,11 @@ import java.nio.ByteBuffer;
 /**
  * Encapsulate the data in an ELF section header.
  */
+// CHECKSTYLE.OFF: LocalVariableName
+// CHECKSTYLE.OFF: ParameterName
 public class ElfSectionHeader {
 
+  // CHECKSTYLE.OFF: MemberName
   public final long sh_name;
   public final SHType sh_type;
   public final long sh_flags;
@@ -33,6 +36,7 @@ public class ElfSectionHeader {
   public final long sh_info;
   public final long sh_addralign;
   public final long sh_entsize;
+  // CHECKSTYLE.ON: MemberName
 
   ElfSectionHeader(
       long sh_name,
@@ -125,3 +129,6 @@ public class ElfSectionHeader {
   }
 
 }
+
+// CHECKSTYLE.ON: ParameterName
+// CHECKSTYLE.ON: LocalVariableName

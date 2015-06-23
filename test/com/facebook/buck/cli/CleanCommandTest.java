@@ -115,7 +115,7 @@ public class CleanCommandTest extends EasyMockSupport {
     Repository repository = new TestRepositoryBuilder().setFilesystem(projectFilesystem).build();
 
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-        AndroidPlatformTarget.explodingAndroidPlatformTargetSupplier;
+        AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     return new CommandRunnerParams(
         new TestConsole(),
         repository,
