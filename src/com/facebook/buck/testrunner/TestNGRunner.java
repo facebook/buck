@@ -36,19 +36,17 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.ITestAnnotation;
 import org.testng.annotations.Test;
-import org.testng.internal.annotations.JDK15AnnotationFinder;
-import org.testng.xml.XmlClass;
-import org.testng.xml.XmlSuite;
-import org.testng.xml.XmlTest;
 
 /** Class that runs a set of TestNG tests and writes the results to a directory. */
 public final class TestNGRunner extends BaseRunner {
 
   @Override
   public void run() throws Throwable {
-    System.out.println("TestNGRunner started!");
     for (String className : testClassNames) {
-      System.out.println("TestNGRunner handling " + className);
+      if (!shouldIncludeTest(className)) {
+        continue;
+      }
+
       final Class<?> testClass = Class.forName(className);
 
       List<TestResult> results;
@@ -56,46 +54,15 @@ public final class TestNGRunner extends BaseRunner {
         results = Collections.emptyList();
       } else {
         results = new ArrayList<>();
-        TestNGWrapper tester = new TestNGWrapper();
-        tester.setAnnoTransformer(new FilteringAnnotationTransformer(results));
-        tester.setXmlSuites(Collections.singletonList(createXmlSuite(testClass)));
-        TestListener listener = new TestListener(results);
-        tester.addListener(new TestListener(results));
-        try {
-          System.out.println("TestNGRunner running " + className);
-          tester.initializeSuitesAndJarFile();
-          tester.runSuitesLocally();
-        } catch (Throwable e) {
-          // There are failures that the TestNG framework fails to
-          // handle (for example, if a test requires a Guice module and
-          // the module throws an exception).
-          // Furthermore, there are bugs in TestNG itself. For example,
-          // when printing the results of a parameterized test, it tries
-          // to call toString() on all the test params and does not catch
-          // resulting exceptions.
-          listener.onFinish(null);
-          System.out.println("TestNGRunner caught an exception");
-          e.printStackTrace();
-          if (!isDryRun) {
-            results.add(
-                new TestResult(className, "<TestNG failure>", 0, ResultType.FAILURE, e, "", ""));
-          }
-        }
-        System.out.println("TestNGRunner tested " + className + ", got " + results.size());
+        TestNG testng = new TestNG();
+        testng.setAnnotationTransformer(new FilteringAnnotationTransformer(results));
+        testng.setTestClasses(new Class<?>[]{testClass});
+        testng.addListener(new TestListener(results));
+        testng.run();
       }
 
       writeResult(className, results);
     }
-    System.out.println("TestNGRunner done!");
-  }
-
-  private XmlSuite createXmlSuite(Class<?> c) {
-    XmlSuite xmlSuite = new XmlSuite();
-    xmlSuite.setName("TmpSuite");
-    XmlTest xmlTest = new XmlTest(xmlSuite);
-    xmlTest.setName("TmpTest");
-    xmlTest.setXmlClasses(Collections.singletonList(new XmlClass(c)));
-    return xmlSuite;
   }
 
   /** Guessing whether or not a class is a test class is an imperfect art form. */
@@ -142,15 +109,9 @@ public final class TestNGRunner extends BaseRunner {
     return hasAtLeastOneTestMethod;
   }
 
-  public final class TestNGWrapper extends TestNG {
-    /**
-     * The built-in setAnnotationTransformer unfortunately does not work with runSuitesLocally()
-     *
-     * <p>The alternative would be to use the (much heavier) run() method.
-     */
-    public void setAnnoTransformer(IAnnotationTransformer anno) {
-      getConfiguration().setAnnotationFinder(new JDK15AnnotationFinder(anno));
-    }
+  private boolean shouldIncludeTest(String className) {
+    TestDescription testDescription = new TestDescription(className, null);
+    return testSelectorList.isIncluded(testDescription);
   }
 
   public class FilteringAnnotationTransformer implements IAnnotationTransformer {
@@ -208,7 +169,18 @@ public final class TestNGRunner extends BaseRunner {
     }
 
     @Override
-    public void onTestStart(ITestResult result) {}
+    public void onTestStart(ITestResult result) {
+      // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
+      // form of System.out.println) the developer is using to debug the test.
+      originalOut = System.out;
+      originalErr = System.err;
+      rawStdOutBytes = new ByteArrayOutputStream();
+      rawStdErrBytes = new ByteArrayOutputStream();
+      stdOutStream = streamToPrintStream(rawStdOutBytes, System.out);
+      stdErrStream = streamToPrintStream(rawStdErrBytes, System.err);
+      System.setOut(stdOutStream);
+      System.setErr(stdErrStream);
+    }
 
     @Override
     public void onTestSuccess(ITestResult result) {
@@ -231,35 +203,20 @@ public final class TestNGRunner extends BaseRunner {
     }
 
     @Override
-    public void onStart(ITestContext context) {
-      // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
-      // form of System.out.println) the developer is using to debug the test.
-      originalOut = System.out;
-      originalErr = System.err;
-      rawStdOutBytes = new ByteArrayOutputStream();
-      rawStdErrBytes = new ByteArrayOutputStream();
-      stdOutStream = streamToPrintStream(rawStdOutBytes, System.out);
-      stdErrStream = streamToPrintStream(rawStdErrBytes, System.err);
-      System.setOut(stdOutStream);
-      System.setErr(stdErrStream);
-      mustRestoreStdoutAndStderr = true;
-    }
+    public void onStart(ITestContext context) {}
 
     @Override
-    public void onFinish(ITestContext context) {
-      if (mustRestoreStdoutAndStderr) {
-        // Restore the original stdout/stderr.
-        System.setOut(originalOut);
-        System.setErr(originalErr);
-
-        // Get the stdout/stderr written during the test as strings.
-        stdOutStream.flush();
-        stdErrStream.flush();
-        mustRestoreStdoutAndStderr = false;
-      }
-    }
+    public void onFinish(ITestContext context) {}
 
     private void recordResult(ITestResult result, ResultType type, Throwable failure) {
+      // Restore the original stdout/stderr.
+      System.setOut(originalOut);
+      System.setErr(originalErr);
+
+      // Get the stdout/stderr written during the test as strings.
+      stdOutStream.flush();
+      stdErrStream.flush();
+
       String stdOut = streamToString(rawStdOutBytes);
       String stdErr = streamToString(rawStdErrBytes);
 
