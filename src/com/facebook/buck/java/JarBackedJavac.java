@@ -16,50 +16,76 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Ordering;
+
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
 
-  private final SourcePath javacJar;
+  private final String compilerClassName;
+  private final Iterable<SourcePath> classpath;
 
-  JarBackedJavac(SourcePath javacJar) {
-    this.javacJar = javacJar;
+  JarBackedJavac(String compilerClassName, Iterable<SourcePath> classpath) {
+    this.compilerClassName = compilerClassName;
+    this.classpath = classpath;
   }
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-    return builder.setReflectively("javac", "jsr199")
+    return builder.setReflectively("javac", "jar-backed-jsr199")
         .setReflectively("javac.version", "in-memory")
-        .setReflectively("javacjar", javacJar);
+        .setReflectively("javac.classname", compilerClassName)
+        .setReflectively("javac.classpath", classpath);
   }
 
   @Override
   protected JavaCompiler createCompiler(
       ExecutionContext context,
-      SourcePathResolver resolver) {
+      final SourcePathResolver resolver) {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     ClassLoader compilerClassLoader = classLoaderCache.getClassLoaderForClassPath(
         ClassLoader.getSystemClassLoader(),
-        ImmutableList.of(resolver.getPath(javacJar)));
+        FluentIterable.from(classpath)
+            .transformAndConcat(
+                new Function<SourcePath, Collection<Path>>() {
+                  @Override
+                  public Collection<Path> apply(SourcePath input) {
+                    Set<Path> paths = new HashSet<>();
+                    Optional<BuildRule> rule = resolver.getRule(input);
+                    if (rule instanceof JavaLibrary) {
+                      paths.addAll(((JavaLibrary) rule).getTransitiveClasspathEntries().values());
+                    } else {
+                      paths.add(resolver.getPath(input));
+                    }
+                    return paths;
+                  }
+                })
+            .toSortedSet(Ordering.natural())
+            .asList());
     try {
-      return (JavaCompiler)
-          compilerClassLoader.loadClass("com.sun.tools.javac.api.JavacTool")
-              .newInstance();
+      return (JavaCompiler) compilerClassLoader.loadClass(compilerClassName).newInstance();
     } catch (ClassNotFoundException | IllegalAccessException | InstantiationException ex) {
       throw new RuntimeException(ex);
     }
   }
 
   @VisibleForTesting
-  SourcePath getJavacJar() {
-    return javacJar;
+  Iterable<SourcePath> getCompilerClassPath() {
+    return classpath;
   }
 }

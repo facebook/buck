@@ -23,7 +23,9 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.TestConsole;
@@ -239,7 +241,7 @@ public class JavacOptionsTest {
         .build();
 
     assertThat(
-        options.getInputs(),
+        options.getInputs(new SourcePathResolver(new BuildRuleResolver())),
         Matchers.<SourcePath>containsInAnyOrder(javacJarPath));
   }
 

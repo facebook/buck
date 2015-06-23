@@ -121,7 +121,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                     Iterables.concat(
                         params.getDeclaredDeps(),
                         resolver.getAllRules(args.providedDeps.get()))),
-                pathResolver.filterBuildRuleInputs(javacOptions.getInputs()))),
+                pathResolver.filterBuildRuleInputs(
+                    javacOptions.getInputs(pathResolver)))),
         pathResolver,
         args.srcs.get(),
         JavaLibraryDescription.validateResources(

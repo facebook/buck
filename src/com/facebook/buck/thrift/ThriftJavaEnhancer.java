@@ -124,14 +124,14 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 .addAll(sourceZips)
                 .addAll(deps)
                 .addAll(BuildRules.getExportedRules(deps))
-                .addAll(pathResolver.filterBuildRuleInputs(templateOptions.getInputs()))
+                .addAll(pathResolver.filterBuildRuleInputs(templateOptions.getInputs(pathResolver)))
                 .build()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     return new DefaultJavaLibrary(
         javaParams,
         pathResolver,
         FluentIterable.from(sourceZips)
-            .transform(SourcePaths.getToBuildTargetSourcePath(params.getProjectFilesystem()))
+            .transform(SourcePaths.getToBuildTargetSourcePath())
             .toSortedSet(Ordering.natural()),
         /* resources */ ImmutableSet.<SourcePath>of(),
         /* proguardConfig */ Optional.<SourcePath>absent(),

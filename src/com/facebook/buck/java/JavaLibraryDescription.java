@@ -108,7 +108,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                         params.getDeclaredDeps(),
                         exportedDeps,
                         resolver.getAllRules(args.providedDeps.get()))),
-                pathResolver.filterBuildRuleInputs(javacOptions.getInputs()))),
+                pathResolver.filterBuildRuleInputs(
+                    javacOptions.getInputs(pathResolver)))),
         pathResolver,
         args.srcs.get(),
         validateResources(pathResolver, args, params.getProjectFilesystem()),

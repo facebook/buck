@@ -72,12 +72,11 @@ public class SourcePaths {
     };
   }
 
-  public static Function<BuildRule, SourcePath> getToBuildTargetSourcePath(
-      final ProjectFilesystem projectFilesystem) {
+  public static Function<BuildRule, SourcePath> getToBuildTargetSourcePath() {
     return new Function<BuildRule, SourcePath>() {
       @Override
       public SourcePath apply(BuildRule input) {
-        return new BuildTargetSourcePath(projectFilesystem, input.getBuildTarget());
+        return new BuildTargetSourcePath(input.getProjectFilesystem(), input.getBuildTarget());
       }
     };
   }

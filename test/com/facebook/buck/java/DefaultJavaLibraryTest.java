@@ -1159,8 +1159,9 @@ public class DefaultJavaLibraryTest {
     assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
     JarBackedJavac jsrJavac = ((JarBackedJavac) (((JavacStep) steps.get(2)).getJavac()));
     assertEquals(
-        jsrJavac.getJavacJar(),
-        new BuildTargetSourcePath(javac.getProjectFilesystem(), javac.getBuildTarget()));
+        jsrJavac.getCompilerClassPath(),
+        ImmutableSet.of(
+            new BuildTargetSourcePath(javac.getProjectFilesystem(), javac.getBuildTarget())));
   }
 
   @Test

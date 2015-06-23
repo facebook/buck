@@ -268,7 +268,7 @@ public class Jsr199JavacIntegrationTest {
     Optional<SourcePath> jar = javacJar.transform(
         SourcePaths.toSourcePath(new FakeProjectFilesystem()));
     if (jar.isPresent()) {
-      return new JarBackedJavac(jar.get());
+      return new JarBackedJavac("com.sun.tools.javac.api.JavacTool", ImmutableSet.of(jar.get()));
     }
 
     return new JdkProvidedInMemoryJavac();

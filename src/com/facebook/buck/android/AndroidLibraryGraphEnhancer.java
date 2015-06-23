@@ -113,7 +113,8 @@ public class AndroidLibraryGraphEnhancer {
     }
 
     // Add dependencies from `SourcePaths` in `JavacOptions`.
-    actualDeps.addAll(pathResolver.filterBuildRuleInputs(javacOptions.getInputs()));
+    actualDeps.addAll(pathResolver.filterBuildRuleInputs(
+            javacOptions.getInputs(pathResolver)));
 
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
         dummyRDotJavaBuildTarget,

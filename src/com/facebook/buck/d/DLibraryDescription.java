@@ -66,7 +66,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
                 FluentIterable.from(params.getDeps())
                     .filter(DLibrary.class)
                     .transform(
-                        SourcePaths.getToBuildTargetSourcePath(params.getProjectFilesystem())))
+                        SourcePaths.getToBuildTargetSourcePath()))
             .build(),
         dBuckConfig.getDCompiler());
   }
