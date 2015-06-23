@@ -488,10 +488,10 @@
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.2.201409121644.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/asm/asm-debug-all-5.0.3.jar"/>
       <fileset dir="${classes.dir}">
-          <include name="com/facebook/buck/java/ReportGenerator.class"/>
+          <include name="com/facebook/buck/java/coverage/ReportGenerator.class"/>
       </fileset>
       <manifest>
-        <attribute name="Main-Class" value="com.facebook.buck.java.ReportGenerator" />
+        <attribute name="Main-Class" value="com.facebook.buck.java.coverage.ReportGenerator" />
       </manifest>
     </jar>
   </target>

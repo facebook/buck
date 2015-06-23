@@ -1,0 +1,24 @@
+java_library(
+  name = 'coverage',
+  srcs = ['ReportGenerator.java',],
+  deps = [
+    '//third-party/java/jacoco:jacoco',
+  ],
+)
+
+java_binary(
+  name = 'report-generator',
+  main_class = 'com.facebook.buck.java.ReportGenerator',
+  blacklist = [
+    '.*SF',
+    '.*RSA',
+  ],
+  deps = [
+    ':coverage',
+  ],
+  visibility = [
+    '//programs:bucklib',
+    '//programs:bucklib-no-nailgun',
+    '//src/com/facebook/buck/java:steps',
+  ]
+)

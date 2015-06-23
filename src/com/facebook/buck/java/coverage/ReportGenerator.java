@@ -11,7 +11,7 @@
  * Contributors:
  *    Brock Janiczak - initial API and implementation
  *******************************************************************************/
-package com.facebook.buck.java;
+package com.facebook.buck.java.coverage;
 
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;

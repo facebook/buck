@@ -8,7 +8,7 @@ java_library(
     '//third-party/java/asm:asm',
   ],
   visibility = [
-    '//src/com/facebook/buck/java:coverage',
+    '//src/com/facebook/buck/java/coverage:coverage',
   ],
 )
 

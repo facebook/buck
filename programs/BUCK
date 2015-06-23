@@ -53,7 +53,7 @@ BUCK_CORE_RESOURCES = {
     'path_to_pex': '//src/com/facebook/buck/python:pex',
     'path_to_python_test_main': '//src/com/facebook/buck/python:__test_main__.py',
     'path_to_sh_binary_template': '//src/com/facebook/buck/shell:sh_binary_template',
-    'report_generator_jar': '//src/com/facebook/buck/java:report-generator',
+    'report_generator_jar': '//src/com/facebook/buck/java/coverage:report-generator',
     'testrunner_classes': '//src/com/facebook/buck/junit:junit-bin-fixed',
 
     # TODO(#5448619): We currently don't have a great way of packaging up

@@ -38,7 +38,7 @@ public class LicenseCheckTest {
   // exclude all files under "test/**/testdata/"
   private static final Set<String> NON_APACHE_LICENSE_WHITELIST = ImmutableSet.of(
       // Because it's not originally our code.
-      "com/facebook/buck/java/ReportGenerator.java",
+      "com/facebook/buck/java/coverage/ReportGenerator.java",
       "com/facebook/buck/util/WindowsCreateProcessEscape.java",
       "com/facebook/buck/util/WindowsCreateProcessEscapeTest.java");
 

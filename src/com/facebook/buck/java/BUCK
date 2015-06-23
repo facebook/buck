@@ -28,30 +28,6 @@ java_library(
 )
 
 java_library(
-  name = 'coverage',
-  srcs = ['ReportGenerator.java',],
-  deps = [
-    '//third-party/java/jacoco:jacoco',
-  ],
-)
-
-java_binary(
-  name = 'report-generator',
-  main_class = 'com.facebook.buck.java.ReportGenerator',
-  blacklist = [
-    '.*SF',
-    '.*RSA',
-  ],
-  deps = [
-    ':coverage',
-  ],
-  visibility = [
-    '//programs:bucklib',
-    '//programs:bucklib-no-nailgun',
-  ]
-)
-
-java_library(
   name = 'config',
   srcs = [
     'JavaBuckConfig.java',
@@ -235,7 +211,6 @@ java_library(
   deps = [
     ':javac',
     ':packagefinder',
-    ':report-generator',
     ':support',
     '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
     '//src/com/facebook/buck/java/abi:abi',
@@ -243,6 +218,7 @@ java_library(
     '//src/com/facebook/buck/java/runner:runner',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/java/coverage:report-generator',
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
