@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -237,6 +238,7 @@ public class Jsr199JavacIntegrationTest {
           SOURCE_PATHS,
           Optional.of(pathToSrcsList),
           Optional.<Path>absent());
+      fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {
       if (ex.toString().contains("abcdef")) {
         caught = true;
