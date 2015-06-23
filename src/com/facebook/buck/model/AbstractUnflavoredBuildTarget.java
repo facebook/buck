@@ -73,7 +73,6 @@ abstract class AbstractUnflavoredBuildTarget
    * If this build target were //third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava/".
    */
-  @Nullable
   public String getBaseNameWithSlash() {
     return getBaseNameWithSlash(getBaseName());
   }
@@ -85,7 +84,7 @@ abstract class AbstractUnflavoredBuildTarget
    * If it were //, it would return //.
    */
   public static String getBaseNameWithSlash(String baseName) {
-    return baseName == null || baseName.equals(BUILD_TARGET_PREFIX) ? baseName : baseName + "/";
+    return baseName.equals(BUILD_TARGET_PREFIX) ? baseName : baseName + "/";
   }
 
   /**

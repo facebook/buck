@@ -45,7 +45,7 @@ public abstract class BuildTargetPatternParser<T> {
 
   private final BuildTargetParser buildTargetParser;
 
-  protected BuildTargetPatternParser(BuildTargetParser targetParser, String baseName) {
+  protected BuildTargetPatternParser(BuildTargetParser targetParser, @Nullable String baseName) {
     this.baseName = baseName;
     this.buildTargetParser = targetParser;
   }
@@ -57,7 +57,11 @@ public abstract class BuildTargetPatternParser<T> {
 
   @Nullable
   public String getBaseNameWithSlash() {
-    return UnflavoredBuildTarget.getBaseNameWithSlash(baseName);
+    if (baseName == null) {
+      return null;
+    } else {
+      return UnflavoredBuildTarget.getBaseNameWithSlash(baseName);
+    }
   }
 
   protected boolean isPublicVisibilityAllowed() {

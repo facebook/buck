@@ -71,7 +71,6 @@ abstract class AbstractBuildTarget
     return getUnflavoredBuildTarget().getBaseName();
   }
 
-  @Nullable
   public String getBaseNameWithSlash() {
     return getUnflavoredBuildTarget().getBaseNameWithSlash();
   }

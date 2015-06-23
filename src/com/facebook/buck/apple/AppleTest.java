@@ -240,7 +240,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
         steps.add(
             new UnzipStep(
                 // This is added as a runtime dependency via getRuntimeDeps() earlier.
-                xctoolZipRule.get().getPathToOutput(),
+                Preconditions.checkNotNull(xctoolZipRule.get().getPathToOutput()),
                 resolvedXctoolUnzipDirectory));
         xctoolBinaryPath = resolvedXctoolUnzipDirectory.resolve("bin/xctool");
       } else {

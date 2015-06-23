@@ -191,7 +191,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       final A args) {
-    final TargetNode<?> binaryTargetNode = params.getTargetGraph().get(args.binary);
+    final TargetNode<?> binaryTargetNode = Preconditions.checkNotNull(
+        params.getTargetGraph().get(args.binary));
     BuildRuleParams binaryRuleParams = new BuildRuleParams(
         args.binary,
         Suppliers.ofInstance(

@@ -170,7 +170,7 @@ public class JavaSymbolFinder {
                 Path buckFileDir = buckFile.getParent();
                 String baseName = "//" + (buckFileDir != null ?
                     MorePaths.pathWithUnixSeparators(buckFileDir) : "");
-                String shortName = (String) ruleMap.get("name");
+                String shortName = (String) Preconditions.checkNotNull(ruleMap.get("name"));
                 sourceFileTargetsMultimap.put(
                     sourceFile,
                     BuildTarget.builder(baseName, shortName).build());

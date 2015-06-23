@@ -199,7 +199,10 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
         if (rule.getClass().isAnnotationPresent(BuildsAnnotationProcessor.class)) {
           Path pathToOutput = rule.getPathToOutput();
           if (pathToOutput != null) {
-            inputs.add(new BuildTargetSourcePath(filesystem, rule.getBuildTarget()));
+            inputs.add(
+                new BuildTargetSourcePath(
+                    Preconditions.checkNotNull(filesystem),
+                    rule.getBuildTarget()));
             searchPathElements.add(pathToOutput);
           }
         } else if (rule instanceof HasClasspathEntries) {

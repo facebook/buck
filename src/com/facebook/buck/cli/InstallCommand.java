@@ -371,7 +371,7 @@ public class InstallCommand extends BuildCommand {
 
     if (!appleSimulatorController.installBundleInSimulator(
             appleSimulator.get().getUdid(),
-            projectFilesystem.resolve(appleBundle.getPathToOutput()))) {
+            projectFilesystem.resolve(Preconditions.checkNotNull(appleBundle.getPathToOutput())))) {
       params.getConsole().printBuildFailure(
           String.format(
               "Cannot install %s (could not install bundle %s in simulator %s)",

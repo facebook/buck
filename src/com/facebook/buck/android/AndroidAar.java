@@ -38,6 +38,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.zip.ZipStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -97,7 +98,10 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
             temp.resolve("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
-    commands.add(CopyStep.forFile(androidResource.getPathToOutput(), temp.resolve("R.txt")));
+    commands.add(
+        CopyStep.forFile(
+            Preconditions.checkNotNull(androidResource.getPathToOutput()),
+            temp.resolve("R.txt")));
 
     // put res/ and assets/ into tmp folder
     commands.add(CopyStep.forDirectory(

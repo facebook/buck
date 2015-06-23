@@ -433,7 +433,7 @@ public class OCamlRuleBuilder {
         ocamlContext.getOcamlDepTool().get(),
         ocamlContext.getMLInput(),
         ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true));
-    ImmutableList<String> cmd = depToolStep.getShellCommand(null);
+    ImmutableList<String> cmd = depToolStep.getShellCommandInternal(null);
     Optional<String> depsString;
     try {
       depsString = executeProcessAndGetStdout(baseDir, cmd);

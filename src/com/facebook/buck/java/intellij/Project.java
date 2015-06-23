@@ -624,7 +624,8 @@ public class Project {
       // values of project_config() assume this approach to help minimize the tedium in writing all
       // of those project_config() rules.
       String url = "file://$MODULE_DIR$";
-      String packagePrefix = javaPackageFinder.findJavaPackage(module.pathToImlFile);
+      String packagePrefix = javaPackageFinder.findJavaPackage(
+          Preconditions.checkNotNull(module.pathToImlFile));
       SerializableModule.SourceFolder sourceFolder =
           new SerializableModule.SourceFolder(url, isTestSource, packagePrefix);
       module.sourceFolders.add(sourceFolder);

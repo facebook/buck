@@ -101,7 +101,7 @@ public class RuleKey {
   };
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (!(obj instanceof RuleKey)) {
       return false;
     }

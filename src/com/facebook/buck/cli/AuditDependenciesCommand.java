@@ -199,7 +199,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
 
   @VisibleForTesting
   ImmutableSet<BuildTarget> getImmediateDependencies(BuildTarget target, TargetGraph graph) {
-    return graph.get(target).getDeps();
+    return Preconditions.checkNotNull(graph.get(target)).getDeps();
   }
 
   @VisibleForTesting
@@ -208,7 +208,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
       BuildTarget target,
       TargetGraph graph) throws IOException, InterruptedException {
     if (!shouldShowTransitiveDependencies()) {
-      return TargetNodes.getTestTargetsForNode(graph.get(target));
+      return TargetNodes.getTestTargetsForNode(Preconditions.checkNotNull(graph.get(target)));
     }
 
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(

@@ -216,13 +216,13 @@ public class Build implements Closeable {
             targetsToBuild,
             numRules));
 
-
+    final BuildContext currentBuildContext = buildContext;
     List<ListenableFuture<BuildResult>> futures = FluentIterable.from(rulesToBuild)
         .transform(
         new Function<BuildRule, ListenableFuture<BuildResult>>() {
           @Override
           public ListenableFuture<BuildResult> apply(BuildRule rule) {
-            return buildEngine.build(buildContext, rule);
+            return buildEngine.build(currentBuildContext, rule);
           }
         }).toList();
 

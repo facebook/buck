@@ -31,8 +31,6 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import javax.annotation.Nullable;
-
 /**
  * Represents string resources of types string, plural and array for a locale. Also responsible
  * for generating a custom format binary file for the resources.
@@ -118,7 +116,6 @@ public class StringResources {
    * </pre>
    * </p>
    */
-  @Nullable
   public byte[] getBinaryFileContent() {
     try (
       ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
@@ -132,7 +129,9 @@ public class StringResources {
 
       return bytesStream.toByteArray();
     } catch (IOException e) {
-      return null;
+      // This should never happen since DataOutputStream redirects all calls to the underlying
+      // stream and ByteArrayOutputStream does not throw IOException.
+      throw new RuntimeException(e);
     }
   }
 

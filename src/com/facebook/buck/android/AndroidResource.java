@@ -279,7 +279,7 @@ public class AndroidResource extends AbstractBuildRule
     }
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MakeCleanDirectoryStep(pathToTextSymbolsDir));
+    steps.add(new MakeCleanDirectoryStep(Preconditions.checkNotNull(pathToTextSymbolsDir)));
 
     // If the 'package' was not specified for this android_resource(), then attempt to parse it
     // from the AndroidManifest.xml.
@@ -318,12 +318,15 @@ public class AndroidResource extends AbstractBuildRule
         .toSet();
 
     steps.add(
-        new MiniAapt(getResolver().getPath(res), pathToTextSymbolsFile, pathsToSymbolsOfDeps));
+        new MiniAapt(
+            getResolver().getPath(Preconditions.checkNotNull(res)),
+            Preconditions.checkNotNull(pathToTextSymbolsFile),
+            pathsToSymbolsOfDeps));
 
-    buildableContext.recordArtifact(pathToTextSymbolsFile);
+    buildableContext.recordArtifact(Preconditions.checkNotNull(pathToTextSymbolsFile));
 
     steps.add(new RecordFileSha1Step(
-        pathToTextSymbolsFile,
+        Preconditions.checkNotNull(pathToTextSymbolsFile),
         METADATA_KEY_FOR_ABI,
         buildableContext));
 
@@ -333,7 +336,7 @@ public class AndroidResource extends AbstractBuildRule
   @Override
   @Nullable
   public Path getPathToOutput() {
-    return Optional.fromNullable(pathToTextSymbolsFile).orNull();
+    return pathToTextSymbolsFile;
   }
 
   @Override

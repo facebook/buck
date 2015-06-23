@@ -117,7 +117,9 @@ public class AuditTestsCommand extends AbstractCommand {
       final TargetGraph graph) {
     TreeMultimap<BuildTarget, BuildTarget> multimap = TreeMultimap.create();
     for (BuildTarget target : targets) {
-      multimap.putAll(target, TargetNodes.getTestTargetsForNode(graph.get(target)));
+      multimap.putAll(
+          target,
+          TargetNodes.getTestTargetsForNode(Preconditions.checkNotNull(graph.get(target))));
     }
     return multimap;
   }

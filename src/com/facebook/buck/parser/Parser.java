@@ -511,7 +511,7 @@ public class Parser {
             Preconditions.checkNotNull(targetNode, "No target node found for %s", buildTarget);
             graph.addNode(targetNode);
             for (BuildTarget target : targetNode.getDeps()) {
-              graph.addEdge(targetNode, getTargetNode(target));
+              graph.addEdge(targetNode, Preconditions.checkNotNull(getTargetNode(target)));
             }
           }
 
@@ -653,7 +653,7 @@ public class Parser {
    * @return the type of rule defined by the map.
    */
   private BuildRuleType parseBuildRuleTypeFromRawRule(Map<String, Object> map) {
-    String type = (String) map.get(BuckPyFunction.TYPE_PROPERTY_NAME);
+    String type = (String) Preconditions.checkNotNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return repository.getBuildRuleType(type);
   }
 
@@ -662,8 +662,8 @@ public class Parser {
    * @return the build target defined by the rule.
    */
   private BuildTarget parseBuildTargetFromRawRule(Map<String, Object> map) {
-    String basePath = (String) map.get("buck.base_path");
-    String name = (String) map.get("name");
+    String basePath = (String) Preconditions.checkNotNull(map.get("buck.base_path"));
+    String name = (String) Preconditions.checkNotNull(map.get("name"));
     return BuildTarget.builder(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath, name).build();
   }
 

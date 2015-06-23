@@ -161,7 +161,10 @@ public class FilterResourcesStep implements Step {
           inResDirToOutResDirMap.keySet(),
           context.getProjectFilesystem());
       pathPredicates.add(
-          Filters.createImageDensityFilter(drawables, targetDensities, canDownscale));
+          Filters.createImageDensityFilter(
+              drawables,
+              Preconditions.checkNotNull(targetDensities),
+              canDownscale));
     }
 
     if (!locales.isEmpty()) {
