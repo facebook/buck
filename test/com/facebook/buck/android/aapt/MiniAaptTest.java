@@ -52,7 +52,7 @@ public class MiniAaptTest {
         "<Button android:id=\"@+id/button3\" ",
         "style:attribute=\"@style/Buck.Theme\" ",
         "android:background=\"@drawable/some_image\" />",
-        "<TextView android:id=\"@id/android:empty\" />",
+        "<TextView tools:showIn=\"@layout/some_layout\" android:id=\"@id/android:empty\" />",
         "</LinearLayout>")
         .build();
 
