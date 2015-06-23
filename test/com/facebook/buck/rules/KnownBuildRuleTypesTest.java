@@ -160,7 +160,7 @@ public class KnownBuildRuleTypesTest {
         DUMMY_PYTHON_ENVIRONMENT).build();
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
 
-    Javac javac = libraryRule.getJavac();
+    Javac javac = libraryRule.getJavacOptions().getJavac();
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -186,7 +186,9 @@ public class KnownBuildRuleTypesTest {
         .build();
 
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-    assertEquals(javac.toPath(), ((ExternalJavac) libraryRule.getJavac()).getPath());
+    assertEquals(
+        javac.toPath(),
+        ((ExternalJavac) libraryRule.getJavacOptions().getJavac()).getPath());
   }
 
   @Test
@@ -249,7 +251,7 @@ public class KnownBuildRuleTypesTest {
         arg);
 
 
-    Javac javac = rule.getJavac();
+    Javac javac = rule.getJavacOptions().getJavac();
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -283,7 +285,7 @@ public class KnownBuildRuleTypesTest {
         buildRuleParams,
         new BuildRuleResolver(),
         arg);
-    assertEquals(javac.toPath(), ((ExternalJavac) rule.getJavac()).getPath());
+    assertEquals(javac.toPath(), ((ExternalJavac) rule.getJavacOptions().getJavac()).getPath());
   }
 
   @Test

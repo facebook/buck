@@ -142,8 +142,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    * jar.
    */
   @VisibleForTesting
-  static interface JarResolver {
-    public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath);
+  interface JarResolver {
+    ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath);
   }
 
   private static final JarResolver JAR_RESOLVER =
@@ -274,7 +274,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
       Optional<Path> workingDirectory;
-      if (getJavac().isUsingWorkspace()) {
+      if (getJavacOptions().getJavac().isUsingWorkspace()) {
         Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
         commands.add(new MakeCleanDirectoryStep(scratchDir));
         workingDirectory = Optional.of(scratchDir);
@@ -735,11 +735,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       BashStep bashStep = new BashStep(postprocessClassesCommand + " " + outputDirectory);
       commands.add(bashStep);
     }
-  }
-
-  @VisibleForTesting
-  public Javac getJavac() {
-    return javacOptions.getJavac();
   }
 
   @Override
