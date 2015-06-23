@@ -20,6 +20,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
@@ -31,17 +32,20 @@ abstract class AbstractCacheResult {
       CacheResult.of(
           Type.SKIP,
           Optional.<String>absent(),
-          Optional.<String>absent());
+          Optional.<String>absent(),
+          Optional.<ImmutableMap<String, String>>absent());
   private static final CacheResult MISS_RESULT =
       CacheResult.of(
           Type.MISS,
           Optional.<String>absent(),
-          Optional.<String>absent());
+          Optional.<String>absent(),
+          Optional.<ImmutableMap<String, String>>absent());
   private static final CacheResult LOCAL_KEY_UNCHANGED_HIT_RESULT =
       CacheResult.of(
           Type.LOCAL_KEY_UNCHANGED_HIT,
           Optional.<String>absent(),
-          Optional.<String>absent());
+          Optional.<String>absent(),
+          Optional.<ImmutableMap<String, String>>absent());
 
   @Value.Parameter
   @JsonProperty("type") public abstract Type getType();
@@ -51,6 +55,9 @@ abstract class AbstractCacheResult {
 
   @Value.Parameter
   @JsonProperty("cacheError") protected abstract Optional<String> cacheError();
+
+  @Value.Parameter
+  @JsonProperty("metadata") protected abstract Optional<ImmutableMap<String, String>> metadata();
 
   public String getCacheSource() {
     Preconditions.checkState(getType() == Type.HIT || getType() == Type.ERROR);
@@ -62,6 +69,11 @@ abstract class AbstractCacheResult {
     return cacheError().get();
   }
 
+  public ImmutableMap<String, String> getMetadata() {
+    Preconditions.checkState(getType() == Type.HIT);
+    return metadata().get();
+  }
+
   public String name() {
     String name = getType().name();
     if (cacheSource().isPresent()) {
@@ -70,12 +82,24 @@ abstract class AbstractCacheResult {
     return name;
   }
 
+  public static CacheResult hit(String cacheSource, ImmutableMap<String, String> metadata) {
+    return CacheResult.of(
+        Type.HIT,
+        Optional.of(cacheSource),
+        Optional.<String>absent(),
+        Optional.of(metadata));
+  }
+
   public static CacheResult hit(String cacheSource) {
-    return CacheResult.of(Type.HIT, Optional.of(cacheSource), Optional.<String>absent());
+    return hit(cacheSource, ImmutableMap.<String, String>of());
   }
 
   public static CacheResult error(String cacheSource, String cacheError) {
-    return CacheResult.of(Type.ERROR, Optional.of(cacheSource), Optional.of(cacheError));
+    return CacheResult.of(
+        Type.ERROR,
+        Optional.of(cacheSource),
+        Optional.of(cacheError),
+        Optional.<ImmutableMap<String, String>>absent());
   }
 
   public static CacheResult miss() {
@@ -105,7 +129,8 @@ abstract class AbstractCacheResult {
                 Optional.of(rest.substring(0, rest.length() - 1).toLowerCase()),
             type == Type.ERROR ?
                 Optional.of("") :
-                Optional.<String>absent());
+                Optional.<String>absent(),
+            Optional.<ImmutableMap<String, String>>absent());
       }
     }
     throw new IllegalStateException("invalid cache result string: " + val);

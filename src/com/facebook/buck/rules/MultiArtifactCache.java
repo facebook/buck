@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
@@ -62,7 +63,7 @@ public class MultiArtifactCache implements ArtifactCache {
           if (priorArtifactCache.equals(artifactCache)) {
             break;
           }
-          priorArtifactCache.store(ImmutableSet.of(ruleKey), output);
+          priorArtifactCache.store(ImmutableSet.of(ruleKey), cacheResult.getMetadata(), output);
         }
         return cacheResult;
       }
@@ -74,9 +75,13 @@ public class MultiArtifactCache implements ArtifactCache {
    * Store the artifact to all encapsulated ArtifactCaches.
    */
   @Override
-  public void store(ImmutableSet<RuleKey> ruleKeys, File output) throws InterruptedException {
+  public void store(
+      ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata,
+      File output)
+      throws InterruptedException {
     for (ArtifactCache artifactCache : artifactCaches) {
-      artifactCache.store(ruleKeys, output);
+      artifactCache.store(ruleKeys, metadata, output);
     }
   }
 

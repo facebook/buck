@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.File;
@@ -29,7 +30,10 @@ public class NoopArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void store(ImmutableSet<RuleKey> ruleKeys, File output) {
+  public void store(
+      ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata,
+      File output) {
     // Do nothing.
   }
 

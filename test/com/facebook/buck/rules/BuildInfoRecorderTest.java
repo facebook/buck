@@ -146,7 +146,10 @@ public class BuildInfoRecorderTest {
             return true;
           }
           @Override
-          public void store(ImmutableSet<RuleKey> ruleKeys, File output) {
+          public void store(
+              ImmutableSet<RuleKey> ruleKeys,
+              ImmutableMap<String, String> metadata,
+              File output) {
             stored.set(true);
             try (Zip zip = new Zip(output, /* forWriting */ false)) {
               assertEquals(

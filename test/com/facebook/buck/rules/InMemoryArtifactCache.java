@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
@@ -30,38 +30,51 @@ import java.util.Map;
 
 public class InMemoryArtifactCache implements ArtifactCache {
 
-  private final Map<RuleKey, byte[]> artifacts = Maps.newConcurrentMap();
+  private final Map<RuleKey, Artifact> artifacts = Maps.newConcurrentMap();
 
-  public Optional<byte[]> getArtifact(RuleKey ruleKey) {
-    return Optional.fromNullable(artifacts.get(ruleKey));
+  public boolean hasArtifact(RuleKey ruleKey) {
+    return artifacts.containsKey(ruleKey);
   }
 
-  public void putArtifact(RuleKey ruleKey, byte[] bytes) {
-    artifacts.put(ruleKey, bytes);
+  public void putArtifact(RuleKey ruleKey, Artifact artifact) {
+    artifacts.put(ruleKey, artifact);
   }
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, File output) {
-    byte[] bytes = artifacts.get(ruleKey);
-    if (bytes == null) {
+    Artifact artifact = artifacts.get(ruleKey);
+    if (artifact == null) {
       return CacheResult.miss();
     }
     try {
-      Files.write(output.toPath(), bytes);
+      Files.write(output.toPath(), artifact.data);
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
-    return CacheResult.hit("in-memory");
+    return CacheResult.hit("in-memory", artifact.metadata);
+  }
+
+  public void store(
+      ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata,
+      byte[] data) {
+    Artifact artifact = new Artifact();
+    artifact.metadata = metadata;
+    artifact.data = data;
+    for (RuleKey ruleKey : ruleKeys) {
+      artifacts.put(ruleKey, artifact);
+    }
   }
 
   @Override
-  public void store(ImmutableSet<RuleKey> ruleKeys, File output) {
-    for (RuleKey ruleKey : ruleKeys) {
-      try (InputStream inputStream = Files.newInputStream(output.toPath())) {
-        artifacts.put(ruleKey, ByteStreams.toByteArray(inputStream));
-      } catch (IOException e) {
-        throw Throwables.propagate(e);
-      }
+  public void store(
+      ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata,
+      File output) {
+    try (InputStream inputStream = Files.newInputStream(output.toPath())) {
+      store(ruleKeys, metadata, ByteStreams.toByteArray(inputStream));
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
     }
   }
 
@@ -72,6 +85,11 @@ public class InMemoryArtifactCache implements ArtifactCache {
 
   @Override
   public void close() throws IOException {
+  }
+
+  public class Artifact {
+    public ImmutableMap<String, String> metadata;
+    public byte[] data;
   }
 
 }

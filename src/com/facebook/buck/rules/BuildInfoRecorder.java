@@ -270,7 +270,7 @@ public class BuildInfoRecorder {
               ArtifactCacheEvent.Operation.COMPRESS,
               ruleKeys));
     }
-    artifactCache.store(ruleKeys, zip);
+    artifactCache.store(ruleKeys, ImmutableMap.<String, String>of(), zip);
     zip.delete();
   }
 

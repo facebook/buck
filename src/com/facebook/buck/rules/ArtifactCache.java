@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.Closeable;
@@ -41,9 +42,11 @@ public interface ArtifactCache extends Closeable {
    * This is a noop if {@link #isStoreSupported()} returns {@code false}.
    *
    * @param ruleKeys keys to store the artifact under
+   * @param metadata additional information to store with the artifact
    * @param output path to read artifact from
    */
-  void store(ImmutableSet<RuleKey> ruleKeys, File output) throws InterruptedException;
+  void store(ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata, File output)
+      throws InterruptedException;
 
   /**
    * This method must return the same value over the lifetime of this object.

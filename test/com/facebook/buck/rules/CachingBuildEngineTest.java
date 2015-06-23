@@ -83,7 +83,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
@@ -1195,8 +1194,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
     // Verify that the artifact was indexed in the cache by the input rule key.
-    Optional<byte[]> artifact = cache.getArtifact(inputRuleKey);
-    assertTrue(artifact.isPresent());
+    assertTrue(cache.hasArtifact(inputRuleKey));
 
     // Verify the input rule key was written to disk.
     OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target);
@@ -1327,7 +1325,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             inputRuleKey.toString(),
             output.toString(),
             ""));
-    cache.putArtifact(inputRuleKey, Files.readAllBytes(temp.toPath()));
+    cache.store(
+        ImmutableSet.of(inputRuleKey),
+        ImmutableMap.<String, String>of(),
+        temp);
 
     // Create the build engine.
     CachingBuildEngine cachingBuildEngine =
@@ -1534,9 +1535,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
    * location of requested {@link File} and writes a zip file there with the entries specified to
    * its constructor.
    * <p>
-   * This makes it possible to react to a call to {@link ArtifactCache#store(ImmutableSet, File)}
-   * and ensure that there will be a zip file in place immediately after the captured method has
-   * been invoked.
+   * This makes it possible to react to a call to
+   * {@link ArtifactCache#store(ImmutableSet, ImmutableMap, File)} and ensure that there will be a
+   * zip file in place immediately after the captured method has been invoked.
    */
   private static class FakeArtifactCacheThatWritesAZipFile implements ArtifactCache {
 
@@ -1557,7 +1558,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public void store(ImmutableSet<RuleKey> ruleKeys, File output) {
+    public void store(
+        ImmutableSet<RuleKey> ruleKeys,
+        ImmutableMap<String, String> metadata,
+        File output) {
       throw new UnsupportedOperationException();
     }
 

@@ -28,6 +28,7 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
@@ -334,7 +335,7 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    cache.store(ImmutableSet.of(ruleKey), output);
+    cache.store(ImmutableSet.of(ruleKey), ImmutableMap.<String, String>of(), output);
     assertTrue(hasCalled.get());
     cache.close();
   }
@@ -359,7 +360,10 @@ public class HttpArtifactCacheTest {
             throw new IOException();
           }
         };
-    cache.store(ImmutableSet.of(new RuleKey("00000000000000000000000000000000")), output);
+    cache.store(
+        ImmutableSet.of(new RuleKey("00000000000000000000000000000000")),
+        ImmutableMap.<String, String>of(),
+        output);
     cache.close();
   }
 
@@ -397,7 +401,7 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    cache.store(ImmutableSet.of(ruleKey1, ruleKey2), output);
+    cache.store(ImmutableSet.of(ruleKey1, ruleKey2), ImmutableMap.<String, String>of(), output);
     assertThat(
         stored,
         Matchers.containsInAnyOrder(ruleKey1, ruleKey2));

@@ -144,7 +144,8 @@ public class EventSerializationTest {
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
             "\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\",\"cacheSource\":{" +
-            "\"present\":false},\"cacheError\":{\"present\":false}},\"buildRule\":{\"type\":" +
+            "\"present\":false},\"cacheError\":{\"present\":false}," +
+            "\"metadata\":{\"present\":false}}, \"buildRule\":{\"type\":" +
             "\"fake_build_rule\",\"name\":\"//fake:rule\"},\"ruleKeySafe\":\"aaaa\"," +
             "\"type\":\"BuildRuleFinished\"}",
         message);
