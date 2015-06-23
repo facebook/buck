@@ -186,13 +186,8 @@ public class CompilationDatabaseIntegrationTest {
       languageStandard = "-std=c++11";
       clang += "++";
     }
-    List<String> commandArgs = Lists.newArrayList(
-        clang,
-        "-isysroot",
-        sdkRoot,
-        "-arch",
-        "x86_64",
-        "'-mios-simulator-version-min=8.0'");
+    List<String> commandArgs = Lists.newArrayList();
+    commandArgs.add(clang);
     commandArgs.add("'" + languageStandard + "'");
     commandArgs.add("-Wno-deprecated");
     commandArgs.add("-Wno-conversion");
@@ -201,7 +196,6 @@ public class CompilationDatabaseIntegrationTest {
       commandArgs.add("-fPIC");
     }
 
-    // TODO(user): these arguments seem to be inserted for preprocessor and compiler
     commandArgs.add("-isysroot");
     commandArgs.add(sdkRoot);
     commandArgs.add("-arch");

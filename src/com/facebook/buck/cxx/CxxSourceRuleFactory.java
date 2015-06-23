@@ -261,6 +261,9 @@ public class CxxSourceRuleFactory {
             .addAll(pic.getFlags())
             // Add in platform specific preprocessor flags.
             .addAll(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, source.getType()))
+            // Add in the platform specific compiler flags.
+            .addAll(getPlatformCompileFlags(
+              CxxSourceTypes.getPreprocessorOutputType(source.getType())))
             .build();
 
     ImmutableList<String> ruleFlags =
@@ -269,6 +272,8 @@ public class CxxSourceRuleFactory {
             .addAll(preprocessorFlags.getUnchecked(source.getType()))
             // Add custom per-file flags.
             .addAll(source.getFlags())
+            // Add custom compiler flags.
+            .addAll(getRuleCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
             .build();
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.

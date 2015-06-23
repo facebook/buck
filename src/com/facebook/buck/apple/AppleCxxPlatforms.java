@@ -203,7 +203,7 @@ public class AppleCxxPlatforms {
         ar,
         "!<arch>\n".getBytes(Charsets.US_ASCII),
         cflags,
-        cflags,
+        ImmutableList.<String>of(),
         getOptionalTool("lex", toolSearchPaths, executableFinder, version),
         getOptionalTool("yacc", toolSearchPaths, executableFinder, version),
         Optional.of(debugPathSanitizer));
