@@ -42,24 +42,48 @@ public class ConsoleEvent extends AbstractBuckEvent {
     return message;
   }
 
+  public static ConsoleEvent create(Level level, String message) {
+    return new ConsoleEvent(level, message);
+  }
+
   public static ConsoleEvent create(Level level, String message, Object... args) {
-    return new ConsoleEvent(level, String.format(message, args));
+    return ConsoleEvent.create(level, String.format(message, args));
+  }
+
+  public static ConsoleEvent finer(String message) {
+    return ConsoleEvent.create(Level.FINER, message);
   }
 
   public static ConsoleEvent finer(String message, Object... args) {
     return ConsoleEvent.create(Level.FINER, message, args);
   }
 
+  public static ConsoleEvent fine(String message) {
+    return ConsoleEvent.create(Level.FINE, message);
+  }
+
   public static ConsoleEvent fine(String message, Object... args) {
     return ConsoleEvent.create(Level.FINE, message, args);
+  }
+
+  public static ConsoleEvent info(String message) {
+    return ConsoleEvent.create(Level.INFO, message);
   }
 
   public static ConsoleEvent info(String message, Object... args) {
     return ConsoleEvent.create(Level.INFO, message, args);
   }
 
+  public static ConsoleEvent warning(String message) {
+    return ConsoleEvent.create(Level.WARNING, message);
+  }
+
   public static ConsoleEvent warning(String message, Object... args) {
     return ConsoleEvent.create(Level.WARNING, message, args);
+  }
+
+  public static ConsoleEvent severe(String message) {
+    return ConsoleEvent.create(Level.SEVERE, message);
   }
 
   public static ConsoleEvent severe(String message, Object... args) {

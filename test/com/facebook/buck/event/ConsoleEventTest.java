@@ -38,4 +38,15 @@ public class ConsoleEventTest {
     assertNotEquals(event1, event3);
     assertNotEquals(event3, event4);
   }
+
+  @Test
+  public void testMessageFormatting() {
+      ConsoleEvent event1 = ConsoleEvent.info("Hello %s");
+      ConsoleEvent event2 = ConsoleEvent.info("Hello %s", "asm");
+      ConsoleEvent event3 = ConsoleEvent.info("Hello %F"); // invalid format
+
+      assertEquals("Hello %s", event1.getMessage());
+      assertEquals("Hello asm", event2.getMessage());
+      assertEquals("Hello %F", event3.getMessage());
+  }
 }
