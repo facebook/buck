@@ -166,11 +166,11 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-    // TODO(simons): Include bootclasspath params.
     builder.setReflectively("sourceLevel", getSourceLevel())
         .setReflectively("targetLevel", getTargetLevel())
         .setReflectively("extraArguments", Joiner.on(',').join(getExtraArguments()))
         .setReflectively("debug", isDebug())
+        .setReflectively("bootclasspath", getBootclasspath())
         .setReflectively("javac", getJavac())
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams());
 
