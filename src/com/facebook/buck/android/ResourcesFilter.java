@@ -211,7 +211,7 @@ public class ResourcesFilter extends AbstractBuildRule
         .setResourceFilter(resourceFilter);
 
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
-      filterResourcesStepBuilder.enableStringsFilter();
+      filterResourcesStepBuilder.enableStringWhitelisting();
       filterResourcesStepBuilder.setWhitelistedStringDirs(whitelistedStringDirs);
     }
 

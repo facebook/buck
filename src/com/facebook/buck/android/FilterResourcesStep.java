@@ -72,15 +72,11 @@ public class FilterResourcesStep implements Step {
 
   @VisibleForTesting
   static final Pattern NON_ENGLISH_STRINGS_FILE_PATH = Pattern.compile(
-      "(\\b|.*/)res/values-.+/strings.xml", Pattern.CASE_INSENSITIVE);
-
-  @VisibleForTesting
-  static final Pattern VALUES_DIR_PATTERN = Pattern.compile(
-      "\\b|.*/res/values-([a-z]{2})(?:-r([A-Z]{2}))*/.*");
+      "\\b|.*/res/values-([a-z]{2})(?:-r([A-Z]{2}))*/strings.xml");
 
   private final ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
   private final boolean filterDrawables;
-  private final boolean filterStrings;
+  private final boolean enableStringWhitelisting;
   private final ImmutableSet<Path> whitelistedStringDirs;
   private final ImmutableSet<String> locales;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
@@ -95,9 +91,12 @@ public class FilterResourcesStep implements Step {
    * Creates a command that filters a specified set of directories.
    * @param inResDirToOutResDirMap set of {@code res} directories to filter
    * @param filterDrawables whether to filter drawables (images)
-   * @param filterStrings whether to filter non-english strings
+   * @param enableStringWhitelisting whether to filter strings based on a whitelist
    * @param whitelistedStringDirs set of directories containing string resource files that must not
    *     be filtered out.
+   * @param locales set of locales that the localized strings.xml files within {@code values-*}
+   *     directories should be filtered by. This is useful if there are multiple apps that support a
+   *     different set of locales that share a module. If empty, no filtering is performed.
    * @param filteredDirectoryCopier refer {@link FilteredDirectoryCopier}
    * @param targetDensities densities we're interested in keeping (e.g. {@code mdpi}, {@code hdpi}
    *     etc.) Only applicable if filterDrawables is true
@@ -110,7 +109,7 @@ public class FilterResourcesStep implements Step {
   FilterResourcesStep(
       ImmutableBiMap<Path, Path> inResDirToOutResDirMap,
       boolean filterDrawables,
-      boolean filterStrings,
+      boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
       FilteredDirectoryCopier filteredDirectoryCopier,
@@ -118,22 +117,18 @@ public class FilterResourcesStep implements Step {
       @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
 
-    Preconditions.checkArgument(filterDrawables || filterStrings || !locales.isEmpty());
+    Preconditions.checkArgument(filterDrawables || enableStringWhitelisting || !locales.isEmpty());
     Preconditions.checkArgument(!filterDrawables ||
         (targetDensities != null && drawableFinder != null));
     this.inResDirToOutResDirMap = inResDirToOutResDirMap;
     this.filterDrawables = filterDrawables;
-    this.filterStrings = filterStrings;
+    this.enableStringWhitelisting = enableStringWhitelisting;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;
     this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;
-    LOG.info(
-        "FilterResourcesStep: filterDrawables: %s; filterStrings: %s",
-        filterDrawables,
-        filterStrings);
   }
 
   @Override
@@ -167,36 +162,29 @@ public class FilterResourcesStep implements Step {
               canDownscale));
     }
 
-    if (!locales.isEmpty()) {
+    final boolean localeFilterEnabled = !locales.isEmpty();
+    if (localeFilterEnabled || enableStringWhitelisting) {
       pathPredicates.add(
           new Predicate<Path>() {
             @Override
-            public boolean apply(Path input) {
-              Matcher matcher = VALUES_DIR_PATTERN.matcher(MorePaths.pathWithUnixSeparators(input));
-              if (!matcher.matches() || isPathWhitelisted(input)) {
-                return true;
-              }
-              String locale = matcher.group(1);
-              if (matcher.group(2) != null) {
-                locale += "_" + matcher.group(2);
-              }
-              return locales.contains(locale);
-            }
-          });
-    }
-
-    if (filterStrings) {
-      pathPredicates.add(
-          new Predicate<Path>() {
-            @Override
-            public boolean apply(Path pathRelativeToProjectRoot) {
-              if (!NON_ENGLISH_STRINGS_FILE_PATH.matcher(MorePaths.pathWithUnixSeparators(
-                      pathRelativeToProjectRoot))
-                  .matches()) {
+            public boolean apply(Path path) {
+              Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(
+                  MorePaths.pathWithUnixSeparators(path));
+              if (!matcher.matches()) {
                 return true;
               }
 
-              return isPathWhitelisted(pathRelativeToProjectRoot);
+              if (enableStringWhitelisting) {
+                return isPathWhitelisted(path);
+              } else {
+                Preconditions.checkState(localeFilterEnabled);
+                String locale = matcher.group(1);
+                if (matcher.group(2) != null) {
+                  locale += "_" + matcher.group(2);
+                }
+
+                return locales.contains(locale);
+              }
             }
           });
     }
@@ -451,9 +439,9 @@ public class FilterResourcesStep implements Step {
     private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
     @Nullable
     private ResourceFilter resourceFilter;
-    private boolean filterStrings = false;
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
     private ImmutableSet<String> locales = ImmutableSet.of();
+    private boolean enableStringWhitelisting = false;
 
     private Builder() {
     }
@@ -468,8 +456,8 @@ public class FilterResourcesStep implements Step {
       return this;
     }
 
-    public Builder enableStringsFilter() {
-      this.filterStrings = true;
+    public Builder enableStringWhitelisting() {
+      this.enableStringWhitelisting = true;
       return this;
     }
 
@@ -490,7 +478,7 @@ public class FilterResourcesStep implements Step {
       return new FilterResourcesStep(
           inResDirToOutResDirMap,
           resourceFilter.isEnabled(),
-          filterStrings,
+          enableStringWhitelisting,
           whitelistedStringDirs,
           locales,
           DefaultFilteredDirectoryCopier.getInstance(),
