@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -176,6 +177,7 @@ public abstract class Jsr199Javac implements Javac {
     // means that libraries that have dependencies on different versions of Buck's deps may choke
     // with novel errors that don't occur on the command line.
     try (ProcessorBundle bundle = prepareProcessors(
+        context.getBuckEventBus(),
         compiler.getClass().getClassLoader(),
         invokingRule,
         options)) {
@@ -238,6 +240,7 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   private ProcessorBundle prepareProcessors(
+      BuckEventBus buckEventBus,
       ClassLoader compilerClassLoader,
       BuildTarget target,
       List<String> options) {
@@ -300,7 +303,11 @@ public abstract class Jsr199Javac implements Javac {
             Preconditions.checkNotNull(processorBundle.classLoader)
                 .loadClass(name)
                 .asSubclass(Processor.class);
-        processorBundle.processors.add(aClass.newInstance());
+        processorBundle.processors.add(
+            new TracingProcessorWrapper(
+                buckEventBus,
+                target,
+                aClass.newInstance()));
       } catch (ReflectiveOperationException e) {
         // If this happens, then the build is really in trouble. Better warn the user.
         throw new HumanReadableException(

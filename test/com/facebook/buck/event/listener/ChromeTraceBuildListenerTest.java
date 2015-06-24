@@ -33,6 +33,7 @@ import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.AnnotationProcessingEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -192,6 +193,25 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
 
+    String annotationProcessorName = "com.facebook.FakeProcessor";
+    AnnotationProcessingEvent.Operation operation = AnnotationProcessingEvent.Operation.PROCESS;
+    int annotationRound = 1;
+    boolean isLastRound = false;
+    eventBus.post(
+        AnnotationProcessingEvent.started(
+            target,
+            annotationProcessorName,
+            operation,
+            annotationRound,
+            isLastRound));
+    eventBus.post(
+        AnnotationProcessingEvent.finished(
+            target,
+            annotationProcessorName,
+            operation,
+            annotationRound,
+            isLastRound));
+
     eventBus.post(StepEvent.finished(stepShortName, stepDescription, stepUuid, 0));
     eventBus.post(
         BuildRuleEvent.finished(
@@ -282,6 +302,18 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "fakeStep",
         ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "com.facebook.FakeProcessor.process",
+        ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "com.facebook.FakeProcessor.process",
+        ChromeTraceEvent.Phase.END,
         emptyArgs);
 
     assertNextResult(

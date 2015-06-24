@@ -71,6 +71,7 @@ java_immutables_library(
   srcs = [
     'AbstractJavacVersion.java',
     'AbstractJavacOptions.java',
+    'AnnotationProcessingEvent.java',
     'AnnotationProcessingParams.java',
     'BuildsAnnotationProcessor.java',
     'ExternalJavac.java',
@@ -82,6 +83,7 @@ java_immutables_library(
     'JavacErrorParser.java',
     'JdkProvidedInMemoryJavac.java',
     'Jsr199Javac.java',
+    'TracingProcessorWrapper.java',
   ],
   deps = [
     ':classhash',
