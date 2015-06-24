@@ -16,69 +16,96 @@
 
 package com.facebook.buck.rules;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.collect.ArrayIterable;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.io.ByteStreams;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Map;
 
 public class DirArtifactCache implements ArtifactCache {
 
   private static final Logger LOG = Logger.get(DirArtifactCache.class);
 
   private final String name;
-  private final File cacheDir;
+  private final ProjectFilesystem filesystem;
+  private final Path cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
   private final boolean doStore;
 
   public DirArtifactCache(
       String name,
-      File cacheDir,
+      ProjectFilesystem filesystem,
+      Path cacheDir,
       boolean doStore,
       Optional<Long> maxCacheSizeBytes)
       throws IOException {
     this.name = name;
+    this.filesystem = filesystem;
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.doStore = doStore;
-    Files.createDirectories(cacheDir.toPath());
+    filesystem.mkdirs(cacheDir);
   }
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, File output) {
-    CacheResult success = CacheResult.miss();
-    File cacheEntry = new File(cacheDir, ruleKey.toString());
-    if (cacheEntry.exists()) {
-      try {
-        Files.createDirectories(output.toPath().getParent());
-        Files.copy(cacheEntry.toPath(), output.toPath(), REPLACE_EXISTING);
-        success = CacheResult.hit(name);
-      } catch (IOException e) {
-        LOG.warn(
-            e,
-            "Artifact fetch(%s, %s) error",
-            ruleKey,
-            output.getPath());
+    CacheResult result;
+    try {
+
+      // First, build up the metadata from the metadata file.
+      ImmutableMap.Builder<String, String> metadata = ImmutableMap.builder();
+      try (DataInputStream in =
+               new DataInputStream(
+                   filesystem.newFileInputStream(
+                       cacheDir.resolve(ruleKey.toString() + ".metadata")))) {
+        int sz = in.readInt();
+        for (int i = 0; i < sz; i++) {
+          String key = in.readUTF();
+          int valSize = in.readInt();
+          byte[] val = new byte[valSize];
+          ByteStreams.readFully(in, val);
+          metadata.put(key, new String(val, Charsets.UTF_8));
+        }
       }
+
+      // Now copy the artifact out.
+      filesystem.copyFile(cacheDir.resolve(ruleKey.toString()), output.toPath());
+
+      result = CacheResult.hit(name, metadata.build());
+    } catch (NoSuchFileException e) {
+      result = CacheResult.miss();
+    } catch (IOException e) {
+      LOG.warn(
+          e,
+          "Artifact fetch(%s, %s) error",
+          ruleKey,
+          output.getPath());
+      result = CacheResult.error(name, String.format("%s: %s", e.getClass(), e.getMessage()));
     }
+
     LOG.debug(
         "Artifact fetch(%s, %s) cache %s",
         ruleKey,
         output.getPath(),
-        (success.getType().isSuccess() ? "hit" : "miss"));
-    return success;
+        (result.getType().isSuccess() ? "hit" : "miss"));
+    return result;
   }
 
   @Override
@@ -86,34 +113,50 @@ public class DirArtifactCache implements ArtifactCache {
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
       File output) {
+
     if (!doStore) {
       return;
     }
-    for (RuleKey ruleKey : ruleKeys) {
-      File cacheEntry = new File(cacheDir, ruleKey.toString());
-      Path tmpCacheEntry = null;
-      try {
+
+    try {
+
+      for (RuleKey ruleKey : ruleKeys) {
+
         // Write to a temporary file and move the file to its final location atomically to protect
         // against partial artifacts (whether due to buck interruption or filesystem failure) posing
         // as valid artifacts during subsequent buck runs.
-        tmpCacheEntry = File.createTempFile(ruleKey.toString(), ".tmp", cacheDir).toPath();
-        Files.copy(output.toPath(), tmpCacheEntry, REPLACE_EXISTING);
-        Files.move(tmpCacheEntry, cacheEntry.toPath(), REPLACE_EXISTING);
-      } catch (IOException e) {
-        LOG.warn(
-            e,
-            "Artifact store(%s, %s) error",
-            ruleKey,
-            output.getPath());
-        if (tmpCacheEntry != null) {
-          try {
-            Files.deleteIfExists(tmpCacheEntry);
-          } catch (IOException ignored) {
-            // Unable to delete a temporary file. Nothing sane to do.
-            LOG.debug(ignored, "Unable to delete temp cache file");
+        Path tmp = filesystem.createTempFile(filesystem.resolve(cacheDir), "artifact", ".tmp");
+        try {
+          filesystem.copyFile(output.toPath(), tmp);
+          filesystem.move(tmp, cacheDir.resolve(ruleKey.toString()));
+        } finally {
+          filesystem.deleteFileAtPathIfExists(tmp);
+        }
+
+        // Now, write the meta data artifact.
+        tmp = filesystem.createTempFile(filesystem.resolve(cacheDir), "metadata", ".tmp");
+        try {
+          try (DataOutputStream out = new DataOutputStream(filesystem.newFileOutputStream(tmp))) {
+            out.writeInt(metadata.size());
+            for (Map.Entry<String, String> ent : metadata.entrySet()) {
+              out.writeUTF(ent.getKey());
+              byte[] val = ent.getValue().getBytes(Charsets.UTF_8);
+              out.writeInt(val.length);
+              out.write(val);
+            }
           }
+          filesystem.move(tmp, cacheDir.resolve(ruleKey.toString() + ".metadata"));
+        } finally {
+          filesystem.deleteFileAtPathIfExists(tmp);
         }
       }
+
+    } catch (IOException e) {
+      LOG.warn(
+          e,
+          "Artifact store(%s, %s) error",
+          ruleKeys,
+          output.getPath());
     }
   }
 
@@ -161,7 +204,7 @@ public class DirArtifactCache implements ArtifactCache {
     Preconditions.checkState(maxCacheSizeBytes.isPresent());
     long maxSizeBytes = maxCacheSizeBytes.get();
 
-    File[] files = cacheDir.listFiles();
+    File[] files = filesystem.resolve(cacheDir).toFile().listFiles();
     MoreFiles.sortFilesByAccessTime(files);
 
     // Finds the first N from the list ordered by last access time who's combined size is less than

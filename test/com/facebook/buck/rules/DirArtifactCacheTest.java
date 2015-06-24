@@ -18,11 +18,14 @@ package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
 import com.google.common.base.Charsets;
@@ -32,6 +35,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,6 +44,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 
 public class DirArtifactCacheTest {
@@ -63,7 +68,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        cacheDir,
+        new ProjectFilesystem(cacheDir.toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
   }
@@ -79,7 +85,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        cacheDir,
+        new ProjectFilesystem(cacheDir.toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
 
@@ -105,7 +112,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        cacheDir,
+        new ProjectFilesystem(cacheDir.toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.<Long>absent());
 
@@ -140,7 +148,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        cacheDir,
+        new ProjectFilesystem(cacheDir.toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
 
@@ -177,7 +186,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        cacheDir,
+        new ProjectFilesystem(cacheDir.toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(0L));
 
@@ -229,7 +239,7 @@ public class DirArtifactCacheTest {
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
     assertEquals(inputRuleZ, new BuildRuleForTest(fileZ));
 
-    assertEquals(3, cacheDir.listFiles().length);
+    assertEquals(6, cacheDir.listFiles().length);
 
     dirArtifactCache.deleteOldFiles();
 
@@ -252,7 +262,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        cacheDir,
+        new ProjectFilesystem(cacheDir.toPath()),
+        Paths.get("."),
         /* doStore */ false,
         /* maxCacheSizeBytes */ Optional.of(0L));
 
@@ -316,7 +327,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        tmpDir.getRoot(),
+        new ProjectFilesystem(tmpDir.getRoot().toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(1024L));
 
@@ -340,7 +352,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        tmpDir.getRoot(),
+        new ProjectFilesystem(tmpDir.getRoot().toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.<Long>absent());
 
@@ -365,7 +378,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        cacheDir,
+        new ProjectFilesystem(cacheDir.toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.of(2L));
 
@@ -397,7 +411,8 @@ public class DirArtifactCacheTest {
 
     dirArtifactCache = new DirArtifactCache(
         "dir",
-        cacheDir,
+        new ProjectFilesystem(cacheDir.toPath()),
+        Paths.get("."),
         /* doStore */ true,
         /* maxCacheSizeBytes */ Optional.<Long>absent());
 
@@ -413,6 +428,39 @@ public class DirArtifactCacheTest {
     // Test that artifact is available via both keys.
     assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKey1, fileX).getType());
     assertEquals(CacheResult.Type.HIT, dirArtifactCache.fetch(ruleKey2, fileX).getType());
+  }
+
+  @Test
+  public void testCacheStoreAndFetchMetadata() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DirArtifactCache cache =
+        new DirArtifactCache(
+            "dir",
+            filesystem,
+            Paths.get("cache"),
+            /* doStore */ true,
+            /* maxCacheSizeBytes */ Optional.<Long>absent());
+
+    RuleKey ruleKey = new RuleKey("0000");
+    ImmutableMap<String, String> metadata = ImmutableMap.of("some", "metadata");
+
+    // Create a dummy data file.
+    Path data = Paths.get("data");
+    filesystem.touch(data);
+
+    // Store the artifact with metadata then re-fetch.
+    cache.store(ImmutableSet.of(ruleKey), metadata, data.toFile());
+    CacheResult result = cache.fetch(ruleKey, Paths.get("out-data").toFile());
+
+    // Verify that the metadata is correct.
+    assertThat(
+        result.getType(),
+        Matchers.equalTo(CacheResult.Type.HIT));
+    assertThat(
+        result.getMetadata(),
+        Matchers.equalTo(metadata));
+
+    cache.close();
   }
 
   private static class BuildRuleForTest extends FakeBuildRule {

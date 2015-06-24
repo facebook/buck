@@ -62,7 +62,8 @@ public class BuildInfoRecorderIntegrationTest {
     cacheDir.create();
     ArtifactCache artifactCache = new DirArtifactCache(
         "dir",
-        cacheDir.getRoot(),
+        new ProjectFilesystem(cacheDir.getRootPath()),
+        Paths.get("."),
         true,
         Optional.<Long>absent());
     buildInfoRecorder.performUploadToArtifactCache(

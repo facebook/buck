@@ -26,7 +26,11 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.DefaultOnDiskBuildInfo;
+import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -35,7 +39,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 
 import org.junit.Rule;
@@ -86,23 +93,30 @@ public class DefaultJavaLibraryIntegrationTest {
     // Verify the build cache.
     File buildCache = workspace.getFile("cache_dir");
     assertTrue(buildCache.isDirectory());
-    assertEquals("There should be one entry (a zip) in the build cache.",
-        1,
+    assertEquals("There should be two entries (a zip and metadata) in the build cache.",
+        2,
         buildCache.listFiles().length);
 
     // Verify the ABI key entry in the build cache.
-    Path artifactZip = buildCache.listFiles()[0].toPath();
-    FileSystem zipFs = FileSystems.newFileSystem(artifactZip, /* loader */ null);
-    Path abiKeyEntry = zipFs.getPath("/buck-out/bin/.no_srcs/metadata/ABI_KEY");
-    assertEquals(AbiWriterProtocol.EMPTY_ABI_KEY,
-        new String(java.nio.file.Files.readAllBytes(abiKeyEntry)));
+    OnDiskBuildInfo onDiskBuildInfo =
+        new DefaultOnDiskBuildInfo(
+            BuildTargetFactory.newInstance("//:no_srcs"),
+            new ProjectFilesystem(tmp.getRootPath()));
+    assertEquals(
+        AbiWriterProtocol.EMPTY_ABI_KEY,
+        onDiskBuildInfo.getValue("ABI_KEY").get());
 
     // Run `buck clean`.
     ProcessResult cleanResult = workspace.runBuckCommand("clean");
     cleanResult.assertSuccess("Successful clean should exit with 0.");
-    assertEquals("The build cache should still exist.", 1, buildCache.listFiles().length);
+    assertEquals("The build cache should still exist.", 2, buildCache.listFiles().length);
 
     // Corrupt the build cache!
+    File artifactZip =
+        FluentIterable.from(ImmutableList.copyOf(buildCache.listFiles()))
+            .toSortedList(Ordering.natural())
+            .get(0);
+    FileSystem zipFs = FileSystems.newFileSystem(artifactZip.toPath(), /* loader */ null);
     Path outputInZip = zipFs.getPath("/buck-out/gen/lib__no_srcs__output/no_srcs.jar");
     java.nio.file.Files.write(outputInZip, "Hello world!".getBytes(), WRITE);
     zipFs.close();

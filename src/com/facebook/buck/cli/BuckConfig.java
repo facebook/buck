@@ -608,12 +608,18 @@ public class BuckConfig {
 
   private ArtifactCache createDirArtifactCache() {
     Path cacheDir = getCacheDir();
-    File dir = cacheDir.toFile();
     boolean doStore = readCacheMode("dir_mode", DEFAULT_DIR_CACHE_MODE);
     try {
-      return new DirArtifactCache("dir", dir, doStore, getCacheDirMaxSizeBytes());
+      return new DirArtifactCache(
+          "dir",
+          projectFilesystem,
+          cacheDir,
+          doStore,
+          getCacheDirMaxSizeBytes());
     } catch (IOException e) {
-      throw new HumanReadableException("Failure initializing artifact cache directory: %s", dir);
+      throw new HumanReadableException(
+          "Failure initializing artifact cache directory: %s",
+          cacheDir);
     }
   }
 
