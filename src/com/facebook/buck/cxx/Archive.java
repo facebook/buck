@@ -37,8 +37,7 @@ import java.nio.file.Path;
 public class Archive extends AbstractBuildRule {
 
   @AddToRuleKey
-  private final Tool archiver;
-  private final byte[] expectedGlobalHeader;
+  private final Archiver archiver;
   @AddToRuleKey(stringify = true)
   private final Path output;
   @AddToRuleKey
@@ -47,13 +46,11 @@ public class Archive extends AbstractBuildRule {
   public Archive(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Tool archiver,
-      byte[] expectedGlobalHeader,
+      Archiver archiver,
       Path output,
       ImmutableList<SourcePath> inputs) {
     super(params, resolver);
     this.archiver = archiver;
-    this.expectedGlobalHeader = expectedGlobalHeader;
     this.output = output;
     this.inputs = inputs;
   }
@@ -73,7 +70,7 @@ public class Archive extends AbstractBuildRule {
             archiver.getCommandPrefix(getResolver()),
             output,
             getResolver().getAllPaths(inputs)),
-        new ArchiveScrubberStep(output, expectedGlobalHeader));
+        new ArchiveScrubberStep(output, archiver.getScrubbers()));
   }
 
   @Override

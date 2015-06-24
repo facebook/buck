@@ -228,6 +228,16 @@ public class ProjectWorkspace {
   public ProcessResult runBuckCommand(String... args)
       throws IOException {
     return runBuckCommandWithEnvironmentAndContext(
+        destPath,
+        Optional.<NGContext>absent(),
+        Optional.<BuckEventListener>absent(),
+        args);
+  }
+
+  public ProcessResult runBuckCommand(Path repoRoot, String... args)
+      throws IOException {
+    return runBuckCommandWithEnvironmentAndContext(
+        repoRoot,
         Optional.<NGContext>absent(),
         Optional.<BuckEventListener>absent(),
         args);
@@ -254,9 +264,9 @@ public class ProjectWorkspace {
             Paths.get("watchman"),
             ImmutableMap.copyOf(System.getenv())).isPresent());
     return runBuckCommandWithEnvironmentAndContext(
+        destPath,
         Optional.of(context),
-        Optional.<BuckEventListener>absent(),
-        args);
+        Optional.<BuckEventListener>absent(), args);
   }
 
   public ProcessResult runBuckdCommand(
@@ -265,12 +275,14 @@ public class ProjectWorkspace {
       String... args)
       throws IOException {
     return runBuckCommandWithEnvironmentAndContext(
+        destPath,
         Optional.of(context),
         Optional.of(eventListener),
         args);
   }
 
-  private ProcessResult runBuckCommandWithEnvironmentAndContext(
+  public ProcessResult runBuckCommandWithEnvironmentAndContext(
+      Path repoRoot,
       Optional<NGContext> context,
       Optional<BuckEventListener> eventListener,
       String... args)
@@ -330,7 +342,7 @@ public class ProjectWorkspace {
     try {
       exitCode = main.runMainWithExitCode(
           new BuildId(),
-          destPath,
+          repoRoot,
           context,
           env,
           args);

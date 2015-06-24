@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.BsdArchiver;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
@@ -28,7 +29,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -200,8 +200,7 @@ public class AppleCxxPlatforms {
         Optional.of(CxxPlatform.LinkerType.DARWIN),
         clangXxPath,
         ldflags,
-        ar,
-        "!<arch>\n".getBytes(Charsets.US_ASCII),
+        new BsdArchiver(ar),
         cflags,
         ImmutableList.<String>of(),
         getOptionalTool("lex", toolSearchPaths, executableFinder, version),

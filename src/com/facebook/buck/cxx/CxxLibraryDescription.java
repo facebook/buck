@@ -301,7 +301,6 @@ public class CxxLibraryDescription implements
         staticTarget,
         params,
         cxxPlatform.getAr(),
-        cxxPlatform.getArExpectedGlobalHeader(),
         staticLibraryPath,
         ImmutableList.copyOf(objects.values()));
   }

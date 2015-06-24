@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Tool;
@@ -370,9 +371,10 @@ public class NdkCxxPlatforms {
             // We always pass the runtime library on the command line, so setting this flag
             // means the resulting link will only use it if it was actually needed it.
             "--as-needed")
-        .setAr(getGccTool(ndkRoot, targetConfiguration, host, "ar", version, executableFinder))
+        .setAr(
+            new GnuArchiver(
+                getGccTool(ndkRoot, targetConfiguration, host, "ar", version, executableFinder)))
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
-        .setArExpectedGlobalHeader("!<arch>\n".getBytes(Charsets.US_ASCII))
         .setDebugPathSanitizer(
             new DebugPathSanitizer(
                 250,

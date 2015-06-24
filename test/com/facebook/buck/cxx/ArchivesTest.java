@@ -34,7 +34,6 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -45,9 +44,8 @@ import java.nio.file.Paths;
 
 public class ArchivesTest {
 
-  private static final Tool DEFAULT_ARCHIVER = new HashedFileTool(Paths.get("ar"));
-  private static final byte[] DEFAULT_EXPECTED_GLOBAL_HEADER =
-      "some-arbitrary-test-header".getBytes(Charsets.US_ASCII);
+  private static final Archiver DEFAULT_ARCHIVER = new GnuArchiver(
+      new HashedFileTool(Paths.get("ar")));
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
       new TestSourcePath("a.o"),
@@ -77,7 +75,6 @@ public class ArchivesTest {
         target,
         params,
         DEFAULT_ARCHIVER,
-        DEFAULT_EXPECTED_GLOBAL_HEADER,
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
             new TestSourcePath("simple.o"),
@@ -112,7 +109,6 @@ public class ArchivesTest {
         target,
         params,
         DEFAULT_ARCHIVER,
-        DEFAULT_EXPECTED_GLOBAL_HEADER,
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS);
 

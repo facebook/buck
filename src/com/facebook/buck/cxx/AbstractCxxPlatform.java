@@ -65,9 +65,8 @@ interface AbstractCxxPlatform {
   List<String> getLdflags();
   Multimap<Linker.LinkableDepType, String> getRuntimeLdflags();
 
-  Tool getAr();
+  Archiver getAr();
   List<String> getArflags();
-  byte[] getArExpectedGlobalHeader();
 
   Optional<Tool> getLex();
   List<String> getLexFlags();

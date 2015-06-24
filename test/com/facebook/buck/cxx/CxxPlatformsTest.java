@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -51,8 +50,7 @@ public class CxxPlatformsTest {
           .setCxxpp(new HashedFileTool(Paths.get("borland")))
           .setCxxld(new HashedFileTool(Paths.get("borland")))
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("borland"))))
-          .setAr(new HashedFileTool(Paths.get("borland")))
-          .setArExpectedGlobalHeader("something arbitrary".getBytes(Charsets.US_ASCII))
+          .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
           .setSharedLibraryExtension(".so")
           .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();

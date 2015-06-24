@@ -22,6 +22,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
@@ -74,8 +75,7 @@ public class CxxPlatforms {
       Optional<CxxPlatform.LinkerType> linkerType,
       Tool ld,
       Iterable<String> ldFlags,
-      Tool ar,
-      byte[] expectedGlobalHeader,
+      Archiver ar,
       ImmutableList<String> cflags,
       ImmutableList<String> cppflags,
       Optional<Tool> lex,
@@ -95,8 +95,7 @@ public class CxxPlatforms {
         .setCxxld(getTool(flavor, "cxxld", config).or(cxxld))
         .setLd(getLd(flavor, platform, config, linkerType, getTool(flavor, "ld", config).or(ld)))
         .addAllLdflags(ldFlags)
-        .setAr(getTool(flavor, "ar", config).or(ar))
-        .setArExpectedGlobalHeader(expectedGlobalHeader)
+        .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass())).or(ar))
         .setLex(getTool(flavor, "lex", config).or(lex))
         .setYacc(getTool(flavor, "yacc", config).or(yacc))
         .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))
@@ -137,8 +136,7 @@ public class CxxPlatforms {
             .or(defaultPlatform.getLd().getTool())
         )
       )
-      .setAr(getTool(flavor, "ar", config).or(defaultPlatform.getAr()))
-      .setArExpectedGlobalHeader(defaultPlatform.getArExpectedGlobalHeader())
+      .setAr(new GnuArchiver(getTool(flavor, "ar", config).or(defaultPlatform.getAr())))
       .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
       .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
       .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))
@@ -150,6 +148,19 @@ public class CxxPlatforms {
     }
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
     return builder.build();
+  }
+
+  private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass) {
+    return new Function<Tool, Archiver>() {
+      @Override
+      public Archiver apply(Tool input) {
+        try {
+          return arClass.getConstructor(Tool.class).newInstance(input);
+        } catch (ReflectiveOperationException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
   }
 
   private static String getSharedLibraryExtension(Platform platform) {

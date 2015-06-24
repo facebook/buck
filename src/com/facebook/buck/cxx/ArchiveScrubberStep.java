@@ -18,111 +18,27 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
-import java.nio.ReadOnlyBufferException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
 
 /**
  * Scrub any non-deterministic meta-data from the given archive (e.g. timestamp, UID, GID).
  */
 public class ArchiveScrubberStep implements Step {
 
-  private static final byte[] FILE_MAGIC = {0x60, 0x0A};
-
   private final Path archive;
-  private final byte[] expectedGlobalHeader;
+  private final ImmutableList<ArchiveScrubber> scrubbers;
 
   public ArchiveScrubberStep(
       Path archive,
-      byte[] expectedGlobalHeader) {
+      ImmutableList<ArchiveScrubber> scrubbers) {
     this.archive = archive;
-    this.expectedGlobalHeader = expectedGlobalHeader;
-  }
-
-  private byte[] getBytes(ByteBuffer buffer, int len) {
-    byte[] bytes = new byte[len];
-    buffer.get(bytes);
-    return bytes;
-  }
-
-  private int getDecimalStringAsInt(ByteBuffer buffer, int len) {
-    byte[] bytes = getBytes(buffer, len);
-    String str = new String(bytes, Charsets.US_ASCII);
-    return Integer.parseInt(str.trim());
-  }
-
-  private void putSpaceLeftPaddedString(ByteBuffer buffer, int len, String value) {
-    Preconditions.checkState(value.length() <= len);
-    value = Strings.padStart(value, len, ' ');
-    buffer.put(value.getBytes(Charsets.US_ASCII));
-  }
-
-  private void putIntAsOctalString(ByteBuffer buffer, int len, int value) {
-    putSpaceLeftPaddedString(buffer, len, String.format("0%o", value));
-  }
-
-  private void putIntAsDecimalString(ByteBuffer buffer, int len, int value) {
-    putSpaceLeftPaddedString(buffer, len, String.format("%d", value));
-  }
-
-  private void checkArchive(boolean expression, String msg) throws ArchiveException {
-    if (!expression) {
-      throw new ArchiveException(msg);
-    }
-  }
-
-  /**
-   * Efficiently modifies the archive backed by the given buffer to remove any non-deterministic
-   * meta-data such as timestamps, UIDs, and GIDs.
-   * @param archive a {@link ByteBuffer} wrapping the contents of the archive.
-   */
-  @SuppressWarnings("PMD.AvoidUsingOctalValues")
-  private void scrubArchive(ByteBuffer archive) throws ArchiveException {
-    try {
-
-      // Grab the global header chunk and verify it's accurate.
-      byte[] globalHeader = getBytes(archive, this.expectedGlobalHeader.length);
-      checkArchive(
-          Arrays.equals(this.expectedGlobalHeader, globalHeader),
-          "invalid global header");
-
-      // Iterate over all the file meta-data entries, injecting zero's for timestamp,
-      // UID, and GID.
-      while (archive.hasRemaining()) {
-        /* File name */ getBytes(archive, 16);
-
-        // Inject 0's for the non-deterministic meta-data entries.
-        /* File modification timestamp */ putIntAsDecimalString(archive, 12, 0);
-        /* Owner ID */ putIntAsDecimalString(archive, 6, 0);
-        /* Group ID */ putIntAsDecimalString(archive, 6, 0);
-
-        /* File mode */ putIntAsOctalString(archive, 8, 0100644);
-        int fileSize = getDecimalStringAsInt(archive, 10);
-
-        // Lastly, grab the file magic entry and verify it's accurate.
-        byte[] fileMagic = getBytes(archive, 2);
-        checkArchive(
-            Arrays.equals(FILE_MAGIC, fileMagic),
-            "invalid file magic");
-
-        // Skip the file data.
-        archive.position(archive.position() + fileSize + fileSize % 2);
-      }
-
-      // Convert any low-level exceptions to `ArchiveExceptions`s.
-    } catch (BufferUnderflowException | ReadOnlyBufferException e) {
-      throw new ArchiveException(e.getMessage());
-    }
+    this.scrubbers = scrubbers;
   }
 
   private FileChannel readWriteChannel(Path path) throws IOException {
@@ -133,11 +49,13 @@ public class ArchiveScrubberStep implements Step {
   public int execute(ExecutionContext context) throws InterruptedException {
     Path archivePath = context.getProjectFilesystem().resolve(archive);
     try {
-      try (FileChannel channel = readWriteChannel(archivePath)) {
-        MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-        scrubArchive(map);
+      for (ArchiveScrubber scrubber : scrubbers) {
+        try (FileChannel channel = readWriteChannel(archivePath)) {
+          MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
+          scrubber.scrubArchive(map);
+        }
       }
-    } catch (IOException | ArchiveException e) {
+    } catch (IOException | ArchiveScrubber.ScrubException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", archivePath);
       return 1;
     }
@@ -152,13 +70,6 @@ public class ArchiveScrubberStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return "archive-scrub";
-  }
-
-  @SuppressWarnings("serial")
-  public static class ArchiveException extends Exception {
-    public ArchiveException(String msg) {
-      super(msg);
-    }
   }
 
 }
