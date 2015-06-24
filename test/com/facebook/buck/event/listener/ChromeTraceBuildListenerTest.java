@@ -79,6 +79,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -218,97 +219,140 @@ public class ChromeTraceBuildListenerTest {
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");
 
-    List<ChromeTraceEvent> resultMap = mapper.readValue(
+    List<ChromeTraceEvent> originalResultList = mapper.readValue(
         resultFile,
         new TypeReference<List<ChromeTraceEvent>>() {});
+    List<ChromeTraceEvent> resultListCopy = new ArrayList<>();
+    resultListCopy.addAll(originalResultList);
+    ImmutableMap<String, String> emptyArgs = ImmutableMap.of();
 
-    assertEquals(17, resultMap.size());
+    assertNextResult(
+        resultListCopy,
+        "process_name",
+        ChromeTraceEvent.Phase.METADATA,
+        ImmutableMap.of("name", "buck"));
 
-    assertEquals("process_name", resultMap.get(0).getName());
-    assertEquals(ChromeTraceEvent.Phase.METADATA, resultMap.get(0).getPhase());
-    assertEquals(
+    assertNextResult(
+        resultListCopy,
+        "party",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("command_args", "arg1 arg2"));
+
+    assertNextResult(
+        resultListCopy,
+        "artifact_connect",
+        ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "artifact_connect",
+        ChromeTraceEvent.Phase.END,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "build",
+        ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "artifact_fetch",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("rule_key", "abc123"));
+
+    assertNextResult(
+        resultListCopy,
+        "artifact_fetch",
+        ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
-            "name", "buck"
-            ),
-        resultMap.get(0).getArgs());
-
-    assertEquals("party", resultMap.get(1).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(1).getPhase());
-    assertEquals(
-        ImmutableMap.of(
-            "command_args", "arg1 arg2"
-            ),
-        resultMap.get(1).getArgs());
-
-    assertEquals("artifact_connect", resultMap.get(2).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(2).getPhase());
-
-    assertEquals("artifact_connect", resultMap.get(3).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(3).getPhase());
-
-    assertEquals("build", resultMap.get(4).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(4).getPhase());
-
-    assertEquals("artifact_fetch", resultMap.get(5).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(5).getPhase());
-
-    assertEquals("artifact_fetch", resultMap.get(6).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(6).getPhase());
+            "rule_key", "abc123",
+            "success", "true",
+            "cache_result", "HTTP_HIT"));
 
     // BuildRuleEvent.Started
-    assertEquals("//fake:rule", resultMap.get(7).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(7).getPhase());
-    assertEquals(ImmutableMap.of("rule_key", "abc123"), resultMap.get(7).getArgs());
+    assertNextResult(
+        resultListCopy,
+        "//fake:rule",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("rule_key", "abc123"));
 
-    assertEquals("fakeStep", resultMap.get(8).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(8).getPhase());
+    assertNextResult(
+        resultListCopy,
+        "fakeStep",
+        ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
 
-    assertEquals("fakeStep", resultMap.get(9).getName());
-    assertEquals(
+    assertNextResult(
+        resultListCopy,
+        "fakeStep",
+        ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "description", "I'm a Fake Step!",
-            "exit_code", "0"),
-        resultMap.get(9).getArgs());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(9).getPhase());
+            "exit_code", "0"));
 
-    // BuildRuleEvent.Finished
-    assertEquals("//fake:rule", resultMap.get(10).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(10).getPhase());
-    assertEquals(
+    assertNextResult(
+        resultListCopy,
+        "//fake:rule",
+        ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "cache_result", "miss",
-            "success_type", "BUILT_LOCALLY"),
-        resultMap.get(10).getArgs());
+            "success_type", "BUILT_LOCALLY"));
 
-    assertEquals("planning", resultMap.get(11).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(11).getPhase());
-    assertEquals(ImmutableMap.of("nefarious", "true"), resultMap.get(11).getArgs());
+    assertNextResult(
+        resultListCopy,
+        "planning",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("nefarious", "true"));
 
-    assertEquals("scheming", resultMap.get(12).getName());
-    assertEquals(ChromeTraceEvent.Phase.BEGIN, resultMap.get(12).getPhase());
-    assertEquals(ImmutableMap.of(), resultMap.get(12).getArgs());
+    assertNextResult(
+        resultListCopy,
+        "scheming",
+        ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
 
-    assertEquals("scheming", resultMap.get(13).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(13).getPhase());
-    assertEquals(ImmutableMap.of("success", "false"), resultMap.get(13).getArgs());
+    assertNextResult(
+        resultListCopy,
+        "scheming",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of("success", "false"));
 
-    assertEquals("planning", resultMap.get(14).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(14).getPhase());
-    assertEquals(ImmutableMap.of(), resultMap.get(14).getArgs());
+    assertNextResult(
+        resultListCopy,
+        "planning",
+        ChromeTraceEvent.Phase.END,
+        emptyArgs);
 
-    assertEquals("build", resultMap.get(15).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(15).getPhase());
+    assertNextResult(
+        resultListCopy,
+        "build",
+        ChromeTraceEvent.Phase.END,
+        emptyArgs);
 
-    assertEquals("party", resultMap.get(16).getName());
-    assertEquals(ChromeTraceEvent.Phase.END, resultMap.get(16).getPhase());
-    assertEquals(
+    assertNextResult(
+        resultListCopy,
+        "party",
+        ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "command_args", "arg1 arg2",
-            "daemon", "true"
-            ),
-        resultMap.get(16).getArgs());
+            "daemon", "true"));
+
+    assertEquals(0, resultListCopy.size());
 
     verify(context);
+  }
+
+  private static void assertNextResult(
+      List<ChromeTraceEvent> resultList,
+      String expectedName,
+      ChromeTraceEvent.Phase expectedPhase,
+      ImmutableMap<String, String> expectedArgs) {
+    assertTrue(resultList.size() > 0);
+    assertEquals(expectedName, resultList.get(0).getName());
+    assertEquals(expectedPhase, resultList.get(0).getPhase());
+    assertEquals(expectedArgs, resultList.get(0).getArgs());
+    resultList.remove(0);
   }
 
   @Test
