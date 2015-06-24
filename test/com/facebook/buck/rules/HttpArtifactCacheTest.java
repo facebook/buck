@@ -27,15 +27,12 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingOutputStream;
-import com.google.common.io.ByteStreams;
+import com.google.common.io.ByteSource;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.Request;
@@ -45,13 +42,14 @@ import com.squareup.okhttp.ResponseBody;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -62,68 +60,24 @@ public class HttpArtifactCacheTest {
   private static final BuckEventBus BUCK_EVENT_BUS =
       new BuckEventBus(new IncrementingFakeClock(), new BuildId());
   private static final HashFunction HASH_FUNCTION = Hashing.crc32();
+  private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
 
-  private byte[] createArtifact(
-      String key,
-      long length,
-      HashCode code,
-      String contents)
+  private ResponseBody createResponseBody(
+      ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata,
+      ByteSource source,
+      String data)
       throws IOException {
-    ByteArrayOutputStream byteSteam = new ByteArrayOutputStream();
-    DataOutputStream output = new DataOutputStream(byteSteam);
-    output.writeUTF(key);
-    output.writeLong(length);
-    output.write(contents.getBytes(Charsets.UTF_8));
-    output.write(code.asBytes());
-    return byteSteam.toByteArray();
-  }
 
-  private byte[] createArtifact(String key, HashCode code, String contents) throws IOException {
-    return createArtifact(
-        key,
-        contents.getBytes(Charsets.UTF_8).length,
-        code,
-        contents);
-  }
-
-  private byte[] createArtifact(String key, int length, String contents) throws IOException {
-    try (HashingOutputStream hasher =
-             new HashingOutputStream(HASH_FUNCTION, ByteStreams.nullOutputStream());
-        DataOutputStream output = new DataOutputStream(hasher)) {
-      output.writeUTF(key);
-      output.writeLong(length);
-      output.write(contents.getBytes(Charsets.UTF_8));
-      return createArtifact(
-          key,
-          length,
-          hasher.hash(),
-          contents);
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+         DataOutputStream dataOut = new DataOutputStream(out)) {
+      byte[] rawMetadata =
+          HttpArtifactCache.createMetadataHeader(ruleKeys, metadata, source, HASH_FUNCTION);
+      dataOut.writeInt(rawMetadata.length);
+      dataOut.write(rawMetadata);
+      dataOut.write(data.getBytes(Charsets.UTF_8));
+      return ResponseBody.create(OCTET_STREAM, out.toByteArray());
     }
-  }
-
-  private byte[] createArtifact(String key, String contents) throws IOException {
-    return createArtifact(
-        key,
-        contents.length(),
-        contents);
-  }
-
-  private ResponseBody createBody(String key, HashCode code, String contents) throws IOException {
-    return ResponseBody.create(
-        MediaType.parse("application/octet-stream"),
-        createArtifact(key, code, contents));
-  }
-
-  private ResponseBody createBody(String key, int length, String contents) throws IOException {
-    return ResponseBody.create(
-        MediaType.parse("application/octet-stream"),
-        createArtifact(key, length, contents));
-  }
-
-  private ResponseBody createBody(String key, String contents) throws IOException {
-    return ResponseBody.create(
-        MediaType.parse("application/octet-stream"),
-        createArtifact(key, contents));
   }
 
   @Test
@@ -175,15 +129,20 @@ public class HttpArtifactCacheTest {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
-                .code(HttpURLConnection.HTTP_OK)
                 .request(request)
                 .protocol(Protocol.HTTP_1_1)
-                .body(createBody(ruleKey.toString(), data))
+                .code(HttpURLConnection.HTTP_OK)
+                .body(
+                    createResponseBody(
+                        ImmutableSet.of(ruleKey),
+                        ImmutableMap.<String, String>of(),
+                        ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
+                        data))
                 .build();
           }
         };
     CacheResult result = cache.fetch(ruleKey, output);
-    assertEquals(CacheResult.Type.HIT, result.getType());
+    assertEquals(result.cacheError().or(""), CacheResult.Type.HIT, result.getType());
     assertEquals(Optional.of(data), filesystem.readFileIfItExists(output.toPath()));
     cache.close();
   }
@@ -204,12 +163,17 @@ public class HttpArtifactCacheTest {
             HASH_FUNCTION) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
-            assertEquals(new URL(url, "artifact/key/" + ruleKey.toString()), request.url());
+            assertEquals(new URL(url, "artifacts/key/" + ruleKey.toString()), request.url());
             return new Response.Builder()
-                .code(HttpURLConnection.HTTP_OK)
-                .protocol(Protocol.HTTP_1_1)
                 .request(request)
-                .body(createBody(ruleKey.toString(), "data"))
+                .protocol(Protocol.HTTP_1_1)
+                .code(HttpURLConnection.HTTP_OK)
+                .body(
+                    createResponseBody(
+                        ImmutableSet.of(ruleKey),
+                        ImmutableMap.<String, String>of(),
+                        ByteSource.wrap(new byte[0]),
+                        "data"))
                 .build();
           }
         };
@@ -234,10 +198,15 @@ public class HttpArtifactCacheTest {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
-                .code(HttpURLConnection.HTTP_OK)
-                .protocol(Protocol.HTTP_1_1)
                 .request(request)
-                .body(createBody(ruleKey.toString(), HashCode.fromInt(0), "test"))
+                .protocol(Protocol.HTTP_1_1)
+                .code(HttpURLConnection.HTTP_OK)
+                .body(
+                    createResponseBody(
+                        ImmutableSet.of(ruleKey),
+                        ImmutableMap.<String, String>of(),
+                        ByteSource.wrap(new byte[0]),
+                        "data"))
                 .build();
           }
         };
@@ -265,10 +234,15 @@ public class HttpArtifactCacheTest {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
-                .code(HttpURLConnection.HTTP_OK)
-                .protocol(Protocol.HTTP_1_1)
                 .request(request)
-                .body(createBody(ruleKey.toString(), 4, "more data than length"))
+                .protocol(Protocol.HTTP_1_1)
+                .code(HttpURLConnection.HTTP_OK)
+                .body(
+                    createResponseBody(
+                        ImmutableSet.of(ruleKey),
+                        ImmutableMap.<String, String>of(),
+                        ByteSource.wrap("more data than length".getBytes(Charsets.UTF_8)),
+                        "small"))
                 .build();
           }
         };
@@ -325,9 +299,29 @@ public class HttpArtifactCacheTest {
           @Override
           protected Response storeCall(Request request) throws IOException {
             hasCalled.set(true);
+
             Buffer buf = new Buffer();
             request.body().writeTo(buf);
-            assertArrayEquals(createArtifact(ruleKey.toString(), data), buf.readByteArray());
+            byte[] actualData = buf.readByteArray();
+
+            byte[] expectedData;
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+                 DataOutputStream dataOut = new DataOutputStream(out)) {
+              dataOut.write(HttpArtifactCache.createKeysHeader(ImmutableSet.of(ruleKey)));
+              byte[] metadata =
+                  HttpArtifactCache.createMetadataHeader(
+                      ImmutableSet.of(ruleKey),
+                      ImmutableMap.<String, String>of(),
+                      ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
+                      HASH_FUNCTION);
+              dataOut.writeInt(metadata.length);
+              dataOut.write(metadata);
+              dataOut.write(data.getBytes(Charsets.UTF_8));
+              expectedData = out.toByteArray();
+            }
+
+            assertArrayEquals(expectedData, actualData);
+
             return new Response.Builder()
                 .code(HttpURLConnection.HTTP_ACCEPTED)
                 .protocol(Protocol.HTTP_1_1)
@@ -335,13 +329,13 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    cache.store(ImmutableSet.of(ruleKey), ImmutableMap.<String, String>of(), output);
+    cache.storeImpl(ImmutableSet.of(ruleKey), ImmutableMap.<String, String>of(), output);
     assertTrue(hasCalled.get());
     cache.close();
   }
 
-  @Test
-  public void testStoreIOException() throws Exception {
+  @Test(expected = IOException.class)
+  public void testStoreIOException() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     File output = new File("output/file");
     filesystem.writeContentsToPath("data", output.toPath());
@@ -360,7 +354,7 @@ public class HttpArtifactCacheTest {
             throw new IOException();
           }
         };
-    cache.store(
+    cache.storeImpl(
         ImmutableSet.of(new RuleKey("00000000000000000000000000000000")),
         ImmutableMap.<String, String>of(),
         output);
@@ -390,10 +384,13 @@ public class HttpArtifactCacheTest {
           protected Response storeCall(Request request) throws IOException {
             Buffer buf = new Buffer();
             request.body().writeTo(buf);
-            List<String> parts = Splitter.on('/').splitToList(request.uri().toASCIIString());
-            RuleKey ruleKey = new RuleKey(parts.get(parts.size() - 1));
-            stored.add(ruleKey);
-            assertArrayEquals(createArtifact(ruleKey.toString(), data), buf.readByteArray());
+            try (DataInputStream in =
+                     new DataInputStream(new ByteArrayInputStream(buf.readByteArray()))) {
+              int keys = in.readInt();
+              for (int i = 0; i < keys; i++) {
+                stored.add(new RuleKey(in.readUTF()));
+              }
+            }
             return new Response.Builder()
                 .code(HttpURLConnection.HTTP_ACCEPTED)
                 .protocol(Protocol.HTTP_1_1)
@@ -401,7 +398,7 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    cache.store(ImmutableSet.of(ruleKey1, ruleKey2), ImmutableMap.<String, String>of(), output);
+    cache.storeImpl(ImmutableSet.of(ruleKey1, ruleKey2), ImmutableMap.<String, String>of(), output);
     assertThat(
         stored,
         Matchers.containsInAnyOrder(ruleKey1, ruleKey2));
@@ -413,6 +410,7 @@ public class HttpArtifactCacheTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final RuleKey otherRuleKey = new RuleKey("11111111111111111111111111111111");
+    final String data = "data";
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
@@ -426,10 +424,15 @@ public class HttpArtifactCacheTest {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
-                .code(HttpURLConnection.HTTP_OK)
-                .protocol(Protocol.HTTP_1_1)
                 .request(request)
-                .body(createBody(otherRuleKey.toString(), "test"))
+                .protocol(Protocol.HTTP_1_1)
+                .code(HttpURLConnection.HTTP_OK)
+                .body(
+                    createResponseBody(
+                        ImmutableSet.of(otherRuleKey),
+                        ImmutableMap.<String, String>of(),
+                        ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
+                        data))
                 .build();
           }
         };
@@ -437,6 +440,44 @@ public class HttpArtifactCacheTest {
     CacheResult result = cache.fetch(ruleKey, output);
     assertEquals(CacheResult.Type.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
+    cache.close();
+  }
+
+  @Test
+  public void testFetchMetadata() throws Exception {
+    File output = new File("output/file");
+    final String data = "test";
+    final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    final ImmutableMap<String, String> metadata = ImmutableMap.of("some", "metadata");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    HttpArtifactCache cache =
+        new HttpArtifactCache(
+            "http",
+            null,
+            null,
+            new URL("http://localhost:8080"),
+            /* doStore */ true,
+            filesystem,
+            BUCK_EVENT_BUS,
+            HASH_FUNCTION) {
+          @Override
+          protected Response fetchCall(Request request) throws IOException {
+            return new Response.Builder()
+                .request(request)
+                .protocol(Protocol.HTTP_1_1)
+                .code(HttpURLConnection.HTTP_OK)
+                .body(
+                    createResponseBody(
+                        ImmutableSet.of(ruleKey),
+                        metadata,
+                        ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
+                        data))
+                .build();
+          }
+        };
+    CacheResult result = cache.fetch(ruleKey, output);
+    assertEquals(CacheResult.Type.HIT, result.getType());
+    assertEquals(metadata, result.getMetadata());
     cache.close();
   }
 

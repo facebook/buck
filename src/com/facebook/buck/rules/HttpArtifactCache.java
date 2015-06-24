@@ -20,13 +20,17 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.hash.HasherInputStream;
+import com.facebook.buck.util.hash.HasherOutputStream;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
-import com.google.common.hash.HashingInputStream;
-import com.google.common.hash.HashingOutputStream;
+import com.google.common.hash.Hasher;
+import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -34,8 +38,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
-import org.apache.commons.compress.utils.BoundedInputStream;
-
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -47,6 +50,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Map;
 import java.util.Set;
 
 import okio.BufferedSink;
@@ -91,11 +95,6 @@ public class HttpArtifactCache implements ArtifactCache {
     this.hashFunction = hashFunction;
   }
 
-  private Request.Builder createRequestBuilder(String key) throws IOException {
-    return new Request.Builder()
-        .url(new URL(url, "artifact/key/" + key));
-  }
-
   protected Response fetchCall(Request request) throws IOException {
     return fetchClient.newCall(request).execute();
   }
@@ -117,7 +116,8 @@ public class HttpArtifactCache implements ArtifactCache {
 
   public CacheResult fetchImpl(RuleKey ruleKey, File file) throws IOException {
     Request request =
-        createRequestBuilder(ruleKey.toString())
+        new Request.Builder()
+            .url(new URL(url, "artifacts/key/" + ruleKey.toString()))
             .get()
             .build();
     Response response = fetchCall(request);
@@ -135,8 +135,15 @@ public class HttpArtifactCache implements ArtifactCache {
       return CacheResult.error(name, msg);
     }
 
-    // The hash code shipped with the artifact to/from the cache.
-    HashCode expectedHashCode, actualHashCode;
+    // Create a hasher to be used to generate a hash of the metadata and input.  We'll use
+    // this to compare against the embedded checksum.
+    Hasher hasher = hashFunction.newHasher();
+
+    // The metadata that we'll re-materialize from the raw metadata header.
+    ImmutableMap<String, String> metadata;
+
+    // The expected hash code embedded in the returned data.
+    HashCode expectedHashCode;
 
     // Setup a temporary file, which sits next to the destination, to write to and
     // make sure all parent dirs exist.
@@ -147,49 +154,67 @@ public class HttpArtifactCache implements ArtifactCache {
         path.getFileName().toString(),
         ".tmp");
 
-    // Open the stream to server just long enough to read the hash code and artifact.
-    try (InputStream raw = response.body().byteStream();
-         HashingInputStream hasher = new HashingInputStream(hashFunction, raw);
-         DataInputStream input = new DataInputStream(hasher)) {
+    // Open the input stream from the server and start processing data.
+    try (DataInputStream input = new DataInputStream(response.body().byteStream())) {
 
-      // Read the key we packaged with the artifact.  This should *always* match the key we
-      // used to fetch with, unless there is something significantly wrong with the cache.
-      String key = input.readUTF();
-      if (!key.equals(ruleKey.toString())) {
-        String msg = "incorrect key name";
-        reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
-        return CacheResult.error(name, msg);
+      // Read the size of a the metadata, and use that to build a input stream to read and
+      // process the rest of it.
+      int metadataSize = input.readInt();
+      byte[] rawMetadata = new byte[metadataSize];
+      ByteStreams.readFully(input, rawMetadata);
+      try (InputStream rawMetadataIn = new ByteArrayInputStream(rawMetadata)) {
+
+        // The first part of the metadata needs to be included in the hash.
+        try (DataInputStream metadataIn =
+                 new DataInputStream(new HasherInputStream(hasher, rawMetadataIn))) {
+
+          // Read in the rule keys that stored this artifact, and add them to the hash we're
+          // building up.
+          Set<RuleKey> ruleKeys = Sets.newHashSet();
+          int size = metadataIn.readInt();
+          for (int i = 0; i < size; i++) {
+            ruleKeys.add(new RuleKey(metadataIn.readUTF()));
+          }
+
+          // Verify that we were one of the rule keys that stored this artifact.
+          if (!ruleKeys.contains(ruleKey)) {
+            readTillEnd(response);
+            String msg = "incorrect key name";
+            reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
+            return CacheResult.error(name, msg);
+          }
+
+          // Read in the actual metadata map, and add it the hash.
+          ImmutableMap.Builder<String, String> metadataBuilder = ImmutableMap.builder();
+          size = metadataIn.readInt();
+          for (int i = 0; i < size; i++) {
+            String key = metadataIn.readUTF();
+            int valSize = metadataIn.readInt();
+            byte[] val = new byte[valSize];
+            ByteStreams.readFully(metadataIn, val);
+            metadataBuilder.put(key, new String(val, Charsets.UTF_8));
+          }
+          metadata = metadataBuilder.build();
+        }
+
+        // Next, read in the embedded expected checksum, which should be the last byte in
+        // the metadata header.
+        byte[] hashCodeBytes = new byte[hashFunction.bits() / Byte.SIZE];
+        ByteStreams.readFully(rawMetadataIn, hashCodeBytes);
+        expectedHashCode = HashCode.fromBytes(hashCodeBytes);
       }
 
-      // First, extract the size of the file data portion, which we put in the beginning of
-      // the artifact.
-      long length = input.readLong();
-
-      // Now, write the remaining response data to the temp file, while grabbing the hash.
-      try (BoundedInputStream boundedInput = new BoundedInputStream(input, length);
+      // The remaining data is the payload, which we write to the created file, and also include
+      // in our verification checksum.
+      try (InputStream payload = new HasherInputStream(hasher, response.body().byteStream());
            OutputStream output = projectFilesystem.newFileOutputStream(temp)) {
-        ByteStreams.copy(boundedInput, output);
-      }
-
-      // Compute the hash now that we've processed the relevant parts of the artifact -- only
-      // the expected hash remains.
-      actualHashCode = hasher.hash();
-
-      // Lastly, extract the hash code from the end of the request data.
-      byte[] hashCodeBytes = new byte[hashFunction.bits() / Byte.SIZE];
-      ByteStreams.readFully(raw, hashCodeBytes);
-      expectedHashCode = HashCode.fromBytes(hashCodeBytes);
-
-      // We should be at the end of output -- verify this.  Also, we could just try to read a
-      // single byte here, instead of all remaining input, but some network stack
-      // implementations require that we exhaust the input stream before the connection can be
-      // reusable.
-      if (readTillEnd(input) != 0) {
-        String msg = "unexpected end of input";
-        reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
-        return CacheResult.error(name, msg);
+        ByteStreams.copy(payload, output);
       }
     }
+
+    // Compute the hash now that we've processed the relevant parts of the artifact -- only
+    // the expected hash remains.
+    HashCode actualHashCode = hasher.hash();
 
     // Now form the checksum on the file we got and compare it to the checksum form the
     // the HTTP header.  If it's incorrect, log this and return a miss.
@@ -204,7 +229,7 @@ public class HttpArtifactCache implements ArtifactCache {
     projectFilesystem.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
 
     LOGGER.info("fetch(%s, %s): cache hit", url, ruleKey);
-    return CacheResult.hit(name);
+    return CacheResult.hit(name, metadata);
   }
 
   @Override
@@ -222,63 +247,117 @@ public class HttpArtifactCache implements ArtifactCache {
     return storeClient.newCall(request).execute();
   }
 
-  private byte[] writeUTF(String str) throws IOException {
-    try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-         DataOutputStream out = new DataOutputStream(bytes)) {
-      out.writeUTF(str);
-      return bytes.toByteArray();
+  @VisibleForTesting
+  protected static byte[] createKeysHeader(ImmutableSet<RuleKey> ruleKeys) throws IOException {
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+         DataOutputStream data = new DataOutputStream(out)) {
+      data.writeInt(ruleKeys.size());
+      for (RuleKey ruleKey : ruleKeys) {
+        data.writeUTF(ruleKey.toString());
+      }
+      return out.toByteArray();
     }
   }
 
-  public void storeImpl(final RuleKey ruleKey, final File file) throws IOException {
-    final byte[] keyBytes = writeUTF(ruleKey.toString());
+  @VisibleForTesting
+  protected static byte[] createMetadataHeader(
+      ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata,
+      ByteSource data,
+      HashFunction hashFunction)
+      throws IOException {
 
-    Request request = createRequestBuilder(ruleKey.toString())
-        .put(
-            new RequestBody() {
+    ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
+    Hasher hasher = hashFunction.newHasher();
+    try (DataOutputStream out = new DataOutputStream(new HasherOutputStream(hasher, rawOut))) {
+
+      // Write the rule keys to the raw metadata, including them in the end-to-end checksum.
+      out.writeInt(ruleKeys.size());
+      for (RuleKey ruleKey : ruleKeys) {
+        out.writeUTF(ruleKey.toString());
+      }
+
+      // Write out the metadata map to the raw metadata, including it in the end-to-end checksum.
+      out.writeInt(metadata.size());
+      for (Map.Entry<String, String> ent : metadata.entrySet()) {
+        out.writeUTF(ent.getKey());
+        byte[] val = ent.getValue().getBytes(Charsets.UTF_8);
+        out.writeInt(val.length);
+        out.write(val);
+      }
+    }
+
+    // Add the file data contents to the end-to-end checksum.
+    data.copyTo(new HasherOutputStream(hasher, ByteStreams.nullOutputStream()));
+
+    // Finish the checksum, adding it to the raw metadata
+    rawOut.write(hasher.hash().asBytes());
+
+    // Finally, base64 encode the raw bytes to make usable in a HTTP header.
+    return rawOut.toByteArray();
+  }
+
+  protected void storeImpl(
+      ImmutableSet<RuleKey> ruleKeys,
+      final ImmutableMap<String, String> metadata,
+      final File file)
+      throws IOException {
+
+    // Build the request, hitting the multi-key endpoint.
+    Request.Builder builder = new Request.Builder();
+    builder.url(new URL(url, "artifacts/key"));
+
+    // Construct the raw keys blob;
+    final byte[] rawKeys = createKeysHeader(ruleKeys);
+
+    // Construct the raw metadata blob;
+    final byte[] rawMetadata =
+        createMetadataHeader(
+            ruleKeys,
+            metadata,
+            new ByteSource() {
               @Override
-              public MediaType contentType() {
-                return OCTET_STREAM;
+              public InputStream openStream() throws IOException {
+                return projectFilesystem.newFileInputStream(file.toPath());
               }
+            },
+            hashFunction);
 
-              @Override
-              public long contentLength() throws IOException {
-                return
-                    keyBytes.length +
-                    Long.SIZE / Byte.SIZE +
-                    projectFilesystem.getFileSize(file.toPath()) +
-                    hashFunction.bits() / Byte.SIZE;
+    // Wrap the file into a `RequestBody` which uses `ProjectFilesystem`.
+    builder.put(
+        new RequestBody() {
+          @Override
+          public MediaType contentType() {
+            return OCTET_STREAM;
+          }
+
+          @Override
+          public long contentLength() throws IOException {
+            return
+                rawKeys.length +
+                Integer.SIZE / Byte.SIZE +
+                rawMetadata.length +
+                projectFilesystem.getFileSize(file.toPath());
+          }
+
+          @Override
+          public void writeTo(BufferedSink bufferedSink) throws IOException {
+            try (DataOutputStream output = new DataOutputStream(bufferedSink.outputStream())) {
+              output.write(rawKeys);
+              output.writeInt(rawMetadata.length);
+              output.write(rawMetadata);
+              try (InputStream input = projectFilesystem.newFileInputStream(file.toPath())) {
+                ByteStreams.copy(input, output);
               }
+            }
+          }
+        });
 
-              @Override
-              public void writeTo(BufferedSink sink) throws IOException {
-                try (InputStream fileInput = projectFilesystem.newFileInputStream(file.toPath());
-                     OutputStream raw = sink.outputStream();
-                     HashingOutputStream hasher = new HashingOutputStream(hashFunction, raw);
-                     DataOutputStream output = new DataOutputStream(hasher)) {
-
-                  // Write the rule key in the stored artifact for verification in the face of
-                  // incorrect objects.
-                  output.write(keyBytes);
-
-                  // Write the artifact size so fetching can easily know where the checksum is.
-                  output.writeLong(projectFilesystem.getFileSize(file.toPath()));
-
-                  // Write the artifact bytes.
-                  ByteStreams.copy(fileInput, output);
-
-                  // Write the checksum to the raw output stream.
-                  raw.write(hasher.hash().asBytes());
-                }
-
-              }
-            })
-        .build();
-
+    // Dispatch the store operation and verify it succeeded.
+    Request request = builder.build();
     Response response = storeCall(request);
-
     if (response.code() != HttpURLConnection.HTTP_ACCEPTED) {
-      reportFailure("store(%s, %s): unexpected response: %d", url, ruleKey, response.code());
+      reportFailure("store(%s, %s): unexpected response: %d", url, ruleKeys, response.code());
     }
   }
 
@@ -291,18 +370,16 @@ public class HttpArtifactCache implements ArtifactCache {
     if (!isStoreSupported()) {
       return;
     }
-    for (RuleKey ruleKey : ruleKeys) {
-      try {
-        storeImpl(ruleKey, output);
-      } catch (IOException e) {
-        reportFailure(
-            e,
-            "store(%s, %s): %s: %s",
-            url,
-            ruleKey,
-            e.getClass().getName(),
-            e.getMessage());
-      }
+    try {
+      storeImpl(ruleKeys, metadata, output);
+    } catch (IOException e) {
+      reportFailure(
+          e,
+          "store(%s, %s): %s: %s",
+          url,
+          ruleKeys,
+          e.getClass().getName(),
+          e.getMessage());
     }
   }
 
