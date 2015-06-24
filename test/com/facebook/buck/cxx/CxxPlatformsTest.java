@@ -16,7 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -76,5 +79,66 @@ public class CxxPlatformsTest {
             CxxPlatformUtils.DEFAULT_PLATFORM),
         equalTo(
             CxxPlatformUtils.DEFAULT_PLATFORM));
+  }
+
+  @Test
+  public void combinesPreprocessAndCompileFlagsIsDefault() {
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx", ImmutableMap.of(
+            "cflags", "-Wtest",
+            "cxxflags", "-Wexample",
+            "cppflags", "-Wp",
+            "cxxppflags", "-Wxp"));
+
+    CxxBuckConfig buckConfig =
+        new CxxBuckConfig(new FakeBuckConfig(sections));
+
+    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+
+    assertThat(
+        platform.getCflags(),
+        hasItem("-Wtest"));
+    assertThat(
+        platform.getCxxflags(),
+        hasItem("-Wexample"));
+    assertThat(
+        platform.getCppflags(),
+        hasItems("-Wtest", "-Wp"));
+    assertThat(
+        platform.getCxxppflags(),
+        hasItems("-Wexample", "-Wxp"));
+  }
+
+  @Test
+  public void compilerOnlyFlagsNotAddedToPreprocessor() {
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx", ImmutableMap.of(
+            "compiler_only_flags", "-Wtest",
+            "cppflags", "-Wp",
+            "cxxppflags", "-Wxp"));
+
+    CxxBuckConfig buckConfig =
+        new CxxBuckConfig(new FakeBuckConfig(sections));
+
+    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+
+    assertThat(
+        platform.getCflags(),
+        hasItem("-Wtest"));
+    assertThat(
+        platform.getCxxflags(),
+        hasItem("-Wtest"));
+    assertThat(
+        platform.getCppflags(),
+        hasItem("-Wp"));
+    assertThat(
+        platform.getCppflags(),
+        not(hasItem("-Wtest")));
+    assertThat(
+        platform.getCxxppflags(),
+        hasItem("-Wxp"));
+    assertThat(
+        platform.getCxxppflags(),
+        not(hasItem("-Wtest")));
   }
 }

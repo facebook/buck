@@ -46,6 +46,7 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LEX_FLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_YACC_FLAGS = ImmutableList.of("-y");
+  private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
 
   @VisibleForTesting
   static final DebugPathSanitizer DEFAULT_DEBUG_PATH_SANITIZER =
@@ -206,12 +207,17 @@ public class CxxPlatforms {
     ImmutableList<String> asflags = config.getFlags("asflags").or(DEFAULT_ASFLAGS);
     ImmutableList<String> cflags = config.getFlags("cflags").or(DEFAULT_CFLAGS);
     ImmutableList<String> cxxflags = config.getFlags("cxxflags").or(DEFAULT_CXXFLAGS);
+    ImmutableList<String> compilerOnlyFlags = config.getFlags("compiler_only_flags")
+        .or(DEFAULT_COMPILER_ONLY_FLAGS);
+
     builder
         .addAllAsflags(asflags)
         .addAllAsppflags(config.getFlags("asppflags").or(DEFAULT_ASPPFLAGS))
         .addAllAsppflags(asflags)
         .addAllCflags(cflags)
+        .addAllCflags(compilerOnlyFlags)
         .addAllCxxflags(cxxflags)
+        .addAllCxxflags(compilerOnlyFlags)
         .addAllCppflags(config.getFlags("cppflags").or(DEFAULT_CPPFLAGS))
         .addAllCppflags(cflags)
         .addAllCxxppflags(config.getFlags("cxxppflags").or(DEFAULT_CXXPPFLAGS))
