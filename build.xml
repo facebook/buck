@@ -784,7 +784,7 @@
   <target name="checkstyle">
     <taskdef resource="checkstyletask.properties"
            classpathref="checkstyle-classpath"/>
-    <checkstyle config="checkstyle.xml">
+    <checkstyle config="checkstyle.xml" maxWarnings="0">
       <fileset dir="${src.dir}">
         <include name="**/*.java"/>
       </fileset>
