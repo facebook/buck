@@ -80,8 +80,8 @@
     <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="immutables/value-2.0.11.jar" />
     <include name="infer-annotations/infer-annotations-1.5.jar" />
-    <include name="jacoco/org.jacoco.core-0.7.2.201409121644.jar" />
-    <include name="jacoco/org.jacoco.report-0.7.2.201409121644.jar" />
+    <include name="jacoco/org.jacoco.core-0.7.5.201505241946.jar" />
+    <include name="jacoco/org.jacoco.report-0.7.5.201505241946.jar" />
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
     <include name="jimfs/jimfs-1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
@@ -529,8 +529,8 @@
 
   <target name="report-generator-jar" depends="compile">
     <jar destfile="${build.dir}/report-generator.jar">
-      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.7.2.201409121644.jar"/>
-      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.2.201409121644.jar"/>
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.7.5.201505241946.jar"/>
+      <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.5.201505241946.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/asm/asm-debug-all-5.0.3.jar"/>
       <fileset dir="${classes.dir}">
           <include name="com/facebook/buck/java/coverage/ReportGenerator.class"/>

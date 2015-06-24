@@ -43,8 +43,8 @@
 	<classpathentry kind="lib" path="third-party/java/jackson/jackson-core-2.0.5.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jackson/jackson-databind-2.0.5.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jackson/jackson-datatype-jdk7-2.5.0.jar"/>
-	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.core-0.7.2.201409121644.jar"/>
-	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.report-0.7.2.201409121644.jar"/>
+	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.core-0.7.5.201505241946.jar"/>
+	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.report-0.7.5.201505241946.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jetty/jetty-all-9.2.10.v20150310.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jsr/javax.inject-1.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jsr/jsr305.jar"/>

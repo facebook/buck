@@ -14,14 +14,14 @@ java_library(
 
 prebuilt_jar(
   name = 'core',
-  binary_jar = 'org.jacoco.core-0.7.2.201409121644.jar',
-  source_jar = 'org.jacoco.core-0.7.2.201409121644-sources.jar',
+  binary_jar = 'org.jacoco.core-0.7.5.201505241946.jar',
+  source_jar = 'org.jacoco.core-0.7.5.201505241946-sources.jar',
 )
 
 prebuilt_jar(
   name = 'report',
-  binary_jar = 'org.jacoco.report-0.7.2.201409121644.jar',
-  source_jar = 'org.jacoco.report-0.7.2.201409121644-sources.jar',
+  binary_jar = 'org.jacoco.report-0.7.5.201505241946.jar',
+  source_jar = 'org.jacoco.report-0.7.5.201505241946-sources.jar',
 )
 
 prebuilt_jar(
