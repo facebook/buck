@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 
 import okio.BufferedSink;
+import okio.BufferedSource;
 
 public class HttpArtifactCache implements ArtifactCache {
 
@@ -342,13 +343,11 @@ public class HttpArtifactCache implements ArtifactCache {
 
           @Override
           public void writeTo(BufferedSink bufferedSink) throws IOException {
-            try (DataOutputStream output = new DataOutputStream(bufferedSink.outputStream())) {
-              output.write(rawKeys);
-              output.writeInt(rawMetadata.length);
-              output.write(rawMetadata);
-              try (InputStream input = projectFilesystem.newFileInputStream(file.toPath())) {
-                ByteStreams.copy(input, output);
-              }
+            bufferedSink.write(rawKeys);
+            bufferedSink.writeInt(rawMetadata.length);
+            bufferedSink.write(rawMetadata);
+            try (BufferedSource fileSource = projectFilesystem.newSource(file.toPath())) {
+              bufferedSink.writeAll(fileSource);
             }
           }
         });

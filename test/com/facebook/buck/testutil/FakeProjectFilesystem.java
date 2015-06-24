@@ -74,6 +74,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import okio.Buffer;
+import okio.BufferedSource;
+
 // TODO(natthu): Implement methods that throw UnsupportedOperationException.
 public class FakeProjectFilesystem extends ProjectFilesystem {
 
@@ -515,11 +518,24 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public InputStream newFileInputStream(Path pathRelativeToProjectRoot)
     throws IOException {
+    byte[] contents = fileContents.get(normalizePathToProjectRoot(pathRelativeToProjectRoot));
+    return new ByteArrayInputStream(contents);
+  }
+
+
+  @Override
+  public BufferedSource newSource(Path pathRelativeToProjectRoot) throws IOException {
+    Buffer buffer = new Buffer();
+    buffer.write(fileContents.get(normalizePathToProjectRoot(pathRelativeToProjectRoot)));
+    return buffer;
+  }
+
+  private Path normalizePathToProjectRoot(Path pathRelativeToProjectRoot)
+    throws NoSuchFileException {
     if (!exists(pathRelativeToProjectRoot)) {
       throw new NoSuchFileException(pathRelativeToProjectRoot.toString());
     }
-    Path normalizedPathToProjectRoot = MorePaths.normalize(pathRelativeToProjectRoot);
-    return new ByteArrayInputStream(fileContents.get(normalizedPathToProjectRoot));
+    return MorePaths.normalize(pathRelativeToProjectRoot);
   }
 
   @Override

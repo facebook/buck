@@ -12,6 +12,7 @@ java_library(
     '//src/com/facebook/buck/zip:stream',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
+    '//third-party/java/okio:okio',
   ],
   visibility = [ 'PUBLIC' ],
 )
