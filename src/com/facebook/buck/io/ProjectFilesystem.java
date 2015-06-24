@@ -840,6 +840,8 @@ public class ProjectFilesystem {
 
       for (Map.Entry<Path, String> fileContentsEntry : additionalFileContents.entrySet()) {
         CustomZipEntry entry = new CustomZipEntry(fileContentsEntry.getKey().toString());
+        // We want deterministic ZIPs, so avoid mtimes.
+        entry.setTime(0);
         zip.putNextEntry(entry);
         try (InputStream stream =
                  new ByteArrayInputStream(fileContentsEntry.getValue().getBytes(Charsets.UTF_8))) {

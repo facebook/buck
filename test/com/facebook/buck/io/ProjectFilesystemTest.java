@@ -488,7 +488,10 @@ public class ProjectFilesystemTest {
 
     // Archive it into a zipfile using `ProjectFileSystem.createZip`.
     File zipFile = new File(tmp.getRoot().toPath().toString() + "/test.zip");
-    filesystem.createZip(ImmutableList.of(exe.toPath()), zipFile);
+    filesystem.createZip(
+        ImmutableList.of(exe.toPath()),
+        zipFile,
+        ImmutableMap.of(Paths.get("additional"), "info"));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime((1 << 21) | (1 << 16)));
