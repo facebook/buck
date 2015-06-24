@@ -11,26 +11,68 @@
 
 <h2>Request types</h2>
 
-Buck makes two types of requests to the cache:
+<p>
+  Buck makes two types of requests to the cache. Note that while there is a distinction between
+  metadata and data, the two are combined in the same way in both types of request, so they can be
+  stored as a single blob by the server. However, while metadata is unique to each set of keys, data
+  can be duplicated between keys, so storing them separately allows for deduplication.
+</p>
 
-<h3><code>GET /artifact/key/[key]</code></h3>
+<h3>Fetch an artifact from the cache.</h3>
 
-<p>Fetch an artifact from the cache.</p>
+<p><code>GET /artifacts/key/[key]</code></p>
 
-<p>If the artifact is cached, the response should have status 200, content-type
-{sp}<code>application/octet-stream</code>, and the artifact data as the response
-body.</p>
+<ul>
+  <li>
+    <p>If the artifact is cached, the response should be:</p>
+    <ul>
+      <li><p>status <code>200</code></p></li>
+      <li><p>content-type <code>application/octet-stream</code></p></li>
+    </ul>
+    <ol>
+      <li>
+        <p>
+          32 bit big endian signed integer denoting the number of length in bytes of the metadata
+        </p>
+      </li>
+      <li><p>(1) bytes of metadata</p></li>
+      <li><p>The artifact's data</p></li>
+    </ol>
+  </li>
+  <li>
+    <p>If the artifact is not cached, the response should be:</p>
+    <ul>
+      <li><p>status <code>404</code></p></li>
+    </ul>
+  </li>
 
-<p>If the artifact is not cached, the response should have status 404.</p>
+</ul>
 
-<h3><code>PUT /artifact/key/[key]</code></h3>
+<h3>Store an artifact in the cache.</h3>
 
-<p>Store one or more artifacts in the cache.</p>
+<p><code>PUT /artifacts/key</code></p>
 
-<p>The request will have content-type {sp}<code>application/octet-stream</code>
-{sp}and the artifact data as the request body.</p>
+<ul>
+  <li><p>status <code>202</code></p></li>
+  <li><p>content-type <code>application/octet-stream</code></p></li>
+</ul>
+<ol>
+  <li><p>32 bit big endian signed integer denoting the number of keys</p></li>
+  <li>
+    <p>
+      (1) strings, one for each key. Each string is represented as a 16 bit big endian unsigned
+      integer followed by the bytes of the string encoded in UTF-8
+    </p>
+  </li>
+  <li>
+    <p>
+      32 bit big endian signed integer denoting the number of length in bytes of the metadata
+    </p>
+  </li>
+  <li><p>(3) bytes of metadata</p></li>
+  <li>The artifact's data</li>
+</ol>
 
-<p>The response should have status 202.</p>
     {/param}
   {/call}
 {/template}
