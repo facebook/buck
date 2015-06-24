@@ -16,10 +16,11 @@
 
 package com.facebook.buck.cli.bootstrapper;
 
+import java.util.concurrent.Callable;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
-public final class ConsoleHandler extends Handler {
+public final class ConsoleHandler extends Handler implements Callable<Handler> {
   private static final Class<?> CONSOLE_HANDLER_CLASS =
       ClassLoaderBootstrapper.loadClass("com.facebook.buck.log.ConsoleHandler");
 
@@ -42,5 +43,10 @@ public final class ConsoleHandler extends Handler {
   @Override
   public void close() throws SecurityException {
     inner.close();
+  }
+
+  @Override
+  public Handler call() {
+    return inner;
   }
 }
