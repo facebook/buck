@@ -95,7 +95,6 @@ public class TestResultSummary {
     return testName;
   }
 
-  @JsonIgnore
   public String getTestCaseName() {
     return testCaseName;
   }
