@@ -220,7 +220,7 @@ public class Jsr199JavacIntegrationTest {
             MockJavac.class));
     executionContext.getClassLoaderCache().injectClassLoader(
         ClassLoader.getSystemClassLoader(),
-        ImmutableList.of(fakeJavacJar),
+        ImmutableList.of(fakeJavacJar.toUri().toURL()),
         mockClassLoader);
 
     Jsr199Javac javac = createJavac(

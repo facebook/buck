@@ -19,39 +19,25 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertSame;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ClassLoaderCacheTest {
   private static final String DUMMYDIR = "d7b9d9fd-1a83-4c76-8981-52deb0fa4d17";
 
-  private static final Function<Path, URL> PATH_TO_URL = new Function<Path, URL>() {
-      @Override
-      public URL apply(Path p) {
-        try {
-          return p.toUri().toURL();
-        } catch (MalformedURLException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    };
-
   @Test
   public void cacheLoaderReturnsSameClassLoader() throws Exception {
     try (ClassLoaderCache clc = new ClassLoaderCache()) {
     ClassLoader dummyParent = ClassLoader.getSystemClassLoader();
-    ImmutableList<Path> dummyClassPath = ImmutableList.of(
-        Paths.get(DUMMYDIR, "foo"),
-        Paths.get(DUMMYDIR, "bar"));
+    ImmutableList<URL> dummyClassPath = ImmutableList.of(
+        Paths.get(DUMMYDIR, "foo").toUri().toURL(),
+        Paths.get(DUMMYDIR, "bar").toUri().toURL());
     ClassLoader cl1 = clc.getClassLoaderForClassPath(dummyParent, dummyClassPath);
     ClassLoader cl2 = clc.getClassLoaderForClassPath(dummyParent, dummyClassPath);
 
@@ -59,9 +45,7 @@ public class ClassLoaderCacheTest {
     assertSame(cl1, cl2);
 
     // And the class loader should contain the URLs we supplied
-    URL[] dummyUrls = FluentIterable.from(dummyClassPath)
-        .transform(PATH_TO_URL)
-        .toArray(URL.class);
+    URL[] dummyUrls = FluentIterable.from(dummyClassPath).toArray(URL.class);
 
     assertArrayEquals(
         dummyUrls,

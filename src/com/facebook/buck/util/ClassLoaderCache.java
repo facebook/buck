@@ -17,16 +17,12 @@
 package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,24 +34,13 @@ import javax.annotation.Nullable;
  */
 public final class ClassLoaderCache implements AutoCloseable {
 
-  private static final Function<Path, URL> PATH_TO_URL = new Function<Path, URL>() {
-      @Override
-      public URL apply(Path p) {
-        try {
-          return p.toUri().toURL();
-        } catch (MalformedURLException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    };
-
-  private final Map<ClassLoader, Map<ImmutableList<Path>, ClassLoader>> cache = new HashMap<>();
+  private final Map<ClassLoader, Map<ImmutableList<URL>, ClassLoader>> cache = new HashMap<>();
 
   private int referenceCount = 1;
 
-  private synchronized Map<ImmutableList<Path>, ClassLoader> getCacheForParent(
+  private synchronized Map<ImmutableList<URL>, ClassLoader> getCacheForParent(
       @Nullable ClassLoader parentClassLoader) {
-    Map<ImmutableList<Path>, ClassLoader> cacheForParent =
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
         cache.get(parentClassLoader);
 
     if (cacheForParent == null) {
@@ -68,16 +53,14 @@ public final class ClassLoaderCache implements AutoCloseable {
 
   public synchronized ClassLoader getClassLoaderForClassPath(
       @Nullable ClassLoader parentClassLoader,
-      ImmutableList<Path> classPath) {
+      ImmutableList<URL> classPath) {
 
-    Map<ImmutableList<Path>, ClassLoader> cacheForParent =
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
         getCacheForParent(parentClassLoader);
 
     ClassLoader classLoader = cacheForParent.get(classPath);
     if (classLoader == null) {
-      URL[] urls = FluentIterable.from(classPath)
-          .transform(PATH_TO_URL)
-          .toArray(URL.class);
+      URL[] urls = classPath.toArray(new URL[classPath.size()]);
       classLoader = new URLClassLoader(urls, parentClassLoader);
       cacheForParent.put(classPath, classLoader);
     }
@@ -88,9 +71,9 @@ public final class ClassLoaderCache implements AutoCloseable {
   @VisibleForTesting
   public synchronized void injectClassLoader(
       @Nullable ClassLoader parentClassLoader,
-      ImmutableList<Path> classPath,
+      ImmutableList<URL> classPath,
       ClassLoader injectedClassLoader) {
-    Map<ImmutableList<Path>, ClassLoader> cacheForParent =
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
         getCacheForParent(parentClassLoader);
 
     cacheForParent.put(classPath, injectedClassLoader);
@@ -110,7 +93,7 @@ public final class ClassLoaderCache implements AutoCloseable {
 
     Optional<IOException> caughtEx = Optional.absent();
 
-    for (Map<ImmutableList<Path>, ClassLoader> cacheForParent : cache.values()) {
+    for (Map<ImmutableList<URL>, ClassLoader> cacheForParent : cache.values()) {
       for (ClassLoader cl : cacheForParent.values()) {
         try {
           if (cl instanceof URLClassLoader) {

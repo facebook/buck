@@ -28,6 +28,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Ordering;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
@@ -36,6 +38,17 @@ import java.util.Set;
 import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
+
+  private static final Function<Path, URL> PATH_TO_URL = new Function<Path, URL>() {
+    @Override
+    public URL apply(Path p) {
+      try {
+        return p.toUri().toURL();
+      } catch (MalformedURLException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  };
 
   private final String compilerClassName;
   private final Iterable<SourcePath> classpath;
@@ -75,7 +88,9 @@ public class JarBackedJavac extends Jsr199Javac {
                     return paths;
                   }
                 })
-            .toSortedSet(Ordering.natural())
+            .transform(PATH_TO_URL)
+            // Use "toString" since URL.equals does DNS lookups.
+            .toSortedSet(Ordering.usingToString())
             .asList());
     try {
       return (JavaCompiler) compilerClassLoader.loadClass(compilerClassName).newInstance();
