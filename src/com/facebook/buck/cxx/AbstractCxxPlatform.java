@@ -46,10 +46,10 @@ interface AbstractCxxPlatform {
   Tool getAspp();
   List<String> getAsppflags();
 
-  Tool getCc();
+  Compiler getCc();
   List<String> getCflags();
 
-  Tool getCxx();
+  Compiler getCxx();
   List<String> getCxxflags();
 
   Tool getCpp();

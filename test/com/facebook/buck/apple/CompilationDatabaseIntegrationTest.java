@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -220,6 +221,10 @@ public class CompilationDatabaseIntegrationTest {
       commandArgs.add(sdkRoot + framework);
     }
 
+    commandArgs.add("-Xclang");
+    commandArgs.add("-fdebug-compilation-dir");
+    commandArgs.add("-Xclang");
+    commandArgs.add("." + Strings.repeat("/", 249));
     commandArgs.add("-x");
     commandArgs.add(language);
     commandArgs.add("-c");

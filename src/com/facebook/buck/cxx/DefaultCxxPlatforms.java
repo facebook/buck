@@ -61,8 +61,12 @@ public class DefaultCxxPlatforms {
         config,
         new HashedFileTool(DEFAULT_AS),
         new HashedFileTool(DEFAULT_ASPP),
-        new HashedFileTool(DEFAULT_CC),
-        new HashedFileTool(DEFAULT_CXX),
+        // TODO(user): this goes horribly wrong if "gcc" is actually clang, like in a default
+        // OSX + Xcode setup. A better option might be to call it and see if it supports -Xclang
+        // Alternatively the default toolchain on OSX could be set to be clang based, as it's a
+        // safer guess
+        new GccCompiler(new HashedFileTool(DEFAULT_CC)),
+        new GccCompiler(new HashedFileTool(DEFAULT_CXX)),
         new HashedFileTool(DEFAULT_CPP),
         new HashedFileTool(DEFAULT_CXXPP),
         new HashedFileTool(DEFAULT_CXXLD),

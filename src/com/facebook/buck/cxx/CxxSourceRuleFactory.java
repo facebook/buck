@@ -363,7 +363,7 @@ public class CxxSourceRuleFactory {
 
   // Pick the compiler to use.  Basically, if we're dealing with C++ sources, use the C++
   // compiler, and the C compiler for everything.
-  private Tool getCompiler(CxxSource.Type type) {
+  private Compiler getCompiler(CxxSource.Type type) {
     return CxxSourceTypes.needsCxxCompiler(type) ?
       cxxPlatform.getCxx() :
       cxxPlatform.getCc();
@@ -419,12 +419,12 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name, pic);
-    Tool tool = getCompiler(source.getType());
+    Compiler compiler = getCompiler(source.getType());
 
     ImmutableSortedSet<BuildRule> dependencies =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             // Add dependencies on any build rules used to create the compiler.
-            .addAll(tool.getBuildRules(pathResolver))
+            .addAll(compiler.getBuildRules(pathResolver))
             // If a build rule generates our input source, add that as a dependency.
             .addAll(pathResolver.filterBuildRuleInputs(source.getPath()))
             .build();
@@ -453,7 +453,7 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(dependencies),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        tool,
+        compiler,
         platformFlags,
         ruleFlags,
         getCompileOutputPath(target, name),
@@ -496,12 +496,12 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name, pic);
-    Tool tool = getCompiler(source.getType());
+    Compiler compiler = getCompiler(source.getType());
 
     ImmutableSortedSet<BuildRule> dependencies =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             // Add dependencies on any build rules used to create the preprocessor.
-            .addAll(tool.getBuildRules(pathResolver))
+            .addAll(compiler.getBuildRules(pathResolver))
             // If a build rule generates our input source, add that as a dependency.
             .addAll(pathResolver.filterBuildRuleInputs(source.getPath()))
             // Add in all preprocessor deps.
@@ -532,10 +532,10 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(dependencies),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        tool,
+        compiler,
         CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, source.getType()),
         preprocessorFlags.getUnchecked(source.getType()),
-        tool,
+        compiler,
         platformCompilerFlags,
         ruleCompilerFlags,
         getCompileOutputPath(target, name),

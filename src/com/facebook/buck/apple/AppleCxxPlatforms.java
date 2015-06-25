@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.BsdArchiver;
+import com.facebook.buck.cxx.ClangCompiler;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
@@ -192,8 +193,8 @@ public class AppleCxxPlatforms {
         config,
         clangPath,
         clangPath,
-        clangPath,
-        clangXxPath,
+        new ClangCompiler(clangPath),
+        new ClangCompiler(clangXxPath),
         clangPath,
         clangXxPath,
         clangXxPath,

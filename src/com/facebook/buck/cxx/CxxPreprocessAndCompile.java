@@ -54,7 +54,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   private final Optional<ImmutableList<String>> platformPreprocessorFlags;
   private final Optional<ImmutableList<String>> rulePreprocessorFlags;
   @AddToRuleKey
-  private final Optional<Tool> compiler;
+  private final Optional<Compiler> compiler;
   private final Optional<ImmutableList<String>> platformCompilerFlags;
   private final Optional<ImmutableList<String>> ruleCompilerFlags;
   @AddToRuleKey(stringify = true)
@@ -77,7 +77,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       Optional<Tool> preprocessor,
       Optional<ImmutableList<String>> platformPreprocessorFlags,
       Optional<ImmutableList<String>> rulePreprocessorFlags,
-      Optional<Tool> compiler,
+      Optional<Compiler> compiler,
       Optional<ImmutableList<String>> platformCompilerFlags,
       Optional<ImmutableList<String>> ruleCompilerFlags,
       Path output,
@@ -118,7 +118,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
   public static CxxPreprocessAndCompile compile(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Tool compiler,
+      Compiler compiler,
       ImmutableList<String> platformFlags,
       ImmutableList<String> ruleFlags,
       Path output,
@@ -169,7 +169,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
         Optional.of(preprocessor),
         Optional.of(platformFlags),
         Optional.of(ruleFlags),
-        Optional.<Tool>absent(),
+        Optional.<Compiler>absent(),
         Optional.<ImmutableList<String>>absent(),
         Optional.<ImmutableList<String>>absent(),
         output,
@@ -191,7 +191,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       Tool preprocessor,
       ImmutableList<String> platformPreprocessorFlags,
       ImmutableList<String> rulePreprocessorFlags,
-      Tool compiler,
+      Compiler compiler,
       ImmutableList<String> platformCompilerFlags,
       ImmutableList<String> ruleCompilerFlags,
       Path output,
@@ -368,6 +368,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKe
       suffix.addAll(getPreprocessorSuffix());
     }
     suffix.addAll(ruleCompilerFlags.get());
+    suffix.addAll(compiler.get().debugCompilationDirFlags(sanitizer.getCompilationDirectory()));
     return suffix.build();
   }
 

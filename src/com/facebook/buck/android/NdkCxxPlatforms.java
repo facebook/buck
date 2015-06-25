@@ -16,9 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.cxx.ClangCompiler;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.GnuArchiver;
+import com.facebook.buck.cxx.GccCompiler;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.Tool;
@@ -258,13 +260,14 @@ public class NdkCxxPlatforms {
     // below.  This will be used in lieu of hashing the contents of the tools, so that builds from
     // different host platforms (which produce identical output) will share the cache with one
     // another.
+    Compiler.Type compilerType = targetConfiguration.getCompiler().getType();
     String version =
         Joiner.on('-').join(
             ImmutableList.of(
                 readVersion(ndk),
                 targetConfiguration.getToolchain(),
                 targetConfiguration.getTargetAppPlatform(),
-                targetConfiguration.getCompiler().getType(),
+                compilerType,
                 targetConfiguration.getCompiler().getVersion(),
                 targetConfiguration.getCompiler().getGccVersion(),
                 cxxRuntime));
@@ -276,7 +279,7 @@ public class NdkCxxPlatforms {
     sanitizePaths.put(
         getNdkToolRoot(ndkRoot, targetConfiguration, host.toString()),
         getNdkToolRoot(Paths.get(ANDROID_NDK_ROOT), targetConfiguration, BUILD_HOST_SUBST));
-    if (targetConfiguration.getCompiler().getType() != Compiler.Type.GCC) {
+    if (compilerType != Compiler.Type.GCC) {
         sanitizePaths.put(
             getNdkGccToolRoot(ndkRoot, targetConfiguration, host.toString()),
             getNdkGccToolRoot(Paths.get(ANDROID_NDK_ROOT), targetConfiguration, BUILD_HOST_SUBST));
@@ -296,42 +299,44 @@ public class NdkCxxPlatforms {
                 ndkRoot,
                 targetConfiguration,
                 host,
-                targetConfiguration.getCompiler().getType().getCc(),
+                compilerType.getCc(),
                 version,
                 executableFinder))
         .setCc(
-            getCTool(
-                ndkRoot,
-                targetConfiguration,
-                host,
-                targetConfiguration.getCompiler().getType().getCc(),
-                version,
-                executableFinder))
+            compilerType.fromTool(
+                getCTool(
+                    ndkRoot,
+                    targetConfiguration,
+                    host,
+                    compilerType.getCc(),
+                    version,
+                    executableFinder)))
         .addAllCflags(getCflagsInternal(ndkRoot, targetConfiguration, host))
         .setCpp(
             getCTool(
                 ndkRoot,
                 targetConfiguration,
                 host,
-                targetConfiguration.getCompiler().getType().getCc(),
+                compilerType.getCc(),
                 version,
                 executableFinder))
         .addAllCppflags(getCppflags(ndkRoot, targetConfiguration, host))
         .setCxx(
-            getCTool(
-                ndkRoot,
-                targetConfiguration,
-                host,
-                targetConfiguration.getCompiler().getType().getCxx(),
-                version,
-                executableFinder))
+            compilerType.fromTool(
+                getCTool(
+                    ndkRoot,
+                    targetConfiguration,
+                    host,
+                    compilerType.getCxx(),
+                    version,
+                    executableFinder)))
         .addAllCxxflags(getCxxflagsInternal(ndkRoot, targetConfiguration, host))
         .setCxxpp(
             getCTool(
                 ndkRoot,
                 targetConfiguration,
                 host,
-                targetConfiguration.getCompiler().getType().getCxx(),
+                compilerType.getCxx(),
                 version,
                 executableFinder))
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration, host, cxxRuntime))
@@ -341,11 +346,11 @@ public class NdkCxxPlatforms {
                 targetConfiguration,
                 host,
                 cxxRuntime,
-                targetConfiguration.getCompiler().getType().getCxx(),
+                compilerType.getCxx(),
                 version,
                 executableFinder))
         .addAllCxxldflags(
-            targetConfiguration.getLinkerFlags(targetConfiguration.getCompiler().getType()))
+            targetConfiguration.getLinkerFlags(compilerType))
         .setLd(
             new GnuLinker(
                 getGccTool(
@@ -1071,6 +1076,16 @@ public class NdkCxxPlatforms {
 
       public String getCxx() {
         return cxx;
+      }
+
+      public com.facebook.buck.cxx.Compiler fromTool(Tool tool) {
+        switch (this) {
+          case GCC:
+            return new GccCompiler(tool);
+          case CLANG:
+            return new ClangCompiler(tool);
+        }
+        throw new RuntimeException("Invalid compiler type");
       }
 
     }

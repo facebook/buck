@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.Tool;
+import com.facebook.buck.cxx.Compiler;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -38,16 +38,16 @@ public class OCamlBuild extends AbstractBuildRule {
   @AddToRuleKey
   private final OCamlBuildContext ocamlContext;
   @AddToRuleKey
-  private final Tool cCompiler;
+  private final Compiler cCompiler;
   @AddToRuleKey
-  private final Tool cxxCompiler;
+  private final Compiler cxxCompiler;
 
   public OCamlBuild(
       BuildRuleParams params,
       SourcePathResolver resolver,
       OCamlBuildContext ocamlContext,
-      Tool cCompiler,
-      Tool cxxCompiler) {
+      Compiler cCompiler,
+      Compiler cxxCompiler) {
     super(params, resolver);
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;

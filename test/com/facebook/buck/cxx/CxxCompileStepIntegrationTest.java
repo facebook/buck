@@ -52,8 +52,8 @@ public class CxxCompileStepIntegrationTest {
     CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
 
     // Build up the paths to various files the archive step will use.
-    ImmutableList<String> compiler =
-        platform.getCc().getCommandPrefix(new SourcePathResolver(new BuildRuleResolver()));
+    ImmutableList<String> compiler = platform.getCc().getCommandPrefix(
+        new SourcePathResolver(new BuildRuleResolver()));
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path relativeInput = Paths.get("input.c");
     Path input = filesystem.resolve(relativeInput);

@@ -67,8 +67,8 @@ public class CxxPlatforms {
       CxxBuckConfig config,
       Tool as,
       Tool aspp,
-      Tool cc,
-      Tool cxx,
+      Compiler cc,
+      Compiler cxx,
       Tool cpp,
       Tool cxxpp,
       Tool cxxld,
@@ -88,8 +88,10 @@ public class CxxPlatforms {
         .setFlavor(flavor)
         .setAs(getTool(flavor, "as", config).or(as))
         .setAspp(getTool(flavor, "aspp", config).or(aspp))
-        .setCc(getTool(flavor, "cc", config).or(cc))
-        .setCxx(getTool(flavor, "cxx", config).or(cxx))
+        // TODO(user): Don't assume the compiler override specifies the same type of compiler as
+        // the default one.
+        .setCc(getTool(flavor, "cc", config).transform(getCompiler(cc.getClass())).or(cc))
+        .setCxx(getTool(flavor, "cxx", config).transform(getCompiler(cxx.getClass())).or(cxx))
         .setCpp(getTool(flavor, "cpp", config).or(cpp))
         .setCxxpp(getTool(flavor, "cxxpp", config).or(cxxpp))
         .setCxxld(getTool(flavor, "cxxld", config).or(cxxld))
@@ -125,8 +127,14 @@ public class CxxPlatforms {
       .setFlavor(flavor)
       .setAs(getTool(flavor, "as", config).or(defaultPlatform.getAs()))
       .setAspp(getTool(flavor, "aspp", config).or(defaultPlatform.getAspp()))
-      .setCc(getTool(flavor, "cc", config).or(defaultPlatform.getCc()))
-      .setCxx(getTool(flavor, "cxx", config).or(defaultPlatform.getCxx()))
+      .setCc(
+          getTool(flavor, "cc", config)
+              .transform(getCompiler(defaultPlatform.getCc().getClass()))
+              .or(defaultPlatform.getCc()))
+      .setCxx(
+          getTool(flavor, "cxx", config)
+              .transform(getCompiler(defaultPlatform.getCxx().getClass()))
+              .or(defaultPlatform.getCxx()))
       .setCpp(getTool(flavor, "cpp", config).or(defaultPlatform.getCpp()))
       .setCxxpp(getTool(flavor, "cxxpp", config).or(defaultPlatform.getCxxpp()))
       .setCxxld(getTool(flavor, "cxxld", config).or(defaultPlatform.getCxxld()))
@@ -148,6 +156,19 @@ public class CxxPlatforms {
     }
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
     return builder.build();
+  }
+
+  private static Function<Tool, Compiler> getCompiler(final Class<? extends Compiler> ccClass) {
+    return new Function<Tool, Compiler>() {
+      @Override
+      public Compiler apply(Tool input) {
+        try {
+          return ccClass.getConstructor(Tool.class).newInstance(input);
+        } catch (ReflectiveOperationException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
   }
 
   private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass) {

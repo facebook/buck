@@ -47,7 +47,8 @@ import java.nio.file.Paths;
 public class CxxPreprocessAndCompileTest {
 
   private static final Tool DEFAULT_PREPROCESSOR = new HashedFileTool(Paths.get("preprocessor"));
-  private static final Tool DEFAULT_COMPILER = new HashedFileTool(Paths.get("compiler"));
+  private static final Compiler DEFAULT_COMPILER =
+      new GccCompiler(new HashedFileTool(Paths.get("compiler")));
   private static final ImmutableList<String> DEFAULT_PLATFORM_FLAGS =
       ImmutableList.of("-fsanitize=address");
   private static final ImmutableList<String> DEFAULT_RULE_FLAGS =
@@ -130,7 +131,7 @@ public class CxxPreprocessAndCompileTest {
             Optional.<Tool>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
-            Optional.<Tool>of(new HashedFileTool(Paths.get("different"))),
+            Optional.<Compiler>of(new GccCompiler(new HashedFileTool(Paths.get("different")))),
             Optional.of(DEFAULT_PLATFORM_FLAGS),
             Optional.of(DEFAULT_RULE_FLAGS),
             DEFAULT_OUTPUT,
@@ -151,7 +152,7 @@ public class CxxPreprocessAndCompileTest {
             Optional.of(DEFAULT_PREPROCESSOR),
             Optional.of(DEFAULT_PLATFORM_FLAGS),
             Optional.of(DEFAULT_RULE_FLAGS),
-            Optional.<Tool>absent(),
+            Optional.<Compiler>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             DEFAULT_OUTPUT,
@@ -336,7 +337,7 @@ public class CxxPreprocessAndCompileTest {
             Optional.of(DEFAULT_PREPROCESSOR),
             Optional.of(platformFlags1),
             Optional.of(ruleFlags1),
-            Optional.<Tool>absent(),
+            Optional.<Compiler>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             DEFAULT_OUTPUT,
@@ -358,7 +359,7 @@ public class CxxPreprocessAndCompileTest {
             Optional.of(DEFAULT_PREPROCESSOR),
             Optional.of(platformFlags2),
             Optional.of(ruleFlags2),
-            Optional.<Tool>absent(),
+            Optional.<Compiler>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             DEFAULT_OUTPUT,
@@ -434,7 +435,7 @@ public class CxxPreprocessAndCompileTest {
         Optional.of(DEFAULT_PREPROCESSOR),
         Optional.of(platformFlags),
         Optional.of(ruleFlags),
-        Optional.<Tool>absent(),
+        Optional.<Compiler>absent(),
         Optional.<ImmutableList<String>>absent(),
         Optional.<ImmutableList<String>>absent(),
         output,

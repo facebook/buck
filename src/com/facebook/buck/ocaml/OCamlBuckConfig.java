@@ -17,11 +17,11 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.Compiler;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
@@ -53,7 +53,7 @@ public class OCamlBuckConfig {
     return getExecutable("ocaml", "ocaml.compiler", DEFAULT_OCAML_COMPILER);
   }
 
-  public Tool getCCompiler() {
+  public Compiler getCCompiler() {
     return cxxPlatform.getCc();
   }
 
@@ -77,7 +77,7 @@ public class OCamlBuckConfig {
     return getExecutable("ocaml", "ocaml.bytecode.compiler", DEFAULT_OCAML_BYTECODE_COMPILER);
   }
 
-  public Tool getCxxCompiler() {
+  public Compiler getCxxCompiler() {
     return cxxPlatform.getCxx();
   }
 

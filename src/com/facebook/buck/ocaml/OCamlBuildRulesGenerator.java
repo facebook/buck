@@ -18,8 +18,8 @@ package com.facebook.buck.ocaml;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.facebook.buck.cxx.Compiler;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -61,8 +61,8 @@ public class OCamlBuildRulesGenerator {
   private final ImmutableMap<Path, ImmutableList<Path>> mlInput;
   private final ImmutableList<SourcePath> cInput;
 
-  private final Tool cCompiler;
-  private final Tool cxxCompiler;
+  private final Compiler cCompiler;
+  private final Compiler cxxCompiler;
 
   public OCamlBuildRulesGenerator(
       BuildRuleParams params,
@@ -71,8 +71,8 @@ public class OCamlBuildRulesGenerator {
       OCamlBuildContext ocamlContext,
       ImmutableMap<Path, ImmutableList<Path>> mlInput,
       ImmutableList<SourcePath> cInput,
-      Tool cCompiler,
-      Tool cxxCompiler) {
+      Compiler cCompiler,
+      Compiler cxxCompiler) {
     this.params = params;
     this.pathResolver = pathResolver;
     this.resolver = resolver;
