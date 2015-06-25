@@ -39,6 +39,7 @@ import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeProcess;
@@ -62,6 +63,7 @@ public class JavaLibraryDescriptionTest {
   private JavacOptions defaults;
   private JavaLibraryDescription.Arg arg;
   private BuildRuleResolver ruleResolver;
+  private SourcePathResolver resolver;
 
   @Before
   public void createHelpers() {
@@ -74,14 +76,15 @@ public class JavaLibraryDescriptionTest {
     populateWithDefaultValues(arg);
 
     ruleResolver = new BuildRuleResolver();
+    resolver = new SourcePathResolver(ruleResolver);
   }
 
   @Test
   public void compilerArgWithDefaultValueReturnsJsr199Javac() {
-    Either<BuiltInJavac, Either<BuildTarget, Path>> either = Either.ofLeft(DEFAULT);
+    Either<BuiltInJavac, SourcePath> either = Either.ofLeft(DEFAULT);
     arg.compiler = Optional.of(either);
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
-        ruleResolver,
+        resolver,
         arg,
         defaults).build();
 
@@ -101,12 +104,11 @@ public class JavaLibraryDescriptionTest {
         .setBinaryJar(javacJarPath)
         .build(ruleResolver);
     SourcePath sourcePath = new BuildTargetSourcePath(filesystem, target);
-    Either<BuiltInJavac, Either<BuildTarget, Path>> either =
-        Either.ofRight(Either.<BuildTarget, Path>ofLeft(target));
+    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
-        ruleResolver,
+        resolver,
         arg,
         defaults).build();
 
@@ -120,8 +122,8 @@ public class JavaLibraryDescriptionTest {
   @Test
   public void compilerArgWithPathReturnsExternalJavac() {
     Path externalJavac = Paths.get("/foo/bar/javac.exe");
-    Either<BuiltInJavac, Either<BuildTarget, Path>> either =
-        Either.ofRight(Either.<BuildTarget, Path>ofRight(externalJavac));
+    Either<BuiltInJavac, SourcePath> either =
+        Either.ofRight((SourcePath) new TestSourcePath(externalJavac.toString()));
 
     ProcessExecutorParams version = ProcessExecutorParams.builder()
         .setCommand(ImmutableList.of(externalJavac.toString(), "-version"))
@@ -134,7 +136,7 @@ public class JavaLibraryDescriptionTest {
 
     arg.compiler = Optional.of(either);
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
-        ruleResolver,
+        resolver,
         arg,
         newDefaults).build();
 
@@ -148,8 +150,8 @@ public class JavaLibraryDescriptionTest {
   @Test
   public void compilerArgTakesPrecedenceOverJavacPathArg() {
     Path externalJavac = Paths.get("/foo/bar/javac.exe");
-    Either<BuiltInJavac, Either<BuildTarget, Path>> either =
-        Either.ofRight(Either.<BuildTarget, Path>ofRight(externalJavac));
+    SourcePath sourcePath = new TestSourcePath(externalJavac.toString());
+    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     ProcessExecutorParams version = ProcessExecutorParams.builder()
         .setCommand(ImmutableList.of(externalJavac.toString(), "-version"))
@@ -163,7 +165,7 @@ public class JavaLibraryDescriptionTest {
     arg.compiler = Optional.of(either);
     arg.javac = Optional.of(Paths.get("does-not-exist"));
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
-        ruleResolver,
+        resolver,
         arg,
         newDefaults).build();
 
@@ -183,14 +185,13 @@ public class JavaLibraryDescriptionTest {
         .setBinaryJar(javacJarPath)
         .build(ruleResolver);
     SourcePath sourcePath = new BuildTargetSourcePath(filesystem, target);
-    Either<BuiltInJavac, Either<BuildTarget, Path>> either =
-        Either.ofRight(Either.<BuildTarget, Path>ofLeft(target));
+    Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);
     arg.javacJar = Optional.<SourcePath>of(
         new PathSourcePath(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
-        ruleResolver,
+        resolver,
         arg,
         defaults).build();
 
@@ -210,7 +211,7 @@ public class JavaLibraryDescriptionTest {
     arg.javacJar = Optional.<SourcePath>of(
         new PathSourcePath(new FakeProjectFilesystem(), expected));
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
-        ruleResolver,
+        resolver,
         arg,
         defaults).build();
 

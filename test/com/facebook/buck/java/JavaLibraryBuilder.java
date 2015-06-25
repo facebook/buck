@@ -77,8 +77,9 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
   }
 
   public JavaLibraryBuilder setCompiler(BuildRule javac) {
-    Either<BuildTarget, Path> right = Either.ofLeft(javac.getBuildTarget());
-    Either<BuiltInJavac, Either<BuildTarget, Path>> value = Either.ofRight(right);
+    SourcePath right =
+        new BuildTargetSourcePath(javac.getProjectFilesystem(), javac.getBuildTarget());
+    Either<BuiltInJavac, SourcePath> value = Either.ofRight(right);
 
     arg.compiler = Optional.of(value);
     return this;

@@ -87,7 +87,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
     JavacOptions.Builder javacOptionsBuilder =
         JavaLibraryDescription.getJavacOptions(
-            resolver,
+            pathResolver,
             args,
             templateOptions);
     AnnotationProcessingParams annotationParams =

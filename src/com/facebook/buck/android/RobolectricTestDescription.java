@@ -77,7 +77,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     JavacOptions.Builder javacOptionsBuilder =
         JavaLibraryDescription.getJavacOptions(
-            resolver,
+            pathResolver,
             args,
             templateOptions);
     AnnotationProcessingParams annotationParams =

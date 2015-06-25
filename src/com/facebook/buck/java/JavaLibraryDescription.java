@@ -91,7 +91,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
     JavacOptions.Builder javacOptionsBuilder =
         JavaLibraryDescription.getJavacOptions(
-            resolver,
+            pathResolver,
             args,
             defaultOptions);
     AnnotationProcessingParams annotationParams =
@@ -141,7 +141,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   public static JavacOptions.Builder getJavacOptions(
-      BuildRuleResolver ruleResolver,
+      SourcePathResolver resolver,
       Arg args,
       JavacOptions defaultOptions) {
     JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
@@ -159,12 +159,14 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     if (args.compiler.isPresent()) {
-      Either<BuiltInJavac, Either<BuildTarget, Path>> left = args.compiler.get();
-      // Until we have more than one value for BuiltInJavac, left has nothing to do.
+      Either<BuiltInJavac, SourcePath> left = args.compiler.get();
+
       if (left.isRight()) {
-        Either<BuildTarget, Path> right = left.getRight();
-        if (right.isLeft()) {
-          BuildRule rule = ruleResolver.getRule(right.getLeft());
+        SourcePath right = left.getRight();
+
+        Optional<BuildRule> possibleRule = resolver.getRule(right);
+        if (possibleRule.isPresent()) {
+          BuildRule rule = possibleRule.get();
           if (rule instanceof PrebuiltJar) {
             builder.setJavacJarPath(
                 new BuildTargetSourcePath(rule.getProjectFilesystem(), rule.getBuildTarget()));
@@ -172,7 +174,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
           }
         } else {
-          builder.setJavacPath(right.getRight());
+          builder.setJavacPath(resolver.getPath(right));
         }
       }
     } else {
@@ -272,7 +274,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<Path> javac;
     public Optional<SourcePath> javacJar;
     // I am not proud of this.
-    public Optional<Either<BuiltInJavac, Either<BuildTarget, Path>>> compiler;
+    public Optional<Either<BuiltInJavac, SourcePath>> compiler;
     public Optional<ImmutableList<String>> extraArguments;
     public Optional<Path> proguardConfig;
     public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
