@@ -28,6 +28,8 @@ public class ReactNativeFlavors {
 
   public static final Flavor DEV = ImmutableFlavor.of("dev");
 
+  public static final Flavor DO_NOT_BUNDLE = ImmutableFlavor.of("rn_no_bundle");
+
   public static boolean validateFlavors(ImmutableSet<Flavor> flavors) {
     return flavors.isEmpty() || flavors.equals(ImmutableSet.of(DEV));
   }
@@ -36,4 +38,7 @@ public class ReactNativeFlavors {
     return buildTarget.getFlavors().contains(DEV);
   }
 
+  public static boolean skipBundling(BuildTarget buildTarget) {
+    return buildTarget.getFlavors().contains(DO_NOT_BUNDLE);
+  }
 }

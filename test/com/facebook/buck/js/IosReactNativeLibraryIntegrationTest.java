@@ -16,6 +16,8 @@
 
 package com.facebook.buck.js;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -28,6 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 
 public class IosReactNativeLibraryIntegrationTest {
@@ -47,10 +50,23 @@ public class IosReactNativeLibraryIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
     workspace.setUp();
   }
+
   @Test
   public void testBundleOutputContainsJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64").assertSuccess();
 
     workspace.verify();
+  }
+
+  @Test
+  public void testFlavoredBundleOutputDoesNotContainJSAndResources() throws IOException {
+    workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle").assertSuccess();
+
+    File appDir = workspace.getFile(
+        "buck-out/gen/DemoApp#iphonesimulator-x86_64,rn_no_bundle/DemoApp.app");
+    assertTrue(appDir.exists() && appDir.isDirectory());
+
+    File bundle = new File(appDir, "Apps/DemoApp/DemoApp.bundle");
+    assertFalse(bundle.exists());
   }
 }
