@@ -138,6 +138,43 @@ public class AppleLibraryIntegrationTest {
         inputPath.resolve("PublicHeader.h"));
   }
 
+  @Test
+  public void testAppleLibraryIsHermetic() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_is_hermetic", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult first = workspace.runBuckCommand(
+        workspace.getPath("first"),
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#static,iphonesimulator-x86_64");
+    first.assertSuccess();
+
+    ProjectWorkspace.ProcessResult second = workspace.runBuckCommand(
+        workspace.getPath("second"),
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#static,iphonesimulator-x86_64");
+    second.assertSuccess();
+
+    assertTrue(
+        com.google.common.io.Files.equal(
+            workspace.getFile(
+                "first/buck-out/gen/Libraries/TestLibrary/" +
+                    "TestLibrary#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"),
+            workspace.getFile(
+                "second/buck-out/gen/Libraries/TestLibrary/" +
+                    "TestLibrary#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o")));
+    assertTrue(
+        com.google.common.io.Files.equal(
+            workspace.getFile(
+                "first/buck-out/gen/Libraries/TestLibrary/" +
+                    "TestLibrary#iphonesimulator-x86_64,static/libTestLibrary.a"),
+            workspace.getFile(
+                "second/buck-out/gen/Libraries/TestLibrary/" +
+                    "TestLibrary#iphonesimulator-x86_64,static/libTestLibrary.a")));
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

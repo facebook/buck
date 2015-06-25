@@ -1,0 +1,5 @@
+apple_library(
+  name = 'TestLibrary',
+  compiler_flags = ['-g'],
+  srcs = ['TestClass.m'],
+)
