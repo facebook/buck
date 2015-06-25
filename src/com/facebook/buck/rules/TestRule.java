@@ -128,4 +128,11 @@ public interface TestRule extends HasBuildTarget {
    * false otherwise.
    */
   public boolean runTestSeparately();
+
+  /**
+   * @return true if calling {@code runTests()} on this rule invokes
+   * the callbacks in {@code testReportingCallback} as the tests run,
+   * false otherwise.
+   */
+  public boolean supportsStreamingTests();
 }

@@ -197,70 +197,71 @@ public class TestRunning {
           options.isResultsCacheEnabled(),
           !options.getTestSelectorList().isEmpty());
 
+      final Map<String, UUID> testUUIDMap = new HashMap<>();
+      TestRule.TestReportingCallback testReportingCallback = new TestRule.TestReportingCallback() {
+          @Override
+          public void testsDidBegin() {
+            LOG.debug("Tests for rule %s began", test.getBuildTarget());
+          }
+
+          @Override
+          public void testDidBegin(
+              String testCaseName,
+              String testName) {
+            LOG.debug(
+                "Test rule %s test case %s test name %s began",
+                test.getBuildTarget(),
+                testCaseName,
+                testName);
+            UUID testUUID = UUID.randomUUID();
+            // UUID is immutable and thread-safe as of Java 7, so it's
+            // safe to stash in a map and use later:
+            //
+            // http://bugs.java.com/view_bug.do?bug_id=6611830
+            testUUIDMap.put(testCaseName + ":" + testName, testUUID);
+            params.getBuckEventBus().post(
+                TestSummaryEvent.started(
+                    testUUID,
+                    testCaseName,
+                    testName));
+          }
+
+          @Override
+          public void testDidEnd(
+              TestResultSummary testResultSummary) {
+            LOG.debug(
+                "Test rule %s test did end: %s",
+                test.getBuildTarget(),
+                testResultSummary);
+            UUID testUUID = testUUIDMap.get(
+                testResultSummary.getTestCaseName() + ":" + testResultSummary.getTestName());
+            Preconditions.checkNotNull(testUUID);
+            params.getBuckEventBus().post(
+                TestSummaryEvent.finished(testUUID, testResultSummary));
+          }
+
+          @Override
+          public void testsDidEnd(
+              List<TestCaseSummary> testCaseSummaries) {
+            LOG.debug(
+                "Test rule %s tests did end: %s",
+                test.getBuildTarget(),
+                testCaseSummaries);
+          }
+        };
 
       List<Step> steps;
       if (isTestRunRequired) {
         params.getBuckEventBus().post(IndividualTestEvent.started(testTargets));
         ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
         Preconditions.checkState(buildEngine.isRuleBuilt(test.getBuildTarget()));
-        final Map<String, UUID> testUUIDMap = new HashMap<>();
         List<Step> testSteps = test.runTests(
             buildContext,
             executionContext,
             options.isDryRun(),
             options.isShufflingTests(),
             options.getTestSelectorList(),
-            new TestRule.TestReportingCallback() {
-              @Override
-              public void testsDidBegin() {
-                LOG.debug("Tests for rule %s began", test.getBuildTarget());
-              }
-
-              @Override
-              public void testDidBegin(
-                  String testCaseName,
-                  String testName) {
-                LOG.debug(
-                    "Test rule %s test case %s test name %s began",
-                    test.getBuildTarget(),
-                    testCaseName,
-                    testName);
-                UUID testUUID = UUID.randomUUID();
-                // UUID is immutable and thread-safe as of Java 7, so it's
-                // safe to stash in a map and use later:
-                //
-                // http://bugs.java.com/view_bug.do?bug_id=6611830
-                testUUIDMap.put(testCaseName + ":" + testName, testUUID);
-                params.getBuckEventBus().post(
-                    TestSummaryEvent.started(
-                        testUUID,
-                        testCaseName,
-                        testName));
-              }
-
-              @Override
-              public void testDidEnd(
-                  TestResultSummary testResultSummary) {
-                LOG.debug(
-                    "Test rule %s test did end: %s",
-                    test.getBuildTarget(),
-                    testResultSummary);
-                UUID testUUID = testUUIDMap.get(
-                    testResultSummary.getTestCaseName() + ":" + testResultSummary.getTestName());
-                Preconditions.checkNotNull(testUUID);
-                params.getBuckEventBus().post(
-                    TestSummaryEvent.finished(testUUID, testResultSummary));
-              }
-
-              @Override
-              public void testsDidEnd(
-                  List<TestCaseSummary> testCaseSummaries) {
-                LOG.debug(
-                    "Test rule %s tests did end: %s",
-                    test.getBuildTarget(),
-                    testCaseSummaries);
-              }
-            });
+            testReportingCallback);
         if (!testSteps.isEmpty()) {
           stepsBuilder.addAll(testSteps);
           stepsBuilder.add(testRuleKeyFileHelper.createRuleKeyInDirStep(test));
@@ -278,8 +279,8 @@ public class TestRunning {
               test.interpretTestResults(
                   executionContext,
                   /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
-                  /*isDryRun*/ options.isDryRun())));
-
+                  /*isDryRun*/ options.isDryRun())),
+          testReportingCallback);
 
       // Always run the commands, even if the list of commands as empty. There may be zero
       // commands because the rule is cached, but its results must still be processed.
@@ -323,6 +324,7 @@ public class TestRunning {
                 testResults,
                 grouper,
                 testRun.getTest(),
+                testRun.getTestReportingCallback(),
                 testTargets,
                 printTestResults,
                 lastReportedTestSequenceNumber,
@@ -355,6 +357,7 @@ public class TestRunning {
                           testStepRunningCallback),
                       grouper,
                       testRun.getTest(),
+                      testRun.getTestReportingCallback(),
                       testTargets,
                       printTestResults,
                       lastReportedTestSequenceNumber,
@@ -451,6 +454,7 @@ public class TestRunning {
       ListenableFuture<TestResults> originalTestResults,
       @Nullable final TestResultsGrouper grouper,
       final TestRule testRule,
+      final TestRule.TestReportingCallback testReportingCallback,
       final ImmutableSet<String> testTargets,
       final boolean printTestResults,
       final AtomicInteger lastReportedTestSequenceNumber,
@@ -462,6 +466,23 @@ public class TestRunning {
       private void postTestResults(TestResults testResults) {
         testResults.setSequenceNumber(lastReportedTestSequenceNumber.incrementAndGet());
         testResults.setTotalNumberOfTests(totalNumberOfTests);
+        if (!testRule.supportsStreamingTests()) {
+          // For test rules which don't support streaming tests, we'll
+          // stream test summary events after interpreting the
+          // results.
+          LOG.debug("Simulating streaming test events for rule %s", testRule);
+          testReportingCallback.testsDidBegin();
+          for (TestCaseSummary testCaseSummary : testResults.getTestCases()) {
+            for (TestResultSummary testResultSummary : testCaseSummary.getTestResults()) {
+              testReportingCallback.testDidBegin(
+                  testResultSummary.getTestCaseName(),
+                  testResultSummary.getTestName());
+              testReportingCallback.testDidEnd(testResultSummary);
+            }
+          }
+          testReportingCallback.testsDidEnd(testResults.getTestCases());
+          LOG.debug("Done simulating streaming test events for rule %s", testRule);
+        }
         params.getBuckEventBus().post(
             IndividualTestEvent.finished(
                 testTargets,

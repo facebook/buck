@@ -18,6 +18,7 @@ package com.facebook.buck.test;
 
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.TimeFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
@@ -161,13 +162,12 @@ public class TestCaseSummary {
       padding += ' ';
     }
 
-    int passedCount = testResults.size() - failureCount - skippedCount;
     return String.format("%s%s %s %2d Passed  %2d Skipped  %2d Failed   %s",
         status,
         padding,
         !isCached ? TimeFormat.formatForConsole(totalTime, ansi)
                   : ansi.asHighlightedStatusText(severityLevel, "CACHED"),
-        passedCount,
+        getPassedCount(),
         skippedCount,
         failureCount,
         testCaseName);
@@ -175,6 +175,15 @@ public class TestCaseSummary {
 
   public ImmutableList<TestResultSummary> getTestResults() {
     return testResults;
+  }
+
+  @JsonIgnore
+  public int getPassedCount() {
+    return testResults.size() - failureCount - skippedCount;
+  }
+
+  public int getSkippedCount() {
+    return skippedCount;
   }
 
   public int getFailureCount() {

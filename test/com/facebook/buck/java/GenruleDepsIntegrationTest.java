@@ -56,7 +56,7 @@ public class GenruleDepsIntegrationTest {
     result2.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
-        containsString("FAILURE testBasicAssertion"));
+        containsString("FAILURE com.example.LameTest testBasicAssertion"));
   }
 
 }

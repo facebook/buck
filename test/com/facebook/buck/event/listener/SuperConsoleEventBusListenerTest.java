@@ -387,7 +387,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.5)));
+            formatConsoleTimes("[+] TESTING...%s", 0.5)));
 
     rawEventBus.post(
         configureTestEventAtTime(
@@ -403,7 +403,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.7),
+            formatConsoleTimes("[+] TESTING...%s", 0.7),
             formatConsoleTimes(" |=> //:test...  %s", 0.1)));
 
     UUID stepUuid = new UUID(0, 1);
@@ -424,7 +424,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.9),
+            formatConsoleTimes("[+] TESTING...%s", 0.9),
             formatConsoleTimes(" |=> //:test...  %s (running step_name[%s])", 0.3, 0.1)));
 
     rawEventBus.post(
@@ -445,14 +445,14 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.1),
+            formatConsoleTimes("[+] TESTING...%s", 1.1),
             formatConsoleTimes(" |=> //:test...  %s", 0.5)));
 
     UUID testUUID = new UUID(2, 3);
 
     rawEventBus.post(
         configureTestEventAtTime(
-            TestSummaryEvent.started(testUUID, "TestClass", "TestClass.Foo"),
+            TestSummaryEvent.started(testUUID, "TestClass", "Foo"),
             3700L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -464,13 +464,13 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.3),
-            formatConsoleTimes(" |=> //:test...  %s (running TestClass.Foo[%s])", 0.7, 0.1)));
+            formatConsoleTimes("[+] TESTING...%s", 1.3),
+            formatConsoleTimes(" |=> //:test...  %s (running Foo[%s])", 0.7, 0.1)));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
             "TestClass",
-            "TestClass.Foo",
+            "Foo",
             ResultType.SUCCESS,
             0L, // time
             null, // message
@@ -648,7 +648,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.5)));
+            formatConsoleTimes("[+] TESTING...%s", 0.5)));
 
     rawEventBus.post(
         configureTestEventAtTime(
@@ -664,7 +664,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.7),
+            formatConsoleTimes("[+] TESTING...%s", 0.7),
             formatConsoleTimes(" |=> //:test...  %s", 0.1)));
 
     UUID stepUuid = new UUID(0, 1);
@@ -685,7 +685,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.9),
+            formatConsoleTimes("[+] TESTING...%s", 0.9),
             formatConsoleTimes(" |=> //:test...  %s (running step_name[%s])", 0.3, 0.1)));
 
     rawEventBus.post(
@@ -706,14 +706,14 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.1),
+            formatConsoleTimes("[+] TESTING...%s", 1.1),
             formatConsoleTimes(" |=> //:test...  %s", 0.5)));
 
     UUID testUUID = new UUID(2, 3);
 
     rawEventBus.post(
         configureTestEventAtTime(
-            TestSummaryEvent.started(testUUID, "TestClass", "TestClass.Foo"),
+            TestSummaryEvent.started(testUUID, "TestClass", "Foo"),
             3700L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -725,13 +725,13 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.3),
-            formatConsoleTimes(" |=> //:test...  %s (running TestClass.Foo[%s])", 0.7, 0.1)));
+            formatConsoleTimes("[+] TESTING...%s", 1.3),
+            formatConsoleTimes(" |=> //:test...  %s (running Foo[%s])", 0.7, 0.1)));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
             "TestClass",
-            "TestClass.Foo",
+            "Foo",
             ResultType.ASSUMPTION_VIOLATION,
             0L, // time
             null, // message
@@ -911,7 +911,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.5)));
+            formatConsoleTimes("[+] TESTING...%s", 0.5)));
 
     rawEventBus.post(
         configureTestEventAtTime(
@@ -927,7 +927,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.7),
+            formatConsoleTimes("[+] TESTING...%s", 0.7),
             formatConsoleTimes(" |=> //:test...  %s", 0.1)));
 
     UUID stepUuid = new UUID(0, 1);
@@ -948,7 +948,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 0.9),
+            formatConsoleTimes("[+] TESTING...%s", 0.9),
             formatConsoleTimes(" |=> //:test...  %s (running step_name[%s])", 0.3, 0.1)));
 
     rawEventBus.post(
@@ -969,14 +969,14 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.1),
+            formatConsoleTimes("[+] TESTING...%s", 1.1),
             formatConsoleTimes(" |=> //:test...  %s", 0.5)));
 
     UUID testUUID = new UUID(2, 3);
 
     rawEventBus.post(
         configureTestEventAtTime(
-            TestSummaryEvent.started(testUUID, "TestClass", "TestClass.Foo"),
+            TestSummaryEvent.started(testUUID, "TestClass", "Foo"),
             3700L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -988,13 +988,13 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            formatConsoleTimes("[+] TESTING...%s (0 PASS/0 FAIL)", 1.3),
-            formatConsoleTimes(" |=> //:test...  %s (running TestClass.Foo[%s])", 0.7, 0.1)));
+            formatConsoleTimes("[+] TESTING...%s", 1.3),
+            formatConsoleTimes(" |=> //:test...  %s (running Foo[%s])", 0.7, 0.1)));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
             "TestClass",
-            "TestClass.Foo",
+            "Foo",
             ResultType.FAILURE,
             0L, // time
             "Foo.java:47: Assertion failure: 'foo' != 'bar'", // message
@@ -1020,7 +1020,7 @@ public class SuperConsoleEventBusListenerTest {
             formatConsoleTimes("[+] TESTING...%s (0 PASS/1 FAIL)", 1.5),
             formatConsoleTimes(" |=> //:test...  %s", 0.9),
             "Log:",
-            "FAILURE TestClass.Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'"));
+            "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'"));
 
     rawEventBus.post(
         configureTestEventAtTime(
@@ -1051,10 +1051,10 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             testingLine,
             "Log:",
-            "FAILURE TestClass.Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
+            "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
             "RESULTS FOR ALL TESTS",
             "FAIL    <100ms  0 Passed   0 Skipped   1 Failed   TestClass",
-            "FAILURE TestClass.Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
+            "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
             "====STANDARD OUT====",
             "Message on stdout",
             "====STANDARD ERR====",

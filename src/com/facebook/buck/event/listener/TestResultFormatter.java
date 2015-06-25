@@ -109,8 +109,9 @@ public class TestResultFormatter {
 
   public void reportResultSummary(ImmutableList.Builder<String> addTo,
                                   TestResultSummary testResult) {
-    addTo.add(String.format("%s %s: %s",
+    addTo.add(String.format("%s %s %s: %s",
         testResult.getType().toString(),
+        testResult.getTestCaseName(),
         testResult.getTestName(),
         testResult.getMessage()));
 

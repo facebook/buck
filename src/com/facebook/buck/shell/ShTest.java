@@ -187,4 +187,8 @@ public class ShTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
     return getDeps();
   }
 
+  @Override
+  public boolean supportsStreamingTests() {
+    return false;
+  }
 }

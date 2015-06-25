@@ -66,7 +66,8 @@ public class TimeoutIntegrationTest {
     exceedsAnnotationTimeoutTestResult.assertTestFailure("Test should fail due to timeout");
     assertThat(exceedsAnnotationTimeoutTestResult.getStderr(),
         containsString(
-            "FAILURE testShouldFailDueToExpiredTimeout: test timed out after 1000 milliseconds"));
+            "FAILURE com.example.ExceedsAnnotationTimeoutTest testShouldFailDueToExpiredTimeout: " +
+            "test timed out after 1000 milliseconds"));
 
     // TimeoutChangesBehaviorTest should pass.
     ProcessResult timeoutTestWithoutTimeout = workspace.runBuckCommand(
@@ -81,8 +82,9 @@ public class TimeoutIntegrationTest {
     timeoutTestWithTimeoutOnAnnotation.assertTestFailure();
     assertThat(timeoutTestWithTimeoutOnAnnotation.getStderr(),
         containsString(
-            "FAILURE testTimeoutDictatesTheSuccessOfThisTest: " +
-            "Database should have an open transaction due to setUp()."));
+            "FAILURE com.example.TimeoutChangesBehaviorTest " +
+            "testTimeoutDictatesTheSuccessOfThisTest: Database should have an open transaction " +
+            "due to setUp()."));
 
     // TimeoutChangesBehaviorTest with @Rule(Timeout) should pass.
     modifyTimeoutInTestAnnotation(PATH_TO_TIMEOUT_BEHAVIOR_TEST, /* addTimeout */ false);

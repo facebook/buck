@@ -148,4 +148,9 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
   public boolean runTestSeparately() {
     return runTestSeparately;
   }
+
+  @Override
+  public boolean supportsStreamingTests() {
+    return false;
+  }
 }

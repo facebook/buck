@@ -264,12 +264,13 @@ public class TestResultFormatterTest {
 
     String expected = String.format(Joiner.on('\n').join(
         "FAIL     200ms  0 Passed   0 Skipped   1 Failed   com.example.FooTest",
-        "FAILURE %s: %s",
+        "FAILURE %s %s: %s",
         "%s",
         "====STANDARD OUT====",
         "%s",
         "====STANDARD ERR====",
         "%s"),
+        failingTest.getTestCaseName(),
         failingTest.getTestName(),
         failingTest.getMessage(),
         stackTrace,

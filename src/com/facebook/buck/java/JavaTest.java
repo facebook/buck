@@ -531,4 +531,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         .build();
   }
 
+  @Override
+  public boolean supportsStreamingTests() {
+    return false;
+  }
 }

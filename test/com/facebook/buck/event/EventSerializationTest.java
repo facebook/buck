@@ -173,7 +173,8 @@ public class EventSerializationTest {
         "results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\":" +
         "null,\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
         "\"stacktrace\":null,\"stdOut\":null," +
-        "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
+        "\"stdErr\":null}],\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0," +
+        "\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
         "\"success\":false}],\"type\":\"RunComplete\"}", message);
@@ -198,7 +199,8 @@ public class EventSerializationTest {
         "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\"" +
         ":null,\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
         "\"stacktrace\":null,\"stdOut\":null," +
-        "\"stdErr\":null}],\"failureCount\":1,\"totalTime\":0,\"success\":false}]," +
+        "\"stdErr\":null}],\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0," +
+        "\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
         "\"success\":false},\"type\":\"ResultsAvailable\"}", message);

@@ -58,7 +58,7 @@ public class BuildTargetSourcePathAsSrcIntegrationTest {
     result2.assertTestFailure();
     assertThat("`buck test` should fail because testStringFromGenfile() failed.",
         result2.getStderr(),
-        containsString("FAILURE testStringFromGenfile"));
+        containsString("FAILURE com.example.LameTest testStringFromGenfile"));
   }
 
 }

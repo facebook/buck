@@ -183,4 +183,8 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
         .build();
   }
 
+  @Override
+  public boolean supportsStreamingTests() {
+    return false;
+  }
 }

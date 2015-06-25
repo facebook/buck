@@ -178,4 +178,9 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
   public boolean runTestSeparately() {
     return false;
   }
+
+  @Override
+  public boolean supportsStreamingTests() {
+    return false;
+  }
 }

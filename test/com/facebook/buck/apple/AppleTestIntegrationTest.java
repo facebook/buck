@@ -308,7 +308,7 @@ public class AppleTestIntegrationTest {
         containsString("0 Passed   0 Skipped   1 Failed   FooXCTest"));
     assertThat(
         result.getStderr(),
-        containsString("FAILURE -[FooXCTest testTwoPlusTwoEqualsFive]: FooXCTest.m:9"));
+        containsString("FAILURE FooXCTest -[FooXCTest testTwoPlusTwoEqualsFive]: FooXCTest.m:9"));
   }
 
   @Test
@@ -349,7 +349,7 @@ public class AppleTestIntegrationTest {
         containsString("0 Passed   0 Skipped   1 Failed   AppTest"));
     assertThat(
         result.getStderr(),
-        containsString("FAILURE -[AppTest testMagicValueShouldFail]: AppTest.m:13"));
+        containsString("FAILURE AppTest -[AppTest testMagicValueShouldFail]: AppTest.m:13"));
   }
 
   @Test

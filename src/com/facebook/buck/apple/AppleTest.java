@@ -349,4 +349,8 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     return runtimeDepsBuilder.build();
   }
 
+  @Override
+  public boolean supportsStreamingTests() {
+    return !useXctest;
+  }
 }

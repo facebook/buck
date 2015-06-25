@@ -40,4 +40,7 @@ interface AbstractTestRun {
 
   @Value.Parameter
   Callable<TestResults> getTestResultsCallable();
+
+  @Value.Parameter
+  TestRule.TestReportingCallback getTestReportingCallback();
 }

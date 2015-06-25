@@ -226,4 +226,9 @@ public class DTest extends DLinkable implements TestRule {
   public boolean runTestSeparately() {
     return false;
   }
+
+  @Override
+  public boolean supportsStreamingTests() {
+    return false;
+  }
 }

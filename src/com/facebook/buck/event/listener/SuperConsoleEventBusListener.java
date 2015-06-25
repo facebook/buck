@@ -444,12 +444,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               testPassesVal,
               testSkipsVal,
               testFailuresVal));
-    } else {
+    } else if (testPassesVal > 0 || testFailuresVal > 0) {
       return Optional.of(
           String.format(
               "(%d PASS/%d FAIL)",
               testPassesVal,
               testFailuresVal));
+    } else {
+      return Optional.absent();
     }
   }
 
@@ -594,8 +596,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         // includes the stack trace and stdout/stderr.
         logEvents.add(
             ConsoleEvent.severe(
-                String.format("%s %s: %s",
+                String.format("%s %s %s: %s",
                               testResult.getType().toString(),
+                              testResult.getTestCaseName(),
                               testResult.getTestName(),
                               testResult.getMessage())));
         break;

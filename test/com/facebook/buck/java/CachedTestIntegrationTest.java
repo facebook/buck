@@ -70,7 +70,7 @@ public class CachedTestIntegrationTest {
     result2.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
-        containsString("FAILURE testBasicAssertion"));
+        containsString("FAILURE com.example.LameTest testBasicAssertion"));
 
     // Restore the file to its previous state.
     testUtil.makeTestSucceed();
@@ -83,7 +83,7 @@ public class CachedTestIntegrationTest {
     result4.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result4.getStderr(),
-        containsString("FAILURE testBasicAssertion"));
+        containsString("FAILURE com.example.LameTest testBasicAssertion"));
   }
 
   /**
@@ -110,7 +110,7 @@ public class CachedTestIntegrationTest {
     result2.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result2.getStderr(),
-        containsString("FAILURE testBasicAssertion"));
+        containsString("FAILURE com.example.LameTest testBasicAssertion"));
 
     // Restore the file to its previous state.
     testUtil.makeTestSucceed();
@@ -127,7 +127,7 @@ public class CachedTestIntegrationTest {
     result4.assertTestFailure();
     assertThat("`buck test` should fail because testBasicAssertion() failed.",
         result4.getStderr(),
-        containsString("FAILURE testBasicAssertion"));
+        containsString("FAILURE com.example.LameTest testBasicAssertion"));
   }
 
   private static class CachedTestUtil {
