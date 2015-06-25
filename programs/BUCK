@@ -38,7 +38,7 @@ genrule(
 
 BUCK_CORE_RESOURCES = {
     'android_agent_path': '//assets/android:agent.apk',
-    'bootstrapper_classes': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
+    'bootstrapper_jar': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
     'buck_package_info': ':gen_buck_package_info',
     'buck_server': '//src/com/facebook/buck/cli:main-fixed',
     'dx': '//third-party/java/dx-from-kitkat:etc_dx',

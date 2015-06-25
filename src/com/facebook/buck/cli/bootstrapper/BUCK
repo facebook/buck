@@ -1,12 +1,20 @@
-java_library(
+java_binary(
   name = 'bootstrapper',
-  srcs = glob(['*.java']),
   deps = [
-    '//src/com/facebook/buck/cli:cli',
+    ':bootstrapper_lib',
   ],
   visibility = [
     '//programs:bucklib',
     '//programs:bucklib-no-nailgun',
     '//test/com/facebook/buck/cli/bootstrapper:bootstrapper',
+  ],
+)
+
+java_library(
+  name = 'bootstrapper_lib',
+  srcs = glob(['*.java']),
+  deps = [
+  ],
+  visibility = [
   ],
 )

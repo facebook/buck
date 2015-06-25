@@ -9,7 +9,7 @@ from buck_tool import BuckTool, Resource
 
 
 SERVER = Resource("buck_server")
-BOOTSTRAPPER = Resource("bootstrapper_classes")
+BOOTSTRAPPER = Resource("bootstrapper_jar")
 
 
 class BuckPackage(BuckTool):
