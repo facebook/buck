@@ -70,7 +70,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   private final Tool xctest;
 
   @AddToRuleKey
-  private final Tool otest;
+  private final Optional<Tool> otest;
 
   @AddToRuleKey
   private final boolean useXctest;
@@ -125,7 +125,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       Optional<Path> xctoolPath,
       Optional<BuildRule> xctoolZipRule,
       Tool xctest,
-      Tool otest,
+      Optional<Tool> otest,
       Boolean useXctest,
       String platformName,
       Optional<String> simulatorName,
@@ -258,10 +258,19 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
               resolvedTestOutputPath,
               xctoolStdoutReader));
     } else {
+      Tool testRunningTool;
+      if (testBundleExtension == "xctest") {
+        testRunningTool = xctest;
+      } else if (otest.isPresent()) {
+        testRunningTool = otest.get();
+      } else {
+        throw new HumanReadableException(
+            "Cannot run non-xctest bundle type %s (otest not present)",
+            testBundleExtension);
+      }
       steps.add(
           new XctestRunTestsStep(
-              (testBundleExtension == "xctest" ? xctest : otest)
-                  .getCommandPrefix(getResolver()),
+              testRunningTool.getCommandPrefix(getResolver()),
               (testBundleExtension == "xctest" ? "-XCTest" : "-SenTest"),
               resolvedTestBundleDirectory,
               resolvedTestOutputPath));

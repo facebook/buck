@@ -154,10 +154,10 @@ public class AppleCxxPlatforms {
         "apple-xctest",
         version);
 
-    Tool otest = new VersionedTool(
-        getToolPath("otest", toolSearchPaths, executableFinder),
-        ImmutableList.<String>of(),
-        "apple-otest",
+    Optional<Tool> otest = getOptionalTool(
+        "otest",
+        toolSearchPaths,
+        executableFinder,
         version);
 
     Tool dsymutil = new VersionedTool(

@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
@@ -47,6 +48,6 @@ abstract class AbstractAppleCxxPlatform {
   public abstract Tool getActool();
   public abstract Tool getIbtool();
   public abstract Tool getXctest();
-  public abstract Tool getOtest();
+  public abstract Optional<Tool> getOtest();
   public abstract Tool getDsymutil();
 }
