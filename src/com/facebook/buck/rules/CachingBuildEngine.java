@@ -54,7 +54,9 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -189,7 +191,7 @@ public class CachingBuildEngine implements BuildEngine {
 
               // Calculate the input-based rule key and record it in the metadata.
               RuleKey inputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
-              buildInfoRecorder.addMetadata(
+              buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
                   inputRuleKey.toString());
 
@@ -266,7 +268,7 @@ public class CachingBuildEngine implements BuildEngine {
             }
 
             // 5. build the rule
-            executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
+            executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext, buildInfoRecorder);
 
             return Futures.immediateFuture(
                 new BuildResult(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
@@ -286,10 +288,13 @@ public class CachingBuildEngine implements BuildEngine {
 
     final OnDiskBuildInfo onDiskBuildInfo = context.createOnDiskBuildInfoFor(rule.getBuildTarget());
     final BuildInfoRecorder buildInfoRecorder =
-        context.createBuildInfoRecorder(
-            rule.getBuildTarget(),
-            rule.getRuleKey(),
-            rule.getRuleKeyWithoutDeps());
+        context.createBuildInfoRecorder(rule.getBuildTarget())
+            .addBuildMetadata(
+                BuildInfo.METADATA_KEY_FOR_RULE_KEY,
+                rule.getRuleKey().toString())
+            .addBuildMetadata(
+                BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS,
+                rule.getRuleKeyWithoutDeps().toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
 
     // Dispatch the build job for this rule.
@@ -334,10 +339,10 @@ public class CachingBuildEngine implements BuildEngine {
 
             // Make sure that all of the local files have the same values they would as if the
             // rule had been built locally.
-            buildInfoRecorder.addMetadata(
+            buildInfoRecorder.addBuildMetadata(
                 BuildInfo.METADATA_KEY_FOR_TARGET,
                 rule.getBuildTarget().toString());
-            buildInfoRecorder.addMetadata(
+            buildInfoRecorder.addBuildMetadata(
                 BuildInfo.METADATA_KEY_FOR_DEPS,
                 FluentIterable.from(rule.getDeps())
                     .transform(HasBuildTarget.TO_TARGET)
@@ -649,6 +654,17 @@ public class CachingBuildEngine implements BuildEngine {
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.
       Files.delete(zipFile.toPath());
+
+      // If we have a hit, also write out the build metadata.
+      if (cacheResult.getType() == CacheResult.Type.HIT) {
+        Path metadataDir = BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget());
+        for (Map.Entry<String, String> ent : cacheResult.getMetadata().entrySet()) {
+          Path dest = metadataDir.resolve(ent.getKey());
+          filesystem.createParentDirs(dest);
+          filesystem.writeContentsToPath(ent.getValue(), dest);
+        }
+      }
+
     } catch (IOException e) {
       // In the wild, we have seen some inexplicable failures during this step. For now, we try to
       // give the user as much information as we can to debug the issue, but return CacheResult.MISS
@@ -678,7 +694,8 @@ public class CachingBuildEngine implements BuildEngine {
   private void executeCommandsNowThatDepsAreBuilt(
       BuildRule rule,
       BuildContext context,
-      BuildableContext buildableContext)
+      BuildableContext buildableContext,
+      BuildInfoRecorder buildInfoRecorder)
       throws InterruptedException, StepFailedException {
 
     LOG.debug("Building locally: %s", rule);
@@ -691,7 +708,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule(rule);
     if (abiRule != null) {
-      buildableContext.addMetadata(
+      buildInfoRecorder.addBuildMetadata(
           ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
           abiRule.getAbiKeyForDeps().getHash());
     }

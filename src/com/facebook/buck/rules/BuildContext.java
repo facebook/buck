@@ -121,17 +121,13 @@ public abstract class BuildContext {
    * This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s
    * in general.
    */
-  BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget,
-      RuleKey ruleKey,
-      RuleKey ruleKeyWithoutDeps) {
+  BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget) {
     return new BuildInfoRecorder(
         buildTarget,
         getProjectFilesystem(),
         getClock(),
         getBuildId(),
-        ImmutableMap.copyOf(getEnvironment()),
-        ruleKey,
-        ruleKeyWithoutDeps);
+        ImmutableMap.copyOf(getEnvironment()));
   }
 
   public void logBuildInfo(String format, Object... args) {

@@ -27,6 +27,11 @@ import java.nio.file.Path;
 class BuildInfo {
 
   /**
+   * Key for {@link OnDiskBuildInfo} to identify additional info describing a build.
+   */
+  static final String METADATA_KEY_FOR_ADDITIONAL_INFO = "ADDITIONAL_INFO";
+
+  /**
    * Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule.
    */
   static final String METADATA_KEY_FOR_RULE_KEY = "RULE_KEY";

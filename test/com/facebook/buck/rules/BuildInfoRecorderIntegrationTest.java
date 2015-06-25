@@ -41,7 +41,6 @@ import java.util.Collection;
 
 public class BuildInfoRecorderIntegrationTest {
   private static final String RULE_KEY = Strings.repeat("a", 40);
-  private static final String RULE_KEY_WITHOUT_DEPS = Strings.repeat("b", 40);
 
   private static final BuildTarget BUILD_TARGET = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -79,8 +78,6 @@ public class BuildInfoRecorderIntegrationTest {
         filesystem,
         new DefaultClock(),
         new BuildId(),
-        ImmutableMap.<String, String>of(),
-        new RuleKey(RULE_KEY),
-        new RuleKey(RULE_KEY_WITHOUT_DEPS));
+        ImmutableMap.<String, String>of());
   }
 }

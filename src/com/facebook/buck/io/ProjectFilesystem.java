@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
@@ -817,7 +816,6 @@ public class ProjectFilesystem {
       Collection<Path> pathsToIncludeInZip,
       File out,
       ImmutableMap<Path, String> additionalFileContents) throws IOException {
-    Preconditions.checkState(!Iterables.isEmpty(pathsToIncludeInZip));
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {
         boolean isDirectory = isDirectory(path);

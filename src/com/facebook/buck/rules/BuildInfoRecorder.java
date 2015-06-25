@@ -35,6 +35,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Funnels;
@@ -50,7 +51,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
@@ -71,7 +71,6 @@ public class BuildInfoRecorder {
   static final String ABSOLUTE_PATH_ERROR_FORMAT =
       "Error! '%s' is trying to record artifacts with absolute path: '%s'.";
 
-  private static final Path PATH_TO_ARTIFACT_INFO = Paths.get("buck-out/log/cache_artifact.txt");
   private static final String BUCK_CACHE_DATA_ENV_VAR = "BUCK_CACHE_DATA";
 
   private final BuildTarget buildTarget;
@@ -81,6 +80,7 @@ public class BuildInfoRecorder {
   private final BuildId buildId;
   private final ImmutableMap<String, String> artifactExtraData;
   private final Map<String, String> metadataToWrite;
+  private final Map<String, String> buildMetadata;
 
   /**
    * Every value in this set is a path relative to the project root.
@@ -91,9 +91,7 @@ public class BuildInfoRecorder {
       ProjectFilesystem projectFilesystem,
       Clock clock,
       BuildId buildId,
-      ImmutableMap<String, String> environment,
-      RuleKey ruleKey,
-      RuleKey rukeKeyWithoutDeps) {
+      ImmutableMap<String, String> environment) {
     this.buildTarget = buildTarget;
     this.pathToMetadataDirectory = BuildInfo.getPathToMetadataDirectory(buildTarget);
     this.projectFilesystem = projectFilesystem;
@@ -107,13 +105,37 @@ public class BuildInfoRecorder {
                 Optional.fromNullable(environment.get(BUCK_CACHE_DATA_ENV_VAR)).or("null"))
             .build();
 
-    this.metadataToWrite = Maps.newHashMap();
-    metadataToWrite.put(BuildInfo.METADATA_KEY_FOR_RULE_KEY,
-        ruleKey.toString());
-    metadataToWrite.put(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS,
-        rukeKeyWithoutDeps.toString());
-
+    this.metadataToWrite = Maps.newLinkedHashMap();
+    this.buildMetadata = Maps.newLinkedHashMap();
     this.pathsToOutputs = Sets.newHashSet();
+  }
+
+  private String formatAdditionalArtifactInfo(Map<String, String> entries) {
+    StringBuilder builder = new StringBuilder();
+    for (Map.Entry<String, String> entry : entries.entrySet()) {
+      builder.append(entry.getKey());
+      builder.append('=');
+      builder.append(entry.getValue());
+      builder.append('\n');
+    }
+    return builder.toString();
+  }
+
+  private ImmutableMap<String, String> getBuildMetadata() {
+    return ImmutableMap.<String, String>builder()
+        .put(
+            BuildInfo.METADATA_KEY_FOR_ADDITIONAL_INFO,
+            formatAdditionalArtifactInfo(
+                ImmutableMap.<String, String>builder()
+                    .put("build_id", buildId.toString())
+                    .put(
+                        "timestamp",
+                        String.valueOf(
+                            TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis())))
+                    .putAll(artifactExtraData)
+                    .build()))
+        .putAll(buildMetadata)
+        .build();
   }
 
   /**
@@ -126,11 +148,29 @@ public class BuildInfoRecorder {
     }
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
-    for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
+    for (Map.Entry<String, String> entry :
+         Iterables.concat(metadataToWrite.entrySet(), getBuildMetadata().entrySet())) {
       projectFilesystem.writeContentsToPath(
           entry.getValue(),
           pathToMetadataDirectory.resolve(entry.getKey()));
     }
+  }
+
+  /**
+   * Used by the build engine to record metadata describing the build (e.g. rule key, build UUID).
+   */
+  public BuildInfoRecorder addBuildMetadata(String key, String value) {
+    buildMetadata.put(key, value);
+    return this;
+  }
+
+  public BuildInfoRecorder addBuildMetadata(String key, Iterable<String> value) {
+    JsonArray values = new JsonArray();
+    for (String str : value) {
+      values.add(new JsonPrimitive(str));
+    }
+    addBuildMetadata(key, values.toString());
+    return this;
   }
 
   /**
@@ -206,17 +246,6 @@ public class BuildInfoRecorder {
     return new Pair<>(size, hasher.hash());
   }
 
-  private String formatAdditionalArtifactInfo(Map<String, String> entries) {
-    StringBuilder builder = new StringBuilder();
-    for (Map.Entry<String, String> entry : entries.entrySet()) {
-      builder.append(entry.getKey());
-      builder.append('=');
-      builder.append(entry.getValue());
-      builder.append('\n');
-    }
-    return builder.toString();
-  }
-
   /**
    * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
    */
@@ -237,16 +266,6 @@ public class BuildInfoRecorder {
             ArtifactCacheEvent.Operation.COMPRESS,
             ruleKeys));
 
-    String additionalArtifactInfo =
-        formatAdditionalArtifactInfo(
-            ImmutableMap.<String, String>builder()
-                .put("build_id", buildId.toString())
-                .put(
-                    "timestamp",
-                    String.valueOf(TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis())))
-                .putAll(artifactExtraData)
-                .build());
-
     File zip;
     ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.of();
     try {
@@ -254,10 +273,7 @@ public class BuildInfoRecorder {
       zip = File.createTempFile(
           "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()),
           ".zip");
-      projectFilesystem.createZip(
-          pathsToIncludeInZip,
-          zip,
-          ImmutableMap.of(PATH_TO_ARTIFACT_INFO, additionalArtifactInfo));
+      projectFilesystem.createZip(pathsToIncludeInZip, zip, ImmutableMap.<Path, String>of());
     } catch (IOException e) {
       eventBus.post(ConsoleEvent.info("Failed to create zip for %s containing:\n%s",
           buildTarget,
@@ -270,7 +286,9 @@ public class BuildInfoRecorder {
               ArtifactCacheEvent.Operation.COMPRESS,
               ruleKeys));
     }
-    artifactCache.store(ruleKeys, ImmutableMap.<String, String>of(), zip);
+
+    // Store the artifact, including any additional metadata.
+    artifactCache.store(ruleKeys, getBuildMetadata(), zip);
     zip.delete();
   }
 
