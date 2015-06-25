@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.AppendableRuleKeyCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -27,6 +26,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Optional;
@@ -91,15 +91,13 @@ public class ExternalJavacTest extends EasyMockSupport {
     Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    AppendableRuleKeyCache appendableRuleKeyCache =
-        new AppendableRuleKeyCache(pathResolver, fileHashCache);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey javacKey =
-        new RuleKey.Builder(pathResolver, fileHashCache, appendableRuleKeyCache)
+        new RuleKeyBuilder(pathResolver, fileHashCache)
             .setReflectively("javac", javac)
             .build();
     RuleKey.Builder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
@@ -124,17 +122,15 @@ public class ExternalJavacTest extends EasyMockSupport {
     Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    AppendableRuleKeyCache appendableRuleKeyCache =
-        new AppendableRuleKeyCache(pathResolver, fileHashCache);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey javacKey =
-        new RuleKey.Builder(pathResolver, fileHashCache, appendableRuleKeyCache)
-        .setReflectively("javac.version", javacVersion.toString())
-        .build();
+        new RuleKeyBuilder(pathResolver, fileHashCache)
+            .setReflectively("javac.version", javacVersion.toString())
+            .build();
     RuleKey.Builder builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKey expected = builder.build();

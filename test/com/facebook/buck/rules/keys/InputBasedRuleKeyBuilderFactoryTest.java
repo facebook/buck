@@ -19,11 +19,19 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -77,7 +85,44 @@ public class InputBasedRuleKeyBuilderFactoryTest {
   }
 
   @Test
-  public void ruleKeyChangesIfInputContentsFromDependencyChanges() {
+  public void ruleKeyChangesIfInputContentsFromPathSourceChanges() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path output = Paths.get("output");
+
+    BuildRule rule =
+        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("out")
+            .setSrc(new PathSourcePath(filesystem, output))
+            .build(resolver, filesystem);
+
+    // Build a rule key with a particular hash set for the output for the above rule.
+    FakeFileHashCache hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                output,
+                HashCode.fromInt(0)));
+    RuleKey inputKey1 =
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+
+    // Now, build a rule key with a different hash for the output for the above rule.
+    hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                output,
+                HashCode.fromInt(1)));
+    RuleKey inputKey2 =
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+
+    assertThat(
+        inputKey1,
+        Matchers.not(Matchers.equalTo(inputKey2)));
+  }
+
+
+  @Test
+  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -93,7 +138,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             .setSrc(new BuildTargetSourcePath(filesystem, dep.getBuildTarget()))
             .build(resolver, filesystem);
 
-    // Build a rule key with a particular hash set for the output for the above genrule.
+    // Build a rule key with a particular hash set for the output for the above rule.
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
@@ -102,7 +147,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     RuleKey inputKey1 =
         new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
 
-    // Now, build a rule key with a different hash for the output for the above genrule.
+    // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
@@ -114,6 +159,107 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     assertThat(
         inputKey1,
         Matchers.not(Matchers.equalTo(inputKey2)));
+  }
+
+  @Test
+  public void ruleKeyChangesIfInputContentsFromPathSourcePathInRuleKeyAppendableChanges() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    final Path output = Paths.get("output");
+
+    BuildRuleParams params =
+        BuildRuleParamsFactory.createTrivialBuildRuleParams(
+            BuildTargetFactory.newInstance("//:rule"));
+    BuildRule rule =
+        new NoopBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          RuleKeyAppendableWithInput input =
+              new RuleKeyAppendableWithInput(new PathSourcePath(filesystem, output));
+        };
+
+    // Build a rule key with a particular hash set for the output for the above rule.
+    FakeFileHashCache hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                output,
+                HashCode.fromInt(0)));
+    RuleKey inputKey1 =
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+
+    // Now, build a rule key with a different hash for the output for the above rule.
+    hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                output,
+                HashCode.fromInt(1)));
+    RuleKey inputKey2 =
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+
+    assertThat(
+        inputKey1,
+        Matchers.not(Matchers.equalTo(inputKey2)));
+  }
+
+  @Test
+  public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathInRuleKeyAppendableChanges() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    final BuildRule dep =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver, filesystem);
+
+    BuildRuleParams params =
+        new FakeBuildRuleParamsBuilder("//:rule")
+            .setDeps(ImmutableSortedSet.of(dep))
+            .build();
+    BuildRule rule =
+        new NoopBuildRule(params, pathResolver) {
+          @AddToRuleKey
+          RuleKeyAppendableWithInput input =
+              new RuleKeyAppendableWithInput(
+                  new BuildTargetSourcePath(filesystem, dep.getBuildTarget()));
+        };
+
+    // Build a rule key with a particular hash set for the output for the above rule.
+    FakeFileHashCache hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                Preconditions.checkNotNull(dep.getPathToOutput()),
+                HashCode.fromInt(0)));
+    RuleKey inputKey1 =
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+
+    // Now, build a rule key with a different hash for the output for the above rule.
+    hashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                Preconditions.checkNotNull(dep.getPathToOutput()),
+                HashCode.fromInt(1)));
+    RuleKey inputKey2 =
+        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+
+    assertThat(
+        inputKey1,
+        Matchers.not(Matchers.equalTo(inputKey2)));
+  }
+
+  private static class RuleKeyAppendableWithInput implements RuleKeyAppendable {
+
+    private final SourcePath input;
+
+    public RuleKeyAppendableWithInput(SourcePath input) {
+      this.input = input;
+    }
+
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+      return builder.setReflectively("input", input);
+    }
+
   }
 
 }

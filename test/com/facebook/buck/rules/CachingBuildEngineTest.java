@@ -39,6 +39,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -1478,8 +1479,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     public RuleKey.Builder newInstance(final BuildRule buildRule) {
       SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
       FileHashCache hashCache = new NullFileHashCache();
-      AppendableRuleKeyCache ruleKeyCache = new AppendableRuleKeyCache(resolver, hashCache);
-      return new RuleKey.Builder(resolver, hashCache, ruleKeyCache) {
+      return new RuleKeyBuilder(resolver, hashCache) {
 
         @Override
         public RuleKey.Builder setReflectively(String key, @Nullable Object val) {

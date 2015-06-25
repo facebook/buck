@@ -114,7 +114,7 @@ public class RuleKey {
     return this.getHashCode().hashCode();
   }
 
-  public static class Builder {
+  public abstract static class Builder {
 
     @VisibleForTesting
     static final byte SEPARATOR = '\0';
@@ -124,18 +124,15 @@ public class RuleKey {
     private final SourcePathResolver resolver;
     private final Hasher hasher;
     private final FileHashCache hashCache;
-    private final AppendableRuleKeyCache appendableRuleKeyCache;
 
     @Nullable private List<String> logElms;
 
     public Builder(
         SourcePathResolver resolver,
-        FileHashCache hashCache,
-        AppendableRuleKeyCache appendableRuleKeyCache) {
+        FileHashCache hashCache) {
       this.resolver = resolver;
       this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
       this.hashCache = hashCache;
-      this.appendableRuleKeyCache = appendableRuleKeyCache;
       if (logger.isVerboseEnabled()) {
         this.logElms = Lists.newArrayList();
       }
@@ -176,11 +173,26 @@ public class RuleKey {
       return setSingleValue(rule.getRuleKey());
     }
 
+    /**
+     * Implementations can override this to provide context-specific caching.
+     *
+     * @return the {@link RuleKey} to be used for the given {@code appendable}.
+     */
+    protected abstract RuleKey getAppendableRuleKey(
+        SourcePathResolver resolver,
+        FileHashCache hashCache,
+        RuleKeyAppendable appendable);
+
+    public Builder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
+      setReflectively(
+          key + ".appendableSubKey",
+          getAppendableRuleKey(resolver, hashCache, appendable));
+      return this;
+    }
+
     public Builder setReflectively(String key, @Nullable Object val) {
       if (val instanceof RuleKeyAppendable) {
-        setReflectively(
-            key + ".appendableSubKey",
-            appendableRuleKeyCache.get((RuleKeyAppendable) val));
+        setAppendableRuleKey(key, (RuleKeyAppendable) val);
         if (!(val instanceof BuildRule)) {
           return this;
         }

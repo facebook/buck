@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AppendableRuleKeyCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -148,15 +147,13 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     FileHashCache fileHashCache = new NullFileHashCache();
-    AppendableRuleKeyCache appendableRuleKeyCache =
-        new AppendableRuleKeyCache(pathResolver, fileHashCache);
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey subKey =
-        new RuleKey.Builder(pathResolver, fileHashCache, appendableRuleKeyCache)
-        .setReflectively("cheese", "brie")
-        .build();
+        new RuleKeyBuilder(pathResolver, fileHashCache)
+            .setReflectively("cheese", "brie")
+            .build();
 
     RuleKey.Builder builder = factory.newInstance(rule);
     builder.setReflectively("field.appendableSubKey", subKey);
@@ -185,8 +182,6 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     FileHashCache fileHashCache = new NullFileHashCache();
-    AppendableRuleKeyCache appendableRuleKeyCache =
-        new AppendableRuleKeyCache(pathResolver, fileHashCache);
     DefaultRuleKeyBuilderFactory factory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
@@ -209,9 +204,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
     AppendableRule appendableRule = new AppendableRule(depTarget);
 
     RuleKey subKey =
-        new RuleKey.Builder(pathResolver, fileHashCache, appendableRuleKeyCache)
-        .setReflectively("cheese", "brie")
-        .build();
+        new RuleKeyBuilder(pathResolver, fileHashCache)
+            .setReflectively("cheese", "brie")
+            .build();
 
     RuleKey.Builder builder = factory.newInstance(rule);
     builder.setReflectively("field.appendableSubKey", subKey);
