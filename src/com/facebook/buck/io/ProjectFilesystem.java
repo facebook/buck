@@ -62,7 +62,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -200,7 +199,7 @@ public class ProjectFilesystem {
   public File getFileForRelativePath(String pathRelativeToProjectRoot) {
     return pathRelativeToProjectRoot.isEmpty()
         ? projectRoot.toFile()
-        : getPathForRelativePath(Paths.get(pathRelativeToProjectRoot)).toFile();
+        : getPathForRelativePath(pathRelativeToProjectRoot).toFile();
   }
 
   /**
@@ -214,6 +213,11 @@ public class ProjectFilesystem {
   public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
     return projectRoot.resolve(pathRelativeToProjectRoot);
   }
+
+  public Path getPathForRelativePath(String pathRelativeToProjectRoot) {
+    return projectRoot.resolve(pathRelativeToProjectRoot);
+  }
+
 
   /**
    * @param path Absolute path or path relative to the project root.
@@ -526,7 +530,7 @@ public class ProjectFilesystem {
    *  {@link #createParentDirs(java.nio.file.Path)}.
    */
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
-    Path file = getPathForRelativePath(Paths.get(pathRelativeToProjectRoot));
+    Path file = getPathForRelativePath(pathRelativeToProjectRoot);
     mkdirs(file.getParent());
   }
 
@@ -674,7 +678,7 @@ public class ProjectFilesystem {
    *  {@link #readFirstLine(java.nio.file.Path)}
    */
   public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
-    return readFirstLine(Paths.get(pathRelativeToProjectRoot));
+    return readFirstLine(projectRoot.getFileSystem().getPath(pathRelativeToProjectRoot));
   }
 
   /**

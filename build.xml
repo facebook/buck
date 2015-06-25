@@ -79,6 +79,7 @@
     <include name="jacoco/org.jacoco.core-0.7.2.201409121644.jar" />
     <include name="jacoco/org.jacoco.report-0.7.2.201409121644.jar" />
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
+    <include name="jimfs/jimfs-1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="okhttp/okhttp-2.2.0.jar" />
     <include name="okio/okio-1.2.0.jar" />
