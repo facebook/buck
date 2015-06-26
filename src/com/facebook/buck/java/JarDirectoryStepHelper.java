@@ -22,11 +22,13 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.DirectoryTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
-import com.google.common.base.Throwables;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -216,9 +218,14 @@ public class JarDirectoryStepHelper {
    * @param jar is the file being written.
    */
   private static void addFilesInDirectoryToJar(File directory,
-      final CustomZipOutputStream jar,
+      CustomZipOutputStream jar,
       final Set<String> alreadyAddedEntries,
       final BuckEventBus eventBus) throws IOException {
+
+    // Since filesystem traversals can be non-deterministic, sort the entries we find into
+    // a tree map before writing them out.
+    final Map<String, Pair<JarEntry, Optional<File>>> entries = Maps.newTreeMap();
+
     new DirectoryTraversal(directory) {
 
       @Override
@@ -226,23 +233,19 @@ public class JarDirectoryStepHelper {
         JarEntry entry = new JarEntry(relativePath.replace('\\', '/'));
         String entryName = entry.getName();
         entry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
-        try {
-          // We expect there to be many duplicate entries for things like directories. Creating
-          // those repeatedly would be lame, so don't do that.
-          if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
-            if (!entryName.endsWith("/")) {
-              eventBus.post(ConsoleEvent.create(
-                  determineSeverity(entry),
-                  "Duplicate found when adding directory to jar: %s", relativePath));
-            }
-              return;
+
+        // We expect there to be many duplicate entries for things like directories. Creating
+        // those repeatedly would be lame, so don't do that.
+        if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
+          if (!entryName.endsWith("/")) {
+            eventBus.post(ConsoleEvent.create(
+                determineSeverity(entry),
+                "Duplicate found when adding directory to jar: %s", relativePath));
           }
-          jar.putNextEntry(entry);
-          Files.copy(file, jar);
-          jar.closeEntry();
-        } catch (IOException e) {
-          Throwables.propagate(e);
+            return;
         }
+
+        entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
       }
 
       @Override
@@ -257,10 +260,18 @@ public class JarDirectoryStepHelper {
         }
         JarEntry entry = new JarEntry(entryName);
         entry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
-        jar.putNextEntry(entry);
-        jar.closeEntry();
+        entries.put(entry.getName(), new Pair<>(entry, Optional.<File>absent()));
       }
     }.traverse();
+
+    // Write the entries out using the iteration order of the tree map above.
+    for (Pair<JarEntry, Optional<File>> entry : entries.values()) {
+      jar.putNextEntry(entry.getFirst());
+      if (entry.getSecond().isPresent()) {
+        Files.copy(entry.getSecond().get(), jar);
+      }
+      jar.closeEntry();
+    }
   }
 
   /**

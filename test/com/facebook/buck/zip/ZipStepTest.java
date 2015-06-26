@@ -24,9 +24,11 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -293,7 +295,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void zipMaintainsPosixPermissions() throws IOException {
+  public void zipMaintainsExecutablePermissions() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     Path parent = tmp.newFolder("zipstep").toPath();
@@ -322,4 +324,62 @@ public class ZipStepTest {
     Unzip.extractZipFile(outputZip, destination, Unzip.ExistingFileMode.OVERWRITE);
     assertTrue(java.nio.file.Files.isExecutable(destination.resolve("foo.sh")));
   }
+
+  @Test
+  public void zipEntryOrderingIsFilesystemAgnostic() throws IOException {
+    Path output = Paths.get("output");
+    Path zipdir = Paths.get("zipdir");
+
+    // Run the zip step on a filesystem with a particular ordering.
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExecutionContext context =
+        TestExecutionContext.newBuilder()
+            .setProjectFilesystem(filesystem)
+            .build();
+    filesystem.mkdirs(zipdir);
+    filesystem.touch(zipdir.resolve("file1"));
+    filesystem.touch(zipdir.resolve("file2"));
+    ZipStep step =
+        new ZipStep(
+            output,
+            ImmutableSet.<Path>of(),
+            false,
+            ZipStep.MIN_COMPRESSION_LEVEL,
+            zipdir);
+    assertEquals(0, step.execute(context));
+    ImmutableList<String> entries1 = getEntries(filesystem, output);
+
+    // Run the zip step on a filesystem with a different ordering.
+    filesystem = new FakeProjectFilesystem();
+    context =
+        TestExecutionContext.newBuilder()
+            .setProjectFilesystem(filesystem)
+            .build();
+    filesystem.mkdirs(zipdir);
+    filesystem.touch(zipdir.resolve("file2"));
+    filesystem.touch(zipdir.resolve("file1"));
+    step =
+        new ZipStep(
+            output,
+            ImmutableSet.<Path>of(),
+            false,
+            ZipStep.MIN_COMPRESSION_LEVEL,
+            zipdir);
+    assertEquals(0, step.execute(context));
+    ImmutableList<String> entries2 = getEntries(filesystem, output);
+
+    assertEquals(entries1, entries2);
+  }
+
+  private ImmutableList<String> getEntries(ProjectFilesystem filesystem, Path zip)
+      throws IOException {
+    ImmutableList.Builder<String> entries = ImmutableList.builder();
+    try (ZipInputStream is = new ZipInputStream(filesystem.newFileInputStream(zip))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        entries.add(entry.getName());
+      }
+    }
+    return entries.build();
+  }
+
 }

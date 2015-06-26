@@ -414,4 +414,69 @@ public class FakeProjectFilesystemTest {
     }
   }
 
+  @Test
+  public void filesystemWalkUsesInsertionOrder() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(Paths.get("foo"));
+    filesystem.touch(Paths.get("foo/bbbb"));
+    filesystem.touch(Paths.get("foo/aaaa"));
+    AccumulatingFileVisitor visitor = new AccumulatingFileVisitor();
+    filesystem.walkRelativeFileTree(
+        Paths.get("foo"),
+        visitor);
+    assertThat(
+        visitor.getSeen(),
+        contains(Paths.get("foo/bbbb"), Paths.get("foo/aaaa")));
+
+    // Change the order the files were added and verify this changes the iteration order.
+    filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(Paths.get("foo"));
+    filesystem.touch(Paths.get("foo/aaaa"));
+    filesystem.touch(Paths.get("foo/bbbb"));
+    visitor = new AccumulatingFileVisitor();
+    filesystem.walkRelativeFileTree(
+        Paths.get("foo"),
+        visitor);
+    assertThat(
+        visitor.getSeen(),
+        contains(Paths.get("foo/aaaa"), Paths.get("foo/bbbb")));
+  }
+
+  private static class AccumulatingFileVisitor implements FileVisitor<Path> {
+
+    private final List<Path> seen = Lists.newArrayList();
+
+    public ImmutableList<Path> getSeen() {
+      return ImmutableList.copyOf(seen);
+    }
+
+    @Override
+    public FileVisitResult preVisitDirectory(
+        Path dir,
+        BasicFileAttributes attrs)
+        throws IOException {
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult visitFile(
+        Path file,
+        BasicFileAttributes attrs)
+        throws IOException {
+      seen.add(file);
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+      throw exc;
+    }
+
+    @Override
+    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+      throw exc;
+    }
+
+  }
+
 }

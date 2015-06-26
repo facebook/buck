@@ -23,22 +23,28 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 
@@ -100,84 +106,99 @@ public class ZipStep implements Step {
       return 1;
     }
 
+    // Since filesystem traversals can be non-deterministic, sort the entries we find into
+    // a tree map before writing them out.
+    final Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = Maps.newTreeMap();
+
+    FileVisitor<Path> pathFileVisitor = new SimpleFileVisitor<Path>() {
+      private boolean isSkipFile(Path file) {
+        return !paths.isEmpty() && !paths.contains(file);
+      }
+
+      private String getEntryName(Path path) {
+        Path relativePath = junkPaths ? path.getFileName() : baseDir.relativize(path);
+        return MorePaths.pathWithUnixSeparators(relativePath);
+      }
+
+      private CustomZipEntry getZipEntry(
+          String entryName,
+          final Path path,
+          BasicFileAttributes attr) throws IOException {
+        boolean isDirectory = filesystem.isDirectory(path);
+        if (isDirectory) {
+          entryName += "/";
+        }
+
+        CustomZipEntry entry = new CustomZipEntry(entryName);
+        entry.setTime(0);  // We want deterministic ZIP files, so avoid mtimes.
+        entry.setCompressionLevel(compressionLevel);
+        // If we're using STORED files, we must manually set the CRC, size, and compressed size.
+        if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
+          entry.setSize(attr.size());
+          entry.setCompressedSize(attr.size());
+          entry.setCrc(
+              new ByteSource() {
+                @Override
+                public InputStream openStream() throws IOException {
+                  return filesystem.newFileInputStream(path);
+                }
+              }.hash(Hashing.crc32()).padToLong());
+        }
+        // Support executable files.  If we detect this file is executable, store this
+        // information as 0100 in the field typically used in zip implementations for
+        // POSIX file permissions.  We'll use this information when unzipping.
+        if (filesystem.isExecutable(path)) {
+          long mode =
+              MorePosixFilePermissions.toMode(
+                  EnumSet.of(PosixFilePermission.OWNER_EXECUTE));
+          long externalAttributes = mode << 16;
+          LOG.verbose(
+              "Setting mode for entry %s path %s to 0x%08X (0x%08X)",
+              entryName, path, mode, externalAttributes);
+          entry.setExternalAttributes(externalAttributes);
+        }
+        return entry;
+      }
+
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+          throws IOException {
+        if (!isSkipFile(file)) {
+          CustomZipEntry entry = getZipEntry(getEntryName(file), file, attrs);
+          entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
+        }
+        return FileVisitResult.CONTINUE;
+      }
+      @Override
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+          throws IOException {
+        if (!dir.equals(baseDir) && !isSkipFile(dir)) {
+          CustomZipEntry entry = getZipEntry(getEntryName(dir), dir, attrs);
+          entries.put(entry.getName(), new Pair<>(entry, Optional.<Path>absent()));
+        }
+        return FileVisitResult.CONTINUE;
+      }
+    };
+
     try (
       BufferedOutputStream baseOut =
           new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
-      final CustomZipOutputStream out =
+      CustomZipOutputStream out =
           ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING)) {
 
-      final FileVisitor<Path> pathFileVisitor = new SimpleFileVisitor<Path>() {
-        private boolean isSkipFile(Path file) {
-          if (!paths.isEmpty() && !paths.contains(file)) {
-            return true;
-          }
-          return false;
-        }
-
-        private String getEntryName(Path path) {
-          Path relativePath = junkPaths ? path.getFileName() : baseDir.relativize(path);
-          return MorePaths.pathWithUnixSeparators(relativePath);
-        }
-
-        private CustomZipEntry getZipEntry(
-            String entryName,
-            Path path,
-            BasicFileAttributes attr) throws IOException {
-          boolean isDirectory = path.toFile().isDirectory();
-          if (isDirectory) {
-            entryName += "/";
-          }
-
-          CustomZipEntry entry = new CustomZipEntry(entryName);
-          entry.setTime(0);  // We want deterministic ZIP files, so avoid mtimes.
-          entry.setCompressionLevel(compressionLevel);
-          // If we're using STORED files, we must manually set the CRC, size, and compressed size.
-          if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
-            entry.setSize(attr.size());
-            entry.setCompressedSize(attr.size());
-            entry.setCrc(
-                com.google.common.io.Files.hash(
-                    path.toFile(),
-                    Hashing.crc32()).padToLong());
-          }
-          PosixFileAttributeView posixAttrView = Files.getFileAttributeView(
-              path, PosixFileAttributeView.class);
-          if (posixAttrView != null) {
-            // Copy permissions (including the executable bit) into the
-            // external attributes field of the entry, starting at bit 16.
-            PosixFileAttributes posixAttr = posixAttrView.readAttributes();
-            long mode = MorePosixFilePermissions.toMode(posixAttr.permissions());
-            long externalAttributes = mode << 16;
-            LOG.verbose(
-                "Setting mode for entry %s path %s to 0x%08X (0x%08X)",
-                entryName, path, mode, externalAttributes);
-            entry.setExternalAttributes(externalAttributes);
-          }
-          return entry;
-        }
-
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-            throws IOException {
-          if (!isSkipFile(file)) {
-            Path path = filesystem.resolve(file);
-            out.putNextEntry(getZipEntry(getEntryName(file), path, attrs));
-            Files.copy(path, out);
-            out.closeEntry();
-          }
-          return FileVisitResult.CONTINUE;
-        }
-        @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-            throws IOException {
-          if (!dir.equals(baseDir) && !isSkipFile(dir)) {
-            out.putNextEntry(getZipEntry(getEntryName(dir), filesystem.resolve(dir), attrs));
-            out.closeEntry();
-          }
-          return FileVisitResult.CONTINUE;
-        }
-      };
       filesystem.walkRelativeFileTree(baseDir, pathFileVisitor);
+
+      // Write the entries out using the iteration order of the tree map above.
+      for (Pair<CustomZipEntry, Optional<Path>> entry : entries.values()) {
+        out.putNextEntry(entry.getFirst());
+        if (entry.getSecond().isPresent()) {
+          try (InputStream input = filesystem.newFileInputStream(entry.getSecond().get())) {
+            ByteStreams.copy(input, out);
+          }
+        }
+        out.closeEntry();
+      }
+
     } catch (IOException e) {
       context.logError(e, "Error creating zip file %s", pathToZipFile);
       return 1;
