@@ -129,6 +129,36 @@ public class IjModuleGraphTest {
   }
 
   @Test
+  public void testDoesNotDependOnSelfViaExportedDependencies() {
+    TargetNode<?> libraryTypes = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/library:types"))
+        .build();
+
+    TargetNode<?> reExporter = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/reexporter:reexporter"))
+        .addExportedDep(libraryTypes.getBuildTarget())
+        .build();
+
+    TargetNode<?> libraryCore = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/library:core"))
+        .addDep(reExporter.getBuildTarget())
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.of(
+            libraryCore,
+            reExporter,
+            libraryTypes));
+
+    IjModule libraryModule = getModuleForTarget(moduleGraph, libraryCore);
+    IjModule reExporterModule = getModuleForTarget(moduleGraph, reExporter);
+
+    assertEquals(
+        ImmutableMap.of(reExporterModule, IjModuleGraph.DependencyType.PROD),
+        moduleGraph.getDependentModulesFor(libraryModule));
+  }
+
+  @Test
   public void testTestDependencies() {
     TargetNode<?> junitTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third-party/junit:junit"))

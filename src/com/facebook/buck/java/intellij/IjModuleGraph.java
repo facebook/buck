@@ -22,6 +22,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableListMultimap;
@@ -138,7 +139,7 @@ public class IjModuleGraph {
         depsBuilder = ImmutableMap.builder();
     final Set<IjLibrary> referencedLibraries = new HashSet<>();
 
-    for (IjModule module : FluentIterable.from(rulesToModules.values()).toSet()) {
+    for (final IjModule module : FluentIterable.from(rulesToModules.values()).toSet()) {
       Map<IjProjectElement, DependencyType> moduleDeps = new HashMap<>();
 
       for (Map.Entry<BuildTarget, DependencyType> entry : module.getDependencies().entrySet()) {
@@ -158,6 +159,16 @@ public class IjModuleGraph {
           depElements = FluentIterable.from(
               exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget))
               .append(depBuildTarget)
+              .filter(
+                  new Predicate<BuildTarget>() {
+                    @Override
+                    public boolean apply(BuildTarget input) {
+                      // The exported deps closure can contain references back to targets contained
+                      // in the module, so filter those out.
+                      TargetNode<?> targetNode = targetGraph.get(input);
+                      return !module.getTargets().contains(targetNode);
+                    }
+                  })
               .transform(
                   new Function<BuildTarget, IjProjectElement>() {
                     @Nullable
