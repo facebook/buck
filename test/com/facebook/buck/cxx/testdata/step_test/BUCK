@@ -1,0 +1,6 @@
+cxx_library(
+  name = 'simple',
+  srcs = [
+    'simple.cc',
+  ],
+)

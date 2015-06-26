@@ -231,6 +231,7 @@ public class ProjectWorkspace {
         destPath,
         Optional.<NGContext>absent(),
         Optional.<BuckEventListener>absent(),
+        Optional.<ImmutableMap<String, String>>absent(),
         args);
   }
 
@@ -240,6 +241,7 @@ public class ProjectWorkspace {
         repoRoot,
         Optional.<NGContext>absent(),
         Optional.<BuckEventListener>absent(),
+        Optional.<ImmutableMap<String, String>>absent(),
         args);
   }
 
@@ -266,7 +268,9 @@ public class ProjectWorkspace {
     return runBuckCommandWithEnvironmentAndContext(
         destPath,
         Optional.of(context),
-        Optional.<BuckEventListener>absent(), args);
+        Optional.<BuckEventListener>absent(),
+        Optional.<ImmutableMap<String, String>>absent(),
+        args);
   }
 
   public ProcessResult runBuckdCommand(
@@ -278,6 +282,7 @@ public class ProjectWorkspace {
         destPath,
         Optional.of(context),
         Optional.of(eventListener),
+        Optional.<ImmutableMap<String, String>>absent(),
         args);
   }
 
@@ -285,6 +290,7 @@ public class ProjectWorkspace {
       Path repoRoot,
       Optional<NGContext> context,
       Optional<BuckEventListener> eventListener,
+      Optional<ImmutableMap<String, String>> env,
       String... args)
     throws IOException {
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
@@ -335,7 +341,7 @@ public class ProjectWorkspace {
         envBuilder.put(variable, value);
       }
     }
-    ImmutableMap<String, String> env = envBuilder.build();
+    ImmutableMap<String, String> sanizitedEnv = envBuilder.build();
 
     Main main = new Main(stdout, stderr, eventListeners.build());
     int exitCode = 0;
@@ -344,7 +350,7 @@ public class ProjectWorkspace {
           new BuildId(),
           repoRoot,
           context,
-          env,
+          env.or(sanizitedEnv),
           args);
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);

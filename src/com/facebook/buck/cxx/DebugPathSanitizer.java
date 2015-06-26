@@ -69,25 +69,10 @@ public class DebugPathSanitizer {
   }
 
   /**
-   * Return a new {@link DebugPathSanitizer} with a different pathSize setting.
-   */
-  public DebugPathSanitizer changePathSize(int newPathSize) {
-    return new DebugPathSanitizer(
-        newPathSize,
-        separator,
-        compilationDirectory,
-        other);
-  }
-
-  /**
    * @return the given path as a string, expanded using {@code separator} to fulfill the required
    *     {@code pathSize}.
    */
   public String getExpandedPath(Path path) {
-    if (pathSize == 0) {
-      return path.toString();
-    }
-
     Preconditions.checkArgument(path.toString().length() <= pathSize);
     return Strings.padEnd(path.toString(), pathSize, separator);
   }

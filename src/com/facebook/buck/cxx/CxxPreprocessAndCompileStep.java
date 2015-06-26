@@ -121,7 +121,11 @@ public class CxxPreprocessAndCompileStep implements Step {
                 .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
                 .or(replacementPath);
 
-            replacementPath = sanitizer.sanitize(Optional.of(workingDir), replacementPath);
+            replacementPath =
+                sanitizer.sanitize(
+                    Optional.of(workingDir),
+                    replacementPath,
+                    /* expandPaths */ false);
 
             if (!originalPath.equals(replacementPath)) {
               String num = m.group("num");
@@ -167,6 +171,28 @@ public class CxxPreprocessAndCompileStep implements Step {
     ProcessBuilder builder = new ProcessBuilder();
     builder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
     builder.redirectError(ProcessBuilder.Redirect.PIPE);
+
+    // A forced compilation directory is set in the constructor.  Now, we can't actually force
+    // the compiler to embed this into the binary -- all we can do set the PWD environment to
+    // variations of the actual current working directory (e.g. /actual/dir or
+    // /actual/dir////).  This adjustment serves two purposes:
+    //
+    //   1) it makes the compiler's current-directory line directive output agree with its cwd,
+    //      given by getProjectDirectoryRoot.  (If PWD and cwd are different names for the same
+    //      directory, the compiler prefers PWD, but we expect cwd for DebugPathSanitizer.)
+    //
+    //   2) in the case where we're using post-linkd debug path replacement, we reserve room
+    //      to expand the path later.
+    //
+    builder.environment().put(
+        "PWD",
+        // We only need to expand the working directory if compiling, as some compilers
+        // (e.g. clang) ignore overrides set in the preprocessed source when embedding the
+        // working directory in the debug info.
+        operation == Operation.COMPILE_MUNGE_DEBUGINFO ?
+            sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()) :
+            context.getProjectDirectoryRoot().toAbsolutePath().toString());
+
     return builder;
   }
 
@@ -302,91 +328,82 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
   }
 
+  private int executeOther(ExecutionContext context) throws Exception {
+    ProcessBuilder builder = makeSubprocessBuilder(context);
+
+    // If we're preprocessing, file output goes through stdout, so we can postprocess it.
+    if (operation == Operation.PREPROCESS) {
+      builder.command(makePreprocessCommand());
+      builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+    } else {
+      builder.command(
+          makeCompileCommand(
+              input.toString(),
+              inputType.getLanguage()));
+    }
+
+    LOG.debug(
+        "Running command (pwd=%s): %s",
+        builder.directory(),
+        getDescription(context));
+
+    // Start the process.
+    Process process = builder.start();
+
+    // We buffer error messages in memory, as these are typically small.
+    ByteArrayOutputStream error = new ByteArrayOutputStream();
+
+    // Open the temp file to write the intermediate output to and also fire up managed threads
+    // to process the stdout and stderr lines from the preprocess command.
+    int exitCode;
+    try {
+      try (FunctionLineProcessorThread errorProcessor =
+               new FunctionLineProcessorThread(
+                   process.getErrorStream(),
+                   error,
+                   createErrorLineProcessor(context.getProjectDirectoryRoot()))) {
+        errorProcessor.start();
+
+        // If we're preprocessing, we pipe the output through a processor to sanitize the line
+        // markers.  So fire that up...
+        if (operation == Operation.PREPROCESS) {
+          try (OutputStream output =
+                   context.getProjectFilesystem().newFileOutputStream(this.output);
+               FunctionLineProcessorThread outputProcessor =
+                   new FunctionLineProcessorThread(
+                       process.getInputStream(),
+                       output,
+                       createPreprocessOutputLineProcessor(context.getProjectDirectoryRoot()))) {
+            outputProcessor.start();
+          }
+        }
+      }
+      exitCode = process.waitFor();
+    } finally {
+      process.destroy();
+      process.waitFor();
+    }
+
+    // If we generated any error output, print that to the console.
+    String err = new String(error.toByteArray());
+    if (!err.isEmpty()) {
+      context.getConsole().printErrorText(err);
+    }
+
+    return exitCode;
+  }
+
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
     try {
       LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
       // We need completely different logic if we're piping from the preprocessor to the compiler.
-      if (operation == Operation.PIPED_PREPROCESS_AND_COMPILE) {
-        return executePiped(context);
-      }
-
-      ProcessBuilder builder = makeSubprocessBuilder(context);
-      // If we're preprocessing, file output goes through stdout, so we can postprocess it.
-      if (operation == Operation.PREPROCESS) {
-        builder.command(makePreprocessCommand());
-        builder.redirectOutput(ProcessBuilder.Redirect.PIPE);
-      } else {
-        builder.command(
-            makeCompileCommand(
-                input.toString(),
-                inputType.getLanguage()));
-
-      }
-
-      // A forced compilation directory is set in the constructor.  Now, we can't actually force
-      // the compiler to embed this into the binary -- all we can do set the PWD environment to
-      // variations of the actual current working directory (e.g. /actual/dir or
-      // /actual/dir////).  This adjustment serves two purposes:
-      //
-      //   1) it makes the compiler's current-directory line directive output agree with its cwd,
-      //      given by getProjectDirectoryRoot.  (If PWD and cwd are different names for the same
-      //      directory, the compiler prefers PWD, but we expect cwd for DebugPathSanitizer.)
-      //
-      //   2) in the case where we're using post-linkd debug path replacement, we reserve room
-      //      to expand the path later.
-      //
-      builder.environment().put(
-          "PWD",
-          sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()));
-
-      LOG.debug(
-          "Running command (pwd=%s): %s",
-          builder.directory(),
-          getDescription(context));
-
-      // Start the process.
-      Process process = builder.start();
-
-      // We buffer error messages in memory, as these are typically small.
-      ByteArrayOutputStream error = new ByteArrayOutputStream();
-
-      // Open the temp file to write the intermediate output to and also fire up managed threads
-      // to process the stdout and stderr lines from the preprocess command.
       int exitCode;
-      try {
-        try (FunctionLineProcessorThread errorProcessor =
-                 new FunctionLineProcessorThread(
-                     process.getErrorStream(),
-                     error,
-                     createErrorLineProcessor(context.getProjectDirectoryRoot()))) {
-          errorProcessor.start();
-
-          // If we're preprocessing, we pipe the output through a processor to sanitize the line
-          // markers.  So fire that up...
-          if (operation == Operation.PREPROCESS) {
-            try (OutputStream output =
-                     context.getProjectFilesystem().newFileOutputStream(this.output);
-                 FunctionLineProcessorThread outputProcessor =
-                     new FunctionLineProcessorThread(
-                         process.getInputStream(),
-                         output,
-                         createPreprocessOutputLineProcessor(context.getProjectDirectoryRoot()))) {
-              outputProcessor.start();
-            }
-          }
-        }
-        exitCode = process.waitFor();
-      } finally {
-        process.destroy();
-        process.waitFor();
-      }
-
-      // If we generated any error output, print that to the console.
-      String err = new String(error.toByteArray());
-      if (!err.isEmpty()) {
-        context.getConsole().printErrorText(err);
+      if (operation == Operation.PIPED_PREPROCESS_AND_COMPILE) {
+        exitCode = executePiped(context);
+      } else {
+        exitCode = executeOther(context);
       }
 
       // If the compilation completed successfully and we didn't effect debug-info normalization
@@ -405,7 +422,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       }
 
       if (exitCode != 0) {
-        LOG.warn("error %d %s %s: %s", exitCode, operation.toString().toLowerCase(), input, err);
+        LOG.warn("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
       }
 
       return exitCode;
@@ -461,7 +478,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     return getDescriptionNoContext();
   }
 
-  public static enum Operation {
+  public enum Operation {
     COMPILE,
     COMPILE_MUNGE_DEBUGINFO,
     PREPROCESS,

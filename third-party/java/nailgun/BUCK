@@ -5,6 +5,7 @@ prebuilt_jar(
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/cxx:cxx',
     '//test/com/facebook/buck/java:java',
     '//test/com/facebook/buck/testutil/integration:integration',
   ]

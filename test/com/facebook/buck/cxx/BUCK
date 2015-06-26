@@ -73,5 +73,6 @@ java_test(
     '//third-party/java/junit:junit',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/gson:gson',
+    '//third-party/java/nailgun:nailgun',
   ],
 )

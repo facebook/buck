@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -46,26 +47,30 @@ import java.util.List;
 @RunWith(Parameterized.class)
 public class NdkCxxPlatformIntegrationTest {
 
-  @Parameterized.Parameters(name = "{0},{1},{2}")
+  @Parameterized.Parameters(name = "{0},{1},{2},{3}")
   public static Collection<Object[]> data() {
     List<Object[]> data = Lists.newArrayList();
     for (String arch : ImmutableList.of("arm", "armv7", "x86")) {
-      data.add(
-          new Object[] {
-              NdkCxxPlatforms.Compiler.Type.GCC,
-              NdkCxxPlatforms.CxxRuntime.GNUSTL,
-              arch
-          });
-      data.add(
-          new Object[] {
-              NdkCxxPlatforms.Compiler.Type.CLANG,
-              NdkCxxPlatforms.CxxRuntime.GNUSTL,
-              arch});
-      data.add(
-          new Object[] {
-              NdkCxxPlatforms.Compiler.Type.CLANG,
-              NdkCxxPlatforms.CxxRuntime.LIBCXX,
-              arch});
+      for (CxxPreprocessMode mode : CxxPreprocessMode.values()) {
+        data.add(
+            new Object[]{
+                NdkCxxPlatforms.Compiler.Type.GCC,
+                NdkCxxPlatforms.CxxRuntime.GNUSTL,
+                arch,
+                mode});
+        data.add(
+            new Object[]{
+                NdkCxxPlatforms.Compiler.Type.CLANG,
+                NdkCxxPlatforms.CxxRuntime.GNUSTL,
+                arch,
+                mode});
+        data.add(
+            new Object[]{
+                NdkCxxPlatforms.Compiler.Type.CLANG,
+                NdkCxxPlatforms.CxxRuntime.LIBCXX,
+                arch,
+                mode});
+      }
     }
     return data;
   }
@@ -79,6 +84,9 @@ public class NdkCxxPlatformIntegrationTest {
   @Parameterized.Parameter(value = 2)
   public String arch;
 
+  @Parameterized.Parameter(value = 3)
+  public CxxPreprocessMode mode;
+
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -86,7 +94,12 @@ public class NdkCxxPlatformIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, name, tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
-        String.format("[ndk]\n  compiler = %s\n  cxx_runtime = %s\n", compiler, cxxRuntime),
+        String.format(
+            "[cxx]\n  preprocess_mode = %s\n" +
+            "[ndk]\n  compiler = %s\n  cxx_runtime = %s\n",
+            mode.toString().toLowerCase(),
+            compiler,
+            cxxRuntime),
         ".buckconfig");
     return workspace;
   }
@@ -130,7 +143,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Test
-  public void testNdkHeaderPathsAreSanitized() throws IOException {
+  public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths");
     workspace.runBuckBuild(String.format("//:lib#android-%s,static", arch)).assertSuccess();
     java.io.File lib =
@@ -139,7 +152,22 @@ public class NdkCxxPlatformIntegrationTest {
         Files.asByteSource(lib)
             .asCharSource(Charsets.ISO_8859_1)
             .read();
-    assertFalse(contents.contains(getNdkRoot().toString()));
+
+    // Verify that the working directory is sanitized.
+    assertFalse(contents.contains(tmp.getRootPath().toString()));
+
+    // TODO(user): We don't currently support fixing up debug paths for the combined flow.
+    if (mode != CxxPreprocessMode.COMBINED) {
+
+      // Verify that we don't have any references to the build toolchain in the debug info.
+      for (NdkCxxPlatforms.Host host : NdkCxxPlatforms.Host.values()) {
+        assertFalse(contents.contains(host.toString()));
+      }
+
+      // Verify that the NDK path is sanitized.
+      assertFalse(contents.contains(getNdkRoot().toString()));
+    }
+
   }
 
 }
