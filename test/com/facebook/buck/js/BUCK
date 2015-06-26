@@ -1,6 +1,6 @@
 java_test(
   name = 'js',
-  srcs = glob(['*.java']),
+  srcs = glob(['*Test.java']),
   source_under_test = [
     '//src/com/facebook/buck/js:js',
   ],
@@ -12,4 +12,19 @@ java_test(
     '//third-party/java/junit:junit',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
+)
+
+java_library(
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes = ['*Test.java']),
+  deps = [
+    '//src/com/facebook/buck/js:js',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//test/com/facebook/buck/rules:testutil',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/...',
+  ]
 )

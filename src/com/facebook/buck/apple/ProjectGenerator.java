@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
@@ -722,14 +723,17 @@ public class ProjectGenerator {
     // and add any shell script rules here
     ImmutableList.Builder<TargetNode<?>> preScriptPhases = ImmutableList.builder();
     ImmutableList.Builder<TargetNode<?>> postScriptPhases = ImmutableList.builder();
+    boolean skipRNBundle = ReactNativeFlavors.skipBundling(buildTargetNode.getBuildTarget());
     if (bundle.isPresent() && targetNode != bundle.get()) {
       collectBuildScriptDependencies(
           targetGraph.getAll(bundle.get().getDeclaredDeps()),
+          skipRNBundle,
           preScriptPhases,
           postScriptPhases);
     }
     collectBuildScriptDependencies(
         targetGraph.getAll(targetNode.getDeclaredDeps()),
+        skipRNBundle,
         preScriptPhases,
         postScriptPhases);
     mutator.setPreBuildRunScriptPhases(preScriptPhases.build());
@@ -1148,12 +1152,13 @@ public class ProjectGenerator {
 
   private void collectBuildScriptDependencies(
       Iterable<TargetNode<?>> targetNodes,
+      boolean skipRNBundle,
       ImmutableList.Builder<TargetNode<?>> preRules,
       ImmutableList.Builder<TargetNode<?>> postRules) {
     for (TargetNode<?> targetNode : targetNodes) {
       BuildRuleType type = targetNode.getType();
       if (type.equals(XcodePostbuildScriptDescription.TYPE) ||
-          type.equals(IosReactNativeLibraryDescription.TYPE)) {
+          (type.equals(IosReactNativeLibraryDescription.TYPE) && !skipRNBundle)) {
         postRules.add(targetNode);
       } else if (
           type.equals(XcodePrebuildScriptDescription.TYPE) ||

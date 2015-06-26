@@ -51,12 +51,10 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.IosReactNativeLibraryBuilder;
 import com.facebook.buck.js.ReactNativeBuckConfig;
-import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -67,7 +65,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -438,23 +435,15 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
     BuildTarget depBuildTarget = BuildTarget.builder("//foo", "dep").build();
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(new FakeBuckConfig(
         ImmutableMap.of("react-native", ImmutableMap.of("packager", "react-native/packager.sh")),
-        new AllExistingProjectFilesystem()));
+        filesystem));
     TargetNode<?> reactNativeNode =
-        new AbstractNodeBuilder<ReactNativeLibraryArgs>(
-            new IosReactNativeLibraryDescription(buckConfig),
-            depBuildTarget) {
-
-          @Override
-          public TargetNode<ReactNativeLibraryArgs> build() {
-            ProjectFilesystem filesystem = new FakeProjectFilesystem();
-            arg.bundleName = "Apps/Foo/FooBundle.js";
-            arg.entryPath = new PathSourcePath(filesystem, Paths.get("js/FooApp.js"));
-            return super.build();
-          }
-
-        }.build();
+        IosReactNativeLibraryBuilder.builder(depBuildTarget, buckConfig)
+        .setBundleName("Apps/Foo/FooBundle.js")
+        .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))
+        .build();
 
     mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(reactNativeNode));
     NewNativeTargetProjectMutator.Result result =
