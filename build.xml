@@ -146,9 +146,15 @@
     </javac>
   </target>
 
+  <path id="bootstrapper-classpath">
+    <!-- Do not add dependencies. The bootstrapper is intended to keep the system ClassLoader free
+         of classes that might conflict with those used by compiler plugins and annotation
+         processors. As such it cannot depend on third-party libraries, directly or indirectly. -->
+  </path>
+
   <target name="compile-bootstrapper" depends="checkversion">
     <mkdir dir="${bootstrapper.classes.dir}" />
-    <ecj destdir="${bootstrapper.classes.dir}">
+    <ecj destdir="${bootstrapper.classes.dir}" classpathref="bootstrapper-classpath">
       <javac-params>
         <include name="${bootstrapper.src.dir}/**/*.java" />
       </javac-params>
@@ -158,6 +164,9 @@
   <target name="jar-bootstrapper" depends="compile-bootstrapper">
     <jar destfile="${bootstrapper.jar}">
       <fileset dir="${bootstrapper.classes.dir}" />
+
+      <!-- Be very careful what is added here, and leave comments justifying each addition. See the
+      comment in bootstrapper-classpath above for more details on why. -->
     </jar>
   </target>
 

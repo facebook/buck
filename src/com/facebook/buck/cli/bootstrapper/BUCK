@@ -2,6 +2,9 @@ java_binary(
   name = 'bootstrapper',
   deps = [
     ':bootstrapper_lib',
+
+    # Be very careful what is added here, and leave comments justifying
+    # each addition. See the comment below for more details on why.
   ],
   visibility = [
     '//programs:bucklib',
@@ -14,6 +17,10 @@ java_library(
   name = 'bootstrapper_lib',
   srcs = glob(['*.java']),
   deps = [
+    # Do not add dependencies. The bootstrapper is intended to keep the
+    # system ClassLoader free of classes that might conflict with
+    # those used by compiler plugins and annotation processors. As such,
+    # it cannot depend on third-party libraries, directly or indirectly.
   ],
   visibility = [
   ],
