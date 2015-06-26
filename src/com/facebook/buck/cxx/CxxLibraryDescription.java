@@ -450,10 +450,13 @@ public class CxxLibraryDescription implements
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.srcs = Optional.of(
         SourceWithFlagsList.ofUnnamedSources(ImmutableList.<SourceWithFlags>of()));
+    arg.platformSrcs = Optional.of(PatternMatchedCollection.<SourceWithFlagsList>of());
     arg.prefixHeaders = Optional.of(ImmutableList.<SourcePath>of());
     arg.headers = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
+    arg.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     arg.exportedHeaders = Optional.of(
         SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
+    arg.exportedPlatformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     arg.compilerFlags = Optional.of(ImmutableList.<String>of());
     arg.platformCompilerFlags =
         Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
