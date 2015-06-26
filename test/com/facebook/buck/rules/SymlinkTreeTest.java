@@ -26,6 +26,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
@@ -35,6 +38,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -201,6 +205,83 @@ public class SymlinkTreeTest {
     // Verify that the rules keys are the same.
     assertEquals(pair1, pair2);
 
+  }
+
+  @Test
+  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToDependencyChanges() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of()),
+            pathResolver);
+
+    FakeBuildRule dep = new FakeBuildRule("//:dep", pathResolver);
+    symlinkTreeBuildRule =
+        new SymlinkTree(
+            new FakeBuildRuleParamsBuilder(buildTarget)
+                .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
+                .build(),
+            new SourcePathResolver(new BuildRuleResolver()),
+            outputPath,
+            links);
+
+    // Generate an input-based rule key for the symlink tree.
+    dep.setRuleKey(new RuleKey("aaaa"));
+    RuleKey ruleKey1 =
+        inputBasedRuleKeyBuilderFactory.newInstance(symlinkTreeBuildRule).build();
+
+    // Change the dep's rule key and re-calculate the input-based rule key.
+    dep.setRuleKey(new RuleKey("bbbb"));
+    RuleKey ruleKey2 =
+        inputBasedRuleKeyBuilderFactory.newInstance(symlinkTreeBuildRule).build();
+
+    // Verify that the rules keys are the same.
+    assertEquals(ruleKey1, ruleKey2);
+  }
+
+
+  @Test
+  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+
+    symlinkTreeBuildRule =
+        new SymlinkTree(
+            new FakeBuildRuleParamsBuilder(buildTarget)
+                .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
+                .build(),
+            pathResolver,
+            outputPath,
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get("link"),
+                new BuildTargetSourcePath(projectFilesystem, dep.getBuildTarget())));
+
+    // Generate an input-based rule key for the symlink tree with the contents of the link
+    // target hashing to "aaaa".
+    RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.of("out", "aaaa")),
+            pathResolver);
+    RuleKey ruleKey1 =
+        inputBasedRuleKeyBuilderFactory.newInstance(symlinkTreeBuildRule).build();
+
+    // Generate an input-based rule key for the symlink tree with the contents of the link
+    // target hashing to a different value: "bbbb".
+    inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(ImmutableMap.of("out", "bbbb")),
+            pathResolver);
+    RuleKey ruleKey2 =
+        inputBasedRuleKeyBuilderFactory.newInstance(symlinkTreeBuildRule).build();
+
+    // Verify that the rules keys are the same.
+    assertEquals(ruleKey1, ruleKey2);
   }
 
 }

@@ -16,14 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -32,7 +31,7 @@ import javax.annotation.Nullable;
 
 public class SymlinkTree
     extends AbstractBuildRule
-    implements AbiRule, RuleKeyAppendable, HasPostBuildSteps {
+    implements RuleKeyAppendable, HasPostBuildSteps, SupportsInputBasedRuleKey {
 
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
@@ -73,17 +72,8 @@ public class SymlinkTree
     return ImmutableList.of();
   }
 
-  /**
-   * @return The root of the symlinks directory or {@link Optional#absent()} if there were no
-   *     files to symlink.
-   */
-  public Optional<Path> getRootOfSymlinksDirectory() {
-    return links.isEmpty() ? Optional.<Path>absent() : Optional.of(root);
-  }
-
   // Put the link map into the rule key, as if it changes at all, we need to
   // re-run it.
-
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     for (Map.Entry<Path, SourcePath> entry : links.entrySet()) {
@@ -91,7 +81,6 @@ public class SymlinkTree
           "link(" + entry.getKey().toString() + ")",
           getResolver().getPath(entry.getValue()).toString());
     }
-
     return builder;
   }
 
@@ -113,14 +102,6 @@ public class SymlinkTree
     return ImmutableList.of(
         new MakeCleanDirectoryStep(root),
         new SymlinkTreeStep(root, resolveLinks()));
-  }
-
-  // Since we're just setting up symlinks to existing files, we don't actually need to
-  // re-run this rule if our deps change in any way.  We only need to re-run if our symlinks
-  // or symlink targets change, which is modeled above in the rule key.
-  @Override
-  public Sha1HashCode getAbiKeyForDeps() {
-    return Sha1HashCode.fromHashCode(HashCode.fromInt(0));
   }
 
   public Path getRoot() {
