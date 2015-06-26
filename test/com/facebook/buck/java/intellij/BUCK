@@ -8,6 +8,7 @@ java_test(
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java/intellij:intellij',
+    '//src/com/facebook/buck/java:autodeps',
     '//src/com/facebook/buck/java:packagefinder',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',

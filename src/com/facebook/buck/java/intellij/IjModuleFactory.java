@@ -39,11 +39,14 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -290,13 +293,13 @@ public class IjModuleFactory {
   /**
    * Calculate the set of directories containing inputs to the target.
    *
-   * @param target target to process.
-   * @return set of {@link Path}s representing the project root relative directory paths
-   *         where the target's inputs reside.
+   * @param paths inputs to a given target.
+   * @return index of path to set of inputs in that path
    */
-  private static ImmutableSet<Path> getSourceFolders(TargetNode<?> target) {
-    return FluentIterable.from(target.getInputs())
-        .transform(
+  private static ImmutableMultimap<Path, Path> getSourceFoldersToInputsIndex(
+      ImmutableSet<Path> paths) {
+    return FluentIterable.from(paths)
+        .index(
             new Function<Path, Path>() {
               @Override
               public Path apply(Path input) {
@@ -306,8 +309,7 @@ public class IjModuleFactory {
                 }
                 return parent;
               }
-            })
-        .toSet();
+            });
   }
 
   /**
@@ -331,21 +333,22 @@ public class IjModuleFactory {
   /**
    * Add the set of input paths to the {@link IjModule.Builder} as source folders.
    *
-   * @param sourceFolders paths to add to the module as source folders.
+   * @param foldersToInputsIndex mapping of source folders to their inputs.
    * @param type folder type.
    * @param wantsPackagePrefix whether folders should be annotated with a package prefix. This
    *                           only makes sense when the source folder is Java source code.
    * @param context the module to add the folders to.
    */
   private static void addSourceFolders(
-      ImmutableSet<Path> sourceFolders,
+      ImmutableMultimap<Path, Path> foldersToInputsIndex,
       IjFolder.Type type,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
-    for (Path path : sourceFolders) {
+    for (Map.Entry<Path, Collection<Path>> entry : foldersToInputsIndex.asMap().entrySet()) {
       context.addSourceFolder(
           IjFolder.builder()
-              .setPath(path)
+              .setPath(entry.getKey())
+              .setInputs(FluentIterable.from(entry.getValue()).toSortedSet(Ordering.natural()))
               .setType(type)
               .setWantsPackagePrefix(wantsPackagePrefix)
               .build());
@@ -357,14 +360,15 @@ public class IjModuleFactory {
       boolean isTest,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
-    ImmutableSet<Path> folders = getSourceFolders(targetNode);
+    ImmutableMultimap<Path, Path> foldersToInputsIndex = getSourceFoldersToInputsIndex(
+        targetNode.getInputs());
     addSourceFolders(
-        folders,
+        foldersToInputsIndex,
         isTest ? IjFolder.Type.TEST_FOLDER : IjFolder.Type.SOURCE_FOLDER,
         wantsPackagePrefix,
         context);
     context.addDeps(
-        folders,
+        foldersToInputsIndex.keySet(),
         targetNode.getDeps(),
         isTest ? IjModuleGraph.DependencyType.TEST : IjModuleGraph.DependencyType.PROD);
   }

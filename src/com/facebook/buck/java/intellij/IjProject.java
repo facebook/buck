@@ -19,6 +19,7 @@ package com.facebook.buck.java.intellij;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.JavaFileParser;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -42,6 +43,7 @@ public class IjProject {
 
   private final TargetGraphAndTargets targetGraphAndTargets;
   private final JavaPackageFinder javaPackageFinder;
+  private final JavaFileParser javaFileParser;
   private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
@@ -49,11 +51,13 @@ public class IjProject {
   public IjProject(
       TargetGraphAndTargets targetGraphAndTargets,
       JavaPackageFinder javaPackageFinder,
+      JavaFileParser javaFileParser,
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem projectFilesystem) {
     this.targetGraphAndTargets = targetGraphAndTargets;
     this.javaPackageFinder = javaPackageFinder;
+    this.javaFileParser = javaFileParser;
     this.buildRuleResolver = buildRuleResolver;
     this.sourcePathResolver = sourcePathResolver;
     this.projectFilesystem = projectFilesystem;
@@ -108,8 +112,12 @@ public class IjProject {
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
         moduleFactory);
+    ParsingJavaPackageFinder parsingJavaPackageFinder = new ParsingJavaPackageFinder(
+        javaFileParser,
+        projectFilesystem,
+        javaPackageFinder);
     IjProjectWriter writer = new IjProjectWriter(
-        new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, projectFilesystem),
+        new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
         projectFilesystem);
     writer.write();
     return requiredBuildTargets.build();

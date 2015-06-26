@@ -43,6 +43,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -242,9 +243,11 @@ public class IjProjectDataPreparerTest {
 
   @Test
   public void testEmptyRootModule() throws Exception {
+
+    Path baseTargetSrcFilePath = Paths.get("java/com/example/base/Base.java");
     TargetNode<?> baseTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addSrc(Paths.get("java/com/example/base/Base.java"))
+        .addSrc(baseTargetSrcFilePath)
         .build();
 
     IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
@@ -262,6 +265,7 @@ public class IjProjectDataPreparerTest {
                     IjFolder.builder()
                         .setType(AbstractIjFolder.Type.SOURCE_FOLDER)
                         .setPath(Paths.get("java/com/example/base"))
+                        .setInputs(ImmutableSortedSet.<Path>of(baseTargetSrcFilePath))
                         .setWantsPackagePrefix(true)
                         .build())
                 .build(),
@@ -269,7 +273,7 @@ public class IjProjectDataPreparerTest {
                 .setModuleBasePath(Paths.get(""))
                 .setTargets(ImmutableSet.<TargetNode<?>>of())
                 .build()
-            )
+        )
     );
 
   }

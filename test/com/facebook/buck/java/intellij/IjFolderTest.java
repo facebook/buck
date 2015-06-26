@@ -18,8 +18,11 @@ package com.facebook.buck.java.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.ImmutableSortedSet;
+
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class IjFolderTest {
@@ -32,12 +35,15 @@ public class IjFolderTest {
 
     IjFolder sourceFolder = folderBuilder
         .setType(IjFolder.Type.SOURCE_FOLDER)
+        .setInputs(ImmutableSortedSet.of(Paths.get("Source.java")))
         .build();
     IjFolder testFolder = folderBuilder
         .setType(IjFolder.Type.TEST_FOLDER)
+        .setInputs(ImmutableSortedSet.of(Paths.get("Test.java")))
         .build();
     IjFolder excludeFolder = folderBuilder
         .setType(IjFolder.Type.EXCLUDE_FOLDER)
+        .setInputs(ImmutableSortedSet.<Path>of())
         .build();
 
     assertEquals("Merging the folder with itself is that folder.",
@@ -48,12 +54,20 @@ public class IjFolderTest {
         testFolder,
         testFolder.merge(testFolder));
 
+    IjFolder mergedSourceAndTest = folderBuilder
+        .setType(IjFolder.Type.SOURCE_FOLDER)
+        .setInputs(ImmutableSortedSet.of(
+                Paths.get("Source.java"),
+                Paths.get("Test.java")
+            ))
+        .build();
+
     assertEquals("Merging prod with test means test is promoted to prod.",
-        sourceFolder,
+        mergedSourceAndTest,
         testFolder.merge(sourceFolder));
 
     assertEquals("Merging prod with test means test is promoted to prod in either order.",
-        sourceFolder,
+        mergedSourceAndTest,
         sourceFolder.merge(testFolder));
 
     assertEquals("Merging the folder with itself is that folder.",

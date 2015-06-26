@@ -244,16 +244,11 @@ public class JavaSymbolFinder {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(javacOptions);
 
     for (Path candidatePath : getCandidatePaths(symbol, srcRoots)) {
-      try {
-        String content = projectFilesystem.readFileIfItExists(
-            projectFilesystem.getPathForRelativeExistingPath(candidatePath)).get();
-        Set<String> symbols = parser.getExportedSymbolsFromString(content);
-        if (symbols.contains(symbol)) {
-          definingPaths.add(candidatePath);
-        }
-      } catch (IOException e) {
-        buckEventBus.post(
-            ThrowableConsoleEvent.create(e, "Error while searching for source files."));
+      String content = projectFilesystem.readFileIfItExists(
+          projectFilesystem.getPathForRelativeExistingPath(candidatePath)).get();
+      Set<String> symbols = parser.getExportedSymbolsFromString(content);
+      if (symbols.contains(symbol)) {
+        definingPaths.add(candidatePath);
       }
     }
     return definingPaths.build();

@@ -184,7 +184,9 @@ public class IjProjectTemplateDataPreparer {
   private IjSourceFolder createSourceFolder(IjFolder folder, Path moduleLocationBasePath) {
     String packagePrefix = null;
     if (folder.getWantsPackagePrefix()) {
-      packagePrefix = javaPackageFinder.findJavaPackage(folder.getPath().resolve("notfound"));
+      Path fileToLookupPackageIn = FluentIterable.from(folder.getInputs()).first()
+          .or(folder.getPath().resolve("notfound"));
+      packagePrefix = javaPackageFinder.findJavaPackage(fileToLookupPackageIn);
     }
     return IjSourceFolder.builder()
         .setType(folder.getType().getIjName())
@@ -233,6 +235,7 @@ public class IjProjectTemplateDataPreparer {
                       .setPath(dir)
                       .setType(AbstractIjFolder.Type.EXCLUDE_FOLDER)
                       .setWantsPackagePrefix(false)
+                      .setInputs(ImmutableSortedSet.<Path>of())
                       .build());
               return FileVisitResult.SKIP_SUBTREE;
             }

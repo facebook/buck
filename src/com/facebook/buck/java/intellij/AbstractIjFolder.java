@@ -18,6 +18,7 @@ package com.facebook.buck.java.intellij;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
@@ -80,6 +81,11 @@ abstract class AbstractIjFolder {
   public abstract Path getPath();
 
   /**
+   * @return set of input files corresponding to this folder.
+   */
+  public abstract ImmutableSortedSet<Path> getInputs();
+
+  /**
    * Used to make IntelliJ ignore the package name->folder structure convention and assume the
    * given package prefix. An example of a scenario this makes possible to achieve is having
    * java/src/Foo.java declare the package "org.bar" (instead of having the path to the file be
@@ -91,7 +97,6 @@ abstract class AbstractIjFolder {
    */
   public abstract boolean getWantsPackagePrefix();
 
-
   public boolean isTest() {
     return getType() == Type.TEST_FOLDER;
   }
@@ -101,7 +106,11 @@ abstract class AbstractIjFolder {
 
     return otherFolder
         .withWantsPackagePrefix(getWantsPackagePrefix() || otherFolder.getWantsPackagePrefix())
-        .withType(Type.merge(getType(), otherFolder.getType()));
+        .withType(Type.merge(getType(), otherFolder.getType()))
+        .withInputs(ImmutableSortedSet.<Path>naturalOrder()
+                .addAll(getInputs())
+                .addAll(otherFolder.getInputs())
+                .build());
   }
 
   @Value.Check

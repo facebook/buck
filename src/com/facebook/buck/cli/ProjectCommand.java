@@ -25,8 +25,11 @@ import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.java.JavaBuckConfig;
+import com.facebook.buck.java.JavaFileParser;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaPackageFinder;
+import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.intellij.IjProject;
 import com.facebook.buck.java.intellij.IntellijConfig;
 import com.facebook.buck.java.intellij.Project;
@@ -55,6 +58,7 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
@@ -427,9 +431,13 @@ public class ProjectCommand extends BuildCommand {
         new BuildRuleResolver(ImmutableSet.copyOf(actionGraph.getNodes()));
     SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
 
+    JavacOptions javacOptions = new JavaBuckConfig(params.getBuckConfig())
+        .getDefaultJavacOptions(new ProcessExecutor(params.getConsole()));
+
     IjProject project = new IjProject(
         targetGraphAndTargets,
         getJavaPackageFinder(params.getBuckConfig()),
+        JavaFileParser.createJavaFileParser(javacOptions),
         buildRuleResolver,
         sourcePathResolver,
         params.getRepository().getFilesystem());

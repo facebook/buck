@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,7 +36,6 @@ import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -69,17 +69,8 @@ public class JavaFileParser {
     return new JavaFileParser(AST.JLS8, javaVersion);
   }
 
-  public ImmutableSortedSet<String> getExportedSymbolsFromString(String code) throws IOException {
-    ASTParser parser = ASTParser.newParser(jlsLevel);
-    parser.setSource(code.toCharArray());
-    parser.setKind(ASTParser.K_COMPILATION_UNIT);
-
-    @SuppressWarnings("unchecked")
-    Map<String, String> options = JavaCore.getOptions();
-    JavaCore.setComplianceOptions(javaVersion, options);
-    parser.setCompilerOptions(options);
-
-    final CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(/* monitor */ null);
+  public ImmutableSortedSet<String> getExportedSymbolsFromString(String code) {
+    final CompilationUnit compilationUnit = makeCompilationUnitFromSource(code);
 
     final ImmutableSortedSet.Builder<String> symbolsBuilder = ImmutableSortedSet.naturalOrder();
 
@@ -109,6 +100,30 @@ public class JavaFileParser {
     });
 
     return symbolsBuilder.build();
+  }
+
+  private CompilationUnit makeCompilationUnitFromSource(String code) {
+    ASTParser parser = ASTParser.newParser(jlsLevel);
+    parser.setSource(code.toCharArray());
+    parser.setKind(ASTParser.K_COMPILATION_UNIT);
+
+    @SuppressWarnings("unchecked")
+    Map<String, String> options = JavaCore.getOptions();
+    JavaCore.setComplianceOptions(javaVersion, options);
+    parser.setCompilerOptions(options);
+
+    return (CompilationUnit) parser.createAST(/* monitor */ null);
+  }
+
+  public Optional<String> getPackageNameFromSource(String code) {
+    final CompilationUnit compilationUnit = makeCompilationUnitFromSource(code);
+
+    // A Java file might not have a package. Hopefully all of ours do though...
+    PackageDeclaration packageDecl = compilationUnit.getPackage();
+    if (packageDecl != null) {
+      return Optional.of(packageDecl.getName().toString());
+    }
+    return Optional.absent();
   }
 
   private String getFullyQualifiedTypeName(AbstractTypeDeclaration node) {

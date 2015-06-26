@@ -2,7 +2,7 @@
 <module type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <content url="file://$MODULE_DIR$/../../modules/dep1">
-      <sourceFolder url="file://$MODULE_DIR$/../../modules/dep1/src" isTestSource="false"  packagePrefix="modules.dep1.src"  />
+      <sourceFolder url="file://$MODULE_DIR$/../../modules/dep1/src" isTestSource="false"  packagePrefix="com.example"  />
 
     </content>
     <orderEntry type="module" module-name="modules_dep2" scope="COMPILE"  />

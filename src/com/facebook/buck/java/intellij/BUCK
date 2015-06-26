@@ -14,6 +14,7 @@ java_immutables_library(
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/java:autodeps',
     '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java:packagefinder',
     '//src/com/facebook/buck/java:rules',

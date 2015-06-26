@@ -256,6 +256,8 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/java/intellij:intellij',
     '//test/com/facebook/buck/java:java',
+    '//test/com/facebook/buck/java/intellij:intellij',
   ],
 )
