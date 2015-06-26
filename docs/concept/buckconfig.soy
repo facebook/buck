@@ -103,6 +103,15 @@ $ buck build app
 $ buck test apptest
 </pre>{/literal}
 
+Note that you can also suffix aliases with flavors:
+
+{literal}<pre class="prettyprint">
+$ buck build app#src_jar
+# This will expand the alias and effectively build the target returned by:
+$ buck targets --resolve-alias app#src_jar
+//apps/myapp:app#src_jar
+</pre>{/literal}
+
 {call .section}{param title: 'android' /}{/call}
 
 Specify the version of the Android SDK that all Android code
