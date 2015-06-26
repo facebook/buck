@@ -16,14 +16,10 @@
 
 package com.facebook.buck.java.intellij;
 
-import com.facebook.buck.android.AndroidAarDescription;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
-import com.facebook.buck.java.JavaBinaryDescription;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
@@ -59,15 +55,11 @@ public class IjModuleFactory {
    * These target types are mapped onto .iml module files.
    */
   private static final ImmutableSet<BuildRuleType> SUPPORTED_MODULE_TYPES = ImmutableSet.of(
-      AndroidAarDescription.TYPE,
       AndroidBinaryDescription.TYPE,
       AndroidLibraryDescription.TYPE,
-      AndroidPrebuiltAarDescription.TYPE,
       AndroidResourceDescription.TYPE,
-      JavaBinaryDescription.TYPE,
       JavaLibraryDescription.TYPE,
       JavaTestDescription.TYPE,
-      NdkLibraryDescription.TYPE,
       RobolectricTestDescription.TYPE);
 
   public static final Predicate<TargetNode<?>> SUPPORTED_MODULE_TYPES_PREDICATE =
@@ -245,6 +237,9 @@ public class IjModuleFactory {
     addToIndex(new RobolectricTestModuleRule());
 
     this.dummyRDotJavaClassPathResolver = dummyRDotJavaClassPathResolver;
+
+    Preconditions.checkState(
+        moduleRuleIndex.keySet().equals(SUPPORTED_MODULE_TYPES));
   }
 
   private void addToIndex(IjModuleRule<?> rule) {
@@ -272,10 +267,7 @@ public class IjModuleFactory {
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
     for (TargetNode<?> targetNode : targetNodes) {
-      IjModuleRule<?> rule = moduleRuleIndex.get(targetNode.getType());
-      if (rule == null) {
-        continue;
-      }
+      IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(targetNode.getType()));
 
       rule.apply((TargetNode) targetNode, context);
     }
