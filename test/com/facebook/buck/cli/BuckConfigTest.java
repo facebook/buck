@@ -149,12 +149,18 @@ public class BuckConfigTest {
         temporaryFolder,
         reader,
         parser);
+
     assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("foo"));
     assertEquals("//java/com/example:bar", config.getBuildTargetForAlias("bar"));
+    // Flavors on alias.
+    assertEquals("//java/com/example:foo#src_jar", config.getBuildTargetForAlias("foo#src_jar"));
+    assertEquals("//java/com/example:bar#fl1,fl2", config.getBuildTargetForAlias("bar#fl1,fl2"));
+
     assertNull(
         "Invalid alias names, such as build targets, should be tolerated by this method.",
         config.getBuildTargetForAlias("//java/com/example:foo"));
     assertNull(config.getBuildTargetForAlias("baz"));
+    assertNull(config.getBuildTargetForAlias("baz#src_jar"));
 
     Reader noAliasesReader = new StringReader("");
     BuckConfig noAliasesConfig = BuckConfigTestUtils.createWithDefaultFilesystem(

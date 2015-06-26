@@ -310,10 +310,17 @@ public class BuckConfig {
   }
 
   @Nullable
-  public String getBuildTargetForAlias(String alias) {
+  public String getBuildTargetForAlias(String possiblyFlavoredAlias) {
+    String alias = possiblyFlavoredAlias;
+    int poundIdx = possiblyFlavoredAlias.indexOf('#');
+    if (poundIdx != -1) {
+      alias = possiblyFlavoredAlias.substring(0, poundIdx);
+    }
+
     BuildTarget buildTarget = aliasToBuildTargetMap.get(alias);
     if (buildTarget != null) {
-      return buildTarget.getFullyQualifiedName();
+      return buildTarget.getFullyQualifiedName() +
+          (poundIdx == -1 ? "" : possiblyFlavoredAlias.substring(poundIdx));
     } else {
       return null;
     }
