@@ -21,6 +21,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 
+import java.nio.file.Path;
+
 /**
  * A react-native view of {@link BuckConfig}.
  */
@@ -44,5 +46,9 @@ public class ReactNativeBuckConfig {
           "specify 'packager' in .buckconfig under the 'react-native' section.");
     }
     return packager.get();
+  }
+
+  public Optional<Path> getServer() {
+    return delegate.getPath("react-native", "server");
   }
 }

@@ -20,6 +20,7 @@ import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSinglet
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.getSingletonPhaseByType;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -107,7 +108,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -1923,7 +1923,9 @@ public class ProjectGeneratorTest {
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(rnLibraryNode, sharedLibraryNode, bundleNode));
+        ImmutableSet.of(rnLibraryNode, sharedLibraryNode, bundleNode),
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        Optional.of(Paths.get("js/react-native/runServer.sh")));
 
     projectGenerator.createXcodeProjects();
 
@@ -1933,11 +1935,14 @@ public class ProjectGeneratorTest {
     assertThat(target.getName(), equalTo("//foo:bundle#rn_no_bundle"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
-    Iterator<PBXShellScriptBuildPhase> iterator = Iterables.filter(
-        target.getBuildPhases(),
-        PBXShellScriptBuildPhase.class).iterator();
+    PBXShellScriptBuildPhase shellScriptBuildPhase =
+        getSingletonPhaseByType(
+            target,
+            PBXShellScriptBuildPhase.class);
 
-    assertThat(iterator.hasNext(), is(false));
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        endsWith("js/react-native/runServer.sh"));
   }
 
   @Test
@@ -2903,6 +2908,7 @@ public class ProjectGeneratorTest {
             xctest2),
         ImmutableSet.<BuildTarget>of(),
         projectFilesystem,
+        /* reactNativeServer */ Optional.<Path>absent(),
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
@@ -3093,6 +3099,7 @@ public class ProjectGeneratorTest {
         TargetGraphFactory.newInstance(nodes),
         FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
         projectFilesystem,
+        /* reactNativeServer */ Optional.<Path>absent(),
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",
@@ -3197,6 +3204,16 @@ public class ProjectGeneratorTest {
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
+    return createProjectGeneratorForCombinedProject(
+        nodes,
+        projectGeneratorOptions,
+        Optional.<Path>absent());
+  }
+
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      Iterable<TargetNode<?>> nodes,
+      ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
+      Optional<Path> reactNativeServer) {
     ImmutableSet<BuildTarget> initialBuildTargets = FluentIterable
         .from(nodes)
         .transform(HasBuildTarget.TO_TARGET)
@@ -3206,6 +3223,7 @@ public class ProjectGeneratorTest {
         TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes)),
         initialBuildTargets,
         projectFilesystem,
+        reactNativeServer,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",

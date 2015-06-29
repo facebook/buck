@@ -36,8 +36,10 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -86,6 +88,7 @@ import javax.annotation.Nullable;
 public class WorkspaceAndProjectGeneratorTest {
 
   private ProjectFilesystem projectFilesystem;
+  private ReactNativeBuckConfig reactNativeBuckConfig;
 
   private TargetGraph targetGraph;
   private TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode;
@@ -105,6 +108,8 @@ public class WorkspaceAndProjectGeneratorTest {
     projectFilesystem.writeContentsToPath(
         "",
         Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_COMPILER));
+
+    reactNativeBuckConfig = new ReactNativeBuckConfig(new FakeBuckConfig(projectFilesystem));
 
     setUpWorkspaceAndProjects();
   }
@@ -221,6 +226,7 @@ public class WorkspaceAndProjectGeneratorTest {
   public void workspaceAndProjectsShouldDiscoverDependenciesAndTests() throws IOException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
@@ -282,6 +288,7 @@ public class WorkspaceAndProjectGeneratorTest {
   public void combinedProjectShouldDiscoverDependenciesAndTests() throws IOException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
@@ -328,6 +335,7 @@ public class WorkspaceAndProjectGeneratorTest {
   public void workspaceAndProjectsWithoutTests() throws IOException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
@@ -403,6 +411,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
@@ -447,6 +456,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
@@ -468,6 +478,7 @@ public class WorkspaceAndProjectGeneratorTest {
   public void buildWithBuck() throws IOException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
@@ -563,6 +574,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspace.getConstructorArg(),
         workspaceNode.getBuildTarget(),
@@ -968,6 +980,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspaceWithExtraSchemeNode.getConstructorArg(),
         workspaceWithExtraSchemeNode.getBuildTarget(),
@@ -1112,6 +1125,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
+        reactNativeBuckConfig,
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),

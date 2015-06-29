@@ -16,6 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.AdbOptions;
+import com.facebook.buck.android.ExopackageInstaller;
+import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
@@ -23,35 +27,39 @@ import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
-import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.AdbOptions;
-import com.facebook.buck.android.ExopackageInstaller;
-import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.js.ReactNativeBuckConfig;
+import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.UnixUserIdFetcher;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -382,6 +390,19 @@ public class InstallCommand extends BuildCommand {
       return 1;
     }
 
+    if (ReactNativeFlavors.skipBundling(appleBundle.getBuildTarget())) {
+      ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(params.getBuckConfig());
+      if (buckConfig.getServer().isPresent()) {
+        int exitCode = launchReactNativeServer(
+            processExecutor,
+            projectFilesystem.resolve(buckConfig.getServer().get()),
+            params.getBuckEventBus());
+        if (exitCode != 0) {
+          return exitCode;
+        }
+      }
+    }
+
     if (run) {
       return launchAppleBundle(
           params,
@@ -464,6 +485,29 @@ public class InstallCommand extends BuildCommand {
     }
 
     return Optional.<AppleSimulator>absent();
+  }
+
+  private int launchReactNativeServer(
+      ProcessExecutor processExecutor,
+      Path reactNativeServerInitScript,
+      BuckEventBus eventBus) throws IOException, InterruptedException {
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of(reactNativeServerInitScript.toString()))
+            .build();
+    Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+    ProcessExecutor.Result result = processExecutor.launchAndExecute(
+        processExecutorParams,
+        options,
+        /* stdin */ Optional.<String>absent(),
+        /* timeOutMs */ Optional.<Long>absent(),
+        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+    LOG.debug("React Native server: %s", result.getStdout());
+    if (result.getExitCode() != 0) {
+      eventBus.post(ConsoleEvent.severe(
+              "Error starting the RN server: %s", result.getStderr().or("")));
+    }
+    return result.getExitCode();
   }
 
   @Override

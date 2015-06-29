@@ -58,6 +58,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,6 +102,7 @@ public class NewNativeTargetProjectMutator {
   private Path assetCatalogBuildScript = Paths.get("");
   private Iterable<TargetNode<?>> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
+  private Collection<Path> additionalRunScripts = ImmutableList.of();
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
@@ -200,6 +202,10 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public void setAdditionalRunScripts(Collection<Path> scripts) {
+    additionalRunScripts = scripts;
+  }
+
   /**
    * @param assetCatalogBuildScript Path of the asset catalog build script relative to repo root.
    * @param assetCatalogs List of asset catalog targets.
@@ -230,6 +236,7 @@ public class NewNativeTargetProjectMutator {
     addResourcesBuildPhase(target, targetGroup);
     addAssetCatalogBuildPhase(target, targetGroup);
     addRunScriptBuildPhases(target, postBuildRunScriptPhases);
+    addRawScriptBuildPhases(target);
 
     // Product
 
@@ -595,6 +602,14 @@ public class NewNativeTargetProjectMutator {
         // unreachable
         throw new IllegalStateException("Invalid rule type for shell script build phase");
       }
+    }
+  }
+
+  private void addRawScriptBuildPhases(PBXNativeTarget target) {
+    for (Path runScript : additionalRunScripts) {
+      PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();
+      phase.setShellScript(runScript.toString());
+      target.getBuildPhases().add(phase);
     }
   }
 
