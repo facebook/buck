@@ -38,7 +38,7 @@ public class AppleNativeIntegrationTestUtils {
         new Predicate<AppleSdk>() {
           @Override
           public boolean apply(AppleSdk sdk) {
-            return sdk.getApplePlatform() == platform;
+            return sdk.getApplePlatform().equals(platform);
           }
         });
   }
