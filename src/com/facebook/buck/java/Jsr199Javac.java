@@ -207,7 +207,7 @@ public abstract class Jsr199Javac implements Javac {
             ++numWarnings;
           }
 
-          context.getStdErr().println(diagnostic);
+          context.getStdErr().println(DiagnosticPrettyPrinter.format(diagnostic));
         }
 
         if (numErrors > 0 || numWarnings > 0) {
@@ -356,8 +356,8 @@ public abstract class Jsr199Javac implements Javac {
     JavacErrorParser javacErrorParser = new JavacErrorParser(
         context.getProjectFilesystem(),
         context.getJavaPackageFinder());
-    Optional<String> symbol =
-        javacErrorParser.getMissingSymbolFromCompilerError(diagnostic.toString());
+    Optional<String> symbol = javacErrorParser.getMissingSymbolFromCompilerError(
+        DiagnosticPrettyPrinter.format(diagnostic));
     if (!symbol.isPresent()) {
       // This error wasn't related to a missing symbol, as far as we can tell.
       return;

@@ -74,6 +74,7 @@ java_immutables_library(
     'AnnotationProcessingEvent.java',
     'AnnotationProcessingParams.java',
     'BuildsAnnotationProcessor.java',
+    'DiagnosticPrettyPrinter.java',
     'ExternalJavac.java',
     'HasClasspathEntries.java',
     'HasJavaAbi.java',
