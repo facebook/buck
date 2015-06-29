@@ -144,7 +144,16 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       SourcePathResolver resolver,
       Arg args,
       JavacOptions defaultOptions) {
+    if ((args.source.isPresent() || args.target.isPresent()) && args.javaVersion.isPresent()) {
+      throw new HumanReadableException("Please set either source and target or java_version.");
+    }
+
     JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
+
+    if (args.javaVersion.isPresent()) {
+      builder.setSourceLevel(args.javaVersion.get());
+      builder.setTargetLevel(args.javaVersion.get());
+    }
 
     if (args.source.isPresent()) {
       builder.setSourceLevel(args.source.get());
@@ -271,6 +280,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSortedSet<SourcePath>> resources;
     public Optional<String> source;
     public Optional<String> target;
+    public Optional<String> javaVersion;
     public Optional<Path> javac;
     public Optional<SourcePath> javacJar;
     // I am not proud of this.

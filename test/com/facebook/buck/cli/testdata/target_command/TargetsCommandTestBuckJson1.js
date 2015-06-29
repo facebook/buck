@@ -13,6 +13,7 @@
   "extraArguments": [],
   "javac": null,
   "javacJar": null,
+  "javaVersion": null,
   "name" : "test-library",
   "postprocessClassesCommands" : [ ],
   "proguardConfig" : null,

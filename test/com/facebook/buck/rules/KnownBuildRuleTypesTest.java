@@ -118,6 +118,7 @@ public class KnownBuildRuleTypesTest {
     arg.resources = Optional.of(ImmutableSortedSet.<SourcePath>of());
     arg.source = Optional.absent();
     arg.target = Optional.absent();
+    arg.javaVersion = Optional.absent();
     arg.javac = Optional.absent();
     arg.javacJar = Optional.absent();
     arg.compiler = Optional.absent();

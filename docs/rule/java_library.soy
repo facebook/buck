@@ -107,6 +107,16 @@ of the compiled class files and resources.
 {/call}
 
 {call buck.arg}
+  {param name: 'java_version' /}
+  {param default: '<global value>' /}
+  {param desc}
+  Equivalent to setting both <code>source</code> and <code>target
+  </code> to the given value. Setting this and <code>source</code>
+  or <code>target</code> (or both!) is an error.
+  {/param} 
+{/call}
+
+{call buck.arg}
   {param name: 'javac' /}
   {param default : '<global value>' /}
   {param desc}

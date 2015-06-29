@@ -20,6 +20,7 @@ import static com.facebook.buck.java.BuiltInJavac.DEFAULT;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -44,6 +45,7 @@ import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -77,6 +79,71 @@ public class JavaLibraryDescriptionTest {
 
     ruleResolver = new BuildRuleResolver();
     resolver = new SourcePathResolver(ruleResolver);
+  }
+
+  @Test
+  public void javaVersionSetsBothSourceAndTargetLevels() {
+    JavaLibraryDescription.Arg arg =
+        new JavaLibraryDescription(defaults).createUnpopulatedConstructorArg();
+    populateWithDefaultValues(arg);
+
+    arg.source = Optional.absent();
+    arg.target = Optional.absent();
+    arg.javaVersion = Optional.of("1.4");  // Set in the past, so if we ever bump the default....
+
+    JavacOptions options = JavaLibraryDescription.getJavacOptions(
+        resolver,
+        arg,
+        defaults).build();
+
+    assertEquals("1.4", options.getSourceLevel());
+    assertEquals("1.4", options.getTargetLevel());
+  }
+
+  @Test
+  public void settingJavaVersionAndSourceLevelIsAnError() {
+    JavaLibraryDescription.Arg arg =
+        new JavaLibraryDescription(defaults).createUnpopulatedConstructorArg();
+    populateWithDefaultValues(arg);
+
+    arg.source = Optional.of("1.4");
+    arg.target = Optional.absent();
+    arg.javaVersion = Optional.of("1.4");
+
+    try {
+      JavaLibraryDescription.getJavacOptions(
+          resolver,
+          arg,
+          defaults).build();
+      fail();
+    } catch (HumanReadableException e) {
+      assertTrue(
+          e.getMessage(),
+          e.getHumanReadableErrorMessage().contains("either source and target or java_version"));
+    }
+  }
+
+  @Test
+  public void settingJavaVersionAndTargetLevelIsAnError() {
+    JavaLibraryDescription.Arg arg =
+        new JavaLibraryDescription(defaults).createUnpopulatedConstructorArg();
+    populateWithDefaultValues(arg);
+
+    arg.source = Optional.absent();
+    arg.target = Optional.of("1.4");
+    arg.javaVersion = Optional.of("1.4");
+
+    try {
+      JavaLibraryDescription.getJavacOptions(
+          resolver,
+          arg,
+          defaults).build();
+      fail();
+    } catch (HumanReadableException e) {
+      assertTrue(
+          e.getMessage(),
+          e.getHumanReadableErrorMessage().contains("either source and target or java_version"));
+    }
   }
 
   @Test
