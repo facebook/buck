@@ -16,9 +16,9 @@
 
 {let $step2sha1: '6c809273e70428f2f465cdeef568e1f35c30b439' /}
 {let $step3sha1: '5f7ce4934e9e8ea9a391a09d2093c79b64b7d207' /}
-{let $step4sha1: 'fa2f6cb74e594d5a75c9b67da8b654fa09ecf3cf' /}
-{let $step5sha1: '4856481f75b1f457ea489f2811b22f14402d747b' /}
-{let $step6sha1: '340814588800efdd06d147ebfb04005dd4070f92' /}
+{let $step4sha1: 'd4553a92eb8969e05d7cd9c2e73b4309fee72966' /}
+{let $step5sha1: '1f1b375624664ac1cdc82668a4b952c6f332bdb0' /}
+{let $step6sha1: '4250292b4d4742d40a9b06ce638741b2873210f1' /}
 
 <p>
 
@@ -446,7 +446,6 @@ AntennaPod APK. Note that the only item listed in its <code>deps</code> is
 android_binary(
   name = 'antennapod',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = ':debug_keystore',
   deps = [
     ':main-lib',
@@ -465,6 +464,8 @@ file named <code>.buckconfig</code> in the root of the repo with the following c
 [cache]
   mode = dir
   dir_max_size = 1GB
+[android]
+  target = Google Inc.:Google APIs:19
 {/literal}</pre>
 
 Now you should be able to run <code>{call buck.cmd_build /} antennapod</code> to build the app,
@@ -665,7 +666,6 @@ in <span style="color:green">green</span>):
 android_binary(
   name = 'antennapod',
   manifest = 'AndroidManifest.xml',
-  target = 'Google Inc.:Google APIs:19',
   keystore = ':debug_keystore',
 <span style="color:green">  use_split_dex = True,
   exopackage_modes = ['secondary_dex'],
