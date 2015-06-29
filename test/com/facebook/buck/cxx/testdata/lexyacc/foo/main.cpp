@@ -1,3 +1,5 @@
+#include "foo/mainy.yy.h"
+
 int yylex(void) {
   return 0;
 }

@@ -17,9 +17,15 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -33,6 +39,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGContext;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,21 +73,15 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-
-    //
-    assumeTrue(
-        Platform.detect() != Platform.MACOS ||
-            !ImmutableSet.of(CxxPreprocessMode.SEPARATE, CxxPreprocessMode.PIPED).contains(mode));
-
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "step_test", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
         "[cxx]\n" +
-        "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
-        "  cppflags = -g\n" +
-        "  cflags = -g\n" +
-        "  cxxppflags = -g\n" +
-        "  cxxflags = -g\n",
+            "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
+            "  cppflags = -g\n" +
+            "  cflags = -g\n" +
+            "  cxxppflags = -g\n" +
+            "  cxxflags = -g\n",
         ".buckconfig");
   }
 
@@ -139,10 +140,164 @@ public class CxxPreprocessAndCompileIntegrationTest {
     folder.delete();
   }
 
+  @Test
+  public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_source");
+    String unusedGenruleInput = "unused.dat";
+    BuildTarget genrule = BuildTargetFactory.newInstance("//:gensource");
+    String sourceName = "bar.cpp";
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    BuildTarget preprocessTarget =
+        cxxSourceRuleFactory.createPreprocessBuildTarget(
+            sourceName,
+            AbstractCxxSource.Type.CXX,
+            CxxSourceRuleFactory.PicType.PDC);
+    BuildTarget compileTarget =
+        cxxSourceRuleFactory.createCompileBuildTarget(
+            sourceName,
+            CxxSourceRuleFactory.PicType.PDC);
+
+    // Run the build and verify that the C++ source was (preprocessed and) compiled.
+    workspace.runBuckBuild(target.toString()).assertSuccess();
+    if (mode == CxxPreprocessMode.SEPARATE) {
+      assertThat(
+          workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
+          Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+    }
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Now modify the unused genrule input.
+    workspace.writeContentsToPath(
+        "SOMETHING ELSE",
+        unusedGenruleInput);
+
+    // Run the build again and verify that got a matching input-based rule key, and therefore
+    // didn't recompile.
+    workspace.runBuckBuild(target.toString()).assertSuccess();
+
+    // Verify that the genrule actually re-ran.
+    assertThat(
+        workspace.getBuildLog().getLogEntry(genrule).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Verify that the (preprocess and) compile rules aren't re-run.
+    if (mode == CxxPreprocessMode.SEPARATE) {
+      assertThat(
+          workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
+          Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+    }
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+  }
+
+  @Test
+  public void inputBasedRuleKeyAvoidsRerunningIfGeneratedHeaderDoesNotChange() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_header");
+    String unusedGenruleInput = "unused.dat";
+    BuildTarget genrule = BuildTargetFactory.newInstance("//:genheader");
+    String sourceName = "foo.cpp";
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    BuildTarget preprocessTarget =
+        cxxSourceRuleFactory.createPreprocessBuildTarget(
+            sourceName,
+            AbstractCxxSource.Type.CXX,
+            CxxSourceRuleFactory.PicType.PDC);
+    BuildTarget compileTarget =
+        cxxSourceRuleFactory.createCompileBuildTarget(
+            sourceName,
+            CxxSourceRuleFactory.PicType.PDC);
+
+    // Run the build and verify that the C++ source was (preprocessed and) compiled.
+    workspace.runBuckBuild(target.toString()).assertSuccess();
+    if (mode == CxxPreprocessMode.SEPARATE) {
+      assertThat(
+          workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
+          Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+    }
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Now modify the unused genrule input.
+    workspace.writeContentsToPath(
+        "SOMETHING ELSE",
+        unusedGenruleInput);
+
+    // Run the build again and verify that got a matching input-based rule key, and therefore
+    // didn't recompile.
+    workspace.runBuckBuild(target.toString()).assertSuccess();
+
+    // Verify that the genrule actually re-ran.
+    assertThat(
+        workspace.getBuildLog().getLogEntry(genrule).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Verify that the (preprocess and) compile rules aren't re-run.
+    if (mode == CxxPreprocessMode.SEPARATE) {
+      assertThat(
+          workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
+          Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+    }
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+  }
+
+  @Test
+  public void inputBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
+
+    // This test is only meant to check the separate flow, as we want to avoid recompiling if only
+    // unused headers have changed.
+    assumeTrue(
+        "only tests \"separate\" preprocess mode",
+        mode == CxxPreprocessMode.SEPARATE);
+
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    String unusedHeaderName = "unused_header.h";
+    String sourceName = "source.cpp";
+    BuildTarget compileTarget =
+        cxxSourceRuleFactory.createCompileBuildTarget(
+            sourceName,
+            CxxSourceRuleFactory.PicType.PDC);
+
+    // Run the build and verify that the C++ source was compiled.
+    workspace.runBuckBuild(target.toString());
+    BuckBuildLog.BuildLogEntry firstRunEntry = workspace.getBuildLog().getLogEntry(compileTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Now modify the unused header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        unusedHeaderName);
+
+    // Run the build again and verify that got a matching input-based rule key, and therefore
+    // didn't recompile.
+    workspace.runBuckBuild(target.toString());
+    BuckBuildLog.BuildLogEntry secondRunEntry = workspace.getBuildLog().getLogEntry(compileTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+
+
+    // Also, make sure the original rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(Matchers.equalTo(firstRunEntry.getRuleKey())));
+  }
+
   public void assumeNotUsingSeparateOrPipedModesWithClang() {
     assumeTrue(
         Platform.detect() != Platform.MACOS ||
-        !ImmutableSet.of(CxxPreprocessMode.SEPARATE, CxxPreprocessMode.PIPED).contains(mode));
+            !ImmutableSet.of(CxxPreprocessMode.SEPARATE, CxxPreprocessMode.PIPED).contains(mode));
   }
 
 }

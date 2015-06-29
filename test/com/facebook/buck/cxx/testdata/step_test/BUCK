@@ -4,3 +4,48 @@ cxx_library(
     'simple.cc',
   ],
 )
+
+cxx_binary(
+  name = 'binary_with_unused_header',
+  srcs = [
+    'source.cpp',
+  ],
+  headers = [
+    'unused_header.h',
+  ],
+)
+
+genrule(
+  name = 'genheader',
+  out = 'genheader.h',
+  cmd = 'echo "#define TEST" > $OUT',
+  srcs = [
+    'unused.dat',
+  ]
+)
+
+cxx_binary(
+  name = 'binary_using_generated_header',
+  srcs = [
+    'foo.cpp',
+  ],
+  headers = [
+    ':genheader',
+  ],
+)
+
+genrule(
+  name = 'gensource',
+  out = 'bar.cpp',
+  cmd = 'echo "int main() { return 4; }" > $OUT',
+  srcs = [
+    'unused.dat',
+  ]
+)
+
+cxx_binary(
+  name = 'binary_using_generated_source',
+  srcs = [
+    ':gensource',
+  ],
+)

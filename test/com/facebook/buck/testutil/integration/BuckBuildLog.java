@@ -41,26 +41,6 @@ public class BuckBuildLog {
       Pattern.compile(".*BuildRuleFinished\\((?<BuildTarget>[^\\)]+)\\): (?<Status>\\S+) " +
               "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)");
 
-
-  static class BuildLogEntry {
-    private final BuildRuleStatus status;
-    private final Optional<BuildRuleSuccessType> successType;
-    @SuppressWarnings("unused")
-    private final Optional<CacheResult> cacheResult;
-    private final Sha1HashCode ruleKey;
-
-    private BuildLogEntry(
-        BuildRuleStatus status,
-        Optional<BuildRuleSuccessType> successType,
-        Optional<CacheResult> cacheResult,
-        Sha1HashCode ruleKey) {
-      this.status = Preconditions.checkNotNull(status);
-      this.successType = successType;
-      this.cacheResult = cacheResult;
-      this.ruleKey = Preconditions.checkNotNull(ruleKey);
-    }
-  }
-
   private final Map<BuildTarget, BuildLogEntry> buildLogEntries;
 
   private BuckBuildLog(Map<BuildTarget, BuildLogEntry> buildLogEntries) {
@@ -150,4 +130,45 @@ public class BuckBuildLog {
 
     return buildLogEntries.get(buildTarget);
   }
+
+  public BuildLogEntry getLogEntry(BuildTarget target) {
+    return getLogEntryOrFail(target.toString());
+  }
+
+  public static class BuildLogEntry {
+
+    private final BuildRuleStatus status;
+    private final Optional<BuildRuleSuccessType> successType;
+    private final Optional<CacheResult> cacheResult;
+    private final Sha1HashCode ruleKey;
+
+    private BuildLogEntry(
+        BuildRuleStatus status,
+        Optional<BuildRuleSuccessType> successType,
+        Optional<CacheResult> cacheResult,
+        Sha1HashCode ruleKey) {
+      this.status = Preconditions.checkNotNull(status);
+      this.successType = successType;
+      this.cacheResult = cacheResult;
+      this.ruleKey = Preconditions.checkNotNull(ruleKey);
+    }
+
+    public BuildRuleStatus getStatus() {
+      return status;
+    }
+
+    public Optional<BuildRuleSuccessType> getSuccessType() {
+      return successType;
+    }
+
+    public Optional<CacheResult> getCacheResult() {
+      return cacheResult;
+    }
+
+    public Sha1HashCode getRuleKey() {
+      return ruleKey;
+    }
+
+  }
+
 }

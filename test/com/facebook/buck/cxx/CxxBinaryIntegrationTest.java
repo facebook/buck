@@ -223,7 +223,7 @@ public class CxxBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     // Update the source file.
-    workspace.replaceFileContents(headerFull, "BLAH 5", "BLAH 6");
+    workspace.replaceFileContents(headerFull, "blah = 5", "blah = 6");
 
     // Check that running a build again makes the source get recompiled and the binary
     // re-linked, but does not cause the header rules to re-run.

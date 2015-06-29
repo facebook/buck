@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
@@ -45,7 +46,9 @@ import java.util.Map;
 /**
  * A build rule which preprocesses and/or compiles a C/C++ source in a single step.
  */
-public class CxxPreprocessAndCompile extends AbstractBuildRule implements RuleKeyAppendable {
+public class CxxPreprocessAndCompile
+    extends AbstractBuildRule
+    implements RuleKeyAppendable, SupportsInputBasedRuleKey {
 
   @AddToRuleKey
   private final CxxPreprocessAndCompileStep.Operation operation;

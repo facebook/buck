@@ -1,0 +1,9 @@
+cxx_binary(
+  name = 'binary',
+  srcs = [
+    'source.cpp',
+  ],
+  headers = [
+    'unused_header.h',
+  ],
+)
