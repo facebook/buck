@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -29,7 +31,9 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroFinder;
 import com.facebook.buck.rules.macros.MacroReplacer;
@@ -41,6 +45,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -50,9 +55,12 @@ import java.util.Map;
 public class PrebuiltCxxLibraryDescription
     implements Description<PrebuiltCxxLibraryDescription.Arg> {
 
+  private static final Logger LOG = Logger.get(PrebuiltCxxLibraryDescription.class);
+
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
   private static enum Type {
+    EXPORTED_HEADERS,
     SHARED,
   }
 
@@ -60,6 +68,7 @@ public class PrebuiltCxxLibraryDescription
       new FlavorDomain<>(
           "C/C++ Library Type",
           ImmutableMap.of(
+              CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR, Type.EXPORTED_HEADERS,
               CxxDescriptionEnhancer.SHARED_FLAVOR, Type.SHARED));
 
   public static final BuildRuleType TYPE = BuildRuleType.of("prebuilt_cxx_library");
@@ -176,6 +185,57 @@ public class PrebuiltCxxLibraryDescription
     return getLibraryPath(target, cxxPlatform, libDir, libName, ".a");
   }
 
+  /**
+   * @return a {@link SymlinkTree} for the exported headers of this prebuilt C/C++ library.
+   */
+  public static <A extends Arg> SymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      A args) {
+    return CxxDescriptionEnhancer.createHeaderSymlinkTree(
+        params,
+        resolver,
+        new SourcePathResolver(resolver),
+        cxxPlatform,
+        /* includeLexYaccHeaders */ false,
+        ImmutableMap.<String, SourcePath>of(),
+        ImmutableMap.<String, SourcePath>of(),
+        parseExportedHeaders(params, resolver, cxxPlatform, args),
+        HeaderVisibility.PUBLIC);
+  }
+
+  private static <A extends Arg> ImmutableMap<Path, SourcePath> parseExportedHeaders(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      A args) {
+    ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    CxxDescriptionEnhancer.putAllHeaders(
+        args.exportedHeaders.get(),
+        headers,
+        pathResolver,
+        "exported_headers",
+        params.getBuildTarget());
+    for (SourceList sourceList :
+        args.exportedPlatformHeaders.get().getMatchingValues(cxxPlatform.getFlavor().toString())) {
+      CxxDescriptionEnhancer.putAllHeaders(
+          sourceList,
+          headers,
+          pathResolver,
+          "exported_platform_headers",
+          params.getBuildTarget());
+    }
+    return CxxPreprocessables.resolveHeaderMap(
+        args.headerNamespace.transform(MorePaths.TO_PATH)
+            .or(params.getBuildTarget().getBasePath()),
+        headers.build());
+  }
+
+  /**
+   * @return a {@link CxxLink} rule for a shared library version of this prebuilt C/C++ library.
+   */
   private <A extends Arg> BuildRule createSharedLibraryBuildRule(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -218,7 +278,12 @@ public class PrebuiltCxxLibraryDescription
   public <A extends Arg> BuildRule createBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      final A args) {
+    if (args.includeDirs.get().size() > 0) {
+      LOG.warn(
+          "Build target %s uses `include_dirs` which is deprecated. Use `exported_headers` instead",
+          params.getBuildTarget().toString());
+    }
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -237,9 +302,20 @@ public class PrebuiltCxxLibraryDescription
     // rule builder methods.  Currently, we only support building a shared lib from the
     // pre-existing static lib, which we do here.
     if (type.isPresent()) {
-      Preconditions.checkState(type.get().getValue() == Type.SHARED);
       Preconditions.checkState(platform.isPresent());
-      return createSharedLibraryBuildRule(params, resolver, platform.get().getValue(), args);
+      if (type.get().getValue() == Type.EXPORTED_HEADERS) {
+        return createExportedHeaderSymlinkTreeBuildRule(
+            params,
+            resolver,
+            platform.get().getValue(),
+            args);
+      } else if (type.get().getValue() == Type.SHARED) {
+        return createSharedLibraryBuildRule(
+            params,
+            resolver,
+            platform.get().getValue(),
+            args);
+      }
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
@@ -266,8 +342,25 @@ public class PrebuiltCxxLibraryDescription
         includeDirs,
         args.libDir,
         args.libName,
-        args.exportedLinkerFlags.get(),
-        args.exportedPlatformLinkerFlags.get(),
+        new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
+          @Override
+          public ImmutableMultimap<CxxSource.Type, String> apply(CxxPlatform input) {
+            return CxxFlags.getLanguageFlags(
+                args.exportedPreprocessorFlags,
+                args.exportedPlatformPreprocessorFlags,
+                args.exportedLangPreprocessorFlags,
+                input.getFlavor());
+          }
+        },
+        new Function<CxxPlatform, ImmutableList<String>>() {
+          @Override
+          public ImmutableList<String> apply(CxxPlatform input) {
+            return CxxFlags.getFlags(
+                args.exportedLinkerFlags,
+                args.exportedPlatformLinkerFlags,
+                input.getFlavor());
+          }
+        },
         args.soname,
         args.headerOnly.or(false),
         args.linkWhole.or(false),
@@ -280,8 +373,16 @@ public class PrebuiltCxxLibraryDescription
     public Optional<String> libName;
     public Optional<String> libDir;
     public Optional<Boolean> headerOnly;
+    public Optional<SourceList> exportedHeaders;
+    public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders;
+    public Optional<String> headerNamespace;
     public Optional<Boolean> provided;
     public Optional<Boolean> linkWhole;
+    public Optional<ImmutableList<String>> exportedPreprocessorFlags;
+    public Optional<PatternMatchedCollection<ImmutableList<String>>>
+        exportedPlatformPreprocessorFlags;
+    public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
+        exportedLangPreprocessorFlags;
     public Optional<ImmutableList<String>> exportedLinkerFlags;
     public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
     public Optional<String> soname;

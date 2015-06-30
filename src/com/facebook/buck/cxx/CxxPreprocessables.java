@@ -44,6 +44,17 @@ public class CxxPreprocessables {
 
   private CxxPreprocessables() {}
 
+  public enum IncludeType {
+    /**
+     * Headers should be included with `-I`.
+     */
+    LOCAL,
+    /**
+     * Headers should be included with `-isystem`.
+     */
+    SYSTEM,
+  }
+
   /**
    * Resolve the map of name to {@link SourcePath} to a map of full header name to
    * {@link SourcePath}.
@@ -138,6 +149,7 @@ public class CxxPreprocessables {
       BuildRuleResolver ruleResolver,
       Flavor flavor,
       HeaderVisibility headerVisibility,
+      IncludeType includeType,
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Iterable<Path> frameworkSearchPaths) {
     BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
@@ -147,7 +159,7 @@ public class CxxPreprocessables {
         CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility));
     Preconditions.checkState(rule instanceof SymlinkTree);
     SymlinkTree symlinkTree = (SymlinkTree) rule;
-    return CxxPreprocessorInput.builder()
+    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder()
         .addRules(symlinkTree.getBuildTarget())
         .putAllPreprocessorFlags(exportedPreprocessorFlags)
         .setIncludes(
@@ -156,8 +168,15 @@ public class CxxPreprocessables {
                 .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
                 .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))
                 .build())
-        .addIncludeRoots(symlinkTree.getRoot())
-        .addAllFrameworkRoots(frameworkSearchPaths)
-        .build();
+        .addAllFrameworkRoots(frameworkSearchPaths);
+    switch(includeType) {
+      case LOCAL:
+        builder.addIncludeRoots(symlinkTree.getRoot());
+        break;
+      case SYSTEM:
+        builder.addSystemIncludeRoots(symlinkTree.getRoot());
+        break;
+    }
+    return builder.build();
   }
 }

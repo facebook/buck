@@ -109,6 +109,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         ruleResolver,
         cxxPlatform.getFlavor(),
         headerVisibility,
+        CxxPreprocessables.IncludeType.LOCAL,
         exportedPreprocessorFlags.apply(cxxPlatform),
         frameworkSearchPaths);
   }

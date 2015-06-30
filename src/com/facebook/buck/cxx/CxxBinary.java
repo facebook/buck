@@ -96,6 +96,7 @@ public class CxxBinary
         ruleResolver,
         cxxPlatform.getFlavor(),
         headerVisibility,
+        CxxPreprocessables.IncludeType.LOCAL,
         ImmutableMultimap.<CxxSource.Type, String>of(),
         frameworkSearchPaths);
   }

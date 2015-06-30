@@ -29,13 +29,13 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
@@ -50,8 +50,9 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   private final ImmutableList<Path> includeDirs;
   private final Optional<String> libDir;
   private final Optional<String> libName;
-  private final ImmutableList<String> exportedLinkerFlags;
-  private final PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags;
+  private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
+      exportedPreprocessorFlags;
+  private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<String> soname;
   private final boolean headerOnly;
   private final boolean linkWhole;
@@ -68,8 +69,9 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       ImmutableList<Path> includeDirs,
       Optional<String> libDir,
       Optional<String> libName,
-      ImmutableList<String> exportedLinkerFlags,
-      PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags,
+      Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
+          exportedPreprocessorFlags,
+      Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<String> soname,
       boolean headerOnly,
       boolean linkWhole,
@@ -81,8 +83,8 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     this.includeDirs = includeDirs;
     this.libDir = libDir;
     this.libName = libName;
+    this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
-    this.exportedPlatformLinkerFlags = exportedPlatformLinkerFlags;
     this.soname = soname;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
@@ -128,8 +130,17 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     switch (headerVisibility) {
       case PUBLIC:
         return CxxPreprocessorInput.builder()
+            .from(
+                CxxPreprocessables.getCxxPreprocessorInput(
+                    params,
+                    ruleResolver,
+                    cxxPlatform.getFlavor(),
+                    headerVisibility,
+                    CxxPreprocessables.IncludeType.SYSTEM,
+                    exportedPreprocessorFlags.apply(cxxPlatform),
+                    /* frameworkSearchPaths */ ImmutableList.<Path>of()))
             // Just pass the include dirs as system includes.
-            .setSystemIncludeRoots(ImmutableSortedSet.copyOf(includeDirs))
+            .addAllSystemIncludeRoots(ImmutableSortedSet.copyOf(includeDirs))
             .build();
       case PRIVATE:
         return CxxPreprocessorInput.EMPTY;
@@ -174,10 +185,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(exportedLinkerFlags);
-    linkerArgsBuilder.addAll(
-        Iterables.concat(
-            exportedPlatformLinkerFlags.getMatchingValues(cxxPlatform.getFlavor().toString())));
+    linkerArgsBuilder.addAll(exportedLinkerFlags.apply(cxxPlatform));
     if (!headerOnly) {
       if (provided || type == Linker.LinkableDepType.SHARED) {
         SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);

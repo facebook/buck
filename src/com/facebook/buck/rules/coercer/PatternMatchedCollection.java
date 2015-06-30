@@ -55,8 +55,9 @@ public class PatternMatchedCollection<T> {
 
     private final ImmutableList.Builder<Pair<Pattern, T>> builder = ImmutableList.builder();
 
-    public void add(Pattern platformSelector, T value) {
+    public Builder<T> add(Pattern platformSelector, T value) {
       builder.add(new Pair<>(platformSelector, value));
+      return this;
     }
 
     public PatternMatchedCollection<T> build() {

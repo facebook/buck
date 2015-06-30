@@ -299,7 +299,11 @@ public class CxxDescriptionEnhancer {
         headers.build());
   }
 
-  private static void putAllHeaders(
+  /**
+   * Resolves the headers in `sourceList` and puts them into `sources` for the specificed
+   * `buildTarget`.
+   */
+  public static void putAllHeaders(
       SourceList sourceList,
       ImmutableMap.Builder<String, SourcePath> sources,
       SourcePathResolver pathResolver,
