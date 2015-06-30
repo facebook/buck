@@ -191,6 +191,10 @@ public abstract class Jsr199Javac implements Javac {
       close(fileManager, compilationUnits);
     }
 
+    for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+      LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
+    }
+
     if (isSuccess) {
       return 0;
     } else {
