@@ -52,6 +52,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.FileHashCache;
 import com.facebook.buck.util.NullFileHashCache;
@@ -65,6 +66,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -1173,25 +1175,20 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         };
 
     // Prepopulate the cache with an artifact indexed by the input-based rule key.
-    File temp = File.createTempFile("artifact", ".zip");
+    File artifact = tmp.newFile("artifact.zip");
     writeEntriesToZip(
-        temp,
+        artifact,
         ImmutableMap.of(
-            BuildInfo.getPathToMetadataDirectory(target)
-                .resolve(BuildInfo.METADATA_KEY_FOR_RULE_KEY)
-                .toString(),
-            // Store a stale rule key, to verify it gets overwritten with the correct one.
-            new RuleKey("bbbb").toString(),
-            BuildInfo.getPathToMetadataDirectory(target)
-                .resolve(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY)
-                .toString(),
-            inputRuleKey.toString(),
             output.toString(),
-            ""));
+            "stuff"));
     cache.store(
         ImmutableSet.of(inputRuleKey),
-        ImmutableMap.<String, String>of(),
-        temp);
+        ImmutableMap.of(
+            BuildInfo.METADATA_KEY_FOR_RULE_KEY,
+            new RuleKey("bbbb").toString(),
+            BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
+            inputRuleKey.toString()),
+        artifact);
 
     // Create the build engine.
     CachingBuildEngine cachingBuildEngine =
@@ -1212,6 +1209,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY),
         Matchers.equalTo(Optional.of(inputRuleKey)));
+
+    // Verify that the artifact is re-cached correctly under the main rule key.
+    File fetchedArtifact = tmp.newFile("fetched_artifact.zip");
+    assertThat(
+        cache.fetch(rule.getRuleKey(), fetchedArtifact).getType(),
+        Matchers.equalTo(CacheResult.Type.HIT));
+    assertEquals(
+        new ZipInspector(artifact).getZipFileEntries(),
+        new ZipInspector(fetchedArtifact).getZipFileEntries());
+    assertTrue(Files.equal(artifact, fetchedArtifact));
   }
 
 
@@ -1512,6 +1519,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             new FileOutputStream(file)))) {
       for (Map.Entry<String, String> mapEntry : entries.entrySet()) {
         ZipEntry entry = new ZipEntry(mapEntry.getKey());
+        entry.setTime(0);
         zip.putNextEntry(entry);
         zip.write(mapEntry.getValue().getBytes());
         zip.closeEntry();

@@ -19,6 +19,8 @@ package com.facebook.buck.zip;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
@@ -82,7 +84,7 @@ public class Unzip {
           // Create parent folder
           filesystem.createParentDirs(target);
 
-          filesWritten.add(filesystem.resolve(target));
+          filesWritten.add(target);
           // Write file
           try (OutputStream out = filesystem.newFileOutputStream(target)) {
             ByteStreams.copy(zip.getInputStream(entry), out);
@@ -173,11 +175,20 @@ public class Unzip {
 
   public static ImmutableList<Path> extractZipFile(
       Path zipFile,
-      Path destination,
+      final Path destination,
       ExistingFileMode existingFileMode) throws IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
-    return extractZipFile(zipFile, new ProjectFilesystem(destination), existingFileMode);
+    return FluentIterable
+        .from(extractZipFile(zipFile, new ProjectFilesystem(destination), existingFileMode))
+        .transform(
+            new Function<Path, Path>() {
+              @Override
+              public Path apply(Path input) {
+                return destination.resolve(input).toAbsolutePath();
+              }
+            })
+        .toList();
   }
 
 }

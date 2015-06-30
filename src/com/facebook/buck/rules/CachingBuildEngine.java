@@ -37,6 +37,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -646,22 +647,30 @@ public class CachingBuildEngine implements BuildEngine {
             ArtifactCacheEvent.Operation.DECOMPRESS,
             ImmutableSet.of(ruleKey)));
     try {
-      Unzip.extractZipFile(
-          zipFile.toPath().toAbsolutePath(),
-          filesystem,
-          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+      ImmutableList<Path> unpacked =
+          Unzip.extractZipFile(
+              zipFile.toPath().toAbsolutePath(),
+              filesystem,
+              Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.
       Files.delete(zipFile.toPath());
 
-      // If we have a hit, also write out the build metadata.
       if (cacheResult.getType() == CacheResult.Type.HIT) {
+
+        // If we have a hit, also write out the build metadata.
         Path metadataDir = BuildInfo.getPathToMetadataDirectory(rule.getBuildTarget());
         for (Map.Entry<String, String> ent : cacheResult.getMetadata().entrySet()) {
           Path dest = metadataDir.resolve(ent.getKey());
           filesystem.createParentDirs(dest);
           filesystem.writeContentsToPath(ent.getValue(), dest);
+        }
+
+        // Record the items we fetched from the cache, as we may need to re-cache these under a
+        // different rule key.
+        for (Path input : unpacked) {
+          buildInfoRecorder.recordArtifact(input);
         }
       }
 
