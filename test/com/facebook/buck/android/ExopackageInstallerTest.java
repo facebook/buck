@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.android;
 
-import static com.facebook.buck.cli.ExopackageInstaller.NATIVE_LIB_PATTERN;
+import static com.facebook.buck.android.ExopackageInstaller.NATIVE_LIB_PATTERN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

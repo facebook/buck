@@ -162,6 +162,7 @@ java_library(
 HELPERS_SRCS = [
   'AdbHelper.java',
   'AdbOptions.java',
+  'ExopackageInstaller.java',
   'TargetDeviceOptions.java',
 ]
 
@@ -172,6 +173,7 @@ java_library(
     ':exceptions',
     ':steps',
     ':utils',
+    '//src/com/facebook/buck/android/agent/util:util',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:exceptions',
@@ -180,6 +182,7 @@ java_library(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/log:log',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/util/concurrent:concurrent',

@@ -8,8 +8,8 @@ java_library(
     # Do not add other deps here.  The agent should remain very small.
   ],
   visibility = [
+    '//src/com/facebook/buck/android:helpers',
     '//src/com/facebook/buck/android/agent:agent-lib',
-    '//src/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/android/agent/util:util',
   ],
 )

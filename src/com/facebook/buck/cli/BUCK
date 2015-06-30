@@ -71,7 +71,6 @@ java_immutables_library(
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:utils',
-    '//src/com/facebook/buck/android/agent/util:util',
     '//src/com/facebook/buck/apple/simulator:simulator',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/command:command',

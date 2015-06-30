@@ -25,6 +25,7 @@ import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.AdbOptions;
+import com.facebook.buck.android.ExopackageInstaller;
 import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
