@@ -833,10 +833,62 @@ public class ProjectGeneratorTest {
         "$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME",
         settings.get("BUILT_PRODUCTS_DIR"));
     assertEquals(
-        "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+        "$BUILT_PRODUCTS_DIR",
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
-        "Headers/MyHeaderPathPrefix",
+        "F4XWM33PHJWGSYQ/Headers/MyHeaderPathPrefix",
+        settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
+  }
+
+  @Test
+  public void testAppleFrameworkConfiguresPublicHeaderPaths() throws IOException {
+    BuildTarget libTarget = BuildTarget.builder("//foo", "lib")
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    TargetNode<?> libNode = AppleLibraryBuilder
+        .createBuilder(libTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setHeaderPathPrefix(Optional.of("MyHeaderPathPrefix"))
+        .setUseBuckHeaderMaps(Optional.of(false))
+        .build();
+
+    BuildTarget frameworkTarget = BuildTarget.builder("//foo", "bundle").build();
+    TargetNode<?> frameworkNode = AppleBundleBuilder
+        .createBuilder(frameworkTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setBinary(libTarget)
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(libNode, frameworkNode),
+        ImmutableSet.<ProjectGenerator.Option>of());
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget frameworkPbxTarget = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:bundle");
+    assertEquals(frameworkPbxTarget.getProductType(), ProductType.FRAMEWORK);
+    assertThat(frameworkPbxTarget.isa(), equalTo("PBXNativeTarget"));
+    PBXFileReference frameworkProductReference = frameworkPbxTarget.getProductReference();
+    assertEquals("bundle.framework", frameworkProductReference.getName());
+    assertEquals(Optional.of("wrapper.framework"), frameworkProductReference.getExplicitFileType());
+
+    ImmutableMap<String, String> settings = getBuildSettings(
+        frameworkTarget, frameworkPbxTarget, "Debug");
+    assertEquals("framework", settings.get("WRAPPER_EXTENSION"));
+    assertEquals(
+        "$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME",
+        settings.get("BUILT_PRODUCTS_DIR"));
+    assertEquals(
+        "$BUILT_PRODUCTS_DIR",
+        settings.get("CONFIGURATION_BUILD_DIR"));
+    assertEquals(
+        "F4XWM33PHJRHK3TENRSQ/Headers/MyHeaderPathPrefix",
         settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
   }
 
@@ -872,10 +924,10 @@ public class ProjectGeneratorTest {
         "$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME",
         settings.get("BUILT_PRODUCTS_DIR"));
     assertEquals(
-        "$BUILT_PRODUCTS_DIR/F4XWQ2J2NRUWEI3TNBQXEZLE",
+        "$BUILT_PRODUCTS_DIR",
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
-        "Headers/MyHeaderPathPrefix",
+        "F4XWQ2J2NRUWEI3TNBQXEZLE/Headers/MyHeaderPathPrefix",
         settings.get("PUBLIC_HEADERS_FOLDER_PATH"));
   }
 
@@ -908,7 +960,7 @@ public class ProjectGeneratorTest {
         "$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME",
         settings.get("BUILT_PRODUCTS_DIR"));
     assertEquals(
-        "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+        "$BUILT_PRODUCTS_DIR",
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
         "FooHeaders",
@@ -1215,7 +1267,7 @@ public class ProjectGeneratorTest {
         "$SYMROOT/$CONFIGURATION$EFFECTIVE_PLATFORM_NAME",
         settings.get("BUILT_PRODUCTS_DIR"));
     assertEquals(
-        "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+        "$BUILT_PRODUCTS_DIR",
         settings.get("CONFIGURATION_BUILD_DIR"));
     assertEquals(
         "VALUE",
@@ -1281,10 +1333,10 @@ public class ProjectGeneratorTest {
         null,
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+        "$(inherited) $BUILT_PRODUCTS_DIR",
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) $SDKROOT",
+        "$(inherited) $BUILT_PRODUCTS_DIR $SDKROOT",
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -1351,10 +1403,10 @@ public class ProjectGeneratorTest {
         "user_headers",
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
-        "libraries $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+        "libraries $BUILT_PRODUCTS_DIR",
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        "frameworks $SDKROOT",
+        "frameworks $BUILT_PRODUCTS_DIR $SDKROOT",
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -1436,12 +1488,11 @@ public class ProjectGeneratorTest {
         settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals(
         "$(inherited) " +
-            "$BUILT_PRODUCTS_DIR/F4XWEYLSHJWGSYQ " +
-            "$BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ",
+            "$BUILT_PRODUCTS_DIR",
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
         "$(inherited) " +
-            "$SDKROOT",
+            "$BUILT_PRODUCTS_DIR $SDKROOT",
         settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
@@ -1494,7 +1545,7 @@ public class ProjectGeneratorTest {
         "headers $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "libraries ",
+        "libraries $BUILT_PRODUCTS_DIR",
         settings.get("LIBRARY_SEARCH_PATHS"));
 
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
@@ -1560,7 +1611,7 @@ public class ProjectGeneratorTest {
         "headers $BUILT_PRODUCTS_DIR/F4XWM33PHJWGSYQ/Headers",
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
-        "libraries ",
+        "libraries $BUILT_PRODUCTS_DIR",
         settings.get("LIBRARY_SEARCH_PATHS"));
 
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
@@ -1659,7 +1710,7 @@ public class ProjectGeneratorTest {
         ImmutableList.of(
             "$SDKROOT/Foo.framework",
             // Propagated library from deps.
-            "$BUILT_PRODUCTS_DIR/F4XWIZLQHJSGK4A/libdep.a"));
+            "$BUILT_PRODUCTS_DIR/libdep.a"));
 
     // this test does not have a dependency on any asset catalogs, so verify no build phase for them
     // exists.
@@ -2165,7 +2216,7 @@ public class ProjectGeneratorTest {
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
-            "$BUILT_PRODUCTS_DIR/F4XWIZLQHJZWQYLSMVSCG43IMFZGKZA/libshared.dylib"));
+            "$BUILT_PRODUCTS_DIR/libshared.dylib"));
   }
 
   @Test
@@ -2224,7 +2275,7 @@ public class ProjectGeneratorTest {
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
-        ImmutableList.of("$BUILT_PRODUCTS_DIR/F4XWIZLQHJTHEYLNMV3W64TL/framework.framework"));
+        ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
 
   @Test
@@ -2294,7 +2345,7 @@ public class ProjectGeneratorTest {
     assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
     assertHasSingletonCopyFilesPhaseWithFileEntries(
         target,
-        ImmutableList.of("$BUILT_PRODUCTS_DIR/F4XWIZLQHJTHEYLNMV3W64TL/framework.framework"));
+        ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
 
   @Test
@@ -2522,7 +2573,7 @@ public class ProjectGeneratorTest {
         "$(inherited) $BUILT_PRODUCTS_DIR $SDKROOT $SOURCE_ROOT",
         settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) ",
+        "$(inherited) $BUILT_PRODUCTS_DIR",
         settings.get("FRAMEWORK_SEARCH_PATHS"));
 
   }
@@ -2891,9 +2942,9 @@ public class ProjectGeneratorTest {
         ImmutableList.of(
             "$BUILT_PRODUCTS_DIR/libxctest1.a",
             "$BUILT_PRODUCTS_DIR/libxctest2.a",
-            "$BUILT_PRODUCTS_DIR/F4XWY2LCOM5GIZLQNRUWE/libdeplib.a",
-            "$BUILT_PRODUCTS_DIR/F4XWM33PHJSGK4BR/libdep1.a",
-            "$BUILT_PRODUCTS_DIR/F4XWM33PHJSGK4BS/libdep2.a",
+            "$BUILT_PRODUCTS_DIR/libdeplib.a",
+            "$BUILT_PRODUCTS_DIR/libdep1.a",
+            "$BUILT_PRODUCTS_DIR/libdep2.a",
             "$SDKROOT/DeclaredInTestLib.framework",
             "$SDKROOT/DeclaredInTestLibDep.framework",
             "$SDKROOT/DeclaredInTest.framework"));

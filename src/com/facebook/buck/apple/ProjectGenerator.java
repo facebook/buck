@@ -798,9 +798,10 @@ public class ProjectGenerator {
           "WRAPPER_EXTENSION",
           getExtensionString(bundle.get().getConstructorArg().getExtension()));
     }
-    defaultSettingsBuilder.put(
-        "PUBLIC_HEADERS_FOLDER_PATH",
-        getHeaderOutputPath(targetNode.getConstructorArg().headerPathPrefix));
+    String publicHeadersPath =
+        getHeaderOutputPath(buildTargetNode, targetNode.getConstructorArg().headerPathPrefix);
+    LOG.debug("Public headers path for %s: %s", targetNode, publicHeadersPath);
+    defaultSettingsBuilder.put("PUBLIC_HEADERS_FOLDER_PATH", publicHeadersPath);
     // We use BUILT_PRODUCTS_DIR as the root for the everything being built. Target-
     // specific output is placed within CONFIGURATION_BUILD_DIR, inside BUILT_PRODUCTS_DIR.
     // That allows Copy Files build phases to reference files in the CONFIGURATION_BUILD_DIR
@@ -810,7 +811,7 @@ public class ProjectGenerator {
         // $EFFECTIVE_PLATFORM_NAME starts with a dash, so this expands to something like:
         // $SYMROOT/Debug-iphonesimulator
         Joiner.on('/').join("$SYMROOT", "$CONFIGURATION$EFFECTIVE_PLATFORM_NAME"));
-    defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", getTargetOutputPath(buildTargetNode));
+    defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", "$BUILT_PRODUCTS_DIR");
     if (!bundle.isPresent() && targetNode.getType().equals(AppleLibraryDescription.TYPE)) {
       defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
     }
@@ -1415,9 +1416,12 @@ public class ProjectGenerator {
     return buildTarget.getShortName();
   }
 
-  private String getHeaderOutputPath(Optional<String> headerPathPrefix) {
+  private String getHeaderOutputPath(
+      TargetNode<?> buildTargetNode,
+      Optional<String> headerPathPrefix) {
     // This is automatically appended to $CONFIGURATION_BUILD_DIR.
     return Joiner.on('/').join(
+        getBuiltProductsRelativeTargetOutputPath(buildTargetNode),
         "Headers",
         headerPathPrefix.or("$TARGET_NAME"));
   }
@@ -1522,6 +1526,7 @@ public class ProjectGenerator {
 
   private ImmutableSet<String> collectRecursiveHeaderSearchPaths(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
+    LOG.debug("Collecting recursive header search paths for %s...", targetNode);
     return FluentIterable
         .from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -1543,7 +1548,9 @@ public class ProjectGenerator {
             new Function<TargetNode<?>, String>() {
               @Override
               public String apply(TargetNode<?> input) {
-                return getHeaderSearchPath(input);
+                String result = getHeaderSearchPath(input);
+                LOG.debug("Header search path for %s: %s", input, result);
+                return result;
               }
             })
         .toSet();
@@ -1630,56 +1637,24 @@ public class ProjectGenerator {
 
   private <T> ImmutableSet<String> collectRecursiveLibrarySearchPaths(
       Iterable<TargetNode<T>> targetNodes) {
-    return FluentIterable
-        .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
-                targetGraph,
-                AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                ImmutableSet.of(AppleLibraryDescription.TYPE)))
-        .filter(getLibraryWithSourcesToCompilePredicate())
-        .transform(
-            new Function<TargetNode<?>, String>() {
-              @Override
-              public String apply(TargetNode<?> input) {
-                return getTargetOutputPath(input);
-              }
-            })
-        .append(
+    return new ImmutableSet.Builder<String>()
+        .add("$BUILT_PRODUCTS_DIR")
+        .addAll(
             collectRecursiveSearchPathsForFrameworkPaths(
                 targetNodes,
                 FrameworkPath.FrameworkType.LIBRARY))
-        .toSet();
+        .build();
   }
 
   private <T> ImmutableSet<String> collectRecursiveFrameworkSearchPaths(
       Iterable<TargetNode<T>> targetNodes) {
-    return FluentIterable
-        .from(targetNodes)
-        .transformAndConcat(
-            AppleBuildRules.newRecursiveRuleDependencyTransformer(
-                targetGraph,
-                AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                ImmutableSet.of(AppleBundleDescription.TYPE)))
-        .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return getLibraryNode(targetGraph, input).isPresent();
-              }
-            })
-        .transform(
-            new Function<TargetNode<?>, String>() {
-              @Override
-              public String apply(TargetNode<?> input) {
-                return getTargetOutputPath(input);
-              }
-            })
-        .append(
+    return new ImmutableSet.Builder<String>()
+        .add("$BUILT_PRODUCTS_DIR")
+        .addAll(
             collectRecursiveSearchPathsForFrameworkPaths(
                 targetNodes,
                 FrameworkPath.FrameworkType.FRAMEWORK))
-        .toSet();
+        .build();
   }
 
   private <T> Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(
@@ -1840,12 +1815,9 @@ public class ProjectGenerator {
       throw new RuntimeException("Unexpected type: " + targetNode.getType());
     }
 
-    String productOutputRelativePath = Joiner.on('/')
-        .join(getBuiltProductsRelativeTargetOutputPath(targetNode), productOutputName);
-
     return new SourceTreePath(
         PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-        Paths.get(productOutputRelativePath));
+        Paths.get(productOutputName));
   }
 
   private PBXFileReference getLibraryFileReference(TargetNode<?> targetNode) {
