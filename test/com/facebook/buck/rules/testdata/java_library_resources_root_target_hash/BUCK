@@ -1,0 +1,4 @@
+java_library(
+  name = 'empty',
+  resources_root = '.',
+)

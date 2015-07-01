@@ -39,6 +39,7 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
   private final String name;
   private final String pythonName;
   private final boolean isDep;
+  private final boolean isInput;
   private final Field field;
 
   public ParamInfo(TypeCoercerFactory typeCoercerFactory, Field field) {
@@ -47,6 +48,7 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
     Hint hint = field.getAnnotation(Hint.class);
     this.pythonName = determinePythonName(this.name, hint);
     this.isDep = hint != null ? hint.isDep() : Hint.DEFAULT_IS_DEP;
+    this.isInput = hint != null ? hint.isInput() : Hint.DEFAULT_IS_INPUT;
 
     isOptional = Optional.class.isAssignableFrom(field.getType());
     this.typeCoercer = typeCoercerFactory.typeCoercerForType(Types.getFirstNonOptionalType(field));
@@ -66,6 +68,10 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
 
   public boolean isDep() {
     return isDep;
+  }
+
+  public boolean isInput() {
+    return isInput;
   }
 
   /**

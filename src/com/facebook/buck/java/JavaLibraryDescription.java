@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FlavorableDescription;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -292,6 +293,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSet<String>> annotationProcessors;
     public Optional<Boolean> annotationProcessorOnly;
     public Optional<ImmutableList<String>> postprocessClassesCommands;
+    @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
 
     public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
