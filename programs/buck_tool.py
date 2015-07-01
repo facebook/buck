@@ -1,4 +1,5 @@
 from __future__ import print_function
+import json
 import os
 import platform
 import re
@@ -167,7 +168,7 @@ class BuckTool(object):
 
     def launch_buckd(self, buck_version_uid=None):
         with Tracing('BuckRepo.launch_buckd'):
-            self._setup_watchman_watch()
+            watchman_root, watchman_prefix = self._setup_watchman_watch()
             if buck_version_uid is None:
                 buck_version_uid = self._get_buck_version_uid()
             # Override self._tmp_dir to a long lived directory.
@@ -187,6 +188,9 @@ class BuckTool(object):
             command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
             command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
             command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
+            command.append("-Dbuck.watchman_root={0}".format(watchman_root))
+            if watchman_prefix:
+                command.append("-Dbuck.watchman_project_prefix={0}".format(watchman_prefix))
             command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
             command.append("-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
                 ngserver_output_path))
@@ -305,12 +309,35 @@ class BuckTool(object):
 
             print("Using watchman.", file=sys.stderr)
             try:
-                check_output(
-                    ['watchman', 'watch', self._buck_project.root],
-                    stderr=subprocess.STDOUT)
+                # Check watchman version
+                # We only want to use watch-project in watchman >= 3.4,
+                # since early versions don't return the project path relative to
+                # the repo root.
+                if self._watchman_atleast(3, 4):
+                    response = check_output(
+                        ['watchman', 'watch-project', self._buck_project.root],
+                        stderr=subprocess.STDOUT)
+                else:
+                    response = check_output(
+                        ['watchman', 'watch', self._buck_project.root],
+                        stderr=subprocess.STDOUT)
+
+                jsonresp = json.loads(response)
+                return jsonresp.get("watch"), jsonresp.get('relative_path')
             except CalledProcessError as e:
                 print(e.output, end='', file=sys.stderr)
                 raise
+
+    def _watchman_atleast(self, major, minor):
+        """Returns true if the installed watchman is greater than or equal to
+        the given version."""
+        response = check_output(['watchman', 'version'])
+        version = json.loads(response).get("version")
+        parts = version.split('.')
+        actualmajor = int(parts[0])
+        actualminor = int(parts[1])
+        return actualmajor > major or (actualmajor == major and
+                                       actualminor >= minor)
 
     def _is_buckd_running(self):
         with Tracing('BuckRepo._is_buckd_running'):

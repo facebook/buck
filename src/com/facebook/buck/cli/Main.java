@@ -33,6 +33,7 @@ import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavacOptions;
@@ -205,8 +206,15 @@ public final class Main {
     private ProjectFilesystemWatcher createWatcher(ProjectFilesystem projectFilesystem)
         throws IOException {
       LOG.debug("Using watchman to watch for file changes.");
+
+      String projectRoot = MorePaths.absolutify(projectFilesystem.getRootPath()).toString();
+      String watchRoot = System.getProperty("buck.watchman_root", projectRoot);
+      Optional<String> watchPrefix = Optional.fromNullable(
+          System.getProperty("buck.watchman_project_prefix"));
+
       return new WatchmanWatcher(
-          projectFilesystem,
+          watchRoot,
+          watchPrefix,
           fileEventBus,
           clock,
           objectMapper,

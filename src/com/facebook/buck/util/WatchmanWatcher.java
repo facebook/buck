@@ -19,8 +19,6 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.fasterxml.jackson.core.JsonParser;
@@ -28,6 +26,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
@@ -79,7 +78,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
 
   private final long timeoutMillis;
 
-  public WatchmanWatcher(ProjectFilesystem filesystem,
+  public WatchmanWatcher(String watchRoot,
+                         Optional<String> watchPrefix,
                          EventBus fileChangeEventBus,
                          Clock clock,
                          ObjectMapper objectMapper,
@@ -93,7 +93,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         DEFAULT_TIMEOUT_MILLIS,
         createQuery(
             objectMapper,
-            MorePaths.absolutify(filesystem.getRootPath()).toString(),
+            watchRoot,
+            watchPrefix,
             UUID.randomUUID().toString(),
             ignorePaths,
             ignoreGlobs));
@@ -119,13 +120,14 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   @VisibleForTesting
   static String createQuery(
       ObjectMapper objectMapper,
-      String rootPath,
+      String watchRoot,
+      Optional<String> watchPrefix,
       String uuid,
       Iterable<Path> ignorePaths,
       Iterable<String> ignoreGlobs) {
     List<Object> queryParams = new ArrayList<>();
     queryParams.add("query");
-    queryParams.add(rootPath);
+    queryParams.add(watchRoot);
     // Note that we use LinkedHashMap so insertion order is preserved. That
     // helps us write tests that don't depend on the undefined order of HashMap.
     Map<String, Object> sinceParams = new LinkedHashMap<>();
@@ -169,6 +171,9 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
             excludeAnyOf));
     sinceParams.put("empty_on_fresh_instance", true);
     sinceParams.put("fields", Lists.newArrayList("name", "exists", "new"));
+    if (watchPrefix.isPresent()) {
+      sinceParams.put("relative_root", watchPrefix.get());
+    }
     queryParams.add(sinceParams);
     try {
       return objectMapper.writeValueAsString(queryParams);

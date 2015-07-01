@@ -39,6 +39,7 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
@@ -450,10 +451,26 @@ public class WatchmanWatcherTest {
   }
 
   @Test
+  public void watchmanQueryWithRepoRelativePrefix() {
+    String query = WatchmanWatcher.createQuery(
+        new ObjectMapper(),
+        "path/to/repo",
+        Optional.of("project"),
+        "uuid",
+        Lists.<Path>newArrayList(),
+        Lists.<String>newArrayList());
+
+    assertThat(
+        query,
+        Matchers.containsString("\"relative_root\":\"project\""));
+  }
+
+  @Test
   public void watchmanQueryWithRepoPathNeedingEscapingFormatsToCorrectJson() {
     String query = WatchmanWatcher.createQuery(
         new ObjectMapper(),
         "/path/to/\"repo\"",
+        Optional.<String>absent(),
         "uuid",
         Lists.<Path>newArrayList(),
         Lists.<String>newArrayList());
@@ -470,6 +487,7 @@ public class WatchmanWatcherTest {
     String query = WatchmanWatcher.createQuery(
         new ObjectMapper(),
         "/path/to/repo",
+        Optional.<String>absent(),
         "uuid",
         Lists.newArrayList(Paths.get("foo"), Paths.get("bar/baz")),
         Lists.<String>newArrayList());
@@ -488,6 +506,7 @@ public class WatchmanWatcherTest {
     String query = WatchmanWatcher.createQuery(
         new ObjectMapper(),
         "/path/to/repo",
+        Optional.<String>absent(),
         "uuid",
         Lists.<Path>newArrayList(),
         Lists.newArrayList("*/project.pbxproj", "buck-out/*"));
