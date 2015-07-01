@@ -35,6 +35,7 @@ import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
@@ -43,6 +44,7 @@ import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -497,6 +499,14 @@ public class AdbHelper {
   public boolean installApk(
       InstallableApk installableApk,
       final boolean installViaSd) throws InterruptedException {
+    Optional<ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
+    if (exopackageInfo.isPresent()) {
+      return new ExopackageInstaller(
+          context,
+          this,
+          installableApk)
+          .install();
+    }
     getBuckEventBus().post(InstallEvent.started(installableApk.getBuildTarget()));
 
     final File apk = installableApk.getApkPath().toFile();
