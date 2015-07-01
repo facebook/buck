@@ -16,7 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Function;
@@ -64,22 +65,24 @@ public class CxxPreprocessAndCompileStepTest {
             replacementPaths,
             sanitizer);
 
-    Function<String, String> processor =
+    Function<String, Iterable<String>> processor =
         cxxPreprocessStep.createPreprocessOutputLineProcessor(compilationDirectory);
 
     // Fixup line marker lines properly.
-    assertEquals(
-        String.format("# 12 \"%s\"", Escaper.escapePathForCIncludeString(finalPath)),
-        processor.apply(String.format("# 12 \"%s\"", original)));
-    assertEquals(
-        String.format("# 12 \"%s\" 2 1", Escaper.escapePathForCIncludeString(finalPath)),
-        processor.apply(String.format("# 12 \"%s\" 2 1", original)));
+    assertThat(
+        ImmutableList.of(
+            String.format("# 12 \"%s\"", Escaper.escapePathForCIncludeString(finalPath))),
+        equalTo(processor.apply(String.format("# 12 \"%s\"", original))));
+    assertThat(
+        ImmutableList.of(
+            String.format("# 12 \"%s\" 2 1", Escaper.escapePathForCIncludeString(finalPath))),
+        equalTo(processor.apply(String.format("# 12 \"%s\" 2 1", original))));
 
     // test.h isn't in the replacement map, so shouldn't be replaced.
-    assertEquals("# 4 \"test.h\"", processor.apply("# 4 \"test.h\""));
+    assertThat(ImmutableList.of("# 4 \"test.h\""), equalTo(processor.apply("# 4 \"test.h\"")));
 
     // Don't modify non-line-marker lines.
-    assertEquals("int main() {", processor.apply("int main() {"));
+    assertThat(ImmutableList.of("int main() {"), equalTo(processor.apply("int main() {")));
   }
 
   @Test
@@ -115,51 +118,55 @@ public class CxxPreprocessAndCompileStepTest {
             replacementPaths,
             sanitizer);
 
-    Function<String, String> processor =
+    Function<String, Iterable<String>> processor =
         cxxPreprocessStep.createErrorLineProcessor(compilationDirectory);
 
     // Fixup lines in included traces.
-    assertEquals(
-        String.format("In file included from %s:", replacement),
-        processor.apply(String.format("In file included from %s:", original)));
-    assertEquals(
-        String.format("In file included from %s:3:2:", replacement),
-        processor.apply(String.format("In file included from %s:3:2:", original)));
-    assertEquals(
-        String.format("In file included from %s,", replacement),
-        processor.apply(String.format("In file included from %s,", original)));
-    assertEquals(
-        String.format("In file included from %s:7,", replacement),
-        processor.apply(String.format("In file included from %s:7,", original)));
-    assertEquals(
-        String.format("   from %s:", replacement),
-        processor.apply(String.format("   from %s:", original)));
-    assertEquals(
-        String.format("   from %s:3:2:", replacement),
-        processor.apply(String.format("   from %s:3:2:", original)));
-    assertEquals(
-        String.format("   from %s,", replacement),
-        processor.apply(String.format("   from %s,", original)));
-    assertEquals(
-        String.format("   from %s:7,", replacement),
-        processor.apply(String.format("   from %s:7,", original)));
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s:", replacement)),
+        equalTo(processor.apply(String.format("In file included from %s:", original))));
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s:3:2:", replacement)),
+        equalTo(processor.apply(String.format("In file included from %s:3:2:", original))));
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s,", replacement)),
+        equalTo(processor.apply(String.format("In file included from %s,", original))));
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s:7,", replacement)),
+        equalTo(processor.apply(String.format("In file included from %s:7,", original))));
+    assertThat(
+        ImmutableList.of(String.format("   from %s:", replacement)),
+        equalTo(processor.apply(String.format("   from %s:", original))));
+    assertThat(
+        ImmutableList.of(String.format("   from %s:3:2:", replacement)),
+        equalTo(processor.apply(String.format("   from %s:3:2:", original))));
+    assertThat(
+        ImmutableList.of(String.format("   from %s,", replacement)),
+        equalTo(processor.apply(String.format("   from %s,", original))));
+    assertThat(
+        ImmutableList.of(String.format("   from %s:7,", replacement)),
+        equalTo(processor.apply(String.format("   from %s:7,", original))));
 
     // Fixup lines in error messages.
-    assertEquals(
-        String.format("%s: something bad", replacement),
-        processor.apply(String.format("%s: something bad", original)));
-    assertEquals(
-        String.format("%s:4: something bad", replacement),
-        processor.apply(String.format("%s:4: something bad", original)));
-    assertEquals(
-        String.format("%s:4:2: something bad", replacement),
-        processor.apply(String.format("%s:4:2: something bad", original)));
+    assertThat(
+        ImmutableList.of(String.format("%s: something bad", replacement)),
+        equalTo(processor.apply(String.format("%s: something bad", original))));
+    assertThat(
+        ImmutableList.of(String.format("%s:4: something bad", replacement)),
+        equalTo(processor.apply(String.format("%s:4: something bad", original))));
+    assertThat(
+        ImmutableList.of(String.format("%s:4:2: something bad", replacement)),
+        equalTo(processor.apply(String.format("%s:4:2: something bad", original))));
 
     // test.h isn't in the replacement map, so shouldn't be replaced.
-    assertEquals("In file included from test.h:", processor.apply("In file included from test.h:"));
+    assertThat(
+        ImmutableList.of("In file included from test.h:"),
+        equalTo(processor.apply("In file included from test.h:")));
 
     // Don't modify lines without headers.
-    assertEquals(" error message!", processor.apply(" error message!"));
+    assertThat(
+        ImmutableList.of(" error message!"),
+        equalTo(processor.apply(" error message!")));
   }
 
 }

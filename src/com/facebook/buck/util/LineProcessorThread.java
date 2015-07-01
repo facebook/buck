@@ -35,7 +35,7 @@ public abstract class LineProcessorThread extends ManagedThread {
     this.outputStream = Preconditions.checkNotNull(outputStream);
   }
 
-  public abstract String process(String line);
+  public abstract Iterable<String> process(String line);
 
   @Override
   protected void run() throws Exception {
@@ -43,8 +43,11 @@ public abstract class LineProcessorThread extends ManagedThread {
          BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
       String line;
       while ((line = reader.readLine()) != null) {
-        writer.write(process(line));
-        writer.newLine();
+        Iterable<String> processedLines = process(line);
+        for (String processedLine : processedLines) {
+          writer.write(processedLine);
+          writer.newLine();
+        }
       }
     }
   }

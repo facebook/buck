@@ -101,14 +101,14 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  Function<String, String> createPreprocessOutputLineProcessor(final Path workingDir) {
-    return new Function<String, String>() {
+  Function<String, Iterable<String>> createPreprocessOutputLineProcessor(final Path workingDir) {
+    return new Function<String, Iterable<String>>() {
 
       private final Pattern lineMarkers =
           Pattern.compile("^# (?<num>\\d+) \"(?<path>[^\"]+)\"(?<rest>.*)?$");
 
       @Override
-      public String apply(String line) {
+      public Iterable<String> apply(String line) {
         if (line.startsWith("# ")) {
           Matcher m = lineMarkers.matcher(line);
 
@@ -130,17 +130,17 @@ public class CxxPreprocessAndCompileStep implements Step {
             if (!originalPath.equals(replacementPath)) {
               String num = m.group("num");
               String rest = m.group("rest");
-              return "# " + num + " \"" + replacementPath + "\"" + rest;
+              return ImmutableList.of("# " + num + " \"" + replacementPath + "\"" + rest);
             }
           }
         }
-        return line;
+        return ImmutableList.of(line);
       }
     };
   }
 
   @VisibleForTesting
-  Function<String, String> createErrorLineProcessor(final Path workingDir) {
+  Function<String, Iterable<String>> createErrorLineProcessor(final Path workingDir) {
     return CxxDescriptionEnhancer.createErrorMessagePathProcessor(
         new Function<String, String>() {
           @Override

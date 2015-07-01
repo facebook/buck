@@ -857,9 +857,9 @@ public class CxxDescriptionEnhancer {
    * @return a {@link Function} object which transforms path names from the output of a compiler
    *     or preprocessor using {@code pathProcessor}.
    */
-  public static Function<String, String> createErrorMessagePathProcessor(
+  public static Function<String, Iterable<String>> createErrorMessagePathProcessor(
       final Function<String, String> pathProcessor) {
-    return new Function<String, String>() {
+    return new Function<String, Iterable<String>>() {
 
       private final ImmutableList<Pattern> patterns =
           ImmutableList.of(
@@ -871,14 +871,14 @@ public class CxxDescriptionEnhancer {
                   "^(?<path>[^:]+)(?=:(?:\\d+:(?:\\d+:)?)? )"));
 
       @Override
-      public String apply(String line) {
+      public Iterable<String> apply(String line) {
         for (Pattern pattern : patterns) {
           Matcher m = pattern.matcher(line);
           if (m.find()) {
-            return m.replaceAll(pathProcessor.apply(m.group("path")));
+            return ImmutableList.of(m.replaceAll(pathProcessor.apply(m.group("path"))));
           }
         }
-        return line;
+        return ImmutableList.of(line);
       }
 
     };

@@ -24,18 +24,18 @@ import java.io.OutputStream;
 
 public class FunctionLineProcessorThread extends LineProcessorThread {
 
-  private final Function<String, String> processor;
+  private final Function<String, Iterable<String>> processor;
 
   public FunctionLineProcessorThread(
       InputStream inputStream,
       OutputStream outputStream,
-      Function<String, String> processor) {
+      Function<String, Iterable<String>> processor) {
     super(inputStream, outputStream);
     this.processor = Preconditions.checkNotNull(processor);
   }
 
   @Override
-  public String process(String line) {
+  public Iterable<String> process(String line) {
     return processor.apply(line);
   }
 
