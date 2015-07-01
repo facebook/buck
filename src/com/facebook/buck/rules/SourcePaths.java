@@ -20,12 +20,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 /**
  * Utilities for dealing with {@link SourcePath}s.
@@ -42,18 +38,6 @@ public class SourcePaths {
 
   /** Utility class: do not instantiate. */
   private SourcePaths() {}
-
-  public static ImmutableSortedSet<SourcePath> toSourcePathsSortedByNaturalOrder(
-      ProjectFilesystem projectFilesystem,
-      @Nullable Iterable<Path> paths) {
-    if (paths == null) {
-      return ImmutableSortedSet.of();
-    }
-
-    return FluentIterable.from(paths)
-        .transform(toSourcePath(projectFilesystem))
-        .toSortedSet(Ordering.natural());
-  }
 
   public static Iterable<BuildTarget> filterBuildTargetSourcePaths(
       Iterable<SourcePath> sourcePaths) {
