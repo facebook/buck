@@ -266,7 +266,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(
         new AaptStep(
             getAndroidManifestXml(),
-            getResolver().getAllPaths(filteredResourcesProvider.getResDirectories()),
+            filteredResourcesProvider.getResDirectories(),
             assetsDirectory,
             getResourceApkPath(),
             rDotTxtDir,
@@ -358,7 +358,7 @@ public class AaptPackageResources extends AbstractBuildRule
       // produces a JSON with android resource id's and xml paths for each string resource.
       GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
           rDotTxtDir,
-          getResolver().getAllPaths(filteredResourcesProvider.getResDirectories()),
+          filteredResourcesProvider.getResDirectories(),
           outputDirPath);
       steps.add(genNativeStringInfo);
 

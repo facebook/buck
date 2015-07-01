@@ -109,7 +109,7 @@ public class PackageStringAssets extends AbstractBuildRule
     Path pathToAllLocalesStringAssetsZip = getPathToAllLocalesStringAssetsZip();
     steps.add(new MakeCleanDirectoryStep(pathToStrings));
     steps.add(new CompileStringsStep(
-            getResolver().getAllPaths(filteredResourcesProvider.getStringFiles()),
+            filteredResourcesProvider.getStringFiles(),
             aaptPackageResources.getPathToRDotTxtDir(),
             assetPathBuilder));
     steps.add(new ZipStep(

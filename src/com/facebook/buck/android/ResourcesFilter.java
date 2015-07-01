@@ -28,7 +28,6 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -119,12 +118,12 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<SourcePath> getResDirectories() {
+  public ImmutableList<Path> getResDirectories() {
     return buildOutputInitializer.getBuildOutput().resDirectories;
   }
 
   @Override
-  public ImmutableList<SourcePath> getStringFiles() {
+  public ImmutableList<Path> getStringFiles() {
     return buildOutputInitializer.getBuildOutput().stringFiles;
   }
 
@@ -226,17 +225,13 @@ public class ResourcesFilter extends AbstractBuildRule
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    ImmutableList<SourcePath> resDirectories =
+    ImmutableList<Path> resDirectories =
         FluentIterable.from(onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get())
             .transform(MorePaths.TO_PATH)
-            .transform(
-                SourcePaths.getToBuildTargetSourcePath(getProjectFilesystem(), getBuildTarget()))
             .toList();
-    ImmutableList<SourcePath> stringFiles =
+    ImmutableList<Path> stringFiles =
         FluentIterable.from(onDiskBuildInfo.getValues(STRING_FILES_KEY).get())
             .transform(MorePaths.TO_PATH)
-            .transform(
-                SourcePaths.getToBuildTargetSourcePath(getProjectFilesystem(), getBuildTarget()))
             .toList();
 
     return new BuildOutput(resDirectories, stringFiles);
@@ -248,12 +243,12 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   public static class BuildOutput {
-    private final ImmutableList<SourcePath> resDirectories;
-    private final ImmutableList<SourcePath> stringFiles;
+    private final ImmutableList<Path> resDirectories;
+    private final ImmutableList<Path> stringFiles;
 
     public BuildOutput(
-        ImmutableList<SourcePath> resDirectories,
-        ImmutableList<SourcePath> stringFiles) {
+        ImmutableList<Path> resDirectories,
+        ImmutableList<Path> stringFiles) {
       this.resDirectories = resDirectories;
       this.stringFiles = stringFiles;
     }

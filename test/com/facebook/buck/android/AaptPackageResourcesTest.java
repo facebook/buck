@@ -315,11 +315,11 @@ public class AaptPackageResourcesTest {
     FilteredResourcesProvider resourcesProvider =
         new FilteredResourcesProvider() {
           @Override
-          public ImmutableList<SourcePath> getResDirectories() {
+          public ImmutableList<Path> getResDirectories() {
             throw new AssertionError("unexpected call to getResDirectories");
           }
           @Override
-          public ImmutableList<SourcePath> getStringFiles() {
+          public ImmutableList<Path> getStringFiles() {
             throw new AssertionError("unexpected call to getStringFiles");
           }
         };
