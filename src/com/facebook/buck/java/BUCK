@@ -107,6 +107,10 @@ java_immutables_library(
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
   ],
+  provided_deps = [
+    # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
+    '//src/com/facebook/buck/event/api:api',
+  ],
   visibility = ['PUBLIC'],
 )
 

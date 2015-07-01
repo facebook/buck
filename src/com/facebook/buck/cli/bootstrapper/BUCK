@@ -5,6 +5,11 @@ java_binary(
 
     # Be very careful what is added here, and leave comments justifying
     # each addition. See the comment below for more details on why.
+
+    # The Tracing API jar must be accessible to both Buck and compiler plugins, so we put it
+    # in the bootstrapper. Compiler plugins will have their own copy linked in, but the ClassLoaders
+    # will end up loading this one instead when they are run inside Buck.
+    '//src/com/facebook/buck/event/api:api',
   ],
   visibility = [
     '//programs:bucklib',

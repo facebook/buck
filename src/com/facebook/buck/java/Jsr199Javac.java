@@ -17,7 +17,9 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.MissingSymbolEvent;
+import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -172,23 +174,31 @@ public abstract class Jsr199Javac implements Javac {
         compilationUnits);
 
     boolean isSuccess = false;
-    // Ensure annotation processors are loaded from their own classloader. If we don't do this,
-    // then the evidence suggests that they get one polluted with Buck's own classpath, which
-    // means that libraries that have dependencies on different versions of Buck's deps may choke
-    // with novel errors that don't occur on the command line.
-    try (ProcessorBundle bundle = prepareProcessors(
-        context.getBuckEventBus(),
-        compiler.getClass().getClassLoader(),
-        invokingRule,
-        options)) {
-      compilationTask.setProcessors(bundle.processors);
+    BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
+        new BuckTracingEventBusBridge(context.getBuckEventBus(), invokingRule));
+    try {
+      // Ensure annotation processors are loaded from their own classloader. If we don't do this,
+      // then the evidence suggests that they get one polluted with Buck's own classpath, which
+      // means that libraries that have dependencies on different versions of Buck's deps may choke
+      // with novel errors that don't occur on the command line.
+      try (ProcessorBundle bundle = prepareProcessors(
+          context.getBuckEventBus(),
+          compiler.getClass().getClassLoader(),
+          invokingRule,
+          options)) {
+        compilationTask.setProcessors(bundle.processors);
 
-      // Invoke the compilation and inspect the result.
-      isSuccess = compilationTask.call();
-    } catch (IOException e) {
-      LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
+        // Invoke the compilation and inspect the result.
+        isSuccess = compilationTask.call();
+      } catch (IOException e) {
+        LOG.warn(e, "Unable to close annotation processor class loader. We may be leaking memory.");
+      } finally {
+        close(fileManager, compilationUnits);
+      }
     } finally {
-      close(fileManager, compilationUnits);
+      // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
+      // be using it.
+      BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
     }
 
     for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {

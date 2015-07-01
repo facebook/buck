@@ -20,6 +20,7 @@ import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
+import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.TraceEvent;
@@ -447,6 +448,26 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         finished.getCategory(),
         ChromeTraceEvent.Phase.END,
         ImmutableMap.<String, String>of(),
+        finished);
+  }
+
+  @Subscribe
+  public void compilerPluginDurationEventStarted(CompilerPluginDurationEvent.Started started) {
+    writeChromeTraceEvent(
+        started.getPluginName(),
+        started.getDurationName(),
+        ChromeTraceEvent.Phase.BEGIN,
+        started.getArgs(),
+        started);
+  }
+
+  @Subscribe
+  public void compilerPluginDurationEventFinished(CompilerPluginDurationEvent.Finished finished) {
+    writeChromeTraceEvent(
+        finished.getPluginName(),
+        finished.getDurationName(),
+        ChromeTraceEvent.Phase.END,
+        finished.getArgs(),
         finished);
   }
 

@@ -30,6 +30,7 @@ import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
+import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -204,6 +205,19 @@ public class ChromeTraceBuildListenerTest {
             operation,
             annotationRound,
             isLastRound));
+
+    final CompilerPluginDurationEvent.Started processingPartOneStarted =
+        CompilerPluginDurationEvent.started(
+            target,
+            annotationProcessorName,
+            "processingPartOne",
+            ImmutableMap.<String, String>of());
+    eventBus.post(processingPartOneStarted);
+    eventBus.post(
+        CompilerPluginDurationEvent.finished(
+            processingPartOneStarted,
+            ImmutableMap.<String, String>of()));
+
     eventBus.post(
         AnnotationProcessingEvent.finished(
             target,
@@ -308,6 +322,18 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "com.facebook.FakeProcessor.process",
         ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "processingPartOne",
+        ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "processingPartOne",
+        ChromeTraceEvent.Phase.END,
         emptyArgs);
 
     assertNextResult(

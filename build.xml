@@ -11,6 +11,9 @@
   <property name="bootstrapper.src.dir" value="com/facebook/buck/cli/bootstrapper/" />
   <property name="bootstrapper.classes.dir" value="${build.dir}/bootstrapper/classes" />
   <property name="bootstrapper.jar" value="${build.dir}/bootstrapper/bootstrapper.jar" />
+  <property name="tracing-api.src.dir" value="com/facebook/buck/event/api/" />
+  <property name="tracing-api.classes.dir" value="${build.dir}/tracing-api/classes" />
+  <property name="tracing-api.jar" value="${build.dir}/tracing-api/tracing-api.jar"/>
   <property name="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh" />
   <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/pex.py" />
   <property name="buck.path_to_python_test_main" value="${basedir}/src/com/facebook/buck/python/__test_main__.py" />
@@ -96,6 +99,7 @@
     <fileset refid="third-party.jars" />
     <pathelement location="${classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
+    <pathelement location="${tracing-api.jar}" />
   </path>
 
   <path id="classpath">
@@ -161,12 +165,34 @@
     </ecj>
   </target>
 
-  <target name="jar-bootstrapper" depends="compile-bootstrapper">
+  <target name="jar-bootstrapper" depends="compile-bootstrapper, tracing-api">
     <jar destfile="${bootstrapper.jar}">
       <fileset dir="${bootstrapper.classes.dir}" />
 
       <!-- Be very careful what is added here, and leave comments justifying each addition. See the
       comment in bootstrapper-classpath above for more details on why. -->
+      
+      <!-- The Tracing API jar must be accessible to both Buck and compiler plugins, so we put it
+      in the bootstrapper. Compiler plugins will have their own copy linked in, but the ClassLoaders
+      will end up loading this one instead when they are run inside Buck. -->
+      <zipfileset src="${tracing-api.jar}" />
+    </jar>
+  </target>
+
+  <path id="tracing-api.classpath">
+    <!-- The Tracing API is a very light JAR meant to be included in compiler plugins that may
+    be run outside of Buck. As such, it can take no dependencies. -->
+  </path>
+
+  <target name="tracing-api" depends="checkversion">
+    <mkdir dir="${tracing-api.classes.dir}" />
+    <ecj destdir="${tracing-api.classes.dir}" classpathref="tracing-api.classpath">
+      <javac-params>
+        <include name="${tracing-api.src.dir}/**/*.java"/>
+      </javac-params>
+    </ecj>
+    <jar destfile="${tracing-api.jar}">
+      <fileset dir="${tracing-api.classes.dir}"/>
     </jar>
   </target>
 
@@ -290,7 +316,7 @@
   </macrodef>
 
   <target name="compile"
-          depends="compile-testrunner, jar-bootstrapper, dx, generate-immutables"
+          depends="compile-testrunner, jar-bootstrapper, tracing-api, dx, generate-immutables"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -408,6 +434,7 @@
         <exclude name="com/facebook/buck/android/support/**" />
         <exclude name="com/facebook/buck/cli/bootstrapper/**" />
         <exclude name="com/facebook/buck/cli/quickstart/**" />
+        <exclude name="com/facebook/buck/event/api/**" />
         <exclude name="com/facebook/buck/junit/**" />
         <!-- Excluded since the maven functionality is bolted on later -->
         <exclude name="com/facebook/buck/maven/**" />
