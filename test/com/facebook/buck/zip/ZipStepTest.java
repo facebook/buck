@@ -286,7 +286,7 @@ public class ZipStepTest {
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     assertTrue(java.nio.file.Files.exists(outputZip));
-    Date dosEpoch = new Date(ZipUtil.dosToJavaTime((1 << 21) | (1 << 16)));
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_EPOCH_START));
     try (ZipInputStream is = new ZipInputStream(new FileInputStream(outputZip.toFile()))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));

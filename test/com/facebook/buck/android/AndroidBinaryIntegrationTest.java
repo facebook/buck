@@ -25,7 +25,10 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.zip.ZipConstants;
 
+import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.hamcrest.Matchers;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -33,9 +36,14 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class AndroidBinaryIntegrationTest {
 
@@ -243,6 +251,21 @@ public class AndroidBinaryIntegrationTest {
     zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_x86-only.so");
     zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
+  }
+
+  @Test
+  public void testApksHaveDeterministicTimestamps() throws IOException {
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//apps/sample:app");
+    result.assertSuccess();
+
+    // Iterate over each of the entries, expecting to see all zeros in the time fields.
+    File apk = workspace.getFile("buck-out/gen/apps/sample/app.apk");
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_EPOCH_START));
+    try (ZipInputStream is = new ZipInputStream(new FileInputStream(apk))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+      }
+    }
   }
 
 }

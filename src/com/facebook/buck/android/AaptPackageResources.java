@@ -45,6 +45,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -290,6 +291,10 @@ public class AaptPackageResources extends AbstractBuildRule
                 getPathToRDotJavaDex(),
                 Collections.singleton(getPathToCompiledRDotJavaFiles()),
                 DX_OPTIONS));
+
+        // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
+        // the output non-deterministic.  So use an additional scrubbing step to zero these out.
+        steps.add(new ZipScrubberStep(getPathToRDotJavaDex()));
 
         final EstimateLinearAllocStep estimateLinearAllocStep = new EstimateLinearAllocStep(
             getPathToCompiledRDotJavaFiles());

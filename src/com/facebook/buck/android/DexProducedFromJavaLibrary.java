@@ -37,6 +37,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -131,6 +132,11 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
               DxStep.Option.NO_OPTIMIZE,
               DxStep.Option.FORCE_JUMBO));
       steps.add(dx);
+
+      // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
+      // the output non-deterministic.  So use an additional scrubbing step to zero these out.
+      steps.add(new ZipScrubberStep(getPathToDex()));
+
     } else {
       linearAllocEstimate = Suppliers.ofInstance(0);
     }

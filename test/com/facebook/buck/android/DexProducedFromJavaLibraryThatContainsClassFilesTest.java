@@ -124,11 +124,12 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         Paths.get("/home/user/buck-out/gen/foo/bar.jar"));
     MoreAsserts.assertSteps("Generate bar.dex.jar.",
         ImmutableList.of(
-          String.format("rm -f %s", Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar")),
-          String.format("mkdir -p %s", Paths.get("/home/user/buck-out/gen/foo")),
-          "estimate_linear_alloc",
-          "(cd / && " + expectedDxCommand + ")",
-          "record_dx_success"),
+            String.format("rm -f %s", Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar")),
+            String.format("mkdir -p %s", Paths.get("/home/user/buck-out/gen/foo")),
+            "estimate_linear_alloc",
+            "(cd / && " + expectedDxCommand + ")",
+            "zip-scrub buck-out/gen/foo/bar#dex.dex.jar",
+            "record_dx_success"),
         steps,
         executionContext);
 
@@ -138,7 +139,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     replayAll();
 
     ((EstimateLinearAllocStep) steps.get(2)).setLinearAllocEstimateForTesting(250);
-    Step recordArtifactAndMetadataStep = steps.get(4);
+    Step recordArtifactAndMetadataStep = steps.get(5);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext);
     assertEquals(0, exitCode);
     assertEquals("The generated .dex.jar file should be in the set of recorded artifacts.",

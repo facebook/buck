@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.zip.ZipConstants;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -494,7 +495,7 @@ public class ProjectFilesystemTest {
         ImmutableMap.of(Paths.get("additional"), "info"));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
-    Date dosEpoch = new Date(ZipUtil.dosToJavaTime((1 << 21) | (1 << 16)));
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_EPOCH_START));
     try (ZipInputStream is = new ZipInputStream(new FileInputStream(zipFile))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));

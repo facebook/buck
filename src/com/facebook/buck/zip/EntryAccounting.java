@@ -35,10 +35,10 @@ import java.util.zip.ZipEntry;
  * write the entry to a zip file.
  */
 class EntryAccounting {
+
   private static final int DATA_DESCRIPTOR_FLAG = 1 << 3;
   private static final int UTF8_NAMES_FLAG = 1 << 11;
   private static final int ARBITRARY_SIZE = 1024;
-  private static final long DOS_EPOCH_START = (1 << 21) | (1 << 16);
 
   private final ZipEntry entry;
   private final Method method;
@@ -103,7 +103,7 @@ class EntryAccounting {
     // The DOS epoch begins in 1980. If the year is before that, then default to the start of the
     // epoch (the 1st day of the 1st month)
     if (year < 1980) {
-      return DOS_EPOCH_START;
+      return ZipConstants.DOS_EPOCH_START;
     }
     return (year - 1980) << 25 |
         (instance.get(Calendar.MONTH) + 1) << 21 |

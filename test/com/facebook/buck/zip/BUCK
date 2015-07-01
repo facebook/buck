@@ -17,6 +17,7 @@ java_test(
     '//src/com/facebook/buck/zip:steps',
     '//src/com/facebook/buck/zip:unzip',
     '//test/com/facebook/buck/step:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',

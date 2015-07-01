@@ -27,6 +27,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,8 +59,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class JarDirectoryStepTest {
-
-  //private static final long DOS_EPOCH_START = (1 << 21) | (1 << 16);
 
   @Rule public TemporaryFolder folder = new TemporaryFolder();
 
@@ -275,7 +274,7 @@ public class JarDirectoryStepTest {
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     assertTrue(Files.exists(outputJar));
-    Date dosEpoch = new Date(ZipUtil.dosToJavaTime((1 << 21) | (1 << 16)));
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_EPOCH_START));
     try (ZipInputStream is = new ZipInputStream(new FileInputStream(outputJar.toFile()))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));

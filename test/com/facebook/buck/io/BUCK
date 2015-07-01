@@ -4,6 +4,7 @@ java_test(
   deps = [
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/zip:stream',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/commons-compress:commons-compress',

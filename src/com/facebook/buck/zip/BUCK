@@ -8,6 +8,7 @@ java_library(
     'CustomZipEntry.java',
     'EntryAccounting.java',
     'OverwritingZipOutputStream.java',
+    'ZipConstants.java',
     'ZipOutputStreams.java',
     'ZipWriteTest.java',
   ],

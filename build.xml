@@ -366,6 +366,7 @@
         <include name="com/facebook/buck/zip/CustomZipEntry.java" />
         <include name="com/facebook/buck/zip/EntryAccounting.java" />
         <include name="com/facebook/buck/zip/OverwritingZipOutputStream.java" />
+        <include name="com/facebook/buck/zip/ZipConstants.java" />
         <include name="com/facebook/buck/zip/ZipOutputStreams.java" />
 
         <!-- //src/com/facebook/buck/timing:timing -->

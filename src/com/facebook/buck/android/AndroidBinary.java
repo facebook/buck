@@ -52,6 +52,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.zip.RepackZipEntriesStep;
+import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -412,6 +413,9 @@ public class AndroidBinary
         /* debugMode */ false);
     steps.add(apkBuilderCommand);
 
+    // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
+    // the output non-deterministic.  So use an additional scrubbing step to zero these out.
+    steps.add(new ZipScrubberStep(signedApkPath));
 
     Path apkToAlign;
     // Optionally, compress the resources file in the .apk.
