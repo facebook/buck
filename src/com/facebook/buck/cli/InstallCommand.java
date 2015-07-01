@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.AdbOptions;
-import com.facebook.buck.android.ExopackageInstaller;
 import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleConfig;
@@ -38,7 +37,6 @@ import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor;
@@ -230,18 +228,7 @@ public class InstallCommand extends BuildCommand {
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    boolean installSuccess;
-    Optional<ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
-    if (exopackageInfo.isPresent()) {
-      installSuccess = new ExopackageInstaller(
-          executionContext,
-          adbHelper,
-          installableApk)
-          .install();
-    } else {
-      installSuccess = adbHelper.installApk(installableApk, shouldInstallViaSd());
-    }
-    if (!installSuccess) {
+    if (!adbHelper.installApk(installableApk, shouldInstallViaSd())) {
       return 1;
     }
 
