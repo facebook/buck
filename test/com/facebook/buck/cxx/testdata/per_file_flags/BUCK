@@ -1,0 +1,8 @@
+cxx_binary(
+  name = 'binary',
+  preprocessor_flags = ['-fobjc-arc'],
+  compiler_flags = ['-fobjc-arc'],
+  srcs = [
+    ('main.m', ['-fno-objc-arc']),
+  ],
+)

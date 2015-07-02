@@ -269,10 +269,10 @@ public class CxxSourceRuleFactory {
         ImmutableList.<String>builder()
             // Add custom preprocessor flags.
             .addAll(preprocessorFlags.getUnchecked(source.getType()))
-            // Add custom per-file flags.
-            .addAll(source.getFlags())
             // Add custom compiler flags.
             .addAll(getRuleCompileFlags(CxxSourceTypes.getPreprocessorOutputType(source.getType())))
+            // Add custom per-file flags.
+            .addAll(source.getFlags())
             .build();
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.

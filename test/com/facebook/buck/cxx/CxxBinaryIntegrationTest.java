@@ -17,7 +17,9 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.cli.BuckConfig;
@@ -671,6 +673,16 @@ public class CxxBinaryIntegrationTest {
   public void buildBinaryWithSharedDependencies() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "shared_library", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void buildBinaryWithPerFileFlags() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "per_file_flags", tmp);
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
     result.assertSuccess();
