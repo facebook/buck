@@ -76,8 +76,8 @@ public class PythonBuckConfig {
   }
 
   /**
-   * Returns the path to python interpreter. If python is specified in the tools section
-   * that is used and an error reported if invalid.
+   * Returns the path to python interpreter. If python is specified in 'interpreter' key
+   * of the 'python' section that is used and an error reported if invalid.
    * @return The found python interpreter.
    */
   public String getPythonInterpreter() {
