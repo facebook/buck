@@ -104,6 +104,7 @@ public class Parser {
   private final ImmutableSet<Pattern> tempFilePatterns;
 
   private final Repository repository;
+  private final String buildFileName;
   private final ProjectBuildFileParserFactory buildFileParserFactory;
 
   /**
@@ -120,6 +121,7 @@ public class Parser {
   private final ListMultimap<Path, Path> buildFileDependents;
 
   private final boolean enforceBuckPackageBoundary;
+
 
   /**
    * A BuckEvent used to record the parse start time, which should include the WatchEvent
@@ -234,6 +236,7 @@ public class Parser {
       ProjectBuildFileParserFactory buildFileParserFactory)
       throws IOException, InterruptedException {
     this.repository = repository;
+    this.buildFileName = buildFileName;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
     this.buildFileParserFactory = buildFileParserFactory;
     this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
@@ -297,7 +300,7 @@ public class Parser {
     // Iterate over the build files the given target node spec returns.
     for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(
         repository.getFilesystem(),
-        parserConfig.getBuildFileName())) {
+        buildFileName)) {
 
       // Format a proper error message for non-existent build files.
       if (!repository.getFilesystem().isFile(buildFile)) {
@@ -575,10 +578,10 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     if (!isCached(buildFile, parserConfig.getDefaultIncludes(), environment)) {
-      LOG.debug("Parsing %s file: %s", parserConfig.getBuildFileName(), buildFile);
+      LOG.debug("Parsing %s file: %s", buildFileName, buildFile);
       parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile));
     } else {
-      LOG.debug("Not parsing %s file (already in cache)", parserConfig.getBuildFileName());
+      LOG.debug("Not parsing %s file (already in cache)", buildFileName);
     }
     return state.getRawRules(buildFile);
   }
@@ -866,7 +869,7 @@ public class Parser {
 
     private final LoadingCache<BuildTarget, HashCode> buildTargetHashCodeCache;
 
-    private final String buildFileName;
+    private final String buildFile;
 
     public CachedState(String buildFileName) {
       this.memoizedTargetNodes = Maps.newHashMap();
@@ -882,7 +885,7 @@ public class Parser {
               return loadHashCodeForBuildTarget(buildTarget);
             }
           });
-      this.buildFileName = buildFileName;
+      this.buildFile = buildFileName;
     }
 
     public void invalidateAll() {
@@ -1011,14 +1014,14 @@ public class Parser {
     }
 
     public void put(BuildTarget target, Map<String, Object> rawRules) {
-      Path normalized = normalize(target.getBasePath().resolve(buildFileName));
+      Path normalized = normalize(target.getBasePath().resolve(buildFile));
       LOG.verbose("Adding rules for parsed build file %s", normalized);
       parsedBuildFiles.put(normalized, rawRules);
 
       targetsToFile.put(
           target,
           normalize(Paths.get((String) rawRules.get("buck.base_path")))
-              .resolve(buildFileName).toAbsolutePath());
+              .resolve(buildFile).toAbsolutePath());
     }
 
     @Nullable
@@ -1054,14 +1057,14 @@ public class Parser {
         targetsToFile.put(
             BuildTarget.of(unflavored),
             normalize(Paths.get((String) map.get("buck.base_path")))
-                .resolve(buildFileName).toAbsolutePath());
+                .resolve(buildFile).toAbsolutePath());
 
         Description<?> description = repository.getDescription(buildRuleType);
         if (description == null) {
           throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
               buildRuleType,
               UnflavoredBuildTarget.BUILD_TARGET_PREFIX,
-              MorePaths.pathWithUnixSeparators(unflavored.getBasePath().resolve(buildFileName)));
+              MorePaths.pathWithUnixSeparators(unflavored.getBasePath().resolve(buildFile)));
         }
 
         if (buildTarget.isFlavored()) {
@@ -1073,7 +1076,7 @@ public class Parser {
                   buildTarget,
                   UnflavoredBuildTarget.BUILD_TARGET_PREFIX,
                   MorePaths.pathWithUnixSeparators(
-                      buildTarget.getBasePath().resolve(buildFileName)));
+                      buildTarget.getBasePath().resolve(buildFile)));
             }
           } else {
             LOG.warn(
