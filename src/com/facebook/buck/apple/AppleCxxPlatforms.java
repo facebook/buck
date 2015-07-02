@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.DebugPathSanitizer;
-import com.facebook.buck.cxx.Tool;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.ImmutableFlavor;

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.Tool;
+
 /**
  * An object wrapping a linker, providing its source path and an interface to decorate
  * arguments with specific flags.

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.cxx.Tool;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;

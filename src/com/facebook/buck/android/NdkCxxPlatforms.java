@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GccCompiler;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.Tool;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;

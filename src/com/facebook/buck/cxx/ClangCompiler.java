@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
 
 public class ClangCompiler implements Compiler {

@@ -14,15 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.rules;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Represents tool used as part of the C/C++ build process.
+ * An abstraction for describing some tools used as part of the build.
  */
 public interface Tool extends RuleKeyAppendable {
 

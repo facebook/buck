@@ -15,7 +15,6 @@ PLATFORM_SRCS = [
   'GccCompiler.java',
   'GnuLinker.java',
   'Linker.java',
-  'Tool.java',
   'HashedFileTool.java',
   'VersionedTool.java',
 ]

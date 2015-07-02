@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 
+import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
 
 /**

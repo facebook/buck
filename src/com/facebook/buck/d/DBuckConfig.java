@@ -18,7 +18,7 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.HashedFileTool;
-import com.facebook.buck.cxx.Tool;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.io.ExecutableFinder;
 
 import java.nio.file.Path;
