@@ -20,19 +20,20 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-public class GccCompiler implements Compiler {
+public class DefaultCompiler implements Compiler {
 
   private final Tool tool;
 
-  public GccCompiler(Tool tool) {
+  public DefaultCompiler(Tool tool) {
     this.tool = tool;
   }
 
   @Override
-  public ImmutableList<String> debugCompilationDirFlags(String debugCompilationDir) {
-    return ImmutableList.of();
+  public Optional<ImmutableList<String>> debugCompilationDirFlags(String debugCompilationDir) {
+    return Optional.absent();
   }
 
   @Override

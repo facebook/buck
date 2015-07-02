@@ -66,8 +66,8 @@ public class DefaultCxxPlatforms {
         // OSX + Xcode setup. A better option might be to call it and see if it supports -Xclang
         // Alternatively the default toolchain on OSX could be set to be clang based, as it's a
         // safer guess
-        new GccCompiler(new HashedFileTool(DEFAULT_CC)),
-        new GccCompiler(new HashedFileTool(DEFAULT_CXX)),
+        new DefaultCompiler(new HashedFileTool(DEFAULT_CC)),
+        new DefaultCompiler(new HashedFileTool(DEFAULT_CXX)),
         new HashedFileTool(DEFAULT_CPP),
         new HashedFileTool(DEFAULT_CXXPP),
         new HashedFileTool(DEFAULT_CXXLD),

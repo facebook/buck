@@ -19,16 +19,16 @@ package com.facebook.buck.android;
 import com.facebook.buck.cxx.ClangCompiler;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.DefaultCompiler;
 import com.facebook.buck.cxx.GnuArchiver;
-import com.facebook.buck.cxx.GccCompiler;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -1081,7 +1081,7 @@ public class NdkCxxPlatforms {
       public com.facebook.buck.cxx.Compiler fromTool(Tool tool) {
         switch (this) {
           case GCC:
-            return new GccCompiler(tool);
+            return new DefaultCompiler(tool);
           case CLANG:
             return new ClangCompiler(tool);
         }

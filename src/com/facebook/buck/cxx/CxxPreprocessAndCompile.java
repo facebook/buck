@@ -370,7 +370,10 @@ public class CxxPreprocessAndCompile
       suffix.addAll(getPreprocessorSuffix());
     }
     suffix.addAll(ruleCompilerFlags.get());
-    suffix.addAll(compiler.get().debugCompilationDirFlags(sanitizer.getCompilationDirectory()));
+    suffix.addAll(
+        compiler.get()
+            .debugCompilationDirFlags(sanitizer.getCompilationDirectory())
+            .or(ImmutableList.<String>of()));
     return suffix.build();
   }
 
