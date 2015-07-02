@@ -28,8 +28,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -61,6 +63,11 @@ public class NdkLibraryDescriptionTest {
     @Override
     public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
       return Optional.absent();
+    }
+
+    @Override
+    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      return ImmutableMap.of();
     }
 
   }

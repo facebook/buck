@@ -42,6 +42,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -49,11 +50,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,6 +72,8 @@ public class CxxDescriptionEnhancer {
   public static final Flavor STATIC_PIC_FLAVOR = ImmutableFlavor.of("static-pic");
   public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
   public static final Flavor MACH_O_BUNDLE_FLAVOR = ImmutableFlavor.of("mach-o-bundle");
+  public static final Flavor SHARED_LIBRARY_SYMLINK_TREE_FLAVOR =
+      ImmutableFlavor.of("shared-library-symlink-tree");
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
   public static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
@@ -874,6 +880,71 @@ public class CxxDescriptionEnhancer {
       }
 
     };
+  }
+
+  /**
+   * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the
+   *    symlink tree of shared libraries.
+   */
+  public static BuildTarget createSharedLibrarySymlinkTreeTarget(
+      BuildTarget target,
+      Flavor platform) {
+    return BuildTarget
+        .builder(target)
+        .addFlavors(SHARED_LIBRARY_SYMLINK_TREE_FLAVOR)
+        .addFlavors(platform)
+        .build();
+  }
+
+  /**
+   * @return the {@link Path} to use for the symlink tree of headers.
+   */
+  public static Path getSharedLibrarySymlinkTreePath(
+      BuildTarget target,
+      Flavor platform) {
+    return BuildTargets.getGenPath(
+        createSharedLibrarySymlinkTreeTarget(target, platform),
+        "%s");
+  }
+
+  /**
+   * Build a {@link SymlinkTree} of all the shared libraries found via the top-level rule's
+   * transitive dependencies.
+   */
+  public static SymlinkTree createSharedLibrarySymlinkTree(
+      BuildRuleParams params,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      Predicate<Object> traverse) {
+
+    BuildTarget symlinkTreeTarget =
+        createSharedLibrarySymlinkTreeTarget(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor());
+    Path symlinkTreeRoot =
+        getSharedLibrarySymlinkTreePath(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor());
+
+    ImmutableSortedMap<String, SourcePath> libraries =
+        NativeLinkables.getTransitiveSharedLibraries(
+            cxxPlatform,
+            params.getDeps(),
+            Linker.LinkableDepType.SHARED,
+            traverse);
+
+    ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
+    for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
+      links.put(Paths.get(ent.getKey()), ent.getValue());
+    }
+    return new SymlinkTree(
+        params.copyWithChanges(
+            symlinkTreeTarget,
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        pathResolver,
+        symlinkTreeRoot,
+        links.build());
   }
 
 }

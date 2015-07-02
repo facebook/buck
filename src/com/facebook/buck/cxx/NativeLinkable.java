@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Interface for {@link com.facebook.buck.rules.BuildRule} objects (e.g. C++ libraries) which can
@@ -30,5 +32,11 @@ public interface NativeLinkable {
 
   Optional<Linker.LinkableDepType> getPreferredLinkage(
       CxxPlatform cxxPlatform);
+
+  /**
+   * @return a map of shared library SONAME to shared library path for the given
+   *     {@link CxxPlatform}.
+   */
+  ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform);
 
 }

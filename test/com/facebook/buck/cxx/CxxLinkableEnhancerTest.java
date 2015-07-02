@@ -42,6 +42,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -87,6 +88,12 @@ public class CxxLinkableEnhancerTest {
     public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
       return Optional.absent();
     }
+
+    @Override
+    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      return ImmutableMap.of();
+    }
+
   }
 
   private static FakeNativeLinkable createNativeLinkable(
