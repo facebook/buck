@@ -687,73 +687,77 @@ public class CxxSourceRuleFactoryTest {
         assemblerSourcePerFileFlags);
   }
 
-  // TODO(#5393669): Re-enable once we can handle the language flag in a portable way.
-  /*@Test
+  @Test
   public void languageFlagsArePassed() {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
 
     String name = "foo/bar.ii";
-    SourcePath input = new PathSourcePath(target.getBasePath().resolve(name));
-    CxxSource cxxSource = new CxxSource(CxxSource.Type.CXX_CPP_OUTPUT, input);
+    SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
+    CxxSource cxxSource = CxxSource.of(
+        CxxSource.Type.CXX_CPP_OUTPUT,
+        input,
+        ImmutableList.<String>of());
 
-    CxxPreprocessAndCompile cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
-        params,
+    CxxSourceRuleFactory cxxSourceRuleFactory =
+        new CxxSourceRuleFactory(
+            params,
+            buildRuleResolver,
+            sourcePathResolver,
+            CXX_PLATFORM,
+            ImmutableList.<CxxPreprocessorInput>of(),
+            ImmutableList.<String>of());
+
+    CxxPreprocessAndCompile cxxCompile = cxxSourceRuleFactory.createCompileBuildRule(
         buildRuleResolver,
-        CXX_PLATFORM,
-        ImmutableList.<String>of(),
-        false,
         name,
-        cxxSource);
+        cxxSource,
+        CxxSourceRuleFactory.PicType.PDC);
 
-    assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "c++-cpp-output"));
+    assertThat(cxxCompile.makeMainStep().getCommand(), Matchers.hasItems("-x", "c++-cpp-output"));
 
     name = "foo/bar.mi";
-    input = new PathSourcePath(target.getBasePath().resolve(name));
-    cxxSource = new CxxSource(CxxSource.Type.OBJC_CPP_OUTPUT, input);
+    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
+    cxxSource = CxxSource.of(CxxSource.Type.OBJC_CPP_OUTPUT, input, ImmutableList.<String>of());
 
-    cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
-        params,
+    cxxCompile = cxxSourceRuleFactory.createCompileBuildRule(
         buildRuleResolver,
-        CXX_PLATFORM,
-        ImmutableList.<String>of(),
-        false,
         name,
-        cxxSource);
+        cxxSource,
+        CxxSourceRuleFactory.PicType.PDC);
 
-    assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "objective-c-cpp-output"));
+    assertThat(
+        cxxCompile.makeMainStep().getCommand(),
+        Matchers.hasItems("-x", "objective-c-cpp-output"));
 
     name = "foo/bar.mii";
-    input = new PathSourcePath(target.getBasePath().resolve(name));
-    cxxSource = new CxxSource(CxxSource.Type.OBJCXX_CPP_OUTPUT, input);
+    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
+    cxxSource = CxxSource.of(CxxSource.Type.OBJCXX_CPP_OUTPUT, input, ImmutableList.<String>of());
 
-    cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
-        params,
+    cxxCompile = cxxSourceRuleFactory.createCompileBuildRule(
         buildRuleResolver,
-        CXX_PLATFORM,
-        ImmutableList.<String>of(),
-        false,
         name,
-        cxxSource);
+        cxxSource,
+        CxxSourceRuleFactory.PicType.PDC);
 
-    assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "objective-c++-cpp-output"));
+    assertThat(
+        cxxCompile.makeMainStep().getCommand(),
+        Matchers.hasItems("-x", "objective-c++-cpp-output"));
 
     name = "foo/bar.i";
-    input = new PathSourcePath(target.getBasePath().resolve(name));
-    cxxSource = new CxxSource(CxxSource.Type.C_CPP_OUTPUT, input);
+    input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
+    cxxSource = CxxSource.of(CxxSource.Type.C_CPP_OUTPUT, input, ImmutableList.<String>of());
 
-    cxxCompile = CxxCompilableEnhancer.createCompileBuildRule(
-        params,
+    cxxCompile = cxxSourceRuleFactory.createCompileBuildRule(
         buildRuleResolver,
-        CXX_PLATFORM,
-        ImmutableList.<String>of(),
-        false,
         name,
-        cxxSource);
+        cxxSource,
+        CxxSourceRuleFactory.PicType.PDC);
 
-    assertThat(cxxCompile.getFlags(), Matchers.contains("-x", "c-cpp-output"));
-  }*/
+    assertThat(cxxCompile.makeMainStep().getCommand(), Matchers.hasItems("-x", "cpp-output"));
+  }
 
   @Test
   public void checkCorrectFlagsAreUsedForObjcAndObjcxx() {
