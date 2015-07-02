@@ -39,6 +39,8 @@ import com.google.common.collect.Maps;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -47,6 +49,7 @@ import javax.annotation.Nullable;
 public abstract class ShellStep implements Step {
 
   private static final Logger LOG = Logger.get(ShellStep.class);
+  private static final OperatingSystemMXBean OS_JMX = ManagementFactory.getOperatingSystemMXBean();
 
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
   @Nullable
@@ -119,6 +122,7 @@ public abstract class ShellStep implements Step {
     }
 
     int exitCode;
+    double initialLoad = OS_JMX.getSystemLoadAverage();
     try {
       startTime = System.currentTimeMillis();
       exitCode = launchAndInteractWithProcess(context, builder.build());
@@ -128,6 +132,15 @@ public abstract class ShellStep implements Step {
     }
 
     endTime = System.currentTimeMillis();
+    double endLoad = OS_JMX.getSystemLoadAverage();
+
+    LOG.debug(
+        "%s: exit code: %d. os load (before, after): (%f, %f). CPU count: %d",
+        shellCommandArgs,
+        exitCode,
+        initialLoad,
+        endLoad,
+        OS_JMX.getAvailableProcessors());
 
     return exitCode;
   }
