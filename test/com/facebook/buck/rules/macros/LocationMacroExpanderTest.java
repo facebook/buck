@@ -24,7 +24,6 @@ import com.facebook.buck.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -57,7 +56,6 @@ public class LocationMacroExpanderTest {
 
   @Test
   public void testShouldWarnUsersWhenThereIsNoOutputForARuleButLocationRequested() {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildRuleResolver resolver = new BuildRuleResolver();
     JavaLibraryBuilder
         .createBuilder(BuildTarget.builder("//cheese", "java").build())
@@ -68,7 +66,7 @@ public class LocationMacroExpanderTest {
     MacroHandler macroHandler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of(
             "location",
-            new LocationMacroExpander(parser)));
+            new LocationMacroExpander()));
     try {
       macroHandler.expand(target, resolver, filesystem, "$(location //cheese:java)");
       fail("Location was null. Expected HumanReadableException with helpful message.");
@@ -83,7 +81,6 @@ public class LocationMacroExpanderTest {
   @Test
   public void replaceLocationOfFullyQualifiedBuildTarget() throws IOException, MacroException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildTargetParser parser = new BuildTargetParser();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
     Path outputPath = javaBinary.getPathToOutput();
@@ -98,7 +95,7 @@ public class LocationMacroExpanderTest {
     MacroHandler macroHandler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of(
             "location",
-            new LocationMacroExpander(parser)));
+            new LocationMacroExpander()));
     String transformedString = macroHandler.expand(
         javaBinary.getBuildTarget(),
         ruleResolver,

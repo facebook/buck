@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -71,7 +70,6 @@ public class PatternMatchedCollectionTypeCoercer<T>
 
   @Override
   public PatternMatchedCollection<T> coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
@@ -92,12 +90,10 @@ public class PatternMatchedCollectionTypeCoercer<T>
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
       Pattern platformSelector = patternTypeCoercer.coerce(
-          buildTargetParser,
           filesystem,
           pathRelativeToProjectRoot,
           pair.next());
       T value = valueTypeCoercer.coerce(
-          buildTargetParser,
           filesystem,
           pathRelativeToProjectRoot,
           pair.next());

@@ -29,7 +29,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildRule;
@@ -103,7 +102,6 @@ public class AuditOwnerCommandTest {
     arg.inputs = inputs;
     BuildRuleFactoryParams params =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            new BuildTargetParser(),
             buildTarget);
     try {
       return new TargetNode<>(

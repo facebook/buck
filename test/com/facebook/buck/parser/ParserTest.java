@@ -182,8 +182,7 @@ public class ParserTest extends EasyMockSupport {
         ofInstance(
             new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
         rules,
-        new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes),
-        new BuildTargetParser());
+        new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes));
   }
 
   private Parser createParser(
@@ -195,21 +194,18 @@ public class ParserTest extends EasyMockSupport {
             new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
         rules,
         buildFileParserFactory,
-        new BuildTargetParser(),
         repository);
   }
 
   private Parser createParser(
           Supplier<BuildFileTree> buildFileTreeSupplier,
       Iterable<Map<String, Object>> rules,
-      ProjectBuildFileParserFactory buildFileParserFactory,
-      BuildTargetParser buildTargetParser)
+      ProjectBuildFileParserFactory buildFileParserFactory)
       throws IOException, InterruptedException {
     return createParser(
         buildFileTreeSupplier,
         rules,
         buildFileParserFactory,
-        buildTargetParser,
         repository);
   }
 
@@ -217,7 +213,6 @@ public class ParserTest extends EasyMockSupport {
         Supplier<BuildFileTree> buildFileTreeSupplier,
         Iterable<Map<String, Object>> rules,
         ProjectBuildFileParserFactory buildFileParserFactory,
-        BuildTargetParser buildTargetParser,
         Repository repository)
         throws IOException, InterruptedException {
       ParserConfig parserConfig = new ParserConfig(
@@ -230,7 +225,6 @@ public class ParserTest extends EasyMockSupport {
         parserConfig.getTempFilePatterns(),
         parserConfig.getBuildFileName(),
         buildFileTreeSupplier,
-        buildTargetParser,
         buildFileParserFactory);
 
     try {

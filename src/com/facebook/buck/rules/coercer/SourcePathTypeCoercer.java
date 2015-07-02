@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -43,7 +42,6 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
 
   @Override
   public SourcePath coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
@@ -54,14 +52,12 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
             ((String) object).startsWith("@"))) {
       BuildTarget buildTarget =
           buildTargetTypeCoercer.coerce(
-              buildTargetParser,
               filesystem,
               pathRelativeToProjectRoot,
               object);
       return new BuildTargetSourcePath(buildTarget);
     } else {
       Path path = pathTypeCoercer.coerce(
-          buildTargetParser,
           filesystem,
           pathRelativeToProjectRoot,
           object);

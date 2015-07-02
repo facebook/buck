@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -53,7 +52,6 @@ public interface TypeCoercer<T> {
    * @throws CoerceFailedException Input object cannot be coerced into the given type.
    */
   public T coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException;

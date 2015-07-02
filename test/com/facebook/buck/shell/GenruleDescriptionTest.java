@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.InMemoryBuildFileTree;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -61,7 +60,6 @@ public class GenruleDescriptionTest {
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
     BuildRuleFactoryParams params = new BuildRuleFactoryParams(
         projectFilesystem,
-        new BuildTargetParser(),
         BuildTargetFactory.newInstance("//foo:bar"),
         new InMemoryBuildFileTree(ImmutableList.<BuildTarget>of()),
         /* enforeBuckBoundaryCheck */ true);

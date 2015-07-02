@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -38,7 +37,6 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
 
   @Override
   public E coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {

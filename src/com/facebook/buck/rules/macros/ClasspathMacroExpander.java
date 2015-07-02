@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.base.Functions;
@@ -38,10 +37,6 @@ import java.nio.file.Path;
  * that target, expanding all paths to be absolute.
  */
 public class ClasspathMacroExpander extends BuildTargetMacroExpander {
-
-  public ClasspathMacroExpander(BuildTargetParser parser) {
-    super(parser);
-  }
 
   private ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries(BuildRule rule)
       throws MacroException {

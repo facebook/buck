@@ -46,8 +46,7 @@ public class ParserConfigTest {
     ParserConfig config = new ParserConfig(
         BuckConfigTestUtils.createWithDefaultFilesystem(
             temporaryFolder,
-            reader,
-            null));
+            reader));
     assertFalse(config.getAllowEmptyGlobs());
   }
 

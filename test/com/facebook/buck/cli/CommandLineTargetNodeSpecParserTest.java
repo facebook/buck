@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
@@ -37,7 +36,7 @@ public class CommandLineTargetNodeSpecParserTest {
   private static final CommandLineTargetNodeSpecParser PARSER =
       new CommandLineTargetNodeSpecParser(
           new FakeBuckConfig(),
-          new BuildTargetPatternTargetNodeParser(new BuildTargetParser(), ImmutableSet.<Path>of()));
+          new BuildTargetPatternTargetNodeParser(ImmutableSet.<Path>of()));
 
   @Test
   public void trailingDotDotDot() {

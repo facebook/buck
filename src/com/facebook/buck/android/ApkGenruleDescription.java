@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -44,13 +43,12 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apk_genrule");
 
-  private static final BuildTargetParser BUILD_TARGET_PARSER = new BuildTargetParser();
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
           ImmutableMap.<String, MacroExpander>of(
-              "classpath", new ClasspathMacroExpander(BUILD_TARGET_PARSER),
-              "exe", new ExecutableMacroExpander(BUILD_TARGET_PARSER),
-              "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
+              "classpath", new ClasspathMacroExpander(),
+              "exe", new ExecutableMacroExpander(),
+              "location", new LocationMacroExpander()));
 
   @Override
   public BuildRuleType getBuildRuleType() {

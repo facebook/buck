@@ -77,7 +77,6 @@ public class AuditTestsCommand extends AbstractCommand {
     }
 
     ImmutableSet<BuildTarget> targets = getBuildTargets(
-        params,
         ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
 
     TargetGraph graph;

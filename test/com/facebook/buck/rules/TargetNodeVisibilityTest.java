@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableSet;
 
@@ -233,9 +232,7 @@ public class TargetNodeVisibilityTest {
     Description<FakeDescription.FakeArg> description = new FakeDescription();
     FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     BuildRuleFactoryParams params =
-        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            new BuildTargetParser(),
-            buildTarget);
+        NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(buildTarget);
     return new TargetNode<>(
         description,
         arg,

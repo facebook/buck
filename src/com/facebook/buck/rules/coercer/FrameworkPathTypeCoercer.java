@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -76,7 +75,6 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
 
   @Override
   public FrameworkPath coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
@@ -117,7 +115,6 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
       } else {
         return FrameworkPath.ofSourcePath(
             sourcePathTypeCoercer.coerce(
-                buildTargetParser,
                 filesystem,
                 pathRelativeToProjectRoot,
                 object));

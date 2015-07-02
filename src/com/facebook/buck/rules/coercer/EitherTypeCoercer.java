@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -93,7 +92,6 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
 
   @Override
   public Either<Left, Right> coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
@@ -110,15 +108,13 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     if (leftCoercerType == objectType && rightCoercerType == objectType) {
       try {
         return Either.ofLeft(leftTypeCoercer.coerce(
-            buildTargetParser,
-            filesystem,
+                filesystem,
             pathRelativeToProjectRoot,
             object));
       } catch (CoerceFailedException eLeft) {
         try {
           return Either.ofRight(rightTypeCoercer.coerce(
-              buildTargetParser,
-              filesystem,
+                  filesystem,
               pathRelativeToProjectRoot,
               object));
         } catch (CoerceFailedException eRight) {
@@ -135,8 +131,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     // exceptions propagate up.
     if (leftCoercerType == objectType) {
       return Either.ofLeft(leftTypeCoercer.coerce(
-          buildTargetParser,
-          filesystem,
+              filesystem,
           pathRelativeToProjectRoot,
           object));
     }
@@ -145,8 +140,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     // exceptions propagate up.
     if (rightCoercerType == objectType) {
       return Either.ofRight(rightTypeCoercer.coerce(
-          buildTargetParser,
-          filesystem,
+              filesystem,
           pathRelativeToProjectRoot,
           object));
     }

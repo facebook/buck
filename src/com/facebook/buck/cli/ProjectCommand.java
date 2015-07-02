@@ -318,7 +318,6 @@ public class ProjectCommand extends BuildCommand {
     }
 
     ImmutableSet<BuildTarget> passedInTargetsSet = getBuildTargets(
-        params,
         getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
         params.getParser(),

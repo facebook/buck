@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -26,24 +25,17 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Paths;
 
-import javax.annotation.Nullable;
-
 public class BuckConfigTestUtils {
   private BuckConfigTestUtils() {}
 
   public static BuckConfig createWithDefaultFilesystem(
       DebuggableTemporaryFolder temporaryFolder,
-      Reader reader,
-      @Nullable BuildTargetParser parser)
+      Reader reader)
       throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
-    if (parser == null) {
-      parser = new BuildTargetParser();
-    }
     return createFromReader(
         reader,
         projectFilesystem,
-        parser,
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
   }
@@ -51,14 +43,12 @@ public class BuckConfigTestUtils {
   public static BuckConfig createFromReader(
       Reader reader,
       ProjectFilesystem projectFilesystem,
-      BuildTargetParser buildTargetParser,
       Platform platform,
       ImmutableMap<String, String> environment)
       throws IOException {
     return BuckConfig.createFromReaders(
         ImmutableMap.of(Paths.get("FAKE.buckconfig"), reader),
         projectFilesystem,
-        buildTargetParser,
         platform,
         environment);
   }

@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -116,7 +115,6 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
       Map<String, ?> instance
       ) throws ParamInfoException {
     set(
-        params.buildTargetParser,
         filesystem,
         params.target.getBasePath(),
         arg,
@@ -132,7 +130,6 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
   public void set(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object dto,
@@ -152,7 +149,6 @@ class ParamInfo<T> implements Comparable<ParamInfo<T>> {
     } else {
       try {
         result = typeCoercer.coerce(
-            buildTargetParser,
             filesystem,
             pathRelativeToProjectRoot,
             value);

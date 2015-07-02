@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Before;
@@ -31,7 +30,6 @@ import java.nio.file.Paths;
 
 public class PathTypeCoercerTest {
 
-  private final BuildTargetParser buildTargetParser = new BuildTargetParser();
   private ProjectFilesystem filesystem;
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
@@ -46,7 +44,6 @@ public class PathTypeCoercerTest {
     String invalidPath = "";
     try {
       pathTypeCoercer.coerce(
-          buildTargetParser,
           filesystem,
           pathRelativeToProjectRoot,
           invalidPath);
@@ -61,7 +58,6 @@ public class PathTypeCoercerTest {
     String missingPath = "hello";
     try {
       pathTypeCoercer.coerce(
-          buildTargetParser,
           filesystem,
           pathRelativeToProjectRoot,
           missingPath);

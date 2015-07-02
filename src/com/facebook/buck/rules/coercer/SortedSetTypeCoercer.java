@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -48,7 +47,6 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
   }
 
   protected void fillSortedSet(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       SortedSet<T> builder,
@@ -58,7 +56,6 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
       for (Object element : (Iterable<?>) object) {
         // if any element failed, the entire collection fails
         T coercedElement = elementTypeCoercer.coerce(
-            buildTargetParser,
             filesystem,
             pathRelativeToProjectRoot,
             element);
@@ -75,14 +72,12 @@ public class SortedSetTypeCoercer<T extends Comparable<T>>
 
   @Override
   public ImmutableSortedSet<T> coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     final SortedSet<T> builder = Sets.newTreeSet();
     fillSortedSet(
-        buildTargetParser,
         filesystem,
         pathRelativeToProjectRoot,
         builder,

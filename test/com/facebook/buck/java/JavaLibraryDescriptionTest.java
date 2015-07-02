@@ -26,7 +26,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
@@ -328,7 +327,6 @@ public class JavaLibraryDescriptionTest {
   private void populateWithDefaultValues(Object arg) {
     BuildRuleFactoryParams factoryParams =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-            new BuildTargetParser(),
             BuildTargetFactory.newInstance("//example:target"));
 
     try {

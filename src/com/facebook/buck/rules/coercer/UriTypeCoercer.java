@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,7 +31,6 @@ public class UriTypeCoercer extends LeafTypeCoercer<URI> {
 
   @Override
   public URI coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {

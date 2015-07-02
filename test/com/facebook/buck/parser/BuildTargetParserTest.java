@@ -35,12 +35,13 @@ import java.nio.file.Paths;
 
 public class BuildTargetParserTest {
 
+  private final BuildTargetParser parser = BuildTargetParser.INSTANCE;
   private BuildTargetPatternParser<BuildTargetPattern> fullyQualifiedParser;
+
 
   @Before
   public void setUpFullyQualifiedBuildTargetPatternParser() {
-    BuildTargetParser targetParser = new BuildTargetParser();
-    fullyQualifiedParser = BuildTargetPatternParser.fullyQualified(targetParser);
+    fullyQualifiedParser = BuildTargetPatternParser.fullyQualified();
   }
 
   @Rule
@@ -49,7 +50,6 @@ public class BuildTargetParserTest {
   @Test
   public void testParseRootRule() {
     // Parse "//:fb4a" with the BuildTargetParser and test all of its observers.
-    BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse("//:fb4a", fullyQualifiedParser);
     assertEquals("fb4a", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
@@ -60,7 +60,6 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseRuleWithFlavors() {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse("//:lib#foo,bar", fullyQualifiedParser);
     // Note the sort order.
     assertEquals("lib#bar,foo", buildTarget.getShortNameAndFlavorPostfix());
@@ -76,7 +75,6 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseValidTargetWithDots() {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse("//..a/b../a...b:assets", fullyQualifiedParser);
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//..a/b../a...b", buildTarget.getBaseName());
@@ -90,7 +88,6 @@ public class BuildTargetParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
             "(found //.:assets)");
-    BuildTargetParser parser = new BuildTargetParser();
     parser.parse("//.:assets", fullyQualifiedParser);
   }
 
@@ -99,7 +96,6 @@ public class BuildTargetParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
             "(found //../facebookorca:assets)");
-    BuildTargetParser parser = new BuildTargetParser();
     parser.parse("//../facebookorca:assets", fullyQualifiedParser);
   }
 
@@ -108,14 +104,12 @@ public class BuildTargetParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
             "(found ///facebookorca:assets)");
-    BuildTargetParser parser = new BuildTargetParser();
     parser.parse("///facebookorca:assets", fullyQualifiedParser);
   }
 
   @Test
   public void testParseTrailingColon() {
     try {
-      BuildTargetParser parser = new BuildTargetParser();
       parser.parse("//facebook/orca:assets:", fullyQualifiedParser);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
@@ -126,7 +120,6 @@ public class BuildTargetParserTest {
   @Test
   public void testParseNoColon() {
     try {
-      BuildTargetParser parser = new BuildTargetParser();
       parser.parse("//facebook/orca/assets", fullyQualifiedParser);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
@@ -138,7 +131,6 @@ public class BuildTargetParserTest {
   @Test
   public void testParseMultipleColons() {
     try {
-      BuildTargetParser parser = new BuildTargetParser();
       parser.parse("//facebook:orca:assets", fullyQualifiedParser);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
@@ -149,7 +141,6 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseFullyQualified() {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse("//facebook/orca:assets", fullyQualifiedParser);
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
@@ -157,10 +148,9 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseBuildFile() {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildTarget buildTarget = parser.parse(
         ":assets",
-        BuildTargetPatternParser.forBaseName(new BuildTargetParser(), "//facebook/orca"));
+        BuildTargetPatternParser.forBaseName("//facebook/orca"));
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
   }
@@ -168,9 +158,8 @@ public class BuildTargetParserTest {
   @Test
   public void testParseWithVisibilityContext() {
     // Invoke the BuildTargetParser using the VISIBILITY context.
-    BuildTargetParser parser = new BuildTargetParser();
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
-        BuildTargetPatternParser.forVisibilityArgument(new BuildTargetParser());
+        BuildTargetPatternParser.forVisibilityArgument();
     BuildTarget target = parser.parse("//java/com/example:", buildTargetPatternParser);
     assertEquals(
         "A build target that ends with a colon should be treated as a wildcard build target " +
@@ -181,7 +170,6 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseWithRepoName() {
-    BuildTargetParser parser = new BuildTargetParser();
     String targetStr = "@localreponame//foo/bar:baz";
     BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser);
     assertEquals(targetStr, buildTarget.getFullyQualifiedName());
@@ -190,7 +178,6 @@ public class BuildTargetParserTest {
 
   @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
-    BuildTargetParser parser = new BuildTargetParser();
 
     String invalidTargetStr = "@myRepo:baz";
     parser.parse(invalidTargetStr, fullyQualifiedParser);
@@ -198,7 +185,6 @@ public class BuildTargetParserTest {
 
   @Test(expected = BuildTargetParseException.class)
   public void testParseFailsWithEmptyRepoName() throws NoSuchBuildTargetException {
-    BuildTargetParser parser = new BuildTargetParser();
 
     String zeroLengthRepoTargetStr = "@//foo/bar:baz";
     parser.parse(zeroLengthRepoTargetStr, fullyQualifiedParser);
@@ -206,7 +192,6 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseWithBackslash() {
-    BuildTargetParser parser = new BuildTargetParser();
     String backslashStr = "//com\\microsoft\\windows:something";
     BuildTarget buildTarget = parser.parse(backslashStr, fullyQualifiedParser);
     assertEquals("//com/microsoft/windows", buildTarget.getBaseName());

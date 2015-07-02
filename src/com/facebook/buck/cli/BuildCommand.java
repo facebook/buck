@@ -328,9 +328,8 @@ public class BuildCommand extends AbstractCommand {
 
     // If the user specified an explicit build target, use that.
     if (justBuildTarget != null) {
-      BuildTargetParser parser = new BuildTargetParser();
-      BuildTarget explicitTarget =
-          parser.parse(justBuildTarget, BuildTargetPatternParser.fullyQualified(parser));
+      BuildTarget explicitTarget = BuildTargetParser.INSTANCE.parse(
+          justBuildTarget, BuildTargetPatternParser.fullyQualified());
       Iterable<BuildRule> actionGraphRules = Preconditions.checkNotNull(actionGraph.getNodes());
       ImmutableSet<BuildTarget> actionGraphTargets =
           ImmutableSet.copyOf(Iterables.transform(actionGraphRules, HasBuildTarget.TO_TARGET));

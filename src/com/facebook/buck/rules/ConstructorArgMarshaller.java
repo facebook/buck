@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -96,7 +95,7 @@ public class ConstructorArgMarshaller {
         declaredDeps,
         instance,
         /* populate all fields, optional and required */ false);
-    populateVisibilityPatterns(params.buildTargetParser, visibilityPatterns, instance);
+    populateVisibilityPatterns(visibilityPatterns, instance);
   }
 
   @VisibleForTesting
@@ -144,7 +143,6 @@ public class ConstructorArgMarshaller {
 
   @SuppressWarnings("unchecked")
   private void populateVisibilityPatterns(
-      BuildTargetParser targetParser,
       ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns,
       Map<String, ?> instance) throws NoSuchBuildTargetException {
     Object value = instance.get("visibility");
@@ -156,7 +154,7 @@ public class ConstructorArgMarshaller {
 
       for (String visibility : (List<String>) value) {
         visibilityPatterns.add(
-            BuildTargetPatternParser.forVisibilityArgument(targetParser).parse(visibility));
+            BuildTargetPatternParser.forVisibilityArgument().parse(visibility));
       }
     }
   }

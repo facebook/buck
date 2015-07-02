@@ -19,24 +19,20 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 
 public final class BuildRuleFactoryParams {
 
   private final ProjectFilesystem filesystem;
-  public final BuildTargetParser buildTargetParser;
   public final BuildTarget target;
   private final BuildFileTree buildFileTree;
   private final boolean enforceBuckPackageBoundary;
 
   public BuildRuleFactoryParams(
       ProjectFilesystem filesystem,
-      BuildTargetParser buildTargetParser,
       BuildTarget target,
       BuildFileTree buildFileTree,
       boolean enforceBuckPackageBoundary) {
     this.filesystem = filesystem;
-    this.buildTargetParser = buildTargetParser;
     this.target = target;
     this.buildFileTree = buildFileTree;
     this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
@@ -57,7 +53,6 @@ public final class BuildRuleFactoryParams {
   public BuildRuleFactoryParams withBuildTarget(BuildTarget buildTarget) {
     return new BuildRuleFactoryParams(
         filesystem,
-        buildTargetParser,
         buildTarget,
         buildFileTree,
         enforceBuckPackageBoundary);

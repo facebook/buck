@@ -31,6 +31,11 @@ import java.util.Set;
 
 public class BuildTargetParser {
 
+  /**
+   * The BuildTargetParser is stateless, so this single instance can be shared.
+   */
+  public static final BuildTargetParser INSTANCE = new BuildTargetParser();
+
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String BUILD_RULE_SEPARATOR = ":";
   private static final String REPOSITORY_STARTER = "@";
@@ -39,13 +44,17 @@ public class BuildTargetParser {
 
   private final FlavorParser flavorParser = new FlavorParser();
 
+  private BuildTargetParser() {
+    // this is stateless. There's no need to do anything other than grab the instance needed.
+  }
+
   /**
    * @param buildTargetName either a fully-qualified name or relative to the {@link BuildTargetPatternParser}.
    *     For example, inside {@code first-party/orca/orcaapp/BUILD}, which can be obtained by
    *     calling {@code ParseContext.forBaseName("first-party/orca/orcaapp")},
    *     {@code //first-party/orca/orcaapp:assets} and {@code :assets} refer to the same target.
    *     However, from the command line the context is obtained by calling
-   *     {@link BuildTargetPatternParser#fullyQualified(BuildTargetParser)} and relative names are
+   *     {@link BuildTargetPatternParser#fullyQualified()} and relative names are
    *     not recognized.
    * @param buildTargetPatternParser how targets should be interpreted, such in the context of a
    *     specific build file or only as fully-qualified names (as is the case for targets from the

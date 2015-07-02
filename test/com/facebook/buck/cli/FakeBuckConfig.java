@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Config;
 import com.facebook.buck.util.environment.Platform;
@@ -82,7 +81,6 @@ public class FakeBuckConfig extends BuckConfig {
     super(
         new Config(sections),
         filesystem,
-        new BuildTargetParser(),
         platform,
         environment);
   }

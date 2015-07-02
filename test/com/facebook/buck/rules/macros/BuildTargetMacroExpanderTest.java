@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -47,12 +46,11 @@ public class BuildTargetMacroExpanderTest {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     FakeBuildRule rule = new FakeBuildRule("//something:manifest", sourcePathResolver);
     resolver.addToIndex(rule);
-    BuildTargetParser parser = new BuildTargetParser();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroHandler handler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of(
             "exe",
-            new BuildTargetMacroExpander(parser) {
+            new BuildTargetMacroExpander() {
               @Override
               public String expand(ProjectFilesystem filesystem, BuildRule rule)
                   throws MacroException {

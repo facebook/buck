@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -60,7 +59,6 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
 
   @Override
   public ImmutableMap<K, V> coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
@@ -70,12 +68,10 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
 
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
         K key = keyTypeCoercer.coerce(
-            buildTargetParser,
             filesystem,
             pathRelativeToProjectRoot,
             entry.getKey());
         V value = valueTypeCoercer.coerce(
-            buildTargetParser,
             filesystem,
             pathRelativeToProjectRoot,
             entry.getValue());

@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -41,13 +40,11 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
 
   @Override
   public ImmutableList<T> coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     ImmutableList.Builder<T> builder = ImmutableList.builder();
     fill(
-        buildTargetParser,
         filesystem,
         pathRelativeToProjectRoot,
         builder,

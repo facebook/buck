@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Preconditions;
@@ -59,7 +58,6 @@ public class TypeCoercerFactory {
         new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
           @Override
           public BuildTargetPattern coerce(
-              BuildTargetParser buildTargetParser,
               ProjectFilesystem filesystem,
               Path pathRelativeToProjectRoot,
               Object object)

@@ -24,7 +24,6 @@ import com.facebook.buck.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -56,7 +55,6 @@ public class ExecutableMacroExpanderTest {
 
   @Test
   public void testReplaceBinaryBuildRuleRefsInCmd() throws MacroException {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildTarget target = BuildTarget.builder("//cheese", "cake").build();
     createSampleJavaBinaryRule(ruleResolver);
@@ -67,7 +65,7 @@ public class ExecutableMacroExpanderTest {
     MacroHandler macroHandler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of(
             "exe",
-            new ExecutableMacroExpander(parser)));
+            new ExecutableMacroExpander()));
     String transformedString = macroHandler.expand(target, ruleResolver, filesystem, originalCmd);
 
     // Verify that the correct cmd was created.
@@ -82,7 +80,6 @@ public class ExecutableMacroExpanderTest {
 
   @Test
   public void testReplaceRelativeBinaryBuildRuleRefsInCmd() throws MacroException {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildRule rule = createSampleJavaBinaryRule(ruleResolver);
     String originalCmd = "$(exe :ManifestGenerator) $OUT";
@@ -92,7 +89,7 @@ public class ExecutableMacroExpanderTest {
     MacroHandler macroHandler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of(
             "exe",
-            new ExecutableMacroExpander(parser)));
+            new ExecutableMacroExpander()));
     String transformedString = macroHandler.expand(
         rule.getBuildTarget(),
         ruleResolver,
@@ -110,7 +107,6 @@ public class ExecutableMacroExpanderTest {
 
   @Test
   public void testDepsGenrule() throws MacroException {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     BuildRule rule = createSampleJavaBinaryRule(ruleResolver);
 
@@ -121,7 +117,7 @@ public class ExecutableMacroExpanderTest {
     MacroHandler macroHandler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of(
             "exe",
-            new ExecutableMacroExpander(parser)));
+            new ExecutableMacroExpander()));
     String transformedString = macroHandler.expand(
         rule.getBuildTarget(),
         ruleResolver,

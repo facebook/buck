@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Test;
@@ -34,13 +33,11 @@ public class UriTypeCoercerTest {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path pathFromRoot = Paths.get("third-party/java");
-  private BuildTargetParser buildTargetParser = new BuildTargetParser();
 
   @Test
   public void canCoerceAValidHttpURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("http://example.org");
     URI uri = new UriTypeCoercer().coerce(
-        buildTargetParser,
         filesystem,
         pathFromRoot,
         expected.toString());
@@ -52,7 +49,6 @@ public class UriTypeCoercerTest {
   public void canCoerceAValidHttpsURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("https://example.org");
     URI uri = new UriTypeCoercer().coerce(
-        buildTargetParser,
         filesystem,
         pathFromRoot,
         expected.toString());
@@ -64,7 +60,6 @@ public class UriTypeCoercerTest {
   public void canCoerceAMavenURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("mvn:org.hamcrest:hamcrest-core:jar:1.3");
     URI uri = new UriTypeCoercer().coerce(
-        buildTargetParser,
         filesystem,
         pathFromRoot,
         expected.toString());
@@ -75,7 +70,6 @@ public class UriTypeCoercerTest {
   @Test(expected = CoerceFailedException.class)
   public void shouldThrowAMeaningfulExceptionIfURICannotBeCoerced() throws CoerceFailedException {
     new UriTypeCoercer().coerce(
-        buildTargetParser,
         filesystem,
         pathFromRoot,
         "not a valid URI");

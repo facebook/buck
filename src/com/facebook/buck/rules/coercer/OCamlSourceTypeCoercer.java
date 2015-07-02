@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
@@ -56,7 +55,6 @@ public class OCamlSourceTypeCoercer implements TypeCoercer<OCamlSource> {
 
   @Override
   public OCamlSource coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
@@ -68,7 +66,6 @@ public class OCamlSourceTypeCoercer implements TypeCoercer<OCamlSource> {
       String name = (String) object;
       return OCamlSource.ofNameAndSourcePath(
           name, sourcePathTypeCoercer.coerce(
-              buildTargetParser,
               filesystem,
               pathRelativeToProjectRoot,
               object));

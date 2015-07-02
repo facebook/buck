@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Test;
@@ -34,14 +33,12 @@ import java.nio.file.Paths;
 
 public class BuildTargetTypeCoercerTest {
 
-  private BuildTargetParser targetParser = new BuildTargetParser();
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path basePath = Paths.get("java/com/facebook/buck/example");
 
   @Test
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        targetParser,
         filesystem,
         basePath,
         "//foo:bar");
@@ -52,7 +49,6 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        targetParser,
         filesystem,
         basePath,
         ":bar");
@@ -63,7 +59,6 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        targetParser,
         filesystem,
         basePath,
         "//foo:bar#baz");
@@ -76,7 +71,6 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        targetParser,
         filesystem,
         basePath,
         "//foo:bar#baz,qux");
@@ -93,7 +87,6 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        targetParser,
         filesystem,
         basePath,
         ":bar#baz");
@@ -126,7 +119,6 @@ public class BuildTargetTypeCoercerTest {
         });
 
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        targetParser,
         filesystem,
         stubPath,
         ":baz");

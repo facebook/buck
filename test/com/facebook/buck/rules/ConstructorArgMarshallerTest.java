@@ -24,7 +24,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
@@ -631,10 +630,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   public BuildRuleFactoryParams buildRuleFactoryParams() {
-    BuildTargetParser parser = new BuildTargetParser();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:three");
-    return NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
-        parser,
-        target);
+    return NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(target);
   }
 }

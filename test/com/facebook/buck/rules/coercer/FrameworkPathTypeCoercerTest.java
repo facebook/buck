@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
@@ -38,7 +37,6 @@ public class FrameworkPathTypeCoercerTest {
   private final TypeCoercer<FrameworkPath> frameworkPathTypeCoercer = new FrameworkPathTypeCoercer(
       sourcePathTypeCoercer);
 
-  private final BuildTargetParser buildTargetParser = new BuildTargetParser();
   private FakeProjectFilesystem projectFilesystem;
   private final Path pathRelativeToProjectRoot = Paths.get("");
 
@@ -50,7 +48,6 @@ public class FrameworkPathTypeCoercerTest {
   @Test(expected = HumanReadableException.class)
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws CoerceFailedException{
     frameworkPathTypeCoercer.coerce(
-        buildTargetParser,
         projectFilesystem,
         pathRelativeToProjectRoot,
         "$FOOBAR/libfoo.a");

@@ -28,10 +28,8 @@ public class BuildTargetPatternTargetNodeParser
 
   private final ImmutableSet<Path> ignorePaths;
 
-  public BuildTargetPatternTargetNodeParser(
-      BuildTargetParser targetParser,
-      ImmutableSet<Path> ignorePaths) {
-    super(targetParser, /* baseName */ null);
+  public BuildTargetPatternTargetNodeParser(ImmutableSet<Path> ignorePaths) {
+    super(/* baseName */ "");
     this.ignorePaths = ignorePaths;
   }
 

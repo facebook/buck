@@ -153,7 +153,7 @@ public abstract class AbstractCommand implements Command {
     CommandLineTargetNodeSpecParser parser =
         new CommandLineTargetNodeSpecParser(
             config,
-            new BuildTargetPatternTargetNodeParser(new BuildTargetParser(), ignorePaths));
+            new BuildTargetPatternTargetNodeParser(ignorePaths));
     for (String arg : targetsAsArgs) {
       specs.add(parser.parse(arg));
     }
@@ -163,18 +163,14 @@ public abstract class AbstractCommand implements Command {
   /**
    * @return A set of {@link BuildTarget}s for the input buildTargetNames.
    */
-  protected ImmutableSet<BuildTarget> getBuildTargets(
-      CommandRunnerParams params,
-      Iterable<String> buildTargetNames) {
+  protected ImmutableSet<BuildTarget> getBuildTargets(Iterable<String> buildTargetNames) {
     ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
 
     // Parse all of the build targets specified by the user.
-    BuildTargetParser buildTargetParser = params.getParser().getBuildTargetParser();
-
     for (String buildTargetName : buildTargetNames) {
-      buildTargets.add(buildTargetParser.parse(
+      buildTargets.add(BuildTargetParser.INSTANCE.parse(
               buildTargetName,
-              BuildTargetPatternParser.fullyQualified(buildTargetParser)));
+              BuildTargetPatternParser.fullyQualified()));
     }
 
     return buildTargets.build();

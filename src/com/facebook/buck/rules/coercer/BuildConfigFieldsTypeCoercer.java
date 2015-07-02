@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -40,7 +39,6 @@ public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFie
 
   @Override
   public BuildConfigFields coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {

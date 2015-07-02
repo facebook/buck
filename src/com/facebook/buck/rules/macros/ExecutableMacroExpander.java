@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.Escaper;
@@ -28,10 +27,6 @@ import com.google.common.collect.Iterables;
  * Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}.
  */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander {
-
-  public ExecutableMacroExpander(BuildTargetParser parser) {
-    super(parser);
-  }
 
   @Override
   public String expand(ProjectFilesystem filesystem, BuildRule rule) throws MacroException {

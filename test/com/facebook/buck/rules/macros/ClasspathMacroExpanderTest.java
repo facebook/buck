@@ -23,7 +23,6 @@ import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -48,7 +47,7 @@ public class ClasspathMacroExpanderTest {
 
   @Before
   public void createMacroExpander() {
-    this.expander = new ClasspathMacroExpander(new BuildTargetParser());
+    this.expander = new ClasspathMacroExpander();
     this.filesystem = new FakeProjectFilesystem() {
       @Override
       public Path resolve(Path path) {

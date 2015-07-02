@@ -21,7 +21,6 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
@@ -68,10 +67,6 @@ abstract class AbstractRepository {
 
   public ImmutableSet<Description<?>> getAllDescriptions() {
     return getKnownBuildRuleTypes().getAllDescriptions();
-  }
-
-  public BuildTargetParser getBuildTargetParser() {
-    return new BuildTargetParser();
   }
 
   public Path getAbsolutePathToBuildFile(BuildTarget target)

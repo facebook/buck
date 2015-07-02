@@ -35,7 +35,6 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
   @Override
   public BuildTarget coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem alsoUnused,
       Path pathRelativeToProjectRoot,
       Object object)
@@ -49,9 +48,9 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
         String baseName = UnflavoredBuildTarget.BUILD_TARGET_PREFIX +
             MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
 
-      return buildTargetParser.parse(
+      return BuildTargetParser.INSTANCE.parse(
           param,
-          BuildTargetPatternParser.forBaseName(buildTargetParser, baseName));
+          BuildTargetPatternParser.forBaseName(baseName));
     } catch (BuildTargetParseException e) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }

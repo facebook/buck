@@ -21,6 +21,7 @@ import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
@@ -103,10 +104,9 @@ public class AuditClasspathCommand extends AbstractCommand {
         .transform(new Function<String, BuildTarget>() {
                      @Override
                      public BuildTarget apply(String input) {
-                       return params.getParser().getBuildTargetParser().parse(
+                       return BuildTargetParser.INSTANCE.parse(
                            input,
-                           BuildTargetPatternParser.fullyQualified(
-                               params.getParser().getBuildTargetParser()));
+                           BuildTargetPatternParser.fullyQualified());
                      }
                    })
         .toSet();

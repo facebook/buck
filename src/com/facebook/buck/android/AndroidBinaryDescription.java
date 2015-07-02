@@ -32,7 +32,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -76,12 +75,11 @@ public class AndroidBinaryDescription
    */
   private static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
 
-  private static final BuildTargetParser BUILD_TARGET_PARSER = new BuildTargetParser();
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
           ImmutableMap.<String, MacroExpander>of(
-              "exe", new ExecutableMacroExpander(BUILD_TARGET_PARSER),
-              "location", new LocationMacroExpander(BUILD_TARGET_PARSER)));
+              "exe", new ExecutableMacroExpander(),
+              "location", new LocationMacroExpander()));
 
   private static final Pattern COUNTRY_LOCALE_PATTERN = Pattern.compile("([a-z]{2})-[A-Z]{2}");
 

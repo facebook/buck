@@ -34,12 +34,6 @@ import com.google.common.collect.ImmutableList;
  */
 public abstract class BuildTargetMacroExpander implements MacroExpander {
 
-  protected final BuildTargetParser parser;
-
-  public BuildTargetMacroExpander(BuildTargetParser parser) {
-    this.parser = parser;
-  }
-
   protected abstract String expand(ProjectFilesystem filesystem, BuildRule rule)
       throws MacroException;
 
@@ -51,9 +45,9 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
 
     BuildTarget other;
     try {
-      other = parser.parse(input, BuildTargetPatternParser.forBaseName(
-              parser,
-              target.getBaseName()));
+      other = BuildTargetParser.INSTANCE.parse(
+          input,
+          BuildTargetPatternParser.forBaseName(target.getBaseName()));
     } catch (BuildTargetParseException e) {
       throw new MacroException(e.getMessage(), e);
     }
@@ -88,9 +82,9 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
       BuildTarget target,
       String input) {
     return ImmutableList.of(
-        parser.parse(input, BuildTargetPatternParser.forBaseName(
-                parser,
-                target.getBaseName())));
+        BuildTargetParser.INSTANCE.parse(
+            input,
+            BuildTargetPatternParser.forBaseName(target.getBaseName())));
   }
 
 }

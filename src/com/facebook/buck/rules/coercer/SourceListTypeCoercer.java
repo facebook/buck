@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -69,21 +68,18 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
 
   @Override
   public SourceList coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     if (object instanceof List) {
       return SourceList.ofUnnamedSources(
           unnamedHeadersTypeCoercer.coerce(
-              buildTargetParser,
               filesystem,
               pathRelativeToProjectRoot,
               object));
     } else {
       return SourceList.ofNamedSources(
           namedHeadersTypeCoercer.coerce(
-              buildTargetParser,
               filesystem,
               pathRelativeToProjectRoot,
               object));

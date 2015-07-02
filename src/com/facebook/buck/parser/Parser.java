@@ -99,8 +99,6 @@ import javax.annotation.Nullable;
  */
 public class Parser {
 
-  private final BuildTargetParser buildTargetParser;
-
   private final CachedState state;
 
   private final ImmutableSet<Pattern> tempFilePatterns;
@@ -214,7 +212,6 @@ public class Parser {
           }
         },
         // TODO(jacko): Get rid of this global BuildTargetParser completely.
-        repository.getBuildTargetParser(),
         new DefaultProjectBuildFileParserFactory(
             repository.getFilesystem().getRootPath(),
             pythonInterpreter,
@@ -234,21 +231,15 @@ public class Parser {
       ImmutableSet<Pattern> tempFilePatterns,
       String buildFileName,
       Supplier<BuildFileTree> buildFileTreeSupplier,
-      BuildTargetParser buildTargetParser,
       ProjectBuildFileParserFactory buildFileParserFactory)
       throws IOException, InterruptedException {
     this.repository = repository;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
-    this.buildTargetParser = buildTargetParser;
     this.buildFileParserFactory = buildFileParserFactory;
     this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
     this.state = new CachedState(buildFileName);
-  }
-
-  public BuildTargetParser getBuildTargetParser() {
-    return buildTargetParser;
   }
 
   public Path getProjectRoot() {
@@ -455,7 +446,7 @@ public class Parser {
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget)
               throws IOException, InterruptedException {
             BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
-                BuildTargetPatternParser.forBaseName(buildTargetParser, buildTarget.getBaseName());
+                BuildTargetPatternParser.forBaseName(buildTarget.getBaseName());
 
             // Verify that the BuildTarget actually exists in the map of known BuildTargets
             // before trying to recurse through its children.
@@ -484,7 +475,6 @@ public class Parser {
                         NoSuchBuildTargetException.createForMissingBuildRule(
                             buildTargetForDep,
                             BuildTargetPatternParser.forBaseName(
-                                buildTargetParser,
                                 buildTargetForDep.getBaseName()),
                             parserConfig.getBuildFileName()));
                   }
@@ -1104,7 +1094,6 @@ public class Parser {
 
         BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
             targetRepo.getFilesystem(),
-            targetRepo.getBuildTargetParser(),
             // Although we store the rule by its unflavoured name, when we construct it, we need the
             // flavour.
             buildTarget,

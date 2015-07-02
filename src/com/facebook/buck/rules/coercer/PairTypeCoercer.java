@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -62,7 +61,6 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
 
   @Override
   public Pair<FIRST, SECOND> coerce(
-      BuildTargetParser buildTargetParser,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object)
@@ -77,12 +75,10 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
       }
       Iterator<?> iterator = collection.iterator();
       FIRST first = firstTypeCoercer.coerce(
-          buildTargetParser,
           filesystem,
           pathRelativeToProjectRoot,
           iterator.next());
       SECOND second = secondTypeCoercer.coerce(
-          buildTargetParser,
           filesystem,
           pathRelativeToProjectRoot,
           iterator.next());

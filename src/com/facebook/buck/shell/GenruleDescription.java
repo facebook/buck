@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -52,12 +51,11 @@ public class GenruleDescription
   private final MacroHandler macroHandler;
 
   public GenruleDescription() {
-    BuildTargetParser parser = new BuildTargetParser();
     this.macroHandler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of(
-            "classpath", new ClasspathMacroExpander(parser),
-            "exe", new ExecutableMacroExpander(parser),
-            "location", new LocationMacroExpander(parser)));
+            "classpath", new ClasspathMacroExpander(),
+            "exe", new ExecutableMacroExpander(),
+            "location", new LocationMacroExpander()));
   }
 
   @Override
