@@ -197,9 +197,7 @@ public class OCamlBuildRulesGenerator {
             ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
       resolver.addToIndex(compileRule);
       objects.add(
-          new BuildTargetSourcePath(
-              compileRule.getProjectFilesystem(),
-              compileRule.getBuildTarget()));
+          new BuildTargetSourcePath(compileRule.getBuildTarget()));
     }
     return objects.build();
   }
@@ -480,7 +478,7 @@ public class OCamlBuildRulesGenerator {
             .build());
     if (!outputFileName.endsWith(OCamlCompilables.OCAML_CMI)) {
       cmxFiles.add(
-          new BuildTargetSourcePath(compile.getProjectFilesystem(), compile.getBuildTarget()));
+          new BuildTargetSourcePath(compile.getBuildTarget()));
     }
   }
 
@@ -575,9 +573,7 @@ public class OCamlBuildRulesGenerator {
             .build());
     if (!outputFileName.endsWith(OCamlCompilables.OCAML_CMI)) {
       cmoFiles.add(
-          new BuildTargetSourcePath(
-              compileBytecode.getProjectFilesystem(),
-              compileBytecode.getBuildTarget()));
+          new BuildTargetSourcePath(compileBytecode.getBuildTarget()));
     }
   }
 

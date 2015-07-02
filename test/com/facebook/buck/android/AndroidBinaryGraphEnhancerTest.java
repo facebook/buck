@@ -447,9 +447,7 @@ public class AndroidBinaryGraphEnhancerTest {
                   .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
               pathResolver,
               ImmutableSortedSet.<BuildRule>of(),
-              new BuildTargetSourcePath(
-                  resourcesDep.getProjectFilesystem(),
-                  resourcesDep.getBuildTarget()),
+              new BuildTargetSourcePath(resourcesDep.getBuildTarget()),
               ImmutableSortedSet.<Path>of(),
               null,
               null,

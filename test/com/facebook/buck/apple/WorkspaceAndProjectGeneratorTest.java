@@ -399,7 +399,7 @@ public class WorkspaceAndProjectGeneratorTest {
             Optional.of(
                 ImmutableList.of(
                     SourceWithFlags.of(
-                        new BuildTargetSourcePath(projectFilesystem, genruleTarget)))))
+                        new BuildTargetSourcePath(genruleTarget)))))
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
@@ -444,7 +444,7 @@ public class WorkspaceAndProjectGeneratorTest {
             Optional.of(
                 ImmutableList.of(
                     SourceWithFlags.of(
-                        new BuildTargetSourcePath(projectFilesystem, genruleTarget)))))
+                        new BuildTargetSourcePath(genruleTarget)))))
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder

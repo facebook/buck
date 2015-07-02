@@ -78,7 +78,6 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         new BuildTargetSourcePath(
-            projectFilesystem,
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     Optional.<String>absent(),
@@ -98,7 +97,6 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         new BuildTargetSourcePath(
-            projectFilesystem,
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                       Optional.<String>absent(),
@@ -120,7 +118,6 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         new BuildTargetSourcePath(
-            projectFilesystem,
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     Optional.of("hello"),

@@ -159,7 +159,7 @@ public class TestRunningTest {
         javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
 
     assertEquals("All non-generated source files are under one source tmp.",
-        ImmutableSet.of("./package/src/"), result);
+        ImmutableSet.of("package/src/"), result);
 
     verify(defaultJavaPackageFinder);
   }
@@ -223,7 +223,7 @@ public class TestRunningTest {
         javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
 
     assertEquals("The non-generated source files are under two different source folders.",
-        ImmutableSet.of("./package/src-gen/", "./package/src/"), result);
+        ImmutableSet.of("package/src-gen/", "package/src/"), result);
 
     verify(defaultJavaPackageFinder);
   }

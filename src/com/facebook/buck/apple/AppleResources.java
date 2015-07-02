@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeFlavors;
@@ -67,7 +66,6 @@ public class AppleResources {
   public static <T> void collectResourceDirsAndFiles(
       TargetGraph targetGraph,
       TargetNode<T> targetNode,
-      ProjectFilesystem filesystem,
       ImmutableSet.Builder<SourcePath> resourceDirs,
       ImmutableSet.Builder<SourcePath> dirsContainingResourceDirs,
       ImmutableSet.Builder<SourcePath> resourceFiles) {
@@ -95,11 +93,9 @@ public class AppleResources {
 
         dirsContainingResourceDirs.add(
             new BuildTargetSourcePath(
-                filesystem,
                 buildTarget,
                 ReactNativeBundle.getPathToJSBundleDir(buildTarget)),
             new BuildTargetSourcePath(
-                filesystem,
                 buildTarget,
                 ReactNativeBundle.getPathToResources(buildTarget)));
       }

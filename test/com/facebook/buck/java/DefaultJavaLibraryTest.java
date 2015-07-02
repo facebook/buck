@@ -1161,7 +1161,7 @@ public class DefaultJavaLibraryTest {
     assertEquals(
         jsrJavac.getCompilerClassPath(),
         ImmutableSet.of(
-            new BuildTargetSourcePath(javac.getProjectFilesystem(), javac.getBuildTarget())));
+            new BuildTargetSourcePath(javac.getBuildTarget())));
   }
 
   @Test

@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 
 import org.hamcrest.Matchers;
@@ -70,7 +69,6 @@ public class NdkLibraryDescriptionTest {
   public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     FakeBuildRule transitiveInput = resolver.addToIndex(
         new FakeBuildRule("//:transitive_input", pathResolver));
@@ -79,7 +77,7 @@ public class NdkLibraryDescriptionTest {
             new FakeNativeLinkable(
                 "//:transitive_dep",
                 pathResolver,
-                new BuildTargetSourcePath(filesystem, transitiveInput.getBuildTarget())));
+                new BuildTargetSourcePath(transitiveInput.getBuildTarget())));
     FakeBuildRule firstOrderInput = resolver.addToIndex(
         new FakeBuildRule("//:first_order_input", pathResolver));
     FakeNativeLinkable firstOrderDep =
@@ -87,7 +85,7 @@ public class NdkLibraryDescriptionTest {
             new FakeNativeLinkable(
                 "//:first_order_dep",
                 pathResolver,
-                new BuildTargetSourcePath(filesystem, firstOrderInput.getBuildTarget()),
+                new BuildTargetSourcePath(firstOrderInput.getBuildTarget()),
                 transitiveDep));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");

@@ -257,10 +257,7 @@ public class OCamlRuleBuilder {
               .transform(pathResolver.getPathFunction())
               .filter(OCamlUtil.ext(OCamlCompilables.OCAML_C))
               .transform(ocamlContext.toCOutput())
-              .transform(
-                  SourcePaths.getToBuildTargetSourcePath(
-                      params.getProjectFilesystem(),
-                      compileParams.getBuildTarget()))
+              .transform(SourcePaths.getToBuildTargetSourcePath(compileParams.getBuildTarget()))
               .toList(),
           ocamlContext,
           ocamlLibraryBuild,

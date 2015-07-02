@@ -78,7 +78,6 @@ public class CxxLibraryDescriptionTest {
   @Test
   @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createBuildRule() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
@@ -154,7 +153,7 @@ public class CxxLibraryDescriptionTest {
           Linker.LinkableDepType type) {
         return NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(getProjectFilesystem(), archive.getBuildTarget())),
+                new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
       }
 
@@ -204,13 +203,13 @@ public class CxxLibraryDescriptionTest {
         .setExportedHeaders(
             ImmutableSortedSet.<SourcePath>of(
                 new TestSourcePath(headerName),
-                new BuildTargetSourcePath(projectFilesystem, genHeaderTarget)))
+                new BuildTargetSourcePath(genHeaderTarget)))
         .setHeaders(
             ImmutableSortedSet.<SourcePath>of(new TestSourcePath(privateHeaderName)))
         .setSrcs(
             ImmutableList.of(
                 SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
-                SourceWithFlags.of(new BuildTargetSourcePath(projectFilesystem, genSourceTarget))))
+                SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
         .setFrameworkSearchPaths(
             ImmutableList.of(
                 Paths.get("/some/framework/path"),
@@ -246,13 +245,13 @@ public class CxxLibraryDescriptionTest {
                         new TestSourcePath(headerName))
                     .putNameToPathMap(
                         Paths.get(genHeaderName),
-                        new BuildTargetSourcePath(projectFilesystem, genHeaderTarget))
+                        new BuildTargetSourcePath(genHeaderTarget))
                     .putFullNameToPathMap(
                         headerRoot.resolve(headerName),
                         new TestSourcePath(headerName))
                     .putFullNameToPathMap(
                         headerRoot.resolve(genHeaderName),
-                        new BuildTargetSourcePath(projectFilesystem, genHeaderTarget))
+                        new BuildTargetSourcePath(genHeaderTarget))
                     .build())
             .addIncludeRoots(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
@@ -487,7 +486,6 @@ public class CxxLibraryDescriptionTest {
   @Test
   @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createCxxLibraryBuildRules() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
@@ -554,13 +552,11 @@ public class CxxLibraryDescriptionTest {
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
-                        getProjectFilesystem(),
                         staticLibraryDep.getBuildTarget())),
                 ImmutableList.of(staticLibraryOutput.toString())) :
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
-                        getProjectFilesystem(),
                         sharedLibraryDep.getBuildTarget())),
                 ImmutableList.of(sharedLibraryOutput.toString()));
       }
@@ -614,13 +610,13 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
         .setExportedHeaders(
             ImmutableMap.<String, SourcePath>of(
-                genHeaderName, new BuildTargetSourcePath(projectFilesystem, genHeaderTarget)))
+                genHeaderName, new BuildTargetSourcePath(genHeaderTarget)))
         .setSrcs(
             ImmutableMap.of(
                 sourceName,
                 SourceWithFlags.of(new TestSourcePath(sourceName)),
                 genSourceName,
-                SourceWithFlags.of(new BuildTargetSourcePath(projectFilesystem, genSourceTarget))))
+                SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
         .setFrameworkSearchPaths(
             ImmutableList.of(
                 Paths.get("/some/framework/path"),
@@ -655,10 +651,10 @@ public class CxxLibraryDescriptionTest {
                 CxxHeaders.builder()
                     .putNameToPathMap(
                         Paths.get(genHeaderName),
-                        new BuildTargetSourcePath(projectFilesystem, genHeaderTarget))
+                        new BuildTargetSourcePath(genHeaderTarget))
                     .putFullNameToPathMap(
                         headerRoot.resolve(genHeaderName),
-                        new BuildTargetSourcePath(projectFilesystem, genHeaderTarget))
+                        new BuildTargetSourcePath(genHeaderTarget))
                     .build())
             .addIncludeRoots(
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
@@ -872,7 +868,7 @@ public class CxxLibraryDescriptionTest {
                 CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
                     target,
                     cxxPlatform)),
-            new BuildTargetSourcePath(projectFilesystem, sharedRule.getBuildTarget())),
+            new BuildTargetSourcePath(sharedRule.getBuildTarget())),
         ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
     assertEquals(

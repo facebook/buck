@@ -88,9 +88,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
             staticLibraryTarget,
             /* isLibrary */ true);
     inputBuilder.addInputs(
-        new BuildTargetSourcePath(
-            ocamlLibraryBuild.getProjectFilesystem(),
-            ocamlLibraryBuild.getBuildTarget()));
+        new BuildTargetSourcePath(ocamlLibraryBuild.getBuildTarget()));
     inputBuilder.addArgs(staticLibraryPath.toString());
 
     // Add args and inputs for C object files.

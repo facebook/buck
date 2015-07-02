@@ -127,7 +127,7 @@ public class CxxBinaryDescriptionTest {
           Linker.LinkableDepType type) {
         return NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(getProjectFilesystem(), archive.getBuildTarget())),
+                new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()));
       }
 
@@ -175,12 +175,11 @@ public class CxxBinaryDescriptionTest {
                       SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
                       SourceWithFlags.of(
                           new BuildTargetSourcePath(
-                              projectFilesystem,
                               genSource.getBuildTarget()))))
               .setHeaders(
                   ImmutableSortedSet.<SourcePath>of(
                       new TestSourcePath("test/bar.h"),
-                      new BuildTargetSourcePath(projectFilesystem, genHeader.getBuildTarget())))
+                      new BuildTargetSourcePath(genHeader.getBuildTarget())))
               .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
     CxxBinary binRule = (CxxBinary) cxxBinaryBuilder.build(resolver);
     CxxLink rule = binRule.getRule();

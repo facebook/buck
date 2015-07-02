@@ -370,7 +370,7 @@ public class BuckConfig {
     }
     try {
       BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
-      return Optional.<SourcePath>of(new BuildTargetSourcePath(projectFilesystem, target));
+      return Optional.<SourcePath>of(new BuildTargetSourcePath(target));
     } catch (BuildTargetParseException e) {
       checkPathExists(
           value.get(),

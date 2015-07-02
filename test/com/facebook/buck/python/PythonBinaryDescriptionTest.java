@@ -23,7 +23,6 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.io.MorePathsForTests;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -39,7 +38,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,7 +49,6 @@ import java.nio.file.Paths;
 
 public class PythonBinaryDescriptionTest {
 
-  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
   private static final Path PEX_PATH = Paths.get("pex");
   private static final Path PEX_EXECUTER_PATH = MorePathsForTests.rootRelativePath("/not/python2");
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
@@ -74,7 +71,7 @@ public class PythonBinaryDescriptionTest {
         new SourcePathResolver(resolver),
         ImmutableMap.<Path, SourcePath>of(
             Paths.get("hello"),
-            new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule.getBuildTarget())),
+            new BuildTargetSourcePath(genrule.getBuildTarget())),
         ImmutableMap.<Path, SourcePath>of(),
         Optional.<Boolean>absent());
 
@@ -122,7 +119,7 @@ public class PythonBinaryDescriptionTest {
     arg.mainModule = Optional.absent();
     arg.main =
         Optional.<SourcePath>of(
-            new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule.getBuildTarget()));
+            new BuildTargetSourcePath(genrule.getBuildTarget()));
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);

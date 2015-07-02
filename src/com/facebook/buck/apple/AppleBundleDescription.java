@@ -125,7 +125,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     AppleResources.collectResourceDirsAndFiles(
         params.getTargetGraph(),
         Preconditions.checkNotNull(params.getTargetGraph().get(params.getBuildTarget())),
-        params.getProjectFilesystem(),
         bundleDirsBuilder,
         dirsContainingResourceDirsBuilder,
         bundleFilesBuilder);

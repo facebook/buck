@@ -124,13 +124,10 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
     return type == Linker.LinkableDepType.STATIC ?
         NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(getProjectFilesystem(), archive.getBuildTarget())),
+                new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString())) :
         NativeLinkableInput.of(
-            ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(
-                    getProjectFilesystem(),
-                    sharedLibrary.getBuildTarget())),
+            ImmutableList.<SourcePath>of(new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
             ImmutableList.of(sharedLibraryOutput.toString()));
   }
 

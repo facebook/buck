@@ -159,16 +159,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         androidResourceParams,
         pathResolver,
         /* deps */ ImmutableSortedSet.copyOf(depRules.build()),
-        new BuildTargetSourcePath(
-            assembleResourceDirectories.getProjectFilesystem(),
-            assembleResourceDirectories.getBuildTarget()),
+        new BuildTargetSourcePath(assembleResourceDirectories.getBuildTarget()),
         /* resSrcs */ ImmutableSortedSet.<Path>of(),
         /* rDotJavaPackage */ null,
-        new BuildTargetSourcePath(
-            assembleAssetsDirectories.getProjectFilesystem(),
-            assembleAssetsDirectories.getBuildTarget()),
+        new BuildTargetSourcePath(assembleAssetsDirectories.getBuildTarget()),
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
-        new BuildTargetSourcePath(manifest.getProjectFilesystem(), manifest.getBuildTarget()),
+        new BuildTargetSourcePath(manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
     depRules.add(resolver.addToIndex(androidResource));
 

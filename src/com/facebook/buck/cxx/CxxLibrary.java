@@ -196,10 +196,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(
-            new BuildTargetSourcePath(
-                libraryRule.getProjectFilesystem(),
-                libraryRule.getBuildTarget())),
+        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(libraryRule.getBuildTarget())),
         linkerArgs);
   }
 
@@ -235,9 +232,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(
         Paths.get(sharedLibrarySoname),
-        new BuildTargetSourcePath(
-            sharedLibraryBuildRule.getProjectFilesystem(),
-            sharedLibraryBuildRule.getBuildTarget()));
+        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
     return PythonPackageComponents.of(
         /* modules */ ImmutableMap.<Path, SourcePath>of(),
         /* resources */ ImmutableMap.<Path, SourcePath>of(),
@@ -280,9 +275,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(
         sharedLibrarySoname,
-        new BuildTargetSourcePath(
-            sharedLibraryBuildRule.getProjectFilesystem(),
-            sharedLibraryBuildRule.getBuildTarget()));
+        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
     return libs.build();
   }
 

@@ -22,16 +22,17 @@ import java.nio.file.Path;
 
 public class PathSourcePath extends AbstractSourcePath {
 
+  private final ProjectFilesystem filesystem;
   private final Path relativePath;
 
-  public PathSourcePath(ProjectFilesystem projectFilesystem, Path relativePath) {
-    super(projectFilesystem);
+  public PathSourcePath(ProjectFilesystem filesystem, Path relativePath) {
+    this.filesystem = filesystem;
     this.relativePath = relativePath;
   }
 
   @Override
   protected Object asReference() {
-    return relativePath;
+    return filesystem.getRootPath().toString() + relativePath;
   }
 
   public Path getRelativePath() {

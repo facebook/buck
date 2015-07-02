@@ -113,11 +113,9 @@ public class AndroidPrebuiltAarDescription
             /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar))),
         /* resolver */ pathResolver,
         /* proguardConfig */ new BuildTargetSourcePath(
-            unzipAar.getProjectFilesystem(),
             unzipAar.getBuildTarget(),
             unzipAar.getProguardConfig()),
         /* nativeLibsDirectory */ new BuildTargetSourcePath(
-            unzipAar.getProjectFilesystem(),
             unzipAar.getBuildTarget(),
             unzipAar.getNativeLibsDirectory()),
         /* prebuiltJar */ prebuiltJar,
@@ -141,7 +139,6 @@ public class AndroidPrebuiltAarDescription
         /* params */ buildRuleParams,
         /* resolver */ resolver,
         /* binaryJar */ new BuildTargetSourcePath(
-            unzipAar.getProjectFilesystem(),
             unzipAar.getBuildTarget(),
             unzipAar.getPathToClassesJar()),
         /* sourceJar */ Optional.<SourcePath>absent(),
@@ -166,18 +163,15 @@ public class AndroidPrebuiltAarDescription
         /* resolver */ resolver,
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         /* res */ new BuildTargetSourcePath(
-            unzipAar.getProjectFilesystem(),
             unzipAar.getBuildTarget(),
             unzipAar.getResDirectory()),
         /* resSrcs */ ImmutableSortedSet.<Path>of(),
         /* rDotJavaPackage */ null,
         /* assets */ new BuildTargetSourcePath(
-            unzipAar.getProjectFilesystem(),
             unzipAar.getBuildTarget(),
             unzipAar.getAssetsDirectory()),
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
         /* manifestFile */ new BuildTargetSourcePath(
-            unzipAar.getProjectFilesystem(),
             unzipAar.getBuildTarget(),
             unzipAar.getAndroidManifest()),
         /* hasWhitelistedStrings */ false);

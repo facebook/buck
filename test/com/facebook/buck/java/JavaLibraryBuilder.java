@@ -67,7 +67,7 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
   }
 
   public JavaLibraryBuilder addSrcTarget(BuildTarget target) {
-    arg.srcs = amend(arg.srcs, new BuildTargetSourcePath(new FakeProjectFilesystem(), target));
+    arg.srcs = amend(arg.srcs, new BuildTargetSourcePath(target));
     return this;
   }
 
@@ -78,7 +78,7 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
 
   public JavaLibraryBuilder setCompiler(BuildRule javac) {
     SourcePath right =
-        new BuildTargetSourcePath(javac.getProjectFilesystem(), javac.getBuildTarget());
+        new BuildTargetSourcePath(javac.getBuildTarget());
     Either<BuiltInJavac, SourcePath> value = Either.ofRight(right);
 
     arg.compiler = Optional.of(value);

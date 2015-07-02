@@ -756,7 +756,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     if (outputJar.isPresent()) {
       collector.addClasspathEntry(
           this,
-          new BuildTargetSourcePath(getProjectFilesystem(), getBuildTarget(), outputJar.get()));
+          new BuildTargetSourcePath(getBuildTarget(), outputJar.get()));
     }
     if (proguardConfig.isPresent()) {
       collector.addProguardConfig(getBuildTarget(), proguardConfig.get());

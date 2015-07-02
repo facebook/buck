@@ -194,7 +194,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   private final Clock clock;
 
   public FakeProjectFilesystem() {
-    this(new FakeClock(0), Paths.get(".").toFile(), ImmutableSet.<Path>of());
+    this(new FakeClock(0), Paths.get("").toFile(), ImmutableSet.<Path>of());
   }
 
   // We accept a File here since that's what's returned by TemporaryFolder.

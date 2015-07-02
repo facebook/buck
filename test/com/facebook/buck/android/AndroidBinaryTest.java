@@ -40,7 +40,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -377,7 +376,6 @@ public class AndroidBinaryTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRule keystoreRule = addKeystoreRule(resolver);
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildRule prebuiltJarGen =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:jar"))
@@ -386,7 +384,7 @@ public class AndroidBinaryTest {
 
     BuildRule transitivePrebuiltJarDep =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
-            .setBinaryJar(new BuildTargetSourcePath(filesystem, prebuiltJarGen.getBuildTarget()))
+            .setBinaryJar(new BuildTargetSourcePath(prebuiltJarGen.getBuildTarget()))
             .build(resolver);
 
     FakeJavaLibrary immediateDep =

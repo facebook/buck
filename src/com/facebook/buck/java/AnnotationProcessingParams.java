@@ -200,9 +200,7 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
           Path pathToOutput = rule.getPathToOutput();
           if (pathToOutput != null) {
             inputs.add(
-                new BuildTargetSourcePath(
-                    Preconditions.checkNotNull(filesystem),
-                    rule.getBuildTarget()));
+                new BuildTargetSourcePath(rule.getBuildTarget()));
             searchPathElements.add(pathToOutput);
           }
         } else if (rule instanceof HasClasspathEntries) {
@@ -212,7 +210,6 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
           for (Map.Entry<JavaLibrary, Path> entry : entries.entries()) {
             inputs.add(
                 new BuildTargetSourcePath(
-                    entry.getKey().getProjectFilesystem(),
                     entry.getKey().getBuildTarget(),
                     entry.getValue()));
           }

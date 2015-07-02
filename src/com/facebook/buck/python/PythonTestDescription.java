@@ -205,9 +205,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
             .<Path, SourcePath>builder()
             .put(
                 getTestModulesListName(),
-                new BuildTargetSourcePath(
-                    testModulesBuildRule.getProjectFilesystem(),
-                    testModulesBuildRule.getBuildTarget()))
+                new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
             .put(
                 getTestMainName(),
                 new PathSourcePath(projectFilesystem, pathToPythonTestMain))

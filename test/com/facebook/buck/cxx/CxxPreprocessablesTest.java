@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,8 +48,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxPreprocessablesTest {
-
-  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
   private static class FakeCxxPreprocessorDep extends FakeBuildRule
       implements CxxPreprocessorDep {
@@ -220,7 +216,7 @@ public class CxxPreprocessablesTest {
         Paths.get("link1"),
         new TestSourcePath("hello"),
         Paths.get("link2"),
-        new BuildTargetSourcePath(PROJECT_FILESYSTEM, genrule.getBuildTarget()));
+        new BuildTargetSourcePath(genrule.getBuildTarget()));
 
     // Build our symlink tree rule using the helper method.
     SymlinkTree symlinkTree = CxxPreprocessables.createHeaderSymlinkTreeBuildRule(

@@ -114,7 +114,7 @@ public class CxxTestDescription implements
     CxxTestType type = args.framework.or(getDefaultTestType());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     SourcePath binary =
-        new BuildTargetSourcePath(cxxLink.getProjectFilesystem(), cxxLink.getBuildTarget());
+        new BuildTargetSourcePath(cxxLink.getBuildTarget());
     // It's not uncommon for users to add dependencies onto other binaries that they run during
     // the test, so make sure to add them as runtime deps.
     ImmutableSortedSet<BuildRule> additionalDeps =

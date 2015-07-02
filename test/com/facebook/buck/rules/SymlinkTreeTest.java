@@ -260,7 +260,7 @@ public class SymlinkTreeTest {
             outputPath,
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get("link"),
-                new BuildTargetSourcePath(projectFilesystem, dep.getBuildTarget())));
+                new BuildTargetSourcePath(dep.getBuildTarget())));
 
     // Generate an input-based rule key for the symlink tree with the contents of the link
     // target hashing to "aaaa".

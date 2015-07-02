@@ -123,7 +123,7 @@ public class CxxLibraryTest {
     // interface.
     NativeLinkableInput expectedStaticNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
-            new BuildTargetSourcePath(projectFilesystem, archive.getBuildTarget())),
+            new BuildTargetSourcePath(archive.getBuildTarget())),
         ImmutableList.of(archiveOutput.toString()));
     assertEquals(
         expectedStaticNativeLinkableInput,
@@ -135,7 +135,7 @@ public class CxxLibraryTest {
     // interface.
     NativeLinkableInput expectedSharedNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
-            new BuildTargetSourcePath(projectFilesystem, sharedLibrary.getBuildTarget())),
+            new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
         ImmutableList.of(sharedLibraryOutput.toString()));
     assertEquals(
         expectedSharedNativeLinkableInput,
@@ -163,7 +163,6 @@ public class CxxLibraryTest {
 
   @Test
   public void staticLinkage() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -207,9 +206,7 @@ public class CxxLibraryTest {
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(
-                    projectFilesystem,
-                    staticPicLibraryTarget)),
+                new BuildTargetSourcePath(staticPicLibraryTarget)),
             ImmutableList.of(
                 CxxDescriptionEnhancer.getStaticLibraryPath(
                     target,

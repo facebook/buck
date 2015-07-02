@@ -126,9 +126,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addClasspathEntry(
-        this,
-        new BuildTargetSourcePath(getProjectFilesystem(), getBuildTarget()));
+    collector.addClasspathEntry(this, new BuildTargetSourcePath(getBuildTarget()));
   }
 
 }

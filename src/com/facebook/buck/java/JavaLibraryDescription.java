@@ -179,7 +179,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
           BuildRule rule = possibleRule.get();
           if (rule instanceof PrebuiltJar) {
             builder.setJavacJarPath(
-                new BuildTargetSourcePath(rule.getProjectFilesystem(), rule.getBuildTarget()));
+                new BuildTargetSourcePath(rule.getBuildTarget()));
           } else {
             throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
           }

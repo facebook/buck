@@ -273,7 +273,6 @@ public class RuleKeyTest {
 
   @Test
   public void setInputBuildTargetSourcePath() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeBuildRule fake1 = new FakeBuildRule("//:fake1", pathResolver);
@@ -290,7 +289,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "key",
                 new BuildTargetSourcePath(
-                    projectFilesystem,
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build(),
@@ -299,7 +297,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "key",
                 new BuildTargetSourcePath(
-                    projectFilesystem,
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build());
@@ -311,7 +308,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "key",
                 new BuildTargetSourcePath(
-                    projectFilesystem,
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build(),
@@ -320,7 +316,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "key",
                 new BuildTargetSourcePath(
-                    projectFilesystem,
                     fake1.getBuildTarget(),
                     Paths.get("different")))
             .build());
@@ -332,7 +327,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "key",
                 new BuildTargetSourcePath(
-                    projectFilesystem,
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build(),
@@ -341,7 +335,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "key",
                 new BuildTargetSourcePath(
-                    projectFilesystem,
                     fake2.getBuildTarget(),
                     Paths.get("location")))
             .build());
@@ -353,7 +346,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "key",
                 new BuildTargetSourcePath(
-                    projectFilesystem,
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build(),
@@ -362,7 +354,6 @@ public class RuleKeyTest {
             .setReflectively(
                 "different-key",
                 new BuildTargetSourcePath(
-                    projectFilesystem,
                     fake1.getBuildTarget(),
                     Paths.get("location")))
             .build());

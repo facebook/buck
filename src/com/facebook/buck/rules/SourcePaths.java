@@ -60,18 +60,17 @@ public class SourcePaths {
     return new Function<BuildRule, SourcePath>() {
       @Override
       public SourcePath apply(BuildRule input) {
-        return new BuildTargetSourcePath(input.getProjectFilesystem(), input.getBuildTarget());
+        return new BuildTargetSourcePath(input.getBuildTarget());
       }
     };
   }
 
   public static Function<Path, SourcePath> getToBuildTargetSourcePath(
-      final ProjectFilesystem projectFilesystem,
       final BuildTarget target) {
     return new Function<Path, SourcePath>() {
       @Override
       public SourcePath apply(Path input) {
-        return new BuildTargetSourcePath(projectFilesystem, target, input);
+        return new BuildTargetSourcePath(target, input);
       }
     };
   }

@@ -331,15 +331,11 @@ public class ProjectGeneratorTest {
             ImmutableMap.<String, SourcePath>of(
                 "any/name.h", new TestSourcePath("HeaderGroup1/foo.h"),
                 "different/name.h", new TestSourcePath("HeaderGroup2/baz.h"),
-                "one/more/name.h", new BuildTargetSourcePath(
-                    projectFilesystem,
-                    privateGeneratedTarget)))
+                "one/more/name.h", new BuildTargetSourcePath(privateGeneratedTarget)))
         .setExportedHeaders(
             ImmutableMap.<String, SourcePath>of(
                 "yet/another/name.h", new TestSourcePath("HeaderGroup1/bar.h"),
-                "and/one/more.h", new BuildTargetSourcePath(
-                    projectFilesystem,
-                    publicGeneratedTarget)))
+                "and/one/more.h", new BuildTargetSourcePath(publicGeneratedTarget)))
         .setUseBuckHeaderMaps(Optional.of(true))
         .build();
 
@@ -2799,7 +2795,7 @@ public class ProjectGeneratorTest {
   @Test
   public void usingBuildTargetSourcePathInResourceDirsOrFilesDoesNotThrow() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:rule");
-    SourcePath sourcePath = new BuildTargetSourcePath(fakeProjectFilesystem, buildTarget);
+    SourcePath sourcePath = new BuildTargetSourcePath(buildTarget);
     TargetNode<?> generatingTarget = GenruleBuilder.newGenruleBuilder(buildTarget)
         .setCmd("echo HI")
         .build();
@@ -2980,7 +2976,7 @@ public class ProjectGeneratorTest {
 
     TargetNode<ExportFileDescription.Arg> source2Ref = ExportFileBuilder
         .newExportFileBuilder(source2RefTarget)
-        .setSrc(new BuildTargetSourcePath(projectFilesystem, source2Target))
+        .setSrc(new BuildTargetSourcePath(source2Target))
         .build();
 
     TargetNode<ExportFileDescription.Arg> source3 = ExportFileBuilder
@@ -3002,13 +2998,13 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableList.of(
                     SourceWithFlags.of(
-                        new BuildTargetSourcePath(projectFilesystem, source1Target)),
+                        new BuildTargetSourcePath(source1Target)),
                     SourceWithFlags.of(
-                        new BuildTargetSourcePath(projectFilesystem, source2RefTarget)),
+                        new BuildTargetSourcePath(source2RefTarget)),
                     SourceWithFlags.of(
-                        new BuildTargetSourcePath(projectFilesystem, source3Target)))))
+                        new BuildTargetSourcePath(source3Target)))))
         .setPrefixHeader(
-            Optional.<SourcePath>of(new BuildTargetSourcePath(projectFilesystem, headerTarget)))
+            Optional.<SourcePath>of(new BuildTargetSourcePath(headerTarget)))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(

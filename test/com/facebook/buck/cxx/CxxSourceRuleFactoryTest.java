@@ -314,7 +314,7 @@ public class CxxSourceRuleFactoryTest {
 
     FakeBuildRule dep = createFakeBuildRule("//:test", new SourcePathResolver(resolver));
     resolver.addToIndex(dep);
-    SourcePath input = new BuildTargetSourcePath(PROJECT_FILESYSTEM, dep.getBuildTarget());
+    SourcePath input = new BuildTargetSourcePath(dep.getBuildTarget());
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
             params,

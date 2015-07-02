@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -33,7 +32,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -54,7 +52,6 @@ public class ArchivesTest {
 
   @Test
   public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
@@ -78,8 +75,8 @@ public class ArchivesTest {
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(
             new TestSourcePath("simple.o"),
-            new BuildTargetSourcePath(projectFilesystem, genrule1.getBuildTarget()),
-            new BuildTargetSourcePath(projectFilesystem, genrule2.getBuildTarget())));
+            new BuildTargetSourcePath(genrule1.getBuildTarget()),
+            new BuildTargetSourcePath(genrule2.getBuildTarget())));
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.

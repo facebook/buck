@@ -100,13 +100,11 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
     librariesBuilder.add(
         new BuildTargetSourcePath(
-            getProjectFilesystem(),
             getBuildTarget(),
             getResolver().getPath(staticNativeLibraryPath)));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
       librariesBuilder.add(
           new BuildTargetSourcePath(
-              getProjectFilesystem(),
               getBuildTarget(),
               getResolver().getPath(staticCLibraryPath)));
     }

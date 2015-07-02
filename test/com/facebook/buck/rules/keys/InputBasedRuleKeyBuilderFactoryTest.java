@@ -135,7 +135,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     BuildRule rule =
         ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setSrc(new BuildTargetSourcePath(filesystem, dep.getBuildTarget()))
+            .setSrc(new BuildTargetSourcePath(dep.getBuildTarget()))
             .build(resolver, filesystem);
 
     // Build a rule key with a particular hash set for the output for the above rule.
@@ -221,7 +221,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(
-                  new BuildTargetSourcePath(filesystem, dep.getBuildTarget()));
+                  new BuildTargetSourcePath(dep.getBuildTarget()));
         };
 
     // Build a rule key with a particular hash set for the output for the above rule.

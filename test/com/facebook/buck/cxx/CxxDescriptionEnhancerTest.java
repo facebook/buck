@@ -87,7 +87,7 @@ public class CxxDescriptionEnhancerTest {
         .newGenruleBuilder(genruleTarget)
         .setOut(lexSourceName)
         .build(resolver);
-    SourcePath lexSource = new BuildTargetSourcePath(filesystem, genrule.getBuildTarget());
+    SourcePath lexSource = new BuildTargetSourcePath(genrule.getBuildTarget());
 
     // Use a regular path for our yacc source.
     String yaccSourceName = "test.yy";
@@ -132,19 +132,19 @@ public class CxxDescriptionEnhancerTest {
         CxxHeaderSourceSpec.of(
             ImmutableMap.<Path, SourcePath>of(
                 target.getBasePath().resolve(lexSourceName + ".h"),
-                new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputHeader),
+                new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputHeader),
                 target.getBasePath().resolve(yaccSourceName + ".h"),
-                new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputHeader)),
+                new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputHeader)),
             ImmutableMap.of(
                 lexSourceName + ".cc",
                 CxxSource.of(
                     CxxSource.Type.CXX,
-                    new BuildTargetSourcePath(filesystem, lex.getBuildTarget(), lexOutputSource),
+                    new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputSource),
                     ImmutableList.<String>of()),
                 yaccSourceName + ".cc",
                 CxxSource.of(
                     CxxSource.Type.CXX,
-                    new BuildTargetSourcePath(filesystem, yacc.getBuildTarget(), yaccOutputSource),
+                    new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputSource),
                     ImmutableList.<String>of())));
     assertEquals(expected, actual);
   }

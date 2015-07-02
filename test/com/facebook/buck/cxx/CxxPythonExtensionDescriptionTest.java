@@ -169,7 +169,6 @@ public class CxxPythonExtensionDescriptionTest {
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
-                        getProjectFilesystem(),
                         sharedLibraryDep.getBuildTarget(),
                         sharedLibraryOutput)),
                 ImmutableList.of(sharedLibraryOutput.toString()));
@@ -268,7 +267,7 @@ public class CxxPythonExtensionDescriptionTest {
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(
             target.getBasePath().resolve(desc.getExtensionName(target)),
-            new BuildTargetSourcePath(projectFilesystem, rule.getBuildTarget())),
+            new BuildTargetSourcePath(rule.getBuildTarget())),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableSet.<SourcePath>of(),

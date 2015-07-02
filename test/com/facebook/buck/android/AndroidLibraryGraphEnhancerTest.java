@@ -24,7 +24,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -175,7 +173,6 @@ public class AndroidLibraryGraphEnhancerTest {
   public void testDummyRDotJavaRuleInheritsJavacOptionsDeps() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FakeBuildRule dep =
         resolver.addToIndex(
             new FakeBuildRule(BuildTargetFactory.newInstance("//:dep"), pathResolver));
@@ -183,7 +180,7 @@ public class AndroidLibraryGraphEnhancerTest {
     JavacOptions options = JavacOptions.builder()
         .setSourceLevel("5")
         .setTargetLevel("5")
-        .setJavacJarPath(new BuildTargetSourcePath(filesystem, dep.getBuildTarget()))
+        .setJavacJarPath(new BuildTargetSourcePath(dep.getBuildTarget()))
         .build();
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(

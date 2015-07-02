@@ -106,9 +106,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
     if (!nativeLibraries.isEmpty()) {
       BuildRule innerJarRule = rule;
       resolver.addToIndex(innerJarRule);
-      SourcePath innerJar = new BuildTargetSourcePath(
-          innerJarRule.getProjectFilesystem(),
-          innerJarRule.getBuildTarget());
+      SourcePath innerJar = new BuildTargetSourcePath(innerJarRule.getBuildTarget());
       rule = new JarFattener(
           params.appendExtraDeps(
               Suppliers.<Iterable<BuildRule>>ofInstance(

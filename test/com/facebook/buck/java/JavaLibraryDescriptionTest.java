@@ -164,13 +164,12 @@ public class JavaLibraryDescriptionTest {
 
   @Test
   public void compilerArgWithPrebuiltJarValueReturnsJsr199Javac() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJarBuilder.createBuilder(target)
         .setBinaryJar(javacJarPath)
         .build(ruleResolver);
-    SourcePath sourcePath = new BuildTargetSourcePath(filesystem, target);
+    SourcePath sourcePath = new BuildTargetSourcePath(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);
@@ -245,13 +244,12 @@ public class JavaLibraryDescriptionTest {
 
   @Test
   public void compilerArgTakesPrecedenceOverJavacJarArg() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJarBuilder.createBuilder(target)
         .setBinaryJar(javacJarPath)
         .build(ruleResolver);
-    SourcePath sourcePath = new BuildTargetSourcePath(filesystem, target);
+    SourcePath sourcePath = new BuildTargetSourcePath(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);

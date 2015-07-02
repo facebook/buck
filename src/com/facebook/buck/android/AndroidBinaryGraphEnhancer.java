@@ -266,7 +266,6 @@ public class AndroidBinaryGraphEnhancer {
       collector.addClasspathEntry(
           aaptPackageResources,
           new BuildTargetSourcePath(
-              aaptPackageResources.getProjectFilesystem(),
               aaptPackageResources.getBuildTarget(),
               aaptPackageResources.getPathToCompiledRDotJavaFiles()));
     }

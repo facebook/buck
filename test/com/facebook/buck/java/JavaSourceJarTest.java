@@ -69,7 +69,6 @@ public class JavaSourceJarTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     SourcePath fileBased = new TestSourcePath("some/path/File.java");
     SourcePath ruleBased = new BuildTargetSourcePath(
-        new FakeProjectFilesystem(),
         BuildTargetFactory.newInstance("//cheese:cake"));
 
     JavaPackageFinder finderStub = createNiceMock(JavaPackageFinder.class);

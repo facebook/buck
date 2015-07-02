@@ -187,9 +187,7 @@ public class AppleTestDescription implements
               resolver,
               testHostAppDescription));
       testHostAppBinarySourcePath = Optional.<SourcePath>of(
-          new BuildTargetSourcePath(
-              params.getProjectFilesystem(),
-              testHostAppDescription.binary));
+          new BuildTargetSourcePath(testHostAppDescription.binary));
     } else {
       testHostApp = Optional.absent();
       testHostAppBinarySourcePath = Optional.absent();
@@ -240,7 +238,6 @@ public class AppleTestDescription implements
     AppleResources.collectResourceDirsAndFiles(
         params.getTargetGraph(),
         Preconditions.checkNotNull(params.getTargetGraph().get(params.getBuildTarget())),
-        params.getProjectFilesystem(),
         resourceDirsBuilder,
         dirsContainingResourceDirsBuilder,
         resourceFilesBuilder);

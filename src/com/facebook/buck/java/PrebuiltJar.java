@@ -230,7 +230,7 @@ public class PrebuiltJar extends AbstractBuildRule
   }
 
   public SourcePath getBinaryJar() {
-    return new BuildTargetSourcePath(getProjectFilesystem(), getBuildTarget());
+    return new BuildTargetSourcePath(getBuildTarget());
   }
 
 }

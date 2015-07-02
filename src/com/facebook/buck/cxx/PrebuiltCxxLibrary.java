@@ -118,9 +118,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
             cxxPlatform.getFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR);
 
-    return new BuildTargetSourcePath(
-        sharedLibrary.getProjectFilesystem(),
-        sharedLibrary.getBuildTarget());
+    return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
   }
 
   @Override
