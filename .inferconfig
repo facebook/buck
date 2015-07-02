@@ -1,0 +1,17 @@
+{
+  "checkers_whitelist": [
+    "src",
+    "plugin"
+  ],
+  "eradicate_whitelist": [
+    "src",
+    "plugin"
+  ],
+  "eradicate_blacklist": [
+    "src/com/facebook/buck/junit"
+  ],
+  "infer_whitelist": [
+    "src",
+    "plugin"
+  ]
+}
