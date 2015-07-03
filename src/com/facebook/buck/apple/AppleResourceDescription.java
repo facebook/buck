@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -59,6 +58,6 @@ public class AppleResourceDescription implements Description<AppleResourceDescri
   public static class Arg {
     public Set<SourcePath> dirs;
     public Set<SourcePath> files;
-    public Optional<Map<String, Map<String, SourcePath>>> variants;
+    public Optional<Set<SourcePath>> variants;
   }
 }

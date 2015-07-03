@@ -110,6 +110,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -1990,12 +1991,9 @@ public class ProjectGeneratorTest {
         .setFiles(ImmutableSet.<SourcePath>of())
         .setDirs(ImmutableSet.<SourcePath>of())
         .setVariants(
-            Optional.<Map<String, Map<String, SourcePath>>>of(
-                ImmutableMap.<String, Map<String, SourcePath>>of(
-                    "Bar.storyboard",
-                    ImmutableMap.<String, SourcePath>of(
-                        "Base",
-                        new TestSourcePath("Base.lproj/Bar.storyboard")))))
+            Optional.<Set<SourcePath>>of(
+                ImmutableSet.<SourcePath>of(
+                    new TestSourcePath("Base.lproj/Bar.storyboard"))))
         .build();
     BuildTarget fooLibraryTarget = BuildTarget.builder("//foo", "lib").build();
     TargetNode<?> fooLibraryNode = AppleLibraryBuilder
@@ -2022,14 +2020,11 @@ public class ProjectGeneratorTest {
     PBXVariantGroup storyboardGroup = (PBXVariantGroup) Iterables.get(
         resourcesGroup.getChildren(),
         0);
-    PBXFileReference baseStoryboardReference =
-        storyboardGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
-            "Base",
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                Paths.get("Base.lproj/Bar.storyboard")));
+    List<PBXReference> storyboardGroupChildren = storyboardGroup.getChildren();
+    assertEquals(1, storyboardGroupChildren.size());
+    assertTrue(storyboardGroupChildren.get(0) instanceof PBXFileReference);
+    PBXFileReference baseStoryboardReference = (PBXFileReference) storyboardGroupChildren.get(0);
 
-    // Even though the name doesn't have an extension..
     assertEquals("Base", baseStoryboardReference.getName());
 
     // Make sure the file type is set from the path.

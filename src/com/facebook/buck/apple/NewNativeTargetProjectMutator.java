@@ -48,6 +48,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleDescription;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -55,6 +56,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -460,25 +462,34 @@ public class NewNativeTargetProjectMutator {
         phase.getFiles().add(buildFile);
       }
 
-      for (Map.Entry<String, Map<String, SourcePath>> virtualOutputEntry :
-          resource.variants.get().entrySet()) {
-        String variantName = Paths.get(virtualOutputEntry.getKey()).getFileName().toString();
-        PBXVariantGroup variantGroup =
-            resourcesGroup.getOrCreateChildVariantGroupByName(variantName);
-
-        PBXBuildFile buildFile = new PBXBuildFile(variantGroup);
-        phase.getFiles().add(buildFile);
-
-        for (Map.Entry<String, SourcePath> childVirtualNameEntry :
-            virtualOutputEntry.getValue().entrySet()) {
-          SourceTreePath sourceTreePath = new SourceTreePath(
-              PBXReference.SourceTree.SOURCE_ROOT,
-              pathRelativizer.outputPathToSourcePath(childVirtualNameEntry.getValue()));
-
-          variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
-              childVirtualNameEntry.getKey(),
-              sourceTreePath);
+      Map<String, PBXVariantGroup> variantGroups = Maps.newHashMap();
+      for (SourcePath variantSourcePath : resource.variants.get()) {
+        String lprojSuffix = ".lproj";
+        Path variantFilePath = sourcePathResolver.apply(variantSourcePath);
+        Path variantDirectory = variantFilePath.getParent();
+        if (variantDirectory == null || !variantDirectory.toString().endsWith(lprojSuffix)) {
+          throw new HumanReadableException(
+              "Variant files have to be in a directory with name ending in '.lproj', " +
+                  "but '%s' is not.",
+              variantFilePath);
         }
+        String variantDirectoryName = variantDirectory.getFileName().toString();
+        String variantLocalization =
+            variantDirectoryName.substring(0, variantDirectoryName.length() - lprojSuffix.length());
+        String variantFileName = variantFilePath.getFileName().toString();
+        PBXVariantGroup variantGroup = variantGroups.get(variantFileName);
+        if (variantGroup == null) {
+          variantGroup = resourcesGroup.getOrCreateChildVariantGroupByName(variantFileName);
+          PBXBuildFile buildFile = new PBXBuildFile(variantGroup);
+          phase.getFiles().add(buildFile);
+          variantGroups.put(variantFileName, variantGroup);
+        }
+        SourceTreePath sourceTreePath = new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            pathRelativizer.outputPathToSourcePath(variantSourcePath));
+        variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
+            variantLocalization,
+            sourceTreePath);
       }
     }
     LOG.debug("Added resources build phase %s", phase);
