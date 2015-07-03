@@ -66,6 +66,9 @@ interface AbstractCxxPlatform {
   List<String> getLdflags();
   Multimap<Linker.LinkableDepType, String> getRuntimeLdflags();
 
+  Tool getStrip();
+  List<String> getStripFlags();
+
   Archiver getAr();
   List<String> getArflags();
 

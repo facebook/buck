@@ -35,6 +35,7 @@ public class CxxPlatformUtils {
           .setCxxpp(new HashedFileTool(Paths.get("tool")))
           .setCxxld(new HashedFileTool(Paths.get("tool")))
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("tool"))))
+          .setStrip(new HashedFileTool(Paths.get("tool")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("tool"))))
           .setSharedLibraryExtension(".so")
           .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)

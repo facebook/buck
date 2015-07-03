@@ -136,6 +136,12 @@ public class AppleCxxPlatforms {
         "apple-ar",
         version);
 
+    Tool strip = new VersionedTool(
+        getToolPath("strip", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "apple-strip",
+        version);
+
     Tool actool = new VersionedTool(
         getToolPath("actool", toolSearchPaths, executableFinder),
         ImmutableList.<String>of(),
@@ -201,6 +207,7 @@ public class AppleCxxPlatforms {
         Optional.of(CxxPlatform.LinkerType.DARWIN),
         clangXxPath,
         ldflags,
+        strip,
         new BsdArchiver(ar),
         cflags,
         ImmutableList.<String>of(),

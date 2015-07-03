@@ -65,16 +65,18 @@ public class FakeAppleRuleDescriptions {
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
           new FakeBuckConfig(),
-          new FakeExecutableFinder(ImmutableSet.of(
-              Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
-              Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
-              Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
-              Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
-              Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
-              Paths.get("usr/bin/actool"),
-              Paths.get("usr/bin/ibtool"),
-              Paths.get("Tools/otest"),
-              Paths.get("usr/bin/xctest"))));
+          new FakeExecutableFinder(
+              ImmutableSet.of(
+                  Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
+                  Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
+                  Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+                  Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"),
+                  Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"),
+                  Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
+                  Paths.get("usr/bin/actool"),
+                  Paths.get("usr/bin/ibtool"),
+                  Paths.get("Tools/otest"),
+                  Paths.get("usr/bin/xctest"))));
 
   private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();
 

@@ -34,7 +34,6 @@ public class NdkLibraryBuilder extends AbstractNodeBuilder<NdkLibraryDescription
   private static final NdkCxxPlatform DEFAULT_NDK_PLATFORM =
       NdkCxxPlatform.builder()
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
-          .setObjcopy(Paths.get("tool"))
           .setCxxRuntime(NdkCxxPlatforms.CxxRuntime.GNUSTL)
           .setCxxSharedRuntimePath(Paths.get("runtime"))
           .build();

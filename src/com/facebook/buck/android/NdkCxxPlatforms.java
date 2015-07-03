@@ -376,6 +376,8 @@ public class NdkCxxPlatforms {
             // We always pass the runtime library on the command line, so setting this flag
             // means the resulting link will only use it if it was actually needed it.
             "--as-needed")
+        .setStrip(
+            getGccTool(ndkRoot, targetConfiguration, host, "strip", version, executableFinder))
         .setAr(
             new GnuArchiver(
                 getGccTool(ndkRoot, targetConfiguration, host, "ar", version, executableFinder)))
@@ -399,7 +401,6 @@ public class NdkCxxPlatforms {
 
     return NdkCxxPlatform.builder()
         .setCxxPlatform(cxxPlatform)
-        .setObjcopy(getGccToolPath(ndkRoot, targetConfiguration, host, "objcopy", executableFinder))
         .setCxxRuntime(cxxRuntime)
         .setCxxSharedRuntimePath(
             getCxxRuntimeLibsDirectory(ndkRoot, targetConfiguration, cxxRuntime)

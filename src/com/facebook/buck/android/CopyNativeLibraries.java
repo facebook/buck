@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
-import com.facebook.buck.cxx.ObjcopyStep;
+import com.facebook.buck.cxx.StripStep;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
@@ -147,11 +147,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
               .resolve(entry.getKey().getSecond());
       NdkCxxPlatform platform =
           Preconditions.checkNotNull(nativePlatforms.get(entry.getKey().getFirst()));
-      Path objcopy = platform.getObjcopy();
       steps.add(new MkdirStep(destination.getParent()));
       steps.add(
-          new ObjcopyStep(
-              objcopy,
+          new StripStep(
+              platform.getCxxPlatform().getStrip().getCommandPrefix(getResolver()),
               ImmutableList.of("--strip-unneeded"),
               getResolver().getPath(entry.getValue()),
               destination));

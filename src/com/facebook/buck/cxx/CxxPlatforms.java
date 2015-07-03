@@ -76,6 +76,7 @@ public class CxxPlatforms {
       Optional<CxxPlatform.LinkerType> linkerType,
       Tool ld,
       Iterable<String> ldFlags,
+      Tool strip,
       Archiver ar,
       ImmutableList<String> cflags,
       ImmutableList<String> cppflags,
@@ -99,6 +100,7 @@ public class CxxPlatforms {
         .setLd(getLd(flavor, platform, config, linkerType, getTool(flavor, "ld", config).or(ld)))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass())).or(ar))
+        .setStrip(getTool(flavor, "strip", config).or(strip))
         .setLex(getTool(flavor, "lex", config).or(lex))
         .setYacc(getTool(flavor, "yacc", config).or(yacc))
         .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))
@@ -146,6 +148,7 @@ public class CxxPlatforms {
         )
       )
       .setAr(new GnuArchiver(getTool(flavor, "ar", config).or(defaultPlatform.getAr())))
+      .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
       .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
       .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
       .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))

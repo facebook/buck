@@ -32,8 +32,6 @@ interface AbstractNdkCxxPlatform {
 
   CxxPlatform getCxxPlatform();
 
-  Path getObjcopy();
-
   NdkCxxPlatforms.CxxRuntime getCxxRuntime();
 
   /**

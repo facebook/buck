@@ -46,6 +46,7 @@ public class DefaultCxxPlatforms {
   private static final Path DEFAULT_CXXLD = Paths.get("/usr/bin/g++");
   private static final Path DEFAULT_LD = Paths.get("/usr/bin/ld");
   private static final Path DEFAULT_AR = Paths.get("/usr/bin/ar");
+  private static final Path DEFAULT_STRIP = Paths.get("/usr/bin/strip");
   private static final Path DEFAULT_LEX = Paths.get("/usr/bin/flex");
   private static final Path DEFAULT_YACC = Paths.get("/usr/bin/bison");
 
@@ -74,6 +75,7 @@ public class DefaultCxxPlatforms {
         Optional.<CxxPlatform.LinkerType>absent(),
         new HashedFileTool(DEFAULT_LD),
         ImmutableList.<String>of(),
+        new HashedFileTool(DEFAULT_STRIP),
         new GnuArchiver(new HashedFileTool(DEFAULT_AR)),
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),

@@ -23,17 +23,21 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /**
- * Run objcopy on a binary.
+ * Run strip on a binary.
  */
-public class ObjcopyStep extends ShellStep {
+public class StripStep extends ShellStep {
 
-  private final Path objcopy;
+  private final ImmutableList<String> stripCommandPrefix;
   private final ImmutableList<String> flags;
   private final Path source;
   private final Path destination;
 
-  public ObjcopyStep(Path objcopy, ImmutableList<String> flags, Path source, Path destination) {
-    this.objcopy = objcopy;
+  public StripStep(
+      ImmutableList<String> stripCommandPrefix,
+      ImmutableList<String> flags,
+      Path source,
+      Path destination) {
+    this.stripCommandPrefix = stripCommandPrefix;
     this.flags = flags;
     this.source = source;
     this.destination = destination;
@@ -42,16 +46,17 @@ public class ObjcopyStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(objcopy.toString())
+        .addAll(stripCommandPrefix)
         .addAll(flags)
         .add(source.toString())
+        .add("-o")
         .add(destination.toString())
         .build();
   }
 
   @Override
   public String getShortName() {
-    return "objcopy";
+    return "strip";
   }
 
 }
