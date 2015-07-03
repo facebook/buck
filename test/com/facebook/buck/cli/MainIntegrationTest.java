@@ -75,6 +75,15 @@ public class MainIntegrationTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void testConfigOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "includes_override", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("targets", "--config", "buildfile.includes=//includes.py")
+        .assertSuccess();
+  }
+
   private String getUsageString() {
     return Joiner.on('\n').join(
         "buck build tool",

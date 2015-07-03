@@ -39,8 +39,21 @@ Disables the build artifact cache.
 {call buck.param}
   {param name: 'buildfile:includes' /}
   {param desc}
-Overrides the common includes specified in
-<a href="{ROOT}concept/buckconfig.html#buildfile">.buckconfig</a>.
+Overrides the common includes specified in <a href="{ROOT}concept/buckconfig.html#buildfile">.buckconfig</a>.
+<br>
+<p>Note that overriding values of <code>.buckconfig</code> from the command line
+makes reproducing the build very hard. The preferred method of overriding values
+of <code>.buckconfig</code> is via <code>.buckconfig.local</code>.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'config' /}
+  {param desc}
+Overrides settings specified in <a href="{ROOT}concept/buckconfig.html#buildfile">.buckconfig</a>.
+
+<p>
+<pre>buck build --config cache.mode=dir ...</pre>
 
 <p>Note that overriding values of <code>.buckconfig</code> from the command line
 makes reproducing the build very hard. The preferred method of overriding values
