@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.io;
 
 import java.nio.ByteBuffer;
 
-public interface ArchiveScrubber {
+public interface FileScrubber {
 
   @SuppressWarnings("serial")
   class ScrubException extends Exception {
@@ -28,6 +28,6 @@ public interface ArchiveScrubber {
   }
 
 
-  void scrubArchive(ByteBuffer archive) throws ScrubException;
+  void scrubArchive(ByteBuffer file) throws ScrubException;
 
 }

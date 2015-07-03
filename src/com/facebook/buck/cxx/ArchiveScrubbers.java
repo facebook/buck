@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.FileScrubber;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -31,46 +32,46 @@ public class ArchiveScrubbers {
 
   private ArchiveScrubbers() {}
 
-  public static ArchiveScrubber createDateUidGidScrubber(final byte[] expectedGlobalHeader) {
-    return new ArchiveScrubber() {
+  public static FileScrubber createDateUidGidScrubber(final byte[] expectedGlobalHeader) {
+    return new FileScrubber() {
 
       /**
        * Efficiently modifies the archive backed by the given buffer to remove any non-deterministic
        * meta-data such as timestamps, UIDs, and GIDs.
-       * @param archive a {@link ByteBuffer} wrapping the contents of the archive.
+       * @param file a {@link ByteBuffer} wrapping the contents of the archive.
        */
       @SuppressWarnings("PMD.AvoidUsingOctalValues")
       @Override
-      public void scrubArchive(ByteBuffer archive) throws ScrubException {
+      public void scrubArchive(ByteBuffer file) throws ScrubException {
         try {
 
           // Grab the global header chunk and verify it's accurate.
-          byte[] globalHeader = getBytes(archive, expectedGlobalHeader.length);
+          byte[] globalHeader = getBytes(file, expectedGlobalHeader.length);
           checkArchive(
               Arrays.equals(expectedGlobalHeader, globalHeader),
               "invalid global header");
 
           // Iterate over all the file meta-data entries, injecting zero's for timestamp,
           // UID, and GID.
-          while (archive.hasRemaining()) {
-        /* File name */ getBytes(archive, 16);
+          while (file.hasRemaining()) {
+        /* File name */ getBytes(file, 16);
 
             // Inject 0's for the non-deterministic meta-data entries.
-        /* File modification timestamp */ putIntAsDecimalString(archive, 12, 0);
-        /* Owner ID */ putIntAsDecimalString(archive, 6, 0);
-        /* Group ID */ putIntAsDecimalString(archive, 6, 0);
+        /* File modification timestamp */ putIntAsDecimalString(file, 12, 0);
+        /* Owner ID */ putIntAsDecimalString(file, 6, 0);
+        /* Group ID */ putIntAsDecimalString(file, 6, 0);
 
-        /* File mode */ putIntAsOctalString(archive, 8, 0100644);
-            int fileSize = getDecimalStringAsInt(archive, 10);
+        /* File mode */ putIntAsOctalString(file, 8, 0100644);
+            int fileSize = getDecimalStringAsInt(file, 10);
 
             // Lastly, grab the file magic entry and verify it's accurate.
-            byte[] fileMagic = getBytes(archive, 2);
+            byte[] fileMagic = getBytes(file, 2);
             checkArchive(
                 Arrays.equals(END_OF_FILE_HEADER_MARKER, fileMagic),
                 "invalid file magic");
 
             // Skip the file data.
-            archive.position(archive.position() + fileSize + fileSize % 2);
+            file.position(file.position() + fileSize + fileSize % 2);
           }
 
           // Convert any low-level exceptions to `ArchiveExceptions`s.
@@ -120,9 +121,9 @@ public class ArchiveScrubbers {
   }
 
   public static void checkArchive(boolean expression, String msg)
-      throws ArchiveScrubber.ScrubException {
+      throws FileScrubber.ScrubException {
     if (!expression) {
-      throw new ArchiveScrubber.ScrubException(msg);
+      throw new FileScrubber.ScrubException(msg);
     }
   }
 

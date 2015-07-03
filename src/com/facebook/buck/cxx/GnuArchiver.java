@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -35,7 +36,7 @@ public class GnuArchiver implements Archiver {
   }
 
   @Override
-  public ImmutableList<ArchiveScrubber> getScrubbers() {
+  public ImmutableList<FileScrubber> getScrubbers() {
     return ImmutableList.of(ArchiveScrubbers.createDateUidGidScrubber(EXPECTED_GLOBAL_HEADER));
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -32,11 +33,11 @@ import java.nio.file.StandardOpenOption;
 public class ArchiveScrubberStep implements Step {
 
   private final Path archive;
-  private final ImmutableList<ArchiveScrubber> scrubbers;
+  private final ImmutableList<FileScrubber> scrubbers;
 
   public ArchiveScrubberStep(
       Path archive,
-      ImmutableList<ArchiveScrubber> scrubbers) {
+      ImmutableList<FileScrubber> scrubbers) {
     this.archive = archive;
     this.scrubbers = scrubbers;
   }
@@ -49,13 +50,13 @@ public class ArchiveScrubberStep implements Step {
   public int execute(ExecutionContext context) throws InterruptedException {
     Path archivePath = context.getProjectFilesystem().resolve(archive);
     try {
-      for (ArchiveScrubber scrubber : scrubbers) {
+      for (FileScrubber scrubber : scrubbers) {
         try (FileChannel channel = readWriteChannel(archivePath)) {
           MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
           scrubber.scrubArchive(map);
         }
       }
-    } catch (IOException | ArchiveScrubber.ScrubException e) {
+    } catch (IOException | FileScrubber.ScrubException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", archivePath);
       return 1;
     }
