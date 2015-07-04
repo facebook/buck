@@ -57,6 +57,22 @@ public class DefaultCxxPlatforms {
   public static CxxPlatform build(
       Platform platform,
       CxxBuckConfig config) {
+    String sharedLibraryExtension;
+    switch (platform) {
+      case LINUX:
+        sharedLibraryExtension = "so";
+        break;
+      case WINDOWS:
+        sharedLibraryExtension = "dll";
+        break;
+      case MACOS:
+        sharedLibraryExtension = "dylib";
+        break;
+      //$CASES-OMITTED$
+      default:
+        throw new RuntimeException(String.format("Unsupported platform: %s", platform));
+    }
+
     return CxxPlatforms.build(
         FLAVOR,
         platform,
@@ -81,6 +97,7 @@ public class DefaultCxxPlatforms {
         ImmutableList.<String>of(),
         Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
         Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)),
+        sharedLibraryExtension,
         Optional.<DebugPathSanitizer>absent());
   }
 

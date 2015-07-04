@@ -82,6 +82,7 @@ public class CxxPlatforms {
       ImmutableList<String> cppflags,
       Optional<Tool> lex,
       Optional<Tool> yacc,
+      String sharedLibraryExtension,
       Optional<DebugPathSanitizer> debugPathSanitizer) {
     // TODO(user, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
@@ -103,7 +104,7 @@ public class CxxPlatforms {
         .setStrip(getTool(flavor, "strip", config).or(strip))
         .setLex(getTool(flavor, "lex", config).or(lex))
         .setYacc(getTool(flavor, "yacc", config).or(yacc))
-        .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))
+        .setSharedLibraryExtension(sharedLibraryExtension)
         .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cflags);
@@ -142,16 +143,13 @@ public class CxxPlatforms {
       .setCxxpp(getTool(flavor, "cxxpp", config).or(defaultPlatform.getCxxpp()))
       .setCxxld(getTool(flavor, "cxxld", config).or(defaultPlatform.getCxxld()))
       .setLd(
-        getLd(
-          flavor, platform, config, linkerType, getTool(flavor, "ld", config)
-            .or(defaultPlatform.getLd().getTool())
-        )
-      )
+          getLd(flavor, platform, config, linkerType, getTool(flavor, "ld", config)
+              .or(defaultPlatform.getLd().getTool())))
       .setAr(new GnuArchiver(getTool(flavor, "ar", config).or(defaultPlatform.getAr())))
       .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
       .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
       .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
-      .setSharedLibraryExtension(CxxPlatforms.getSharedLibraryExtension(platform))
+      .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
       .setDebugPathSanitizer(defaultPlatform.getDebugPathSanitizer());
 
     if (config.getDefaultPlatform().isPresent()) {
@@ -186,18 +184,6 @@ public class CxxPlatforms {
         }
       }
     };
-  }
-
-  private static String getSharedLibraryExtension(Platform platform) {
-    switch (platform) {
-      case MACOS:
-        return "dylib";
-      case WINDOWS:
-        return "dll";
-      // $CASES-OMITTED$
-      default:
-        return "so";
-    }
   }
 
   private static Linker getLd(

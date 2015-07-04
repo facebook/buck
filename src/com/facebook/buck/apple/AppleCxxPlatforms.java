@@ -23,10 +23,10 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.DebugPathSanitizer;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -213,6 +213,7 @@ public class AppleCxxPlatforms {
         ImmutableList.<String>of(),
         getOptionalTool("lex", toolSearchPaths, executableFinder, version),
         getOptionalTool("yacc", toolSearchPaths, executableFinder, version),
+        "dylib",
         Optional.of(debugPathSanitizer));
 
     return AppleCxxPlatform.builder()
