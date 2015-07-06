@@ -96,6 +96,9 @@ public class BuckConfig {
   public static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
   private static final String DEFAULT_BUCK_CONFIG_DIRECTORY_NAME = ".buckconfig.d";
 
+  private static final Path GLOBAL_BUCK_CONFIG_FILE_PATH = Paths.get("/etc/buckconfig");
+  private static final Path GLOBAL_BUCK_CONFIG_DIRECTORY_PATH = Paths.get("/etc/buckconfig.d");
+
   private static final String ALIAS_SECTION_HEADER = "alias";
 
   /**
@@ -799,6 +802,20 @@ public class BuckConfig {
       ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
       throws IOException {
     ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
+
+    File globalConfigDir = GLOBAL_BUCK_CONFIG_DIRECTORY_PATH.toFile();
+    if (globalConfigDir.isDirectory()) {
+      File globalConfigFiles[] = globalConfigDir.listFiles();
+      Arrays.sort(globalConfigFiles);
+      for (File globalConfigFile : globalConfigFiles) {
+        configFileBuilder.add(globalConfigFile);
+      }
+    }
+    File globalConfigFile = GLOBAL_BUCK_CONFIG_FILE_PATH.toFile();
+    if (globalConfigFile.isFile()) {
+      configFileBuilder.add(globalConfigFile);
+    }
+
     Path homeDirectory = Paths.get(System.getProperty("user.home"));
     File userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME).toFile();
     if (userConfigDir.isDirectory()) {
@@ -812,6 +829,7 @@ public class BuckConfig {
     if (userConfigFile.isFile()) {
       configFileBuilder.add(userConfigFile);
     }
+
     File configFile = projectFilesystem.getFileForRelativePath(DEFAULT_BUCK_CONFIG_FILE_NAME);
     if (configFile.isFile()) {
       configFileBuilder.add(configFile);
