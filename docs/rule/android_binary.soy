@@ -26,16 +26,7 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'manifest' /}
-  {param desc}
-  Relative path to the Android manifest for the APK.
-  The common case is that the manifest will be in the same directory
-  as the <code>android_binary()</code>, in which case this will
-  simply be <code>'AndroidManifest.xml'</code>, but it can also reference an
-  {sp}{call buck.android_manifest /} rule.
-  {/param}
-{/call}
+{call android_common.manifest_apk_arg /}
 
 {call buck.arg}
   {param name: 'keystore' /}
@@ -143,24 +134,7 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name : 'deps' /}
-  {param default : '[]' /}
-  {param desc}
-  List of build targets whose corresponding compiled Java code,
-  Android resources, and native libraries will be included in the APK.
-  From the transitive closure of these dependencies, the outputs of rules of the following type will be included in the APK:
-  <ul>
-    <li><code>android_library()</code>
-    <li><code>android_resource()</code>
-    <li><code>java_library()</code>
-    <li><code>java_binary()</code>
-    <li><code>prebuilt_jar()</code>
-    <li><code>ndk_library()</code>
-    <li><code>prebuilt_native_library()</code>
-  </ul>
-  {/param}
-{/call}
+{call android_common.deps_apk_arg /}
 
 {call buck.visibility_arg /}
 

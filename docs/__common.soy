@@ -149,6 +149,7 @@
             'android_aar',
             'android_binary',
             'android_build_config',
+            'android_instrumentation_apk',
             'android_library',
             'android_manifest',
             'android_prebuilt_aar',
@@ -511,6 +512,11 @@
 /***/
 {template .android_resource}
 {call .ruleLink}{param name : 'android_resource' /}{/call}
+{/template}
+
+/***/
+{template .apk_genrule}
+{call .ruleLink}{param name : 'apk_genrule' /}{/call}
 {/template}
 
 /***/
