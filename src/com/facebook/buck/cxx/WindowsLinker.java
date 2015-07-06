@@ -16,8 +16,12 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * A specialization of {@link Linker} containing information specific to the Windows implementation.
@@ -30,8 +34,13 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
-  public Tool getTool() {
-    return tool;
+  public ImmutableSortedSet<SourcePath> getInputs() {
+    return tool.getInputs();
+  }
+
+  @Override
+  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+    return tool.getCommandPrefix(resolver);
   }
 
   @Override
@@ -42,6 +51,13 @@ public class WindowsLinker implements Linker {
   @Override
   public Iterable<String> soname(String arg) {
     return ImmutableList.of(arg);
+  }
+
+  @Override
+  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    return builder
+        .setReflectively("tool", tool)
+        .setReflectively("type", getClass().getSimpleName());
   }
 
 }

@@ -22,12 +22,7 @@ import com.facebook.buck.rules.Tool;
  * An object wrapping a linker, providing its source path and an interface to decorate
  * arguments with specific flags.
  */
-public interface Linker {
-
-  /**
-   * @return {@link Tool} representing the linker.
-   */
-  Tool getTool();
+public interface Linker extends Tool {
 
   /**
    * @return the platform-specific way to specify that the library represented by the
@@ -44,7 +39,7 @@ public interface Linker {
   /**
    * The various ways to link an output file.
    */
-  public static enum LinkType {
+  enum LinkType {
 
     // Link as standalone executable.
     EXECUTABLE,
@@ -61,7 +56,7 @@ public interface Linker {
   /**
    * The various ways to link in dependencies.
    */
-  public static enum LinkableDepType {
+  enum LinkableDepType {
 
     // Provide input suitable for statically linking this linkable (e.g. return references to
     // static libraries, libfoo.a).
@@ -77,7 +72,7 @@ public interface Linker {
    * The various styles of runtime library to which we can link shared objects.  In some cases, it's
    * useful to link against a static version of the usual dynamic support library.
    */
-  public static enum CxxRuntimeType {
+  enum CxxRuntimeType {
     // Link in the C++ runtime library dynamically
     DYNAMIC,
 

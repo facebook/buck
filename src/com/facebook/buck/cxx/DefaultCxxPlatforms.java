@@ -59,7 +59,6 @@ public class DefaultCxxPlatforms {
     if (platform == Platform.MACOS) {
       return CxxPlatforms.build(
           FLAVOR,
-          platform,
           config,
           new HashedFileTool(DEFAULT_AS),
           new HashedFileTool(DEFAULT_OSX_C_FRONTEND),
@@ -67,9 +66,8 @@ public class DefaultCxxPlatforms {
           new ClangCompiler(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
           new HashedFileTool(DEFAULT_OSX_C_FRONTEND),
           new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND),
-          new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND),
-          Optional.<CxxPlatform.LinkerType>absent(),
-          new HashedFileTool(DEFAULT_LD),
+          new DarwinLinker(new HashedFileTool(DEFAULT_LD)),
+          new DarwinLinker(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
           ImmutableList.<String>of(),
           new HashedFileTool(DEFAULT_STRIP),
           new BsdArchiver(new HashedFileTool(DEFAULT_AR)),
@@ -96,7 +94,6 @@ public class DefaultCxxPlatforms {
 
     return CxxPlatforms.build(
         FLAVOR,
-        platform,
         config,
         new HashedFileTool(DEFAULT_AS),
         new HashedFileTool(DEFAULT_C_FRONTEND),
@@ -104,9 +101,8 @@ public class DefaultCxxPlatforms {
         new DefaultCompiler(new HashedFileTool(DEFAULT_CXX_FRONTEND)),
         new HashedFileTool(DEFAULT_C_FRONTEND),
         new HashedFileTool(DEFAULT_CXX_FRONTEND),
-        new HashedFileTool(DEFAULT_CXX_FRONTEND),
-        Optional.<CxxPlatform.LinkerType>absent(),
-        new HashedFileTool(DEFAULT_LD),
+        new GnuLinker(new HashedFileTool(DEFAULT_LD)),
+        new GnuLinker(new HashedFileTool(DEFAULT_CXX_FRONTEND)),
         ImmutableList.<String>of(),
         new HashedFileTool(DEFAULT_STRIP),
         new GnuArchiver(new HashedFileTool(DEFAULT_AR)),

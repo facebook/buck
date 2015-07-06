@@ -22,13 +22,13 @@ import com.facebook.buck.cxx.ClangCompiler;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
+import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -195,7 +195,6 @@ public class AppleCxxPlatforms {
 
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
-        Platform.MACOS,
         config,
         clangPath,
         clangPath,
@@ -203,9 +202,8 @@ public class AppleCxxPlatforms {
         new ClangCompiler(clangXxPath),
         clangPath,
         clangXxPath,
-        clangXxPath,
-        Optional.of(CxxPlatform.LinkerType.DARWIN),
-        clangXxPath,
+        new DarwinLinker(clangPath),
+        new DarwinLinker(clangXxPath),
         ldflags,
         strip,
         new BsdArchiver(ar),
