@@ -726,21 +726,20 @@ public class ProjectGenerator {
     // and add any shell script rules here
     ImmutableList.Builder<TargetNode<?>> preScriptPhases = ImmutableList.builder();
     ImmutableList.Builder<TargetNode<?>> postScriptPhases = ImmutableList.builder();
-    boolean skipRNBundle = ReactNativeFlavors.skipBundling(buildTargetNode.getBuildTarget());
     if (bundle.isPresent() && targetNode != bundle.get()) {
       collectBuildScriptDependencies(
           targetGraph.getAll(bundle.get().getDeclaredDeps()),
-          skipRNBundle,
           preScriptPhases,
           postScriptPhases);
     }
     collectBuildScriptDependencies(
         targetGraph.getAll(targetNode.getDeclaredDeps()),
-        skipRNBundle,
         preScriptPhases,
         postScriptPhases);
     mutator.setPreBuildRunScriptPhases(preScriptPhases.build());
     mutator.setPostBuildRunScriptPhases(postScriptPhases.build());
+    boolean skipRNBundle = ReactNativeFlavors.skipBundling(buildTargetNode.getBuildTarget());
+    mutator.skipReactNativeBundle(skipRNBundle);
 
     if (skipRNBundle && reactNativeServer.isPresent()) {
       mutator.setAdditionalRunScripts(
@@ -1161,13 +1160,12 @@ public class ProjectGenerator {
 
   private void collectBuildScriptDependencies(
       Iterable<TargetNode<?>> targetNodes,
-      boolean skipRNBundle,
       ImmutableList.Builder<TargetNode<?>> preRules,
       ImmutableList.Builder<TargetNode<?>> postRules) {
     for (TargetNode<?> targetNode : targetNodes) {
       BuildRuleType type = targetNode.getType();
       if (type.equals(XcodePostbuildScriptDescription.TYPE) ||
-          (type.equals(IosReactNativeLibraryDescription.TYPE) && !skipRNBundle)) {
+          type.equals(IosReactNativeLibraryDescription.TYPE)) {
         postRules.add(targetNode);
       } else if (
           type.equals(XcodePrebuildScriptDescription.TYPE) ||

@@ -20,6 +20,7 @@ import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSinglet
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.getSingletonPhaseByType;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -108,6 +109,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1932,14 +1934,21 @@ public class ProjectGeneratorTest {
     assertThat(target.getName(), equalTo("//foo:bundle#rn_no_bundle"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
-    PBXShellScriptBuildPhase shellScriptBuildPhase =
-        getSingletonPhaseByType(
-            target,
-            PBXShellScriptBuildPhase.class);
+    Iterator<PBXShellScriptBuildPhase> phases = Iterables.filter(
+        target.getBuildPhases(),
+        PBXShellScriptBuildPhase.class).iterator();
 
+    assertThat(phases.hasNext(), is(true));
     assertThat(
-        shellScriptBuildPhase.getShellScript(),
+        phases.next().getShellScript(),
+        containsString("rm -rf ${JS_OUT}"));
+
+    assertThat(phases.hasNext(), is(true));
+    assertThat(
+        phases.next().getShellScript(),
         endsWith("js/react-native/runServer.sh"));
+
+    assertThat(phases.hasNext(), is(false));
   }
 
   @Test

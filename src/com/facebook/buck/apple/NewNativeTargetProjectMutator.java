@@ -104,6 +104,7 @@ public class NewNativeTargetProjectMutator {
   private Path assetCatalogBuildScript = Paths.get("");
   private Iterable<TargetNode<?>> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
+  private boolean skipRNBundle = false;
   private Collection<Path> additionalRunScripts = ImmutableList.of();
 
   public NewNativeTargetProjectMutator(
@@ -201,6 +202,11 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(Iterable<TargetNode<?>> phases) {
     postBuildRunScriptPhases = phases;
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator skipReactNativeBundle(boolean skipRNBundle) {
+    this.skipRNBundle = skipRNBundle;
     return this;
   }
 
@@ -634,16 +640,23 @@ public class NewNativeTargetProjectMutator {
     ImmutableList.Builder<String> script = ImmutableList.builder();
     script.add("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}");
     script.add("JS_OUT=${BASE_DIR}/" + args.bundleName);
-    script.add("mkdir -p `dirname ${JS_OUT}`");
 
-    script.add(Joiner.on(" ").join(
-            ReactNativeBundle.getBundleScript(
-                filesystem.resolve(sourcePathResolver.apply(description.getReactNativePackager())),
-                filesystem.resolve(sourcePathResolver.apply(args.entryPath)),
-                ReactNativePlatform.IOS,
-                ReactNativeFlavors.isDevMode(targetNode.getBuildTarget()),
-                "${JS_OUT}",
-                "${BASE_DIR}")));
+    if (skipRNBundle) {
+      // Working in server mode: make sure that we clear the bundle from a previous build.
+      script.add("rm -rf ${JS_OUT}");
+    } else {
+      script.add("mkdir -p `dirname ${JS_OUT}`");
+
+      script.add(Joiner.on(" ").join(
+              ReactNativeBundle.getBundleScript(
+                  filesystem.resolve(
+                      sourcePathResolver.apply(description.getReactNativePackager())),
+                  filesystem.resolve(sourcePathResolver.apply(args.entryPath)),
+                  ReactNativePlatform.IOS,
+                  ReactNativeFlavors.isDevMode(targetNode.getBuildTarget()),
+                  "${JS_OUT}",
+                  "${BASE_DIR}")));
+    }
 
     return Joiner.on(" && ").join(script.build());
   }
