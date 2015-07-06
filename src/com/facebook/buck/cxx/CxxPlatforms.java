@@ -93,7 +93,7 @@ public class CxxPlatforms {
         .setCxx(getTool(flavor, "cxx", config).transform(getCompiler(cxx.getClass())).or(cxx))
         .setCpp(getTool(flavor, "cpp", config).or(cpp))
         .setCxxpp(getTool(flavor, "cxxpp", config).or(cxxpp))
-        .setCxxld(getTool(flavor, "cxxld", config).or(cxxld))
+        .setCxxld(getTool(flavor, "cxxld", config).transform(getLinker(cxxld.getClass())).or(cxxld))
         .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass())).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass())).or(ar))
@@ -135,7 +135,10 @@ public class CxxPlatforms {
               .or(defaultPlatform.getCxx()))
       .setCpp(getTool(flavor, "cpp", config).or(defaultPlatform.getCpp()))
       .setCxxpp(getTool(flavor, "cxxpp", config).or(defaultPlatform.getCxxpp()))
-      .setCxxld(getTool(flavor, "cxxld", config).or(defaultPlatform.getCxxld()))
+      .setCxxld(
+          getTool(flavor, "cxxld", config)
+              .transform(getLinker(defaultPlatform.getCxxld().getClass()))
+              .or(defaultPlatform.getCxxld()))
       .setLd(
           getTool(flavor, "ld", config)
               .transform(getLinker(defaultPlatform.getLd().getClass()))

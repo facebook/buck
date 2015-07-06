@@ -53,7 +53,7 @@ interface AbstractCxxPlatform {
   Tool getCxxpp();
   List<String> getCxxppflags();
 
-  Tool getCxxld();
+  Linker getCxxld();
   List<String> getCxxldflags();
 
   Linker getLd();

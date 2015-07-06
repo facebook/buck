@@ -635,7 +635,7 @@ public class NdkCxxPlatforms {
         .resolve(targetConfiguration.getTargetArchAbi().toString());
   }
 
-  private static Tool getCcLinkTool(
+  private static Linker getCcLinkTool(
       Path ndkRoot,
       TargetConfiguration targetConfiguration,
       Host host,
@@ -674,11 +674,12 @@ public class NdkCxxPlatforms {
     flags.add(
         "-L" + getCxxRuntimeLibsDirectory(ndkRoot, targetConfiguration, cxxRuntime).toString());
 
-    return new VersionedTool(
-        getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
-        flags.build(),
-        tool,
-        version);
+    return new GnuLinker(
+        new VersionedTool(
+            getToolPath(ndkRoot, targetConfiguration, host, tool, executableFinder),
+            flags.build(),
+            tool,
+            version));
   }
 
   /**
