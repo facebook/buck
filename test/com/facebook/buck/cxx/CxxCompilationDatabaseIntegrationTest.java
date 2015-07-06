@@ -24,7 +24,9 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -40,7 +42,16 @@ import java.util.Map;
 
 public class CxxCompilationDatabaseIntegrationTest {
 
-  private static final String COMPILER_PATH = "/usr/bin/g++";
+  private static final String COMPILER_PATH =
+      Platform.detect() == Platform.MACOS ? "/usr/bin/clang++" : "/usr/bin/g++";
+  private static final ImmutableList<String> COMPILER_SPECIFIC_FLAGS =
+      Platform.detect() == Platform.MACOS ?
+          ImmutableList.of(
+              "-Xclang",
+              "-fdebug-compilation-dir",
+              "-Xclang",
+              "." + Strings.repeat("/", 249)) :
+          ImmutableList.<String>of();
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -86,6 +97,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(binaryHeaderSymlinkTreeFolder)
             .add("-I")
             .add(binaryExportedHeaderSymlinkTreeFoler)
+            .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
             .add("-c")
@@ -129,6 +141,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreeFolder)
             .add("-I")
             .add(exportedHeaderSymlinkTreeFoler)
+            .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
             .add("-c")

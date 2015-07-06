@@ -38,17 +38,16 @@ public class DefaultCxxPlatforms {
   private static final Flavor FLAVOR = ImmutableFlavor.of("default");
 
   private static final Path DEFAULT_AS = Paths.get("/usr/bin/as");
-  private static final Path DEFAULT_ASPP = Paths.get("/usr/bin/gcc");
-  private static final Path DEFAULT_CC = Paths.get("/usr/bin/gcc");
-  private static final Path DEFAULT_CXX = Paths.get("/usr/bin/g++");
-  private static final Path DEFAULT_CPP = Paths.get("/usr/bin/gcc");
-  private static final Path DEFAULT_CXXPP = Paths.get("/usr/bin/g++");
-  private static final Path DEFAULT_CXXLD = Paths.get("/usr/bin/g++");
+  private static final Path DEFAULT_C_FRONTEND = Paths.get("/usr/bin/gcc");
+  private static final Path DEFAULT_CXX_FRONTEND = Paths.get("/usr/bin/g++");
   private static final Path DEFAULT_LD = Paths.get("/usr/bin/ld");
   private static final Path DEFAULT_AR = Paths.get("/usr/bin/ar");
   private static final Path DEFAULT_STRIP = Paths.get("/usr/bin/strip");
   private static final Path DEFAULT_LEX = Paths.get("/usr/bin/flex");
   private static final Path DEFAULT_YACC = Paths.get("/usr/bin/bison");
+
+  private static final Path DEFAULT_OSX_C_FRONTEND = Paths.get("/usr/bin/clang");
+  private static final Path DEFAULT_OSX_CXX_FRONTEND = Paths.get("/usr/bin/clang++");
 
   public static CxxPlatform build(CxxBuckConfig config) {
     return build(Platform.detect(), config);
@@ -57,6 +56,31 @@ public class DefaultCxxPlatforms {
   public static CxxPlatform build(
       Platform platform,
       CxxBuckConfig config) {
+    if (platform == Platform.MACOS) {
+      return CxxPlatforms.build(
+          FLAVOR,
+          platform,
+          config,
+          new HashedFileTool(DEFAULT_AS),
+          new HashedFileTool(DEFAULT_OSX_C_FRONTEND),
+          new ClangCompiler(new HashedFileTool(DEFAULT_OSX_C_FRONTEND)),
+          new ClangCompiler(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
+          new HashedFileTool(DEFAULT_OSX_C_FRONTEND),
+          new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND),
+          new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND),
+          Optional.<CxxPlatform.LinkerType>absent(),
+          new HashedFileTool(DEFAULT_LD),
+          ImmutableList.<String>of(),
+          new HashedFileTool(DEFAULT_STRIP),
+          new BsdArchiver(new HashedFileTool(DEFAULT_AR)),
+          ImmutableList.<String>of(),
+          ImmutableList.<String>of(),
+          Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
+          Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)),
+          "dylib",
+          Optional.<DebugPathSanitizer>absent());
+    }
+
     String sharedLibraryExtension;
     switch (platform) {
       case LINUX:
@@ -64,9 +88,6 @@ public class DefaultCxxPlatforms {
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
-        break;
-      case MACOS:
-        sharedLibraryExtension = "dylib";
         break;
       //$CASES-OMITTED$
       default:
@@ -78,16 +99,12 @@ public class DefaultCxxPlatforms {
         platform,
         config,
         new HashedFileTool(DEFAULT_AS),
-        new HashedFileTool(DEFAULT_ASPP),
-        // TODO(user): this goes horribly wrong if "gcc" is actually clang, like in a default
-        // OSX + Xcode setup. A better option might be to call it and see if it supports -Xclang
-        // Alternatively the default toolchain on OSX could be set to be clang based, as it's a
-        // safer guess
-        new DefaultCompiler(new HashedFileTool(DEFAULT_CC)),
-        new DefaultCompiler(new HashedFileTool(DEFAULT_CXX)),
-        new HashedFileTool(DEFAULT_CPP),
-        new HashedFileTool(DEFAULT_CXXPP),
-        new HashedFileTool(DEFAULT_CXXLD),
+        new HashedFileTool(DEFAULT_C_FRONTEND),
+        new DefaultCompiler(new HashedFileTool(DEFAULT_C_FRONTEND)),
+        new DefaultCompiler(new HashedFileTool(DEFAULT_CXX_FRONTEND)),
+        new HashedFileTool(DEFAULT_C_FRONTEND),
+        new HashedFileTool(DEFAULT_CXX_FRONTEND),
+        new HashedFileTool(DEFAULT_CXX_FRONTEND),
         Optional.<CxxPlatform.LinkerType>absent(),
         new HashedFileTool(DEFAULT_LD),
         ImmutableList.<String>of(),
