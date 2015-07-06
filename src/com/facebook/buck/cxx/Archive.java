@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
@@ -70,7 +71,7 @@ public class Archive extends AbstractBuildRule {
             archiver.getCommandPrefix(getResolver()),
             output,
             getResolver().getAllPaths(inputs)),
-        new ArchiveScrubberStep(output, archiver.getScrubbers()));
+        new FileScrubberStep(output, archiver.getScrubbers()));
   }
 
   @Override

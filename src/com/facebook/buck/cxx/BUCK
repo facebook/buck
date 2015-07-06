@@ -1,6 +1,5 @@
 PLATFORM_SRCS = [
   'Archiver.java',
-  'ArchiveScrubbers.java',
   'AbstractCxxPlatform.java',
   'BsdArchiver.java',
   'ByteBufferReplacer.java',
@@ -15,6 +14,7 @@ PLATFORM_SRCS = [
   'GnuLinker.java',
   'Linker.java',
   'HashedFileTool.java',
+  'ObjectFileScrubbers.java',
   'VersionedTool.java',
 ]
 java_immutables_library(

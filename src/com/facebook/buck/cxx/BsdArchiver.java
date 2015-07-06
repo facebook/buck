@@ -35,38 +35,38 @@ public class BsdArchiver implements Archiver {
 
   private static final FileScrubber SYMBOL_NAME_TABLE_PADDING_SCRUBBER = new FileScrubber() {
     @Override
-    public void scrubArchive(ByteBuffer file) throws ScrubException {
+    public void scrubFile(ByteBuffer file) throws ScrubException {
 
       // Grab the global header chunk and verify it's accurate.
-      byte[] globalHeader = ArchiveScrubbers.getBytes(file, EXPECTED_GLOBAL_HEADER.length);
-      ArchiveScrubbers.checkArchive(
+      byte[] globalHeader = ObjectFileScrubbers.getBytes(file, EXPECTED_GLOBAL_HEADER.length);
+      ObjectFileScrubbers.checkArchive(
           Arrays.equals(EXPECTED_GLOBAL_HEADER, globalHeader),
           "invalid global header");
 
-      byte[] marker = ArchiveScrubbers.getBytes(file, 3);
-      ArchiveScrubbers.checkArchive(
+      byte[] marker = ObjectFileScrubbers.getBytes(file, 3);
+      ObjectFileScrubbers.checkArchive(
           Arrays.equals(LONG_NAME_MARKER, marker),
           "unexpected short symbol table name");
 
-      int nameLength = ArchiveScrubbers.getDecimalStringAsInt(file, 13);
+      int nameLength = ObjectFileScrubbers.getDecimalStringAsInt(file, 13);
 
-      /* File modification timestamp */ ArchiveScrubbers.getDecimalStringAsInt(file, 12);
-      /* Owner ID */ ArchiveScrubbers.getDecimalStringAsInt(file, 6);
-      /* Group ID */ ArchiveScrubbers.getDecimalStringAsInt(file, 6);
+      /* File modification timestamp */ ObjectFileScrubbers.getDecimalStringAsInt(file, 12);
+      /* Owner ID */ ObjectFileScrubbers.getDecimalStringAsInt(file, 6);
+      /* Group ID */ ObjectFileScrubbers.getDecimalStringAsInt(file, 6);
 
-      /* File mode */ ArchiveScrubbers.getOctalStringAsInt(file, 8);
-      /* File size */ ArchiveScrubbers.getDecimalStringAsInt(file, 10);
+      /* File mode */ ObjectFileScrubbers.getOctalStringAsInt(file, 8);
+      /* File size */ ObjectFileScrubbers.getDecimalStringAsInt(file, 10);
 
       // Lastly, grab the file magic entry and verify it's accurate.
-      byte[] fileMagic = ArchiveScrubbers.getBytes(file, 2);
-      ArchiveScrubbers.checkArchive(
-          Arrays.equals(ArchiveScrubbers.END_OF_FILE_HEADER_MARKER, fileMagic),
+      byte[] fileMagic = ObjectFileScrubbers.getBytes(file, 2);
+      ObjectFileScrubbers.checkArchive(
+          Arrays.equals(ObjectFileScrubbers.END_OF_FILE_HEADER_MARKER, fileMagic),
           "invalid file magic");
 
       // Skip the file name
       file.position(file.position() + nameLength);
 
-      int descriptorsSize = ArchiveScrubbers.getLittleEndian32BitLong(file);
+      int descriptorsSize = ObjectFileScrubbers.getLittleEndian32BitLong(file);
 
       if (descriptorsSize > 0) {
 
@@ -75,11 +75,11 @@ public class BsdArchiver implements Archiver {
           file.position(file.position() + descriptorsSize - 8);
         }
 
-        int lastSymbolNameOffset = ArchiveScrubbers.getLittleEndian32BitLong(file);
+        int lastSymbolNameOffset = ObjectFileScrubbers.getLittleEndian32BitLong(file);
         // Skip the corresponding object offset
-        ArchiveScrubbers.getLittleEndian32BitLong(file);
+        ObjectFileScrubbers.getLittleEndian32BitLong(file);
 
-        int symbolNameTableSize = ArchiveScrubbers.getLittleEndian32BitLong(file);
+        int symbolNameTableSize = ObjectFileScrubbers.getLittleEndian32BitLong(file);
         int endOfSymbolNameTableOffset = file.position() + symbolNameTableSize;
 
         // Skip to the last symbol name
@@ -93,8 +93,8 @@ public class BsdArchiver implements Archiver {
           file.put((byte) 0x00);
         }
       } else {
-        int symbolNameTableSize = ArchiveScrubbers.getLittleEndian32BitLong(file);
-        ArchiveScrubbers.checkArchive(
+        int symbolNameTableSize = ObjectFileScrubbers.getLittleEndian32BitLong(file);
+        ObjectFileScrubbers.checkArchive(
             symbolNameTableSize == 0,
             "archive has no symbol descriptors but has symbol names");
       }
@@ -110,7 +110,7 @@ public class BsdArchiver implements Archiver {
   @Override
   public ImmutableList<FileScrubber> getScrubbers() {
     return ImmutableList.of(
-        ArchiveScrubbers.createDateUidGidScrubber(EXPECTED_GLOBAL_HEADER),
+        ObjectFileScrubbers.createDateUidGidScrubber(EXPECTED_GLOBAL_HEADER),
         SYMBOL_NAME_TABLE_PADDING_SCRUBBER);
   }
 

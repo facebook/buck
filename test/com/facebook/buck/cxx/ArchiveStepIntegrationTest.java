@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Preconditions;
@@ -64,7 +65,7 @@ public class ArchiveStepIntegrationTest {
         archiver,
         output,
         ImmutableList.of(input));
-    ArchiveScrubberStep archiveScrubberStep = new ArchiveScrubberStep(
+    FileScrubberStep fileScrubberStep = new FileScrubberStep(
         output,
         platform.getAr().getScrubbers());
 
@@ -76,7 +77,7 @@ public class ArchiveStepIntegrationTest {
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = archiveStep.execute(executionContext);
     assertEquals("archive step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
-    exitCode = archiveScrubberStep.execute(executionContext);
+    exitCode = fileScrubberStep.execute(executionContext);
     assertEquals("archive scrub step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
 
     // Now read the archive entries and verify that the timestamp, UID, and GID fields are

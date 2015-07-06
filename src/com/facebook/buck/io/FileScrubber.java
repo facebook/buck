@@ -28,6 +28,6 @@ public interface FileScrubber {
   }
 
 
-  void scrubArchive(ByteBuffer file) throws ScrubException;
+  void scrubFile(ByteBuffer file) throws ScrubException;
 
 }

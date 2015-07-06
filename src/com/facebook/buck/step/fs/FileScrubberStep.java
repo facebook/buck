@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.step.ExecutionContext;
@@ -28,17 +28,17 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 /**
- * Scrub any non-deterministic meta-data from the given archive (e.g. timestamp, UID, GID).
+ * Scrub any non-deterministic meta-data from the given file (e.g. timestamp, UID, GID).
  */
-public class ArchiveScrubberStep implements Step {
+public class FileScrubberStep implements Step {
 
-  private final Path archive;
+  private final Path input;
   private final ImmutableList<FileScrubber> scrubbers;
 
-  public ArchiveScrubberStep(
-      Path archive,
+  public FileScrubberStep(
+      Path input,
       ImmutableList<FileScrubber> scrubbers) {
-    this.archive = archive;
+    this.input = input;
     this.scrubbers = scrubbers;
   }
 
@@ -48,16 +48,16 @@ public class ArchiveScrubberStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    Path archivePath = context.getProjectFilesystem().resolve(archive);
+    Path filePath = context.getProjectFilesystem().resolve(input);
     try {
       for (FileScrubber scrubber : scrubbers) {
-        try (FileChannel channel = readWriteChannel(archivePath)) {
+        try (FileChannel channel = readWriteChannel(filePath)) {
           MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-          scrubber.scrubArchive(map);
+          scrubber.scrubFile(map);
         }
       }
     } catch (IOException | FileScrubber.ScrubException e) {
-      context.logError(e, "Error scrubbing non-deterministic metadata from %s", archivePath);
+      context.logError(e, "Error scrubbing non-deterministic metadata from %s", filePath);
       return 1;
     }
     return 0;
@@ -65,12 +65,12 @@ public class ArchiveScrubberStep implements Step {
 
   @Override
   public String getShortName() {
-    return "archive-scrub";
+    return "file-scrub";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "archive-scrub";
+    return "file-scrub";
   }
 
 }

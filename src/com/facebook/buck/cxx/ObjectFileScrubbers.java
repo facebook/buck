@@ -26,11 +26,11 @@ import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 import java.util.Arrays;
 
-public class ArchiveScrubbers {
+public class ObjectFileScrubbers {
 
   public static final byte[] END_OF_FILE_HEADER_MARKER = {0x60, 0x0A};
 
-  private ArchiveScrubbers() {}
+  private ObjectFileScrubbers() {}
 
   public static FileScrubber createDateUidGidScrubber(final byte[] expectedGlobalHeader) {
     return new FileScrubber() {
@@ -42,7 +42,7 @@ public class ArchiveScrubbers {
        */
       @SuppressWarnings("PMD.AvoidUsingOctalValues")
       @Override
-      public void scrubArchive(ByteBuffer file) throws ScrubException {
+      public void scrubFile(ByteBuffer file) throws ScrubException {
         try {
 
           // Grab the global header chunk and verify it's accurate.
