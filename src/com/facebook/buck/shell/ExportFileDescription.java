@@ -16,16 +16,24 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitInputsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 
-public class ExportFileDescription implements Description<ExportFileDescription.Arg> {
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+public class ExportFileDescription implements
+    Description<ExportFileDescription.Arg>,
+    ImplicitInputsInferringDescription<ExportFileDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("export_file");
 
@@ -45,6 +53,21 @@ public class ExportFileDescription implements Description<ExportFileDescription.
       BuildRuleResolver resolver,
       A args) {
     return new ExportFile(params, new SourcePathResolver(resolver), args);
+  }
+
+  /**
+   * If the src field is absent, add the name field to the list of inputs.
+   */
+  @Override
+  public Iterable<Path> inferInputsFromConstructorArgs(
+      BuildTarget buildTarget,
+      ExportFileDescription.Arg constructorArg) {
+    ImmutableList.Builder<Path> inputs = ImmutableList.builder();
+    if (!constructorArg.src.isPresent()) {
+      String name = buildTarget.getBasePathWithSlash() + buildTarget.getShortNameAndFlavorPostfix();
+      inputs.add(Paths.get(name));
+    }
+    return inputs.build();
   }
 
   @SuppressFieldNotInitialized

@@ -97,6 +97,7 @@ java_immutables_library(
     'HasRuntimeDeps.java',
     'Hint.java',
     'ImplicitDepsInferringDescription.java',
+    'ImplicitInputsInferringDescription.java',
     'OnDiskBuildInfo.java',
     'ParamInfo.java',
     'ParamInfoException.java',

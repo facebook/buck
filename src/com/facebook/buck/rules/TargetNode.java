@@ -84,6 +84,13 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
                   .findDepsForTargetFromConstructorArgs(params.target, constructorArg));
     }
 
+    if (description instanceof ImplicitInputsInferringDescription) {
+      paths
+          .addAll(
+              ((ImplicitInputsInferringDescription<T>) description)
+                  .inferInputsFromConstructorArgs(params.target, constructorArg));
+    }
+
     this.extraDeps = ImmutableSortedSet.copyOf(Sets.difference(extraDeps.build(), declaredDeps));
     this.pathsReferenced = ruleFactoryParams.enforceBuckPackageBoundary()
         ? verifyPaths(paths.build())

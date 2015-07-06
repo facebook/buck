@@ -56,4 +56,16 @@ public class AuditInputCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout.json"), result.getStdout());
   }
+
+  @Test
+  public void testBuckAuditInputExportFileWithoutSrc() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_input_no_src", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo.plist");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout"), result.getStdout());
+  }
 }
