@@ -54,6 +54,7 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -516,18 +517,22 @@ public class SuperConsoleEventBusListenerTest {
 
     final String testingLine = formatConsoleTimes("[-] TESTING...FINISHED %s (1 PASS/0 FAIL)", 1.6);
 
-    validateConsole(
+    validateConsoleWithStdOutAndErr(
         console,
         listener,
         4200L,
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            testingLine,
-            "Log:",
-            "RESULTS FOR ALL TESTS",
-            "PASS    <100ms  1 Passed   0 Skipped   0 Failed   TestClass",
-            "TESTS PASSED"));
+            testingLine),
+        Optional.of(
+            Joiner.on('\n').join(
+                "RESULTS FOR ALL TESTS",
+                "PASS    <100ms  1 Passed   0 Skipped   0 Failed   TestClass",
+                "TESTS PASSED",
+                "")),
+        // We don't care about stderr, since the last frame will be flushed there.
+        Optional.<String>absent());
   }
 
   @Test
@@ -779,18 +784,22 @@ public class SuperConsoleEventBusListenerTest {
         "[-] TESTING...FINISHED %s (0 PASS/1 SKIP/0 FAIL)",
         1.6);
 
-    validateConsole(
+    validateConsoleWithStdOutAndErr(
         console,
         listener,
         4200L,
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            testingLine,
-            "Log:",
-            "RESULTS FOR ALL TESTS",
-            "ASSUME  <100ms  0 Passed   1 Skipped   0 Failed   TestClass",
-            "TESTS PASSED (with some assumption violations)"));
+            testingLine),
+        Optional.of(
+            Joiner.on('\n').join(
+                "RESULTS FOR ALL TESTS",
+                "ASSUME  <100ms  0 Passed   1 Skipped   0 Failed   TestClass",
+                "TESTS PASSED (with some assumption violations)",
+                "")),
+        // We don't care about stderr, since the last frame will be flushed there.
+        Optional.<String>absent());
   }
 
   @Test
@@ -1042,7 +1051,7 @@ public class SuperConsoleEventBusListenerTest {
 
     final String testingLine = formatConsoleTimes("[-] TESTING...FINISHED %s (0 PASS/1 FAIL)", 1.6);
 
-    validateConsole(
+    validateConsoleWithStdOutAndErr(
         console,
         listener,
         4200L,
@@ -1051,17 +1060,22 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             testingLine,
             "Log:",
-            "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
-            "RESULTS FOR ALL TESTS",
-            "FAIL    <100ms  0 Passed   0 Skipped   1 Failed   TestClass",
-            "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
-            "====STANDARD OUT====",
-            "Message on stdout",
-            "====STANDARD ERR====",
-            "Message on stderr",
-            "TESTS FAILED: 1 FAILURE",
-            "Failed target: //:test",
-            "FAIL TestClass"));
+            "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'"),
+        Optional.of(
+            Joiner.on('\n').join(
+                "RESULTS FOR ALL TESTS",
+                "FAIL    <100ms  0 Passed   0 Skipped   1 Failed   TestClass",
+                "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'",
+                "====STANDARD OUT====",
+                "Message on stdout",
+                "====STANDARD ERR====",
+                "Message on stderr",
+                "TESTS FAILED: 1 FAILURE",
+                "Failed target: //:test",
+                "FAIL TestClass",
+                "")),
+        // We don't care about stderr, since the last frame will be flushed there.
+        Optional.<String>absent());
   }
 
   @Test
@@ -1238,8 +1252,29 @@ public class SuperConsoleEventBusListenerTest {
       SuperConsoleEventBusListener listener,
       long timeMs,
       ImmutableList<String> lines) {
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals("", console.getTextWrittenToStdErr());
+    validateConsoleWithStdOutAndErr(
+        console,
+        listener,
+        timeMs,
+        lines,
+        Optional.of(""),
+        Optional.of(""));
+  }
+
+  private void validateConsoleWithStdOutAndErr(
+      TestConsole console,
+      SuperConsoleEventBusListener listener,
+      long timeMs,
+      ImmutableList<String> lines,
+      Optional<String> stdout,
+      Optional<String> stderr) {
+
+    if (stdout.isPresent()) {
+      assertEquals(stdout.get(), console.getTextWrittenToStdOut());
+    }
+    if (stderr.isPresent()) {
+      assertEquals(stderr.get(), console.getTextWrittenToStdErr());
+    }
     assertEquals(lines, listener.createRenderLinesAtTime(timeMs));
   }
 }

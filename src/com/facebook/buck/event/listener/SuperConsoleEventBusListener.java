@@ -557,9 +557,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       testFormatter.reportResult(builder, results);
     }
     testFormatter.runComplete(builder, finished.getResults());
+    String testOutput;
     synchronized (testReportBuilder) {
       testReportBuilder.addAll(builder.build());
-      logEvents.add(ConsoleEvent.info(Joiner.on('\n').join(testReportBuilder.build())));
+      testOutput = Joiner.on('\n').join(testReportBuilder.build());
+    }
+    // We're about to write to stdout, so make sure we render the final frame before we do.
+    render();
+    synchronized (console.getStdOut()) {
+      console.getStdOut().println(testOutput);
     }
   }
 
