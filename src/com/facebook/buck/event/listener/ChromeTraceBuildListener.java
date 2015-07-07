@@ -435,7 +435,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void annotationProcessingStarted(AnnotationProcessingEvent.Started started) {
-    writeChromeTraceEvent("buck",
+    writeChromeTraceEvent(
+        started.getAnnotationProcessorName(),
         started.getCategory(),
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.<String, String>of(),
@@ -444,7 +445,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void annotationProcessingFinished(AnnotationProcessingEvent.Finished finished) {
-    writeChromeTraceEvent("buck",
+    writeChromeTraceEvent(
+        finished.getAnnotationProcessorName(),
         finished.getCategory(),
         ChromeTraceEvent.Phase.END,
         ImmutableMap.<String, String>of(),
