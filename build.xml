@@ -99,7 +99,7 @@
     <fileset refid="third-party.jars" />
     <pathelement location="${classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
-    <pathelement location="${tracing-api.jar}" />
+    <pathelement location="${bootstrapper.jar}" />
   </path>
 
   <path id="classpath">
@@ -156,16 +156,13 @@
          processors. As such it cannot depend on third-party libraries, directly or indirectly. -->
   </path>
 
-  <target name="compile-bootstrapper" depends="checkversion">
+  <target name="bootstrapper" depends="checkversion, tracing-api">
     <mkdir dir="${bootstrapper.classes.dir}" />
     <ecj destdir="${bootstrapper.classes.dir}" classpathref="bootstrapper-classpath">
       <javac-params>
         <include name="${bootstrapper.src.dir}/**/*.java" />
       </javac-params>
     </ecj>
-  </target>
-
-  <target name="jar-bootstrapper" depends="compile-bootstrapper, tracing-api">
     <jar destfile="${bootstrapper.jar}">
       <fileset dir="${bootstrapper.classes.dir}" />
 
@@ -316,7 +313,7 @@
   </macrodef>
 
   <target name="compile"
-          depends="compile-testrunner, jar-bootstrapper, tracing-api, dx, generate-immutables"
+          depends="compile-testrunner, bootstrapper, tracing-api, dx, generate-immutables"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
