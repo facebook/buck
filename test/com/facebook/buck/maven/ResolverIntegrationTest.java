@@ -51,9 +51,6 @@ import com.google.common.hash.Hashing;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.util.log.StdErrLog;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -84,23 +81,9 @@ public class ResolverIntegrationTest {
 
   @BeforeClass
   public static void setUpFakeMavenRepo() throws Exception {
-    repo = TestDataHelper.getTestDataDirectory(new ResolverIntegrationTest());
-    // If we're running this test in IJ, then this path doesn't exist. Fall back to one that does
-    if (!Files.exists(repo)) {
-      repo = Paths.get("test/com/facebook/buck/maven/testdata");
-    }
-
+    repo = TestDataHelper.getTestDataDirectory(ResolverIntegrationTest.class);
     httpd = new HttpdForTests();
-
-    ResourceHandler resourceHandler = new ResourceHandler();
-    resourceHandler.setDirectoriesListed(true);
-    resourceHandler.setResourceBase(repo.toAbsolutePath().toString());
-
-    ContextHandler contextHandler = new ContextHandler("/");
-    contextHandler.setHandler(resourceHandler);
-    contextHandler.setLogger(new StdErrLog());
-
-    httpd.addHandler(contextHandler);
+    httpd.addHandler(new HttpdForTests.FileDispenserRequestHandler(repo));
     httpd.start();
   }
 

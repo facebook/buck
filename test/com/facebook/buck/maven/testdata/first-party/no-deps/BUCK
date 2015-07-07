@@ -1,0 +1,9 @@
+prebuilt_jar(
+  name = 'no-deps',
+  binary_jar = 'no-deps-1.0.jar',
+  deps = [
+  ],
+  visibility = [
+    'PUBLIC'
+  ],
+)

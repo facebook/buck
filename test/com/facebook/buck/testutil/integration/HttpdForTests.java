@@ -19,6 +19,7 @@ package com.facebook.buck.testutil.integration;
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static org.junit.Assert.assertFalse;
 
+import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -27,14 +28,20 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.log.JavaUtilLog;
 import org.eclipse.jetty.util.log.Log;
+import org.eclipse.jetty.util.log.StdErrLog;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -133,6 +140,46 @@ public class HttpdForTests implements AutoCloseable {
       // Use an unusual charset.
       httpServletResponse.getOutputStream().write(content.getBytes(UTF_16));
       request.setHandled(true);
+    }
+  }
+
+  public static class DummyPutRequestsHandler extends AbstractHandler {
+
+    private final List<String> putRequestsPaths = new ArrayList<>();
+
+    @Override
+    public void handle(
+        String target,
+        Request request,
+        HttpServletRequest httpServletRequest,
+        HttpServletResponse httpServletResponse) throws IOException, ServletException {
+      if (!HttpMethod.PUT.is(request.getMethod())) {
+        return;
+      }
+      putRequestsPaths.add(request.getUri().toString());
+      request.setHandled(true);
+    }
+
+    public List<String> getPutRequestsPaths() {
+      return putRequestsPaths;
+    }
+  }
+
+  public static class FileDispenserRequestHandler extends ContextHandler {
+
+    public FileDispenserRequestHandler(Path rootDir) {
+      this(rootDir, "/");
+    }
+
+    public FileDispenserRequestHandler(Path rootDir, String urlBasePath) {
+      super(urlBasePath);
+
+      ResourceHandler resourceHandler = new ResourceHandler();
+      resourceHandler.setDirectoriesListed(true);
+      resourceHandler.setResourceBase(rootDir.toAbsolutePath().toString());
+
+      setHandler(resourceHandler);
+      setLogger(new StdErrLog());
     }
   }
 }
