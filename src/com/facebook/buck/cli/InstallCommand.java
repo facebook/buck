@@ -398,9 +398,10 @@ public class InstallCommand extends BuildCommand {
           projectFilesystem,
           appleSimulator.get());
     } else {
-      params.getConsole().printSuccess(
-          String.format(
-              "Successfully installed %s. (Use `buck install -r %s` to run.)",
+      params.getBuckEventBus().post(
+          ConsoleEvent.info(
+              params.getConsole().getAnsi().asHighlightedSuccessText(
+                  "Successfully installed %s. (Use `buck install -r %s` to run.)"),
               getArguments().get(0),
               getArguments().get(0)));
       return 0;
@@ -445,9 +446,10 @@ public class InstallCommand extends BuildCommand {
       return 1;
     }
 
-    params.getConsole().printSuccess(
-        String.format(
-            "Successfully launched %s%s. To debug, run: lldb -p %d",
+    params.getBuckEventBus().post(
+        ConsoleEvent.info(
+            params.getConsole().getAnsi().asHighlightedSuccessText(
+                "Successfully launched %s%s. To debug, run: lldb -p %d"),
             getArguments().get(0),
             waitForDebugger ? " (waiting for debugger)" : "",
             launchedPid.get()));
