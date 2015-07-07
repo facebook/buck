@@ -122,15 +122,18 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     ImmutableSet.Builder<SourcePath> bundleDirsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> dirsContainingResourceDirsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> bundleFilesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> bundleVariantFilesBuilder = ImmutableSet.builder();
     AppleResources.collectResourceDirsAndFiles(
         params.getTargetGraph(),
         Preconditions.checkNotNull(params.getTargetGraph().get(params.getBuildTarget())),
         bundleDirsBuilder,
         dirsContainingResourceDirsBuilder,
-        bundleFilesBuilder);
+        bundleFilesBuilder,
+        bundleVariantFilesBuilder);
     ImmutableSet<SourcePath> bundleDirs = bundleDirsBuilder.build();
     ImmutableSet<SourcePath> dirsContainingResourceDirs = dirsContainingResourceDirsBuilder.build();
     ImmutableSet<SourcePath> bundleFiles = bundleFilesBuilder.build();
+    ImmutableSet<SourcePath> bundleVariantFiles = bundleVariantFilesBuilder.build();
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
@@ -163,7 +166,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                         Iterables.concat(
                             bundleFiles,
                             bundleDirs,
-                            dirsContainingResourceDirs))))
+                            dirsContainingResourceDirs,
+                            bundleVariantFiles))))
             .build());
 
     return new AppleBundle(
@@ -177,6 +181,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         bundleDirs,
         bundleFiles,
         dirsContainingResourceDirs,
+        Optional.of(bundleVariantFiles),
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         bundledAssetCatalogs,

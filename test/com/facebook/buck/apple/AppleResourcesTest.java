@@ -31,6 +31,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Set;
+
 import org.junit.Test;
 
 public class AppleResourcesTest {
@@ -51,10 +53,17 @@ public class AppleResourcesTest {
   @Test
   public void libWithSingleResourceDepReturnsResource() {
     BuildTarget resourceTarget = BuildTarget.builder("//foo", "resource").build();
+
+    Set<SourcePath> variants = ImmutableSet.<SourcePath>of(
+        new TestSourcePath("path/aa.lproj/Localizable.strings"),
+        new TestSourcePath("path/bb.lproj/Localizable.strings"),
+        new TestSourcePath("path/cc.lproj/Localizable.strings"));
+
     TargetNode<AppleResourceDescription.Arg> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
             .setDirs(ImmutableSet.<SourcePath>of())
+            .setVariants(Optional.of(variants))
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> libNode = AppleLibraryBuilder
         .createBuilder(BuildTarget.builder("//foo", "lib").build())

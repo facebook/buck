@@ -68,7 +68,8 @@ public class AppleResources {
       TargetNode<T> targetNode,
       ImmutableSet.Builder<SourcePath> resourceDirs,
       ImmutableSet.Builder<SourcePath> dirsContainingResourceDirs,
-      ImmutableSet.Builder<SourcePath> resourceFiles) {
+      ImmutableSet.Builder<SourcePath> resourceFiles,
+      ImmutableSet.Builder<SourcePath> bundleVariantFiles) {
     ImmutableSet<BuildRuleType> types =
         ReactNativeFlavors.skipBundling(targetNode.getBuildTarget())
             ? ImmutableSet.of(AppleResourceDescription.TYPE)
@@ -87,6 +88,9 @@ public class AppleResources {
         AppleResourceDescription.Arg appleResource = (AppleResourceDescription.Arg) constructorArg;
         resourceDirs.addAll(appleResource.dirs);
         resourceFiles.addAll(appleResource.files);
+        if (appleResource.variants.isPresent()) {
+          bundleVariantFiles.addAll(appleResource.variants.get());
+        }
       } else {
         Preconditions.checkState(constructorArg instanceof ReactNativeLibraryArgs);
         BuildTarget buildTarget = resourceNode.getBuildTarget();

@@ -39,6 +39,7 @@ import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -88,6 +89,9 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final Set<SourcePath> dirsContainingResourceDirs;
 
   @AddToRuleKey
+  private final Optional<ImmutableSet<SourcePath>> resourceVariantFiles;
+
+  @AddToRuleKey
   private final Tool ibtool;
 
   @AddToRuleKey
@@ -121,6 +125,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Set<SourcePath> resourceDirs,
       Set<SourcePath> resourceFiles,
       Set<SourcePath> dirsContainingResourceDirs,
+      Optional<ImmutableSet<SourcePath>> resourceVariantFiles,
       Tool ibtool,
       Tool dsymutil,
       Set<AppleAssetCatalog> bundledAssetCatalogs,
@@ -139,6 +144,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.resourceDirs = resourceDirs;
     this.resourceFiles = resourceFiles;
     this.dirsContainingResourceDirs = dirsContainingResourceDirs;
+    this.resourceVariantFiles = resourceVariantFiles;
     this.ibtool = ibtool;
     this.dsymutil = dsymutil;
     this.bundledAssetCatalogs = ImmutableSet.copyOf(bundledAssetCatalogs);
@@ -257,6 +263,27 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Path resolvedFilePath = getResolver().getPath(file);
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
+    }
+
+    if (resourceVariantFiles.isPresent()) {
+      for (SourcePath variantSourcePath : resourceVariantFiles.get()) {
+        Path variantFilePath = getResolver().getPath(variantSourcePath);
+
+        Path variantDirectory = variantFilePath.getParent();
+        if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
+          throw new HumanReadableException(
+              "Variant files have to be in a directory with name ending in '.lproj', " +
+                  "but '%s' is not.",
+              variantFilePath);
+        }
+
+        Path bundleVariantDestinationPath =
+            bundleDestinationPath.resolve(variantDirectory.getFileName());
+        stepsBuilder.add(new MkdirStep(bundleVariantDestinationPath));
+
+        Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
+        addResourceProcessingSteps(variantFilePath, destinationPath, stepsBuilder);
+      }
     }
 
     for (AppleAssetCatalog bundledAssetCatalog : bundledAssetCatalogs) {

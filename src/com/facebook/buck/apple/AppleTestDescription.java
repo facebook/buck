@@ -235,16 +235,20 @@ public class AppleTestDescription implements
     ImmutableSet.Builder<SourcePath> resourceDirsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> dirsContainingResourceDirsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> resourceFilesBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> resourceVariantFilesBuilder = ImmutableSet.builder();
+
     AppleResources.collectResourceDirsAndFiles(
         params.getTargetGraph(),
         Preconditions.checkNotNull(params.getTargetGraph().get(params.getBuildTarget())),
         resourceDirsBuilder,
         dirsContainingResourceDirsBuilder,
-        resourceFilesBuilder);
+        resourceFilesBuilder,
+        resourceVariantFilesBuilder);
 
     ImmutableSet<SourcePath> resourceDirs = resourceDirsBuilder.build();
     ImmutableSet<SourcePath> dirsContainingResourceDirs = dirsContainingResourceDirsBuilder.build();
     ImmutableSet<SourcePath> resourceFiles = resourceFilesBuilder.build();
+    ImmutableSet<SourcePath> resourceVariantFiles = resourceVariantFilesBuilder.build();
 
     CollectedAssetCatalogs collectedAssetCatalogs =
         AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
@@ -279,7 +283,8 @@ public class AppleTestDescription implements
                                 Iterables.concat(
                                     resourceFiles,
                                     resourceDirs,
-                                    dirsContainingResourceDirs))))
+                                    dirsContainingResourceDirs,
+                                    resourceVariantFiles))))
                     .build()),
             Suppliers.ofInstance(params.getExtraDeps())),
         sourcePathResolver,
@@ -291,6 +296,7 @@ public class AppleTestDescription implements
         resourceDirs,
         resourceFiles,
         dirsContainingResourceDirsBuilder.build(),
+        Optional.of(resourceVariantFiles),
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         bundledAssetCatalogs,

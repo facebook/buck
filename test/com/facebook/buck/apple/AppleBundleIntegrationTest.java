@@ -26,9 +26,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.HumanReadableException;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,6 +40,9 @@ public class AppleBundleIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void simpleApplicationBundle() throws IOException{
@@ -111,12 +116,23 @@ public class AppleBundleIntegrationTest {
     workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
 
     workspace.verify();
+  }
 
-    assertTrue(
-        Files.exists(
-            tmp.getRootPath()
-                .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
+  @Test
+  public void appBundleVariantDirectoryMustEndInLproj() throws IOException {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Variant files have to be in a directory with name ending in '.lproj', " +
+            "but 'cc/Localizable.strings' is not.");
+
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "app_bundle_with_invalid_variant",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertFailure();
   }
 
   @Test
