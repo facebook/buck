@@ -40,6 +40,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/guice/guice-assistedinject-3.0.jar",
     "third-party/java/guice/guice-multibindings-3.0.jar",
     "third-party/java/icu4j/icu4j-54.1.1.jar",
+    "third-party/java/infer-annotations/infer-annotations-1.5.jar",
     "third-party/java/ini4j/ini4j-0.5.2.jar",
     "third-party/java/jackson/jackson-annotations-2.0.5.jar",
     "third-party/java/jackson/jackson-core-2.0.5.jar",
