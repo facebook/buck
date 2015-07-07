@@ -1248,6 +1248,31 @@ public class SuperConsoleEventBusListenerTest {
             " |=> IDLE"));
   }
 
+  @Test
+  public void debugConsoleEventShouldNotPrintLogLineToConsole() {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            new DefaultExecutionEnvironment(
+                new FakeProcessExecutor(),
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+        Optional.<WebServer>absent());
+    eventBus.register(listener);
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ConsoleEvent.fine("I'll get you Bluths - Hel-loh"),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    validateConsole(console, listener, 0L, ImmutableList.<String>of());
+  }
+
   private void validateConsole(TestConsole console,
       SuperConsoleEventBusListener listener,
       long timeMs,

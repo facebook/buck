@@ -296,9 +296,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       return;
     }
 
-    lines.add("Log:");
+    ImmutableList.Builder<String> logEventLinesBuilder = ImmutableList.builder();
     for (ConsoleEvent logEvent : logEvents) {
-      formatConsoleEvent(logEvent, lines);
+      formatConsoleEvent(logEvent, logEventLinesBuilder);
+    }
+    ImmutableList<String> logEventLines = logEventLinesBuilder.build();
+    if (!logEventLines.isEmpty()) {
+      lines.add("Log:");
+      lines.addAll(logEventLines);
     }
   }
 
