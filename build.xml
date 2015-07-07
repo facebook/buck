@@ -317,87 +317,6 @@
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
-    <ecj>
-      <javac-params>
-        <!-- //src/com/facebook/buck/io:io -->
-        <include name="com/facebook/buck/io/PathListing.java" />
-
-        <!-- //src/com/facebook/buck/log:log -->
-        <include name="com/facebook/buck/log/CommandThreadAssociation.java" />
-        <include name="com/facebook/buck/log/CommandThreadFactory.java" />
-        <include name="com/facebook/buck/log/CompressingFileHandler.java" />
-        <include name="com/facebook/buck/log/ConsoleHandler.java" />
-        <include name="com/facebook/buck/log/GlobalState.java" />
-        <include name="com/facebook/buck/log/LogConfig.java" />
-        <include name="com/facebook/buck/log/LogConfigPaths.java" />
-        <include name="com/facebook/buck/log/LogFormatter.java" />
-        <include name="com/facebook/buck/log/Logger.java" />
-
-        <!-- //src/com/facebook/buck/util:concurrent -->
-        <include name="com/facebook/buck/util/concurrent/MoreExecutors.java" />
-        <include name="com/facebook/buck/util/concurrent/MoreFutures.java" />
-        <include name="com/facebook/buck/util/concurrent/TimeSpan.java" />
-
-        <!-- //src/com/facebook/buck/util:escaper -->
-        <include name="com/facebook/buck/util/Escaper.java" />
-        <include name="com/facebook/buck/util/WindowsCreateProcessEscape.java" />
-
-        <!-- //src/com/facebook/buck/util:exceptions -->
-        <include name="com/facebook/buck/util/ExceptionWithHumanReadableMessage.java" />
-        <include name="com/facebook/buck/util/HumanReadableException.java" />
-        <include name="com/facebook/buck/util/WatchmanWatcherException.java" />
-
-        <!-- //src/com/facebook/buck/util:io -->
-        <include name="com/facebook/buck/util/AbstractProcessExecutorParams.java" />
-        <include name="com/facebook/buck/util/Ansi.java" />
-        <include name="com/facebook/buck/util/AnsiEnvironmentChecking.java" />
-        <include name="com/facebook/buck/util/BestCompressionGZIPOutputStream.java" />
-        <include name="com/facebook/buck/util/Console.java" />
-        <include name="com/facebook/buck/util/CapturingPrintStream.java" />
-        <include name="com/facebook/buck/util/DefaultDirectoryTraverser.java" />
-        <include name="com/facebook/buck/util/DirectoryTraverser.java" />
-        <include name="com/facebook/buck/util/DirectoryTraversal.java" />
-        <include name="com/facebook/buck/util/DirtyPrintStreamDecorator.java" />
-        <include name="com/facebook/buck/util/InputStreamConsumer.java" />
-        <include name="com/facebook/buck/util/MoreFiles.java" />
-        <include name="com/facebook/buck/util/MorePaths.java" />
-        <include name="com/facebook/buck/util/MorePosixFilePermissions.java" />
-        <include name="com/facebook/buck/util/PkillProcessManager.java" />
-        <include name="com/facebook/buck/util/ProcessExecutor.java" />
-        <include name="com/facebook/buck/util/ProcessExecutorParams.java" />
-        <include name="com/facebook/buck/util/ProcessManager.java" />
-        <include name="com/facebook/buck/util/ProjectFilesystem.java" />
-        <include name="com/facebook/buck/util/Threads.java" />
-        <include name="com/facebook/buck/util/UnixUserIdFetcher.java" />
-        <include name="com/facebook/buck/util/UserIdFetcher.java" />
-        <include name="com/facebook/buck/util/Verbosity.java" />
-
-        <!-- //src/com/facebook/buck/util:constants -->
-        <include name="com/facebook/buck/util/BuckConstant.java" />
-
-        <!-- //src/com/facebook/buck/util/environment:platform -->
-        <include name="com/facebook/buck/util/environment/Platform.java" />
-
-        <!-- //src/com/facebook/buck/util/immutables:immutables -->
-        <include name="com/facebook/buck/util/immutables/BuckStyleImmutable.java" />
-
-        <!-- //src/com/facebook/buck/zip:stream -->
-        <include name="com/facebook/buck/zip/AppendingZipOutputStream.java" />
-        <include name="com/facebook/buck/zip/ByteIo.java" />
-        <include name="com/facebook/buck/zip/CentralDirectory.java" />
-        <include name="com/facebook/buck/zip/CustomZipOutputStream.java" />
-        <include name="com/facebook/buck/zip/CustomZipEntry.java" />
-        <include name="com/facebook/buck/zip/EntryAccounting.java" />
-        <include name="com/facebook/buck/zip/OverwritingZipOutputStream.java" />
-        <include name="com/facebook/buck/zip/ZipConstants.java" />
-        <include name="com/facebook/buck/zip/ZipOutputStreams.java" />
-
-        <!-- //src/com/facebook/buck/timing:timing -->
-        <include name="com/facebook/buck/timing/*.java" />
-
-        <src path="${immutables.gensrc.dir}" />
-      </javac-params>
-    </ecj>
     <!-- Copy in scripts we need at run time when using an unpacked buck -->
     <copy file="src/com/facebook/buck/json/buck.py" todir="${classes.dir}/com/facebook/buck/json"/>
 
@@ -418,10 +337,6 @@
       <compilerarg value="-Xlint:serial" />
     </javac>
 
-    <!--
-      Note that the inputs to this <ecj> task overlap with those from the previous
-      <ecj> task. It's too much work to exclude them here.
-    -->
     <ecj>
       <javac-params>
         <!--
