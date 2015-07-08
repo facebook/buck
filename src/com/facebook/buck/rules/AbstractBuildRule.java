@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.Beta;
 import com.google.common.base.CaseFormat;
@@ -98,7 +97,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public final int compareTo(HasBuildTarget that) {
+  public final int compareTo(BuildRule that) {
     return this.getBuildTarget().compareTo(that.getBuildTarget());
   }
 
