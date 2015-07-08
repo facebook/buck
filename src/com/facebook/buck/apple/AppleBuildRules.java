@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.shell.GenruleDescription;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -34,6 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 
 import javax.annotation.Nullable;
@@ -59,9 +59,7 @@ public final class AppleBuildRules {
       ImmutableSet.<Class<? extends BuildRule>>of(AppleTest.class);
 
   private static final ImmutableSet<BuildRuleType> RECURSIVE_DEPENDENCIES_STOP_AT_TYPES =
-      ImmutableSet.of(
-          AppleBundleDescription.TYPE,
-          GenruleDescription.TYPE);
+      ImmutableSet.of(AppleBundleDescription.TYPE);
 
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.OCTEST, AppleBundleExtension.XCTEST);
@@ -125,6 +123,10 @@ public final class AppleBuildRules {
         new AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>>() {
           @Override
           protected Iterator<TargetNode<?>> findChildren(TargetNode<?> node) throws IOException {
+            if (!isXcodeTargetBuildRuleType(node.getType())) {
+              return Collections.emptyIterator();
+            }
+
             LOG.verbose("Finding children of node: %s", node);
 
             ImmutableSortedSet.Builder<TargetNode<?>> defaultDepsBuilder =
