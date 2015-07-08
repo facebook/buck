@@ -329,7 +329,7 @@ public class MiniAapt implements Step {
     }
   }
 
-  private void addToResourceCollector(Node node, RType rType) {
+  private void addToResourceCollector(Node node, RType rType) throws ResourceParseException {
     String resourceName = sanitizeName(extractNameAttribute(node));
     if (rType.equals(RType.STYLEABLE)) {
 
@@ -438,8 +438,15 @@ public class MiniAapt implements Step {
     }
   }
 
-  private static String extractNameAttribute(Node node) {
-    return node.getAttributes().getNamedItem("name").getNodeValue();
+  private static String extractNameAttribute(Node node) throws ResourceParseException {
+    Node attribute = node.getAttributes().getNamedItem("name");
+    if (attribute == null) {
+      throw new ResourceParseException(
+          "Error: expected a 'name' attribute in node '%s' with value '%s'",
+          node.getNodeName(),
+          node.getTextContent());
+    }
+    return attribute.getNodeValue();
   }
 
   private static String sanitizeName(String rawName) {
