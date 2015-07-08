@@ -58,6 +58,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   private final ProjectFilesystem projectFilesystem;
   private final Path pathToPex;
   private final Path pathToPexExecuter;
+  private final String pexExtension;
   private final Path pathToPythonTestMain;
   private final PythonEnvironment pythonEnvironment;
   private final CxxPlatform defaultCxxPlatform;
@@ -67,6 +68,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
       ProjectFilesystem projectFilesystem,
       Path pathToPex,
       Path pathToPexExecuter,
+      String pexExtension,
       Path pathToPythonTestMain,
       PythonEnvironment pythonEnvironment,
       CxxPlatform defaultCxxPlatform,
@@ -74,6 +76,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     this.projectFilesystem = projectFilesystem;
     this.pathToPex = pathToPex;
     this.pathToPexExecuter = pathToPexExecuter;
+    this.pexExtension = pexExtension;
     this.pathToPythonTestMain = pathToPythonTestMain;
     this.pythonEnvironment = pythonEnvironment;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -228,6 +231,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         pathResolver,
         pathToPex,
         pathToPexExecuter,
+        pexExtension,
         pythonEnvironment,
         PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
         allComponents);

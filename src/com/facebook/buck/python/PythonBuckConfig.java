@@ -139,6 +139,10 @@ public class PythonBuckConfig {
     return path.get();
   }
 
+  public String getPexExtension() {
+    return delegate.getValue(SECTION, "pex_extension").or(".pex");
+  }
+
   private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {
     try {

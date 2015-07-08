@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -39,9 +40,11 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -51,6 +54,7 @@ public class PythonBinaryDescriptionTest {
 
   private static final Path PEX_PATH = Paths.get("pex");
   private static final Path PEX_EXECUTER_PATH = MorePathsForTests.rootRelativePath("/not/python2");
+  private static final String PEX_EXTENSION = ".pex";
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(new FakeBuckConfig()));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
@@ -82,6 +86,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
         PEX_EXECUTER_PATH,
+        PEX_EXTENSION,
         new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
@@ -111,6 +116,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
         PEX_EXECUTER_PATH,
+        PEX_EXTENSION,
         new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
@@ -138,6 +144,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
         PEX_EXECUTER_PATH,
+        PEX_EXTENSION,
         new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.5")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
@@ -174,6 +181,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc = new PythonBinaryDescription(
         PEX_PATH,
         PEX_EXECUTER_PATH,
+        PEX_EXTENSION,
         new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.5")),
         CXX_PLATFORM,
         CXX_PLATFORMS);
@@ -185,6 +193,31 @@ public class PythonBinaryDescriptionTest {
     arg.zipSafe = Optional.absent();
     PythonBinary rule = desc.createBuildRule(params, resolver, arg);
     assertEquals(mainModule, rule.getMainModule());
+  }
+
+  @Test
+  public void pexExtension() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    PythonBinaryDescription desc =
+        new PythonBinaryDescription(
+            PEX_PATH,
+            PEX_EXECUTER_PATH,
+            ".different_extension",
+            new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.5")),
+            CXX_PLATFORM,
+            CXX_PLATFORMS);
+    PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
+    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.mainModule = Optional.of("main");
+    arg.main = Optional.absent();
+    arg.baseModule = Optional.absent();
+    arg.zipSafe = Optional.absent();
+    PythonBinary rule = desc.createBuildRule(params, resolver, arg);
+    assertThat(
+        Preconditions.checkNotNull(rule.getPathToOutput()).toString(),
+        Matchers.endsWith(".different_extension"));
   }
 
 }

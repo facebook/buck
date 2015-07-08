@@ -67,6 +67,7 @@ public class PythonBinaryTest {
         resolver,
         Paths.get("dummy_path_to_pex"),
         Paths.get("dummy_path_to_pex_runner"),
+        ".pex",
         new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         "main",
         PythonPackageComponents.of(

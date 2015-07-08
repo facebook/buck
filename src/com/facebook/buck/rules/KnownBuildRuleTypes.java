@@ -475,6 +475,7 @@ public class KnownBuildRuleTypes {
         new PythonBinaryDescription(
             pyConfig.getPathToPex(),
             pyConfig.getPathToPexExecuter(),
+            pyConfig.getPexExtension(),
             pythonEnv,
             defaultCxxPlatform,
             cxxPlatforms));
@@ -484,6 +485,7 @@ public class KnownBuildRuleTypes {
             projectFilesystem,
             pyConfig.getPathToPex(),
             pyConfig.getPathToPexExecuter(),
+            pyConfig.getPexExtension(),
             pythonPathToPythonTestMain,
             pythonEnv,
             defaultCxxPlatform,

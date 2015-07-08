@@ -46,6 +46,8 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   private final Path pathToPex;
   private final Path pathToPexExecuter;
   @AddToRuleKey
+  private final String pexExtension;
+  @AddToRuleKey
   private final String mainModule;
   @AddToRuleKey
   private final PythonPackageComponents components;
@@ -57,12 +59,14 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
       SourcePathResolver resolver,
       Path pathToPex,
       Path pathToPexExecuter,
+      String pexExtension,
       PythonEnvironment pythonEnvironment,
       String mainModule,
       PythonPackageComponents components) {
     super(params, resolver);
     this.pathToPex = pathToPex;
     this.pathToPexExecuter = pathToPexExecuter;
+    this.pexExtension = pexExtension;
     this.pythonEnvironment = pythonEnvironment;
     this.mainModule = mainModule;
     this.components = components;
@@ -74,7 +78,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
   }
 
   public Path getBinPath() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s.pex");
+    return BuildTargets.getGenPath(getBuildTarget(), "%s" + pexExtension);
   }
 
   @Override

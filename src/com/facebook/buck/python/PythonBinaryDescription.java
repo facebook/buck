@@ -46,6 +46,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
 
   private final Path pathToPex;
   private final Path pathToPexExecuter;
+  private final String pexExtension;
   private final PythonEnvironment pythonEnvironment;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
@@ -53,11 +54,13 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
   public PythonBinaryDescription(
       Path pathToPex,
       Path pathToPexExecuter,
+      String pexExtension,
       PythonEnvironment pythonEnv,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.pathToPex = pathToPex;
     this.pathToPexExecuter = pathToPexExecuter;
+    this.pexExtension = pexExtension;
     this.pythonEnvironment = pythonEnv;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
@@ -138,6 +141,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         pathResolver,
         pathToPex,
         pathToPexExecuter,
+        pexExtension,
         pythonEnvironment,
         mainModule,
         allPackageComponents);

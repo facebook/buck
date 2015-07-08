@@ -51,6 +51,7 @@ public class PythonTestDescriptionTest {
 
   private static final Path PEX_PATH = Paths.get("pex");
   private static final Path PEX_EXECUTER_PATH = MorePathsForTests.rootRelativePath("/not/python2");
+  private static final String PEX_EXTENSION = ".pex";
   private static final Path TEST_MAIN = Paths.get("main");
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
@@ -68,6 +69,7 @@ public class PythonTestDescriptionTest {
         PROJECT_FILESYSTEM,
         PEX_PATH,
         PEX_EXECUTER_PATH,
+        PEX_EXTENSION,
         TEST_MAIN,
         new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         CXX_PLATFORM,
@@ -110,6 +112,7 @@ public class PythonTestDescriptionTest {
         PROJECT_FILESYSTEM,
         PEX_PATH,
         PEX_EXECUTER_PATH,
+        PEX_EXTENSION,
         TEST_MAIN,
         new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.5")),
         CXX_PLATFORM,
@@ -141,8 +144,9 @@ public class PythonTestDescriptionTest {
     PythonBinary baseModuleRule = (PythonBinary) resolver.getRule(
         desc.getBinaryBuildTarget(target));
     assertNotNull(baseModuleRule);
-    assertTrue(baseModuleRule.getComponents().getModules().containsKey(
-        Paths.get(arg.baseModule.get()).resolve(sourceName)));
+    assertTrue(
+        baseModuleRule.getComponents().getModules().containsKey(
+            Paths.get(arg.baseModule.get()).resolve(sourceName)));
   }
 
 }
