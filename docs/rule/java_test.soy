@@ -52,19 +52,7 @@ A <code>java_test()</code> rule is used to define a set of
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'labels' /}
-  {param default: '[]' /}
-  {param desc}
-  A list of labels to be applied to these tests. These labels are
-  arbitrary text strings and have no meaning within buck itself. They
-  can, however, have meaning for you as a test author
-  (e.g., <code>smoke</code> or <code>fast</code>). A label can be
-  used to filter or include a specific <code>java_test()</code> rule
-  when executing <a href="{ROOT}command/test.html"><code>buck
-  test</code></a>.
-  {/param}
-{/call}
+{call buck.test_label_arg /}
 
 {call buck.arg}
   {param name: 'source_under_test' /}

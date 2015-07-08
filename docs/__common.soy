@@ -150,6 +150,7 @@
             'android_binary',
             'android_build_config',
             'android_instrumentation_apk',
+            'android_instrumentation_test',
             'android_library',
             'android_manifest',
             'android_prebuilt_aar',
@@ -503,6 +504,11 @@
 {/template}
 
 /***/
+{template .android_instrumentation_apk}
+{call .ruleLink}{param name : 'android_instrumentation_apk' /}{/call}
+{/template}
+
+/***/
 {template .android_library}
 {call .ruleLink}{param name : 'android_library' /}{/call}
 {/template}
@@ -678,6 +684,23 @@
   {param desc}
   List of <a href="{ROOT}concept/build_target.html">build target</a> that
   identify the test rules that exercise this target.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .test_label_arg}
+{call buck.arg}
+  {param name: 'labels' /}
+  {param default: '[]' /}
+  {param desc}
+  A list of labels to be applied to these tests. These labels are
+  arbitrary text strings and have no meaning within buck itself. They
+  can, however, have meaning for you as a test author
+  (e.g., <code>smoke</code> or <code>fast</code>). A label can be
+  used to filter or include a specific test rule
+  when executing <a href="{ROOT}command/test.html"><code>buck
+  test</code></a>.
   {/param}
 {/call}
 {/template}
