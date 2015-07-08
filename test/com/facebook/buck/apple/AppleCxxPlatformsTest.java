@@ -166,6 +166,9 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCflags(),
         hasConsecutiveItems("-arch", "armv7"));
     assertThat(
+        cxxPlatform.getAsflags(),
+        hasConsecutiveItems("-arch", "armv7"));
+    assertThat(
         cxxPlatform.getCflags(),
         hasConsecutiveItems("-mios-version-min=7.0"));
     assertThat(

@@ -293,7 +293,7 @@ public class NdkCxxPlatforms {
         .setFlavor(flavor)
         .setAs(getGccTool(ndkRoot, targetConfiguration, host, "as", version, executableFinder))
         // Default assembler flags added by the NDK to enforce the NX (no execute) security feature.
-        .addAsflags("--noexecstack")
+        .addAsflags("-Xassembler", "--noexecstack")
         .setAspp(
             getCTool(
                 ndkRoot,

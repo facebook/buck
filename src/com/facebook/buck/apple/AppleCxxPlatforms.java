@@ -110,6 +110,7 @@ public class AppleCxxPlatforms {
     }
 
     ImmutableList<String> ldflags = ImmutableList.of("-sdk_version", targetSdk.getVersion());
+    ImmutableList<String> asflags = ImmutableList.of("-arch", targetArchitecture);
 
     ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
     versionsBuilder.add(targetSdk.getVersion());
@@ -207,6 +208,8 @@ public class AppleCxxPlatforms {
         ldflags,
         strip,
         new BsdArchiver(ar),
+        asflags,
+        ImmutableList.<String>of(),
         cflags,
         ImmutableList.<String>of(),
         getOptionalTool("lex", toolSearchPaths, executableFinder, version),

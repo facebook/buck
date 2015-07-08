@@ -211,6 +211,9 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-Wno-deprecated");
     commandArgs.add("-Wno-conversion");
 
+    commandArgs.add("-arch");
+    commandArgs.add("x86_64");
+
     for (String include : includes) {
       commandArgs.add("-I");
       commandArgs.add(include);

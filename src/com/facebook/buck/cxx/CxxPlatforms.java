@@ -74,6 +74,8 @@ public class CxxPlatforms {
       Iterable<String> ldFlags,
       Tool strip,
       Archiver ar,
+      ImmutableList<String> asflags,
+      ImmutableList<String> asppflags,
       ImmutableList<String> cflags,
       ImmutableList<String> cppflags,
       Optional<Tool> lex,
@@ -107,6 +109,8 @@ public class CxxPlatforms {
     builder.addAllCppflags(cppflags);
     builder.addAllCxxppflags(cppflags);
     builder.addAllCxxldflags(cflags);
+    builder.addAllAsflags(asflags);
+    builder.addAllAsppflags(asppflags);
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
     return builder.build();
   }
