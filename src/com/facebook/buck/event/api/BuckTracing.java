@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.api;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -51,6 +52,17 @@ public final class BuckTracing {
 
   /**
    * Records the beginning of a traced section. The section will appear in the trace labeled with
+   * eventName.
+   *
+   * For best results, this call should be immediately before a try block, and a corresponding call
+   * to {@link #end(Map)} should be in the finally block.
+   */
+  public void begin(final String eventName) {
+    begin(eventName, Collections.<String, String>emptyMap());
+  }
+
+  /**
+   * Records the beginning of a traced section. The section will appear in the trace labeled with
    * eventName, and the supplied arguments will be visible when the section is selected.
    *
    * For best results, this call should be immediately before a try block, and a corresponding call
@@ -62,6 +74,17 @@ public final class BuckTracing {
     }
 
     tracingInterface.begin(pluginName, eventName, args);
+  }
+
+  /**
+   * Records the end of the traced section started by the most recent call to
+   * {@link #begin(String, Map)}, on <em>any</em> {@link BuckTracing} object, on the current thread.
+   *
+   * For best results, this call should be in a finally block, with the corresponding
+   * {@link #begin(String, Map)} call immediately before the try.
+   */
+  public void end() {
+    end(Collections.<String, String>emptyMap());
   }
 
   /**
