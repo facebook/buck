@@ -34,7 +34,7 @@ if platform.system() == 'Linux':
 elif platform.system() == 'Darwin':
     # From <mach/mach_time.h>
     KERN_SUCCESS = 0
-    libSystem = ctypes.CDLL('libSystem.dylib', use_errno=True)
+    libSystem = ctypes.CDLL('/usr/lib/libSystem.dylib', use_errno=True)
     mach_timebase_info = libSystem.mach_timebase_info
 
     class struct_mach_timebase_info(ctypes.Structure):
