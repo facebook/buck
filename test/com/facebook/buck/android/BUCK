@@ -100,6 +100,7 @@ java_test(
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:stream',
+    '//src/com/facebook/buck/zip:unzip',
     '//third-party/java/args4j:args4j',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/java:testutil',
