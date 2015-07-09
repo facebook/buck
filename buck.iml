@@ -13,6 +13,8 @@
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/dx-from-kitkat/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables-test" isTestSource="true" generated="true" />
+      <excludeFolder url="file://$MODULE_DIR$/buck-out" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/cli/quickstart" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/junit" />
