@@ -28,9 +28,15 @@ genrule(
   out = 'generated.jar',
 )
 
+genrule(
+  name = 'generated_source_jar',
+  cmd = 'echo foo > $OUT',
+  out = 'generated-sources.jar',
+)
 prebuilt_jar(
   name = 'generated',
   binary_jar = ':generated_jar',
+  source_jar = ':generated_source_jar',
   visibility = [
     'PUBLIC',
   ],

@@ -104,7 +104,6 @@ public class ProjectIntegrationTest {
     workspace.verify();
   }
 
-
   @Test
   public void testBuckProjectDryRun() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -119,6 +118,7 @@ public class ProjectIntegrationTest {
         "//:root_module",
         "//libs:generated",
         "//libs:generated_jar",
+        "//libs:generated_source_jar",
         "//libs:guava",
         "//libs:jsr305",
         "//libs:junit",
