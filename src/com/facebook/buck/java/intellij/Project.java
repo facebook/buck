@@ -972,10 +972,9 @@ public class Project {
       PrebuiltJar prebuiltJar = (PrebuiltJar) libraryJar;
 
       String binaryJar = resolver.getPath(prebuiltJar.getBinaryJar()).toString();
-      String sourceJar = null;
-      if (prebuiltJar.getSourceJar().isPresent()) {
-        sourceJar = prebuiltJar.getSourceJar().get().toString();
-      }
+      String sourceJar = prebuiltJar.getSourceJar().isPresent()
+          ? resolver.getPath(prebuiltJar.getSourceJar().get()).toString()
+          : null;
       String javadocUrl = prebuiltJar.getJavadocUrl().orNull();
       libraries.add(new SerializablePrebuiltJarRule(name, binaryJar, sourceJar, javadocUrl));
     }
