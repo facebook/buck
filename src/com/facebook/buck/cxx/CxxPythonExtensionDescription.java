@@ -141,7 +141,7 @@ public class CxxPythonExtensionDescription implements
                 args.preprocessorFlags,
                 args.platformPreprocessorFlags,
                 args.langPreprocessorFlags,
-                cxxPlatform.getFlavor()),
+                cxxPlatform),
             args.prefixHeaders.get(),
             ImmutableList.of(headerSymlinkTree),
             ImmutableList.<Path>of(),
@@ -166,7 +166,7 @@ public class CxxPythonExtensionDescription implements
             CxxFlags.getFlags(
                 args.compilerFlags,
                 args.platformCompilerFlags,
-                cxxPlatform.getFlavor()),
+                cxxPlatform),
             cxxBuckConfig.getPreprocessMode(),
             allSources,
             CxxSourceRuleFactory.PicType.PIC);
@@ -182,7 +182,7 @@ public class CxxPythonExtensionDescription implements
         /* extraLdFlags */ CxxFlags.getFlags(
             args.linkerFlags,
             args.platformLinkerFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         getExtensionTarget(params.getBuildTarget(), cxxPlatform.getFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),

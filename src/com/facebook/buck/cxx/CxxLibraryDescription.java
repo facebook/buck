@@ -373,20 +373,20 @@ public class CxxLibraryDescription implements
     ImmutableList<String> extraCxxLdFlags = extraCxxLdFlagsBuilder.build();
 
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
-            cxxPlatform,
-            params,
-            pathResolver,
-            extraCxxLdFlags,
-            linkerFlags,
-            sharedTarget,
-            linkType,
-            Optional.of(sharedLibrarySoname),
-            sharedLibraryPath,
-            objects.values(),
-            linkableDepType,
-            params.getDeps(),
-            cxxRuntimeType,
-            bundleLoader);
+        cxxPlatform,
+        params,
+        pathResolver,
+        extraCxxLdFlags,
+        linkerFlags,
+        sharedTarget,
+        linkType,
+        Optional.of(sharedLibrarySoname),
+        sharedLibraryPath,
+        objects.values(),
+        linkableDepType,
+        params.getDeps(),
+        cxxRuntimeType,
+        bundleLoader);
   }
 
   /**
@@ -549,21 +549,21 @@ public class CxxLibraryDescription implements
             args.preprocessorFlags,
             args.platformPreprocessorFlags,
             args.langPreprocessorFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         CxxFlags.getLanguageFlags(
             args.exportedPreprocessorFlags,
             args.exportedPlatformPreprocessorFlags,
             args.exportedLangPreprocessorFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
-        args.frameworkSearchPaths.get(),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, cxxPlatform),
         preprocessMode,
         pic);
   }
@@ -586,13 +586,13 @@ public class CxxLibraryDescription implements
         CxxFlags.getFlags(
             args.linkerFlags,
             args.platformLinkerFlags,
-            cxxPlatform.getFlavor()));
+            cxxPlatform));
 
     linkerFlags.addAll(
         CxxFlags.getFlags(
             args.exportedLinkerFlags,
             args.exportedPlatformLinkerFlags,
-            cxxPlatform.getFlavor()));
+            cxxPlatform));
 
     return createSharedLibrary(
         params,
@@ -605,22 +605,22 @@ public class CxxLibraryDescription implements
             args.preprocessorFlags,
             args.platformPreprocessorFlags,
             args.langPreprocessorFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         CxxFlags.getLanguageFlags(
             args.exportedPreprocessorFlags,
             args.exportedPlatformPreprocessorFlags,
             args.exportedLangPreprocessorFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
         linkerFlags.build(),
-        args.frameworkSearchPaths.get(),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, cxxPlatform),
         args.soname,
         preprocessMode,
         args.cxxRuntimeType,
@@ -650,21 +650,21 @@ public class CxxLibraryDescription implements
             args.preprocessorFlags,
             args.platformPreprocessorFlags,
             args.langPreprocessorFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         CxxFlags.getLanguageFlags(
             args.exportedPreprocessorFlags,
             args.exportedPlatformPreprocessorFlags,
             args.exportedLangPreprocessorFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         args.prefixHeaders.get(),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(
             args.compilerFlags,
             args.platformCompilerFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
-        args.frameworkSearchPaths.get(),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, cxxPlatform),
         preprocessMode);
   }
 
@@ -838,7 +838,7 @@ public class CxxLibraryDescription implements
                 args.exportedPreprocessorFlags,
                 args.exportedPlatformPreprocessorFlags,
                 args.exportedLangPreprocessorFlags,
-                input.getFlavor());
+                input);
           }
         },
         new Function<CxxPlatform, ImmutableList<String>>() {
@@ -847,11 +847,16 @@ public class CxxLibraryDescription implements
             return CxxFlags.getFlags(
                 args.exportedLinkerFlags,
                 args.exportedPlatformLinkerFlags,
-                input.getFlavor());
+                input);
           }
         },
         args.supportedPlatformsRegex,
-        args.frameworkSearchPaths.get(),
+        new Function<CxxPlatform, ImmutableList<Path>>() {
+          @Override
+          public ImmutableList<Path> apply(CxxPlatform input) {
+            return CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, input);
+          }
+        },
         args.forceStatic.or(false) ? CxxLibrary.Linkage.STATIC : CxxLibrary.Linkage.ANY,
         args.linkWhole.or(false),
         args.soname,

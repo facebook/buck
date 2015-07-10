@@ -692,6 +692,19 @@ public class CxxDescriptionEnhancer {
     return BuildTarget.builder(target).addFlavors(CXX_LINK_BINARY_FLAVOR).build();
   }
 
+  /**
+   * @return the framework search paths with any embedded macros expanded.
+   */
+  static ImmutableList<Path> getFrameworkSearchPaths(
+      Optional<ImmutableList<Path>> frameworkSearchPaths,
+      CxxPlatform cxxPlatform) {
+    return FluentIterable.from(frameworkSearchPaths.or(ImmutableList.<Path>of()))
+        .transform(Functions.toStringFunction())
+        .transform(CxxFlags.getTranslateMacrosFn(cxxPlatform))
+        .transform(MorePaths.TO_PATH)
+        .toList();
+  }
+
   static class CxxLinkAndCompileRules {
     final CxxLink cxxLink;
     final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
@@ -747,10 +760,12 @@ public class CxxDescriptionEnhancer {
                 args.preprocessorFlags,
                 args.platformPreprocessorFlags,
                 args.langPreprocessorFlags,
-                cxxPlatform.getFlavor()),
+                cxxPlatform),
             args.prefixHeaders.get(),
             ImmutableList.of(headerSymlinkTree),
-            args.frameworkSearchPaths.get(),
+            getFrameworkSearchPaths(
+                args.frameworkSearchPaths,
+                cxxPlatform),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
                 FluentIterable.from(params.getDeps())
@@ -775,7 +790,7 @@ public class CxxDescriptionEnhancer {
             CxxFlags.getFlags(
                 args.compilerFlags,
                 args.platformCompilerFlags,
-                cxxPlatform.getFlavor()),
+                cxxPlatform),
             preprocessMode,
             sources,
             CxxSourceRuleFactory.PicType.PDC);
@@ -791,7 +806,7 @@ public class CxxDescriptionEnhancer {
         /* extraLdFlags */ CxxFlags.getFlags(
             args.linkerFlags,
             args.platformLinkerFlags,
-            cxxPlatform.getFlavor()),
+            cxxPlatform),
         createCxxLinkTarget(params.getBuildTarget()),
         Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),

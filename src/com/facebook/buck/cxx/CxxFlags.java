@@ -16,32 +16,49 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 
+import java.util.Map;
+
 public class CxxFlags {
 
   private CxxFlags() {}
 
+  public static Function<String, String> getTranslateMacrosFn(final CxxPlatform cxxPlatform) {
+    return new Function<String, String>() {
+      @Override
+      public String apply(String flag) {
+        // TODO(agallager): We're currently tied to `$VARIABLE` style of macros as much of the apple
+        // support relies on this.  Long-term though, we should make this consistent with the
+        // `$(macro ...)` style we use in the rest of the codebase.
+        for (Map.Entry<String, String> entry : cxxPlatform.getFlagMacros().entrySet()) {
+          flag = flag.replace("$" + entry.getKey(), entry.getValue());
+        }
+        return flag;
+      }
+    };
+  }
+
   public static ImmutableList<String> getFlags(
       Optional<ImmutableList<String>> flags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
-      Flavor platform) {
-    ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
-
-    flagsBuilder.addAll(flags.or(ImmutableList.<String>of()));
-    flagsBuilder.addAll(
-        Iterables.concat(
-            platformFlags
-                .or(PatternMatchedCollection.<ImmutableList<String>>of())
-                .getMatchingValues(platform.toString())));
-
-    return flagsBuilder.build();
+      CxxPlatform platform) {
+    return FluentIterable
+        .from(flags.or(ImmutableList.<String>of()))
+        .append(
+            Iterables.concat(
+                platformFlags
+                    .or(PatternMatchedCollection.<ImmutableList<String>>of())
+                    .getMatchingValues(platform.getFlavor().toString())))
+        .transform(getTranslateMacrosFn(platform))
+        .toList();
   }
 
   private static ImmutableMultimap<CxxSource.Type, String> toLanguageFlags(
@@ -60,7 +77,7 @@ public class CxxFlags {
       Optional<ImmutableList<String>> flags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
       Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> languageFlags,
-      Flavor platform) {
+      CxxPlatform platform) {
 
     ImmutableMultimap.Builder<CxxSource.Type, String> langFlags = ImmutableMultimap.builder();
 
@@ -68,7 +85,9 @@ public class CxxFlags {
 
     for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<String>> entry :
          languageFlags.or(ImmutableMap.<CxxSource.Type, ImmutableList<String>>of()).entrySet()) {
-      langFlags.putAll(entry.getKey(), entry.getValue());
+      langFlags.putAll(
+          entry.getKey(),
+          Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)));
     }
 
     return langFlags.build();

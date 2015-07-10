@@ -56,7 +56,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<Pattern> supportedPlatformsRegex;
-  private final ImmutableList<Path> frameworkSearchPaths;
+  private final Function<? super CxxPlatform, ImmutableList<Path>> frameworkSearchPaths;
   private final Linkage linkage;
   private final boolean linkWhole;
   private final Optional<String> soname;
@@ -74,7 +74,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<Pattern> supportedPlatformsRegex,
-      ImmutableList<Path> frameworkSearchPaths,
+      Function<? super CxxPlatform, ImmutableList<Path>> frameworkSearchPaths,
       Linkage linkage,
       boolean linkWhole,
       Optional<String> soname,
@@ -111,7 +111,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
         exportedPreprocessorFlags.apply(cxxPlatform),
-        frameworkSearchPaths);
+        frameworkSearchPaths.apply(cxxPlatform));
   }
 
   @Override

@@ -20,6 +20,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 
 import org.immutables.value.Value;
@@ -75,5 +76,11 @@ interface AbstractCxxPlatform {
   String getSharedLibraryExtension();
 
   DebugPathSanitizer getDebugPathSanitizer();
+
+  /**
+   * @return a map for macro names to their respective expansions, to be used to expand macro
+   *     references in user-provided flags.
+   */
+  ImmutableMap<String, String> getFlagMacros();
 
 }

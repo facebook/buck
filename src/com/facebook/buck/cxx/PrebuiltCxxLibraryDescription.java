@@ -59,7 +59,7 @@ public class PrebuiltCxxLibraryDescription
 
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
-  private static enum Type {
+  private enum Type {
     EXPORTED_HEADERS,
     SHARED,
   }
@@ -349,7 +349,7 @@ public class PrebuiltCxxLibraryDescription
                 args.exportedPreprocessorFlags,
                 args.exportedPlatformPreprocessorFlags,
                 args.exportedLangPreprocessorFlags,
-                input.getFlavor());
+                input);
           }
         },
         new Function<CxxPlatform, ImmutableList<String>>() {
@@ -358,7 +358,7 @@ public class PrebuiltCxxLibraryDescription
             return CxxFlags.getFlags(
                 args.exportedLinkerFlags,
                 args.exportedPlatformLinkerFlags,
-                input.getFlavor());
+                input);
           }
         },
         args.soname,
