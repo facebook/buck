@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -172,8 +171,7 @@ public class AppleDescriptions {
       SourcePathResolver resolver,
       CxxConstructorArg output,
       AppleNativeTargetDescriptionArg arg,
-      BuildTarget buildTarget,
-      final Optional<AppleSdkPaths> appleSdkPaths) {
+      BuildTarget buildTarget) {
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
     // The resulting cxx constructor arg will have no exported headers and both headers and exported
     // headers specified in the apple arg will be available with both public and private include
@@ -190,41 +188,35 @@ public class AppleDescriptions {
                 headerPathPrefix,
                 arg))
         .build();
-    Function<ImmutableList<String>, ImmutableList<String>> expandSdkVariableRefs;
-    if (appleSdkPaths.isPresent()) {
-      expandSdkVariableRefs = expandSdkVariableReferencesFunction(appleSdkPaths.get());
-    } else {
-      expandSdkVariableRefs = Functions.identity();
-    }
 
     output.srcs = Optional.of(SourceWithFlagsList.ofUnnamedSources(arg.srcs.get()));
     output.platformSrcs = Optional.of(PatternMatchedCollection.<SourceWithFlagsList>of());
     output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
     output.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
-    output.compilerFlags = arg.compilerFlags.transform(expandSdkVariableRefs);
+    output.compilerFlags = arg.compilerFlags;
     output.platformCompilerFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());
     output.linkerFlags = Optional.of(
         FluentIterable
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
-            .append(arg.linkerFlags.transform(expandSdkVariableRefs).get())
+            .append(arg.linkerFlags.get())
             .toList());
     output.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
-    output.preprocessorFlags = arg.preprocessorFlags.transform(expandSdkVariableRefs);
+    output.preprocessorFlags = arg.preprocessorFlags;
     output.platformPreprocessorFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());
-    output.langPreprocessorFlags = Optional.of(
-        ImmutableMap.copyOf(
-            Maps.transformValues(
-                arg.langPreprocessorFlags.get(),
-                expandSdkVariableRefs)));
-    if (appleSdkPaths.isPresent()) {
-      output.frameworkSearchPaths = arg.frameworks.transform(
-          frameworksToSearchPathsFunction(resolver, appleSdkPaths.get()));
-    } else {
-      output.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
-    }
+    output.langPreprocessorFlags = arg.langPreprocessorFlags;
+    output.frameworkSearchPaths =
+        arg.frameworks.isPresent() ?
+            Optional.of(
+                FluentIterable.from(arg.frameworks.get())
+                    .transform(
+                        FrameworkPath.getUnexpandedSearchPathFunction(
+                            resolver.getPathFunction(),
+                            Functions.<Path>identity()))
+                    .toList()) :
+            Optional.<ImmutableList<Path>>absent();
     output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;
@@ -239,15 +231,13 @@ public class AppleDescriptions {
       SourcePathResolver resolver,
       CxxBinaryDescription.Arg output,
       AppleNativeTargetDescriptionArg arg,
-      BuildTarget buildTarget,
-      final Optional<AppleSdkPaths> appleSdkPaths) {
+      BuildTarget buildTarget) {
     populateCxxConstructorArg(
         resolver,
         output,
         arg,
-        buildTarget,
-        appleSdkPaths);
-    output.linkStyle = Optional.<CxxBinaryDescription.LinkStyle>absent();
+        buildTarget);
+    output.linkStyle = Optional.absent();
   }
 
   public static void populateCxxLibraryDescriptionArg(
@@ -255,31 +245,20 @@ public class AppleDescriptions {
       CxxLibraryDescription.Arg output,
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget,
-      final Optional<AppleSdkPaths> appleSdkPaths,
       boolean linkWhole) {
     populateCxxConstructorArg(
         resolver,
         output,
         arg,
-        buildTarget,
-        appleSdkPaths);
+        buildTarget);
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
-
-    Function<ImmutableList<String>, ImmutableList<String>> expandSdkVariableRefs;
-    if (appleSdkPaths.isPresent()) {
-      expandSdkVariableRefs = expandSdkVariableReferencesFunction(appleSdkPaths.get());
-    } else {
-      expandSdkVariableRefs = Functions.identity();
-    }
-
     output.headers = Optional.of(
         SourceList.ofNamedSources(
             convertAppleHeadersToPrivateCxxHeaders(
                 resolver.getPathFunction(),
                 headerPathPrefix,
                 arg)));
-    output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags.transform(
-        expandSdkVariableRefs);
+    output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags;
     output.exportedHeaders = Optional.of(
         SourceList.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
@@ -295,7 +274,7 @@ public class AppleDescriptions {
     output.exportedLinkerFlags = Optional.of(
         FluentIterable
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
-            .append(arg.exportedLinkerFlags.transform(expandSdkVariableRefs).get())
+            .append(arg.exportedLinkerFlags.get())
             .toList());
     output.exportedPlatformLinkerFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());
@@ -361,15 +340,29 @@ public class AppleDescriptions {
     return new Function<FrameworkPath, Iterable<String>>() {
       @Override
       public Iterable<String> apply(FrameworkPath input) {
+        ImmutableList.Builder<String> flags = ImmutableList.builder();
+
+        // Resolve the framework path.
+        Path frameworkPath =
+            Preconditions.checkNotNull(
+                FrameworkPath.getUnexpandedSearchPathFunction(
+                    resolver,
+                    Functions.<Path>identity()).apply(input));
+
+        // Now add the actual framework/lib to the link.
         FrameworkPath.FrameworkType frameworkType = input.getFrameworkType(resolver);
         switch (frameworkType) {
           case FRAMEWORK:
-            return ImmutableList.of("-framework", input.getName(resolver));
+            flags.add("-F", frameworkPath.toString(), "-framework", input.getName(resolver));
+            break;
           case LIBRARY:
-            return ImmutableList.of("-l" + input.getName(resolver));
+            flags.add("-L", frameworkPath.toString(), "-l" + input.getName(resolver));
+            break;
           default:
             throw new RuntimeException("Unsupported framework type: " + frameworkType);
         }
+
+        return flags.build();
       }
     };
   }

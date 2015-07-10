@@ -22,6 +22,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -78,7 +79,8 @@ public class DefaultCxxPlatforms {
           Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
           Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)),
           "dylib",
-          Optional.<DebugPathSanitizer>absent());
+          Optional.<DebugPathSanitizer>absent(),
+          ImmutableMap.<String, String>of());
     }
 
     String sharedLibraryExtension;
@@ -115,7 +117,8 @@ public class DefaultCxxPlatforms {
         Optional.<Tool>of(new HashedFileTool(DEFAULT_LEX)),
         Optional.<Tool>of(new HashedFileTool(DEFAULT_YACC)),
         sharedLibraryExtension,
-        Optional.<DebugPathSanitizer>absent());
+        Optional.<DebugPathSanitizer>absent(),
+        ImmutableMap.<String, String>of());
   }
 
 }

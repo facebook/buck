@@ -34,15 +34,11 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.Optionals;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.util.Map;
 import java.util.Set;
 
 public class AppleLibraryDescription implements
@@ -66,16 +62,12 @@ public class AppleLibraryDescription implements
 
   private final CxxLibraryDescription delegate;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
+      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain) {
     this.delegate = delegate;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.platformFlavorsToAppleCxxPlatforms =
-        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
   }
 
   @Override
@@ -120,22 +112,11 @@ public class AppleLibraryDescription implements
         CxxLibraryDescription.getTypeAndPlatform(
             params.getBuildTarget(),
             cxxPlatformFlavorDomain);
-    Optional<AppleCxxPlatform> appleCxxPlatform = Optionals.bind(
-        typeAndPlatform.getPlatform(),
-        new Function<Map.Entry<Flavor, CxxPlatform>, Optional<AppleCxxPlatform>>() {
-          @Override
-          public Optional<AppleCxxPlatform> apply(Map.Entry<Flavor, CxxPlatform> input) {
-            return Optional.fromNullable(platformFlavorsToAppleCxxPlatforms.get(input.getKey()));
-          }
-        });
-    Optional<AppleSdkPaths> appleSdkPaths = appleCxxPlatform.transform(
-        AppleCxxPlatform.TO_APPLE_SDK_PATHS);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver,
         delegateArg,
         args,
         params.getBuildTarget(),
-        appleSdkPaths,
         !isSharedLibraryTarget(params.getBuildTarget()));
 
     return delegate.createBuildRule(

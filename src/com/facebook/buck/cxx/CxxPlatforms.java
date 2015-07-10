@@ -81,7 +81,8 @@ public class CxxPlatforms {
       Optional<Tool> lex,
       Optional<Tool> yacc,
       String sharedLibraryExtension,
-      Optional<DebugPathSanitizer> debugPathSanitizer) {
+      Optional<DebugPathSanitizer> debugPathSanitizer,
+      ImmutableMap<String, String> flagMacros) {
     // TODO(user, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
@@ -103,7 +104,8 @@ public class CxxPlatforms {
         .setLex(getTool(flavor, "lex", config).or(lex))
         .setYacc(getTool(flavor, "yacc", config).or(yacc))
         .setSharedLibraryExtension(sharedLibraryExtension)
-        .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
+        .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER))
+        .setFlagMacros(flagMacros);
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cflags);
     builder.addAllCppflags(cppflags);

@@ -108,8 +108,7 @@ public class FakeAppleRuleDescriptions {
             new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
             CxxPreprocessMode.COMBINED),
-        DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
-        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
+        DEFAULT_IPHONEOS_FLAVOR_DOMAIN);
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -120,9 +119,7 @@ public class FakeAppleRuleDescriptions {
             new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_PLATFORM.getCxxPlatform(),
             DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
-            CxxPreprocessMode.COMBINED),
-        DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
-        DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS);
+            CxxPreprocessMode.COMBINED));
 
   /**
    * A fake apple_bundle description with an iOS platform for use in tests.

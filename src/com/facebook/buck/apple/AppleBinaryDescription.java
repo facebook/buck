@@ -18,12 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
-import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.TypeAndPlatform;
 import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,15 +27,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.Optionals;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.util.Map;
 import java.util.Set;
 
 public class AppleBinaryDescription
@@ -58,17 +49,9 @@ public class AppleBinaryDescription
   };
 
   private final CxxBinaryDescription delegate;
-  private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
-  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
 
-  public AppleBinaryDescription(
-      CxxBinaryDescription delegate,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
+  public AppleBinaryDescription(CxxBinaryDescription delegate) {
     this.delegate = delegate;
-    this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
-    this.platformFlavorsToAppleCxxPlatforms =
-        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
   }
 
   @Override
@@ -95,26 +78,11 @@ public class AppleBinaryDescription
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-    TypeAndPlatform typeAndPlatform =
-        CxxLibraryDescription.getTypeAndPlatform(
-            params.getBuildTarget(),
-            cxxPlatformFlavorDomain);
-    Optional<AppleCxxPlatform> appleCxxPlatform = Optionals.bind(
-        typeAndPlatform.getPlatform(),
-        new Function<Map.Entry<Flavor, CxxPlatform>, Optional<AppleCxxPlatform>>() {
-          @Override
-          public Optional<AppleCxxPlatform> apply(Map.Entry<Flavor, CxxPlatform> input) {
-            return Optional.fromNullable(platformFlavorsToAppleCxxPlatforms.get(input.getKey()));
-          }
-        });
-    Optional<AppleSdkPaths> appleSdkPaths = appleCxxPlatform.transform(
-        AppleCxxPlatform.TO_APPLE_SDK_PATHS);
     AppleDescriptions.populateCxxBinaryDescriptionArg(
         pathResolver,
         delegateArg,
         args,
-        params.getBuildTarget(),
-        appleSdkPaths);
+        params.getBuildTarget());
 
     return delegate.createBuildRule(params, resolver, delegateArg);
   }

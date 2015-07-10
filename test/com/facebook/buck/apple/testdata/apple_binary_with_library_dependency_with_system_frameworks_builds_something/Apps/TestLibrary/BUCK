@@ -5,6 +5,7 @@ apple_library(
   frameworks = [
   	'$SDKROOT/System/Library/Frameworks/CoreFoundation.framework',
   	'$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
   ],
   visibility = ['//Apps/...'],
 )

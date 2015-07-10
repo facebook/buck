@@ -135,6 +135,7 @@ public class CompilationDatabaseIntegrationTest {
 
     Iterable<String> frameworks = ImmutableList.of(
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
+        Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
         Paths.get("/System/Library/Frameworks/UIKit.framework").getParent().toString());
     String pathToPrivateHeaders = "buck-out/gen/Apps/Weather/" +
         "Weather#header-symlink-tree,iphonesimulator-x86_64";

@@ -141,7 +141,7 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
 
   public static Function<FrameworkPath, Path> getUnexpandedSearchPathFunction(
       final Function<SourcePath, Path> resolver,
-      final Function<Path, Path> relativizer) {
+      final Function<? super Path, Path> relativizer) {
     return new Function<FrameworkPath, Path>() {
       @Override
       public Path apply(FrameworkPath input) {
