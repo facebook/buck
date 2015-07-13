@@ -43,6 +43,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -208,7 +209,8 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput nativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(fakeBuildRule.getBuildTarget())),
-        ImmutableList.<String>of());
+        ImmutableList.<String>of(),
+        ImmutableSet.<Path>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",
         pathResolver,
@@ -317,11 +319,13 @@ public class CxxLinkableEnhancerTest {
     String staticArg = "static";
     NativeLinkableInput staticInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
-        ImmutableList.of(staticArg));
+        ImmutableList.of(staticArg),
+        ImmutableSet.<Path>of());
     String sharedArg = "shared";
     NativeLinkableInput sharedInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
-        ImmutableList.of(sharedArg));
+        ImmutableList.of(sharedArg),
+        ImmutableSet.<Path>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep",
         pathResolver,
         staticInput, sharedInput);
@@ -424,7 +428,8 @@ public class CxxLinkableEnhancerTest {
     String sentinel = "bottom";
     NativeLinkableInput bottomInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
-        ImmutableList.of(sentinel));
+        ImmutableList.of(sentinel),
+        ImmutableSet.<Path>of());
     BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);
 
     // Create a non-native linkable that sits in the middle of the dep chain, preventing
@@ -434,7 +439,8 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable that sits at the top of the dep chain.
     NativeLinkableInput topInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
-        ImmutableList.<String>of());
+        ImmutableList.<String>of(),
+        ImmutableSet.<Path>of());
     BuildRule top = createNativeLinkable("//:top", pathResolver, topInput, topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling

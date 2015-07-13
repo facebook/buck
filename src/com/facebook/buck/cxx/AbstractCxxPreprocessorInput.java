@@ -98,10 +98,6 @@ abstract class AbstractCxxPreprocessorInput {
 
   public static final CxxPreprocessorInput EMPTY = CxxPreprocessorInput.builder().build();
 
-  public static CxxPreprocessorInput.Builder builder() {
-    return CxxPreprocessorInput.builder();
-  }
-
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs)
       throws AbstractCxxHeaders.ConflictingHeadersException {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();

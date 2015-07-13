@@ -114,7 +114,7 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       ImmutableMap<Path, SourcePath> exportedHeaders,
-      ImmutableList<Path> frameworkSearchPaths) {
+      ImmutableSet<Path> frameworkSearchPaths) {
 
     // Check if there is a target node representative for the library in the action graph and,
     // if so, grab the cached transitive C/C++ preprocessor input from that.  We===
@@ -182,7 +182,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
-      ImmutableList<Path> frameworkSearchPaths,
+      ImmutableSet<Path> frameworkSearchPaths,
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) {
 
@@ -214,7 +214,7 @@ public class CxxLibraryDescription implements
             preprocessorFlags,
             prefixHeaders,
             ImmutableList.of(headerSymlinkTree),
-            ImmutableList.<Path>of(),
+            ImmutableSet.<Path>of(),
             getTransitiveCxxPreprocessorInput(
                 params,
                 ruleResolver,
@@ -262,7 +262,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
-      ImmutableList<Path> frameworkSearchPaths,
+      ImmutableSet<Path> frameworkSearchPaths,
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) {
 
@@ -325,7 +325,7 @@ public class CxxLibraryDescription implements
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<String> linkerFlags,
-      ImmutableList<Path> frameworkSearchPaths,
+      ImmutableSet<Path> frameworkSearchPaths,
       Optional<String> soname,
       CxxPreprocessMode preprocessMode,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -408,7 +408,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
-      ImmutableList<Path> frameworkSearchPaths,
+      ImmutableSet<Path> frameworkSearchPaths,
       CxxPreprocessMode preprocessMode) {
     BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
         .paramsWithoutCompilationDatabaseFlavor(params);
@@ -482,7 +482,7 @@ public class CxxLibraryDescription implements
     arg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     arg.headerNamespace = Optional.absent();
     arg.soname = Optional.absent();
-    arg.frameworkSearchPaths = Optional.of(ImmutableList.<Path>of());
+    arg.frameworkSearchPaths = Optional.of(ImmutableSet.<Path>of());
     arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.supportedPlatformsRegex = Optional.absent();
     return arg;
@@ -851,9 +851,9 @@ public class CxxLibraryDescription implements
           }
         },
         args.supportedPlatformsRegex,
-        new Function<CxxPlatform, ImmutableList<Path>>() {
+        new Function<CxxPlatform, ImmutableSet<Path>>() {
           @Override
-          public ImmutableList<Path> apply(CxxPlatform input) {
+          public ImmutableSet<Path> apply(CxxPlatform input) {
             return CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, input);
           }
         },

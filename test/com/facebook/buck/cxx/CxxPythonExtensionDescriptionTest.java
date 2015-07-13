@@ -165,13 +165,15 @@ public class CxxPythonExtensionDescriptionTest {
         return type == Linker.LinkableDepType.STATIC ?
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(),
-                ImmutableList.<String>of()) :
+                ImmutableList.<String>of(),
+                ImmutableSet.<Path>of()) :
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         sharedLibraryDep.getBuildTarget(),
                         sharedLibraryOutput)),
-                ImmutableList.of(sharedLibraryOutput.toString()));
+                ImmutableList.of(sharedLibraryOutput.toString()),
+                ImmutableSet.<Path>of());
       }
 
       @Override

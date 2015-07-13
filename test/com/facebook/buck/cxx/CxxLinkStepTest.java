@@ -23,6 +23,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -46,14 +47,16 @@ public class CxxLinkStepTest {
         "hello",
         "a.o",
         "libb.a");
+    Path frameworkRoot = Paths.get("/System/Frameworks");
 
     // Create our CxxLinkStep to test.
-    CxxLinkStep cxxLinkStep = new CxxLinkStep(linker, output, args);
+    CxxLinkStep cxxLinkStep = new CxxLinkStep(linker, output, args, ImmutableSet.of(frameworkRoot));
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .addAll(linker)
         .add("-o", output.toString())
+        .add("-F", frameworkRoot.toString())
         .addAll(args)
         .build();
     ImmutableList<String> actual = cxxLinkStep.getShellCommand(context);

@@ -124,7 +124,8 @@ public class CxxLibraryTest {
     NativeLinkableInput expectedStaticNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(archive.getBuildTarget())),
-        ImmutableList.of(archiveOutput.toString()));
+        ImmutableList.of(archiveOutput.toString()),
+        ImmutableSet.<Path>of());
     assertEquals(
         expectedStaticNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
@@ -136,7 +137,8 @@ public class CxxLibraryTest {
     NativeLinkableInput expectedSharedNativeLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
-        ImmutableList.of(sharedLibraryOutput.toString()));
+        ImmutableList.of(sharedLibraryOutput.toString()),
+        ImmutableSet.<Path>of());
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
@@ -189,7 +191,7 @@ public class CxxLibraryTest {
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         Functions.constant(ImmutableList.<String>of()),
         /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
-        Functions.constant(ImmutableList.<Path>of()),
+        Functions.constant(ImmutableSet.<Path>of()),
         CxxLibrary.Linkage.STATIC,
         /* linkWhole */ false,
         Optional.<String>absent(),
@@ -211,7 +213,8 @@ public class CxxLibraryTest {
                 CxxDescriptionEnhancer.getStaticLibraryPath(
                     target,
                     cxxPlatform.getFlavor(),
-                    CxxSourceRuleFactory.PicType.PIC).toString()));
+                    CxxSourceRuleFactory.PicType.PIC).toString()),
+            ImmutableSet.<Path>of());
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(

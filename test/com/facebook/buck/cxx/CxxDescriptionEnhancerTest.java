@@ -47,6 +47,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
@@ -186,7 +187,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableMultimap.<CxxSource.Type, String>of(),
             ImmutableList.<SourcePath>of(),
             ImmutableList.<SymlinkTree>of(),
-            ImmutableList.<Path>of(),
+            ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
@@ -237,7 +238,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableMultimap.<CxxSource.Type, String>of(),
             ImmutableList.<SourcePath>of(),
             ImmutableList.<SymlinkTree>of(),
-            ImmutableList.<Path>of(),
+            ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(otherLibDepParams.getDeps())

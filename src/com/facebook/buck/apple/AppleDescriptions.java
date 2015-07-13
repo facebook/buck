@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -29,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -215,8 +215,8 @@ public class AppleDescriptions {
                         FrameworkPath.getUnexpandedSearchPathFunction(
                             resolver.getPathFunction(),
                             Functions.<Path>identity()))
-                    .toList()) :
-            Optional.<ImmutableList<Path>>absent();
+                    .toSet()) :
+            Optional.<ImmutableSet<Path>>absent();
     output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;
@@ -340,29 +340,15 @@ public class AppleDescriptions {
     return new Function<FrameworkPath, Iterable<String>>() {
       @Override
       public Iterable<String> apply(FrameworkPath input) {
-        ImmutableList.Builder<String> flags = ImmutableList.builder();
-
-        // Resolve the framework path.
-        Path frameworkPath =
-            Preconditions.checkNotNull(
-                FrameworkPath.getUnexpandedSearchPathFunction(
-                    resolver,
-                    Functions.<Path>identity()).apply(input));
-
-        // Now add the actual framework/lib to the link.
         FrameworkPath.FrameworkType frameworkType = input.getFrameworkType(resolver);
         switch (frameworkType) {
           case FRAMEWORK:
-            flags.add("-F", frameworkPath.toString(), "-framework", input.getName(resolver));
-            break;
+            return ImmutableList.of("-framework", input.getName(resolver));
           case LIBRARY:
-            flags.add("-L", frameworkPath.toString(), "-l" + input.getName(resolver));
-            break;
-          default:
-            throw new RuntimeException("Unsupported framework type: " + frameworkType);
+            return ImmutableList.of("-l" + input.getName(resolver));
         }
 
-        return flags.build();
+        throw new RuntimeException("Unsupported framework type: " + frameworkType);
       }
     };
   }

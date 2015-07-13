@@ -144,7 +144,7 @@ public class CxxPythonExtensionDescription implements
                 cxxPlatform),
             args.prefixHeaders.get(),
             ImmutableList.of(headerSymlinkTree),
-            ImmutableList.<Path>of(),
+            ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
                 params.getDeps()));

@@ -35,6 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -118,9 +119,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
             .transform(Functions.toStringFunction()));
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
-    return NativeLinkableInput.of(
-        /* inputs */ libraries,
-        /* args */ linkerArgs);
+    return NativeLinkableInput.of(libraries, linkerArgs, ImmutableSet.<Path>of());
   }
 
   @Override

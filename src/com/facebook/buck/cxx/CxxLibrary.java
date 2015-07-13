@@ -30,6 +30,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,7 +57,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<Pattern> supportedPlatformsRegex;
-  private final Function<? super CxxPlatform, ImmutableList<Path>> frameworkSearchPaths;
+  private final Function<? super CxxPlatform, ImmutableSet<Path>> frameworkSearchPaths;
   private final Linkage linkage;
   private final boolean linkWhole;
   private final Optional<String> soname;
@@ -74,7 +75,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<Pattern> supportedPlatformsRegex,
-      Function<? super CxxPlatform, ImmutableList<Path>> frameworkSearchPaths,
+      Function<? super CxxPlatform, ImmutableSet<Path>> frameworkSearchPaths,
       Linkage linkage,
       boolean linkWhole,
       Optional<String> soname,
@@ -143,12 +144,15 @@ public class CxxLibrary extends AbstractCxxLibrary {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
 
-    if (headerOnly.apply(cxxPlatform)) {
+    if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }
 
-    if (!isPlatformSupported(cxxPlatform)) {
-      return NativeLinkableInput.of();
+    if (headerOnly.apply(cxxPlatform)) {
+      return NativeLinkableInput.of(
+          ImmutableList.<SourcePath>of(),
+          ImmutableList.<String>of(),
+          Preconditions.checkNotNull(frameworkSearchPaths.apply(cxxPlatform)));
     }
 
     // Build up the arguments used to link this library.  If we're linking the
@@ -197,7 +201,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
     return NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new BuildTargetSourcePath(libraryRule.getBuildTarget())),
-        linkerArgs);
+        linkerArgs,
+        Preconditions.checkNotNull(frameworkSearchPaths.apply(cxxPlatform)));
   }
 
   @Override

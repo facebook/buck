@@ -154,7 +154,8 @@ public class CxxLibraryDescriptionTest {
         return NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(archive.getBuildTarget())),
-            ImmutableList.of(archiveOutput.toString()));
+            ImmutableList.of(archiveOutput.toString()),
+            ImmutableSet.<Path>of());
       }
 
       @Override
@@ -211,7 +212,7 @@ public class CxxLibraryDescriptionTest {
                 SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
                 SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
         .setFrameworkSearchPaths(
-            ImmutableList.of(
+            ImmutableSet.of(
                 Paths.get("/some/framework/path"),
                 Paths.get("/another/framework/path")))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
@@ -553,12 +554,14 @@ public class CxxLibraryDescriptionTest {
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         staticLibraryDep.getBuildTarget())),
-                ImmutableList.of(staticLibraryOutput.toString())) :
+                ImmutableList.of(staticLibraryOutput.toString()),
+                ImmutableSet.<Path>of()) :
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         sharedLibraryDep.getBuildTarget())),
-                ImmutableList.of(sharedLibraryOutput.toString()));
+                ImmutableList.of(sharedLibraryOutput.toString()),
+                ImmutableSet.<Path>of());
       }
 
       @Override
@@ -618,7 +621,7 @@ public class CxxLibraryDescriptionTest {
                 genSourceName,
                 SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
         .setFrameworkSearchPaths(
-            ImmutableList.of(
+            ImmutableSet.of(
                 Paths.get("/some/framework/path"),
                 Paths.get("/another/framework/path")))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));

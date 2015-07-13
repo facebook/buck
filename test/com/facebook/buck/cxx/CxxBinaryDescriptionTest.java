@@ -128,7 +128,8 @@ public class CxxBinaryDescriptionTest {
         return NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(archive.getBuildTarget())),
-            ImmutableList.of(archiveOutput.toString()));
+            ImmutableList.of(archiveOutput.toString()),
+            ImmutableSet.<Path>of());
       }
 
       @Override

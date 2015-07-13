@@ -182,6 +182,9 @@ public class CxxLinkableEnhancer {
         output,
         allInputs,
         args,
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(
+            Optional.of(linkableInput.getFrameworkRoots()),
+            cxxPlatform),
         cxxPlatform.getDebugPathSanitizer());
   }
 

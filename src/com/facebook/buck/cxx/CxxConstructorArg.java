@@ -27,6 +27,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -46,7 +47,7 @@ public class CxxConstructorArg implements HasTests {
   public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags;
   public Optional<ImmutableList<String>> linkerFlags;
   public Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags;
-  public Optional<ImmutableList<Path>> frameworkSearchPaths;
+  public Optional<ImmutableSet<Path>> frameworkSearchPaths;
   public Optional<ImmutableList<SourcePath>> lexSrcs;
   public Optional<ImmutableList<SourcePath>> yaccSrcs;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;

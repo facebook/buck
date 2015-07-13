@@ -170,10 +170,10 @@ public class AppleDescriptionsTest {
 
     assertEquals(
         ImmutableList.of(
-            "-L", "$SDKROOT/usr/lib", "-lz",
-            "-F", "$DEVELOPER_DIR/Library/Frameworks", "-framework", "XCTest",
-            "-F", "Vendor/Bar", "-framework", "Bar",
-            "-L", "Vendor/Foo", "-lFoo"),
+            "-lz",
+            "-framework", "XCTest",
+            "-framework", "Bar",
+            "-lFoo"),
         linkerFlags);
   }
 

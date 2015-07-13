@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -83,7 +84,7 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
   }
 
   public AbstractCxxSourceBuilder<T> setFrameworkSearchPaths(
-      ImmutableList<Path> frameworkSearchPaths) {
+      ImmutableSet<Path> frameworkSearchPaths) {
     arg.frameworkSearchPaths = Optional.of(frameworkSearchPaths);
     return this;
   }
