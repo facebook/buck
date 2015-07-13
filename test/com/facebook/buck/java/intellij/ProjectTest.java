@@ -837,6 +837,7 @@ public class ProjectTest {
         .add(new SourceFolder("file://$MODULE_DIR$/.git", /* isTestSource */ false))
         .add(new SourceFolder("file://$MODULE_DIR$/buck-out/bin", /* isTestSource */ false))
         .add(new SourceFolder("file://$MODULE_DIR$/buck-out/log", /* isTestSource */ false))
+        .add(new SourceFolder("file://$MODULE_DIR$/buck-out/tmp", /* isTestSource */ false))
         .build();
     assertEquals("Specific subfolders of buck-out should be excluded rather than all of buck-out.",
         expectedExcludeFolders,

@@ -101,6 +101,12 @@ import javax.annotation.Nullable;
  * time, the Facebook-specific logic will be removed.
  */
 public class Project {
+  /**
+   * Directory in buck-out which holds temporary files. This should be explicitly excluded
+   * from the IntelliJ project because it causes IntelliJ to try and index temporary files
+   * that buck creates whilst a build it taking place.
+   */
+  public static final Path TMP_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("tmp");
 
   /**
    * This directory is analogous to the gen/ directory that IntelliJ would produce when building an
@@ -668,6 +674,7 @@ public class Project {
         if (BuckConstant.BUCK_OUTPUT_PATH.equals(path)) {
           addRootExclude(module, BuckConstant.SCRATCH_PATH);
           addRootExclude(module, BuckConstant.LOG_PATH);
+          addRootExclude(module, TMP_PATH);
         } else {
           addRootExclude(module, path);
         }
