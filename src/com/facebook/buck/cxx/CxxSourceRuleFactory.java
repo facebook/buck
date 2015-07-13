@@ -41,6 +41,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -92,36 +93,36 @@ public class CxxSourceRuleFactory {
         }
       });
 
-  private final Supplier<ImmutableList<Path>> includeRoots =
+  private final Supplier<ImmutableSet<Path>> includeRoots =
       Suppliers.memoize(
-          new Supplier<ImmutableList<Path>>() {
+          new Supplier<ImmutableSet<Path>>() {
             @Override
-            public ImmutableList<Path> get() {
+            public ImmutableSet<Path> get() {
               return FluentIterable.from(cxxPreprocessorInput)
                   .transformAndConcat(CxxPreprocessorInput.GET_INCLUDE_ROOTS)
-                  .toList();
+                  .toSet();
             }
           });
 
-  private final Supplier<ImmutableList<Path>> systemIncludeRoots =
+  private final Supplier<ImmutableSet<Path>> systemIncludeRoots =
       Suppliers.memoize(
-          new Supplier<ImmutableList<Path>>() {
+          new Supplier<ImmutableSet<Path>>() {
             @Override
-            public ImmutableList<Path> get() {
+            public ImmutableSet<Path> get() {
               return FluentIterable.from(cxxPreprocessorInput)
                   .transformAndConcat(CxxPreprocessorInput.GET_SYSTEM_INCLUDE_ROOTS)
-                  .toList();
+                  .toSet();
             }
           });
 
-  private final Supplier<ImmutableList<Path>> frameworkRoots =
+  private final Supplier<ImmutableSet<Path>> frameworkRoots =
       Suppliers.memoize(
-          new Supplier<ImmutableList<Path>>() {
+          new Supplier<ImmutableSet<Path>>() {
             @Override
-            public ImmutableList<Path> get() {
+            public ImmutableSet<Path> get() {
               return FluentIterable.from(cxxPreprocessorInput)
                   .transformAndConcat(CxxPreprocessorInput.GET_FRAMEWORK_ROOTS)
-                  .toList();
+                  .toSet();
             }
           });
 

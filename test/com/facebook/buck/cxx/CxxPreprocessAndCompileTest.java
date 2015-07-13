@@ -38,6 +38,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -62,13 +63,13 @@ public class CxxPreprocessAndCompileTest {
           CxxHeaders.builder()
               .putNameToPathMap(Paths.get("test.h"), new TestSourcePath("foo/test.h"))
               .build());
-  private static final ImmutableList<Path> DEFAULT_INCLUDE_ROOTS = ImmutableList.of(
+  private static final ImmutableSet<Path> DEFAULT_INCLUDE_ROOTS = ImmutableSet.of(
       Paths.get("foo/bar"),
       Paths.get("test"));
-  private static final ImmutableList<Path> DEFAULT_SYSTEM_INCLUDE_ROOTS = ImmutableList.of(
+  private static final ImmutableSet<Path> DEFAULT_SYSTEM_INCLUDE_ROOTS = ImmutableSet.of(
       Paths.get("/usr/include"),
       Paths.get("/include"));
-  private static final ImmutableList<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableList.of();
+  private static final ImmutableSet<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableSet.of();
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
       CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
 
@@ -140,7 +141,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the operation causes a rulekey change.
@@ -161,7 +164,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, operationChange);
 
     // Verify that changing the platform flags causes a rulekey change.
@@ -182,7 +187,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, platformFlagsChange);
 
     // Verify that changing the rule flags causes a rulekey change.
@@ -203,7 +210,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, ruleFlagsChange);
 
     // Verify that changing the input causes a rulekey change.
@@ -224,7 +233,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
@@ -244,9 +255,11 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
-            ImmutableList.of(Paths.get("different")),
+            ImmutableSet.of(Paths.get("different")),
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
     assertEquals(defaultRuleKey, includesChange);
 
     // Verify that changing the system includes does *not* cause a rulekey change, since we use a
@@ -267,8 +280,10 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
-            ImmutableList.of(Paths.get("different")),
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            ImmutableSet.of(Paths.get("different")),
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
     assertEquals(defaultRuleKey, systemIncludesChange);
 
     // Verify that changing the framework roots causes a rulekey change.
@@ -289,7 +304,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            ImmutableList.of(Paths.get("different")), DEFAULT_INCLUDES, DEFAULT_SANITIZER));
+            ImmutableSet.of(Paths.get("different")),
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, frameworkRootsChange);
   }
 
@@ -346,7 +363,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, sanitizer1));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            sanitizer1));
 
     // Generate a rule key for the defaults.
     ImmutableList<String> platformFlags2 = ImmutableList.of("-Idifferent/foo");
@@ -368,7 +387,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_FRAMEWORK_ROOTS, DEFAULT_INCLUDES, sanitizer2));
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            sanitizer2));
 
     assertEquals(ruleKey1, ruleKey2);
   }
@@ -398,8 +419,8 @@ public class CxxPreprocessAndCompileTest {
         output,
         new TestSourcePath(input.toString()),
         DEFAULT_INPUT_TYPE,
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of(),
+        ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
         ImmutableList.of(CxxHeaders.builder().build()),
         DEFAULT_SANITIZER);
@@ -442,8 +463,8 @@ public class CxxPreprocessAndCompileTest {
         output,
         new TestSourcePath(input.toString()),
         DEFAULT_INPUT_TYPE,
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of(),
+        ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
         ImmutableList.of(CxxHeaders.builder().build()),
         DEFAULT_SANITIZER);

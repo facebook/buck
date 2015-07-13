@@ -66,9 +66,9 @@ public class CxxPreprocessAndCompile
   @AddToRuleKey
   private final SourcePath input;
   private final CxxSource.Type inputType;
-  private final ImmutableList<Path> includeRoots;
-  private final ImmutableList<Path> systemIncludeRoots;
-  private final ImmutableList<Path> frameworkRoots;
+  private final ImmutableSet<Path> includeRoots;
+  private final ImmutableSet<Path> systemIncludeRoots;
+  private final ImmutableSet<Path> frameworkRoots;
   @AddToRuleKey
   private final ImmutableList<CxxHeaders> includes;
   private final DebugPathSanitizer sanitizer;
@@ -87,9 +87,9 @@ public class CxxPreprocessAndCompile
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
-      ImmutableList<Path> includeRoots,
-      ImmutableList<Path> systemIncludeRoots,
-      ImmutableList<Path> frameworkRoots,
+      ImmutableSet<Path> includeRoots,
+      ImmutableSet<Path> systemIncludeRoots,
+      ImmutableSet<Path> frameworkRoots,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer) {
     super(params, resolver);
@@ -142,9 +142,9 @@ public class CxxPreprocessAndCompile
         output,
         input,
         inputType,
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of(),
+        ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
         ImmutableList.<CxxHeaders>of(),
         sanitizer);
   }
@@ -161,9 +161,9 @@ public class CxxPreprocessAndCompile
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
-      ImmutableList<Path> includeRoots,
-      ImmutableList<Path> systemIncludeRoots,
-      ImmutableList<Path> frameworkRoots,
+      ImmutableSet<Path> includeRoots,
+      ImmutableSet<Path> systemIncludeRoots,
+      ImmutableSet<Path> frameworkRoots,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
@@ -201,9 +201,9 @@ public class CxxPreprocessAndCompile
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
-      ImmutableList<Path> includeRoots,
-      ImmutableList<Path> systemIncludeRoots,
-      ImmutableList<Path> frameworkRoots,
+      ImmutableSet<Path> includeRoots,
+      ImmutableSet<Path> systemIncludeRoots,
+      ImmutableSet<Path> frameworkRoots,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer,
       CxxPreprocessMode strategy) {

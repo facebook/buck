@@ -100,11 +100,11 @@ public class CxxCompilationDatabaseTest {
             Paths.get("test.o"),
             new TestSourcePath("test.cpp"),
             CxxSource.Type.CXX,
-            ImmutableList.of(
+            ImmutableSet.of(
                 Paths.get("foo/bar"),
                 Paths.get("test")),
-            ImmutableList.<Path>of(),
-            ImmutableList.<Path>of(),
+            ImmutableSet.<Path>of(),
+            ImmutableSet.<Path>of(),
             ImmutableList.<CxxHeaders>of(),
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
@@ -137,11 +137,11 @@ public class CxxCompilationDatabaseTest {
             Paths.get("test.o"),
             new TestSourcePath("test.cpp"),
             CxxSource.Type.CXX,
-            ImmutableList.of(
+            ImmutableSet.of(
                 Paths.get("foo/bar"),
                 Paths.get("test")),
-            ImmutableList.<Path>of(),
-            ImmutableList.<Path>of(),
+            ImmutableSet.<Path>of(),
+            ImmutableSet.<Path>of(),
             ImmutableList.<CxxHeaders>of(),
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
 
@@ -259,11 +259,11 @@ public class CxxCompilationDatabaseTest {
         Paths.get("test.ii"),
         new TestSourcePath("test.cpp"),
         CxxSource.Type.CXX_CPP_OUTPUT,
-        ImmutableList.of(
+        ImmutableSet.of(
             Paths.get("foo/bar"),
             Paths.get("test")),
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of(),
+        ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
         ImmutableList.<CxxHeaders>of(),
         CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
 
@@ -288,9 +288,9 @@ public class CxxCompilationDatabaseTest {
         Paths.get("test.o"),
         new TestSourcePath("test.ii"),
         CxxSource.Type.CXX_CPP_OUTPUT,
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of(),
-        ImmutableList.<Path>of(),
+        ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
         ImmutableList.<CxxHeaders>of(),
         CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
 
