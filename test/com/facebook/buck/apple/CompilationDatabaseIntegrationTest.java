@@ -68,7 +68,6 @@ public class CompilationDatabaseIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.LooseCoupling") // ArrayList.class
   public void testCreateCompilationDatabaseForAppleLibraryWithNoDeps() throws IOException {
     // buck build the #compilation-database.
     File compilationDatabase = workspace.buildAndReturnOutput(
@@ -119,7 +118,6 @@ public class CompilationDatabaseIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.LooseCoupling") // ArrayList.class
   public void testCreateCompilationDatabaseForAppleBinaryWithDeps() throws IOException {
     // buck build the #compilation-database.
     File compilationDatabase = workspace.buildAndReturnOutput(
@@ -134,7 +132,6 @@ public class CompilationDatabaseIntegrationTest {
         CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
 
     Iterable<String> frameworks = ImmutableList.of(
-        Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
         Paths.get("/System/Library/Frameworks/UIKit.framework").getParent().toString());
     String pathToPrivateHeaders = "buck-out/gen/Apps/Weather/" +

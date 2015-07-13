@@ -29,7 +29,6 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,26 +47,26 @@ abstract class AbstractCxxPreprocessorInput {
         }
       };
 
-  public static final Function<CxxPreprocessorInput, ImmutableList<Path>> GET_INCLUDE_ROOTS =
-      new Function<CxxPreprocessorInput, ImmutableList<Path>>() {
+  public static final Function<CxxPreprocessorInput, ImmutableSet<Path>> GET_INCLUDE_ROOTS =
+      new Function<CxxPreprocessorInput, ImmutableSet<Path>>() {
         @Override
-        public ImmutableList<Path> apply(CxxPreprocessorInput input) {
+        public ImmutableSet<Path> apply(CxxPreprocessorInput input) {
           return input.getIncludeRoots();
         }
       };
 
-  public static final Function<CxxPreprocessorInput, ImmutableList<Path>> GET_SYSTEM_INCLUDE_ROOTS =
-      new Function<CxxPreprocessorInput, ImmutableList<Path>>() {
+  public static final Function<CxxPreprocessorInput, ImmutableSet<Path>> GET_SYSTEM_INCLUDE_ROOTS =
+      new Function<CxxPreprocessorInput, ImmutableSet<Path>>() {
         @Override
-        public ImmutableList<Path> apply(CxxPreprocessorInput input) {
+        public ImmutableSet<Path> apply(CxxPreprocessorInput input) {
           return input.getSystemIncludeRoots();
         }
       };
 
-  public static final Function<CxxPreprocessorInput, ImmutableList<Path>> GET_FRAMEWORK_ROOTS =
-      new Function<CxxPreprocessorInput, ImmutableList<Path>>() {
+  public static final Function<CxxPreprocessorInput, ImmutableSet<Path>> GET_FRAMEWORK_ROOTS =
+      new Function<CxxPreprocessorInput, ImmutableSet<Path>>() {
         @Override
-        public ImmutableList<Path> apply(CxxPreprocessorInput input) {
+        public ImmutableSet<Path> apply(CxxPreprocessorInput input) {
           return input.getFrameworkRoots();
         }
       };
@@ -87,15 +86,15 @@ abstract class AbstractCxxPreprocessorInput {
 
   // Normal include directories where headers are found.
   @Value.Parameter
-  public abstract List<Path> getIncludeRoots();
+  public abstract Set<Path> getIncludeRoots();
 
   // Include directories where system headers.
   @Value.Parameter
-  public abstract List<Path> getSystemIncludeRoots();
+  public abstract Set<Path> getSystemIncludeRoots();
 
   // Directories where frameworks are stored.
   @Value.Parameter
-  public abstract List<Path> getFrameworkRoots();
+  public abstract Set<Path> getFrameworkRoots();
 
   public static final CxxPreprocessorInput EMPTY = CxxPreprocessorInput.builder().build();
 
@@ -111,9 +110,9 @@ abstract class AbstractCxxPreprocessorInput {
     ImmutableList.Builder<SourcePath> prefixHeaders = ImmutableList.builder();
     Map<Path, SourcePath> includeNameToPathMap = new HashMap<>();
     Map<Path, SourcePath> includeFullNameToPathMap = new HashMap<>();
-    ImmutableList.Builder<Path> includeRoots = ImmutableList.builder();
-    ImmutableList.Builder<Path> systemIncludeRoots = ImmutableList.builder();
-    ImmutableList.Builder<Path> frameworkRoots = ImmutableList.builder();
+    ImmutableSet.Builder<Path> includeRoots = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> systemIncludeRoots = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> frameworkRoots = ImmutableSet.builder();
 
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
