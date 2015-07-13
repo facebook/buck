@@ -16,11 +16,15 @@
 
 package com.facebook.buck.gwt;
 
+import static org.junit.Assume.assumeThat;
+
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.environment.Platform;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,6 +38,8 @@ public class GwtBinaryIntegrationTest {
 
   @Test(timeout = (2 * 60 * 1000)) // two minutes because CI times out on heavily loaded machines
   public void shouldBeAbleToBuildAGwtBinary() throws IOException {
+    // Temporary as we investigate Mac OOM failures. t7687684
+    assumeThat(Platform.detect(), Matchers.not(Platform.MACOS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "gwt_binary",

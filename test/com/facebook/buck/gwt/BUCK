@@ -2,7 +2,9 @@ java_test(
   name = 'gwt',
   srcs = glob(['*Test.java']),
   deps = [
+    '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',
   ],
   # GwtBinaryIntegrationTest tends to time out when run in parallel
