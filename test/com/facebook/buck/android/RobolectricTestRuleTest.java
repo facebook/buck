@@ -31,7 +31,9 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,6 +80,9 @@ public class RobolectricTestRuleTest {
     }
   }
 
+  @Rule
+  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
   @Test
   public void testRobolectricContainsAllResourceDependenciesInResVmArg() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
@@ -105,7 +110,7 @@ public class RobolectricTestRuleTest {
   @Test
   public void testRobolectricResourceDependenciesVmArgHasCorrectFormat() throws IOException {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
     Path resDep1 = Paths.get("res1");
     Path resDep2 = Paths.get("res2");
     Path resDep3 = Paths.get("res3");

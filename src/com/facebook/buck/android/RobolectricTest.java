@@ -20,7 +20,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
-import com.android.common.annotations.Nullable;
 import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.TestType;
@@ -62,12 +61,14 @@ public class RobolectricTest extends JavaTest {
   static final String LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME =
       "buck.robolectric_res_directories";
 
-  private static final Function<HasAndroidResourceDeps, SourcePath> RESOURCE_DIRECTORY_FUNCTION =
-      new Function<HasAndroidResourceDeps, SourcePath>() {
+  private final Function<HasAndroidResourceDeps, String> resourceDirectoryFunction =
+      new Function<HasAndroidResourceDeps, String>() {
     @Override
-    @Nullable
-    public SourcePath apply(HasAndroidResourceDeps input) {
-      return input.getRes();
+    public String apply(HasAndroidResourceDeps input) {
+      return Optional.fromNullable(input.getRes())
+          .transform(getResolver().getPathFunction())
+          .get()
+          .toString();
     }
   };
 
@@ -133,7 +134,7 @@ public class RobolectricTest extends JavaTest {
   @VisibleForTesting
   String getRobolectricResourceDirectories(List<HasAndroidResourceDeps> resourceDeps) {
     String resourceDirectories = Joiner.on(File.pathSeparator)
-        .join(Iterables.transform(resourceDeps, RESOURCE_DIRECTORY_FUNCTION));
+        .join(Iterables.transform(resourceDeps, resourceDirectoryFunction));
 
     return String.format("-D%s=%s",
         LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME,
