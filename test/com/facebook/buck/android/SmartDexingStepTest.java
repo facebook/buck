@@ -33,6 +33,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -92,7 +93,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
         ImmutableSet.of(testIn.toPath()),
         outputFile.toPath(),
         outputHashFile,
-        EnumSet.of(DxStep.Option.NO_OPTIMIZE));
+        EnumSet.of(DxStep.Option.NO_OPTIMIZE),
+        Optional.<Integer>absent());
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -110,7 +112,10 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.<Integer>absent());
 
     assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
     List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
@@ -132,12 +137,45 @@ public class SmartDexingStepTest extends EasyMockSupport {
   }
 
   @Test
+  public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression() {
+    ImmutableList<Path> filesToDex = ImmutableList.of(
+        Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
+    Path outputPath = Paths.get("classes.dex.jar.xz");
+    EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.<Integer>of(new Integer(9)));
+
+    assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
+    List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
+    String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
+    MoreAsserts.assertSteps(
+        "Steps should repack zip entries and then compress using xz.",
+        ImmutableList.of(
+            "(cd / && " +
+            Paths.get("/usr/bin/dx") + " " + xmx +
+                "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar)",
+            "repack classes.dex.tmp.jar in classes.dex.jar",
+            "rm -f classes.dex.tmp.jar",
+            "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
+            "xz -z -9 --check=crc32 classes.dex.jar"),
+        steps,
+        createMockedExecutionContext());
+
+    verifyAll();
+  }
+
+  @Test
   public void testCreateDxStepForDxPseudoRuleWithDexOutput() {
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.<Integer>absent());
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
@@ -154,7 +192,10 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.<Integer>absent());
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
@@ -172,7 +213,10 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    SmartDexingStep.createDxStepForDxPseudoRule(filesToDex, outputPath, dxOptions);
+    SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+        outputPath,
+        dxOptions,
+        Optional.<Integer>absent());
   }
 
   private ExecutionContext createMockedExecutionContext() {

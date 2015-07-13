@@ -83,6 +83,7 @@ public class SmartDexingStep implements Step {
   private final Path successDir;
   private final EnumSet<DxStep.Option> dxOptions;
   private final ListeningExecutorService executorService;
+  private final Optional<Integer> xzCompressionLevel;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -105,7 +106,8 @@ public class SmartDexingStep implements Step {
       DexInputHashesProvider dexInputHashesProvider,
       Path successDir,
       EnumSet<Option> dxOptions,
-      ListeningExecutorService executorService) {
+      ListeningExecutorService executorService,
+      Optional<Integer> xzCompressionLevel) {
     this.outputToInputsSupplier = Suppliers.memoize(
         new Supplier<Multimap<Path, Path>>() {
           @Override
@@ -123,6 +125,7 @@ public class SmartDexingStep implements Step {
     this.successDir = successDir;
     this.dxOptions = dxOptions;
     this.executorService = executorService;
+    this.xzCompressionLevel = xzCompressionLevel;
   }
 
   public static int determineOptimalThreadCount() {
@@ -225,7 +228,8 @@ public class SmartDexingStep implements Step {
               FluentIterable.from(outputToInputs.get(outputFile)).toSet(),
               outputFile,
               successDir.resolve(outputFile.getFileName()),
-              dxOptions));
+              dxOptions,
+              xzCompressionLevel));
     }
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -257,6 +261,7 @@ public class SmartDexingStep implements Step {
     private final EnumSet<Option> dxOptions;
     @Nullable
     private String newInputsHash;
+    private final Optional<Integer> xzCompressionLevel;
 
     public DxPseudoRule(
         ProjectFilesystem filesystem,
@@ -264,13 +269,15 @@ public class SmartDexingStep implements Step {
         Set<Path> srcs,
         Path outputPath,
         Path outputHashPath,
-        EnumSet<Option> dxOptions) {
+        EnumSet<Option> dxOptions,
+        Optional<Integer> xzCompressionLevel) {
       this.filesystem = filesystem;
       this.dexInputHashes = ImmutableMap.copyOf(dexInputHashes);
       this.srcs = ImmutableSet.copyOf(srcs);
       this.outputPath = outputPath;
       this.outputHashPath = outputHashPath;
       this.dxOptions = dxOptions;
+      this.xzCompressionLevel = xzCompressionLevel;
     }
 
     /**
@@ -314,7 +321,7 @@ public class SmartDexingStep implements Step {
 
       List<Step> steps = Lists.newArrayList();
 
-      steps.add(createDxStepForDxPseudoRule(srcs, outputPath, dxOptions));
+      steps.add(createDxStepForDxPseudoRule(srcs, outputPath, dxOptions, xzCompressionLevel));
       steps.add(new WriteFileStep(newInputsHash, outputHashPath));
 
       // Use a composite step to ensure that runDxSteps can still make use of
@@ -333,7 +340,8 @@ public class SmartDexingStep implements Step {
    */
   static Step createDxStepForDxPseudoRule(Collection<Path> filesToDex,
       Path outputPath,
-      EnumSet<Option> dxOptions) {
+      EnumSet<Option> dxOptions,
+      Optional<Integer> xzCompressionLevel) {
 
     String output = outputPath.toString();
     List<Step> steps = Lists.newArrayList();
@@ -355,7 +363,12 @@ public class SmartDexingStep implements Step {
               repackedJar,
               repackedJar.resolveSibling(
                   repackedJar.getFileName() + ".meta")));
-      steps.add(new XzStep(repackedJar));
+
+      if (xzCompressionLevel.isPresent()) {
+        steps.add(new XzStep(repackedJar, xzCompressionLevel.get().intValue()));
+      } else {
+        steps.add(new XzStep(repackedJar));
+      }
     } else if (DexStore.JAR.matchesPath(outputPath) || DexStore.RAW.matchesPath(outputPath) ||
         output.endsWith("classes.dex")) {
       steps.add(new DxStep(outputPath, filesToDex, dxOptions));

@@ -191,6 +191,8 @@ public class AndroidBinary
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
   protected final AndroidGraphEnhancementResult enhancementResult;
   private final ListeningExecutorService dxExecutorService;
+  @AddToRuleKey
+  private final Optional<Integer> xzCompressionLevel;
 
   AndroidBinary(
       BuildRuleParams params,
@@ -215,6 +217,7 @@ public class AndroidBinary
       Optional<Boolean> reorderClassesIntraDex,
       Optional<SourcePath> dexReorderToolFile,
       Optional<SourcePath> dexReorderDataDumpFile,
+      Optional<Integer> xzCompressionLevel,
       ListeningExecutorService dxExecutorService) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
@@ -239,6 +242,7 @@ public class AndroidBinary
     this.dexReorderToolFile = dexReorderToolFile;
     this.dexReorderDataDumpFile = dexReorderDataDumpFile;
     this.dxExecutorService = dxExecutorService;
+    this.xzCompressionLevel = xzCompressionLevel;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(enhancementResult.getPreDexMerge().isPresent(),
@@ -873,7 +877,8 @@ public class AndroidBinary
         hashInputJarsToDexStep,
         successDir,
         dxOptions,
-        dxExecutorService);
+        dxExecutorService,
+        xzCompressionLevel);
     steps.add(smartDexingCommand);
 
     if (isReorderingClasses()) {

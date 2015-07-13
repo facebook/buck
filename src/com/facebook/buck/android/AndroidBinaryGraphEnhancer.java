@@ -92,6 +92,7 @@ public class AndroidBinaryGraphEnhancer {
   private final Keystore keystore;
   private final BuildConfigFields buildConfigValues;
   private final Optional<SourcePath> buildConfigValuesFile;
+  private final Optional<Integer> xzCompressionLevel;
 
   /**
    * Maps a {@link TargetCpuType} to the {@link CxxPlatform} we need to use to build C/C++
@@ -122,6 +123,7 @@ public class AndroidBinaryGraphEnhancer {
       Keystore keystore,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
+      Optional<Integer> xzCompressionLevel,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService) {
     this.buildRuleParams = originalParams;
@@ -149,6 +151,7 @@ public class AndroidBinaryGraphEnhancer {
     this.buildConfigValuesFile = buildConfigValuesFile;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
+    this.xzCompressionLevel = xzCompressionLevel;
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -571,7 +574,8 @@ public class AndroidBinaryGraphEnhancer {
         dexSplitMode,
         allPreDexDeps,
         aaptPackageResources,
-        dxExecutorService);
+        dxExecutorService,
+        xzCompressionLevel);
     ruleResolver.addToIndex(preDexMerge);
 
     return preDexMerge;

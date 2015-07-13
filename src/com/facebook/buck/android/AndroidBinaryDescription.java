@@ -193,6 +193,7 @@ public class AndroidBinaryDescription
         (Keystore) keystore,
         args.buildConfigValues.get(),
         args.buildConfigValuesFile,
+        Optional.<Integer>absent(),
         nativePlatforms,
         dxExecutorService);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
@@ -253,6 +254,7 @@ public class AndroidBinaryDescription
         args.reorderClassesIntraDex,
         args.dexReorderToolFile,
         args.dexReorderDataDumpFile,
+        args.xzCompressionLevel,
         dxExecutorService);
   }
 
@@ -350,6 +352,7 @@ public class AndroidBinaryDescription
     public Optional<Boolean> reorderClassesIntraDex;
     public Optional<SourcePath> dexReorderToolFile;
     public Optional<SourcePath> dexReorderDataDumpFile;
+    public Optional<Integer> xzCompressionLevel;
 
     /** This will never be absent after this Arg is populated. */
     public Optional<BuildConfigFields> buildConfigValues;

@@ -93,6 +93,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
   private final AaptPackageResources aaptPackageResources;
   private final ListeningExecutorService dxExecutorService;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  private final Optional<Integer> xzCompressionLevel;
 
   public PreDexMerge(
       BuildRuleParams params,
@@ -101,7 +102,8 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
       DexSplitMode dexSplitMode,
       ImmutableSet<DexProducedFromJavaLibrary> preDexDeps,
       AaptPackageResources aaptPackageResources,
-      ListeningExecutorService dxExecutorService) {
+      ListeningExecutorService dxExecutorService,
+      Optional<Integer> xzCompressionLevel) {
     super(params, resolver);
     this.primaryDexPath = primaryDexPath;
     this.dexSplitMode = dexSplitMode;
@@ -109,6 +111,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     this.aaptPackageResources = aaptPackageResources;
     this.dxExecutorService = dxExecutorService;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.xzCompressionLevel = xzCompressionLevel;
   }
 
   @Override
@@ -212,7 +215,8 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         sortResult.dexInputHashesProvider,
         paths.successDir,
         DX_MERGE_OPTIONS,
-        dxExecutorService));
+        dxExecutorService,
+        xzCompressionLevel));
 
     // Record the primary dex SHA1 so exopackage apks can use it to compute their ABI keys.
     // Single dex apks cannot be exopackages, so they will never need ABI keys.

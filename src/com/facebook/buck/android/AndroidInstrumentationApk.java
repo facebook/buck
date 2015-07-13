@@ -78,6 +78,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         Optional.<Boolean>absent(),
         Optional.<SourcePath>absent(),
         Optional.<SourcePath>absent(),
+        Optional.<Integer>absent(),
         dxExecutorService);
   }
 }

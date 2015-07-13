@@ -137,6 +137,7 @@ public class AndroidBinaryGraphEnhancerTest {
         createStrictMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
+        /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         MoreExecutors.newDirectExecutorService());
 
@@ -257,6 +258,7 @@ public class AndroidBinaryGraphEnhancerTest {
         keystore,
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
+        /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         MoreExecutors.newDirectExecutorService());
     replay(keystore);
@@ -374,6 +376,7 @@ public class AndroidBinaryGraphEnhancerTest {
         createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
+        /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         MoreExecutors.newDirectExecutorService());
     graphEnhancer.createAdditionalBuildables();
@@ -415,6 +418,7 @@ public class AndroidBinaryGraphEnhancerTest {
         createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
+        /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         MoreExecutors.newDirectExecutorService());
     graphEnhancer.createAdditionalBuildables();
@@ -482,6 +486,7 @@ public class AndroidBinaryGraphEnhancerTest {
         createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
+        /* xzCompressionLevel */ Optional.<Integer>absent(),
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         MoreExecutors.newDirectExecutorService());
     graphEnhancer.createAdditionalBuildables();

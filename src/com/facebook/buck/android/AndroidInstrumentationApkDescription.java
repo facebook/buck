@@ -133,6 +133,7 @@ public class AndroidInstrumentationApkDescription
         apkUnderTest.getKeystore(),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
+        /* xzCompressionLevel */ Optional.<Integer>absent(),
         nativePlatforms,
         dxExecutorService);
 

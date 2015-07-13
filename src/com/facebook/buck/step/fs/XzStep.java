@@ -99,6 +99,26 @@ public class XzStep implements Step {
         XZ.CHECK_CRC32);
   }
 
+  /**
+   * Creates an XzStep to compress a file with XZ at a user supplied compression level .
+   *
+   * <p> The destination file will be {@code sourceFile} with the added {@code .xz} extension.
+   * <p> Decompression will require up to 64MiB of RAM.
+   *
+   * @param sourceFile file to compress
+   * @param compressionLevel value from 0 to 9. Higher values result in better
+   * compression, but also need more time to compress and will need more RAM
+   * to decompress.
+   */
+  public XzStep(Path sourceFile, int compressionLevel) {
+    this(
+        sourceFile,
+        Paths.get(sourceFile + ".xz"),
+        compressionLevel,
+        /* keep */ false,
+        XZ.CHECK_CRC32);
+  }
+
   @Override
   public int execute(ExecutionContext context) {
     try (
