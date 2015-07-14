@@ -23,7 +23,7 @@ import com.android.dx.Version;
  * to the right "actual" main.
  */
 public class Main {
-    private static String USAGE_MESSAGE =
+    private static final String USAGE_MESSAGE =
         "usage:\n" +
         "  dx --dex [--debug] [--verbose] [--positions=<style>] " +
         "[--no-locals]\n" +

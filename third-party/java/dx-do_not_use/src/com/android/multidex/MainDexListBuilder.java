@@ -47,7 +47,7 @@ public class MainDexListBuilder {
 
     private static final String EOL = System.getProperty("line.separator");
 
-    private static String USAGE_MESSAGE =
+    private static final String USAGE_MESSAGE =
             "Usage:" + EOL + EOL +
             "Short version: Don't use this." + EOL + EOL +
             "Slightly longer version: This tool is used by mainDexClasses script to build" + EOL +
