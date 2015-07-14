@@ -9,5 +9,5 @@ while [ -h "$BUCK_PATH" ]; do
 done
 BUCK_DIR=$(dirname "$BUCK_PATH")
 
-PYTHON=`type -p python2 python | head -1`
+PYTHON=$(command -v python2 python | head -1)
 exec $PYTHON "$BUCK_DIR"/../programs/buck.py "$@"
