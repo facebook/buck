@@ -27,12 +27,18 @@ public final class RegisterSpecSet
     /** {@code non-null;} no-element instance */
     public static final RegisterSpecSet EMPTY = new RegisterSpecSet(0);
 
+    static {
+        EMPTY.setImmutable();
+    }
+
     /**
      * {@code non-null;} array of register specs, where each element is
      * {@code null} or is an instance whose {@code reg}
      * matches the array index
      */
     private final RegisterSpec[] specs;
+
+
 
     /** {@code >= -1;} size of the set or {@code -1} if not yet calculated */
     private int size;
@@ -240,6 +246,8 @@ public final class RegisterSpecSet
      * @param toRemove {@code non-null;} register to remove.
      */
     public void remove(RegisterSpec toRemove) {
+        throwIfImmutable();
+
         try {
             specs[toRemove.getReg()] = null;
             size = -1;
@@ -295,6 +303,8 @@ public final class RegisterSpecSet
      * @param set {@code non-null;} the set to put into this instance
      */
     public void putAll(RegisterSpecSet set) {
+        throwIfImmutable();
+
         int max = set.getMaxSize();
 
         for (int i = 0; i < max; i++) {
