@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Runs buck in debug mode with the given args
+
+buck kill && 
+lsof -i:8888 | tail +2 | awk '{ print $2 }' | xargs -L1 kill -9 &&
+BUCK_DEBUG_MODE=1 NO_BUCKD=1 buck "$@"
