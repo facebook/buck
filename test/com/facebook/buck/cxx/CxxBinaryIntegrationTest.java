@@ -26,6 +26,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -129,7 +130,9 @@ public class CxxBinaryIntegrationTest {
       buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     }
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
-    buildLog.assertTargetBuiltLocally(binaryTarget.toString());
+    assertThat(
+        buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
+        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
     buildLog.assertTargetBuiltLocally(target.toString());
 
     // Clear for new build.
@@ -242,7 +245,9 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
-    buildLog.assertTargetBuiltLocally(binaryTarget.toString());
+    assertThat(
+        buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
+        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
     buildLog.assertTargetBuiltLocally(target.toString());
   }
 
@@ -376,7 +381,9 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
-    buildLog.assertTargetBuiltLocally(binaryTarget.toString());
+    assertThat(
+        buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
+        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
     buildLog.assertTargetBuiltLocally(target.toString());
 
     // Clear for new build.

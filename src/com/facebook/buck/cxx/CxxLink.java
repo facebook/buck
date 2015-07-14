@@ -26,6 +26,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Functions;
@@ -36,7 +37,9 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
-public class CxxLink extends AbstractBuildRule implements RuleKeyAppendable {
+public class CxxLink
+    extends AbstractBuildRule
+    implements RuleKeyAppendable, SupportsInputBasedRuleKey {
 
   @AddToRuleKey
   private final Tool linker;
