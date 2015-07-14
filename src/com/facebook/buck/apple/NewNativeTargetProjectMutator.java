@@ -640,12 +640,14 @@ public class NewNativeTargetProjectMutator {
     ImmutableList.Builder<String> script = ImmutableList.builder();
     script.add("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}");
     script.add("JS_OUT=${BASE_DIR}/" + args.bundleName);
+    script.add("SOURCE_MAP=${TEMP_DIR}/rn_source_map/" + args.bundleName + ".map");
 
     if (skipRNBundle) {
       // Working in server mode: make sure that we clear the bundle from a previous build.
       script.add("rm -rf ${JS_OUT}");
     } else {
       script.add("mkdir -p `dirname ${JS_OUT}`");
+      script.add("mkdir -p `dirname ${SOURCE_MAP}`");
 
       script.add(Joiner.on(" ").join(
               ReactNativeBundle.getBundleScript(
@@ -655,7 +657,8 @@ public class NewNativeTargetProjectMutator {
                   ReactNativePlatform.IOS,
                   ReactNativeFlavors.isDevMode(targetNode.getBuildTarget()),
                   "${JS_OUT}",
-                  "${BASE_DIR}")));
+                  "${BASE_DIR}",
+                  "${SOURCE_MAP}")));
     }
 
     return Joiner.on(" && ").join(script.build());

@@ -4,11 +4,12 @@ THIS_DIR=$(dirname "$0")
 THIS_DIR=$(pwd)/$THIS_DIR
 LAST_ARG="${@: -1}"
 SECOND_LAST_ARG="${@: -3:1}"
+THIRD_LAST_ARG="${@: -5:1}"
 
 case "$1" in
 'bundle')
-  OUTPUT_DIR="$LAST_ARG"
-  OUTPUT_FILE="$SECOND_LAST_ARG"
+  OUTPUT_DIR="$SECOND_LAST_ARG"
+  OUTPUT_FILE="$THIRD_LAST_ARG"
   cat $THIS_DIR/app/sample.android.js $THIS_DIR/app/helpers.js > $OUTPUT_FILE
 
   mkdir $OUTPUT_DIR/drawable-mdpi
@@ -17,6 +18,8 @@ case "$1" in
   cp "$THIS_DIR/app/image@2x.png" $OUTPUT_DIR/drawable-hdpi/image.png
   mkdir $OUTPUT_DIR/drawable-xhdpi
   cp "$THIS_DIR/app/image@3x.png" $OUTPUT_DIR/drawable-xhdpi/image.png
+
+  echo "source map" > $LAST_ARG
 
   exit 0
   ;;

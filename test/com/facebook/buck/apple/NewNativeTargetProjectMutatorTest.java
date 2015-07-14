@@ -455,7 +455,9 @@ public class NewNativeTargetProjectMutatorTest {
     assertThat(
         shellScript,
         startsWith("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}" +
-        " && JS_OUT=${BASE_DIR}/Apps/Foo/FooBundle.js && mkdir -p `dirname ${JS_OUT}`"));
+        " && JS_OUT=${BASE_DIR}/Apps/Foo/FooBundle.js && SOURCE_MAP=${TEMP_DIR}/rn_source_map/" +
+            "Apps/Foo/FooBundle.js.map && mkdir -p `dirname ${JS_OUT}` " +
+            "&& mkdir -p `dirname ${SOURCE_MAP}`"));
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {

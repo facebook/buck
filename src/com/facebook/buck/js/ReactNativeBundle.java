@@ -92,6 +92,8 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     final Path jsOutput = jsOutputDir.resolve(bundleName);
     steps.add(new MakeCleanDirectoryStep(jsOutput.getParent()));
     steps.add(new MakeCleanDirectoryStep(resource));
+    final Path sourceMapOutput = getPathToSourceMap(getBuildTarget());
+    steps.add(new MakeCleanDirectoryStep(sourceMapOutput.getParent()));
 
     steps.add(
         new ShellStep() {
@@ -109,11 +111,13 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
                 platform,
                 isDevMode,
                 filesystem.resolve(jsOutput).toString(),
-                filesystem.resolve(resource).toString());
+                filesystem.resolve(resource).toString(),
+                filesystem.resolve(sourceMapOutput).toString());
           }
         });
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
+    buildableContext.recordArtifact(sourceMapOutput);
     return steps.build();
   }
 
@@ -133,6 +137,10 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     return BuildTargets.getGenPath(target, "__%s_res__/");
   }
 
+  public static Path getPathToSourceMap(BuildTarget target) {
+    return BuildTargets.getGenPath(target, "__%s_source_map__/source.map");
+  }
+
   @Override
   @Nullable
   public Path getPathToOutput() {
@@ -150,7 +158,8 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       ReactNativePlatform platform,
       boolean isDevMode,
       String absoluteBundleOutputPath,
-      String absoluteResourceOutputPath) {
+      String absoluteResourceOutputPath,
+      String absoluteSourceMapOutputPath) {
     return ImmutableList.of(
         jsPackager.toString(),
         "bundle",
@@ -158,6 +167,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
         "--platform", platform.toString(),
         "--dev", isDevMode ? "true" : "false",
         "--bundle-output", absoluteBundleOutputPath,
-        "--assets-dest", absoluteResourceOutputPath);
+        "--assets-dest", absoluteResourceOutputPath,
+        "--sourcemap-output", absoluteSourceMapOutputPath);
   }
 }
