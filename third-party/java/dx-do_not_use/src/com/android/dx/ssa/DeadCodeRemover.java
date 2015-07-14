@@ -29,6 +29,9 @@ import java.util.HashSet;
  * block to entry block.
  */
 public class DeadCodeRemover {
+    /** optimizer that we're working for */
+    private final Optimizer optimizer;
+
     /** method we're processing */
     private final SsaMethod ssaMeth;
 
@@ -47,19 +50,22 @@ public class DeadCodeRemover {
     /**
      * Process a method with the dead-code remver
      *
+     * @param optimizer
      * @param ssaMethod method to process
      */
-    public static void process(SsaMethod ssaMethod) {
-        DeadCodeRemover dc = new DeadCodeRemover(ssaMethod);
+    public static void process(Optimizer optimizer, SsaMethod ssaMethod) {
+        DeadCodeRemover dc = new DeadCodeRemover(optimizer, ssaMethod);
         dc.run();
     }
 
     /**
      * Constructs an instance.
      *
+     * @param optimizer
      * @param ssaMethod method to process
      */
-    private DeadCodeRemover(SsaMethod ssaMethod) {
+    private DeadCodeRemover(Optimizer optimizer, SsaMethod ssaMethod) {
+        this.optimizer = optimizer;
         this.ssaMeth = ssaMethod;
 
         regCount = ssaMethod.getRegCount();
@@ -209,7 +215,7 @@ public class DeadCodeRemover {
      * @param insn {@code null-ok;} instruction in question
      * @return true if it has a side-effect
      */
-    private static boolean hasSideEffect(SsaInsn insn) {
+    private boolean hasSideEffect(SsaInsn insn) {
         if (insn == null) {
             /* While false would seem to make more sense here, true
              * prevents us from adding this back to a worklist unnecessarally.
@@ -217,14 +223,14 @@ public class DeadCodeRemover {
             return true;
         }
 
-        return insn.hasSideEffect();
+        return insn.hasSideEffect(optimizer);
     }
 
     /**
      * A callback class used to build up the initial worklist of
      * registers defined by an instruction with no side effect.
      */
-    static private class NoSideEffectVisitor implements SsaInsn.Visitor {
+    private class NoSideEffectVisitor implements SsaInsn.Visitor {
         BitSet noSideEffectRegs;
 
         /**

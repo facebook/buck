@@ -119,7 +119,7 @@ public class DotDumper implements ParseObserver {
 
         if (optimize) {
             boolean isStatic = AccessFlags.isStatic(meth.getAccessFlags());
-            rmeth = Optimizer.optimize(rmeth,
+            rmeth = new Optimizer().optimize(rmeth,
                     BaseDumper.computeParamWidth(meth, isStatic), isStatic,
                     true, advice);
         }

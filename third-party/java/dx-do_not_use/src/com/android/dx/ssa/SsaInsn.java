@@ -237,8 +237,9 @@ public abstract class SsaInsn implements ToHuman, Cloneable {
      *
      * @return true if this insn is considered to have a side effect beyond
      * that of assigning to the result reg.
+     * @param optimizer
      */
-    public abstract boolean hasSideEffect();
+    public abstract boolean hasSideEffect(Optimizer optimizer);
 
     /**
      * @return true if this is a move (but not a move-operand or

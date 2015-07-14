@@ -217,9 +217,10 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
      * {@inheritDoc}
      *
      * TODO: Increase the scope of this.
+     * @param optimizer
      */
     @Override
-    public boolean hasSideEffect() {
+    public boolean hasSideEffect(Optimizer optimizer) {
         Rop opcode = getOpcode();
 
         if (opcode.getBranchingness() != Rop.BRANCH_NONE) {
@@ -227,7 +228,7 @@ public final class NormalSsaInsn extends SsaInsn implements Cloneable {
         }
 
         boolean hasLocalSideEffect
-            = Optimizer.getPreserveLocals() && getLocalAssignment() != null;
+            = optimizer.getPreserveLocals() && getLocalAssignment() != null;
 
         switch (opcode.getOpcode()) {
             case RegOps.MOVE_RESULT:

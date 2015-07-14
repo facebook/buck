@@ -62,6 +62,9 @@ public class SsaRenamer implements Runnable {
     /** debug flag */
     private static final boolean DEBUG = false;
 
+    /** optimizer that we're working for */
+    private final Optimizer optimizer;
+
     /** method we're processing */
     private final SsaMethod ssaMeth;
 
@@ -94,10 +97,11 @@ public class SsaRenamer implements Runnable {
     /**
      * Constructs an instance of the renamer
      *
+     * @param optimizer
      * @param ssaMeth {@code non-null;} un-renamed SSA method that will
-     * be renamed.
      */
-    public SsaRenamer(SsaMethod ssaMeth) {
+    public SsaRenamer(Optimizer optimizer, SsaMethod ssaMeth) {
+        this.optimizer = optimizer;
         ropRegCount = ssaMeth.getRegCount();
 
         this.ssaMeth = ssaMeth;
@@ -145,12 +149,13 @@ public class SsaRenamer implements Runnable {
     /**
     * Constructs an instance of the renamer with threshold set
     *
-    * @param ssaMeth {@code non-null;} un-renamed SSA method that will
-    * be renamed.
-    * @param thresh registers below this number are unchanged
-    */
-   public SsaRenamer(SsaMethod ssaMeth, int thresh) {
-       this(ssaMeth);
+     * @param optimizer
+     * @param ssaMeth {@code non-null;} un-renamed SSA method that will
+     * be renamed.
+     * @param thresh registers below this number are unchanged
+     */
+   public SsaRenamer(Optimizer optimizer, SsaMethod ssaMeth, int thresh) {
+       this(optimizer, ssaMeth);
        threshold = thresh;
    }
 
@@ -535,7 +540,7 @@ public class SsaRenamer implements Runnable {
                     = RegisterSpec.makeLocalOptional(
                         ssaSourceReg, ropResult.getType(), newLocal);
 
-            if (!Optimizer.getPreserveLocals() || (onlyOneAssociatedLocal
+            if (!optimizer.getPreserveLocals() || (onlyOneAssociatedLocal
                     && equalsHandlesNulls(newLocal, sourceLocal)) &&
                     threshold == 0) {
                 /*

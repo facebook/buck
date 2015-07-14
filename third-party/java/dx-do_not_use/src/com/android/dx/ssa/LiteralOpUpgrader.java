@@ -42,20 +42,24 @@ public class LiteralOpUpgrader {
     /** method we're processing */
     private final SsaMethod ssaMeth;
 
+    /** optimizer that we're working for */
+    private final Optimizer optimizer;
+
     /**
      * Process a method.
      *
      * @param ssaMethod {@code non-null;} method to process
      */
-    public static void process(SsaMethod ssaMethod) {
+    public static void process(Optimizer optimizer, SsaMethod ssaMethod) {
         LiteralOpUpgrader dc;
 
-        dc = new LiteralOpUpgrader(ssaMethod);
+        dc = new LiteralOpUpgrader(optimizer, ssaMethod);
 
         dc.run();
     }
 
-    private LiteralOpUpgrader(SsaMethod ssaMethod) {
+    private LiteralOpUpgrader(Optimizer optimizer, SsaMethod ssaMethod) {
+        this.optimizer = optimizer;
         this.ssaMeth = ssaMethod;
     }
 
@@ -79,7 +83,7 @@ public class LiteralOpUpgrader {
      * Run the literal op upgrader
      */
     private void run() {
-        final TranslationAdvice advice = Optimizer.getAdvice();
+        final TranslationAdvice advice = optimizer.getAdvice();
 
         ssaMeth.forEachInsn(new SsaInsn.Visitor() {
             public void visitMoveInsn(NormalSsaInsn insn) {
