@@ -103,6 +103,12 @@ public class AppleCxxPlatforms {
       case ApplePlatform.Name.IPHONESIMULATOR:
         cflagsBuilder.add("-mios-simulator-version-min=" + minVersion);
         break;
+      case ApplePlatform.Name.WATCHOS:
+        cflagsBuilder.add("-mwatchos-version-min=" + minVersion);
+        break;
+      case ApplePlatform.Name.WATCHSIMULATOR:
+        cflagsBuilder.add("-mwatchos-simulator-version-min=" + minVersion);
+        break;
       default:
         // For Mac builds, -mmacosx-version-min=<version>.
         cflagsBuilder.add(

@@ -186,6 +186,12 @@ public class AppleSdkDiscovery {
       case ApplePlatform.Name.IPHONEOS:
         sdkBuilder.addArchitectures("armv7", "arm64");
         break;
+      case ApplePlatform.Name.WATCHSIMULATOR:
+        sdkBuilder.addArchitectures("i386");
+        break;
+      case ApplePlatform.Name.WATCHOS:
+        sdkBuilder.addArchitectures("armv7k");
+        break;
       default:
         sdkBuilder.addArchitectures("armv7", "arm64", "i386", "x86_64");
         break;

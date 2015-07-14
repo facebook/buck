@@ -57,10 +57,44 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testAppleLibraryBuildsForWatchOS() throws IOException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
+            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build()));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#watchos-armv7k,static");
+    result.assertSuccess();
+
+    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+  }
+
+  @Test
+  public void testAppleLibraryBuildsForWatchSimulator() throws IOException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
+            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHSIMULATOR).build()));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_library_builds_something", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "build",
+        "//Libraries/TestLibrary:TestLibrary#watchsimulator-i386,static");
+    result.assertSuccess();
+
+    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+  }
+
+  @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
-        ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
+            ApplePlatform.builder().setName(ApplePlatform.Name.MACOSX).build()));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_library_builds_something", tmp);

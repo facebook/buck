@@ -26,6 +26,8 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   class Name {
     public static final String IPHONEOS = "iphoneos";
     public static final String IPHONESIMULATOR = "iphonesimulator";
+    public static final String WATCHOS = "watchos";
+    public static final String WATCHSIMULATOR = "watchsimulator";
     public static final String MACOSX = "macosx";
 
     private Name() { }

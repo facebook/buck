@@ -81,7 +81,7 @@ public class AppleCxxPlatformsTest {
   public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void appleSdkPathsBuiltFromDirectory() throws Exception {
+  public void iphoneOSSdkPathsBuiltFromDirectory() throws Exception {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(Paths.get("."))
@@ -181,6 +181,103 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
     assertEquals(
         Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar")
+            .toString(),
+        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
+  }
+
+  @Test
+  public void watchOSSdkPathsBuiltFromDirectory() throws Exception {
+    AppleSdkPaths appleSdkPaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(Paths.get("."))
+            .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(Paths.get("Platforms/WatchOS.platform"))
+            .setSdkPath(Paths.get("Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk"))
+            .build();
+
+    AppleToolchain toolchain = AppleToolchain.builder()
+        .setIdentifier("com.apple.dt.XcodeDefault")
+        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setVersion("1")
+        .build();
+
+    AppleSdk targetSdk = AppleSdk.builder()
+        .setApplePlatform(
+            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build())
+        .setName("watchos2.0")
+        .setVersion("2.0")
+        .setToolchains(ImmutableList.of(toolchain))
+        .build();
+
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
+        .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/xctest"))
+        .build();
+
+    AppleCxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.buildWithExecutableChecker(
+            targetSdk,
+            "2.0",
+            "armv7k",
+            appleSdkPaths,
+            new FakeBuckConfig(),
+            new FakeExecutableFinder(paths));
+
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+
+    assertEquals(
+        ImmutableList.of("usr/bin/actool"),
+        appleCxxPlatform.getActool().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("usr/bin/ibtool"),
+        appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
+    assertEquals(
+        ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
+
+    assertEquals(
+        ImmutableList.of("usr/bin/xctest"),
+        appleCxxPlatform.getXctest().getCommandPrefix(resolver));
+
+    assertEquals(
+        ImmutableFlavor.of("watchos2.0-armv7k"),
+        cxxPlatform.getFlavor());
+    assertEquals(
+        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang").toString(),
+        cxxPlatform.getCc().getCommandPrefix(resolver).get(0));
+    assertThat(
+        ImmutableList.<String>builder()
+            .addAll(cxxPlatform.getCc().getCommandPrefix(resolver))
+            .addAll(cxxPlatform.getCflags())
+            .build(),
+        hasConsecutiveItems(
+            "-isysroot",
+            Paths.get("Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk").toString()));
+    assertThat(
+        cxxPlatform.getCflags(),
+        hasConsecutiveItems("-arch", "armv7k"));
+    assertThat(
+        cxxPlatform.getCflags(),
+        hasConsecutiveItems("-mwatchos-version-min=2.0"));
+    assertThat(
+        cxxPlatform.getLdflags(),
+        hasConsecutiveItems(
+            "-sdk_version",
+            "2.0"));
+    assertEquals(
+        Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
+        cxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
+    assertEquals(
+        Paths.get("Platforms/WatchOS.platform/Developer/usr/bin/ar")
             .toString(),
         cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
@@ -418,7 +515,7 @@ AppleSdkPaths appleSdkPaths =
     CxxPlatform defaultCxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     CxxPlatform cxxPlatform = CxxPlatforms.copyPlatformWithFlavorAndConfig(
-      defaultCxxPlatform,
+        defaultCxxPlatform,
         new CxxBuckConfig(config, testFlavor),
         testFlavor);
 
@@ -472,7 +569,7 @@ AppleSdkPaths appleSdkPaths =
   }
 
   @Test
-  public void simulatorPlatformSetsLinkerFlags() throws Exception {
+  public void iphoneOSSimulatorPlatformSetsLinkerFlags() throws Exception {
     AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
         .setDeveloperPath(Paths.get("."))
         .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
@@ -524,6 +621,62 @@ AppleSdkPaths appleSdkPaths =
     assertThat(
         cxxPlatform.getCxxldflags(),
         hasItem("-mios-simulator-version-min=7.0"));
+  }
+
+  @Test
+  public void watchOSSimulatorPlatformSetsLinkerFlags() throws Exception {
+    AppleSdkPaths appleSdkPaths = AppleSdkPaths.builder()
+        .setDeveloperPath(Paths.get("."))
+        .addToolchainPaths(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setPlatformPath(Paths.get("Platforms/WatchSimulator.platform"))
+        .setSdkPath(
+            Paths.get("Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator2.0.sdk")
+        )
+        .build();
+
+    ImmutableSet<Path> paths = ImmutableSet.<Path>builder()
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/libtool"))
+        .add(Paths.get("Platforms/iPhoneSimulator.platform/Developer/usr/bin/ar"))
+        .add(Paths.get("usr/bin/actool"))
+        .add(Paths.get("usr/bin/ibtool"))
+        .add(Paths.get("usr/bin/xctest"))
+        .build();
+
+    AppleToolchain toolchain = AppleToolchain.builder()
+        .setIdentifier("com.apple.dt.XcodeDefault")
+        .setPath(Paths.get("Toolchains/XcodeDefault.xctoolchain"))
+        .setVersion("1")
+        .build();
+
+    AppleSdk targetSdk = AppleSdk.builder()
+        .setApplePlatform(
+            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHSIMULATOR).build())
+        .setName("watchsimulator2.0")
+        .setVersion("2.0")
+        .setToolchains(ImmutableList.of(toolchain))
+        .build();
+
+    AppleCxxPlatform appleCxxPlatform =
+        AppleCxxPlatforms.buildWithExecutableChecker(
+            targetSdk,
+            "2.0",
+            "armv7k",
+            appleSdkPaths,
+            new FakeBuckConfig(),
+            new FakeExecutableFinder(paths));
+
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
+    assertThat(
+        cxxPlatform.getCflags(),
+        hasItem("-mwatchos-simulator-version-min=2.0"));
+    assertThat(
+        cxxPlatform.getCxxldflags(),
+        hasItem("-mwatchos-simulator-version-min=2.0"));
   }
 
   enum Operation {

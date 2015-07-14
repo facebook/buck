@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
 
 public class AppleSdkDiscoveryTest {
 
@@ -226,6 +225,7 @@ public class AppleSdkDiscoveryTest {
     workspace.setUp();
     Path root = workspace.getPath("");
     createSymLinkIosSdks(root, "8.0");
+    createSymLinkWatchosSdks(root, "2.0");
 
     AppleSdk macosx109Sdk =
         AppleSdk.builder()
@@ -278,6 +278,41 @@ public class AppleSdkDiscoveryTest {
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
             .build();
 
+    AppleSdk watchos20Sdk =
+        AppleSdk.builder()
+            .setName("watchos2.0")
+            .setVersion("2.0")
+            .setApplePlatform(ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build())
+            .addArchitectures("armv7k")
+            .addToolchains(getDefaultToolchain(root))
+            .build();
+    AppleSdkPaths watchos20Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(root)
+            .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/WatchOS.platform"))
+            .setSdkPath(root.resolve("Platforms/WatchOS.platform/Developer/SDKs/WatchOS.sdk"))
+            .build();
+
+    AppleSdk watchsimulator20Sdk =
+        AppleSdk.builder()
+            .setName("watchsimulator2.0")
+            .setVersion("2.0")
+            .setApplePlatform(
+                ApplePlatform.builder().setName(ApplePlatform.Name.WATCHSIMULATOR).build())
+            .addArchitectures("i386")
+            .addToolchains(getDefaultToolchain(root))
+            .build();
+    AppleSdkPaths watchsimulator20Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(root)
+            .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/WatchSimulator.platform"))
+            .setSdkPath(
+                root.resolve(
+                    "Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator.sdk"))
+            .build();
+
     ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
         "com.apple.dt.toolchain.XcodeDefault",
         getDefaultToolchain(root));
@@ -290,6 +325,10 @@ public class AppleSdkDiscoveryTest {
             .put(iphoneos80Sdk.withName("iphoneos"), iphoneos80Paths)
             .put(iphonesimulator80Sdk, iphonesimulator80Paths)
             .put(iphonesimulator80Sdk.withName("iphonesimulator"), iphonesimulator80Paths)
+            .put(watchos20Sdk, watchos20Paths)
+            .put(watchos20Sdk.withName("watchos"), watchos20Paths)
+            .put(watchsimulator20Sdk, watchsimulator20Paths)
+            .put(watchsimulator20Sdk.withName("watchsimulator"), watchsimulator20Paths)
             .build();
 
     assertThat(
@@ -441,7 +480,17 @@ public class AppleSdkDiscoveryTest {
   }
 
   private void createSymLinkIosSdks(Path root, String version) throws IOException {
-    Set<String> sdks = ImmutableSet.of("iPhoneOS", "iPhoneSimulator");
+    createSymLinkSdks(ImmutableSet.of("iPhoneOS", "iPhoneSimulator"), root, version);
+  }
+
+  private void createSymLinkWatchosSdks(Path root, String version) throws IOException {
+    createSymLinkSdks(ImmutableSet.of("WatchOS", "WatchSimulator"), root, version);
+  }
+
+  private void createSymLinkSdks(
+      Iterable<String> sdks,
+      Path root,
+      String version) throws IOException {
     for (String sdk : sdks) {
       Path sdkDir = root.resolve(String.format("Platforms/%s.platform/Developer/SDKs", sdk));
 
