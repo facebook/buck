@@ -32,52 +32,45 @@ public final class CodeStatistics {
      * running sum of the number of registers added/removed in
      * SSA form by the optimizer
      */
-    public static int runningDeltaRegisters = 0;
+    public int runningDeltaRegisters = 0;
 
     /**
      * running sum of the number of insns added/removed in
      * SSA form by the optimizer
      */
-    public static int runningDeltaInsns = 0;
+    public int runningDeltaInsns = 0;
 
     /** running sum of the total number of Rop insns processed */
-    public static int runningTotalInsns = 0;
+    public int runningTotalInsns = 0;
 
     /**
      * running sum of the number of dex-form registers added/removed in
      * SSA form by the optimizer. Only valid if args.statistics is true.
      */
-    public static int dexRunningDeltaRegisters = 0;
+    public int dexRunningDeltaRegisters = 0;
 
     /**
      * running sum of the number of dex-form insns (actually code
      * units) added/removed in SSA form by the optimizer. Only valid
      * if args.statistics is true.
      */
-    public static int dexRunningDeltaInsns = 0;
+    public int dexRunningDeltaInsns = 0;
 
     /**
      * running sum of the total number of dex insns (actually code
      * units) processed
      */
-    public static int dexRunningTotalInsns = 0;
+    public int dexRunningTotalInsns = 0;
 
     /** running sum of original class bytecode bytes */
-    public static int runningOriginalBytes = 0;
-
-    /**
-     * This class is uninstantiable.
-     */
-    private CodeStatistics() {
-        // This space intentionally left blank.
-    }
+    public int runningOriginalBytes = 0;
 
     /**
      * Updates the number of original bytecode bytes processed.
      *
      * @param count {@code >= 0;} the number of bytes to add
      */
-    public static void updateOriginalByteCount(int count) {
+    public void updateOriginalByteCount(int count) {
         runningOriginalBytes += count;
     }
 
@@ -87,7 +80,7 @@ public final class CodeStatistics {
      * @param nonOptCode non-optimized code block
      * @param code optimized code block
      */
-    public static void updateDexStatistics(DalvCode nonOptCode,
+    public void updateDexStatistics(DalvCode nonOptCode,
             DalvCode code) {
         if (DEBUG) {
             System.err.println("dex insns (old/new) "
@@ -116,7 +109,7 @@ public final class CodeStatistics {
      * @param nonOptRmeth non-optimized method
      * @param rmeth optimized method
      */
-    public static void updateRopStatistics(RopMethod nonOptRmeth,
+    public void updateRopStatistics(RopMethod nonOptRmeth,
             RopMethod rmeth) {
         int oldCountInsns
                 = nonOptRmeth.getBlocks().getEffectiveInstructionCount();
@@ -147,7 +140,7 @@ public final class CodeStatistics {
      *
      * @param out {@code non-null;} where to output to
      */
-    public static void dumpStatistics(PrintStream out) {
+    public void dumpStatistics(PrintStream out) {
         out.printf("Optimizer Delta Rop Insns: %d total: %d "
                 + "(%.2f%%) Delta Registers: %d\n",
                 runningDeltaInsns,
