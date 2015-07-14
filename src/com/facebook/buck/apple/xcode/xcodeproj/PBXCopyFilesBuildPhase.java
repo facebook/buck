@@ -48,26 +48,16 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
   }
 
   /**
-   * Base path of destination folder.
+   * Spec for the destination folder.
    */
-  private Destination dstSubfolderSpec;
+  private CopyFilePhaseDestinationSpec dstSubfolderSpec;
 
-  /**
-   * Subdirectory under the destination folder.
-   */
-  private String path;
-
-  public PBXCopyFilesBuildPhase(Destination dstSubfolderSpec, String path) {
+  public PBXCopyFilesBuildPhase(CopyFilePhaseDestinationSpec dstSubfolderSpec) {
     this.dstSubfolderSpec = dstSubfolderSpec;
-    this.path = path;
   }
 
-  public Destination getDstSubfolderSpec() {
+  public CopyFilePhaseDestinationSpec getDstSubfolderSpec() {
     return dstSubfolderSpec;
-  }
-
-  public String getPath() {
-    return path;
   }
 
   @Override
@@ -78,7 +68,7 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
   @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
-    s.addField("dstSubfolderSpec", dstSubfolderSpec.getValue());
-    s.addField("dstPath", path);
+    s.addField("dstSubfolderSpec", dstSubfolderSpec.getDestination().getValue());
+    s.addField("dstPath", dstSubfolderSpec.getPath().or(""));
   }
 }

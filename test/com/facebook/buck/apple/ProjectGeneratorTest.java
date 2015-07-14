@@ -39,8 +39,10 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
@@ -2115,6 +2117,61 @@ public class ProjectGeneratorTest {
         resourcesGroup.getChildren(),
         0);
     assertEquals("foo.xcdatamodel", modelReference.getName());
+  }
+
+  @Test
+  public void testAppleWatchTarget() throws IOException {
+    BuildTarget watchAppBinaryTarget = BuildTarget.builder("//foo", "WatchAppBinary").build();
+    TargetNode<?> watchAppBinaryNode = AppleBinaryBuilder
+        .createBuilder(watchAppBinaryTarget)
+        .build();
+
+    BuildTarget watchAppTarget = BuildTarget.builder("//foo", "WatchApp").build();
+    TargetNode<?> watchAppNode = AppleBundleBuilder
+        .createBuilder(watchAppTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setXcodeProductType(Optional.<String>of("com.apple.product-type.application.watchapp2"))
+        .setBinary(watchAppBinaryTarget)
+        .build();
+
+    BuildTarget hostAppBinaryTarget = BuildTarget.builder("//foo", "HostAppBinary").build();
+    TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder
+        .createBuilder(hostAppBinaryTarget)
+        .build();
+
+    BuildTarget hostAppTarget = BuildTarget.builder("//foo", "HostApp").build();
+    TargetNode<?> hostAppNode = AppleBundleBuilder
+        .createBuilder(hostAppTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setBinary(hostAppBinaryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(watchAppTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(watchAppNode, watchAppBinaryNode, hostAppNode, hostAppBinaryNode));
+    projectGenerator.createXcodeProjects();
+
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:HostApp");
+    assertEquals(target.getProductType(), ProductType.APPLICATION);
+
+    assertHasSingletonCopyFilesPhaseWithFileEntries(
+        target,
+        ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
+
+    PBXCopyFilesBuildPhase copyBuildPhase = getSingletonPhaseByType(
+        target,
+        PBXCopyFilesBuildPhase.class
+    );
+    assertEquals(
+        copyBuildPhase.getDstSubfolderSpec(),
+        CopyFilePhaseDestinationSpec.builder()
+            .setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS)
+            .setPath("$(CONTENTS_FOLDER_PATH)/Watch")
+            .build()
+    );
   }
 
   @Test
