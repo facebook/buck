@@ -277,16 +277,16 @@ public abstract class BaseDumper
         try {
             if (w1 == 0) {
                 int len2 = s2.length();
-                StringWriter sw = new StringWriter(len2 * 2);
-                IndentingWriter iw = new IndentingWriter(sw, w2, separator);
+                try (StringWriter sw = new StringWriter(len2 * 2);
+                        IndentingWriter iw = new IndentingWriter(sw, w2, separator)) {
+                    iw.write(s2);
+                    if ((len2 == 0) || (s2.charAt(len2 - 1) != '\n')) {
+                        iw.write('\n');
+	                }
+                    iw.flush();
 
-                iw.write(s2);
-                if ((len2 == 0) || (s2.charAt(len2 - 1) != '\n')) {
-                    iw.write('\n');
+                    return sw.toString();
                 }
-                iw.flush();
-
-                return sw.toString();
             } else {
                 return TwoColumnOutput.toString(s1, w1, separator, s2, w2);
             }
