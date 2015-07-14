@@ -252,7 +252,7 @@ public class SuperConsoleEventBusListenerTest {
         "I've made a huge mistake."));
 
     rawEventBus.post(configureTestEventAtTime(
-        InstallEvent.finished(fakeTarget, true),
+        InstallEvent.finished(fakeTarget, true, Optional.<Long>absent()),
         4000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 5000L, ImmutableList.of(parsingLine,

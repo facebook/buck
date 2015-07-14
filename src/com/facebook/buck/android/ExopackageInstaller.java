@@ -169,7 +169,10 @@ public class ExopackageInstaller {
           }
         });
 
-    eventBus.post(InstallEvent.finished(apkRule.getBuildTarget(), success));
+    eventBus.post(InstallEvent.finished(
+        apkRule.getBuildTarget(),
+        success,
+        Optional.<Long>absent()));
     return success;
   }
 

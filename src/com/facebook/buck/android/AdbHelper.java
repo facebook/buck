@@ -522,7 +522,10 @@ public class AdbHelper {
             return "install apk";
           }
         });
-    getBuckEventBus().post(InstallEvent.finished(installableApk.getBuildTarget(), success));
+    getBuckEventBus().post(InstallEvent.finished(
+        installableApk.getBuildTarget(),
+        success,
+        Optional.<Long>absent()));
 
     return success;
   }

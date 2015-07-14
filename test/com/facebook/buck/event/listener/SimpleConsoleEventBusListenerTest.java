@@ -137,7 +137,10 @@ public class SimpleConsoleEventBusListenerTest {
         console.getTextWrittenToStdErr());
 
     rawEventBus.post(configureTestEventAtTime(
-        InstallEvent.finished(fakeTarget, true), 4000L, TimeUnit.MILLISECONDS, threadId));
+        InstallEvent.finished(fakeTarget, true, Optional.<Long>absent()),
+        4000L,
+        TimeUnit.MILLISECONDS,
+        threadId));
 
     final String installLine = "[-] INSTALLING...FINISHED 1.5s\n";
 

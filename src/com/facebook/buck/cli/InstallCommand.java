@@ -73,6 +73,7 @@ public class InstallCommand extends BuildCommand {
       "Simulator.app",
       "iOS Simulator.app");
   private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 5s";
+  private static final InstallResult FAILURE = InstallResult.builder().setExitCode(1).build();
 
   @VisibleForTesting static final String RUN_LONG_ARG = "--run";
   @VisibleForTesting static final String RUN_SHORT_ARG = "-r";
@@ -193,14 +194,16 @@ public class InstallCommand extends BuildCommand {
     } else if (buildRule instanceof AppleBundle) {
       AppleBundle appleBundle = (AppleBundle) buildRule;
       params.getBuckEventBus().post(InstallEvent.started(appleBundle.getBuildTarget()));
-      exitCode = installAppleBundle(
+      InstallResult installResult = installAppleBundle(
           params,
           appleBundle,
           build.getExecutionContext().getProjectFilesystem(),
           build.getExecutionContext().getProcessExecutor());
-      params.getBuckEventBus().post(
-          InstallEvent.finished(appleBundle.getBuildTarget(), exitCode == 0));
-      return exitCode;
+      params.getBuckEventBus().post(InstallEvent.finished(
+          appleBundle.getBuildTarget(),
+          installResult.getExitCode() == 0,
+          installResult.getLaunchedPid()));
+      return installResult.getExitCode();
     } else {
       params.getConsole().printBuildFailure(
           String.format(
@@ -249,7 +252,7 @@ public class InstallCommand extends BuildCommand {
     return 0;
   }
 
-  private int installAppleBundle(
+  private InstallResult installAppleBundle(
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
@@ -263,7 +266,7 @@ public class InstallCommand extends BuildCommand {
       params.getConsole().printBuildFailure(
           String.format(
               "Cannot install %s (Xcode not found)", appleBundle.getFullyQualifiedName()));
-      return 1;
+      return FAILURE;
     }
 
     UnixUserIdFetcher userIdFetcher = new UnixUserIdFetcher();
@@ -285,7 +288,7 @@ public class InstallCommand extends BuildCommand {
           xcodeDeveloperPath.get());
       if (!appleCoreSimulatorServiceController.killSimulatorProcesses()) {
         params.getConsole().printBuildFailure("Could not kill running simulator processes.");
-        return 1;
+        return FAILURE;
       }
 
       shouldWaitForSimulatorsToShutdown = true;
@@ -302,7 +305,7 @@ public class InstallCommand extends BuildCommand {
           String.format(
               "Cannot install %s (no appropriate simulator found)",
               appleBundle.getFullyQualifiedName()));
-      return 1;
+      return FAILURE;
     }
 
     Path iosSimulatorPath = null;
@@ -322,7 +325,7 @@ public class InstallCommand extends BuildCommand {
               appleBundle.getFullyQualifiedName(),
               xcodeApplicationsPath,
               APPLE_SIMULATOR_APPS));
-      return 1;
+      return FAILURE;
     }
 
     AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
@@ -334,7 +337,7 @@ public class InstallCommand extends BuildCommand {
       LOG.warn("Cannot start simulator %s, killing simulators and trying again.");
       if (!appleCoreSimulatorServiceController.killSimulatorProcesses()) {
         params.getConsole().printBuildFailure("Could not kill running simulator processes.");
-        return 1;
+        return FAILURE;
       }
 
       shouldWaitForSimulatorsToShutdown = true;
@@ -346,7 +349,7 @@ public class InstallCommand extends BuildCommand {
             String.format(
                 "Cannot install %s (no appropriate simulator found)",
                 appleBundle.getFullyQualifiedName()));
-        return 1;
+        return FAILURE;
       }
     }
 
@@ -360,7 +363,7 @@ public class InstallCommand extends BuildCommand {
                 "Cannot install %s (simulators did not shut down within %d ms).",
                 appleBundle.getFullyQualifiedName(),
                 APPLE_SIMULATOR_WAIT_MILLIS));
-        return 1;
+        return FAILURE;
       }
 
       LOG.debug("Simulators shut down in %d millis.", shutdownMillis.get());
@@ -380,7 +383,7 @@ public class InstallCommand extends BuildCommand {
               appleBundle.getFullyQualifiedName(),
               appleSimulator.get().getName(),
               APPLE_SIMULATOR_WAIT_MILLIS));
-      return 1;
+      return FAILURE;
     }
 
     LOG.debug(
@@ -398,7 +401,7 @@ public class InstallCommand extends BuildCommand {
               appleBundle.getFullyQualifiedName(),
               appleBundle.getPathToOutput(),
               appleSimulator.get().getName()));
-      return 1;
+      return FAILURE;
     }
 
     if (ReactNativeFlavors.skipBundling(appleBundle.getBuildTarget())) {
@@ -409,7 +412,7 @@ public class InstallCommand extends BuildCommand {
             projectFilesystem.resolve(buckConfig.getServer().get()),
             params.getBuckEventBus());
         if (exitCode != 0) {
-          return exitCode;
+          return InstallResult.builder().setExitCode(exitCode).build();
         }
       }
     }
@@ -428,11 +431,11 @@ public class InstallCommand extends BuildCommand {
                   "Successfully installed %s. (Use `buck install -r %s` to run.)"),
               getArguments().get(0),
               getArguments().get(0)));
-      return 0;
+      return InstallResult.builder().setExitCode(0).build();
     }
   }
 
-  private int launchAppleBundle(
+  private InstallResult launchAppleBundle(
       CommandRunnerParams params,
       AppleBundle appleBundle,
       AppleSimulatorController appleSimulatorController,
@@ -452,7 +455,7 @@ public class InstallCommand extends BuildCommand {
               "Cannot install %s (could not get bundle ID from %s)",
               appleBundle.getFullyQualifiedName(),
               appleBundle.getInfoPlistPath()));
-      return 1;
+      return FAILURE;
     }
 
     Optional<Long> launchedPid = appleSimulatorController.launchInstalledBundleInSimulator(
@@ -467,7 +470,7 @@ public class InstallCommand extends BuildCommand {
               "Cannot launch %s (failed to launch bundle ID %s)",
               appleBundle.getFullyQualifiedName(),
               appleBundleId.get()));
-      return 1;
+      return FAILURE;
     }
 
     params.getBuckEventBus().post(
@@ -478,7 +481,7 @@ public class InstallCommand extends BuildCommand {
             waitForDebugger ? " (waiting for debugger)" : "",
             launchedPid.get()));
 
-    return 0;
+    return InstallResult.builder().setExitCode(0).setLaunchedPid(launchedPid.get()).build();
   }
 
   private Optional<AppleSimulator> getAppleSimulatorForBundle(

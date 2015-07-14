@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.google.common.base.Optional;
 
 import org.junit.Test;
 
@@ -32,16 +33,24 @@ public class InstallEventTest {
     InstallEvent startedTwo = configureTestEvent(
         InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
     InstallEvent finished = configureTestEvent(
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:bar"), true));
+        InstallEvent.finished(
+            BuildTargetFactory.newInstance("//foo:bar"),
+            true,
+            Optional.<Long>absent()));
     InstallEvent finishedDifferentEvent = configureTestEvent(
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:raz"), true));
+        InstallEvent.finished(
+            BuildTargetFactory.newInstance("//foo:raz"),
+            true,
+            Optional.<Long>absent()));
     InstallEvent finishedFail = configureTestEvent(
-        InstallEvent.finished(BuildTargetFactory.newInstance("//foo:bar"), false));
+        InstallEvent.finished(
+            BuildTargetFactory.newInstance("//foo:bar"),
+            false,
+            Optional.<Long>absent()));
 
     assertEquals(started, startedTwo);
     assertNotEquals(finished, finishedDifferentEvent);
     assertNotEquals(started, finished);
     assertNotEquals(finished, finishedFail);
-
   }
 }

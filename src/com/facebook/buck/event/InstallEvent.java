@@ -18,6 +18,7 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class InstallEvent extends AbstractBuckEvent implements LeafEvent {
@@ -61,8 +62,8 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
     return new Started(buildTarget);
   }
 
-  public static Finished finished(BuildTarget buildTarget, boolean success) {
-    return new Finished(buildTarget, success);
+  public static Finished finished(BuildTarget buildTarget, boolean success, Optional<Long> pid) {
+    return new Finished(buildTarget, success, pid);
   }
 
   public static class Started extends InstallEvent {
@@ -77,15 +78,24 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
   }
 
   public static class Finished extends InstallEvent {
-    private final boolean success;
 
-    protected Finished(BuildTarget buildTarget, boolean success) {
+    private static long invalidPid = -1;
+
+    private final boolean success;
+    private final long pid;
+
+    protected Finished(BuildTarget buildTarget, boolean success, Optional<Long> pid) {
       super(buildTarget);
       this.success = success;
+      this.pid = pid.or(invalidPid);
     }
 
     public boolean isSuccess() {
       return success;
+    }
+
+    public long getPid() {
+      return pid;
     }
 
     @Override
@@ -100,7 +110,7 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
       }
 
       Finished that = (Finished) o;
-      return isSuccess() == that.isSuccess();
+      return isSuccess() == that.isSuccess() && getPid() == that.getPid();
     }
 
     @Override
