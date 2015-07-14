@@ -201,10 +201,10 @@ public final class DexMerger {
                     CollisionPolicy.FAIL,
                     compactedSizes);
             result = compacter.mergeDexes();
-            System.out.printf("Result compacted from %.1fKiB to %.1fKiB to save %.1fKiB%n",
-                    dexOut.getLength() / 1024f,
-                    result.getLength() / 1024f,
-                    wastedByteCount / 1024f);
+//            System.out.printf("Result compacted from %.1fKiB to %.1fKiB to save %.1fKiB%n",
+//                    dexOut.getLength() / 1024f,
+//                    result.getLength() / 1024f,
+//                    wastedByteCount / 1024f);
         }
 
         int origDefs = 0;
@@ -215,13 +215,13 @@ public final class DexMerger {
         }
 
         long elapsed = System.nanoTime() - start;
-        System.out.printf("Merged dexs (%d defs/%.1fKiB). " +
-                "Result is %d defs/%.1fKiB. Took %.1fs%n",
-                origDefs,
-                origSizes / 1024f,
-                result.getTableOfContents().classDefs.size,
-                result.getLength() / 1024f,
-                elapsed / 1000000000f);
+//        System.out.printf("Merged dexs (%d defs/%.1fKiB). " +
+//                "Result is %d defs/%.1fKiB. Took %.1fs%n",
+//                origDefs,
+//                origSizes / 1024f,
+//                result.getTableOfContents().classDefs.size,
+//                result.getLength() / 1024f,
+//                elapsed / 1000000000f);
 
         return result;
     }
