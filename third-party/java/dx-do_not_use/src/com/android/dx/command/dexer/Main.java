@@ -266,6 +266,13 @@ public class Main {
                 return runMonoDex();
             }
         } finally {
+            if (threadPool != null) {
+                // Uh, oh.  We failed to shut down our thread pool.
+                // Let's do so now to avoid leaking threads in long-running processes.
+                // Worker threads shouldn't have any side effects,
+                // so we shouldn't have to shutdownNow or awaitTermination.
+                threadPool.shutdown();
+            }
             closeOutput(humanOutRaw);
         }
     }
