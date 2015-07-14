@@ -58,14 +58,13 @@ public class ClasspathMacroExpanderTest {
 
   @Test
   public void shouldIncludeARuleIfNothingIsGiven() throws MacroException {
+    final BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     BuildRule rule =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:cake"))
             .addSrc(Paths.get("Example.java"))  // Force a jar to be created
-            .build(new BuildRuleResolver());
+            .build(buildRuleResolver);
 
-    String classpath = expander.expand(filesystem, rule);
-
-    assertEquals(ROOT + File.separator + rule.getPathToOutput(), classpath);
+    assertExpandsTo(rule, buildRuleResolver, ROOT + File.separator + rule.getPathToOutput());
   }
 
   @Test
@@ -82,17 +81,16 @@ public class ClasspathMacroExpanderTest {
             .addDep(dep.getBuildTarget())
             .build(ruleResolver);
 
-    String classpath = expander.expand(filesystem, rule);
-
     // Alphabetical sorting expected, so "dep" should be before "rule"
-    assertEquals(
+    assertExpandsTo(
+        rule,
+        ruleResolver,
         String.format(
             "%s/%s:%s/%s",
             ROOT,
             dep.getPathToOutput(),
             ROOT,
-            rule.getPathToOutput()).replace(':', File.pathSeparatorChar),
-        classpath);
+            rule.getPathToOutput()).replace(':', File.pathSeparatorChar));
   }
 
   @Test(expected = MacroException.class)
@@ -128,4 +126,18 @@ public class ClasspathMacroExpanderTest {
     assertThat(deps, Matchers.containsInAnyOrder(rule, dep));
   }
 
+  private void assertExpandsTo(
+      BuildRule rule,
+      BuildRuleResolver buildRuleResolver,
+      String expectedClasspath) throws MacroException {
+    String classpath = expander.expand(filesystem, rule);
+    String fileClasspath = expander.expandForFile(
+        rule.getBuildTarget(),
+        buildRuleResolver,
+        filesystem,
+        ':' + rule.getBuildTarget().getShortName());
+
+    assertEquals(expectedClasspath, classpath);
+    assertEquals(String.format("'%s'", expectedClasspath), fileClasspath);
+  }
 }

@@ -45,7 +45,16 @@ public class OutputToFileExpander implements MacroExpander {
 
     try {
       Path tempFile = createTempFile(filesystem, target, input);
-      String expanded = delegate.expand(target, resolver, filesystem, input);
+      String expanded;
+      if (delegate instanceof MacroExpanderWithCustomFileOutput) {
+        expanded = ((MacroExpanderWithCustomFileOutput) delegate).expandForFile(
+            target,
+            resolver,
+            filesystem,
+            input);
+      } else {
+        expanded = delegate.expand(target, resolver, filesystem, input);
+      }
 
       filesystem.writeContentsToPath(expanded, tempFile);
       return "@" + filesystem.getAbsolutifier().apply(tempFile);
