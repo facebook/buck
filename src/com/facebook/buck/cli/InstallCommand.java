@@ -68,6 +68,9 @@ public class InstallCommand extends BuildCommand {
 
   private static final Logger LOG = Logger.get(InstallCommand.class);
   private static final long APPLE_SIMULATOR_WAIT_MILLIS = 20000;
+  private static final ImmutableList<String> APPLE_SIMULATOR_APPS = ImmutableList.of(
+      "Simulator.app",
+      "iOS Simulator.app");
 
   @VisibleForTesting static final String RUN_LONG_ARG = "--run";
   @VisibleForTesting static final String RUN_SHORT_ARG = "-r";
@@ -300,7 +303,26 @@ public class InstallCommand extends BuildCommand {
       return 1;
     }
 
-    Path iosSimulatorPath = xcodeDeveloperPath.get().resolve("Applications/iOS Simulator.app");
+    Path iosSimulatorPath = null;
+    Path xcodeApplicationsPath = xcodeDeveloperPath.get().resolve("Applications");
+    for (String simulatorApp : APPLE_SIMULATOR_APPS) {
+      Path resolvedSimulatorPath = xcodeApplicationsPath.resolve(simulatorApp);
+      if (projectFilesystem.isDirectory(resolvedSimulatorPath)) {
+        iosSimulatorPath = resolvedSimulatorPath;
+        break;
+      }
+    }
+
+    if (iosSimulatorPath == null) {
+      params.getConsole().printBuildFailure(
+          String.format(
+              "Cannot install %s (could not find simulator under %s, checked %s)",
+              appleBundle.getFullyQualifiedName(),
+              xcodeApplicationsPath,
+              APPLE_SIMULATOR_APPS));
+      return 1;
+    }
+
     AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
         processExecutor,
         simctlPath,
