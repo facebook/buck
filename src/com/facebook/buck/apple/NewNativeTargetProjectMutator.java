@@ -103,6 +103,7 @@ public class NewNativeTargetProjectMutator {
   private ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs = ImmutableSet.of();
   private Path assetCatalogBuildScript = Paths.get("");
   private Iterable<TargetNode<?>> preBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
   private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
   private boolean skipRNBundle = false;
   private Collection<Path> additionalRunScripts = ImmutableList.of();
@@ -200,6 +201,11 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setCopyFilesPhases(Iterable<PBXBuildPhase> phases) {
+    copyFilesPhases = phases;
+    return this;
+  }
+
   public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(Iterable<TargetNode<?>> phases) {
     postBuildRunScriptPhases = phases;
     return this;
@@ -243,6 +249,7 @@ public class NewNativeTargetProjectMutator {
     addFrameworksBuildPhase(project, target);
     addResourcesBuildPhase(target, targetGroup);
     addAssetCatalogBuildPhase(target, targetGroup);
+    target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
     addRunScriptBuildPhases(target, postBuildRunScriptPhases);
     addRawScriptBuildPhases(target);
 

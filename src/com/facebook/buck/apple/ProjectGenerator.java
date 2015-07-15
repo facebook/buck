@@ -26,6 +26,7 @@ import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
@@ -577,6 +578,14 @@ public class ProjectGenerator {
       infoPlistPath = Optional.absent();
     }
 
+    // -- copy any binary and bundle targets into this bundle
+    Iterable<TargetNode<?>> copiedRules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+        targetGraph,
+        AppleBuildRules.RecursiveDependenciesMode.COPYING,
+        targetNode,
+        Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES));
+    ImmutableList<PBXBuildPhase> copyFilesBuildPhases = getCopyFilesBuildPhases(copiedRules);
+
     PBXNativeTarget target = generateBinaryTarget(
         project,
         Optional.of(targetNode),
@@ -587,15 +596,8 @@ public class ProjectGenerator {
         /* includeFrameworks */ true,
         AppleResources.collectRecursiveResources(targetGraph, ImmutableList.of(targetNode)),
         AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode)),
+        Optional.<Iterable<PBXBuildPhase>>of(copyFilesBuildPhases),
         bundleLoaderNode);
-
-    // -- copy any binary and bundle targets into this bundle
-    Iterable<TargetNode<?>> copiedRules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-        targetGraph,
-        AppleBuildRules.RecursiveDependenciesMode.COPYING,
-        targetNode,
-        Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES));
-    generateCopyFilesBuildPhases(target, copiedRules);
 
     LOG.debug("Generated iOS bundle target %s", target);
     return target;
@@ -615,6 +617,7 @@ public class ProjectGenerator {
         /* includeFrameworks */ true,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
         ImmutableSet.<AppleAssetCatalogDescription.Arg>of(),
+        Optional.<Iterable<PBXBuildPhase>>absent(),
         Optional.<TargetNode<AppleBundleDescription.Arg>>absent());
     LOG.debug("Generated Apple binary target %s", target);
     return target;
@@ -642,6 +645,7 @@ public class ProjectGenerator {
         /* includeFrameworks */ isShared,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
         ImmutableSet.<AppleAssetCatalogDescription.Arg>of(),
+        Optional.<Iterable<PBXBuildPhase>>absent(),
         bundleLoaderNode);
     LOG.debug("Generated iOS library target %s", target);
     return target;
@@ -657,6 +661,7 @@ public class ProjectGenerator {
       boolean includeFrameworks,
       ImmutableSet<AppleResourceDescription.Arg> resources,
       ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs,
+      Optional<Iterable<PBXBuildPhase>> copyFilesPhases,
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
     Optional<String> targetGid = targetNode.getConstructorArg().gid;
@@ -738,6 +743,9 @@ public class ProjectGenerator {
         preScriptPhases,
         postScriptPhases);
     mutator.setPreBuildRunScriptPhases(preScriptPhases.build());
+    if (copyFilesPhases.isPresent()) {
+      mutator.setCopyFilesPhases(copyFilesPhases.get());
+    }
     mutator.setPostBuildRunScriptPhases(postScriptPhases.build());
     boolean skipRNBundle = ReactNativeFlavors.skipBundling(buildTargetNode.getBuildTarget());
     mutator.skipReactNativeBundle(skipRNBundle);
@@ -1378,8 +1386,7 @@ public class ProjectGenerator {
     }
   }
 
-  private void generateCopyFilesBuildPhases(
-      PBXNativeTarget target,
+  private ImmutableList<PBXBuildPhase> getCopyFilesBuildPhases(
       Iterable<TargetNode<?>> copiedNodes) {
 
     // Bucket build rules into bins by their destinations
@@ -1393,33 +1400,36 @@ public class ProjectGenerator {
       }
     }
 
+    ImmutableList.Builder<PBXBuildPhase> phases = ImmutableList.builder();
+
     ImmutableSetMultimap<CopyFilePhaseDestinationSpec, TargetNode<?>> ruleByDestinationSpec =
         ruleByDestinationSpecBuilder.build();
 
     // Emit a copy files phase for each destination.
     for (CopyFilePhaseDestinationSpec destinationSpec : ruleByDestinationSpec.keySet()) {
       Iterable<TargetNode<?>> targetNodes = ruleByDestinationSpec.get(destinationSpec);
-      generateSingleCopyFilesBuildPhase(target, destinationSpec, targetNodes);
+      phases.add(getSingleCopyFilesBuildPhase(destinationSpec, targetNodes));
     }
+
+    return phases.build();
   }
 
-  private void generateSingleCopyFilesBuildPhase(
-      PBXNativeTarget target,
+  private PBXCopyFilesBuildPhase getSingleCopyFilesBuildPhase(
       CopyFilePhaseDestinationSpec destinationSpec,
       Iterable<TargetNode<?>> targetNodes) {
     PBXCopyFilesBuildPhase copyFilesBuildPhase = new PBXCopyFilesBuildPhase(destinationSpec);
-    target.getBuildPhases().add(copyFilesBuildPhase);
     for (TargetNode<?> targetNode : targetNodes) {
       PBXFileReference fileReference = getLibraryFileReference(targetNode);
       copyFilesBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
     }
+    return copyFilesBuildPhase;
   }
 
   /**
    * Create the project bundle structure and write {@code project.pbxproj}.
    */
   private Path writeProjectFile(PBXProject project) throws IOException {
-    XcodeprojSerializer serializer = new XcodeprojSerializer(
+  XcodeprojSerializer serializer = new XcodeprojSerializer(
         new GidGenerator(ImmutableSet.copyOf(gidsToTargetNames.keySet())),
         project);
     NSDictionary rootObject = serializer.toPlist();
