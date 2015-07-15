@@ -1,7 +1,7 @@
 URL: https://android.googlesource.com/platform/dalvik/
 SUBDIRECTORY : dx
 SCM: git
-Revision android-5.1.0_r3
+Revision android-5.1.1_r8
 
 Description:
 This is the dx component of the platform/dalvik repository from the Android
