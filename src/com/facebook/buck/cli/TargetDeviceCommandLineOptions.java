@@ -46,14 +46,28 @@ public class TargetDeviceCommandLineOptions {
 
   @VisibleForTesting static final String SERIAL_NUMBER_SHORT_ARG = "-s";
   @VisibleForTesting static final String SERIAL_NUMBER_LONG_ARG = "--serial";
+  static final String UDID_ARG = "--udid";
   @Option(
       name = SERIAL_NUMBER_LONG_ARG,
-      aliases = {SERIAL_NUMBER_SHORT_ARG},
+      aliases = {SERIAL_NUMBER_SHORT_ARG, UDID_ARG},
+      forbids = SIMULATOR_NAME_LONG_ARG,
       metaVar = "<serial-number>",
-      usage = "Use device or emulator with specific serial number."
+      usage = "Use device or emulator with specific serial or UDID number."
   )
   @Nullable
   private String serialNumber;
+
+  static final String SIMULATOR_NAME_SHORT_ARG = "-n";
+  static final String SIMULATOR_NAME_LONG_ARG = "--simulator-name";
+  @Option(
+      name = SIMULATOR_NAME_LONG_ARG,
+      aliases = {SIMULATOR_NAME_SHORT_ARG},
+      forbids = SERIAL_NUMBER_LONG_ARG,
+      metaVar = "<name>",
+      usage = "Use simulator with specific name (Apple only)."
+  )
+  @Nullable
+  private String simulatorName;
 
   public TargetDeviceCommandLineOptions() {
   }
@@ -78,6 +92,10 @@ public class TargetDeviceCommandLineOptions {
 
   public boolean hasSerialNumber() {
     return serialNumber != null;
+  }
+
+  public Optional<String> getSimulatorName() {
+    return Optional.fromNullable(simulatorName);
   }
 
   public Optional<TargetDevice> getTargetDeviceOptional() {
