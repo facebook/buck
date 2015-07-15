@@ -17,6 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
@@ -128,4 +129,8 @@ public class WebServerBuckEventListener implements BuckEventListener {
     streamingWebSocketServlet.tellClients(event);
   }
 
+  @Subscribe
+  public void installEventFinished(InstallEvent.Finished event) {
+    streamingWebSocketServlet.tellClients(event);
+  }
 }
