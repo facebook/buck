@@ -222,6 +222,7 @@ public final class DalvInsnList extends FixedSizeList {
      * lines for zero-size instructions and explicit constant pool indices
      */
     public void debugPrint(Writer out, String prefix, boolean verbose) {
+        @SuppressWarnings("resource")
         IndentingWriter iw = new IndentingWriter(out, 0, prefix);
         int sz = size();
 

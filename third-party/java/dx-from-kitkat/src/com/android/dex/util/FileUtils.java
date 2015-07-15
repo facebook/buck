@@ -67,8 +67,7 @@ public final class FileUtils {
 
         byte[] result = new byte[length];
 
-        try {
-            FileInputStream in = new FileInputStream(file);
+        try (FileInputStream in = new FileInputStream(file)) {
             int at = 0;
             while (length > 0) {
                 int amt = in.read(result, at, length);
@@ -78,7 +77,6 @@ public final class FileUtils {
                 at += amt;
                 length -= amt;
             }
-            in.close();
         } catch (IOException ex) {
             throw new RuntimeException(file + ": trouble reading", ex);
         }

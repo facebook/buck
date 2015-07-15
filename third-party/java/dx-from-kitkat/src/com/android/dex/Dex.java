@@ -101,13 +101,13 @@ public final class Dex {
      */
     public Dex(File file) throws IOException {
         if (FileUtils.hasArchiveSuffix(file.getName())) {
-            ZipFile zipFile = new ZipFile(file);
-            ZipEntry entry = zipFile.getEntry(DexFormat.DEX_IN_JAR_NAME);
-            if (entry != null) {
-                loadFrom(zipFile.getInputStream(entry));
-                zipFile.close();
-            } else {
-                throw new DexException("Expected " + DexFormat.DEX_IN_JAR_NAME + " in " + file);
+            try (ZipFile zipFile = new ZipFile(file)) {
+                ZipEntry entry = zipFile.getEntry(DexFormat.DEX_IN_JAR_NAME);
+                if (entry != null) {
+                    loadFrom(zipFile.getInputStream(entry));
+                } else {
+                    throw new DexException("Expected " + DexFormat.DEX_IN_JAR_NAME + " in " + file);
+                }
             }
         } else if (file.getName().endsWith(".dex")) {
             loadFrom(new FileInputStream(file));

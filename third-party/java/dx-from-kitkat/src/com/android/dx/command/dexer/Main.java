@@ -832,6 +832,7 @@ public class Main {
             OutputStream out = openOutput(fileName);
 
             try {
+                @SuppressWarnings("resource")
                 JarOutputStream jarOut = new JarOutputStream(out, manifest);
                 for (Map.Entry<String, byte[]> e :
                          outputResources.entrySet()) {
