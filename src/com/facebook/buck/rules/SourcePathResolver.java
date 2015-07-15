@@ -87,6 +87,30 @@ public class SourcePathResolver {
   }
 
   /**
+   * @return the {@link Path} for this {@code sourcPath}, resolved using its associated
+   *     {@link com.facebook.buck.io.ProjectFilesystem}.
+   */
+  public Path getResolvedPath(SourcePath sourcePath) {
+    Path relative = getPath(sourcePath);
+
+    Optional<BuildRule> rule = getRule(sourcePath);
+    if (rule.isPresent()) {
+      return rule.get().getProjectFilesystem().resolve(relative);
+    }
+
+    return ((PathSourcePath) sourcePath).getFilesystem().resolve(relative);
+  }
+
+  public Function<SourcePath, Path> getResolvedPathFunction() {
+    return new Function<SourcePath, Path>() {
+      @Override
+      public Path apply(SourcePath input) {
+        return getResolvedPath(input);
+      }
+    };
+  }
+
+  /**
    * @return An {@link Optional} containing the {@link BuildRule} whose output {@code sourcePath}
    *         refers to, or {@code absent} if {@code sourcePath} doesn't refer to the output of a
    *         {@link BuildRule}.

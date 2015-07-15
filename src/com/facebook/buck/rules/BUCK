@@ -87,6 +87,7 @@ java_immutables_library(
     'BuildRuleStatus.java',
     'BuildRuleSuccessType.java',
     'BuildTargetSourcePath.java',
+    'CommandTool.java',
     'ConstructorArgMarshaller.java',
     'ConstructorArgMarshalException.java',
     'DefaultOnDiskBuildInfo.java',
