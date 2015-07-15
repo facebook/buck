@@ -19,8 +19,11 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 /**
@@ -28,18 +31,34 @@ import com.google.common.collect.Iterables;
  */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander {
 
-  @Override
-  public String expand(ProjectFilesystem filesystem, BuildRule rule) throws MacroException {
+  private BinaryBuildRule getBinaryRule(BuildRule rule) throws MacroException {
     if (!(rule instanceof BinaryBuildRule)) {
       throw new MacroException(
           String.format(
               "%s used in executable macro does not correspond to a binary rule",
               rule.getBuildTarget()));
     }
-    BinaryBuildRule binary = (BinaryBuildRule) rule;
+    return (BinaryBuildRule) rule;
+  }
+
+  @Override
+  protected ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+      BuildRuleResolver resolver,
+      BuildRule rule)
+      throws MacroException {
+    return ImmutableList.copyOf(
+        new SourcePathResolver(resolver)
+            .filterBuildRuleInputs(getBinaryRule(rule).getExecutableCommand().getInputs()));
+  }
+
+  @Override
+  public String expand(SourcePathResolver resolver, ProjectFilesystem filesystem, BuildRule rule)
+      throws MacroException {
     return Joiner.on(' ').join(
         Iterables.transform(
-            binary.getExecutableCommand(filesystem),
+            getBinaryRule(rule)
+                .getExecutableCommand()
+                .getCommandPrefix(resolver),
             Escaper.SHELL_ESCAPER));
   }
 

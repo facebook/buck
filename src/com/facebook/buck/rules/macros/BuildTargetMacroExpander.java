@@ -23,6 +23,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -34,7 +35,10 @@ import com.google.common.collect.ImmutableList;
  */
 public abstract class BuildTargetMacroExpander implements MacroExpander {
 
-  protected abstract String expand(ProjectFilesystem filesystem, BuildRule rule)
+  protected abstract String expand(
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem,
+      BuildRule rule)
       throws MacroException;
 
   protected BuildRule resolve(
@@ -65,7 +69,14 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
       ProjectFilesystem filesystem,
       String input)
       throws MacroException {
-    return expand(filesystem, resolve(target, resolver, input));
+    return expand(new SourcePathResolver(resolver), filesystem, resolve(target, resolver, input));
+  }
+
+  protected ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+      @SuppressWarnings("unused") BuildRuleResolver resolver,
+      BuildRule rule)
+      throws MacroException {
+    return ImmutableList.of(rule);
   }
 
   @Override
@@ -74,7 +85,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
-    return ImmutableList.of(resolve(target, resolver, input));
+    return extractAdditionalBuildTimeDeps(resolver, resolve(target, resolver, input));
   }
 
   @Override

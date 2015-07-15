@@ -52,7 +52,10 @@ public class BuildTargetMacroExpanderTest {
             "exe",
             new BuildTargetMacroExpander() {
               @Override
-              public String expand(ProjectFilesystem filesystem, BuildRule rule)
+              public String expand(
+                  SourcePathResolver resolver,
+                  ProjectFilesystem filesystem,
+                  BuildRule rule)
                   throws MacroException {
                 found.add(rule.getBuildTarget());
                 return "";

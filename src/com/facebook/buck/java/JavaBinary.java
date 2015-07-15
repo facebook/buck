@@ -19,19 +19,21 @@ package com.facebook.buck.java;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
 import com.facebook.buck.io.DirectoryTraverser;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -170,13 +172,16 @@ public class JavaBinary extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
+  public Tool getExecutableCommand() {
     Preconditions.checkState(
         mainClass != null,
         "Must specify a main class for %s in order to to run it.",
         getBuildTarget());
 
-    return ImmutableList.of("java", "-jar",
-        projectFilesystem.getAbsolutifier().apply(getPathToOutput()).toString());
+    return new CommandTool.Builder()
+        .addArg("java")
+        .addArg("-jar")
+        .addArg(new BuildTargetSourcePath(getBuildTarget()))
+        .build();
   }
 }

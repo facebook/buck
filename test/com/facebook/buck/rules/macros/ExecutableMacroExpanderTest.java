@@ -18,18 +18,30 @@ package com.facebook.buck.rules.macros;
 
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -131,6 +143,60 @@ public class ExecutableMacroExpanderTest {
         "java -jar %s $OUT",
         expectedClasspath);
     assertEquals(expectedCmd, transformedString);
+  }
+
+  @Test
+  public void testBuildTimeDependencies() throws MacroException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
+    final BuildRule dep1 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep1"))
+            .setOut("arg1")
+            .build(ruleResolver, filesystem);
+    final BuildRule dep2 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep2"))
+            .setOut("arg2")
+            .build(ruleResolver, filesystem);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    ruleResolver.addToIndex(
+        new NoopBinaryBuildRule(params, pathResolver) {
+          @Override
+          public Tool getExecutableCommand() {
+            return new CommandTool.Builder()
+                .addArg(new BuildTargetSourcePath(dep1.getBuildTarget()))
+                .addArg(new BuildTargetSourcePath(dep2.getBuildTarget()))
+                .build();
+          }
+        });
+
+    // Verify that the correct cmd was created.
+    ExecutableMacroExpander expander = new ExecutableMacroExpander();
+    assertThat(
+        expander.extractAdditionalBuildTimeDeps(target, ruleResolver, "//:rule"),
+        Matchers.containsInAnyOrder(dep1, dep2));
+    assertThat(
+        expander.expand(target, ruleResolver, filesystem, "//:rule"),
+        Matchers.equalTo(
+            String.format(
+                "%s %s",
+                Preconditions.checkNotNull(dep1.getPathToOutput()).toAbsolutePath(),
+                Preconditions.checkNotNull(dep2.getPathToOutput()).toAbsolutePath())));
+  }
+
+  private abstract static class NoopBinaryBuildRule
+      extends NoopBuildRule
+      implements BinaryBuildRule {
+
+    public NoopBinaryBuildRule(
+        BuildRuleParams params,
+        SourcePathResolver resolver) {
+      super(params, resolver);
+    }
+
   }
 
 }

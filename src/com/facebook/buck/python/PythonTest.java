@@ -79,7 +79,7 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
         ProjectFilesystem fs = context.getProjectFilesystem();
         ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
-        builder.addAll(binary.getExecutableCommand(fs));
+        builder.addAll(binary.getExecutableCommand().getCommandPrefix(getResolver()));
         builder.add("-o", fs.resolve(getPathToTestOutputResult()).toString());
         return builder.build();
       }

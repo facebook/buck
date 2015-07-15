@@ -16,8 +16,9 @@
 
 package com.facebook.buck.d;
 
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -44,12 +45,15 @@ public class DBinary extends DLinkable implements BinaryBuildRule {
   }
 
   @Override
-  public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(projectFilesystem.resolve(getPathToOutput()).toString());
+  public Tool getExecutableCommand() {
+    return new CommandTool.Builder()
+        .addArg(new BuildTargetSourcePath(getBuildTarget()))
+        .build();
   }
 
   @Override
   public BuildableProperties getProperties() {
     return new BuildableProperties(BuildableProperties.Kind.PACKAGING);
   }
+
 }

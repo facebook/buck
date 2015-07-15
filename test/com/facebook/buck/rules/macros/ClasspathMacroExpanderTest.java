@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -95,12 +96,14 @@ public class ClasspathMacroExpanderTest {
 
   @Test(expected = MacroException.class)
   public void shouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws MacroException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildRule rule =
         ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//cheese:peas"))
           .setSrc(new TestSourcePath("some-file.jar"))
-          .build(new BuildRuleResolver());
+          .build(ruleResolver);
 
-    expander.expand(filesystem, rule);
+    expander.expand(pathResolver, filesystem, rule);
   }
 
   @Test
@@ -130,7 +133,7 @@ public class ClasspathMacroExpanderTest {
       BuildRule rule,
       BuildRuleResolver buildRuleResolver,
       String expectedClasspath) throws MacroException {
-    String classpath = expander.expand(filesystem, rule);
+    String classpath = expander.expand(new SourcePathResolver(buildRuleResolver), filesystem, rule);
     String fileClasspath = expander.expandForFile(
         rule.getBuildTarget(),
         buildRuleResolver,

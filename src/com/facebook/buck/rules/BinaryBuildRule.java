@@ -16,10 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.collect.ImmutableList;
-
 public interface BinaryBuildRule {
-
-  public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem);
+  Tool getExecutableCommand();
 }

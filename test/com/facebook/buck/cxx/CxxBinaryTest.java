@@ -22,11 +22,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,21 +37,35 @@ public class CxxBinaryTest {
 
   @Test
   public void getExecutableCommandUsesAbsolutePath() throws IOException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path bin = Paths.get("path/to/exectuable");
-    filesystem.touch(bin);
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:target")
-        .build();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    CxxBinary binary = new CxxBinary(
-        params,
-        ruleResolver,
-        new SourcePathResolver(ruleResolver),
-        bin,
-        EasyMock.createMock(CxxLink.class),
-        ImmutableList.<Path>of(),
-        ImmutableList.<BuildTarget>of());
-    ImmutableList<String> command = binary.getExecutableCommand(filesystem);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
+    BuildRuleParams linkParams = new FakeBuildRuleParamsBuilder("//:link").build();
+    Path bin = Paths.get("path/to/exectuable");
+    CxxLink cxxLink =
+        ruleResolver.addToIndex(
+            new CxxLink(
+                linkParams,
+                pathResolver,
+                CxxPlatformUtils.DEFAULT_PLATFORM.getLd(),
+                bin,
+                ImmutableList.<SourcePath>of(),
+                ImmutableList.<String>of(),
+                ImmutableSet.<Path>of(),
+                CxxPlatformUtils.DEFAULT_PLATFORM.getDebugPathSanitizer()));
+
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:target").build();
+    CxxBinary binary =
+        ruleResolver.addToIndex(
+            new CxxBinary(
+                params,
+                ruleResolver,
+                pathResolver,
+                bin,
+                cxxLink,
+                ImmutableList.<Path>of(),
+                ImmutableList.<BuildTarget>of()));
+    ImmutableList<String> command = binary.getExecutableCommand().getCommandPrefix(pathResolver);
     assertTrue(Paths.get(command.get(0)).isAbsolute());
   }
 

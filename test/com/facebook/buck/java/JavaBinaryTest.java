@@ -16,22 +16,16 @@
 
 package com.facebook.buck.java;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.io.DefaultDirectoryTraverser;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -52,6 +46,7 @@ public class JavaBinaryTest {
   @Test
   public void testGetExecutableCommand() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     // prebuilt_jar //third_party/generator:generator
     PrebuiltJarBuilder
@@ -77,16 +72,18 @@ public class JavaBinaryTest {
         .setDeps(ImmutableSortedSet.of(libraryRule))
         .build();
     // java_binary //java/com/facebook/base:Main
-    JavaBinary javaBinary = new JavaBinary(
-        params,
-        new SourcePathResolver(ruleResolver),
-        "com.facebook.base.Main",
-        null,
-        /* merge manifests */ true,
-        null,
-        /* blacklist */ ImmutableSet.<String>of(),
-        new DefaultDirectoryTraverser(),
-        ImmutableSetMultimap.<JavaLibrary, Path>of());
+    JavaBinary javaBinary =
+        ruleResolver.addToIndex(
+            new JavaBinary(
+                params,
+                new SourcePathResolver(ruleResolver),
+                "com.facebook.base.Main",
+                null,
+                /* merge manifests */ true,
+                null,
+                /* blacklist */ ImmutableSet.<String>of(),
+                new DefaultDirectoryTraverser(),
+                ImmutableSetMultimap.<JavaLibrary, Path>of()));
 
     // Strip the trailing "." from the absolute path to the current directory.
     final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");
@@ -96,17 +93,7 @@ public class JavaBinaryTest {
     String expectedClasspath = basePath + javaBinary.getPathToOutput();
 
     List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    Function<Path, Path> pathRelativizer = new Function<Path, Path>() {
-      @Override
-      public Path apply(Path path) {
-        return Paths.get(basePath).resolve(path);
-      }
-    };
-    expect(projectFilesystem.getAbsolutifier()).andReturn(pathRelativizer);
-    replay(projectFilesystem);
-    assertEquals(expectedCommand, javaBinary.getExecutableCommand(projectFilesystem));
-    verify(projectFilesystem);
+    assertEquals(expectedCommand, javaBinary.getExecutableCommand().getCommandPrefix(pathResolver));
 
     assertFalse(
         "Library rules that are used exclusively by genrules should not be part of the classpath.",

@@ -22,6 +22,7 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
@@ -79,7 +80,8 @@ public class ClasspathMacroExpander
   }
 
   @Override
-  protected String expand(ProjectFilesystem filesystem, BuildRule rule) throws MacroException {
+  protected String expand(SourcePathResolver resolver, ProjectFilesystem filesystem, BuildRule rule)
+      throws MacroException {
     return Joiner.on(File.pathSeparator).join(
         FluentIterable.from(getTransitiveClasspathEntries(rule).values())
             .transform(filesystem.getAbsolutifier())
