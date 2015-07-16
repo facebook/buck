@@ -1,0 +1,9 @@
+This is a smoke test of a couple cases of minimal dex creation:
+
+The first test tries to create the truly minimal dex file by using the
+--no-files option. The output dump of this is checked to make sure it
+is exactly correct. (There is arguably only one "right" answer.)
+
+The second test tries to convert a minimal classfile and ensures that
+the conversion runs without failure, though the contents of the
+converted file are not checked for correctness.

@@ -1,0 +1,8 @@
+Zorch.zorch1:()V:
+regs: 0004; ins: 0001; outs: 0002
+  0000: move-object v0, v3
+  0001: move-object v1, v0
+  0002: const/4 v2, #int 0 // #0
+  0003: invoke-direct {v1, v2}, Zorch.zorch2:(I)I
+  0006: move-result v1
+  0007: return-void

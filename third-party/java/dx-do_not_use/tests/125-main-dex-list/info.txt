@@ -1,0 +1,2 @@
+Instruct dx to build 2 dex files with specified classes in each dex file. Then run a test on
+dalvikvm loading the 2 dex files and checking the classes they contain.

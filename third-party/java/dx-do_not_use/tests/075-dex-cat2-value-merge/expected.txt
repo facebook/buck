@@ -1,0 +1,12 @@
+Blort.test:([J)V:
+regs: 0008; ins: 0001; outs: 0000
+  0000: move-object v0, v7
+  0001: const-wide/16 v3, #long 0 // #0000
+  0003: move-wide v1, v3
+  0004: move-wide v3, v1
+  0005: move-object v5, v0
+  0006: const/4 v6, #int 0 // #0
+  0007: aget-wide v5, v5, v6
+  0009: add-long/2addr v3, v5
+  000a: move-wide v1, v3
+  000b: goto 0004 // -0007

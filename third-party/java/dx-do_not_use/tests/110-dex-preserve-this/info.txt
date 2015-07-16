@@ -1,0 +1,10 @@
+This is a smoke test of dex conversion, which checks to see that a
+"this" argument is never reused for a temporary. (Background: Popular
+debuggers will get confused if "this" is reused, and it arguably
+should be the case that the target object of an instance method being
+executed ought never be gc'ed anyway, and overwriting "this" could in
+fact cause that to happen.)
+
+This test compares emitted code against a known-good (via eyeballing)
+version, so it is possible for this test to spuriously fail if other
+aspects of conversion end up altering the output in innocuous ways.

@@ -1,0 +1,2 @@
+This tests that load and store opcodes verify that their arguments are
+actually of the appropriate types.

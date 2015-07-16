@@ -1,0 +1,2 @@
+Test that dx generates several dex files when the application exceeds more
+than 65536 fields and --multi-dex option is given.

@@ -1,0 +1,2 @@
+Test that dx generates one dex file when the dex index do not exceed limits and --multi-dex option
+is given.

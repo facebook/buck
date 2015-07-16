@@ -1,0 +1,162 @@
+reading small-class.txt...
+begin classfile
+magic: cafebabe
+minor_version: 0000
+major_version: 002e
+constant_pool_count: 001f
+
+constant_pool:
+  0001: utf8{"Small"}
+  0002: utf8{"java/lang/Object"}
+  0003: type{Small}
+  0004: type{java.lang.Object}
+  0005: utf8{"ConstantValue"}
+  0006: utf8{"a"}
+  0007: utf8{"b"}
+  0008: utf8{"c"}
+  0009: utf8{"d"}
+  000a: utf8{"e"}
+  000b: utf8{"f"}
+  000c: utf8{"g"}
+  000d: utf8{"h"}
+  000e: utf8{"i"}
+  000f: string{"Small"}
+  0010: int{0x8191a1b1 / -2121162319}
+  0011: float{0xbffeb852 / -1.99}
+  0012: long{0x80818283f0f1f2f3 / -9186918261664386317}
+  0014: double{0xbfffd70a3d70a3d7 / -1.99}
+  0016: utf8{"B"}
+  0017: utf8{"C"}
+  0018: utf8{"D"}
+  0019: utf8{"F"}
+  001a: utf8{"I"}
+  001b: utf8{"J"}
+  001c: utf8{"S"}
+  001d: utf8{"Z"}
+  001e: utf8{"Ljava/lang/String;"}
+end constant_pool
+access_flags: public|super
+this_class: type{Small}
+super_class: type{java.lang.Object}
+interfaces_count: 0000
+fields_count: 0009
+
+fields[0]:
+  access_flags: public
+  name: a
+  descriptor: B
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: int{0x8191a1b1 / -2121162319}
+  end attributes[0]
+end fields[0]
+
+fields[1]:
+  access_flags: private
+  name: b
+  descriptor: C
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: int{0x8191a1b1 / -2121162319}
+  end attributes[0]
+end fields[1]
+
+fields[2]:
+  access_flags: protected
+  name: c
+  descriptor: D
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: double{0xbfffd70a3d70a3d7 / -1.99}
+  end attributes[0]
+end fields[2]
+
+fields[3]:
+  access_flags: static
+  name: d
+  descriptor: F
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: float{0xbffeb852 / -1.99}
+  end attributes[0]
+end fields[3]
+
+fields[4]:
+  access_flags: final
+  name: e
+  descriptor: I
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: int{0x8191a1b1 / -2121162319}
+  end attributes[0]
+end fields[4]
+
+fields[5]:
+  access_flags: volatile
+  name: f
+  descriptor: J
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: long{0x80818283f0f1f2f3 / -9186918261664386317}
+  end attributes[0]
+end fields[5]
+
+fields[6]:
+  access_flags: transient
+  name: g
+  descriptor: S
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: int{0x8191a1b1 / -2121162319}
+  end attributes[0]
+end fields[6]
+
+fields[7]:
+  access_flags: public|static|final
+  name: h
+  descriptor: Z
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: int{0x8191a1b1 / -2121162319}
+  end attributes[0]
+end fields[7]
+
+fields[8]:
+  access_flags: public|static|final
+  name: i
+  descriptor: Ljava/lang/String;
+  attributes_count: 0001
+  
+  attributes[0]:
+    name: ConstantValue
+    length: 00000002
+    value: string{"Small"}
+  end attributes[0]
+end fields[8]
+methods_count: 0000
+attributes_count: 0000
+end classfile

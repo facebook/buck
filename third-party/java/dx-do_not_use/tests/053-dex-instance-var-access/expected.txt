@@ -1,0 +1,79 @@
+Blort.test1:()Ljava/lang/Object;:
+regs: 0006; ins: 0001; outs: 0000
+  0000: move-object v0, v5
+  0001: move-object v2, v0
+  0002: iget-byte v2, v2, Blort.insByte:B
+  0004: move-object v3, v0
+  0005: iget-char v3, v3, Blort.insChar:C
+  0007: add-int/2addr v2, v3
+  0008: move-object v3, v0
+  0009: iget-short v3, v3, Blort.insShort:S
+  000b: add-int/2addr v2, v3
+  000c: move-object v3, v0
+  000d: iget v3, v3, Blort.insInt:I
+  000f: add-int/2addr v2, v3
+  0010: move-object v3, v0
+  0011: iget-wide v3, v3, Blort.insLong:J
+  0013: long-to-int v3, v3
+  0014: add-int/2addr v2, v3
+  0015: move-object v3, v0
+  0016: iget v3, v3, Blort.insFloat:F
+  0018: float-to-int v3, v3
+  0019: add-int/2addr v2, v3
+  001a: move-object v3, v0
+  001b: iget-wide v3, v3, Blort.insDouble:D
+  001d: double-to-int v3, v3
+  001e: add-int/2addr v2, v3
+  001f: move v1, v2
+  0020: move-object v2, v0
+  0021: iget-boolean v2, v2, Blort.insBoolean:Z
+  0023: if-eqz v2, 002d // +000a
+  0025: move v2, v1
+  0026: if-lez v2, 002d // +0007
+  0028: move-object v2, v0
+  0029: iget-object v2, v2, Blort.insObject:Ljava/lang/Object;
+  002b: move-object v0, v2
+  002c: return-object v0
+  002d: const/4 v2, #null // #0
+  002e: move-object v0, v2
+  002f: goto 002c // -0003
+Blort.test2:(ZILjava/lang/Object;)V:
+regs: 000b; ins: 0004; outs: 0000
+  0000: move-object v0, v7
+  0001: move v1, v8
+  0002: move v2, v9
+  0003: move-object v3, v10
+  0004: move-object v4, v0
+  0005: move v5, v1
+  0006: iput-boolean v5, v4, Blort.insBoolean:Z
+  0008: move-object v4, v0
+  0009: move v5, v2
+  000a: int-to-byte v5, v5
+  000b: iput-byte v5, v4, Blort.insByte:B
+  000d: move-object v4, v0
+  000e: move v5, v2
+  000f: int-to-char v5, v5
+  0010: iput-char v5, v4, Blort.insChar:C
+  0012: move-object v4, v0
+  0013: move v5, v2
+  0014: int-to-short v5, v5
+  0015: iput-short v5, v4, Blort.insShort:S
+  0017: move-object v4, v0
+  0018: move v5, v2
+  0019: iput v5, v4, Blort.insInt:I
+  001b: move-object v4, v0
+  001c: move v5, v2
+  001d: int-to-long v5, v5
+  001e: iput-wide v5, v4, Blort.insLong:J
+  0020: move-object v4, v0
+  0021: move v5, v2
+  0022: int-to-float v5, v5
+  0023: iput v5, v4, Blort.insFloat:F
+  0025: move-object v4, v0
+  0026: move v5, v2
+  0027: int-to-double v5, v5
+  0028: iput-wide v5, v4, Blort.insDouble:D
+  002a: move-object v4, v0
+  002b: move-object v5, v3
+  002c: iput-object v5, v4, Blort.insObject:Ljava/lang/Object;
+  002e: return-void

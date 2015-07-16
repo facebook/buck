@@ -1,0 +1,7 @@
+Generated: ./blort.class
+    0000: aload_0 // 00
+    0001: dup
+    0002: dup
+    0003: astore_1 // 01
+    0004: pop2
+    0005: return

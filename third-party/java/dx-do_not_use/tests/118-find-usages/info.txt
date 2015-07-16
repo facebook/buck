@@ -1,0 +1,3 @@
+Creates a .dex file and runs find usages on it to find references and declarations.
+
+The expected output assumes this bug has not yet been fixed: http://b/3366285

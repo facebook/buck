@@ -1,0 +1,3 @@
+This tests that non-wide-taking (category-1) "calculation" opcodes (math
+ops, comparisons, etc.) to verify that their arguments are actually of
+the appropriate types.

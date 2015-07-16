@@ -1,0 +1,2 @@
+Run dx with both options --multi-dex --main-dex-list, verify that only one dex is generated when
+indices do not overflow.

@@ -1,0 +1,4 @@
+The enclosed class file was generated with javac version 1.5.0_13-b05. 
+It contains an example of a subroutine being exited by a "throw" instruction in 
+such a way that it caused the frame merge and subroutine inliner
+algorithms to not converge. This was bug #1137450.

@@ -1,0 +1,303 @@
+#
+# sample small-but-valid classfile
+#
+
+cafe babe  # magic
+0000       # minor_version
+002e       # major_version
+0017       # constant_pool_count
+
+#
+# constant_pool
+#
+07 0003                    # 0001: class[Small]
+07 0004                    # 0002: class[java/lang/Object]
+01 0005 "Small"            # 0003: utf8["Small"]
+01 0010 "java/lang/Object" # 0004: utf8["java/lang/Object"]
+01 0005 "blort"            # 0005: utf8["blort"]
+01 0003 "()V"              # 0006: utf8["()V"]
+01 0004 "Code"             # 0007: utf8["Code"]
+08 0003                    # 0008: string["Small"]
+03 12345678                # 0009: integer[0x12345678]
+04 42f6e666                # 000a: float[123.45]
+05 12345678 9abcdef0       # 000b: long[0x1234567890abcdef0]
+06 41195895 5f8a0903       # 000d: double[415269.3433]
+01 0005 "blort"            # 000f: utf8["blort"]
+01 0007 "x/y/Zzz"          # 0010: utf8["x/y/Zzz"]
+01 0003 "()V"              # 0011: utf8["()V"]
+0c 000f 0010               # 0012: nat[blort:x/y/Zzz]
+0c 000f 0011               # 0013: nat[blort:()V]
+09 0001 0012               # 0014: field[Small.blort:x/y/Zzz]
+0a 0001 0013               # 0015: method[Small.blort:()V]
+0b 0001 0013               # 0016: ifaceMethod[Small.blort:()V]
+
+0001  # access_flags
+0001  # this_class
+0002  # super_class
+0000  # interfaces_count
+0000  # fields_count
+0001  # methods_count
+
+# methods[0]
+0001  # access_flags
+0005  # name
+0006  # descriptor
+0001  # attributes_count
+# attributes[0]
+0007      # name
+000001db  # length (note: == code_length + 0x0c)
+0001      # max_stack
+0001      # max_locals
+000001cf  # code_length
+
+00        # 0000: nop
+01        # 0001: aconst_null
+02        # 0002: aconst_m1
+03        # 0003: iconst_0
+04        # 0004: iconst_1
+05        # 0005: iconst_2
+06        # 0006: iconst_3
+07        # 0007: iconst_4
+08        # 0008: iconst_5
+09        # 0009: lconst_0
+0a        # 000a: lconst_1
+0b        # 000b: fconst_0
+0c        # 000c: fconst_1
+0d        # 000d: fconst_2
+0e        # 000e: dconst_0
+0f        # 000f: dconst_1
+10 45     # 0010: bipush #+45
+11 5432   # 0012: sipush #+5432
+12 08     # 0015: ldc <string>
+12 09     # 0017: ldc <integer>
+12 0a     # 0019: ldc <float>
+13 0008   # 001b: ldc_w <string>
+13 0009   # 001e: ldc_w <integer>
+13 000a   # 0021: ldc_w <float>
+14 000b   # 0024: ldc2_w <long>
+14 000d   # 0027: ldc2_w <double>
+15 01     # 002a: iload 01
+16 02     # 002c: lload 02
+17 03     # 002e: fload 03
+18 04     # 0030: dload 04
+19 05     # 0032: aload 05
+1a        # 0034: iload_0
+1b        # 0035: iload_1
+1c        # 0036: iload_2
+1d        # 0037: iload_3
+1e        # 0038: lload_0
+1f        # 0039: lload_1
+20        # 003a: lload_2
+21        # 003b: lload_3
+22        # 003c: fload_0
+23        # 003d: fload_1
+24        # 003e: fload_2
+25        # 003f: fload_3
+26        # 0040: dload_0
+27        # 0041: dload_1
+28        # 0042: dload_2
+29        # 0043: dload_3
+2a        # 0044: aload_0
+2b        # 0045: aload_1
+2c        # 0046: aload_2
+2d        # 0047: aload_3
+2e        # 0048: iaload
+2f        # 0049: laload
+30        # 004a: faload
+31        # 004b: daload
+32        # 004c: aaload
+33        # 004d: baload
+34        # 004e: caload
+35        # 004f: saload
+36 41     # 0050: istore 41
+37 42     # 0052: lstore 42
+38 43     # 0054: fstore 43
+39 44     # 0056: dstore 44
+3a 45     # 0058: astore 45
+3b        # 005a: istore_0
+3c        # 005b: istore_1
+3d        # 005c: istore_2
+3e        # 005d: istore_3
+3f        # 005e: lstore_0
+40        # 005f: lstore_1
+41        # 0060: lstore_2
+42        # 0061: lstore_3
+43        # 0062: fstore_0
+44        # 0063: fstore_1
+45        # 0064: fstore_2
+46        # 0065: fstore_3
+47        # 0066: dstore_0
+48        # 0067: dstore_1
+49        # 0068: dstore_2
+4a        # 0069: dstore_3
+4b        # 006a: astore_0
+4c        # 006b: astore_1
+4d        # 006c: astore_2
+4e        # 006d: astore_3
+4f        # 006e: iastore
+50        # 006f: lastore
+51        # 0070: fastore
+52        # 0071: dastore
+53        # 0072: aastore
+54        # 0073: bastore
+55        # 0074: castore
+56        # 0075: sastore
+57        # 0076: pop
+58        # 0077: pop2
+59        # 0078: dup
+5a        # 0079: dup_x1
+5b        # 007a: dup_x2
+5c        # 007b: dup2
+5d        # 007c: dup2_x1
+5e        # 007d: dup2_x2
+5f        # 007e: swap
+60        # 007f: iadd
+61        # 0080: ladd
+62        # 0081: fadd
+63        # 0082: dadd
+64        # 0083: isub
+65        # 0084: lsub
+66        # 0085: fsub
+67        # 0086: dsub
+68        # 0087: imul
+69        # 0088: lmul
+6a        # 0089: fmul
+6b        # 008a: dmul
+6c        # 008b: idiv
+6d        # 008c: ldiv
+6e        # 008d: fdiv
+6f        # 008e: ddiv
+70        # 008f: irem
+71        # 0090: lrem
+72        # 0091: frem
+73        # 0092: drem
+74        # 0093: ineg
+75        # 0094: lneg
+76        # 0095: fneg
+77        # 0096: dneg
+78        # 0097: ishl
+79        # 0098: lshl
+7a        # 0099: ishr
+7b        # 009a: lshr
+7c        # 009b: iushr
+7d        # 009c: lushr
+7e        # 009d: iand
+7f        # 009e: land
+80        # 009f: ior
+81        # 00a0: lor
+82        # 00a1: ixor
+83        # 00a2: lxor
+84 05 ff  # 00a3: iinc 05, #-1
+85        # 00a6: i2l
+86        # 00a7: i2f
+87        # 00a8: i2d
+88        # 00a9: l2i
+89        # 00aa: l2f
+8a        # 00ab: l2d
+8b        # 00ac: f2i
+8c        # 00ad: f2l
+8d        # 00ae: f2d
+8e        # 00af: d2i
+8f        # 00b0: d2l
+90        # 00b1: d2f
+91        # 00b2: i2b
+92        # 00b3: i2c
+93        # 00b4: i2s
+94        # 00b5: lcmp
+95        # 00b6: fcmpl
+96        # 00b7: fcmpg
+97        # 00b8: dcmpl
+98        # 00b9: dcmpg
+99 0000   # 00ba: ifeq 00ba
+9a fffd   # 00bd: ifne 00ba
+9b fffa   # 00c0: iflt 00ba
+9c fff7   # 00c3: ifge 00ba
+9d fff4   # 00c6: ifgt 00ba
+9e fff1   # 00c9: ifle 00ba
+9f 000f   # 00cc: if_icmpeq 00db
+a0 000c   # 00cf: if_icmpne 00db
+a1 0009   # 00d2: if_icmplt 00db
+a2 0006   # 00d5: if_icmpge 00db
+a3 0003   # 00d8: if_icmpgt 00db
+a4 0000   # 00db: if_icmple 00db
+a5 0000   # 00de: if_acmpeq 00de
+a6 0000   # 00e1: if_acmpne 00e1
+a7 ff1c   # 00e4: goto 0000
+a8 0000   # 00e7: jsr 00e7
+a9 2f     # 00ea: ret 2f
+aa 000000 # 00ec: tableswitch + padding
+ fffffffe #   default: 000000ea
+ 12340000 #   low: 12340000
+ 12340007 #   high: 12340007
+ ffffff14 #   [0]: 00000000
+ ffffff15 #   [1]: 00000001
+ ffffff16 #   [2]: 00000002
+ ffffff17 #   [3]: 00000003
+ ffffff18 #   [4]: 00000004
+ ffffff19 #   [5]: 00000005
+ ffffff1b #   [6]: 00000007
+ ffffff1d #   [7]: 00000009
+ab 000000 # 011c: lookupswitch + padding
+ ffffffd0 #   default: 000000ec
+ 00000004 #   npairs: 4
+ 89761234 #   match[0]: 89761234
+ 0000002c #   offset[0]: 0148
+ 00001000 #   match[1]: 00001000
+ 0000002d #   offset[1]: 0149
+ 03333333 #   match[2]: 03333333
+ 0000002d #   offset[2]: 0149
+ 79787776 #   match[3]: 79787776
+ 0000002f #   offset[3]: 014b
+ac        # 0148: ireturn
+ad        # 0149: lreturn
+ae        # 014a: freturn
+af        # 014b: dreturn
+b0        # 014c: areturn
+b1        # 014d: return
+b2 0014   # 014e: getstatic 0014
+b3 0014   # 0151: putstatic 0014
+b4 0014   # 0154: getfield 0014
+b5 0014   # 0157: putfield 0014
+b6 0015   # 015a: invokevirtual 0015
+b7 0015   # 015d: invokespecial 0015
+b8 0015   # 0160: invokestatic 0015
+b9 0016 01 00  # 0163: invokeinterface 0016
+bb 0001   # 0169: new 0001
+bc 04     # 016c: newarray boolean
+bc 05     # 016e: newarray char
+bc 06     # 0170: newarray float
+bc 07     # 0172: newarray double
+bc 08     # 0174: newarray byte
+bc 09     # 0176: newarray short
+bc 0a     # 0178: newarray int
+bc 0b     # 017a: newarray long
+bd 0001   # 017c: anewarray 0001
+be        # 017f: arraylength
+bf        # 0180: athrow
+c0 0002   # 0181: checkcast 0002
+c1 0002   # 0184: instanceof 0002
+c2        # 0187: monitorenter
+c3        # 0188: monitorexit
+c415 0123 # 0189: wide iload 0123
+c416 0124 # 018d: wide lload 0124
+c417 0125 # 0191: wide fload 0125
+c418 0126 # 0195: wide dload 0126
+c419 0127 # 0199: wide aload 0127
+c436 20f0 # 019d: wide istore 20f0
+c437 20f1 # 01a1: wide lstore 20f1
+c438 20f2 # 01a5: wide fstore 20f2
+c439 20f3 # 01a9: wide dstore 20f3
+c43a 20f4 # 01ad: wide astore 20f4
+c4a9 ffff # 01b1: wide ret ffff
+c484 0002 1000 # 01b5: wide iinc 0002, 1000
+c5 0002 04 # 01bb: multianewarray 0002, #04
+c6 fe41   # 01bf: ifnull 0000
+c7 0000   # 01c2: ifnonnull 01c2
+c8 70000000 # 01c5: goto_w 700001c5
+c9 fffffffb # 01ca: jsr_w 000001c5
+ca        # 01cf: <unused>
+
+0000      # exception_table_length
+0000      # attributes_count
+
+0000  # attributes_count

@@ -1,0 +1,28 @@
+Blort.test1:()V:
+regs: 0000; ins: 0000; outs: 0000
+  0000: goto/32 0000 // +0000
+Blort.test2:()V:
+regs: 0001; ins: 0000; outs: 0000
+  0000: invoke-static {}, Blort.zorch:()Z
+  0003: move-result v0
+  0004: if-nez v0, 0000 // -0004
+  0006: return-void
+Blort.test3:()V:
+regs: 0001; ins: 0000; outs: 0000
+  0000: invoke-static {}, Blort.zorch:()Z
+  0003: move-result v0
+  0004: if-eqz v0, 000a // +0006
+  0006: invoke-static {}, Blort.zorch:()Z
+  0009: goto 0000 // -0009
+  000a: return-void
+Blort.test4:()V:
+regs: 0001; ins: 0000; outs: 0000
+  0000: invoke-static {}, Blort.zorch:()Z
+  0003: move-result v0
+  0004: if-eqz v0, 0007 // +0003
+  0006: return-void
+  0007: invoke-static {}, Blort.zorch:()Z
+  000a: move-result v0
+  000b: if-eqz v0, 0000 // -000b
+  000d: invoke-static {}, Blort.zorch:()Z
+  0010: goto 0007 // -0009

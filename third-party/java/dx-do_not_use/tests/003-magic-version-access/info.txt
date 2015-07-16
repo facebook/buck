@@ -1,0 +1,9 @@
+This is a dump of a simple class which is valid in structure but is overall
+invalid. That being said, the system should still have no trouble parsing and
+dumping it.
+
+The salient bits of parsing tested here are:
+
+* magic number
+* major / minor version numbers
+* class access_flags

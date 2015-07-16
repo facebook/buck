@@ -1,0 +1,10 @@
+This test checks that we convert invoke-virtual calls to private
+methods with invoke-direct calls.
+
+The Zorch.class file is manually created by compiling Zorch.java
+with java6 and manually editing the file to replace the opcode at
+position 0xE9 with 0xB6 (invokevirtual) instead of 0xB7 (invokespecial).
+
+This test compares emitted code against a known-good (via eyeballing)
+version, so it is possible for this test to spuriously fail if other
+aspects of conversion end up altering the output in innocuous ways.

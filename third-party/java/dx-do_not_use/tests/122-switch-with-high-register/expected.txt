@@ -1,0 +1,1117 @@
+Blort.switchWithHighRegister:(IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII)I:
+regs: 0102; ins: 00ff; outs: 0002
+  0000: const/4 v1, #int 1 // #1
+  0001: sget-object v2, java.lang.System.out:Ljava/io/PrintStream;
+  0003: add-int/2addr v1, v3
+  0004: add-int/2addr v1, v4
+  0005: add-int/2addr v1, v5
+  0006: add-int/2addr v1, v6
+  0007: add-int/2addr v1, v7
+  0008: add-int/2addr v1, v8
+  0009: add-int/2addr v1, v9
+  000a: add-int/2addr v1, v10
+  000b: add-int/2addr v1, v11
+  000c: add-int/2addr v1, v12
+  000d: add-int/2addr v1, v13
+  000e: add-int/2addr v1, v14
+  000f: add-int/2addr v1, v15
+  0010: add-int v1, v1, v16
+  0012: add-int v1, v1, v17
+  0014: add-int v1, v1, v18
+  0016: add-int v1, v1, v19
+  0018: add-int v1, v1, v20
+  001a: add-int v1, v1, v21
+  001c: add-int v1, v1, v22
+  001e: add-int v1, v1, v23
+  0020: add-int v1, v1, v24
+  0022: add-int v1, v1, v25
+  0024: add-int v1, v1, v26
+  0026: add-int v1, v1, v27
+  0028: add-int v1, v1, v28
+  002a: add-int v1, v1, v29
+  002c: add-int v1, v1, v30
+  002e: add-int v1, v1, v31
+  0030: add-int v1, v1, v32
+  0032: add-int v1, v1, v33
+  0034: add-int v1, v1, v34
+  0036: add-int v1, v1, v35
+  0038: add-int v1, v1, v36
+  003a: add-int v1, v1, v37
+  003c: add-int v1, v1, v38
+  003e: add-int v1, v1, v39
+  0040: add-int v1, v1, v40
+  0042: add-int v1, v1, v41
+  0044: add-int v1, v1, v42
+  0046: add-int v1, v1, v43
+  0048: add-int v1, v1, v44
+  004a: add-int v1, v1, v45
+  004c: add-int v1, v1, v46
+  004e: add-int v1, v1, v47
+  0050: add-int v1, v1, v48
+  0052: add-int v1, v1, v49
+  0054: add-int v1, v1, v50
+  0056: add-int v1, v1, v51
+  0058: add-int v1, v1, v52
+  005a: add-int v1, v1, v53
+  005c: add-int v1, v1, v54
+  005e: add-int v1, v1, v55
+  0060: add-int v1, v1, v56
+  0062: add-int v1, v1, v57
+  0064: add-int v1, v1, v58
+  0066: add-int v1, v1, v59
+  0068: add-int v1, v1, v60
+  006a: add-int v1, v1, v61
+  006c: add-int v1, v1, v62
+  006e: add-int v1, v1, v63
+  0070: add-int v1, v1, v64
+  0072: add-int v1, v1, v65
+  0074: add-int v1, v1, v66
+  0076: add-int v1, v1, v67
+  0078: add-int v1, v1, v68
+  007a: add-int v1, v1, v69
+  007c: add-int v1, v1, v70
+  007e: add-int v1, v1, v71
+  0080: add-int v1, v1, v72
+  0082: add-int v1, v1, v73
+  0084: add-int v1, v1, v74
+  0086: add-int v1, v1, v75
+  0088: add-int v1, v1, v76
+  008a: add-int v1, v1, v77
+  008c: add-int v1, v1, v78
+  008e: add-int v1, v1, v79
+  0090: add-int v1, v1, v80
+  0092: add-int v1, v1, v81
+  0094: add-int v1, v1, v82
+  0096: add-int v1, v1, v83
+  0098: add-int v1, v1, v84
+  009a: add-int v1, v1, v85
+  009c: add-int v1, v1, v86
+  009e: add-int v1, v1, v87
+  00a0: add-int v1, v1, v88
+  00a2: add-int v1, v1, v89
+  00a4: add-int v1, v1, v90
+  00a6: add-int v1, v1, v91
+  00a8: add-int v1, v1, v92
+  00aa: add-int v1, v1, v93
+  00ac: add-int v1, v1, v94
+  00ae: add-int v1, v1, v95
+  00b0: add-int v1, v1, v96
+  00b2: add-int v1, v1, v97
+  00b4: add-int v1, v1, v98
+  00b6: add-int v1, v1, v99
+  00b8: add-int v1, v1, v100
+  00ba: add-int v1, v1, v101
+  00bc: add-int v1, v1, v102
+  00be: add-int v1, v1, v103
+  00c0: add-int v1, v1, v104
+  00c2: add-int v1, v1, v105
+  00c4: add-int v1, v1, v106
+  00c6: add-int v1, v1, v107
+  00c8: add-int v1, v1, v108
+  00ca: add-int v1, v1, v109
+  00cc: add-int v1, v1, v110
+  00ce: add-int v1, v1, v111
+  00d0: add-int v1, v1, v112
+  00d2: add-int v1, v1, v113
+  00d4: add-int v1, v1, v114
+  00d6: add-int v1, v1, v115
+  00d8: add-int v1, v1, v116
+  00da: add-int v1, v1, v117
+  00dc: add-int v1, v1, v118
+  00de: add-int v1, v1, v119
+  00e0: add-int v1, v1, v120
+  00e2: add-int v1, v1, v121
+  00e4: add-int v1, v1, v122
+  00e6: add-int v1, v1, v123
+  00e8: add-int v1, v1, v124
+  00ea: add-int v1, v1, v125
+  00ec: add-int v1, v1, v126
+  00ee: add-int v1, v1, v127
+  00f0: add-int v1, v1, v128
+  00f2: add-int v1, v1, v129
+  00f4: add-int v1, v1, v130
+  00f6: add-int v1, v1, v131
+  00f8: add-int v1, v1, v132
+  00fa: add-int v1, v1, v133
+  00fc: add-int v1, v1, v134
+  00fe: add-int v1, v1, v135
+  0100: add-int v1, v1, v136
+  0102: add-int v1, v1, v137
+  0104: add-int v1, v1, v138
+  0106: add-int v1, v1, v139
+  0108: add-int v1, v1, v140
+  010a: add-int v1, v1, v141
+  010c: add-int v1, v1, v142
+  010e: add-int v1, v1, v143
+  0110: add-int v1, v1, v144
+  0112: add-int v1, v1, v145
+  0114: add-int v1, v1, v146
+  0116: add-int v1, v1, v147
+  0118: add-int v1, v1, v148
+  011a: add-int v1, v1, v149
+  011c: add-int v1, v1, v150
+  011e: add-int v1, v1, v151
+  0120: add-int v1, v1, v152
+  0122: add-int v1, v1, v153
+  0124: add-int v1, v1, v154
+  0126: add-int v1, v1, v155
+  0128: add-int v1, v1, v156
+  012a: add-int v1, v1, v157
+  012c: add-int v1, v1, v158
+  012e: add-int v1, v1, v159
+  0130: add-int v1, v1, v160
+  0132: add-int v1, v1, v161
+  0134: add-int v1, v1, v162
+  0136: add-int v1, v1, v163
+  0138: add-int v1, v1, v164
+  013a: add-int v1, v1, v165
+  013c: add-int v1, v1, v166
+  013e: add-int v1, v1, v167
+  0140: add-int v1, v1, v168
+  0142: add-int v1, v1, v169
+  0144: add-int v1, v1, v170
+  0146: add-int v1, v1, v171
+  0148: add-int v1, v1, v172
+  014a: add-int v1, v1, v173
+  014c: add-int v1, v1, v174
+  014e: add-int v1, v1, v175
+  0150: add-int v1, v1, v176
+  0152: add-int v1, v1, v177
+  0154: add-int v1, v1, v178
+  0156: add-int v1, v1, v179
+  0158: add-int v1, v1, v180
+  015a: add-int v1, v1, v181
+  015c: add-int v1, v1, v182
+  015e: add-int v1, v1, v183
+  0160: add-int v1, v1, v184
+  0162: add-int v1, v1, v185
+  0164: add-int v1, v1, v186
+  0166: add-int v1, v1, v187
+  0168: add-int v1, v1, v188
+  016a: add-int v1, v1, v189
+  016c: add-int v1, v1, v190
+  016e: add-int v1, v1, v191
+  0170: add-int v1, v1, v192
+  0172: add-int v1, v1, v193
+  0174: add-int v1, v1, v194
+  0176: add-int v1, v1, v195
+  0178: add-int v1, v1, v196
+  017a: add-int v1, v1, v197
+  017c: add-int v1, v1, v198
+  017e: add-int v1, v1, v199
+  0180: add-int v1, v1, v200
+  0182: add-int v1, v1, v201
+  0184: add-int v1, v1, v202
+  0186: add-int v1, v1, v203
+  0188: add-int v1, v1, v204
+  018a: add-int v1, v1, v205
+  018c: add-int v1, v1, v206
+  018e: add-int v1, v1, v207
+  0190: add-int v1, v1, v208
+  0192: add-int v1, v1, v209
+  0194: add-int v1, v1, v210
+  0196: add-int v1, v1, v211
+  0198: add-int v1, v1, v212
+  019a: add-int v1, v1, v213
+  019c: add-int v1, v1, v214
+  019e: add-int v1, v1, v215
+  01a0: add-int v1, v1, v216
+  01a2: add-int v1, v1, v217
+  01a4: add-int v1, v1, v218
+  01a6: add-int v1, v1, v219
+  01a8: add-int v1, v1, v220
+  01aa: add-int v1, v1, v221
+  01ac: add-int v1, v1, v222
+  01ae: add-int v1, v1, v223
+  01b0: add-int v1, v1, v224
+  01b2: add-int v1, v1, v225
+  01b4: add-int v1, v1, v226
+  01b6: add-int v1, v1, v227
+  01b8: add-int v1, v1, v228
+  01ba: add-int v1, v1, v229
+  01bc: add-int v1, v1, v230
+  01be: add-int v1, v1, v231
+  01c0: add-int v1, v1, v232
+  01c2: add-int v1, v1, v233
+  01c4: add-int v1, v1, v234
+  01c6: add-int v1, v1, v235
+  01c8: add-int v1, v1, v236
+  01ca: add-int v1, v1, v237
+  01cc: add-int v1, v1, v238
+  01ce: add-int v1, v1, v239
+  01d0: add-int v1, v1, v240
+  01d2: add-int v1, v1, v241
+  01d4: add-int v1, v1, v242
+  01d6: add-int v1, v1, v243
+  01d8: add-int v1, v1, v244
+  01da: add-int v1, v1, v245
+  01dc: add-int v1, v1, v246
+  01de: add-int v1, v1, v247
+  01e0: add-int v1, v1, v248
+  01e2: add-int v1, v1, v249
+  01e4: add-int v1, v1, v250
+  01e6: add-int v1, v1, v251
+  01e8: add-int v1, v1, v252
+  01ea: add-int v1, v1, v253
+  01ec: add-int v1, v1, v254
+  01ee: add-int v1, v1, v255
+  01f0: move/from16 v0, v256
+  01f2: add-int/2addr v1, v0
+  01f3: invoke-static {v1}, java.lang.Integer.toString:(I)Ljava/lang/String;
+  01f6: move-result-object v1
+  01f7: invoke-virtual {v2, v1}, java.io.PrintStream.println:(Ljava/lang/String;)V
+  01fa: move/from16 v0, v257
+  01fc: packed-switch v0, 020c // +0010
+  01ff: const/4 v1, #int -1 // #f
+  0200: return v1
+  0201: const/4 v1, #int 0 // #0
+  0202: goto 0200 // -0002
+  0203: const/4 v1, #int 1 // #1
+  0204: goto 0200 // -0004
+  0205: const/4 v1, #int 2 // #2
+  0206: goto 0200 // -0006
+  0207: const/4 v1, #int 3 // #3
+  0208: goto 0200 // -0008
+  0209: const/4 v1, #int 4 // #4
+  020a: goto 0200 // -000a
+  020b: nop // spacer
+  020c: packed-switch-payload // for switch @ 01fc
+          0: 00000201 // +00000005
+          1: 00000203 // +00000007
+          2: 00000205 // +00000009
+          3: 00000207 // +0000000b
+          4: 00000209 // +0000000d
+  debug info
+    line_start: 9
+    parameters_size: 00ff
+    parameter <unnamed> v3
+    parameter <unnamed> v4
+    parameter <unnamed> v5
+    parameter <unnamed> v6
+    parameter <unnamed> v7
+    parameter <unnamed> v8
+    parameter <unnamed> v9
+    parameter <unnamed> v10
+    parameter <unnamed> v11
+    parameter <unnamed> v12
+    parameter <unnamed> v13
+    parameter <unnamed> v14
+    parameter <unnamed> v15
+    parameter <unnamed> v16
+    parameter <unnamed> v17
+    parameter <unnamed> v18
+    parameter <unnamed> v19
+    parameter <unnamed> v20
+    parameter <unnamed> v21
+    parameter <unnamed> v22
+    parameter <unnamed> v23
+    parameter <unnamed> v24
+    parameter <unnamed> v25
+    parameter <unnamed> v26
+    parameter <unnamed> v27
+    parameter <unnamed> v28
+    parameter <unnamed> v29
+    parameter <unnamed> v30
+    parameter <unnamed> v31
+    parameter <unnamed> v32
+    parameter <unnamed> v33
+    parameter <unnamed> v34
+    parameter <unnamed> v35
+    parameter <unnamed> v36
+    parameter <unnamed> v37
+    parameter <unnamed> v38
+    parameter <unnamed> v39
+    parameter <unnamed> v40
+    parameter <unnamed> v41
+    parameter <unnamed> v42
+    parameter <unnamed> v43
+    parameter <unnamed> v44
+    parameter <unnamed> v45
+    parameter <unnamed> v46
+    parameter <unnamed> v47
+    parameter <unnamed> v48
+    parameter <unnamed> v49
+    parameter <unnamed> v50
+    parameter <unnamed> v51
+    parameter <unnamed> v52
+    parameter <unnamed> v53
+    parameter <unnamed> v54
+    parameter <unnamed> v55
+    parameter <unnamed> v56
+    parameter <unnamed> v57
+    parameter <unnamed> v58
+    parameter <unnamed> v59
+    parameter <unnamed> v60
+    parameter <unnamed> v61
+    parameter <unnamed> v62
+    parameter <unnamed> v63
+    parameter <unnamed> v64
+    parameter <unnamed> v65
+    parameter <unnamed> v66
+    parameter <unnamed> v67
+    parameter <unnamed> v68
+    parameter <unnamed> v69
+    parameter <unnamed> v70
+    parameter <unnamed> v71
+    parameter <unnamed> v72
+    parameter <unnamed> v73
+    parameter <unnamed> v74
+    parameter <unnamed> v75
+    parameter <unnamed> v76
+    parameter <unnamed> v77
+    parameter <unnamed> v78
+    parameter <unnamed> v79
+    parameter <unnamed> v80
+    parameter <unnamed> v81
+    parameter <unnamed> v82
+    parameter <unnamed> v83
+    parameter <unnamed> v84
+    parameter <unnamed> v85
+    parameter <unnamed> v86
+    parameter <unnamed> v87
+    parameter <unnamed> v88
+    parameter <unnamed> v89
+    parameter <unnamed> v90
+    parameter <unnamed> v91
+    parameter <unnamed> v92
+    parameter <unnamed> v93
+    parameter <unnamed> v94
+    parameter <unnamed> v95
+    parameter <unnamed> v96
+    parameter <unnamed> v97
+    parameter <unnamed> v98
+    parameter <unnamed> v99
+    parameter <unnamed> v100
+    parameter <unnamed> v101
+    parameter <unnamed> v102
+    parameter <unnamed> v103
+    parameter <unnamed> v104
+    parameter <unnamed> v105
+    parameter <unnamed> v106
+    parameter <unnamed> v107
+    parameter <unnamed> v108
+    parameter <unnamed> v109
+    parameter <unnamed> v110
+    parameter <unnamed> v111
+    parameter <unnamed> v112
+    parameter <unnamed> v113
+    parameter <unnamed> v114
+    parameter <unnamed> v115
+    parameter <unnamed> v116
+    parameter <unnamed> v117
+    parameter <unnamed> v118
+    parameter <unnamed> v119
+    parameter <unnamed> v120
+    parameter <unnamed> v121
+    parameter <unnamed> v122
+    parameter <unnamed> v123
+    parameter <unnamed> v124
+    parameter <unnamed> v125
+    parameter <unnamed> v126
+    parameter <unnamed> v127
+    parameter <unnamed> v128
+    parameter <unnamed> v129
+    parameter <unnamed> v130
+    parameter <unnamed> v131
+    parameter <unnamed> v132
+    parameter <unnamed> v133
+    parameter <unnamed> v134
+    parameter <unnamed> v135
+    parameter <unnamed> v136
+    parameter <unnamed> v137
+    parameter <unnamed> v138
+    parameter <unnamed> v139
+    parameter <unnamed> v140
+    parameter <unnamed> v141
+    parameter <unnamed> v142
+    parameter <unnamed> v143
+    parameter <unnamed> v144
+    parameter <unnamed> v145
+    parameter <unnamed> v146
+    parameter <unnamed> v147
+    parameter <unnamed> v148
+    parameter <unnamed> v149
+    parameter <unnamed> v150
+    parameter <unnamed> v151
+    parameter <unnamed> v152
+    parameter <unnamed> v153
+    parameter <unnamed> v154
+    parameter <unnamed> v155
+    parameter <unnamed> v156
+    parameter <unnamed> v157
+    parameter <unnamed> v158
+    parameter <unnamed> v159
+    parameter <unnamed> v160
+    parameter <unnamed> v161
+    parameter <unnamed> v162
+    parameter <unnamed> v163
+    parameter <unnamed> v164
+    parameter <unnamed> v165
+    parameter <unnamed> v166
+    parameter <unnamed> v167
+    parameter <unnamed> v168
+    parameter <unnamed> v169
+    parameter <unnamed> v170
+    parameter <unnamed> v171
+    parameter <unnamed> v172
+    parameter <unnamed> v173
+    parameter <unnamed> v174
+    parameter <unnamed> v175
+    parameter <unnamed> v176
+    parameter <unnamed> v177
+    parameter <unnamed> v178
+    parameter <unnamed> v179
+    parameter <unnamed> v180
+    parameter <unnamed> v181
+    parameter <unnamed> v182
+    parameter <unnamed> v183
+    parameter <unnamed> v184
+    parameter <unnamed> v185
+    parameter <unnamed> v186
+    parameter <unnamed> v187
+    parameter <unnamed> v188
+    parameter <unnamed> v189
+    parameter <unnamed> v190
+    parameter <unnamed> v191
+    parameter <unnamed> v192
+    parameter <unnamed> v193
+    parameter <unnamed> v194
+    parameter <unnamed> v195
+    parameter <unnamed> v196
+    parameter <unnamed> v197
+    parameter <unnamed> v198
+    parameter <unnamed> v199
+    parameter <unnamed> v200
+    parameter <unnamed> v201
+    parameter <unnamed> v202
+    parameter <unnamed> v203
+    parameter <unnamed> v204
+    parameter <unnamed> v205
+    parameter <unnamed> v206
+    parameter <unnamed> v207
+    parameter <unnamed> v208
+    parameter <unnamed> v209
+    parameter <unnamed> v210
+    parameter <unnamed> v211
+    parameter <unnamed> v212
+    parameter <unnamed> v213
+    parameter <unnamed> v214
+    parameter <unnamed> v215
+    parameter <unnamed> v216
+    parameter <unnamed> v217
+    parameter <unnamed> v218
+    parameter <unnamed> v219
+    parameter <unnamed> v220
+    parameter <unnamed> v221
+    parameter <unnamed> v222
+    parameter <unnamed> v223
+    parameter <unnamed> v224
+    parameter <unnamed> v225
+    parameter <unnamed> v226
+    parameter <unnamed> v227
+    parameter <unnamed> v228
+    parameter <unnamed> v229
+    parameter <unnamed> v230
+    parameter <unnamed> v231
+    parameter <unnamed> v232
+    parameter <unnamed> v233
+    parameter <unnamed> v234
+    parameter <unnamed> v235
+    parameter <unnamed> v236
+    parameter <unnamed> v237
+    parameter <unnamed> v238
+    parameter <unnamed> v239
+    parameter <unnamed> v240
+    parameter <unnamed> v241
+    parameter <unnamed> v242
+    parameter <unnamed> v243
+    parameter <unnamed> v244
+    parameter <unnamed> v245
+    parameter <unnamed> v246
+    parameter <unnamed> v247
+    parameter <unnamed> v248
+    parameter <unnamed> v249
+    parameter <unnamed> v250
+    parameter <unnamed> v251
+    parameter <unnamed> v252
+    parameter <unnamed> v253
+    parameter <unnamed> v254
+    parameter <unnamed> v255
+    parameter <unnamed> v256
+    parameter <unnamed> v257
+    0000: prologue end
+    0000: line 9
+    0001: line 12
+    01fa: advance pc
+    01fa: line 16
+    line = 28
+    01ff: line 28
+    line = 18
+    0201: line 18
+    0203: line 20
+    0205: line 22
+    0207: line 24
+    0209: line 26
+    line = 16
+    020b: line 16
+    end sequence
+  source file: "Blort.java"
+Blort.switchWithHighRegister:(IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII)I:
+regs: 0103; ins: 00ff; outs: 0002
+  0000: const/4 v1, #int 1 // #1
+  0001: sget-object v2, java.lang.System.out:Ljava/io/PrintStream;
+  0003: add-int v3, v1, v4
+  0005: add-int/2addr v3, v5
+  0006: add-int/2addr v3, v6
+  0007: add-int/2addr v3, v7
+  0008: add-int/2addr v3, v8
+  0009: add-int/2addr v3, v9
+  000a: add-int/2addr v3, v10
+  000b: add-int/2addr v3, v11
+  000c: add-int/2addr v3, v12
+  000d: add-int/2addr v3, v13
+  000e: add-int/2addr v3, v14
+  000f: add-int/2addr v3, v15
+  0010: add-int v3, v3, v16
+  0012: add-int v3, v3, v17
+  0014: add-int v3, v3, v18
+  0016: add-int v3, v3, v19
+  0018: add-int v3, v3, v20
+  001a: add-int v3, v3, v21
+  001c: add-int v3, v3, v22
+  001e: add-int v3, v3, v23
+  0020: add-int v3, v3, v24
+  0022: add-int v3, v3, v25
+  0024: add-int v3, v3, v26
+  0026: add-int v3, v3, v27
+  0028: add-int v3, v3, v28
+  002a: add-int v3, v3, v29
+  002c: add-int v3, v3, v30
+  002e: add-int v3, v3, v31
+  0030: add-int v3, v3, v32
+  0032: add-int v3, v3, v33
+  0034: add-int v3, v3, v34
+  0036: add-int v3, v3, v35
+  0038: add-int v3, v3, v36
+  003a: add-int v3, v3, v37
+  003c: add-int v3, v3, v38
+  003e: add-int v3, v3, v39
+  0040: add-int v3, v3, v40
+  0042: add-int v3, v3, v41
+  0044: add-int v3, v3, v42
+  0046: add-int v3, v3, v43
+  0048: add-int v3, v3, v44
+  004a: add-int v3, v3, v45
+  004c: add-int v3, v3, v46
+  004e: add-int v3, v3, v47
+  0050: add-int v3, v3, v48
+  0052: add-int v3, v3, v49
+  0054: add-int v3, v3, v50
+  0056: add-int v3, v3, v51
+  0058: add-int v3, v3, v52
+  005a: add-int v3, v3, v53
+  005c: add-int v3, v3, v54
+  005e: add-int v3, v3, v55
+  0060: add-int v3, v3, v56
+  0062: add-int v3, v3, v57
+  0064: add-int v3, v3, v58
+  0066: add-int v3, v3, v59
+  0068: add-int v3, v3, v60
+  006a: add-int v3, v3, v61
+  006c: add-int v3, v3, v62
+  006e: add-int v3, v3, v63
+  0070: add-int v3, v3, v64
+  0072: add-int v3, v3, v65
+  0074: add-int v3, v3, v66
+  0076: add-int v3, v3, v67
+  0078: add-int v3, v3, v68
+  007a: add-int v3, v3, v69
+  007c: add-int v3, v3, v70
+  007e: add-int v3, v3, v71
+  0080: add-int v3, v3, v72
+  0082: add-int v3, v3, v73
+  0084: add-int v3, v3, v74
+  0086: add-int v3, v3, v75
+  0088: add-int v3, v3, v76
+  008a: add-int v3, v3, v77
+  008c: add-int v3, v3, v78
+  008e: add-int v3, v3, v79
+  0090: add-int v3, v3, v80
+  0092: add-int v3, v3, v81
+  0094: add-int v3, v3, v82
+  0096: add-int v3, v3, v83
+  0098: add-int v3, v3, v84
+  009a: add-int v3, v3, v85
+  009c: add-int v3, v3, v86
+  009e: add-int v3, v3, v87
+  00a0: add-int v3, v3, v88
+  00a2: add-int v3, v3, v89
+  00a4: add-int v3, v3, v90
+  00a6: add-int v3, v3, v91
+  00a8: add-int v3, v3, v92
+  00aa: add-int v3, v3, v93
+  00ac: add-int v3, v3, v94
+  00ae: add-int v3, v3, v95
+  00b0: add-int v3, v3, v96
+  00b2: add-int v3, v3, v97
+  00b4: add-int v3, v3, v98
+  00b6: add-int v3, v3, v99
+  00b8: add-int v3, v3, v100
+  00ba: add-int v3, v3, v101
+  00bc: add-int v3, v3, v102
+  00be: add-int v3, v3, v103
+  00c0: add-int v3, v3, v104
+  00c2: add-int v3, v3, v105
+  00c4: add-int v3, v3, v106
+  00c6: add-int v3, v3, v107
+  00c8: add-int v3, v3, v108
+  00ca: add-int v3, v3, v109
+  00cc: add-int v3, v3, v110
+  00ce: add-int v3, v3, v111
+  00d0: add-int v3, v3, v112
+  00d2: add-int v3, v3, v113
+  00d4: add-int v3, v3, v114
+  00d6: add-int v3, v3, v115
+  00d8: add-int v3, v3, v116
+  00da: add-int v3, v3, v117
+  00dc: add-int v3, v3, v118
+  00de: add-int v3, v3, v119
+  00e0: add-int v3, v3, v120
+  00e2: add-int v3, v3, v121
+  00e4: add-int v3, v3, v122
+  00e6: add-int v3, v3, v123
+  00e8: add-int v3, v3, v124
+  00ea: add-int v3, v3, v125
+  00ec: add-int v3, v3, v126
+  00ee: add-int v3, v3, v127
+  00f0: add-int v3, v3, v128
+  00f2: add-int v3, v3, v129
+  00f4: add-int v3, v3, v130
+  00f6: add-int v3, v3, v131
+  00f8: add-int v3, v3, v132
+  00fa: add-int v3, v3, v133
+  00fc: add-int v3, v3, v134
+  00fe: add-int v3, v3, v135
+  0100: add-int v3, v3, v136
+  0102: add-int v3, v3, v137
+  0104: add-int v3, v3, v138
+  0106: add-int v3, v3, v139
+  0108: add-int v3, v3, v140
+  010a: add-int v3, v3, v141
+  010c: add-int v3, v3, v142
+  010e: add-int v3, v3, v143
+  0110: add-int v3, v3, v144
+  0112: add-int v3, v3, v145
+  0114: add-int v3, v3, v146
+  0116: add-int v3, v3, v147
+  0118: add-int v3, v3, v148
+  011a: add-int v3, v3, v149
+  011c: add-int v3, v3, v150
+  011e: add-int v3, v3, v151
+  0120: add-int v3, v3, v152
+  0122: add-int v3, v3, v153
+  0124: add-int v3, v3, v154
+  0126: add-int v3, v3, v155
+  0128: add-int v3, v3, v156
+  012a: add-int v3, v3, v157
+  012c: add-int v3, v3, v158
+  012e: add-int v3, v3, v159
+  0130: add-int v3, v3, v160
+  0132: add-int v3, v3, v161
+  0134: add-int v3, v3, v162
+  0136: add-int v3, v3, v163
+  0138: add-int v3, v3, v164
+  013a: add-int v3, v3, v165
+  013c: add-int v3, v3, v166
+  013e: add-int v3, v3, v167
+  0140: add-int v3, v3, v168
+  0142: add-int v3, v3, v169
+  0144: add-int v3, v3, v170
+  0146: add-int v3, v3, v171
+  0148: add-int v3, v3, v172
+  014a: add-int v3, v3, v173
+  014c: add-int v3, v3, v174
+  014e: add-int v3, v3, v175
+  0150: add-int v3, v3, v176
+  0152: add-int v3, v3, v177
+  0154: add-int v3, v3, v178
+  0156: add-int v3, v3, v179
+  0158: add-int v3, v3, v180
+  015a: add-int v3, v3, v181
+  015c: add-int v3, v3, v182
+  015e: add-int v3, v3, v183
+  0160: add-int v3, v3, v184
+  0162: add-int v3, v3, v185
+  0164: add-int v3, v3, v186
+  0166: add-int v3, v3, v187
+  0168: add-int v3, v3, v188
+  016a: add-int v3, v3, v189
+  016c: add-int v3, v3, v190
+  016e: add-int v3, v3, v191
+  0170: add-int v3, v3, v192
+  0172: add-int v3, v3, v193
+  0174: add-int v3, v3, v194
+  0176: add-int v3, v3, v195
+  0178: add-int v3, v3, v196
+  017a: add-int v3, v3, v197
+  017c: add-int v3, v3, v198
+  017e: add-int v3, v3, v199
+  0180: add-int v3, v3, v200
+  0182: add-int v3, v3, v201
+  0184: add-int v3, v3, v202
+  0186: add-int v3, v3, v203
+  0188: add-int v3, v3, v204
+  018a: add-int v3, v3, v205
+  018c: add-int v3, v3, v206
+  018e: add-int v3, v3, v207
+  0190: add-int v3, v3, v208
+  0192: add-int v3, v3, v209
+  0194: add-int v3, v3, v210
+  0196: add-int v3, v3, v211
+  0198: add-int v3, v3, v212
+  019a: add-int v3, v3, v213
+  019c: add-int v3, v3, v214
+  019e: add-int v3, v3, v215
+  01a0: add-int v3, v3, v216
+  01a2: add-int v3, v3, v217
+  01a4: add-int v3, v3, v218
+  01a6: add-int v3, v3, v219
+  01a8: add-int v3, v3, v220
+  01aa: add-int v3, v3, v221
+  01ac: add-int v3, v3, v222
+  01ae: add-int v3, v3, v223
+  01b0: add-int v3, v3, v224
+  01b2: add-int v3, v3, v225
+  01b4: add-int v3, v3, v226
+  01b6: add-int v3, v3, v227
+  01b8: add-int v3, v3, v228
+  01ba: add-int v3, v3, v229
+  01bc: add-int v3, v3, v230
+  01be: add-int v3, v3, v231
+  01c0: add-int v3, v3, v232
+  01c2: add-int v3, v3, v233
+  01c4: add-int v3, v3, v234
+  01c6: add-int v3, v3, v235
+  01c8: add-int v3, v3, v236
+  01ca: add-int v3, v3, v237
+  01cc: add-int v3, v3, v238
+  01ce: add-int v3, v3, v239
+  01d0: add-int v3, v3, v240
+  01d2: add-int v3, v3, v241
+  01d4: add-int v3, v3, v242
+  01d6: add-int v3, v3, v243
+  01d8: add-int v3, v3, v244
+  01da: add-int v3, v3, v245
+  01dc: add-int v3, v3, v246
+  01de: add-int v3, v3, v247
+  01e0: add-int v3, v3, v248
+  01e2: add-int v3, v3, v249
+  01e4: add-int v3, v3, v250
+  01e6: add-int v3, v3, v251
+  01e8: add-int v3, v3, v252
+  01ea: add-int v3, v3, v253
+  01ec: add-int v3, v3, v254
+  01ee: add-int v3, v3, v255
+  01f0: move/from16 v0, v256
+  01f2: add-int/2addr v3, v0
+  01f3: move/from16 v0, v257
+  01f5: add-int/2addr v3, v0
+  01f6: invoke-static {v3}, java.lang.Integer.toString:(I)Ljava/lang/String;
+  01f9: move-result-object v3
+  01fa: invoke-virtual {v2, v3}, java.io.PrintStream.println:(Ljava/lang/String;)V
+  01fd: move/from16 v0, v258
+  01ff: packed-switch v0, 020e // +000f
+  0202: const/4 v2, #int -1 // #f
+  0203: return v2
+  0204: const/4 v2, #int 0 // #0
+  0205: goto 0203 // -0002
+  0206: const/4 v2, #int 1 // #1
+  0207: goto 0203 // -0004
+  0208: const/4 v2, #int 2 // #2
+  0209: goto 0203 // -0006
+  020a: const/4 v2, #int 3 // #3
+  020b: goto 0203 // -0008
+  020c: const/4 v2, #int 4 // #4
+  020d: goto 0203 // -000a
+  020e: packed-switch-payload // for switch @ 01ff
+          0: 00000204 // +00000005
+          1: 00000206 // +00000007
+          2: 00000208 // +00000009
+          3: 0000020a // +0000000b
+          4: 0000020c // +0000000d
+  debug info
+    line_start: 9
+    parameters_size: 00ff
+    parameter param1 v4
+    parameter param2 v5
+    parameter param3 v6
+    parameter param4 v7
+    parameter param5 v8
+    parameter param6 v9
+    parameter param7 v10
+    parameter param8 v11
+    parameter param9 v12
+    parameter param10 v13
+    parameter param11 v14
+    parameter param12 v15
+    parameter param13 v16
+    parameter param14 v17
+    parameter param15 v18
+    parameter param16 v19
+    parameter param17 v20
+    parameter param18 v21
+    parameter param19 v22
+    parameter param20 v23
+    parameter param21 v24
+    parameter param22 v25
+    parameter param23 v26
+    parameter param24 v27
+    parameter param25 v28
+    parameter param26 v29
+    parameter param27 v30
+    parameter param28 v31
+    parameter param29 v32
+    parameter param30 v33
+    parameter param31 v34
+    parameter param32 v35
+    parameter param33 v36
+    parameter param34 v37
+    parameter param35 v38
+    parameter param36 v39
+    parameter param37 v40
+    parameter param38 v41
+    parameter param39 v42
+    parameter param40 v43
+    parameter param41 v44
+    parameter param42 v45
+    parameter param43 v46
+    parameter param44 v47
+    parameter param45 v48
+    parameter param46 v49
+    parameter param47 v50
+    parameter param48 v51
+    parameter param49 v52
+    parameter param50 v53
+    parameter param51 v54
+    parameter param52 v55
+    parameter param53 v56
+    parameter param54 v57
+    parameter param55 v58
+    parameter param56 v59
+    parameter param57 v60
+    parameter param58 v61
+    parameter param59 v62
+    parameter param60 v63
+    parameter param61 v64
+    parameter param62 v65
+    parameter param63 v66
+    parameter param64 v67
+    parameter param65 v68
+    parameter param66 v69
+    parameter param67 v70
+    parameter param68 v71
+    parameter param69 v72
+    parameter param70 v73
+    parameter param71 v74
+    parameter param72 v75
+    parameter param73 v76
+    parameter param74 v77
+    parameter param75 v78
+    parameter param76 v79
+    parameter param77 v80
+    parameter param78 v81
+    parameter param79 v82
+    parameter param80 v83
+    parameter param81 v84
+    parameter param82 v85
+    parameter param83 v86
+    parameter param84 v87
+    parameter param85 v88
+    parameter param86 v89
+    parameter param87 v90
+    parameter param88 v91
+    parameter param89 v92
+    parameter param90 v93
+    parameter param91 v94
+    parameter param92 v95
+    parameter param93 v96
+    parameter param94 v97
+    parameter param95 v98
+    parameter param96 v99
+    parameter param97 v100
+    parameter param98 v101
+    parameter param99 v102
+    parameter param100 v103
+    parameter param101 v104
+    parameter param102 v105
+    parameter param103 v106
+    parameter param104 v107
+    parameter param105 v108
+    parameter param106 v109
+    parameter param107 v110
+    parameter param108 v111
+    parameter param109 v112
+    parameter param110 v113
+    parameter param111 v114
+    parameter param112 v115
+    parameter param113 v116
+    parameter param114 v117
+    parameter param115 v118
+    parameter param116 v119
+    parameter param117 v120
+    parameter param118 v121
+    parameter param119 v122
+    parameter param120 v123
+    parameter param121 v124
+    parameter param122 v125
+    parameter param123 v126
+    parameter param124 v127
+    parameter param125 v128
+    parameter param126 v129
+    parameter param127 v130
+    parameter param128 v131
+    parameter param129 v132
+    parameter param130 v133
+    parameter param131 v134
+    parameter param132 v135
+    parameter param133 v136
+    parameter param134 v137
+    parameter param135 v138
+    parameter param136 v139
+    parameter param137 v140
+    parameter param138 v141
+    parameter param139 v142
+    parameter param140 v143
+    parameter param141 v144
+    parameter param142 v145
+    parameter param143 v146
+    parameter param144 v147
+    parameter param145 v148
+    parameter param146 v149
+    parameter param147 v150
+    parameter param148 v151
+    parameter param149 v152
+    parameter param150 v153
+    parameter param151 v154
+    parameter param152 v155
+    parameter param153 v156
+    parameter param154 v157
+    parameter param155 v158
+    parameter param156 v159
+    parameter param157 v160
+    parameter param158 v161
+    parameter param159 v162
+    parameter param160 v163
+    parameter param161 v164
+    parameter param162 v165
+    parameter param163 v166
+    parameter param164 v167
+    parameter param165 v168
+    parameter param166 v169
+    parameter param167 v170
+    parameter param168 v171
+    parameter param169 v172
+    parameter param170 v173
+    parameter param171 v174
+    parameter param172 v175
+    parameter param173 v176
+    parameter param174 v177
+    parameter param175 v178
+    parameter param176 v179
+    parameter param177 v180
+    parameter param178 v181
+    parameter param179 v182
+    parameter param180 v183
+    parameter param181 v184
+    parameter param182 v185
+    parameter param183 v186
+    parameter param184 v187
+    parameter param185 v188
+    parameter param186 v189
+    parameter param187 v190
+    parameter param188 v191
+    parameter param189 v192
+    parameter param190 v193
+    parameter param191 v194
+    parameter param192 v195
+    parameter param193 v196
+    parameter param194 v197
+    parameter param195 v198
+    parameter param196 v199
+    parameter param197 v200
+    parameter param198 v201
+    parameter param199 v202
+    parameter param200 v203
+    parameter param201 v204
+    parameter param202 v205
+    parameter param203 v206
+    parameter param204 v207
+    parameter param205 v208
+    parameter param206 v209
+    parameter param207 v210
+    parameter param208 v211
+    parameter param209 v212
+    parameter param210 v213
+    parameter param211 v214
+    parameter param212 v215
+    parameter param213 v216
+    parameter param214 v217
+    parameter param215 v218
+    parameter param216 v219
+    parameter param217 v220
+    parameter param218 v221
+    parameter param219 v222
+    parameter param220 v223
+    parameter param221 v224
+    parameter param222 v225
+    parameter param223 v226
+    parameter param224 v227
+    parameter param225 v228
+    parameter param226 v229
+    parameter param227 v230
+    parameter param228 v231
+    parameter param229 v232
+    parameter param230 v233
+    parameter param231 v234
+    parameter param232 v235
+    parameter param233 v236
+    parameter param234 v237
+    parameter param235 v238
+    parameter param236 v239
+    parameter param237 v240
+    parameter param238 v241
+    parameter param239 v242
+    parameter param240 v243
+    parameter param241 v244
+    parameter param242 v245
+    parameter param243 v246
+    parameter param244 v247
+    parameter param245 v248
+    parameter param246 v249
+    parameter param247 v250
+    parameter param248 v251
+    parameter param249 v252
+    parameter param250 v253
+    parameter param251 v254
+    parameter param252 v255
+    parameter param253 v256
+    parameter param254 v257
+    parameter param255 v258
+    0000: prologue end
+    0000: line 9
+    0001: line 12
+    0001: +local v1 i int
+    01fd: advance pc
+    01fd: line 16
+    line = 28
+    0202: line 28
+    line = 18
+    0204: line 18
+    0206: line 20
+    0208: line 22
+    020a: line 24
+    020c: line 26
+    line = 16
+    020e: line 16
+    end sequence
+  source file: "Blort.java"

@@ -1,0 +1,8 @@
+This is a dump of two simple classes which are valid in structure but
+are overall invalid. That being said, the system should still have no
+trouble parsing and dumping them.
+
+The salient bit of parsing tested here is that each class has a single
+class-level EnclosingMethod attribute, which is syntactically valid. There
+are two possible variants (method may be null), and this test contains one
+of each.

@@ -1,0 +1,120 @@
+reading Blort.class...
+method <init> ()V
+first 000c
+block 0000
+  pred 000a
+  Blort.java:2@0001: Rop{invoke-direct . <- Ljava/lang/Object; call throws <any
+  >}(java.lang.Object.<init>:()V catch) . <- v0:NffffLBlort;
+  next 000b
+block 000a
+  pred 000c
+  Blort.java:2@0000: move-param-object(0) v0:"this"NffffLBlort; <- .
+  Blort.java:2@0000: goto . <- .
+  next 0000
+block 000b
+  pred 0000
+  Blort.java:2@0004: return-void . <- .
+  returns
+block 000c
+  @????: goto . <- .
+  next 000a
+
+method testMultipleIdenticalSuccessors (I)V
+first 0053
+block 0000
+  pred 004a
+  Blort.java:5@0001: switch({1, 2, 3}) . <- v3:I
+  next 001c
+  next 001c
+  next 001c
+  next 004b *
+block 001c
+  pred 0000
+  pred 0000
+  pred 0000
+  Blort.java:9@001c: get-static-object(java.lang.System.out:Ljava/io/PrintStrea
+  m; catch) . <- .
+  next 0051
+block 001f
+  pred 0051
+  Blort.java:9@001f: const-object("foo" catch) . <- .
+  next 0052
+block 0021
+  pred 0052
+  Blort.java:9@0021: Rop{invoke-virtual . <- Ljava/io/PrintStream; Ljava/lang/S
+  tring; call throws <any>}(java.io.PrintStream.println:(Ljava/lang/String;)V c
+  atch) . <- v0:Ljava/io/PrintStream; v1:Ljava/lang/String;="foo"
+  next 004b
+block 004a
+  pred 0053
+  Blort.java:5@0000: move-param-object(0) v2:"this"LBlort; <- .
+  Blort.java:5@0000: move-param-int(1) v3:"foo"I <- .
+  Blort.java:5@0000: goto . <- .
+  next 0000
+block 004b
+  pred 0000
+  pred 0021
+  Blort.java:12@0024: return-void . <- .
+  returns
+block 0051
+  pred 001c
+  Blort.java:9@001c: Rop{move-result-pseudo Ljava/io/PrintStream; <- . flows} v
+  0:Ljava/io/PrintStream; <- .
+  Blort.java:9@001c: goto . <- .
+  next 001f
+block 0052
+  pred 001f
+  Blort.java:9@001f: Rop{move-result-pseudo Ljava/lang/String; <- . flows} v1:L
+  java/lang/String;="foo" <- .
+  Blort.java:9@001f: goto . <- .
+  next 0021
+block 0053
+  @????: goto . <- .
+  next 004a
+
+method testNoPrimarySuccessor ()V
+first 001a
+block 0000
+  pred 0012
+  Blort.java:16@0000: new-instance(java.lang.RuntimeException catch java.lang.R
+  untimeException) . <- .
+  next 001b
+  next 0019 *
+block 0003
+  pred 0019
+  Blort.java:16@0004: Rop{invoke-direct . <- Ljava/lang/RuntimeException; call 
+  throws <any>}(java.lang.RuntimeException.<init>:()V catch java.lang.RuntimeEx
+  ception) . <- v0:N0000Ljava/lang/RuntimeException;
+  next 001b
+  next 0007 *
+block 0007
+  pred 0003
+  Blort.java:16@0007: throw(catch java.lang.RuntimeException) . <- v0:Ljava/lan
+  g/RuntimeException;
+  next 001b
+block 0012
+  pred 001a
+  Blort.java:16@0000: move-param-object(0) v1:"this"LBlort; <- .
+  Blort.java:16@0000: goto . <- .
+  next 0000
+block 0013
+  pred 001b
+  Blort.java:19@0009: return-void . <- .
+  returns
+block 0019
+  pred 0000
+  Blort.java:16@0000: Rop{move-result-pseudo N0000Ljava/lang/RuntimeException; 
+  <- . flows} v0:N0000Ljava/lang/RuntimeException; <- .
+  Blort.java:16@0000: goto . <- .
+  next 0003
+block 001a
+  @????: goto . <- .
+  next 0012
+block 001b
+  pred 0000
+  pred 0003
+  pred 0007
+  Blort.java:17@0008: Rop{move-exception Ljava/lang/RuntimeException; <- . flow
+  s} v0:Ljava/lang/RuntimeException; <- .
+  @????: goto . <- .
+  next 0013

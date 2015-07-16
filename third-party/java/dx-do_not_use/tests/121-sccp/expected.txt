@@ -1,0 +1,715 @@
+Blort.testDoubleAddSub:()D:
+regs: 0008; ins: 0000; outs: 0000
+  0000: const-wide/high16 v6, #double 5.0 // #4014000000000000
+  0002: const-wide/high16 v2, #double 3.0 // #4008000000000000
+  0004: sub-double v0, v6, v2
+  0006: add-double v4, v2, v0
+  0008: sub-double v2, v6, v0
+  000a: cmpg-double v0, v4, v6
+  000c: if-gtz v0, 0014 // +0008
+  000e: const-wide/high16 v0, #double 1.0 // #3ff0000000000000
+  0010: add-double/2addr v0, v6
+  0011: const-wide/high16 v0, #double 2.0 // #4000000000000000
+  0013: goto 0006 // -000d
+  0014: return-wide v4
+  debug info
+    line_start: 114
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 114
+    0004: line 115
+    0006: line 117
+    0008: line 119
+    000a: line 120
+    000e: line 121
+    0011: line 125
+    0014: line 123
+    end sequence
+  source file: "Blort.java"
+Blort.testDoubleDiv:()D:
+regs: 0008; ins: 0000; outs: 0000
+  0000: const-wide/high16 v6, #double 10.0 // #4024000000000000
+  0002: const-wide/high16 v2, #double 30.0 // #403e000000000000
+  0004: const-wide/high16 v0, #double 9.0 // #4022000000000000
+  0006: const-wide/high16 v4, #double 5.0 // #4014000000000000
+  0008: div-double v4, v2, v4
+  000a: sub-double/2addr v0, v4
+  000b: const-wide/high16 v4, #double 4.0 // #4010000000000000
+  000d: mul-double/2addr v0, v4
+  000e: cmpl-double v4, v0, v6
+  0010: if-lez v4, 0013 // +0003
+  0012: sub-double/2addr v0, v6
+  0013: const-wide/high16 v4, #double 60.0 // #404e000000000000
+  0015: div-double v2, v4, v2
+  0017: mul-double/2addr v0, v2
+  0018: return-wide v0
+  debug info
+    line_start: 141
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 141
+    0004: line 142
+    000b: line 143
+    000e: line 145
+    0012: line 146
+    0013: line 148
+    end sequence
+  source file: "Blort.java"
+Blort.testDoubleMod:()D:
+regs: 0006; ins: 0000; outs: 0000
+  0000: const-wide/high16 v0, #double 5.0 // #4014000000000000
+  0002: const-wide/high16 v2, #double 3.0 // #4008000000000000
+  0004: rem-double v2, v0, v2
+  0006: const-wide/16 v4, #double 0.0 // #0000
+  0008: rem-double/2addr v0, v4
+  0009: add-double/2addr v0, v2
+  000a: return-wide v0
+  debug info
+    line_start: 152
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 152
+    0002: line 153
+    0006: line 154
+    0009: line 155
+    end sequence
+  source file: "Blort.java"
+Blort.testDoubleMult:()D:
+regs: 0006; ins: 0000; outs: 0000
+  0000: const-wide/high16 v4, #double 10.0 // #4024000000000000
+  0002: const-wide/high16 v0, #double 6.0 // #4018000000000000
+  0004: const-wide/high16 v2, #double 9.0 // #4022000000000000
+  0006: sub-double v0, v2, v0
+  0008: const-wide/high16 v2, #double 4.0 // #4010000000000000
+  000a: mul-double/2addr v0, v2
+  000b: cmpl-double v2, v0, v4
+  000d: if-lez v2, 0010 // +0003
+  000f: sub-double/2addr v0, v4
+  0010: const-wide/high16 v2, #double 2.0 // #4000000000000000
+  0012: mul-double/2addr v0, v2
+  0013: return-wide v0
+  debug info
+    line_start: 130
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 130
+    0004: line 131
+    0008: line 132
+    000b: line 134
+    000f: line 135
+    0010: line 137
+    end sequence
+  source file: "Blort.java"
+Blort.testDoublePhi:()D:
+regs: 0007; ins: 0000; outs: 0000
+  0000: const-wide/16 v0, #double 0.0 // #0000
+  0002: const-wide v2, #double 37.0 // #4042800000000000
+  0007: const-wide/high16 v4, #double 3.0 // #4008000000000000
+  0009: cmpl-double v6, v4, v0
+  000b: if-nez v6, 000e // +0003
+  000d: return-wide v0
+  000e: div-double v0, v2, v4
+  0010: goto 000d // -0003
+  debug info
+    line_start: 159
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 159
+    0007: line 160
+    0009: line 161
+    000d: line 162
+    000e: line 161
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatAddSub:()F:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/high16 v3, #float 5.0 // #40a00000
+  0002: const/high16 v1, #float 3.0 // #40400000
+  0004: sub-float v0, v3, v1
+  0006: add-float v2, v1, v0
+  0008: sub-float v1, v3, v0
+  000a: cmpg-float v0, v2, v3
+  000c: if-gtz v0, 0014 // +0008
+  000e: const/high16 v0, #float 1.0 // #3f800000
+  0010: add-float/2addr v0, v3
+  0011: const/high16 v0, #float 2.0 // #40000000
+  0013: goto 0006 // -000d
+  0014: return v2
+  debug info
+    line_start: 60
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 60
+    0004: line 61
+    0006: line 63
+    0008: line 65
+    000a: line 66
+    000e: line 67
+    0011: line 71
+    0014: line 69
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatDiv:()F:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/high16 v3, #float 10.0 // #41200000
+  0002: const/high16 v1, #float 30.0 // #41f00000
+  0004: const/high16 v0, #float 9.0 // #41100000
+  0006: const/high16 v2, #float 5.0 // #40a00000
+  0008: div-float v2, v1, v2
+  000a: sub-float/2addr v0, v2
+  000b: const/high16 v2, #float 4.0 // #40800000
+  000d: mul-float/2addr v0, v2
+  000e: cmpl-float v2, v0, v3
+  0010: if-lez v2, 0013 // +0003
+  0012: sub-float/2addr v0, v3
+  0013: const/high16 v2, #float 60.0 // #42700000
+  0015: div-float v1, v2, v1
+  0017: mul-float/2addr v0, v1
+  0018: return v0
+  debug info
+    line_start: 87
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 87
+    0004: line 88
+    000b: line 89
+    000e: line 91
+    0012: line 92
+    0013: line 94
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatMod:()F:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/high16 v0, #float 5.0 // #40a00000
+  0002: const/high16 v1, #float 3.0 // #40400000
+  0004: rem-float v1, v0, v1
+  0006: const/4 v2, #float 0.0 // #0
+  0007: rem-float/2addr v0, v2
+  0008: add-float/2addr v0, v1
+  0009: return v0
+  debug info
+    line_start: 98
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 98
+    0002: line 99
+    0006: line 100
+    0008: line 101
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatMult:()F:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/high16 v2, #float 10.0 // #41200000
+  0002: const/high16 v0, #float 6.0 // #40c00000
+  0004: const/high16 v1, #float 9.0 // #41100000
+  0006: sub-float v0, v1, v0
+  0008: const/high16 v1, #float 4.0 // #40800000
+  000a: mul-float/2addr v0, v1
+  000b: cmpl-float v1, v0, v2
+  000d: if-lez v1, 0010 // +0003
+  000f: sub-float/2addr v0, v2
+  0010: const/high16 v1, #float 2.0 // #40000000
+  0012: mul-float/2addr v0, v1
+  0013: return v0
+  debug info
+    line_start: 76
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 76
+    0004: line 77
+    0008: line 78
+    000b: line 80
+    000f: line 81
+    0010: line 83
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatPhi:()F:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/4 v0, #float 0.0 // #0
+  0001: const/high16 v1, #float 37.0 // #42140000
+  0003: const/high16 v2, #float 3.0 // #40400000
+  0005: cmpl-float v3, v2, v0
+  0007: if-nez v3, 000a // +0003
+  0009: return v0
+  000a: div-float v0, v1, v2
+  000c: goto 0009 // -0003
+  debug info
+    line_start: 105
+    parameters_size: 0000
+    0000: prologue end
+    0001: line 105
+    0003: line 106
+    0005: line 107
+    0009: line 108
+    000a: line 107
+    end sequence
+  source file: "Blort.java"
+Blort.testIntAddSub:()I:
+regs: 0000; ins: 0000; outs: 0000
+  0000: goto/32 0000 // +0000
+  debug info
+    line_start: 17
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 17
+    end sequence
+  source file: "Blort.java"
+Blort.testIntDiv:()I:
+regs: 0001; ins: 0000; outs: 0000
+  0000: const/4 v0, #int 4 // #4
+  0001: return v0
+  debug info
+    line_start: 40
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 40
+    end sequence
+  source file: "Blort.java"
+Blort.testIntMod:()I:
+regs: 0001; ins: 0000; outs: 0000
+  0000: const/4 v0, #int 5 // #5
+  0001: rem-int/lit8 v0, v0, #int 0 // #00
+  0003: add-int/lit8 v0, v0, #int 2 // #02
+  0005: return v0
+  debug info
+    line_start: 44
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 44
+    0001: line 46
+    0003: line 47
+    end sequence
+  source file: "Blort.java"
+Blort.testIntMult:()I:
+regs: 0001; ins: 0000; outs: 0000
+  0000: const/4 v0, #int 4 // #4
+  0001: return v0
+  debug info
+    line_start: 29
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 29
+    end sequence
+  source file: "Blort.java"
+Blort.testIntPhi:()I:
+regs: 0001; ins: 0000; outs: 0000
+  0000: const/16 v0, #int 12 // #000c
+  0002: return v0
+  debug info
+    line_start: 53
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 53
+    0002: line 54
+    end sequence
+  source file: "Blort.java"
+Blort.testDoubleAddSub:()D:
+regs: 000a; ins: 0000; outs: 0000
+  0000: const-wide/high16 v0, #double 3.0 // #4008000000000000
+  0002: const-wide/high16 v8, #double 5.0 // #4014000000000000
+  0004: sub-double v2, v8, v0
+  0006: add-double v4, v0, v2
+  0008: const-wide/high16 v6, #double 5.0 // #4014000000000000
+  000a: sub-double v0, v6, v2
+  000c: cmpg-double v8, v4, v6
+  000e: if-gtz v8, 0017 // +0009
+  0010: const-wide/high16 v8, #double 1.0 // #3ff0000000000000
+  0012: add-double v4, v6, v8
+  0014: const-wide/high16 v2, #double 2.0 // #4000000000000000
+  0016: goto 0006 // -0010
+  0017: return-wide v4
+  debug info
+    line_start: 114
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 114
+    0002: line 115
+    0002: +local v0 a double
+    0006: line 117
+    0006: +local v2 b double
+    0008: line 118
+    0008: +local v4 c double
+    000a: line 119
+    000a: +local v6 d double
+    000c: line 120
+    0010: line 121
+    0014: line 125
+    0017: line 123
+    end sequence
+  source file: "Blort.java"
+Blort.testDoubleDiv:()D:
+regs: 000c; ins: 0000; outs: 0000
+  0000: const-wide/high16 v10, #double 10.0 // #4024000000000000
+  0002: const-wide/high16 v0, #double 30.0 // #403e000000000000
+  0004: const-wide/high16 v6, #double 9.0 // #4022000000000000
+  0006: const-wide/high16 v8, #double 5.0 // #4014000000000000
+  0008: div-double v8, v0, v8
+  000a: sub-double v2, v6, v8
+  000c: const-wide/high16 v6, #double 4.0 // #4010000000000000
+  000e: mul-double v4, v2, v6
+  0010: cmpl-double v6, v4, v10
+  0012: if-lez v6, 0015 // +0003
+  0014: sub-double/2addr v4, v10
+  0015: const-wide/high16 v6, #double 60.0 // #404e000000000000
+  0017: div-double/2addr v6, v0
+  0018: mul-double/2addr v6, v4
+  0019: return-wide v6
+  debug info
+    line_start: 141
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 141
+    0004: line 142
+    0004: +local v0 a double
+    000c: line 143
+    000c: +local v2 b double
+    0010: line 145
+    0010: +local v4 c double
+    0014: line 146
+    0015: line 148
+    end sequence
+  source file: "Blort.java"
+Blort.testDoubleMod:()D:
+regs: 0008; ins: 0000; outs: 0000
+  0000: const-wide/high16 v0, #double 5.0 // #4014000000000000
+  0002: const-wide/high16 v6, #double 3.0 // #4008000000000000
+  0004: rem-double v2, v0, v6
+  0006: const-wide/16 v6, #double 0.0 // #0000
+  0008: rem-double v4, v0, v6
+  000a: add-double v6, v2, v4
+  000c: return-wide v6
+  debug info
+    line_start: 152
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 152
+    0002: line 153
+    0002: +local v0 a double
+    0006: line 154
+    0006: +local v2 b double
+    000a: line 155
+    000a: +local v4 c double
+    end sequence
+  source file: "Blort.java"
+Blort.testDoubleMult:()D:
+regs: 000a; ins: 0000; outs: 0000
+  0000: const-wide/high16 v8, #double 10.0 // #4024000000000000
+  0002: const-wide/high16 v0, #double 6.0 // #4018000000000000
+  0004: const-wide/high16 v6, #double 9.0 // #4022000000000000
+  0006: sub-double v2, v6, v0
+  0008: const-wide/high16 v6, #double 4.0 // #4010000000000000
+  000a: mul-double v4, v2, v6
+  000c: cmpl-double v6, v4, v8
+  000e: if-lez v6, 0011 // +0003
+  0010: sub-double/2addr v4, v8
+  0011: const-wide/high16 v6, #double 2.0 // #4000000000000000
+  0013: mul-double/2addr v6, v4
+  0014: return-wide v6
+  debug info
+    line_start: 130
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 130
+    0004: line 131
+    0004: +local v0 a double
+    0008: line 132
+    0008: +local v2 b double
+    000c: line 134
+    000c: +local v4 c double
+    0010: line 135
+    0011: line 137
+    end sequence
+  source file: "Blort.java"
+Blort.testDoublePhi:()D:
+regs: 0007; ins: 0000; outs: 0000
+  0000: const-wide/16 v4, #double 0.0 // #0000
+  0002: const-wide v0, #double 37.0 // #4042800000000000
+  0007: const-wide/high16 v2, #double 3.0 // #4008000000000000
+  0009: cmpl-double v6, v2, v4
+  000b: if-nez v6, 000e // +0003
+  000d: return-wide v4
+  000e: div-double v4, v0, v2
+  0010: goto 000d // -0003
+  debug info
+    line_start: 159
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 159
+    0007: line 160
+    0007: +local v0 a double
+    0009: line 161
+    0009: +local v2 b double
+    000d: line 162
+    000d: +local v4 c double
+    000e: line 161
+    000e: -local v4 c double
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatAddSub:()F:
+regs: 0005; ins: 0000; outs: 0000
+  0000: const/high16 v0, #float 3.0 // #40400000
+  0002: const/high16 v4, #float 5.0 // #40a00000
+  0004: sub-float v1, v4, v0
+  0006: add-float v2, v0, v1
+  0008: const/high16 v3, #float 5.0 // #40a00000
+  000a: sub-float v0, v3, v1
+  000c: cmpg-float v4, v2, v3
+  000e: if-gtz v4, 0017 // +0009
+  0010: const/high16 v4, #float 1.0 // #3f800000
+  0012: add-float v2, v3, v4
+  0014: const/high16 v1, #float 2.0 // #40000000
+  0016: goto 0006 // -0010
+  0017: return v2
+  debug info
+    line_start: 60
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 60
+    0002: line 61
+    0002: +local v0 a float
+    0006: line 63
+    0006: +local v1 b float
+    0008: line 64
+    0008: +local v2 c float
+    000a: line 65
+    000a: +local v3 d float
+    000c: line 66
+    0010: line 67
+    0014: line 71
+    0017: line 69
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatDiv:()F:
+regs: 0006; ins: 0000; outs: 0000
+  0000: const/high16 v5, #float 10.0 // #41200000
+  0002: const/high16 v0, #float 30.0 // #41f00000
+  0004: const/high16 v3, #float 9.0 // #41100000
+  0006: const/high16 v4, #float 5.0 // #40a00000
+  0008: div-float v4, v0, v4
+  000a: sub-float v1, v3, v4
+  000c: const/high16 v3, #float 4.0 // #40800000
+  000e: mul-float v2, v1, v3
+  0010: cmpl-float v3, v2, v5
+  0012: if-lez v3, 0015 // +0003
+  0014: sub-float/2addr v2, v5
+  0015: const/high16 v3, #float 60.0 // #42700000
+  0017: div-float/2addr v3, v0
+  0018: mul-float/2addr v3, v2
+  0019: return v3
+  debug info
+    line_start: 87
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 87
+    0004: line 88
+    0004: +local v0 a float
+    000c: line 89
+    000c: +local v1 b float
+    0010: line 91
+    0010: +local v2 c float
+    0014: line 92
+    0015: line 94
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatMod:()F:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/high16 v0, #float 5.0 // #40a00000
+  0002: const/high16 v3, #float 3.0 // #40400000
+  0004: rem-float v1, v0, v3
+  0006: const/4 v3, #float 0.0 // #0
+  0007: rem-float v2, v0, v3
+  0009: add-float v3, v1, v2
+  000b: return v3
+  debug info
+    line_start: 98
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 98
+    0002: line 99
+    0002: +local v0 a float
+    0006: line 100
+    0006: +local v1 b float
+    0009: line 101
+    0009: +local v2 c float
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatMult:()F:
+regs: 0005; ins: 0000; outs: 0000
+  0000: const/high16 v4, #float 10.0 // #41200000
+  0002: const/high16 v0, #float 6.0 // #40c00000
+  0004: const/high16 v3, #float 9.0 // #41100000
+  0006: sub-float v1, v3, v0
+  0008: const/high16 v3, #float 4.0 // #40800000
+  000a: mul-float v2, v1, v3
+  000c: cmpl-float v3, v2, v4
+  000e: if-lez v3, 0011 // +0003
+  0010: sub-float/2addr v2, v4
+  0011: const/high16 v3, #float 2.0 // #40000000
+  0013: mul-float/2addr v3, v2
+  0014: return v3
+  debug info
+    line_start: 76
+    parameters_size: 0000
+    0000: prologue end
+    0002: line 76
+    0004: line 77
+    0004: +local v0 a float
+    0008: line 78
+    0008: +local v1 b float
+    000c: line 80
+    000c: +local v2 c float
+    0010: line 81
+    0011: line 83
+    end sequence
+  source file: "Blort.java"
+Blort.testFloatPhi:()F:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/4 v2, #float 0.0 // #0
+  0001: const/high16 v0, #float 37.0 // #42140000
+  0003: const/high16 v1, #float 3.0 // #40400000
+  0005: cmpl-float v3, v1, v2
+  0007: if-nez v3, 000a // +0003
+  0009: return v2
+  000a: div-float v2, v0, v1
+  000c: goto 0009 // -0003
+  debug info
+    line_start: 105
+    parameters_size: 0000
+    0000: prologue end
+    0001: line 105
+    0003: line 106
+    0003: +local v0 a float
+    0005: line 107
+    0005: +local v1 b float
+    0009: line 108
+    0009: +local v2 c float
+    000a: line 107
+    000a: -local v2 c float
+    end sequence
+  source file: "Blort.java"
+Blort.testIntAddSub:()I:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/4 v0, #int 3 // #3
+  0001: rsub-int/lit8 v1, v0, #int 5 // #05
+  0003: add-int/lit8 v2, v0, #int 2 // #02
+  0005: const/4 v3, #int 5 // #5
+  0006: add-int/lit8 v0, v3, #int -2 // #fe
+  0008: if-gt v2, v3, 000e // +0006
+  000a: add-int/lit8 v2, v3, #int 1 // #01
+  000c: const/4 v1, #int 2 // #2
+  000d: goto 0003 // -000a
+  000e: return v2
+  debug info
+    line_start: 6
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 6
+    0001: line 7
+    0001: +local v0 a int
+    0003: line 9
+    0003: +local v1 b int
+    0005: line 10
+    0005: +local v2 c int
+    0006: line 11
+    0006: +local v3 d int
+    0008: line 12
+    000a: line 13
+    000c: line 17
+    000e: line 15
+    end sequence
+  source file: "Blort.java"
+Blort.testIntDiv:()I:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/16 v0, #int 30 // #001e
+  0002: const/4 v3, #int 6 // #6
+  0003: rsub-int/lit8 v1, v3, #int 9 // #09
+  0005: mul-int/lit8 v2, v1, #int 4 // #04
+  0007: const/16 v3, #int 10 // #000a
+  0009: if-le v2, v3, 000d // +0004
+  000b: add-int/lit8 v2, v2, #int -10 // #f6
+  000d: mul-int/lit8 v3, v2, #int 2 // #02
+  000f: return v3
+  debug info
+    line_start: 33
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 33
+    0002: line 34
+    0002: +local v0 a int
+    0005: line 35
+    0005: +local v1 b int
+    0007: line 37
+    0007: +local v2 c int
+    000b: line 38
+    000d: line 40
+    end sequence
+  source file: "Blort.java"
+Blort.testIntMod:()I:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/4 v0, #int 5 // #5
+  0001: rem-int/lit8 v1, v0, #int 3 // #03
+  0003: rem-int/lit8 v2, v0, #int 0 // #00
+  0005: add-int/lit8 v3, v2, #int 2 // #02
+  0007: return v3
+  debug info
+    line_start: 44
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 44
+    0001: line 45
+    0001: +local v0 a int
+    0003: line 46
+    0003: +local v1 b int
+    0005: line 47
+    0005: +local v2 c int
+    end sequence
+  source file: "Blort.java"
+Blort.testIntMult:()I:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/4 v0, #int 6 // #6
+  0001: rsub-int/lit8 v1, v0, #int 9 // #09
+  0003: mul-int/lit8 v2, v1, #int 4 // #04
+  0005: const/16 v3, #int 10 // #000a
+  0007: if-le v2, v3, 000b // +0004
+  0009: add-int/lit8 v2, v2, #int -10 // #f6
+  000b: mul-int/lit8 v3, v2, #int 2 // #02
+  000d: return v3
+  debug info
+    line_start: 22
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 22
+    0001: line 23
+    0001: +local v0 a int
+    0003: line 24
+    0003: +local v1 b int
+    0005: line 26
+    0005: +local v2 c int
+    0009: line 27
+    000b: line 29
+    end sequence
+  source file: "Blort.java"
+Blort.testIntPhi:()I:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/16 v0, #int 37 // #0025
+  0002: const/4 v1, #int 3 // #3
+  0003: if-nez v1, 0007 // +0004
+  0005: const/4 v2, #int 0 // #0
+  0006: return v2
+  0007: const/16 v2, #int 12 // #000c
+  0009: goto 0006 // -0003
+  debug info
+    line_start: 51
+    parameters_size: 0000
+    0000: prologue end
+    0000: line 51
+    0002: line 52
+    0002: +local v0 a int
+    0003: line 53
+    0003: +local v1 b int
+    0006: line 54
+    0006: +local v2 c int
+    0007: line 53
+    0007: -local v2 c int
+    end sequence
+  source file: "Blort.java"

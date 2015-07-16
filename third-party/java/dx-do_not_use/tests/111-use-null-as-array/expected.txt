@@ -1,0 +1,116 @@
+Blort.test_getBooleanArray:()Z:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 1 // #1
+  0002: aget-byte v0, v0, v1
+  0004: return v0
+Blort.test_getByteArray:()B:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 2 // #2
+  0002: aget-byte v0, v0, v1
+  0004: return v0
+Blort.test_getCharArray:()C:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 3 // #3
+  0002: aget-char v0, v0, v1
+  0004: return v0
+Blort.test_getDoubleArray:()D:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 4 // #4
+  0002: aget-wide v0, v0, v1
+  0004: return-wide v0
+Blort.test_getFloatArray:()F:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 5 // #5
+  0002: aget v0, v0, v1
+  0004: return v0
+Blort.test_getIntArray:()I:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 6 // #6
+  0002: aget v0, v0, v1
+  0004: return v0
+Blort.test_getLongArray:()J:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 7 // #7
+  0002: aget-wide v0, v0, v1
+  0004: return-wide v0
+Blort.test_getObjectArray:()Ljava/lang/Object;:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/16 v1, #int 8 // #0008
+  0003: aget-object v0, v0, v1
+  0005: return-object v0
+Blort.test_getShortArray:()S:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/16 v1, #int 9 // #0009
+  0003: aget-short v0, v0, v1
+  0005: return v0
+Blort.test_setBooleanArray:()V:
+regs: 0002; ins: 0000; outs: 0000
+  0000: const/4 v1, #int 1 // #1
+  0001: const/4 v0, #null // #0
+  0002: aput v1, v0, v1
+  0004: return-void
+Blort.test_setByteArray:()V:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 2 // #2
+  0002: const/4 v2, #int 3 // #3
+  0003: aput v2, v0, v1
+  0005: return-void
+Blort.test_setCharArray:()V:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 4 // #4
+  0002: const/4 v2, #int 5 // #5
+  0003: aput v2, v0, v1
+  0005: return-void
+Blort.test_setDoubleArray:()V:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/4 v1, #int 6 // #6
+  0002: const-wide/high16 v2, #double 7.0 // #401c000000000000
+  0004: aput-wide v2, v0, v1
+  0006: return-void
+Blort.test_setFloatArray:()V:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/16 v1, #int 8 // #0008
+  0003: const/high16 v2, #float 9.0 // #41100000
+  0005: aput v2, v0, v1
+  0007: return-void
+Blort.test_setIntArray:()V:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/16 v1, #int 10 // #000a
+  0003: const/16 v2, #int 11 // #000b
+  0005: aput v2, v0, v1
+  0007: return-void
+Blort.test_setLongArray:()V:
+regs: 0004; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/16 v1, #int 12 // #000c
+  0003: const-wide/16 v2, #long 13 // #000d
+  0005: aput-wide v2, v0, v1
+  0007: return-void
+Blort.test_setObjectArray:()V:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/16 v1, #int 14 // #000e
+  0003: const-string v2, "blort"
+  0005: aput-object v2, v0, v1
+  0007: return-void
+Blort.test_setShortArray:()V:
+regs: 0003; ins: 0000; outs: 0000
+  0000: const/4 v0, #null // #0
+  0001: const/16 v1, #int 15 // #000f
+  0003: const/16 v2, #int 16 // #0010
+  0005: aput v2, v0, v1
+  0007: return-void

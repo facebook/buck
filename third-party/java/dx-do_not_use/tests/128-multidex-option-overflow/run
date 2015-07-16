@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# Copyright (C) 2013 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Stop if something fails.
+set -e
+
+# Write out files with 65500 total static fields, instance fields, and methods
+# to exceed the dex format's limits.
+mkdir src
+awk '
+BEGIN {
+    writeFileField("FillerStatic", "static public int staticInt");
+    writeFileField("FillerField", "public int fieldInt");
+    writeFileMethod("FillerMethod");
+}
+function writeFileField(name, type) {
+    fileName = "src/" name ".java";
+    printf("public class %s {\n", name) > fileName;
+    for (i = 1; i <= 65500; i++) {
+        printf("    %s%d;\n", type, i) > fileName;
+    }
+    printf("}\n") > fileName;
+}
+function writeFileMethod(name) {
+    fileName = "src/" name ".java";
+    printf("public class %s {\n", name) > fileName;
+    for (i = 1; i <= 65500; i++) {
+      printf("    public void meth%d() { }\n", i) > fileName;
+    }
+    printf("}\n") > fileName;
+}'
+
+mkdir classes
+${JAVAC} -d classes `find src -name '*.java'`
+mkdir out
+dx -JXmx1024m --dex --no-optimize --multi-dex --output=out classes
+ls -1F out
+
