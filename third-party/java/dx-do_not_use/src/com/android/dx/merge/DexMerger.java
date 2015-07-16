@@ -29,20 +29,26 @@ import com.android.dex.ProtoId;
 import com.android.dex.SizeOf;
 import com.android.dex.TableOfContents;
 import com.android.dex.TypeList;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.PeekingIterator;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Combine two dex files into one.
  */
 public final class DexMerger {
-    private final Dex dexA;
-    private final Dex dexB;
+    private final List<Dex> dexs;
     private final CollisionPolicy collisionPolicy;
     private final WriterSizes writerSizes;
 

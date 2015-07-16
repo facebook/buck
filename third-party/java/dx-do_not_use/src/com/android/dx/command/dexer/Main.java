@@ -206,7 +206,7 @@ public class Main {
     /**
      * This class is uninstantiable.
      */
-    private Main() {
+    public Main() {
         // This space intentionally left blank.
     }
 
@@ -215,7 +215,7 @@ public class Main {
      * @param argArray the command line arguments
      */
     public static void main(String[] argArray) throws IOException {
-        int result = new Main().run(arguments, null, null);
+        int result = new Main().run(argArray, null, null);
         if (result != 0) {
             System.exit(result);
         }
@@ -248,7 +248,7 @@ public class Main {
         // for multiple runs don't reuse older buffers.
         libraryDexBuffers.clear();
 
-		dxConsole = console;
+		    dxConsole = console;
         args = arguments;
         args.dxConsole = dxConsole;
         args.makeOptionsObjects();
