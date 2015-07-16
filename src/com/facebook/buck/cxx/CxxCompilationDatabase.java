@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -49,7 +50,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
-public class CxxCompilationDatabase extends AbstractBuildRule {
+public class CxxCompilationDatabase extends AbstractBuildRule implements HasPostBuildSteps {
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
 
   private final CxxPreprocessMode preprocessMode;
@@ -103,14 +104,23 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
     super(buildRuleParams, pathResolver);
     this.compileRules = compileRules;
     this.preprocessMode = preprocessMode;
-    this.outputJsonFile = BuildTargets.getGenPath(
-        buildRuleParams.getBuildTarget(),
-        "__%s.json");
+    this.outputJsonFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s.json");
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
+      BuildContext context,
+      BuildableContext buildableContext) {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableList<Step> getPostBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    // We don't want to cache the output of this rule because it contains absolute paths.
+    // Since the step to generate the commands json output is super fast, it's ok if we always build
+    // this rule locally.
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MkdirStep(outputJsonFile.getParent()));
     steps.add(new GenerateCompilationCommandsJson());
@@ -138,13 +148,11 @@ public class CxxCompilationDatabase extends AbstractBuildRule {
     Iterable<CxxCompilationDatabaseEntry> createEntries(ExecutionContext context) {
       List<CxxCompilationDatabaseEntry> entries = Lists.newArrayList();
       for (CxxPreprocessAndCompile compileRule : compileRules) {
-        Optional<CxxPreprocessAndCompile> preprocessRule = Optional
-            .<CxxPreprocessAndCompile>absent();
+        Optional<CxxPreprocessAndCompile> preprocessRule = Optional.absent();
         if (preprocessMode == CxxPreprocessMode.SEPARATE) {
           for (BuildRule buildRule : compileRule.getDeclaredDeps()) {
             if (CxxSourceRuleFactory.isPreprocessFlavoredBuildTarget(buildRule.getBuildTarget())) {
-              preprocessRule = Optional
-                  .<CxxPreprocessAndCompile>of((CxxPreprocessAndCompile) buildRule);
+              preprocessRule = Optional.of((CxxPreprocessAndCompile) buildRule);
               break;
             }
           }

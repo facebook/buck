@@ -158,7 +158,7 @@ public class CxxCompilationDatabaseTest {
 
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     BuildableContext buildableContext = new FakeBuildableContext();
-    List<Step> buildSteps = compilationDatabase.getBuildSteps(buildContext, buildableContext);
+    List<Step> buildSteps = compilationDatabase.getPostBuildSteps(buildContext, buildableContext);
     assertEquals(2, buildSteps.size());
     assertTrue(buildSteps.get(0) instanceof MkdirStep);
     assertTrue(buildSteps.get(1) instanceof
@@ -307,7 +307,7 @@ public class CxxCompilationDatabaseTest {
 
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     BuildableContext buildableContext = new FakeBuildableContext();
-    List<Step> buildSteps = compilationDatabase.getBuildSteps(buildContext, buildableContext);
+    List<Step> buildSteps = compilationDatabase.getPostBuildSteps(buildContext, buildableContext);
     assertEquals(2, buildSteps.size());
     assertTrue(buildSteps.get(0) instanceof MkdirStep);
     assertTrue(buildSteps.get(1) instanceof
