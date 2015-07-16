@@ -280,6 +280,27 @@ public class MiniAaptTest {
   }
 
   @Test
+  public void testInvalidNodeId() throws
+      IOException, XPathExpressionException, ResourceParseException {
+    thrown.expect(ResourceParseException.class);
+    thrown.expectMessage("Invalid definition of a resource: '@button2'");
+
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<LinearLayout>",
+        "<Button android:id=\"@+id/button1\" ",
+        "android:layout_toLeftOf=\"@button2\" />",
+        "</LinearLayout>")
+        .build();
+
+    Path resource = Paths.get("resource.xml");
+    filesystem.writeLinesToPath(lines, resource);
+
+    MiniAapt aapt = new MiniAapt(Paths.get("res"), Paths.get("R.txt"), ImmutableSet.<Path>of());
+    aapt.processXmlFile(filesystem, resource, ImmutableSet.<RDotTxtEntry>builder());
+  }
+
+  @Test
   public void testProcessFileNamesInDirectory() throws IOException, ResourceParseException {
     filesystem.touch(Paths.get("res/drawable/icon.png"));
     filesystem.touch(Paths.get("res/drawable/another_icon.png.orig"));
