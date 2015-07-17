@@ -70,14 +70,23 @@ public class BsdArchiver implements Archiver {
 
       if (descriptorsSize > 0) {
 
-        // Skip to the last descriptor if there is more than one
-        if (descriptorsSize > 8) {
-          file.position(file.position() + descriptorsSize - 8);
+        // We need to find where the last symbol name entry is in the symbol name table, as we
+        // need to sanitize the padding that comes immediately after it.  There are two types of
+        // symbol table formats, one where the descriptors are ordered by archive ordering and one
+        // where the descriptors are ordered alphabetically by their name.  In the former case, we
+        // could just read the last descriptors offset into the symbol name table.  However, this
+        // seems implementation-specific and won't work in the latter case (where the order of the
+        // descriptors doesn't correspond to the order of the symbol name table).  So, just search
+        // through all the descriptors to find the last symbol name table offset.
+        int lastSymbolNameOffset = 0;
+        for (int i = 0; i < descriptorsSize / 8; i++) {
+          lastSymbolNameOffset =
+              Math.max(
+                  lastSymbolNameOffset,
+                  ObjectFileScrubbers.getLittleEndian32BitLong(file));
+          // Skip the corresponding object offset
+          ObjectFileScrubbers.getLittleEndian32BitLong(file);
         }
-
-        int lastSymbolNameOffset = ObjectFileScrubbers.getLittleEndian32BitLong(file);
-        // Skip the corresponding object offset
-        ObjectFileScrubbers.getLittleEndian32BitLong(file);
 
         int symbolNameTableSize = ObjectFileScrubbers.getLittleEndian32BitLong(file);
         int endOfSymbolNameTableOffset = file.position() + symbolNameTableSize;
