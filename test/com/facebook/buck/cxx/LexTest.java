@@ -62,13 +62,14 @@ public class LexTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    FakeFileHashCache hashCache =
+        FakeFileHashCache.createFromStrings(
+            ImmutableMap.of(
+                "lex", Strings.repeat("a", 40),
+                "input", Strings.repeat("b", 40)));
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
-            FakeFileHashCache.createFromStrings(
-                ImmutableMap.of(
-                    "lex", Strings.repeat("a", 40),
-                    "input", Strings.repeat("b", 40),
-                    "different", Strings.repeat("c", 40))),
+            hashCache,
             pathResolver);
 
     // Generate a rule key for the defaults.
@@ -85,11 +86,16 @@ public class LexTest {
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey lexChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(
+                ImmutableMap.of(
+                    "lex", Strings.repeat("f", 40),
+                    "input", Strings.repeat("b", 40))),
+            pathResolver),
         new Lex(
             params,
             pathResolver,
-            new HashedFileTool(Paths.get("different")),
+            DEFAULT_LEX,
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_SOURCE,
             DEFAULT_OUTPUT_HEADER,
@@ -137,7 +143,12 @@ public class LexTest {
 
     // Verify that changing the inputs causes a rulekey change.
     RuleKey inputChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+        new DefaultRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(
+                ImmutableMap.of(
+                    "lex", Strings.repeat("a", 40),
+                    "input", Strings.repeat("f", 40))),
+            pathResolver),
         new Lex(
             params,
             pathResolver,
@@ -145,7 +156,7 @@ public class LexTest {
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_SOURCE,
             DEFAULT_OUTPUT_HEADER,
-            new TestSourcePath("different")));
+            DEFAULT_INPUT));
     assertNotEquals(defaultRuleKey, inputChange);
   }
 

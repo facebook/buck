@@ -43,7 +43,7 @@ public class Lex extends AbstractBuildRule {
   private final Path outputSource;
   @AddToRuleKey(stringify = true)
   private final Path outputHeader;
-  @AddToRuleKey(stringify = true)
+  @AddToRuleKey
   private final SourcePath input;
 
   public Lex(
