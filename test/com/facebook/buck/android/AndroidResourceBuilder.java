@@ -18,7 +18,9 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -39,9 +41,13 @@ public class AndroidResourceBuilder extends AbstractNodeBuilder<AndroidResourceD
     return this;
   }
 
-  public AndroidResourceBuilder setRes(Path res) {
+  public AndroidResourceBuilder setRes(SourcePath res) {
     arg.res = Optional.of(res);
     return this;
+  }
+
+  public AndroidResourceBuilder setRes(Path res) {
+    return setRes(new PathSourcePath(new FakeProjectFilesystem(), res));
   }
 
   public AndroidResourceBuilder setRDotJavaPackage(String rDotJavaPackage) {

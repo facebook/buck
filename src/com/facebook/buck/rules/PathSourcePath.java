@@ -35,7 +35,7 @@ public class PathSourcePath extends AbstractSourcePath {
     return filesystem.getRootPath().resolve(relativePath).toString();
   }
 
-  protected ProjectFilesystem getFilesystem() {
+  public ProjectFilesystem getFilesystem() {
     return filesystem;
   }
 

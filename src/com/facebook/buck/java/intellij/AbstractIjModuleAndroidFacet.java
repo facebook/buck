@@ -40,7 +40,7 @@ abstract class AbstractIjModuleAndroidFacet {
   /**
    * @return paths to resources (usually stuff under the res/ folder).
    */
-  public abstract Set<Path> getResourcePaths();
+  public abstract Set<SourcePath> getResourcePaths();
 
   /**
    * @return paths to assets (usually stuff under the assets/ folder).

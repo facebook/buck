@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<resources>
+  <string name='some_name'>John Snow</string>
+  <string name='another_name'>Hodor</string>
+</resources>

@@ -16,17 +16,22 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.base.Charsets;
+import com.google.common.base.Splitter;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class AndroidResourceIntegrationTest {
 
@@ -51,4 +56,28 @@ public class AndroidResourceIntegrationTest {
     workspace.replaceFileContents("res1/BUCK", "#EXTRA_DEP_HERE", "'//res3:res',");
     workspace.runBuckBuild("//res1:res").assertSuccess();
   }
+
+  @Test
+  public void testGeneratedResourceDirectory() throws IOException, InterruptedException {
+
+    // Verify we correctly build the R.txt file using a generated input resource directory.
+    workspace.runBuckBuild("//generated_res:res").assertSuccess();
+    String output =
+        Splitter.on(' ').trimResults().splitToList(
+            workspace.runBuckCommand("targets", "--show-output", "//generated_res:res")
+                .assertSuccess()
+                .getStdout()).get(1);
+    assertThat(
+        Files.readAllLines(workspace.getPath(output), Charsets.UTF_8),
+        Matchers.contains(
+            "int string another_name 0x7f010002",
+            "int string some_name 0x7f010001"));
+
+    // Add a new item in the input and verify that the resource rule gets re-run.
+    Files.createDirectory(workspace.getPath("generated_res/input_res/raw"));
+    workspace.writeContentsToPath("", "generated_res/input_res/raw/empty.txt");
+    workspace.runBuckBuild("//generated_res:res").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//generated_res:res");
+  }
+
 }
