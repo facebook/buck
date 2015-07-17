@@ -8,7 +8,7 @@ java_library(
 
 java_binary(
   name = 'report-generator',
-  main_class = 'com.facebook.buck.java.ReportGenerator',
+  main_class = 'com.facebook.buck.java.coverage.ReportGenerator',
   blacklist = [
     '.*SF',
     '.*RSA',
