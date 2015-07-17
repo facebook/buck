@@ -16,6 +16,6 @@
     "test/com/facebook/buck/test/cache/testdata",
     "test/com/facebook/buck/test/labels/testdata",
     "test/com/facebook/buck/test/result/groups/testdata",
-    "third-party/java/dx-from-kitkat"
+    "third-party/java/dx"
   ]
 }

@@ -30,7 +30,7 @@
   <property name="test.debug_port" value="8787" />
   <property name="lint.outputpath" value="${build.dir}/lint.output" />
 
-  <property name="dx.base.dir" value="${basedir}/third-party/java/dx-from-kitkat" />
+  <property name="dx.base.dir" value="${basedir}/third-party/java/dx" />
   <property name="dx.src.dir" value="${dx.base.dir}/src" />
   <property name="dx.test.dir" value="${dx.base.dir}/tests" />
   <property name="dx.etc.dir" value="${dx.base.dir}/etc" />

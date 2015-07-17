@@ -1,2 +1,0 @@
-This tests branch opcodes to verify that their arguments are actually of
-the appropriate types.

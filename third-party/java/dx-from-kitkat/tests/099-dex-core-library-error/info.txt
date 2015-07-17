@@ -1,3 +1,0 @@
-This tests that attempts to define core classes fail and that
-an attempt to define a legal javax.* class succeeds. (Only *some*
-javax packages are considered to be off-limits.)

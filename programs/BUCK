@@ -41,7 +41,7 @@ BUCK_CORE_RESOURCES = {
     'bootstrapper_jar': '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
     'buck_package_info': ':gen_buck_package_info',
     'buck_server': '//src/com/facebook/buck/cli:main-fixed',
-    'dx': '//third-party/java/dx-from-kitkat:etc_dx',
+    'dx': '//third-party/java/dx:etc_dx',
     'jacoco_agent_jar': '//third-party/java/jacoco:agent',
     'logging_config_file': '//config:logging.properties',
     'native_exopackage_fake_path': '//assets/android:native-exopackage-fakes.apk',

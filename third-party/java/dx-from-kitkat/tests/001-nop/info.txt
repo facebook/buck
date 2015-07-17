@@ -1,2 +1,0 @@
-This is a sample no-op test, which does at least serve to verify that the
-test harness is working.

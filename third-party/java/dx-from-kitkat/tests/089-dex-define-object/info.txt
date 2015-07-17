@@ -1,4 +1,0 @@
-This tests that a stripped down definition of the class Object can in
-fact be converted to a dex file. This test ensures that the conversion
-runs without failure, though the contents of the converted file are
-not checked for correctness.

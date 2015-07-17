@@ -1,5 +1,0 @@
-Performs little endian operations.
-
-The run script requires vogar, so you must have vogar on your $PATH to run this
-test. You'll also need a device or host VM for vogar to attach to.
-

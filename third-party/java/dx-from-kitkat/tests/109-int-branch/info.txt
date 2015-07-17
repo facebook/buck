@@ -1,6 +1,0 @@
-This tests that an int branch with valid arguments is properly translated.
-(Regression test.)
-
-This test compares emitted code against a known-good (via eyeballing)
-version, so it is possible for this test to spuriously fail if other
-aspects of conversion end up altering the output in innocuous ways.

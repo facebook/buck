@@ -1,5 +1,0 @@
-This test checks to see that the basic block recognizer properly
-includes as live code all code which could possibly be flowed
-to. There is at least one example of each instruction which allows
-flow to the subsequent instruction, and all forks of each conditional
-branch are checked for liveness as well.

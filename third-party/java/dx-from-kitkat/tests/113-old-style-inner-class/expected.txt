@@ -1,4 +1,0 @@
-warning: [options] bootstrap class path not set in conjunction with -source 1.4
-1 warning
-warning:
-warning:

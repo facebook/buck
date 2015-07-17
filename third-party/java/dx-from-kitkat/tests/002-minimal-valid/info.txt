@@ -1,1 +1,0 @@
-This is just a dump of a simple but valid class.

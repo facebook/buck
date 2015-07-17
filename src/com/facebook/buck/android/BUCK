@@ -248,7 +248,7 @@ java_immutables_library(
     '//src/com/facebook/buck/zip:stream',
     '//third-party/java/aosp:aosp',
     '//third-party/java/asm:asm',
-    '//third-party/java/dx-from-kitkat:dx',
+    '//third-party/java/dx:dx',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',

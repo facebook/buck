@@ -1,7 +1,0 @@
-Blort.test:(Ljava/lang/Object;)LBlort;:
-regs: 0003; ins: 0001; outs: 0000
-  0000: move-object v0, v2
-  0001: move-object v1, v0
-  0002: check-cast v1, Blort
-  0004: move-object v0, v1
-  0005: return-object v0

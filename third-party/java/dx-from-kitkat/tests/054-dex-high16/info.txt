@@ -1,6 +1,0 @@
-This is a smoke test of dex conversion, which checks to see that
-"high16" constants get converted properly.
-
-This test compares emitted code against a known-good (via eyeballing)
-version, so it is possible for this test to spuriously fail if other
-aspects of conversion end up altering the output in innocuous ways.

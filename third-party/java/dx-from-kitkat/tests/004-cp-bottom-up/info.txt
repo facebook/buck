@@ -1,8 +1,0 @@
-This is a dump of a simple class which is valid in structure but is overall
-invalid. That being said, the system should still have no trouble parsing and
-dumping it.
-
-The salient bit of parsing tested here is that the constant pool contains
-at least one valid entry of each possible constant pool type, and that
-entries that are referred to by other entries always occur before the
-referring entries.

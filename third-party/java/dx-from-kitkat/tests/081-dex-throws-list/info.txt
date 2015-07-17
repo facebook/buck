@@ -1,7 +1,0 @@
-This is a smoke test of dex conversion, which checks to make sure that
-throws lists (that is, list of declared exceptions on methods) get
-represented reasonably.
-
-This test compares emitted code against a known-good (via eyeballing)
-version, so it is possible for this test to spuriously fail if other
-aspects of conversion end up altering the output in innocuous ways.

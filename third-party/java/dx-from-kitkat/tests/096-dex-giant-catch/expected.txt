@@ -1,5 +1,0 @@
-  catches
-      try 0024..00010017
-      catch java.lang.RuntimeException -> 00011260
-      try 0001003b..0001125f
-      catch java.lang.RuntimeException -> 00011260

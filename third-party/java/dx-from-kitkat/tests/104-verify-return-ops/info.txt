@@ -1,2 +1,0 @@
-This tests that return opcodes verify that their arguments are actually of
-the appropriate types and that the opcode matches the method signature.

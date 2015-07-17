@@ -1,3 +1,0 @@
-This tests that wide-taking (category-2) "calculation" opcodes (math
-ops, comparisons, etc.) verify that their arguments are actually of
-the appropriate types.

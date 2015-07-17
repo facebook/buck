@@ -64,7 +64,7 @@ RESOURCES = {
     "android_agent_path": "assets/android/agent.apk",
     "buck_client": "build/ng",
     "buck_server": "bin/buck",
-    "dx": "third-party/java/dx-from-kitkat/etc/dx",
+    "dx": "third-party/java/dx/etc/dx",
     "jacoco_agent_jar": "third-party/java/jacoco/jacocoagent.jar",
     "logging_config_file": "config/logging.properties",
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",

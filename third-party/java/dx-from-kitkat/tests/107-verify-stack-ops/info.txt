@@ -1,2 +1,0 @@
-This tests that the various stack manipulation opcodes verify that their
-arguments are actually of the appropriate categories.

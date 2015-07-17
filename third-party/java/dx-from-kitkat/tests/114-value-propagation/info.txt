@@ -1,2 +1,0 @@
-Tests propagation of constant values, specifically when going from a
-stack location to a local variable. (regression test)

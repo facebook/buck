@@ -1,3 +1,0 @@
-This test checks to see that the basic block recognizer properly omits
-dead code. There is at least one example of dead code after each instruction 
-that *doesn't* flow to the next instruction.
