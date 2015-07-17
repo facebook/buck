@@ -154,7 +154,9 @@ public class AdbHelperTest {
         createRealDevice("5", IDevice.DeviceState.ONLINE)
     };
 
-    assertNull(basicAdbHelper.filterDevices(devices));
+    List<IDevice> filteredDevicesNoMultiInstall = basicAdbHelper.filterDevices(devices);
+    assertNotNull(filteredDevicesNoMultiInstall);
+    assertEquals(devices.length, filteredDevicesNoMultiInstall.size());
 
     AdbHelper myAdbHelper = createAdbHelper(
         new AdbOptions(0, true),

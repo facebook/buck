@@ -183,19 +183,6 @@ public class AdbHelper {
       return null;
     }
 
-    // Found multiple devices but multi-install mode is not enabled.
-    if (!options.isMultiInstallModeEnabled() && devices.size() > 1) {
-      console.printBuildFailure(
-          String.format("%d device(s) matches specified device filter (1 expected).\n" +
-                        "Either disconnect other devices or enable multi-install mode (%s).",
-                         devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
-      return null;
-    }
-
-    // Report if multiple devices are matching the filter.
-    if (devices.size() > 1) {
-      console.getStdOut().printf("Found " + devices.size() + " matching devices.\n");
-    }
     return devices;
   }
 
@@ -245,6 +232,19 @@ public class AdbHelper {
 
     // Build list of matching devices.
     List<IDevice> devices = filterDevices(adb.getDevices());
+    if (devices != null && devices.size() > 1) {
+      // Found multiple devices but multi-install mode is not enabled.
+      if (!options.isMultiInstallModeEnabled()) {
+        console.printBuildFailure(
+            String.format("%d device(s) matches specified device filter (1 expected).\n" +
+                "Either disconnect other devices or enable multi-install mode (%s).",
+                devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
+        return null;
+      }
+      // Report if multiple devices are matching the filter.
+      console.getStdOut().printf("Found " + devices.size() + " matching devices.\n");
+    }
+
     if (devices == null && restartAdbOnFailure) {
       console.printErrorText("No devices found with adb, restarting adb-server.");
       adb.restart();
