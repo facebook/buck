@@ -16,13 +16,12 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
@@ -63,19 +62,19 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
-  private final SourcePath binary;
+  private final Tool executable;
   private final ImmutableSortedSet<BuildRule> additionalDeps;
 
   public CxxBoostTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePath binary,
+      Tool executable,
       ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver, labels, contacts, sourceUnderTest);
-    this.binary = binary;
+    this.executable = executable;
     this.additionalDeps = additionalDeps;
   }
 
@@ -83,17 +82,15 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   protected ImmutableList<String> getShellCommand(
       ExecutionContext context,
       Path output) {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
-    String resolvedBinary = filesystem.resolve(getResolver().getPath(binary)).toString();
-    String resolvedOutput = filesystem.resolve(output).toString();
-    return ImmutableList.of(
-        resolvedBinary,
-        "--log_format=hrf",
-        "--log_level=test_suite",
-        "--report_format=xml",
-        "--report_level=detailed",
-        "--result_code=no",
-        "--report_sink=" + resolvedOutput);
+    return ImmutableList.<String>builder()
+        .addAll(executable.getCommandPrefix(getResolver()))
+        .add("--log_format=hrf")
+        .add("--log_level=test_suite")
+        .add("--report_format=xml")
+        .add("--report_level=detailed")
+        .add("--result_code=no")
+        .add("--report_sink=" + context.getProjectFilesystem().resolve(output))
+        .build();
   }
 
   private void visitTestSuite(
@@ -208,7 +205,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(getResolver().getRule(binary).asSet())
+        .addAll(getResolver().filterBuildRuleInputs(executable.getInputs()))
         .addAll(additionalDeps)
         .build();
   }

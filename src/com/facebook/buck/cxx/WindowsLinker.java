@@ -54,6 +54,11 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
+  public String origin() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder
         .setReflectively("tool", tool)

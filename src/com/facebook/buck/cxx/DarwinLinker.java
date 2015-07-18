@@ -51,7 +51,12 @@ public class DarwinLinker implements Linker {
 
   @Override
   public Iterable<String> soname(String arg) {
-    return ImmutableList.of("-install_name", arg);
+    return ImmutableList.of("-install_name", "@rpath/" + arg);
+  }
+
+  @Override
+  public String origin() {
+    return "@executable_path";
   }
 
   @Override

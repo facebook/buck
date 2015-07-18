@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -63,6 +65,9 @@ public class CxxBinaryTest {
                 pathResolver,
                 bin,
                 cxxLink,
+                new CommandTool.Builder()
+                    .addArg(new BuildTargetSourcePath(cxxLink.getBuildTarget()))
+                    .build(),
                 ImmutableList.<Path>of(),
                 ImmutableList.<BuildTarget>of()));
     ImmutableList<String> command = binary.getExecutableCommand().getCommandPrefix(pathResolver);

@@ -55,6 +55,11 @@ public class GnuLinker implements Linker {
   }
 
   @Override
+  public String origin() {
+    return "$ORIGIN";
+  }
+
+  @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder
         .setReflectively("tool", tool)

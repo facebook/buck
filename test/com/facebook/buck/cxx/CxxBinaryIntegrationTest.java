@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 
@@ -82,12 +83,14 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     ImmutableSet<BuildTarget> expectedTargets = ImmutableSet.<BuildTarget>builder()
-        .addAll(ImmutableSet.of(
+        .addAll(
+            ImmutableSet.of(
                 headerSymlinkTreeTarget,
                 compileTarget,
                 binaryTarget,
                 target))
-        .addAll((expectPreprocessorOutput
+        .addAll(
+            (expectPreprocessorOutput
                 ? ImmutableSet.of(preprocessTarget)
                 : ImmutableSet.<BuildTarget>of()))
         .build();
@@ -694,4 +697,23 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
     result.assertSuccess();
   }
+
+  @Test
+  public void runBinaryUsingSharedLinkStyle() throws IOException {
+    assumeThat(Platform.detect(), oneOf(Platform.LINUX, Platform.MACOS));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_link_style", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("run", "//:bar").assertSuccess();
+  }
+
+  @Test
+  public void genruleUsingBinaryUsingSharedLinkStyle() throws IOException {
+    assumeThat(Platform.detect(), oneOf(Platform.LINUX, Platform.MACOS));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_link_style", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:gen").assertSuccess();
+  }
+
 }

@@ -35,7 +35,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 import java.util.Set;
@@ -128,6 +127,8 @@ public class CxxBinaryDescription implements
           args);
     }
 
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
           .paramsWithoutCompilationDatabaseFlavor(params);
@@ -140,19 +141,18 @@ public class CxxBinaryDescription implements
               preprocessMode);
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
-          new SourcePathResolver(resolver),
+          pathResolver,
           preprocessMode,
           cxxLinkAndCompileRules.compileRules);
     }
 
-    CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
-        .createBuildRulesForCxxBinaryDescriptionArg(
+    CxxLinkAndCompileRules cxxLinkAndCompileRules =
+        CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             params,
             resolver,
             cxxPlatform,
             args,
             preprocessMode);
-    CxxLink cxxLink = cxxLinkAndCompileRules.cxxLink;
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
     // rule above for a couple reasons:
@@ -165,17 +165,13 @@ public class CxxBinaryDescription implements
     //     By using another BuildRule, we can keep the original target graph dependency tree while
     //     preventing it from affecting link parallelism.
     return new CxxBinary(
-        params.copyWithDeps(
-            Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getDeclaredDeps())
-                    .add(cxxLink)
-                    .build()),
-            Suppliers.ofInstance(params.getExtraDeps())),
+        params.appendExtraDeps(
+            pathResolver.filterBuildRuleInputs(cxxLinkAndCompileRules.executable.getInputs())),
         resolver,
-        new SourcePathResolver(resolver),
-        cxxLink.getOutput(),
-        cxxLink,
+        pathResolver,
+        cxxLinkAndCompileRules.cxxLink.getOutput(),
+        cxxLinkAndCompileRules.cxxLink,
+        cxxLinkAndCompileRules.executable,
         args.frameworkSearchPaths.get(),
         args.tests.get());
   }

@@ -23,9 +23,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -44,6 +42,7 @@ public class CxxBinary
   private final BuildRuleResolver ruleResolver;
   private final Path output;
   private final CxxLink rule;
+  private final Tool executable;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final ImmutableList<Path> frameworkSearchPaths;
 
@@ -53,6 +52,7 @@ public class CxxBinary
       SourcePathResolver resolver,
       Path output,
       CxxLink rule,
+      Tool executable,
       Iterable<Path> frameworkSearchPaths,
       Iterable<BuildTarget> tests) {
     super(params, resolver);
@@ -60,15 +60,14 @@ public class CxxBinary
     this.ruleResolver = ruleResolver;
     this.output = output;
     this.rule = rule;
+    this.executable = executable;
     this.tests = ImmutableSortedSet.copyOf(tests);
     this.frameworkSearchPaths = ImmutableList.copyOf(frameworkSearchPaths);
   }
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(new BuildTargetSourcePath(rule.getBuildTarget(), output))
-        .build();
+    return executable;
   }
 
   @Override
@@ -109,7 +108,7 @@ public class CxxBinary
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>of(rule);
+    return ImmutableSortedSet.copyOf(getResolver().filterBuildRuleInputs(executable.getInputs()));
   }
 
 }

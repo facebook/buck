@@ -27,11 +27,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
@@ -708,11 +710,14 @@ public class CxxDescriptionEnhancer {
   static class CxxLinkAndCompileRules {
     final CxxLink cxxLink;
     final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
+    final Tool executable;
     CxxLinkAndCompileRules(
         CxxLink cxxLink,
-        ImmutableSortedSet<CxxPreprocessAndCompile> compileRules) {
+        ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
+        Tool executable) {
       this.cxxLink = cxxLink;
       this.compileRules = compileRules;
+      this.executable = executable;
     }
   }
 
@@ -795,33 +800,73 @@ public class CxxDescriptionEnhancer {
             sources,
             CxxSourceRuleFactory.PicType.PDC);
 
+    Path output = getOutputPath(params.getBuildTarget());
+    CxxBinaryDescription.LinkStyle linkStyle =
+        args.linkStyle.or(CxxBinaryDescription.LinkStyle.STATIC);
+    ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
+    CommandTool.Builder executableBuilder = new CommandTool.Builder();
+
+    // Build up the linker flags.
+    extraLdFlagsBuilder.addAll(
+        CxxFlags.getFlags(
+            args.linkerFlags,
+            args.platformLinkerFlags,
+            cxxPlatform));
+
+    // Special handling for dynamically linked binaries.
+    if (linkStyle == CxxBinaryDescription.LinkStyle.SHARED) {
+
+      // Create a symlink tree with for all shared libraries needed by this binary.
+      SymlinkTree sharedLibraries =
+          resolver.addToIndex(
+              createSharedLibrarySymlinkTree(
+                  params,
+                  sourcePathResolver,
+                  cxxPlatform,
+                  Predicates.instanceOf(NativeLinkable.class)));
+
+      // Embed a origin-relative library path into the binary so it can find the shared libraries.
+      extraLdFlagsBuilder.add(
+          "-rpath",
+          String.format(
+              "%s/%s",
+              cxxPlatform.getLd().origin(),
+              output.getParent().relativize(sharedLibraries.getRoot()).toString()));
+
+      // Add all the shared libraries and the symlink tree as inputs to the tool that represents
+      // this binary, so that users can attach the proper deps.
+      executableBuilder.addInput(new BuildTargetSourcePath(sharedLibraries.getBuildTarget()));
+      executableBuilder.addInputs(sharedLibraries.getLinks().values());
+    }
+
     // Generate the final link rule.  We use the top-level target as the link rule's
     // target, so that it corresponds to the actual binary we build.
-    Path output = getOutputPath(params.getBuildTarget());
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
         sourcePathResolver,
         /* extraCxxLdFlags */ ImmutableList.<String>of(),
-        /* extraLdFlags */ CxxFlags.getFlags(
-            args.linkerFlags,
-            args.platformLinkerFlags,
-            cxxPlatform),
+        extraLdFlagsBuilder.build(),
         createCxxLinkTarget(params.getBuildTarget()),
         Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         output,
         objects.values(),
-        (args.linkStyle.or(CxxBinaryDescription.LinkStyle.STATIC) ==
-            CxxBinaryDescription.LinkStyle.STATIC)
-        ? Linker.LinkableDepType.STATIC
-        : Linker.LinkableDepType.SHARED,
+        linkStyle == CxxBinaryDescription.LinkStyle.STATIC ?
+            Linker.LinkableDepType.STATIC :
+            Linker.LinkableDepType.SHARED,
         params.getDeps(),
         args.cxxRuntimeType,
         Optional.<SourcePath>absent());
     resolver.addToIndex(cxxLink);
 
-    return new CxxLinkAndCompileRules(cxxLink, ImmutableSortedSet.copyOf(objects.keySet()));
+    // Add the output of the link as the lone argument needed to invoke this binary as a tool.
+    executableBuilder.addArg(new BuildTargetSourcePath(cxxLink.getBuildTarget()));
+
+    return new CxxLinkAndCompileRules(
+        cxxLink,
+        ImmutableSortedSet.copyOf(objects.keySet()),
+        executableBuilder.build());
   }
 
   private static <T> BuildRule createBuildRule(

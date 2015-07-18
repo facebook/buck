@@ -106,6 +106,10 @@ public class CommandTool implements Tool {
       return this;
     }
 
+    public Builder addInput(SourcePath... inputs) {
+      return addInputs(ImmutableList.copyOf(inputs));
+    }
+
     public CommandTool build() {
       return new CommandTool(args.build(), extraInputs.build());
     }

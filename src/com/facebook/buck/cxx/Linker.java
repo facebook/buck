@@ -37,6 +37,12 @@ public interface Linker extends Tool {
   Iterable<String> soname(String soname);
 
   /**
+   * @return the placeholder used by the dynamic loader for the directory containing the top-level
+   *     executable.
+   */
+  String origin();
+
+  /**
    * The various ways to link an output file.
    */
   enum LinkType {

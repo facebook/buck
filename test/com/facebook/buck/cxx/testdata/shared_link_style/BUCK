@@ -1,0 +1,26 @@
+cxx_library(
+  name = 'foo',
+  headers = [
+    'foo.h',
+  ],
+  srcs = [
+    'foo.cpp',
+  ],
+)
+
+cxx_binary(
+  name = 'bar',
+  link_style = 'shared',
+  srcs = [
+    'bar.cpp',
+  ],
+  deps = [
+    ':foo',
+  ],
+)
+
+genrule(
+  name = 'gen',
+  out = 'gen.txt',
+  cmd = '$(exe :bar) > $OUT',
+)
