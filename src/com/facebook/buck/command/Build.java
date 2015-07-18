@@ -280,7 +280,8 @@ public class Build implements Closeable {
         executionContext.getBuckEventBus().post(ConsoleEvent.info(buildReportText));
         exitCode = Iterables.any(ruleToResult.values(), RULES_FAILED_PREDICATE) ? 1 : 0;
         if (exitCode != 0) {
-          console.printBuildFailure("Not all rules succeeded.");
+          executionContext.getBuckEventBus().post(ConsoleEvent.severe(
+              "Not all rules succeeded."));
         }
       } else {
         exitCode = 0;
