@@ -62,6 +62,7 @@ import com.martiansoftware.nailgun.NGContext;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -79,6 +80,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Ignore("t7761196")
 public class DaemonIntegrationTest {
 
   private static final int SUCCESS_EXIT_CODE = 0;
@@ -96,13 +98,14 @@ public class DaemonIntegrationTest {
     try {
       ProcessExecutor.Result result = new ProcessExecutor(new TestConsole()).launchAndExecute(
           ProcessExecutorParams.builder()
-              .setCommand(ImmutableList.of("watchman", "watchzzz", tmp.getRootPath().toString()))
+              .setCommand(ImmutableList.of("watchman", "version", tmp.getRootPath().toString()))
               .build());
       assumeTrue(result.getStdout().isPresent());
       Map<String, Object> response = gson.<Map<String, Object>>fromJson(
           result.getStdout().get(),
           Map.class);
       assumeNotNull(response);
+      assumeTrue(response.containsKey("version"));
       assumeFalse(response.containsKey("error"));
     } catch (IOException e) {
       assumeNoException(e);
