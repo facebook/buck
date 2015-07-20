@@ -54,10 +54,20 @@ public abstract class ManagedThread implements AutoCloseable {
 
   protected abstract void run() throws Exception;
 
+  /**
+   * Wait for the backing thread to terminate.
+   */
+  public void waitFor() throws InterruptedException {
+
+    // Wait for the thread to finish.
+    this.thread.join();
+  }
+
   @Override
   public void close() throws Exception {
 
-    // Wait for the thread to finish.
+    // Stop the thread and wait for it to finish.
+    this.thread.interrupt();
     this.thread.join();
 
     // If the thread died with an exception, forward it to the creating thread.

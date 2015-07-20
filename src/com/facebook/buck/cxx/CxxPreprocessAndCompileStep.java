@@ -221,6 +221,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private void safeCloseProcessor(@Nullable FunctionLineProcessorThread processor) {
     if (processor != null) {
       try {
+        processor.waitFor();
         processor.close();
       } catch (Exception ex) {
         LOG.warn(ex, "error closing processor");
@@ -375,8 +376,16 @@ public class CxxPreprocessAndCompileStep implements Step {
                        output,
                        createPreprocessOutputLineProcessor(context.getProjectDirectoryRoot()))) {
             outputProcessor.start();
+            outputProcessor.waitFor();
+          } catch (Throwable thrown) {
+            process.destroy();
+            throw thrown;
           }
         }
+        errorProcessor.waitFor();
+      } catch (Throwable thrown) {
+        process.destroy();
+        throw thrown;
       }
       exitCode = process.waitFor();
     } finally {
@@ -498,4 +507,5 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
 
   }
+
 }
