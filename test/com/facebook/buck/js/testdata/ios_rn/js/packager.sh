@@ -18,6 +18,9 @@ case "$1" in
   cp "$THIS_DIR/app/image@2x.png" $ASSETS_DIR/
   cp "$THIS_DIR/app/image@3x.png" $ASSETS_DIR/
 
+  # write something as the source map because the rule caches this output.
+  echo "sourcemap" > "$LAST_ARG"
+
   exit 0
   ;;
 'list-dependencies')
