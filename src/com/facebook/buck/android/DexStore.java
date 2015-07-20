@@ -73,6 +73,28 @@ enum DexStore {
       return path.getFileName().toString().endsWith(".dex.jar.xz");
     }
   },
+
+  /**
+   * Secondary dexes will be solid compressed into a single XZS file.
+   */
+  XZS {
+    @Override
+    public String fileNameForSecondary(int index) {
+      // Since secondary dexes are created in parallel, we add a .tmp~
+      // extension to indicate that this process is not yet complete.
+      // A .dex.jar.xzs.tmp~ is a dex file that is waiting to be concatenated
+      // and then XZ compressed. The ~ character is a hack to ensure that
+      // the external apkbuilder tool does not copy this file to the final apk.
+      // The alternative would require either rewriting apkbuilder or writing substantial code
+      // to get around the current limitations of its API.
+      return String.format("secondary-%s.dex.jar.xzs.tmp~", index + 1);
+    }
+
+    @Override
+    public boolean matchesPath(Path path) {
+      return path.getFileName().toString().endsWith(".dex.jar.xzs.tmp~");
+    }
+  },
   ;
 
   /**

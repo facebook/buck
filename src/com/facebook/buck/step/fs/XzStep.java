@@ -91,12 +91,32 @@ public class XzStep implements Step {
    * @param sourceFile file to compress
    */
   public XzStep(Path sourceFile) {
-    this(
-        sourceFile,
-        Paths.get(sourceFile + ".xz"),
-        /* compressionLevel */ 4,
-        /* keep */ false,
-        XZ.CHECK_CRC32);
+    this(sourceFile, 4);
+  }
+
+  /**
+   * Creates an XzStep to compress a file with XZ compression level 4.
+   *
+   * <p> Decompression will require 5MiB of RAM.
+   *
+   * @param sourceFile file to compress
+   * @param outputPath desired output path
+   */
+  public XzStep(Path sourceFile, Path outputPath) {
+    this(sourceFile, outputPath, 4);
+  }
+
+  /**
+   * Creates an XzStep to compress a file with the given XZ compression level and output path.
+   *
+   * <p> Decompression will require up to 64MiB of RAM.
+   *
+   * @param sourceFile file to compress
+   * @param outputPath the desired output path.
+   * @param compressionLevel level of compression (from 0-9)
+   */
+  public XzStep(Path sourceFile, Path outputPath, int compressionLevel) {
+    this(sourceFile, outputPath, compressionLevel, /* keep */ false, XZ.CHECK_CRC32);
   }
 
   /**

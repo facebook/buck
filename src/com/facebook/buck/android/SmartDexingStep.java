@@ -24,6 +24,7 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
@@ -52,6 +53,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -72,6 +74,7 @@ import javax.annotation.Nullable;
 public class SmartDexingStep implements Step {
 
   public static final String SHORT_NAME = "smart_dex";
+  private static final String SECONDARY_SOLID_DEX_FILENAME = "secondary.dex.jar.xzs";
 
   public static interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
@@ -143,6 +146,37 @@ public class SmartDexingStep implements Step {
             secondaryOutputDir.get(),
             outputToInputs.keySet(),
             projectFilesystem);
+
+        // Concatenate if solid compression is specified.
+        List<Path> secondaryDexJars = new ArrayList<>();
+        for (Path p : outputToInputs.keySet()) {
+          if (DexStore.XZS.matchesPath(p)) {
+            secondaryDexJars.add(p);
+          }
+        }
+
+        if (!secondaryDexJars.isEmpty()) {
+          // Construct the output path for our solid blob and its compressed form.
+          Path secondaryBlobOutput = Paths.get(
+              secondaryOutputDir.get().toString(),
+              "secondary.blob");
+          Path secondaryCompressedBlobOutput = Paths.get(
+              secondaryOutputDir.get().toString(),
+              SECONDARY_SOLID_DEX_FILENAME);
+          // Concatenate the jars into a blob and compress it.
+          StepRunner stepRunner = new DefaultStepRunner(context);
+          Step concatStep = new ConcatStep(secondaryDexJars, secondaryBlobOutput);
+          Step xzStep;
+          if (xzCompressionLevel.isPresent()) {
+            xzStep = new XzStep(secondaryBlobOutput,
+                secondaryCompressedBlobOutput,
+                xzCompressionLevel.get().intValue());
+          } else {
+            xzStep = new XzStep(secondaryBlobOutput, secondaryCompressedBlobOutput);
+          }
+          stepRunner.runStepForBuildTarget(concatStep, Optional.<BuildTarget>absent());
+          stepRunner.runStepForBuildTarget(xzStep, Optional.<BuildTarget>absent());
+        }
       }
     } catch (StepFailedException | IOException e) {
       context.logError(e, "There was an error in smart dexing step.");
@@ -363,12 +397,31 @@ public class SmartDexingStep implements Step {
               repackedJar,
               repackedJar.resolveSibling(
                   repackedJar.getFileName() + ".meta")));
-
       if (xzCompressionLevel.isPresent()) {
         steps.add(new XzStep(repackedJar, xzCompressionLevel.get().intValue()));
       } else {
         steps.add(new XzStep(repackedJar));
       }
+    } else if (DexStore.XZS.matchesPath(outputPath)) {
+      // Essentially the same logic as the XZ case above, except we compress later.
+      // The differences in output file names make it worth separating into a different case.
+
+      // Ensure classes.dex is stored.
+      Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xzs\\.tmp~$", ".tmp.jar"));
+      steps.add(new DxStep(tempDexJarOutput, filesToDex, dxOptions));
+      steps.add(new RepackZipEntriesStep(
+          tempDexJarOutput,
+          outputPath,
+          ImmutableSet.of("classes.dex"),
+          ZipStep.MIN_COMPRESSION_LEVEL));
+      steps.add(new RmStep(tempDexJarOutput, true));
+
+      // Write a .meta file.
+      steps.add(
+          new DexJarAnalysisStep(
+              outputPath,
+              outputPath.resolveSibling(
+                  outputPath.getFileName() + ".meta")));
     } else if (DexStore.JAR.matchesPath(outputPath) || DexStore.RAW.matchesPath(outputPath) ||
         output.endsWith("classes.dex")) {
       steps.add(new DxStep(outputPath, filesToDex, dxOptions));
