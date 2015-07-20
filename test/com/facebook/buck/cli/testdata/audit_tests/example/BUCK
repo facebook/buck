@@ -51,6 +51,12 @@ apple_library(
   tests = [ ':six-tests' ],
 )
 
+apple_library(
+  name = 'seven',
+  srcs = [ '7.txt' ],
+  tests = [ ':four-application-tests' ],
+)
+
 apple_test(
   name = 'one-tests',
   extension = 'xctest',

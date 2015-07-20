@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -143,7 +144,7 @@ public class AuditTestsCommand extends AbstractCommand {
   private void printToConsole(
       CommandRunnerParams params,
       Multimap<BuildTarget, BuildTarget> targetsAndTests) {
-    for (BuildTarget target : targetsAndTests.values()) {
+    for (BuildTarget target : ImmutableSortedSet.copyOf(targetsAndTests.values())) {
       params.getConsole().getStdOut().println(target.getFullyQualifiedName());
     }
   }

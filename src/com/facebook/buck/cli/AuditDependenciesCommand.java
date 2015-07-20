@@ -33,6 +33,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -45,7 +46,6 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-
 
 public class AuditDependenciesCommand extends AbstractCommand {
 
@@ -257,7 +257,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
   private void printToConsole(
       CommandRunnerParams params,
       Multimap<BuildTarget, BuildTarget> targetsAndDependencies) {
-    for (BuildTarget target : targetsAndDependencies.values()) {
+    for (BuildTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
       params.getConsole().getStdOut().println(target.getFullyQualifiedName());
     }
   }

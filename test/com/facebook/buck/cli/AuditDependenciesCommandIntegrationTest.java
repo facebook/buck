@@ -191,4 +191,20 @@ public class AuditDependenciesCommandIntegrationTest {
         workspace.getFileContents("stdout-one-two-three-transitive.json"),
         result.getStdout());
   }
+
+  @Test
+  public void testOutputWithoutDuplicates() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "dependencies",
+        "//example:two",
+        "//example:three");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-two-three"), result.getStdout());
+  }
 }

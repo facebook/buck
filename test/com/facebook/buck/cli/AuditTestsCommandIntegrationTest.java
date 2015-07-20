@@ -110,4 +110,21 @@ public class AuditTestsCommandIntegrationTest {
     String expected = workspace.getFileContents("stdout-one-two-three-four-five-six.json");
     assertEquals(expected, result.getStdout());
   }
+
+  @Test
+  public void testTestsWithMultipleTargetParametersExcludesDuplicateOutputs() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_tests", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "tests",
+        "//example:four",
+        "//example:seven");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-four-seven"), result.getStdout());
+  }
+
 }
