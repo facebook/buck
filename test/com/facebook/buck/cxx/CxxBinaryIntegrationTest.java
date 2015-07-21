@@ -716,4 +716,19 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:gen").assertSuccess();
   }
 
+  @Test
+  public void buildBinaryUsingStaticPicLinkStyle() throws IOException {
+    assumeThat(Platform.detect(), oneOf(Platform.LINUX, Platform.MACOS));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "static_pic_link_style", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand(
+        "build",
+        // This should only work (on some architectures) if PIC was used to build all included
+        // object files.
+        "--config", "cxx.cxxldflags=-shared",
+        "//:bar")
+            .assertSuccess();
+  }
+
 }

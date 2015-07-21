@@ -1,0 +1,20 @@
+cxx_library(
+  name = 'foo',
+  headers = [
+    'foo.h',
+  ],
+  srcs = [
+    'foo.cpp',
+  ],
+)
+
+cxx_binary(
+  name = 'bar',
+  link_style = 'static_pic',
+  srcs = [
+    'bar.cpp',
+  ],
+  deps = [
+    ':foo',
+  ],
+)

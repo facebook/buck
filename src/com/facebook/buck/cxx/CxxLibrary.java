@@ -160,7 +160,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     final BuildRule libraryRule;
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(exportedLinkerFlags.apply(cxxPlatform));
-    if (type == Linker.LinkableDepType.STATIC || linkage == Linkage.STATIC) {
+    if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
       libraryRule = CxxDescriptionEnhancer.requireBuildRule(
           params,
           ruleResolver,

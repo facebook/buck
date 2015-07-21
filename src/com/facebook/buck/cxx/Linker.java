@@ -68,6 +68,10 @@ public interface Linker extends Tool {
     // static libraries, libfoo.a).
     STATIC,
 
+    // Provide input suitable for statically linking this linkable using PIC-enabled binaries
+    // (e.g. return references to static libraries, libfoo_pic.a).
+    STATIC_PIC,
+
     // Provide input suitable for dynamically linking this linkable (e.g. return references to
     // shared libraries, libfoo.so).
     SHARED

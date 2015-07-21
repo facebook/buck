@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -121,6 +122,30 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
   }
 
+  /**
+   * @return the {@link Path} representing the actual static PIC library.
+   */
+  private Path getStaticPicLibrary(CxxPlatform cxxPlatform) {
+    Path staticPicLibraryPath =
+        PrebuiltCxxLibraryDescription.getStaticPicLibraryPath(
+            getBuildTarget(),
+            cxxPlatform,
+            libDir,
+            libName);
+
+    // If a specific static-pic variant isn't available, then just use the static variant.
+    if (!params.getProjectFilesystem().exists(staticPicLibraryPath)) {
+      staticPicLibraryPath =
+          PrebuiltCxxLibraryDescription.getStaticLibraryPath(
+              getBuildTarget(),
+              cxxPlatform,
+              libDir,
+              libName);
+    }
+
+    return staticPicLibraryPath;
+  }
+
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
@@ -183,7 +208,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(exportedLinkerFlags.apply(cxxPlatform));
+    linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
     if (!headerOnly) {
       if (provided || type == Linker.LinkableDepType.SHARED) {
         SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
@@ -191,11 +216,13 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
         linkerArgsBuilder.add(pathResolver.getPath(sharedLibrary).toString());
       } else {
         Path staticLibraryPath =
-            PrebuiltCxxLibraryDescription.getStaticLibraryPath(
-                getBuildTarget(),
-                cxxPlatform,
-                libDir,
-                libName);
+            type == Linker.LinkableDepType.STATIC_PIC ?
+                getStaticPicLibrary(cxxPlatform) :
+                PrebuiltCxxLibraryDescription.getStaticLibraryPath(
+                    getBuildTarget(),
+                    cxxPlatform,
+                    libDir,
+                    libName);
         librariesBuilder.add(new PathSourcePath(getProjectFilesystem(), staticLibraryPath));
         if (linkWhole) {
           Linker linker = cxxPlatform.getLd();

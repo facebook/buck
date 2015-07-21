@@ -185,6 +185,14 @@ public class PrebuiltCxxLibraryDescription
     return getLibraryPath(target, cxxPlatform, libDir, libName, ".a");
   }
 
+  public static Path getStaticPicLibraryPath(
+      BuildTarget target,
+      CxxPlatform cxxPlatform,
+      Optional<String> libDir,
+      Optional<String> libName) {
+    return getLibraryPath(target, cxxPlatform, libDir, libName, "_pic.a");
+  }
+
   /**
    * @return a {@link SymlinkTree} for the exported headers of this prebuilt C/C++ library.
    */
@@ -246,7 +254,13 @@ public class PrebuiltCxxLibraryDescription
 
     BuildTarget target = params.getBuildTarget();
     String soname = getSoname(target, cxxPlatform, args.soname, args.libName);
-    Path staticLibraryPath = getStaticLibraryPath(target, cxxPlatform, args.libDir, args.libName);
+
+    // Use the static PIC variant, if available.
+    Path staticLibraryPath =
+        getStaticPicLibraryPath(target, cxxPlatform, args.libDir, args.libName);
+    if (!params.getProjectFilesystem().exists(staticLibraryPath)) {
+      staticLibraryPath = getStaticLibraryPath(target, cxxPlatform, args.libDir, args.libName);
+    }
 
     // Otherwise, we need to build it from the static lib.
     BuildTarget sharedTarget = BuildTarget

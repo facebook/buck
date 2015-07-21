@@ -734,6 +734,10 @@ public class CxxDescriptionEnhancer {
     ImmutableMap<String, SourcePath> yaccSrcs = parseYaccSources(params, resolver, args);
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    Linker.LinkableDepType linkStyle = args.linkStyle.or(Linker.LinkableDepType.STATIC);
+    Path output = getOutputPath(params.getBuildTarget());
+    ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
+    CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Setup the rules to run lex/yacc.
     CxxHeaderSourceSpec lexYaccSources =
@@ -798,13 +802,9 @@ public class CxxDescriptionEnhancer {
                 cxxPlatform),
             preprocessMode,
             sources,
-            CxxSourceRuleFactory.PicType.PDC);
-
-    Path output = getOutputPath(params.getBuildTarget());
-    CxxBinaryDescription.LinkStyle linkStyle =
-        args.linkStyle.or(CxxBinaryDescription.LinkStyle.STATIC);
-    ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
-    CommandTool.Builder executableBuilder = new CommandTool.Builder();
+            linkStyle == Linker.LinkableDepType.STATIC ?
+                CxxSourceRuleFactory.PicType.PDC :
+                CxxSourceRuleFactory.PicType.PIC);
 
     // Build up the linker flags.
     extraLdFlagsBuilder.addAll(
@@ -814,7 +814,7 @@ public class CxxDescriptionEnhancer {
             cxxPlatform));
 
     // Special handling for dynamically linked binaries.
-    if (linkStyle == CxxBinaryDescription.LinkStyle.SHARED) {
+    if (linkStyle == Linker.LinkableDepType.SHARED) {
 
       // Create a symlink tree with for all shared libraries needed by this binary.
       SymlinkTree sharedLibraries =
@@ -841,23 +841,22 @@ public class CxxDescriptionEnhancer {
 
     // Generate the final link rule.  We use the top-level target as the link rule's
     // target, so that it corresponds to the actual binary we build.
-    CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-        cxxPlatform,
-        params,
-        sourcePathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
-        extraLdFlagsBuilder.build(),
-        createCxxLinkTarget(params.getBuildTarget()),
-        Linker.LinkType.EXECUTABLE,
-        Optional.<String>absent(),
-        output,
-        objects.values(),
-        linkStyle == CxxBinaryDescription.LinkStyle.STATIC ?
-            Linker.LinkableDepType.STATIC :
-            Linker.LinkableDepType.SHARED,
-        params.getDeps(),
-        args.cxxRuntimeType,
-        Optional.<SourcePath>absent());
+    CxxLink cxxLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            cxxPlatform,
+            params,
+            sourcePathResolver,
+            /* extraCxxLdFlags */ ImmutableList.<String>of(),
+            extraLdFlagsBuilder.build(),
+            createCxxLinkTarget(params.getBuildTarget()),
+            Linker.LinkType.EXECUTABLE,
+            Optional.<String>absent(),
+            output,
+            objects.values(),
+            linkStyle,
+            params.getDeps(),
+            args.cxxRuntimeType,
+            Optional.<SourcePath>absent());
     resolver.addToIndex(cxxLink);
 
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.

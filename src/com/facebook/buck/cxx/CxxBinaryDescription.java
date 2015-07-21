@@ -213,14 +213,9 @@ public class CxxBinaryDescription implements
     return flavors.isEmpty();
   }
 
-  public enum LinkStyle {
-    STATIC,
-    SHARED,
-  }
-
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
-    public Optional<LinkStyle> linkStyle;
+    public Optional<Linker.LinkableDepType> linkStyle;
   }
 
 }

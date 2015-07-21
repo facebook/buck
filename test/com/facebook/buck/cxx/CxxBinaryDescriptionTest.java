@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -276,6 +277,18 @@ public class CxxBinaryDescriptionTest {
         FluentIterable.from(compileRule2.getDeps())
             .transform(HasBuildTarget.TO_TARGET)
             .toSet());
+  }
+
+  @Test
+  public void staticPicLinkStyle() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    new CxxBinaryBuilder(target)
+        .setSrcs(
+            ImmutableList.of(
+                SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))))
+        .build(resolver, filesystem);
   }
 
 }

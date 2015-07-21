@@ -47,6 +47,7 @@ import com.google.common.collect.Iterables;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -60,6 +61,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
     String libName = arg.libName.or(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(
         String.format("lib%s.a", libName));
+  }
+
+  private static Path getStaticPicLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
+    String libDir = arg.libDir.or("lib");
+    String libName = arg.libName.or(TARGET.getShortName());
+    return TARGET.getBasePath().resolve(libDir).resolve(
+        String.format("lib%s_pic.a", libName));
   }
 
   private static Path getSharedLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
@@ -589,4 +597,48 @@ public class PrebuiltCxxLibraryDescriptionTest {
         expectedComponents,
         lib.getPythonPackageComponents(CXX_PLATFORM));
   }
+
+  @Test
+  public void staticPicLibsUseCorrectPath() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
+    PrebuiltCxxLibrary lib =
+        (PrebuiltCxxLibrary) libBuilder.build(
+            resolver,
+            filesystem,
+            TargetGraphFactory.newInstance(libBuilder.build()));
+    NativeLinkableInput nativeLinkableInput =
+        lib.getNativeLinkableInput(
+            CXX_PLATFORM,
+            Linker.LinkableDepType.STATIC_PIC);
+    SourcePath input = nativeLinkableInput.getInputs().get(0);
+    assertThat(input, Matchers.instanceOf(PathSourcePath.class));
+    assertThat(
+        ((PathSourcePath) input).getRelativePath(),
+        Matchers.equalTo(getStaticLibraryPath(libBuilder.build().getConstructorArg())));
+  }
+
+  @Test
+  public void missingStaticPicLibsUseStaticLibs() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
+    filesystem.touch(getStaticPicLibraryPath(libBuilder.build().getConstructorArg()));
+    PrebuiltCxxLibrary lib =
+        (PrebuiltCxxLibrary) libBuilder.build(
+            resolver,
+            filesystem,
+            TargetGraphFactory.newInstance(libBuilder.build()));
+    NativeLinkableInput nativeLinkableInput =
+        lib.getNativeLinkableInput(
+            CXX_PLATFORM,
+            Linker.LinkableDepType.STATIC_PIC);
+    SourcePath input = nativeLinkableInput.getInputs().get(0);
+    assertThat(input, Matchers.instanceOf(PathSourcePath.class));
+    assertThat(
+        ((PathSourcePath) input).getRelativePath(),
+        Matchers.equalTo(getStaticPicLibraryPath(libBuilder.build().getConstructorArg())));
+  }
+
 }
