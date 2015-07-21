@@ -27,6 +27,11 @@ import java.nio.file.Path;
 class BuildInfo {
 
   /**
+   * Key for {@link OnDiskBuildInfo} which lists the recorded items.
+   */
+  static final String METADATA_KEY_FOR_RECORDED_PATHS = "RECORDED_PATHS";
+
+  /**
    * Key for {@link OnDiskBuildInfo} to identify additional info describing a build.
    */
   static final String METADATA_KEY_FOR_ADDITIONAL_INFO = "ADDITIONAL_INFO";

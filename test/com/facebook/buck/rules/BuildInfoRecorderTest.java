@@ -32,8 +32,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,17 +48,22 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BuildInfoRecorderTest {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public TemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   private static final BuildTarget BUILD_TARGET = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -273,6 +281,44 @@ public class BuildInfoRecorderTest {
     current = updated;
     updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
     assertNotEquals(current, updated);
+  }
+
+  @Test
+  public void testRecordedArtifactsBuildMetadata()
+      throws IOException, InterruptedException {
+
+    RuleKey ruleKey = new RuleKey("aa");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
+    BuckEventBus bus = new BuckEventBus(new FakeClock(0), new BuildId("BUILD"));
+
+    // Add a file.
+    Path file = Paths.get("file");
+    filesystem.writeContentsToPath("", file);
+    buildInfoRecorder.recordArtifact(file);
+
+    // Add a piece of metadata
+    String metadata = "metadata_item";
+    buildInfoRecorder.addMetadata(metadata, "something");
+
+    // Write the metadata to disk and upload the result.
+    buildInfoRecorder.writeMetadataToDisk(true);
+    buildInfoRecorder.performUploadToArtifactCache(ImmutableSet.of(ruleKey), cache, bus);
+
+    // Verify that we saved the above recoreded paths correctly.
+    File fetchedArtifact = tmp.newFile("fetched_artifact.zip");
+    CacheResult result = cache.fetch(ruleKey, fetchedArtifact);
+    List<String> recordedPaths =
+        new ObjectMapper()
+            .readValue(
+                result.getMetadata().get(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS),
+                new TypeReference<List<String>>() {});
+    assertThat(
+        recordedPaths,
+        Matchers.containsInAnyOrder(
+            file.toString(),
+            BuildInfo.getPathToMetadataDirectory(BUILD_TARGET).resolve(metadata).toString()));
   }
 
   private static void assertOnDiskBuildInfoHasMetadata(

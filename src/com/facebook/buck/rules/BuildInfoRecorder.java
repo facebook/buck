@@ -28,6 +28,7 @@ import com.facebook.buck.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -110,6 +111,14 @@ public class BuildInfoRecorder {
     this.pathsToOutputs = Sets.newHashSet();
   }
 
+  private String toJson(Iterable<String> values) {
+    JsonArray out = new JsonArray();
+    for (String str : values) {
+      out.add(new JsonPrimitive(str));
+    }
+    return out.toString();
+  }
+
   private String formatAdditionalArtifactInfo(Map<String, String> entries) {
     StringBuilder builder = new StringBuilder();
     for (Map.Entry<String, String> entry : entries.entrySet()) {
@@ -121,8 +130,11 @@ public class BuildInfoRecorder {
     return builder.toString();
   }
 
-  private ImmutableMap<String, String> getBuildMetadata() {
+  private ImmutableMap<String, String> getBuildMetadata() throws IOException {
     return ImmutableMap.<String, String>builder()
+        .put(
+            BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS,
+            toJson(Iterables.transform(getRecordedPaths(), Functions.toStringFunction())))
         .put(
             BuildInfo.METADATA_KEY_FOR_ADDITIONAL_INFO,
             formatAdditionalArtifactInfo(
@@ -165,12 +177,7 @@ public class BuildInfoRecorder {
   }
 
   public BuildInfoRecorder addBuildMetadata(String key, Iterable<String> value) {
-    JsonArray values = new JsonArray();
-    for (String str : value) {
-      values.add(new JsonPrimitive(str));
-    }
-    addBuildMetadata(key, values.toString());
-    return this;
+    return addBuildMetadata(key, toJson(value));
   }
 
   /**
@@ -181,15 +188,11 @@ public class BuildInfoRecorder {
   }
 
   public void addMetadata(String key, Iterable<String> value) {
-    JsonArray values = new JsonArray();
-    for (String str : value) {
-      values.add(new JsonPrimitive(str));
-    }
-    addMetadata(key, values.toString());
+    addMetadata(key, toJson(value));
   }
 
-  private ImmutableSet<Path> getRecordedPaths() throws IOException {
-    final ImmutableSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+  private ImmutableSortedSet<Path> getRecordedPaths() throws IOException {
+    final ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
 
     // Add metadata files.
     paths.addAll(
@@ -268,11 +271,13 @@ public class BuildInfoRecorder {
 
     File zip;
     ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.of();
+    ImmutableMap<String, String> buildMetadata;
     try {
       pathsToIncludeInZip = getRecordedPaths();
       zip = File.createTempFile(
           "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()),
           ".zip");
+      buildMetadata = getBuildMetadata();
       projectFilesystem.createZip(pathsToIncludeInZip, zip, ImmutableMap.<Path, String>of());
     } catch (IOException e) {
       eventBus.post(ConsoleEvent.info("Failed to create zip for %s containing:\n%s",
@@ -288,7 +293,7 @@ public class BuildInfoRecorder {
     }
 
     // Store the artifact, including any additional metadata.
-    artifactCache.store(ruleKeys, getBuildMetadata(), zip);
+    artifactCache.store(ruleKeys, buildMetadata, zip);
     zip.delete();
   }
 
