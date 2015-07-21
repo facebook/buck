@@ -1,0 +1,53 @@
+java_test(
+  name='integration',
+  srcs=glob(["*IntegrationTest.java"]),
+  deps=[
+    ':assumptions',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rust:rust',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+  ],
+)
+
+java_test(
+  name='unit',
+  srcs=glob(["*Test.java"], excludes=["*IntegrationTest.java"]),
+  deps=[
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:exceptions',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
+    '//test/com/facebook/buck/rules:testutil',
+    '//src/com/facebook/buck/rust:rust',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+  ],
+)
+
+java_library(
+  name='assumptions',
+  srcs=[
+    'RustAssumptions.java'
+  ],
+  deps=[
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/cxx:platform',
+    '//src/com/facebook/buck/rust:rust',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util:exceptions',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+  ],
+)

@@ -99,6 +99,9 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonLibraryDescription;
 import com.facebook.buck.python.PythonTestDescription;
+import com.facebook.buck.rust.RustBinaryDescription;
+import com.facebook.buck.rust.RustBuckConfig;
+import com.facebook.buck.rust.RustLibraryDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
@@ -344,6 +347,8 @@ public class KnownBuildRuleTypes {
 
     ReactNativeBuckConfig reactNativeBuckConfig = new ReactNativeBuckConfig(config);
 
+    RustBuckConfig rustBuckConfig = new RustBuckConfig(config);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
@@ -492,6 +497,8 @@ public class KnownBuildRuleTypes {
             androidBinaryOptions,
             testRuleTimeoutMs,
             defaultCxxPlatform));
+    builder.register(new RustBinaryDescription(rustBuckConfig));
+    builder.register(new RustLibraryDescription(rustBuckConfig));
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription());
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);

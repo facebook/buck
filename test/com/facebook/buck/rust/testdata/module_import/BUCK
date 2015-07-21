@@ -1,0 +1,11 @@
+rust_binary(
+  name = "greeter",
+  srcs = glob(["*.rs"]),
+)
+
+rust_binary(
+  name = "greeter_fail",
+  srcs = [
+    "main.rs",
+  ],
+)

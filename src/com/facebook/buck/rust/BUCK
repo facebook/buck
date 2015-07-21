@@ -1,0 +1,31 @@
+java_library(
+  name='rust',
+  srcs=[
+    'RustBinary.java',
+    'RustBinaryDescription.java',
+    'RustBuckConfig.java',
+    'RustCompileStep.java',
+    'RustLibrary.java',
+    'RustLibraryDescription.java',
+    'RustLinkable.java',
+  ],
+  deps=[
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/cxx:platform',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/shell:steps',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//third-party/java/guava:guava',
+    '//third-party/java/infer-annotations:infer-annotations',
+  ],
+  visibility=[
+    '//src/com/facebook/buck/rules:types',
+    '//test/com/facebook/buck/rust/...',
+  ],
+)

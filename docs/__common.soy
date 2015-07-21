@@ -192,6 +192,10 @@
             'python_library',
             'python_test',
         ],
+        'rust': [
+            'rust_binary',
+            'rust_library',
+        ],
     ] /}
   <h3>Getting Started</h3>
   <ul>
@@ -248,6 +252,10 @@
     {call .platformBuildRuleLink}
         {param platform: 'Python' /}
         {param rules: $platformRulesMap['python'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Rust' /}
+        {param rules: $platformRulesMap['rust'] /}
     {/call}
   </ul>
   <h3>Functions</h3>

@@ -25,23 +25,25 @@
       test/com/facebook/buck/android/testdata, \
       test/com/facebook/buck/apple/testdata, \
       test/com/facebook/buck/apple/xcode/testdata, \
+      test/com/facebook/buck/cli/bootstrapper/testdata, \
       test/com/facebook/buck/cli/testdata, \
+      test/com/facebook/buck/cxx/testdata, \
       test/com/facebook/buck/d/testdata, \
+      test/com/facebook/buck/event/listener/integration/testdata, \
       test/com/facebook/buck/gwt/testdata, \
-      test/com/facebook/buck/java/testdata, \
       test/com/facebook/buck/java/intellij/testdata, \
+      test/com/facebook/buck/java/testdata, \
       test/com/facebook/buck/js/testdata, \
       test/com/facebook/buck/junit/testdata, \
       test/com/facebook/buck/ocaml/testdata, \
       test/com/facebook/buck/parser/testdata, \
+      test/com/facebook/buck/python/testdata, \
+      test/com/facebook/buck/rust/testdata, \
       test/com/facebook/buck/shell/testdata, \
       test/com/facebook/buck/test/cache/testdata, \
       test/com/facebook/buck/test/labels/testdata, \
       test/com/facebook/buck/test/result/groups/testdata, \
-      test/com/facebook/buck/event/listener/integration/testdata, \
       test/com/facebook/buck/thrift/testdata, \
-      test/com/facebook/buck/cxx/testdata, \
-      test/com/facebook/buck/python/testdata, \
 
     ; Common temp file patterns:
     ; .*\.swp$ (vim)

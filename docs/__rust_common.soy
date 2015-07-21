@@ -1,0 +1,70 @@
+{namespace rust_common}
+
+/***/
+{template .supported_language_version}
+Note: Buck is currently tested with (and therefore supports) version 1.1.0 of Rust.
+{/template}
+
+/***/
+{template .deps_arg}
+{call buck.arg}
+  {param name : 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of dependencies of this rule.  Currently, this only supports rust_library rules.
+ {/param}
+{/call}
+{/template}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name : 'srcs' /}
+  {param desc}
+  <p>
+    The set of Rust source files to be compiled by this rule.
+  </p>
+  <p>
+    One of these files must be named <code>{lb}name{rb}.rs</code> or <code>main.rs</code>.  This
+    file will be passed to <code>rustc</code> as the crate root.
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .features_arg}
+{call buck.arg}
+  {param name : 'features' /}
+  {param default : '[]' /}
+  {param desc}
+  <p>
+    The set of features to be enabled for this rule.
+  </p>
+  <p>
+    These are passed to <code>rustc</code> with <code>--cfg feature="{lb}feature{rb}"</code>, and
+    can be used in the code with <code>#[cfg(feature = "{lb}feature{rb}")]</code>.
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .rustc_flags_arg}
+{call buck.arg}
+  {param name : 'rustc_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of additional compiler flags to pass to <code>rustc</code>.
+ {/param}
+{/call}
+{/template}
+
+/***/
+{template .more_examples}
+<p>
+  For more examples, check out our <a
+  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/rust/testdata/">
+  integration tests</a>.
+</p>
+{/template}

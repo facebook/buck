@@ -1,0 +1,26 @@
+rust_binary(
+  name = "with_feature",
+  srcs = [
+    "main.rs",
+  ],
+  features = [
+    "custom_printer_feature",
+  ],
+)
+
+rust_binary(
+  name = "without_feature",
+  srcs = [
+    "main.rs",
+  ],
+)
+
+rust_binary(
+  name = "illegal_feature_name",
+  srcs = [
+    "main.rs",
+  ],
+  features = [
+    "this_has_\"_in_it",
+  ],
+)
