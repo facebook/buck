@@ -43,6 +43,9 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGContext;
 
+import com.dd.plist.BinaryPropertyListParser;
+import com.dd.plist.NSObject;
+
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -519,6 +522,27 @@ public class ProjectWorkspace {
     }
   }
 
+  private void assertFileContentsEqual(File expectedFile, File observedFile) throws IOException {
+    String cleanPathToObservedFile = MoreStrings.withoutSuffix(
+        templatePath.relativize(expectedFile.toPath()).toString(), EXPECTED_SUFFIX);
+
+    String expectedFileContent = Files.toString(expectedFile, Charsets.UTF_8);
+    String observedFileContent = Files.toString(observedFile, Charsets.UTF_8);
+    // It is possible, on Windows, to have Git keep "\n"-style newlines, or convert them to
+    // "\r\n"-style newlines.  Support both ways by normalizing to "\n"-style newlines.
+    // See https://help.github.com/articles/dealing-with-line-endings/ for more information.
+    expectedFileContent = expectedFileContent.replace("\r\n", "\n");
+    observedFileContent = observedFileContent.replace("\r\n", "\n");
+    assertEquals(
+        String.format(
+            "In %s, expected content of %s to match that of %s.",
+            cleanPathToObservedFile,
+            expectedFileContent,
+            observedFileContent),
+        expectedFileContent,
+        observedFileContent);
+  }
+
   /**
    * For every file in the template directory whose name ends in {@code .expected}, checks that an
    * equivalent file has been written in the same place under the destination directory.
@@ -537,23 +561,57 @@ public class ProjectWorkspace {
           if (!observedFile.isFile()) {
             fail("Expected file " + observedFile + " could not be found.");
           }
-          String expectedFileContent = Files.toString(file.toFile(), Charsets.UTF_8);
-          String observedFileContent = Files.toString(observedFile, Charsets.UTF_8);
-          // It is possible, on Windows, to have Git keep "\n"-style newlines, or convert them to
-          // "\r\n"-style newlines.  Support both ways by normalizing to "\n"-style newlines.
-          // See https://help.github.com/articles/dealing-with-line-endings/ for more information.
-          expectedFileContent = expectedFileContent.replace("\r\n", "\n");
-          observedFileContent = observedFileContent.replace("\r\n", "\n");
+
+          String extension = Files.getFileExtension(observedFile.getName());
           String cleanPathToObservedFile = MoreStrings.withoutSuffix(
               templatePath.relativize(file).toString(), EXPECTED_SUFFIX);
-          assertEquals(
-              String.format(
-                  "In %s, expected content of %s to match that of %s.",
-                  cleanPathToObservedFile,
-                  expectedFileContent,
-                  observedFileContent),
-              expectedFileContent,
-              observedFileContent);
+
+          switch (extension) {
+            // For Apple .plist and .stringsdict files, we define equivalence if:
+            // 1. The two files are the same type (XML or binary)
+            // 2. If binary: unserialized objects are deeply-equivalent.
+            //    Otherwise, fall back to exact string match.
+            case "plist":
+            case "stringsdict":
+              NSObject expectedObject;
+              try {
+                expectedObject = BinaryPropertyListParser.parse(file.toFile());
+              } catch (Exception e) {
+                // Not binary format.
+                expectedObject = null;
+              }
+
+              NSObject observedObject;
+              try {
+                observedObject = BinaryPropertyListParser.parse(observedFile);
+              } catch (Exception e) {
+                // Not binary format.
+                observedObject = null;
+              }
+
+              assertTrue(
+                  String.format(
+                      "In %s, expected plist to be of %s type.",
+                      cleanPathToObservedFile,
+                      (expectedObject != null) ? "binary" : "XML"),
+                  !((expectedObject != null) ^ (observedObject != null)));
+
+              if (expectedObject != null && observedObject != null) {
+                assertEquals(
+                    String.format(
+                        "In %s, expected binary plist contents to match.",
+                        cleanPathToObservedFile),
+                    expectedObject,
+                    observedObject);
+                break;
+              } else {
+                assertFileContentsEqual(file.toFile(), observedFile);
+              }
+              break;
+
+            default:
+              assertFileContentsEqual(file.toFile(), observedFile);
+          }
         }
         return FileVisitResult.CONTINUE;
       }

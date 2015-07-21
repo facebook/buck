@@ -21,6 +21,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableMap;
 
+import com.dd.plist.BinaryPropertyListWriter;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
@@ -32,20 +33,33 @@ import java.nio.file.Path;
 
 public class PlistProcessStep implements Step {
 
+  /** Controls what format the plist is output in. */
+  public static enum OutputFormat {
+    /** Output the XML plist format. */
+    XML,
+
+    /** Output the Apple binary plist format. */
+    BINARY,
+    ;
+  }
+
   private final Path input;
   private final Path output;
   private final ImmutableMap<String, NSObject> additionalKeys;
   private final ImmutableMap<String, NSObject> overrideKeys;
+  private final OutputFormat outputFormat;
 
   public PlistProcessStep(
       Path input,
       Path output,
       ImmutableMap<String, NSObject> additionalKeys,
-      ImmutableMap<String, NSObject> overrideKeys) {
+      ImmutableMap<String, NSObject> overrideKeys,
+      OutputFormat outputFormat) {
     this.input = input;
     this.output = output;
     this.additionalKeys = additionalKeys;
     this.overrideKeys = overrideKeys;
+    this.outputFormat = outputFormat;
   }
 
   @Override
@@ -68,10 +82,20 @@ public class PlistProcessStep implements Step {
 
       infoPlist.putAll(overrideKeys);
 
-      String serializedInfoPlist = infoPlist.toXMLPropertyList();
-      filesystem.writeContentsToPath(
-          serializedInfoPlist,
-          output);
+      switch (this.outputFormat) {
+        case XML:
+          String serializedInfoPlist = infoPlist.toXMLPropertyList();
+          filesystem.writeContentsToPath(
+              serializedInfoPlist,
+              output);
+          break;
+        case BINARY:
+          byte[] binaryInfoPlist = BinaryPropertyListWriter.writeToArray(infoPlist);
+          filesystem.writeBytesToPath(
+              binaryInfoPlist,
+              output);
+          break;
+      }
     } catch (IOException e) {
       context.logError(e, "error parsing plist %s", input);
       return 1;

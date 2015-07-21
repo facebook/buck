@@ -47,7 +47,8 @@ public class PlistProcessStepTest {
         INPUT_PATH,
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(),
-        ImmutableMap.<String, NSObject>of());
+        ImmutableMap.<String, NSObject>of(),
+        PlistProcessStep.OutputFormat.XML);
 
     projectFilesystem.writeContentsToPath(
         "<html>not a <b>plist</b></html>",
@@ -70,7 +71,8 @@ public class PlistProcessStepTest {
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(),
         ImmutableMap.<String, NSObject>of(
-            "Key1", new NSString("OverrideValue")));
+            "Key1", new NSString("OverrideValue")),
+        PlistProcessStep.OutputFormat.XML);
 
     NSDictionary dict = new NSDictionary();
     dict.put("Key1", "Value1");
@@ -101,7 +103,8 @@ public class PlistProcessStepTest {
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(
             "Key1", new NSString("OverrideValue")),
-        ImmutableMap.<String, NSObject>of());
+        ImmutableMap.<String, NSObject>of(),
+        PlistProcessStep.OutputFormat.XML);
 
     NSDictionary dict = new NSDictionary();
     dict.put("Key1", "Value1");

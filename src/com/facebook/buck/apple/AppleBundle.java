@@ -219,7 +219,8 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
             infoPlistSubstitutionTempPath,
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(platformName, sdkName),
-            getInfoPlistOverrideKeys(platformName)));
+            getInfoPlistOverrideKeys(platformName),
+            PlistProcessStep.OutputFormat.BINARY));
 
     // TODO(jakubzika):
     // Checking whether the output path is not null only serves as a workaround if the binary is
@@ -359,6 +360,17 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     String sourcePathExtension = Files.getFileExtension(sourcePath.toString())
         .toLowerCase(Locale.US);
     switch (sourcePathExtension) {
+      case "plist":
+      case "stringsdict":
+        LOG.debug("Converting plist %s to binary plist %s", sourcePath, destinationPath);
+        stepsBuilder.add(
+            new PlistProcessStep(
+                sourcePath,
+                destinationPath,
+                ImmutableMap.<String, NSObject>of(),
+                ImmutableMap.<String, NSObject>of(),
+                PlistProcessStep.OutputFormat.BINARY));
+        break;
       case "xib":
         String compiledNibFilename = Files.getNameWithoutExtension(destinationPath.toString()) +
             ".nib";
