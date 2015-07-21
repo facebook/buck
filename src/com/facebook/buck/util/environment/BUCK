@@ -26,7 +26,7 @@ java_library(
   ],
 )
 
-java_library(
+java_immutables_library(
   name = 'environment',
   srcs = glob(['*.java'], excludes = FILTER_SRCS + PLATFORM_SRCS),
   deps = [
@@ -34,6 +34,7 @@ java_library(
     ':platform',
     '//third-party/java/guava:guava',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
   ],
   visibility = [
     'PUBLIC',

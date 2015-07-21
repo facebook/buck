@@ -60,6 +60,7 @@ prebuilt_jar(
     '//src/com/facebook/buck/java/intellij:intellij',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util/network:network',
     '//src/com/facebook/buck/util:watchman',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/shell:steps',

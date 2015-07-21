@@ -5,9 +5,13 @@ java_test(
     '//src/com/facebook/buck/event/listener:listener',
   ],
   deps = [
-    '//third-party/java/hamcrest:hamcrest',
-    '//third-party/java/junit:junit',
     '//src/com/facebook/buck/event/listener:listener',
+    '//test/com/facebook/buck/json:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jackson:jackson',
+    '//third-party/java/jetty:jetty',
+    '//third-party/java/junit:junit',
   ],
 )

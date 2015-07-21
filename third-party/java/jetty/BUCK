@@ -25,6 +25,7 @@ java_library(
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/httpserver:',
     '//test/com/facebook/buck/maven:maven',
+    '//test/com/facebook/buck/event/listener/integration:integration',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
 )

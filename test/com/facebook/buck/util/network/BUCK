@@ -1,0 +1,16 @@
+java_test(
+  name = 'network',
+  srcs = glob(['*.java']),
+  source_under_test = [
+    '//src/com/facebook/buck/util/network:network',
+  ],
+  deps = [
+    '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/network:network',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jackson:jackson-annotations',
+    '//third-party/java/jackson:jackson-databind',
+    '//third-party/java/junit:junit',
+  ],
+)

@@ -10,6 +10,7 @@ java_immutables_library(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/concurrent:concurrent',
   ],
   provided_deps = [

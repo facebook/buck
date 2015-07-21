@@ -69,6 +69,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
@@ -117,6 +118,13 @@ public class BuckConfig {
   private static final String DEFAULT_HTTP_URL = "http://localhost:8080";
   private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
   private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "3";
+
+  private static final Function<String, URI> TO_URI = new Function<String, URI>() {
+    @Override
+    public URI apply(String input) {
+      return URI.create(input);
+    }
+  };
 
   private final Config config;
 
@@ -705,6 +713,10 @@ public class BuckConfig {
       throw new HumanReadableException("Unusable cache.%s: '%s'", fieldName, cacheMode);
     }
     return doStore;
+  }
+
+  public Optional<URI> getRemoteLogUrl() {
+    return getValue("log", "remote_log_url").transform(TO_URI);
   }
 
   public Optional<String> getValue(String sectionName, String propertyName) {

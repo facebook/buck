@@ -255,10 +255,11 @@ public class Logger
      * If the format string is invalid or the arguments are insufficient, an error will be logged and execution
      * will continue.
      *
+     * @param exception an exception associated with the warning being logged
      * @param format a format string compatible with String.format()
      * @param args arguments for the format string
      */
-    public void info(String format, Object... args)
+    public void info(@Nullable Throwable exception, String format, Object... args)
     {
         if (logger.isLoggable(INFO)) {
             String message;
@@ -269,8 +270,18 @@ public class Logger
                 logger.log(SEVERE, illegalFormatMessageFor("INFO", format, args), e);
                 message = rawMessageFor(format, args);
             }
-            logger.info(message);
+            logger.log(INFO, message, exception);
         }
+    }
+
+    /**
+     * Logs a message at INFO level.
+     *
+     * @param format a format string compatible with String.format()
+     * @param args arguments for the format string
+     */
+    public void info(String format, Object... args) {
+        info(null, format, args);
     }
 
     /**

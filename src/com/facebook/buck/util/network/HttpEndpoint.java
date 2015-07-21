@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2013-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.network;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-public interface ScribeLogger {
-  ListenableFuture<Void> log(String category, Iterable<String> lines);
+public interface HttpEndpoint {
+  ListenableFuture<HttpResponse> post(String content);
 }

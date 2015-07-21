@@ -62,23 +62,6 @@ java_immutables_library(
   visibility = [ 'PUBLIC' ],
 )
 
-NETWORK_SRCS = [
-  'BlockingHttpEndpoint.java',
-  'HttpResponse.java',
-  'HttpEndpoint.java',
-]
-java_library(
-  name = 'network',
-  srcs = NETWORK_SRCS,
-  deps = [
-    ':exceptions',
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//src/com/facebook/buck/log:api',
-  ],
-  visibility = [ 'PUBLIC' ],
-)
-
 ESCAPER_SRCS = [
  'Escaper.java',
  'WindowsCreateProcessEscape.java',
@@ -124,7 +107,7 @@ java_immutables_library(
   name = 'util',
   srcs = glob(
     includes = ['*.java'],
-    excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS + NETWORK_SRCS +
+    excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS +
                WATCHMAN_WATCHER_SRCS),
   deps = [
     ':constants',

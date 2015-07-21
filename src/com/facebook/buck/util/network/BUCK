@@ -1,0 +1,22 @@
+java_library(
+  name = 'network',
+  srcs = glob(['*.java']),
+  deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/jackson:jackson-core',
+    '//third-party/java/jackson:jackson-databind',
+    '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:util',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/event/listener:listener',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/event/listener:listener',
+    '//test/com/facebook/buck/util/network:network',
+  ],
+)

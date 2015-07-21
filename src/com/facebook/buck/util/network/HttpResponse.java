@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.util;
+package com.facebook.buck.util.network;
 
 public class HttpResponse {
 

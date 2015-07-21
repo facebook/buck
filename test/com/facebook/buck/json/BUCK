@@ -1,6 +1,24 @@
+STANDARD_TEST_SRCS = [
+  '*Test.java',
+]
+
+java_library(
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS),
+  deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/junit:junit',
+    '//third-party/java/jackson:jackson',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_test(
   name = 'json',
-  srcs = glob(['*.java']),
+  srcs = glob(STANDARD_TEST_SRCS),
   source_under_test = [
     '//src/com/facebook/buck/json:json',
     '//src/com/facebook/buck/json:raw_parser',

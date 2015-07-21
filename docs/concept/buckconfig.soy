@@ -403,6 +403,20 @@ inspection.
 
 <p>Will compress the traces with GZIP.</p>
 
+{literal}<pre class="prettyprint lang-ini">
+[log]
+  remote_log_url = http://all.your.logs:500/are/belong/to/us
+
+</pre>{/literal}
+
+<p>Will stream the build logs to the indicated address. Currently{sp}
+<code>http</code> and <code>https</code> scheme URLs are supported.
+The events are sent in batches using PUT requests. Each batch contains a
+JSON array composing of the long entries.</p>
+
+<p>The format of the individual log entries is not yet finalized and may
+change without warning between Buck versions.</p>
+
 {call .section}{param title: 'ndk' /}{/call}
 
 This section defines properties to configure building native code against

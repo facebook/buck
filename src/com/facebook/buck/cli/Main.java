@@ -29,6 +29,7 @@ import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
+import com.facebook.buck.event.listener.RemoteLogUploaderEventListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
@@ -61,10 +62,12 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.PropertyFinder;
+import com.facebook.buck.util.network.RemoteLoggerFactory;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.concurrent.TimeSpan;
+import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
@@ -92,6 +95,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -585,6 +589,7 @@ public final class Main {
           rootRepository.getBuckConfig(),
           webServer,
           clock,
+          executionEnvironment,
           console,
           consoleListener,
           rootRepository.getKnownBuildRuleTypes(),
@@ -889,6 +894,7 @@ public final class Main {
       BuckConfig config,
       Optional<WebServer> webServer,
       Clock clock,
+      ExecutionEnvironment executionEnvironment,
       Console console,
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
@@ -912,6 +918,20 @@ public final class Main {
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
 
+
+    Optional<URI> remoteLogUrl = config.getRemoteLogUrl();
+    ImmutableMap<String, String> environmentExtraData = ImmutableMap.of();
+    if (remoteLogUrl.isPresent()) {
+      eventListenersBuilder.add(
+          new RemoteLogUploaderEventListener(
+              objectMapper,
+              RemoteLoggerFactory.create(remoteLogUrl.get(), objectMapper),
+              BuildEnvironmentDescription.of(
+                  executionEnvironment,
+                  config.getArtifactCacheModes(),
+                  environmentExtraData)
+          ));
+    }
 
 
     JavacOptions javacOptions = new JavaBuckConfig(config)
