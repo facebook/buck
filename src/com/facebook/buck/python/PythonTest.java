@@ -35,6 +35,7 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -187,4 +188,10 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
   public boolean supportsStreamingTests() {
     return false;
   }
+
+  @VisibleForTesting
+  protected PythonBinary getBinary() {
+    return binary;
+  }
+
 }

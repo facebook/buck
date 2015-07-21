@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.zip.Unzip;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -35,6 +36,9 @@ public class PexStep extends ShellStep {
 
   // Path to the tool to generate the pex file.
   private final Path pathToPex;
+
+  // Additional args to pass the PEX invocation.
+  private final ImmutableList<String> args;
 
   // The path to the executable to create.
   private final Path destination;
@@ -60,6 +64,7 @@ public class PexStep extends ShellStep {
 
   public PexStep(
       Path pathToPex,
+      ImmutableList<String> args,
       Path pythonPath,
       Path tempDir,
       Path destination,
@@ -70,6 +75,7 @@ public class PexStep extends ShellStep {
       ImmutableSet<Path> prebuiltLibraries,
       boolean zipSafe) {
     this.pathToPex = pathToPex;
+    this.args = args;
     this.pythonPath = pythonPath;
     this.tempDir = tempDir;
     this.destination = destination;
@@ -135,6 +141,7 @@ public class PexStep extends ShellStep {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add(pythonPath.toString());
     builder.add(pathToPex.toString());
+    builder.addAll(args);
     builder.add("--python");
     builder.add(pythonPath.toString());
     builder.add("--entry-point");
@@ -174,6 +181,11 @@ public class PexStep extends ShellStep {
     }
 
     return sources.build();
+  }
+
+  @VisibleForTesting
+  protected ImmutableList<String> getArgs() {
+    return args;
   }
 
 }

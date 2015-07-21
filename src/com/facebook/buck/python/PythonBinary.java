@@ -44,8 +44,10 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
-  // TODO(user): Add path to pex to the rule key.
+  @AddToRuleKey
   private final Path pathToPex;
+  @AddToRuleKey
+  private final ImmutableList<String> buildArgs;
   private final Path pathToPexExecuter;
   @AddToRuleKey
   private final String pexExtension;
@@ -60,6 +62,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path pathToPex,
+      ImmutableList<String> buildArgs,
       Path pathToPexExecuter,
       String pexExtension,
       PythonEnvironment pythonEnvironment,
@@ -67,6 +70,7 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
       PythonPackageComponents components) {
     super(params, resolver);
     this.pathToPex = pathToPex;
+    this.buildArgs = buildArgs;
     this.pathToPexExecuter = pathToPexExecuter;
     this.pexExtension = pexExtension;
     this.pythonEnvironment = pythonEnvironment;
@@ -122,17 +126,19 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
     steps.add(new MakeCleanDirectoryStep(workingDirectory));
 
     // Generate and return the PEX build step.
-    steps.add(new PexStep(
-        pathToPex,
-        pythonEnvironment.getPythonPath(),
-        workingDirectory,
-        binPath,
-        mainModule,
-        getResolver().getMappedPaths(components.getModules()),
-        getResolver().getMappedPaths(components.getResources()),
-        getResolver().getMappedPaths(components.getNativeLibraries()),
-        ImmutableSet.copyOf(getResolver().getAllPaths(components.getPrebuiltLibraries())),
-        components.isZipSafe().or(true)));
+    steps.add(
+        new PexStep(
+            pathToPex,
+            buildArgs,
+            pythonEnvironment.getPythonPath(),
+            workingDirectory,
+            binPath,
+            mainModule,
+            getResolver().getMappedPaths(components.getModules()),
+            getResolver().getMappedPaths(components.getResources()),
+            getResolver().getMappedPaths(components.getNativeLibraries()),
+            ImmutableSet.copyOf(getResolver().getAllPaths(components.getPrebuiltLibraries())),
+            components.isZipSafe().or(true)));
 
     // Record the executable package for caching.
     buildableContext.recordArtifact(getBinPath());

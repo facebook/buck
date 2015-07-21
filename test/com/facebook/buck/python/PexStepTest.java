@@ -21,11 +21,13 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
 
 import com.facebook.buck.step.TestExecutionContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -38,8 +40,10 @@ import java.util.List;
 import java.util.Map;
 
 public class PexStepTest {
+
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
   private static final Path PEXPY_PATH = Paths.get("pex.py");
+  private static final ImmutableList<String> ARGS = ImmutableList.of();
   private static final Path TEMP_PATH = Paths.get("/tmp/");
   private static final Path DEST_PATH = Paths.get("/dest");
   private static final String ENTRY_POINT = "entry_point.main";
@@ -55,10 +59,19 @@ public class PexStepTest {
 
   @Test
   public void testCommandLine() {
-    PexStep step = new PexStep(
-        PEXPY_PATH, PYTHON_PATH, TEMP_PATH, DEST_PATH, ENTRY_POINT,
-        MODULES, RESOURCES, NATIVE_LIBRARIES, PREBUILT_LIBRARIES,
-        /* zipSafe */ true);
+    PexStep step =
+        new PexStep(
+            PEXPY_PATH,
+            ARGS,
+            PYTHON_PATH,
+            TEMP_PATH,
+            DEST_PATH,
+            ENTRY_POINT,
+            MODULES,
+            RESOURCES,
+            NATIVE_LIBRARIES,
+            PREBUILT_LIBRARIES,
+            /* zipSafe */ true);
     String command = Joiner.on(" ").join(
         step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
@@ -70,10 +83,19 @@ public class PexStepTest {
 
   @Test
   public void testCommandLineNoZipSafe() {
-    PexStep step = new PexStep(
-        PEXPY_PATH, PYTHON_PATH, TEMP_PATH, DEST_PATH, ENTRY_POINT,
-        MODULES, RESOURCES, NATIVE_LIBRARIES, PREBUILT_LIBRARIES,
-        /* zipSafe */ false);
+    PexStep step =
+        new PexStep(
+            PEXPY_PATH,
+            ARGS,
+            PYTHON_PATH,
+            TEMP_PATH,
+            DEST_PATH,
+            ENTRY_POINT,
+            MODULES,
+            RESOURCES,
+            NATIVE_LIBRARIES,
+            PREBUILT_LIBRARIES,
+            /* zipSafe */ false);
     String command = Joiner.on(" ").join(
         step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
@@ -83,10 +105,19 @@ public class PexStepTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testCommandStdin() throws IOException {
-    PexStep step = new PexStep(
-        PEXPY_PATH, PYTHON_PATH, TEMP_PATH, DEST_PATH, ENTRY_POINT,
-        MODULES, RESOURCES, NATIVE_LIBRARIES, PREBUILT_LIBRARIES,
-        /* zipSafe */ true);
+    PexStep step =
+        new PexStep(
+            PEXPY_PATH,
+            ARGS,
+            PYTHON_PATH,
+            TEMP_PATH,
+            DEST_PATH,
+            ENTRY_POINT,
+            MODULES,
+            RESOURCES,
+            NATIVE_LIBRARIES,
+            PREBUILT_LIBRARIES,
+            /* zipSafe */ true);
 
     Map<String, Object> args = new ObjectMapper().readValue(
         step.getStdin(TestExecutionContext.newInstance()).get(),
@@ -103,6 +134,26 @@ public class PexStepTest {
     assertThat(
         (List<String>) args.get("prebuiltLibraries"),
         hasItem(Paths.get("/src/p.egg").toString()));
+  }
+
+  @Test
+  public void testArgs() {
+    PexStep step =
+        new PexStep(
+            PEXPY_PATH,
+            ImmutableList.of("--some", "--args"),
+            PYTHON_PATH,
+            TEMP_PATH,
+            DEST_PATH,
+            ENTRY_POINT,
+            MODULES,
+            RESOURCES,
+            NATIVE_LIBRARIES,
+            PREBUILT_LIBRARIES,
+            /* zipSafe */ true);
+    assertThat(
+        step.getShellCommandInternal(TestExecutionContext.newInstance()),
+        hasItems("--some", "--args"));
   }
 
 }

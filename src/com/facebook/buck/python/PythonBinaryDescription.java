@@ -32,6 +32,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -140,6 +141,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         binaryParams,
         pathResolver,
         pathToPex,
+        args.buildArgs.or(ImmutableList.<String>of()),
         pathToPexExecuter,
         pexExtension,
         pythonEnvironment,
@@ -154,6 +156,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<String> baseModule;
     public Optional<Boolean> zipSafe;
+    public Optional<ImmutableList<String>> buildArgs;
   }
 
 }

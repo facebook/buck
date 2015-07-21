@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -48,6 +49,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PythonBinaryTest {
+
+  private static final Path PATH_TO_PEX = Paths.get("dummy_path_to_pex");
 
   @Rule
   public final TemporaryFolder tmpDir = new TemporaryFolder();
@@ -65,7 +68,8 @@ public class PythonBinaryTest {
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
             BuildTargetFactory.newInstance("//:bin")),
         resolver,
-        Paths.get("dummy_path_to_pex"),
+        PATH_TO_PEX,
+        ImmutableList.<String>of(),
         Paths.get("dummy_path_to_pex_runner"),
         ".pex",
         new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
@@ -106,6 +110,7 @@ public class PythonBinaryTest {
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
+                    PATH_TO_PEX.toString(), Strings.repeat("a", 40),
                     mainRelative.toString(), Strings.repeat("a", 40),
                     source1Relative.toString(), Strings.repeat("b", 40),
                     source2Relative.toString(), Strings.repeat("c", 40))),

@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -33,15 +34,21 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -85,6 +92,7 @@ public class PythonTestDescriptionTest {
     arg.labels = Optional.absent();
     arg.sourceUnderTest = Optional.absent();
     arg.zipSafe = Optional.absent();
+    arg.buildArgs = Optional.absent();
     PythonTest testRule = desc.createBuildRule(params, resolver, arg);
 
     PythonBinary binRule = (PythonBinary) resolver.getRule(
@@ -125,6 +133,7 @@ public class PythonTestDescriptionTest {
     arg.sourceUnderTest = Optional.absent();
     arg.srcs = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)));
     arg.zipSafe = Optional.absent();
+    arg.buildArgs = Optional.absent();
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
@@ -147,6 +156,25 @@ public class PythonTestDescriptionTest {
     assertTrue(
         baseModuleRule.getComponents().getModules().containsKey(
             Paths.get(arg.baseModule.get()).resolve(sourceName)));
+  }
+
+
+  @Test
+  public void buildArgs() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
+    PythonTest test =
+        (PythonTest) PythonTestBuilder.create(target)
+            .setBuildArgs(buildArgs)
+            .build(resolver);
+    PythonBinary binary = test.getBinary();
+    ImmutableList<Step> buildSteps =
+        binary.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    PexStep pexStep = FluentIterable.from(buildSteps)
+        .filter(PexStep.class)
+        .get(0);
+    assertThat(pexStep.getArgs(), Matchers.equalTo(buildArgs));
   }
 
 }

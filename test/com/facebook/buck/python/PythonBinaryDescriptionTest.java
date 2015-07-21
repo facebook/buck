@@ -33,14 +33,19 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -96,6 +101,7 @@ public class PythonBinaryDescriptionTest {
     arg.main = Optional.<SourcePath>of(new TestSourcePath("blah.py"));
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
+    arg.buildArgs = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
 
     assertEquals(
@@ -128,6 +134,7 @@ public class PythonBinaryDescriptionTest {
             new BuildTargetSourcePath(genrule.getBuildTarget()));
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
+    arg.buildArgs = Optional.absent();
     BuildRule rule = desc.createBuildRule(params, resolver, arg);
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule),
@@ -153,6 +160,7 @@ public class PythonBinaryDescriptionTest {
     arg.mainModule = Optional.absent();
     arg.main = Optional.<SourcePath>of(new TestSourcePath("foo/" + mainName));
     arg.zipSafe = Optional.absent();
+    arg.buildArgs = Optional.absent();
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
@@ -191,6 +199,7 @@ public class PythonBinaryDescriptionTest {
     arg.main = Optional.absent();
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
+    arg.buildArgs = Optional.absent();
     PythonBinary rule = desc.createBuildRule(params, resolver, arg);
     assertEquals(mainModule, rule.getMainModule());
   }
@@ -214,10 +223,29 @@ public class PythonBinaryDescriptionTest {
     arg.main = Optional.absent();
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
+    arg.buildArgs = Optional.absent();
     PythonBinary rule = desc.createBuildRule(params, resolver, arg);
     assertThat(
         Preconditions.checkNotNull(rule.getPathToOutput()).toString(),
         Matchers.endsWith(".different_extension"));
+  }
+
+  @Test
+  public void buildArgs() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
+    PythonBinary binary =
+        (PythonBinary) PythonBinaryBuilder.create(target)
+            .setMainModule("main")
+            .setBuildArgs(buildArgs)
+            .build(resolver);
+    ImmutableList<Step> buildSteps =
+        binary.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    PexStep pexStep = FluentIterable.from(buildSteps)
+        .filter(PexStep.class)
+        .get(0);
+    assertThat(pexStep.getArgs(), Matchers.equalTo(buildArgs));
   }
 
 }

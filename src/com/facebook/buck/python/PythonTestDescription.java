@@ -41,6 +41,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -230,6 +231,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         binaryParams,
         pathResolver,
         pathToPex,
+        args.buildArgs.or(ImmutableList.<String>of()),
         pathToPexExecuter,
         pexExtension,
         pythonEnvironment,
@@ -259,6 +261,8 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+
+    public Optional<ImmutableList<String>> buildArgs;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
