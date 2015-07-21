@@ -58,6 +58,4 @@ public interface Javac extends RuleKeyAppendable {
 
   String getShortName();
 
-  boolean isUsingWorkspace();
-
 }

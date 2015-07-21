@@ -1123,8 +1123,8 @@ public class DefaultJavaLibraryTest {
         libraryOneTarget);
 
     List<Step> steps = stepsBuilder.build();
-    assertEquals(steps.size(), 3);
-    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
+    assertEquals(steps.size(), 4);
+    assertTrue(((JavacStep) steps.get(3)).getJavac() instanceof Jsr199Javac);
   }
 
   @Test
@@ -1155,9 +1155,9 @@ public class DefaultJavaLibraryTest {
         libraryOneTarget);
 
     List<Step> steps = stepsBuilder.build();
-    assertEquals(steps.size(), 3);
-    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
-    JarBackedJavac jsrJavac = ((JarBackedJavac) (((JavacStep) steps.get(2)).getJavac()));
+    assertEquals(steps.size(), 4);
+    assertTrue(((JavacStep) steps.get(3)).getJavac() instanceof Jsr199Javac);
+    JarBackedJavac jsrJavac = ((JarBackedJavac) (((JavacStep) steps.get(3)).getJavac()));
     assertEquals(
         jsrJavac.getCompilerClassPath(),
         ImmutableSet.of(

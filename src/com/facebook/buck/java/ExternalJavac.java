@@ -101,11 +101,6 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public boolean isUsingWorkspace() {
-    return true;
-  }
-
-  @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     if (version.isPresent()) {
       return builder.setReflectively("javac.version", version.get().toString());

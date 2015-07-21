@@ -109,11 +109,6 @@ public abstract class Jsr199Javac implements Javac {
     return "javac";
   }
 
-  @Override
-  public boolean isUsingWorkspace() {
-    return false;
-  }
-
   protected abstract JavaCompiler createCompiler(
       ExecutionContext context,
       SourcePathResolver resolver);

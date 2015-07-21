@@ -274,13 +274,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       commands.add(new MkdirStep(pathToSrcsList.getParent()));
 
       Optional<Path> workingDirectory;
-      if (getJavacOptions().getJavac().isUsingWorkspace()) {
-        Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
-        commands.add(new MakeCleanDirectoryStep(scratchDir));
-        workingDirectory = Optional.of(scratchDir);
-      } else {
-        workingDirectory = Optional.absent();
-      }
+      Path scratchDir = BuildTargets.getGenPath(target, "lib__%s____working_directory");
+      commands.add(new MakeCleanDirectoryStep(scratchDir));
+      workingDirectory = Optional.of(scratchDir);
 
       JavacStep javacStep = new JavacStep(
           outputDirectory,
