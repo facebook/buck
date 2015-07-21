@@ -54,7 +54,6 @@ JAVA_CLASSPATHS = [
     "third-party/java/okio/okio-1.2.0.jar",
     "third-party/java/servlet-api/javax.servlet-api-3.1.0.jar",
     "third-party/java/slf4j/slf4j-api-1.7.2.jar",
-    "third-party/java/slf4j/slf4j-log4j12-1.7.2.jar",
     "third-party/java/stringtemplate/ST-4.0.8.jar",
     "third-party/java/xz-java-1.3/xz-1.3.jar",
 ]
