@@ -19,7 +19,6 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.shell.Shell;
-import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeExecutableStep;
@@ -31,6 +30,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -77,7 +77,7 @@ public class OCamlDebugLauncherStep implements Step {
   }
 
   @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public int execute(ExecutionContext context) throws InterruptedException, IOException {
     String debugCmdStr = getDebugCmd();
     String debugLuancherScript = getDebugLauncherScript(debugCmdStr);
 
@@ -87,7 +87,7 @@ public class OCamlDebugLauncherStep implements Step {
       return writeExitCode;
     }
 
-    ShellStep chmod = new MakeExecutableStep(args.getOutput().toString());
+    Step chmod = new MakeExecutableStep(args.getOutput());
     return chmod.execute(context);
   }
 

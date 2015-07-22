@@ -116,7 +116,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
                     .add("resources", resourceStrings);
               }
             }),
-        new MakeExecutableStep(output.toString()));
+        new MakeExecutableStep(output));
   }
 
   @Override
