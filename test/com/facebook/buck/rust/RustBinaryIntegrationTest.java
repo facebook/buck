@@ -64,6 +64,18 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void buildAfterChangeWorks() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:xyzzy").assertSuccess();
+    workspace.writeContentsToPath(
+        workspace.getFileContents("main.rs") + "// this is a comment",
+        "main.rs");
+  }
+
+  @Test
   public void binaryWithLibrary() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_library", tmp);

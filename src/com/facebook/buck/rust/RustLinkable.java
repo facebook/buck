@@ -98,6 +98,7 @@ abstract class RustLinkable extends AbstractBuildRule {
       externalCratesBuilder.put(buildRule.getBuildTarget().getShortName(), ruleOutput);
     }
     return ImmutableList.of(
+        new MakeCleanDirectoryStep(scratchDir),
         new SymlinkFilesIntoDirectoryStep(
             context.getProjectRoot(),
             getResolver().getAllPaths(srcs),
