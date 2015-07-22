@@ -22,11 +22,15 @@ import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 
+import com.facebook.buck.log.Logger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 
@@ -36,6 +40,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Encapsulates all the logic to sanitize debug paths in native code.  Currently, this just
@@ -51,6 +56,17 @@ public class DebugPathSanitizer {
   private final char separator;
   private final Path compilationDirectory;
   private final ImmutableBiMap<Path, Path> other;
+
+  private final LoadingCache<Path, ImmutableBiMap<Path, Path>> pathCache =
+      CacheBuilder
+          .newBuilder()
+          .softValues()
+          .build(new CacheLoader<Path, ImmutableBiMap<Path, Path>>() {
+            @Override
+            public ImmutableBiMap<Path, Path> load(Path key) {
+              return getAllPathsWork(key);
+            }
+          });
 
   /**
    * @param pathSize fix paths to this size for in-place replacements.
@@ -78,10 +94,23 @@ public class DebugPathSanitizer {
   }
 
   private ImmutableBiMap<Path, Path> getAllPaths(Optional<Path> workingDir) {
-    ImmutableBiMap.Builder<Path, Path> builder = ImmutableBiMap.builder();
-    if (workingDir.isPresent()) {
-      builder.put(workingDir.get(), compilationDirectory);
+    if (!workingDir.isPresent()) {
+      return other;
     }
+
+    try {
+      return pathCache.get(workingDir.get());
+    } catch (ExecutionException e) {
+      Logger.get(DebugPathSanitizer.class).error(
+          "Problem loading paths into cache",
+          e);
+      return getAllPathsWork(workingDir.get());
+    }
+  }
+
+  private ImmutableBiMap<Path, Path> getAllPathsWork(Path workingDir) {
+    ImmutableBiMap.Builder<Path, Path> builder = ImmutableBiMap.builder();
+    builder.put(workingDir, compilationDirectory);
     builder.putAll(other);
     return builder.build();
   }
@@ -115,7 +144,13 @@ public class DebugPathSanitizer {
       } else {
         replacement = entry.getValue().toString();
       }
-      contents = contents.replace(entry.getKey().toString(), replacement);
+      String pathToReplace = entry.getKey().toString();
+      if (contents.contains(pathToReplace)) {
+        // String.replace creates a number of objects, and creates a fair
+        // amount of object churn at this level, so we avoid doing it if
+        // it's essentially going to be a no-op.
+        contents = contents.replace(pathToReplace, replacement);
+      }
     }
     return contents;
   }
