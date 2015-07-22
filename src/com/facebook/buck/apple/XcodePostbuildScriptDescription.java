@@ -35,7 +35,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
  *   cmd = '../Tools/pngcrush.sh',
  * )
  * </pre>
- * </p>
+ * <p>
  * This rule is a hack and in the long-term should be replaced with a rule
  * which operates similarly to apk_genrule, or should be removed entirely
  * if possible. Those rules do nothing when building with Buck.

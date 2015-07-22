@@ -86,7 +86,7 @@ abstract class AbstractIjFolder {
   public abstract ImmutableSortedSet<Path> getInputs();
 
   /**
-   * Used to make IntelliJ ignore the package name->folder structure convention and assume the
+   * Used to make IntelliJ ignore the package name-&gt;folder structure convention and assume the
    * given package prefix. An example of a scenario this makes possible to achieve is having
    * java/src/Foo.java declare the package "org.bar" (instead of having the path to the file be
    * java/org/bar/Foo.java).

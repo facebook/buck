@@ -51,7 +51,7 @@ import javax.annotation.Nullable;
  * relevant to idempotency. The RuleKey.Builder API conceptually implements the construction of an
  * ordered map, and the key/val pairs are digested using an internal serialization that guarantees
  * a 1:1 mapping for each distinct vector of keys
- * &lt;header,k1,...,kn> in RuleKey.builder(header).set(k1, v1) ... .set(kn, vn).build().
+ * &lt;header,k1,...,kn&gt; in RuleKey.builder(header).set(k1, v1) ... .set(kn, vn).build().
  * <p>
  * Note carefully that in order to reliably avoid accidental collisions, each RuleKey schema, as
  * defined by the key vector, must have a distinct header. Otherwise it is possible (if unlikely)

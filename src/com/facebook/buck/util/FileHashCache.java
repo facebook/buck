@@ -22,7 +22,7 @@ import java.nio.file.Path;
 
 /**
  * A cache which maps Paths to cached hashes of their contents,
- * based on a simplified subset of the java.util.Map<Path, HashCode> interface.
+ * based on a simplified subset of the java.util.Map&lt;Path, HashCode&gt; interface.
  */
 public interface FileHashCache {
   boolean contains(Path path);

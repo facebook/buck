@@ -69,7 +69,7 @@ public class ZipStep implements Step {
   /**
    * Create a {@link ZipStep} to create or update a zip archive.
    *
-   * Note that paths added to the archive are always relative to the working directory.<br/>
+   * Note that paths added to the archive are always relative to the working directory.<br>
    * For example, if you're in {@code /dir} and you add {@code file.txt}, you get
    * an archive containing just the file. If you were in {@code /} and added
    * {@code dir/file.txt}, you would get an archive containing the file within a directory.

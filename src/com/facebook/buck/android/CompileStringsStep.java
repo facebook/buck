@@ -67,7 +67,7 @@ import java.util.regex.Pattern;
  *     </string-array>
  *   </resources>
  *   }
- * </pre></p>
+ * </pre>
  *
  * <p>For more information on the xml file format, refer to:
  * <a href="http://developer.android.com/guide/topics/resources/string-resource.html">
@@ -81,7 +81,7 @@ import java.util.regex.Pattern;
  *   <li> a map of plurals </li>
  *   <li> a list of strings </li>
  * </ol>
- * and dumps this map into the output file. See {@link StringResources} for the file format.</p>
+ * and dumps this map into the output file. See {@link StringResources} for the file format.
  */
 public class CompileStringsStep implements Step {
 

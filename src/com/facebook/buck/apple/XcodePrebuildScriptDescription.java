@@ -35,7 +35,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
  *   cmd = 'register_app.sh',
  * )
  * </pre>
- * </p>
+ * <p>
  * This rule is a hack and in the long-term should be replaced with a genrule that works in both
  * Buck and Xcode build. Those rules do nothing when building with Buck.
  */

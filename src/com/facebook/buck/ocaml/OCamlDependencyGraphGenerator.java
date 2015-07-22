@@ -34,7 +34,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Parse output of ocamldep tool and build dependency graph of ocaml source files (*.ml & *.mli)
+ * Parse output of ocamldep tool and build dependency graph of ocaml source files (*.ml &amp; *.mli)
  */
 public class OCamlDependencyGraphGenerator {
   private static final String OCAML_SOURCE_AND_DEPS_SEPARATOR = ":";

@@ -45,6 +45,17 @@
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
   <property name="immutables.gensrc.test.dir" value="${build.dir}/immutables-tests" />
 
+  <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
+  <available property="jdk1.8" classname="java.util.stream.Stream"/>
+  <condition
+          property="javadoc.doclint"
+          value="-Xdoclint:-reference"
+          else="">
+    <and>
+      <isset property="jdk1.8"/>
+    </and>
+  </condition>
+
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
     <include name="ddmlib/ddmlib-22.5.3.jar" />
@@ -167,7 +178,7 @@
 
       <!-- Be very careful what is added here, and leave comments justifying each addition. See the
       comment in bootstrapper-classpath above for more details on why. -->
-      
+
       <!-- The Tracing API jar must be accessible to both Buck and compiler plugins, so we put it
       in the bootstrapper. Compiler plugins will have their own copy linked in, but the ClassLoaders
       will end up loading this one instead when they are run inside Buck. -->
@@ -783,15 +794,18 @@
       <delete dir="@{destdir}" />
       <mkdir dir="@{destdir}" />
       <record name="@{destdir}/javadoc.log" action="start" />
+
       <javadoc destdir="@{destdir}"
                access="@{access}"
                classpathref="@{classpathref}"
                windowtitle="Buck"
                failonerror="true"
+               additionalparam="${javadoc.doclint}"
                >
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/cli/quickstart/**" />
+          <exclude name="com/facebook/buck/android/support/exopackage/**" />
         </fileset>
         <fileset dir="${immutables.gensrc.dir}" />
         <link href="http://docs.oracle.com/javase/7/docs/api/" />

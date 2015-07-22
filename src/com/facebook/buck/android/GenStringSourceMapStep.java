@@ -41,23 +41,23 @@ import java.util.Map;
 
 /**
  * This class implements a Buck build step that will generate a JSON file with the following info
- * for each <string>, <plurals> and <string-array> resource found in the strings.xml files for each
- * resource directory:
- * <p/>
+ * for each &lt;string&gt;, &lt;plurals&gt; and &lt;string-array&gt; resource found in the
+ * strings.xml files for each resource directory:
+ * <p>
  * <pre>
  * android_resource_name : {
  *   androidResourceId,
  *   stringsXmlPath
  * }
  * </pre>
- * <p/>
+ * <p>
  * where:
  * <ul>
  *   <li>androidResourceId is the integer value, assigned by aapt, extracted from R.txt
  *   <li>stringsXmlPath is the path to the first strings.xml file where this string resource was
  *   found.
  * </ul>
- * <p/>
+ * <p>
  * Example:
  * <pre>
  * {

@@ -102,7 +102,7 @@ public class Logger
 
     /**
      * Logs a message at VERBOSE level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.verbose("value is %s (%d ms)", value, time);
@@ -130,7 +130,7 @@ public class Logger
 
     /**
      * Logs a message at VERBOSE level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.verbose(e, "value is %s (%d ms)", value, time);
@@ -180,7 +180,7 @@ public class Logger
 
     /**
      * Logs a message at DEBUG level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.debug("value is %s (%d ms)", value, time);
@@ -208,7 +208,7 @@ public class Logger
 
     /**
      * Logs a message at DEBUG level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.debug(e, "value is %s (%d ms)", value, time);
@@ -247,7 +247,7 @@ public class Logger
 
     /**
      * Logs a message at INFO level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.info("value is %s (%d ms)", value, time);
@@ -307,7 +307,7 @@ public class Logger
 
     /**
      * Logs a message at WARN level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.warn(e, "something bad happened when connecting to %s:%d", host, port);
@@ -336,7 +336,7 @@ public class Logger
 
     /**
      * Logs a message at WARN level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.warn("something bad happened when connecting to %s:%d", host, port);
@@ -375,7 +375,7 @@ public class Logger
 
     /**
      * Logs a message at ERROR level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.error(e, "something really bad happened when connecting to %s:%d", host, port);
@@ -404,7 +404,7 @@ public class Logger
 
     /**
      * Logs a message at ERROR level. The value of {@code exception.getMessage()} will be used as the log message.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.error(e);
@@ -421,7 +421,7 @@ public class Logger
 
     /**
      * Logs a message at ERROR level.
-     * <br/>
+     * <br>
      * Usage example:
      * <pre>
      *    logger.error("something really bad happened when connecting to %s:%d", host, port);

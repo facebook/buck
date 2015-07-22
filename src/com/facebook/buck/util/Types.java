@@ -36,11 +36,11 @@ public class Types {
   /**
    * Determine the "base type" of a field. That is, the following will be returned:
    * <ul>
-   *   <li>{@code String} -> {@code String.class}
-   *   <li>{@code Optional&lt;String>} -> {@code String.class}
-   *   <li>{@code Set&lt;String>} -> {@code String.class}
-   *   <li>{@code Collection&lt;? extends Comparable>} -> {@code Comparable.class}
-   *   <li>{@code Collection&lt;? super Comparable} -> {@code Object.class}
+   *   <li>{@code String} -&gt; {@code String.class}
+   *   <li>{@code Optional&lt;String&gt;} -&gt; {@code String.class}
+   *   <li>{@code Set&lt;String&gt;} -&gt; {@code String.class}
+   *   <li>{@code Collection&lt;? extends Comparable&gt;} -&gt; {@code Comparable.class}
+   *   <li>{@code Collection&lt;? super Comparable} -&gt; {@code Object.class}
    * </ul>
    */
   public static Type getBaseType(Field field) {
@@ -88,10 +88,10 @@ public class Types {
    * information from the {@link ParameterizedType}.
    *
    * <ul>
-   *   <li>String -> String
-   *   <li>Optional&lt;String> -> String
-   *   <li>ImmutableSet&lt;String> -> ImmutableSet&lt;String>
-   *   <li>Optional&lt;ImmutableSet&lt;String>> -> ImmutableSet&lt;String>
+   *   <li>String -&gt; String
+   *   <li>Optional&lt;String$gt; -&gt; String
+   *   <li>ImmutableSet&lt;String&gt; -&gt; ImmutableSet&lt;String&gt;
+   *   <li>Optional&lt;ImmutableSet&lt;String&gt;&gt; -&gt; ImmutableSet&lt;String&gt;
    * </ul>
    */
   public static Type getFirstNonOptionalType(Field field) {

@@ -34,6 +34,7 @@ import java.lang.annotation.Target;
  * <li>Supports setFoo() setters in the parent interface or abstract class</li>
  * <li>Ensures the generated class is public (even if the parent interface or abstract class
  * is package private)</li>
+ * </ol>
  */
 @Value.Style(
     typeImmutable = "*",

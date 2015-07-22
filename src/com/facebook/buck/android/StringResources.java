@@ -114,7 +114,6 @@ public class StringResources {
    *   arrays
    *   [Byte array of string value] x Summation of array elements over # of arrays
    * </pre>
-   * </p>
    */
   public byte[] getBinaryFileContent() {
     try (

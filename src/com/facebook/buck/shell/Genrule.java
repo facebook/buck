@@ -65,7 +65,7 @@ import java.util.Set;
  *     'wakizashi_to_katana_manifest.py',
  *     'AndroidManifest.xml',
  *   ],
- *   cmd = 'python wakizashi_to_katana_manifest.py ${SRCDIR}/AndroidManfiest.xml > $OUT',
+ *   cmd = 'python wakizashi_to_katana_manifest.py ${SRCDIR}/AndroidManfiest.xml &gt; $OUT',
  *   out = 'AndroidManifest.xml',
  * )
  * </pre>
@@ -92,7 +92,7 @@ import java.util.Set;
  * In the above example, if the {@code katana_manifest} rule were defined in the
  * {@code src/com/facebook/wakizashi} directory, then the command that would be executed would be:
  * <pre>
- * python convert_to_katana.py src/com/facebook/wakizashi/AndroidManifest.xml > \
+ * python convert_to_katana.py src/com/facebook/wakizashi/AndroidManifest.xml &gt; \
  *     buck-out/gen/src/com/facebook/wakizashi/AndroidManifest.xml
  * </pre>
  * Note that {@code cmd} could be run on either Mac or Linux, so it should contain logic that works

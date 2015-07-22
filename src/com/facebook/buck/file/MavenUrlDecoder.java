@@ -32,9 +32,9 @@ import java.util.regex.Pattern;
  * <pre>
  *   mvn:optionalServer:group:id:type:classifier:version
  * </pre>
- * If the {@code optionalServer} is omitted, the default one configured in "download -> maven_repo" in
- * the project's {@code .buckconfig} is used, or an exception is thrown. The optionalServer URL is
- * expected to be a valid {@link java.net.URL}.
+ * If the {@code optionalServer} is omitted, the default one configured in "download -&gt;
+ * maven_repo" in the project's {@code .buckconfig} is used, or an exception is thrown. The
+ * optionalServer URL is expected to be a valid {@link java.net.URL}.
  * <p>
  * Examples of valid mvn URLs:
  * <pre>

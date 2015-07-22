@@ -78,7 +78,7 @@ public class MorePosixFilePermissions {
 
   /**
    * Return a new set of permissions which include execute permission for each of the
-   * roles that already have read permissions (e.g. 0606 => 0707).
+   * roles that already have read permissions (e.g. 0606 =&gt; 0707).
    */
   public static ImmutableSet<PosixFilePermission> addExecutePermissionsIfReadable(
       Set<PosixFilePermission> permissions) {
