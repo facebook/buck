@@ -139,6 +139,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             params.getBuildTarget(),
             resolver),
         args.resourcesRoot,
+        args.mavenCoords,
         dummyRDotJava,
         testRuleTimeoutMs,
         args.getRunTestSeparately());

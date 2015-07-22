@@ -85,6 +85,7 @@ public class RobolectricTest extends JavaTest {
       List<String> vmArgs,
       ImmutableSet<BuildRule> sourceTargetsUnderTest,
       Optional<Path> resourcesRoot,
+      Optional<String> mavenCoords,
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestSeparately) {
@@ -102,6 +103,7 @@ public class RobolectricTest extends JavaTest {
         vmArgs,
         sourceTargetsUnderTest,
         resourcesRoot,
+        mavenCoords,
         testRuleTimeoutMs,
         runTestSeparately);
     this.optionalDummyRDotJava = optionalDummyRDotJava;

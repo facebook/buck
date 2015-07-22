@@ -59,5 +59,7 @@
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="immutables-annotations" level="project" />
+    <orderEntry type="module" module-name="maven" />
+    <orderEntry type="library" name="maven-lib" level="project" />
   </component>
 </module>

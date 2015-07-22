@@ -27,10 +27,18 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.helpers.NOPLoggerFactory;
+
+import java.net.URL;
 
 public class AetherUtil {
 
   private AetherUtil() {
+  }
+
+  public static RemoteRepository toRemoteRepository(URL remoteRepositoryUrl) {
+    return toRemoteRepository(remoteRepositoryUrl.toString());
   }
 
   public static RemoteRepository toRemoteRepository(String remoteRepositoryUrl) {
@@ -41,8 +49,24 @@ public class AetherUtil {
 
   public static ServiceLocator initServiceLocator() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
+    locator.setErrorHandler(
+        new DefaultServiceLocator.ErrorHandler() {
+          @Override
+          public void serviceCreationFailed(Class<?> type, Class<?> impl, Throwable exception) {
+            throw new RuntimeException(
+                String.format("Failed to initialize service %s, implemented by %s: %s",
+                    type.getName(),
+                    impl.getName(),
+                    exception.getMessage()),
+                    exception);
+          }
+        });
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
     locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+    // Use a no-op logger. Leaving this out would introduce a runtime dependency on log4j
+    locator.addService(ILoggerFactory.class, NOPLoggerFactory.class);
+    // Also requires log4j
+//    locator.addService(ILoggerFactory.class, Log4jLoggerFactory.class);
     return locator;
   }
 }

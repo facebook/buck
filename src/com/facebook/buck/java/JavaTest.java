@@ -114,6 +114,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
       List<String> vmArgs,
       ImmutableSet<BuildRule> sourceUnderTest,
       Optional<Path> resourcesRoot,
+      Optional<String> mavenCoords,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestSeparately) {
     super(
@@ -127,7 +128,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         addtionalClasspathEntries,
         javacOptions,
-        resourcesRoot);
+        resourcesRoot,
+        mavenCoords);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.sourceUnderTest = sourceUnderTest;
     this.labels = ImmutableSet.copyOf(labels);

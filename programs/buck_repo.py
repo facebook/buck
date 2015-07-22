@@ -56,6 +56,19 @@ JAVA_CLASSPATHS = [
     "third-party/java/slf4j/slf4j-api-1.7.2.jar",
     "third-party/java/stringtemplate/ST-4.0.8.jar",
     "third-party/java/xz-java-1.3/xz-1.3.jar",
+    # maven/aether libs
+    "third-party/java/aether/aether-api-1.0.2.v20150114.jar",
+    "third-party/java/aether/aether-connector-basic-1.0.2.v20150114.jar",
+    "third-party/java/aether/aether-impl-1.0.0.v20140518.jar",
+    "third-party/java/aether/aether-spi-1.0.2.v20150114.jar",
+    "third-party/java/aether/aether-transport-http-1.0.2.v20150114.jar",
+    "third-party/java/aether/aether-util-1.0.2.v20150114.jar",
+    "third-party/java/maven/maven-aether-provider-3.2.5.jar",
+    "third-party/java/maven/maven-model-3.2.5.jar",
+    "third-party/java/maven/maven-model-builder-3.2.5.jar",
+    "third-party/java/slf4j/slf4j-api-1.7.5.jar",
+    "third-party/java/plexus/plexus-utils-3.0.20.jar",
+    "third-party/java/plexus/plexus-interpolation-1.21.jar",
 ]
 
 RESOURCES = {

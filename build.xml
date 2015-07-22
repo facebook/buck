@@ -102,6 +102,24 @@
     <include name="slf4j/slf4j-api-1.7.2.jar" />
     <include name="stringtemplate/ST-4.0.8.jar" />
     <include name="xz-java-1.3/xz-1.3.jar" />
+
+    <!-- maven interop -->
+    <include name="aether/aether-api-1.0.2.v20150114.jar" />
+    <include name="aether/aether-connector-basic-1.0.2.v20150114.jar" />
+    <include name="aether/aether-impl-1.0.0.v20140518.jar" />
+    <include name="aether/aether-spi-1.0.2.v20150114.jar" />
+    <include name="aether/aether-transport-http-1.0.2.v20150114.jar" />
+    <include name="aether/aether-util-1.0.2.v20150114.jar" />
+    <include name="httpcomponents/httpclient-4.2.6.jar" />
+    <include name="httpcomponents/httpcore-4.2.5.jar" />
+    <include name="maven/maven-aether-provider-3.2.5.jar" />
+    <include name="maven/maven-model-3.2.5.jar" />
+    <include name="maven/maven-model-builder-3.2.5.jar" />
+    <include name="maven/maven-repository-metadata-3.2.5.jar" />
+    <include name="plexus/plexus-utils-3.0.20.jar" />
+    <include name="plexus/plexus-interpolation-1.21.jar" />
+    <include name="slf4j/jcl-over-slf4j-1.6.2.jar" />
+    <include name="slf4j/slf4j-api-1.7.5.jar" />
   </fileset>
 
   <path id="classpath-no-src">
@@ -358,8 +376,6 @@
         <exclude name="com/facebook/buck/cli/quickstart/**" />
         <exclude name="com/facebook/buck/event/api/**" />
         <exclude name="com/facebook/buck/junit/**" />
-        <!-- Excluded since the maven functionality is bolted on later -->
-        <exclude name="com/facebook/buck/maven/**" />
         <src path="${immutables.gensrc.dir}" />
       </javac-params>
     </ecj>
@@ -539,7 +555,6 @@
          >
       <javac-params>
         <exclude name="**/testdata/**" />
-        <exclude name="com/facebook/buck/maven/**" />
       </javac-params>
     </ecj>
   </target>
@@ -613,7 +628,6 @@
           <include name="**/*${test.class}.java" />
 
           <exclude name="**/testdata/**" />
-          <exclude name="com/facebook/buck/maven/**" />
           <exclude name="com/facebook/buck/java/**" />
           <exclude name="com/facebook/buck/android/**" />
           <exclude name="com/facebook/buck/dalvik/**" />
@@ -827,16 +841,6 @@
     <!-- Buck test runner has references to JUnit and TestNG. -->
     <pathelement location="${third-party.dir}/java/junit/junit-4.11.jar" />
     <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
-
-    <!-- Include the jars required to document the maven interop pieces -->
-    <pathelement location="${third-party.dir}/java/aether/aether-api-1.0.2.v20150114.jar" />
-    <pathelement location="${third-party.dir}/java/aether/aether-connector-basic-1.0.2.v20150114.jar" />
-    <pathelement location="${third-party.dir}/java/aether/aether-impl-1.0.0.v20140518.jar" />
-    <pathelement location="${third-party.dir}/java/aether/aether-spi-1.0.2.v20150114.jar" />
-    <pathelement location="${third-party.dir}/java/aether/aether-transport-http-1.0.2.v20150114.jar" />
-    <pathelement location="${third-party.dir}/java/aether/aether-util-1.0.2.v20150114.jar" />
-    <pathelement location="${third-party.dir}/java/maven/maven-aether-provider-3.2.5.jar" />
-    <pathelement location="${third-party.dir}/java/slf4j/slf4j-api-1.7.5.jar" />
   </path>
 
   <target name="javadoc"

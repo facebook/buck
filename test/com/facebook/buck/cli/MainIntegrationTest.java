@@ -99,6 +99,7 @@ public class MainIntegrationTest {
         "  fetch       downloads remote resources to your local machine",
         "  install     builds and installs an application",
         "  project     generates project configuration files for an IDE",
+        "  publish     builds and publishes a library to a central repository",
         "  quickstart  generates a default project directory",
         "  run         runs a target as a command",
         "  server      query and control the http server",

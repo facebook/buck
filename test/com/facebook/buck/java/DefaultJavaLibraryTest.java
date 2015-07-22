@@ -937,7 +937,8 @@ public class DefaultJavaLibraryTest {
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         DEFAULT_JAVAC_OPTIONS,
-        /* resourcesRoot */ Optional.<Path>absent()) {
+        /* resourcesRoot */ Optional.<Path>absent(),
+        /* mavenCoords */ Optional.<String>absent()) {
       @Override
       public Sha1HashCode getAbiKey() {
         if (partialAbiHash == null) {
@@ -1384,6 +1385,7 @@ public class DefaultJavaLibraryTest {
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
           options.build(),
           /* resourcesRoot */ Optional.<Path>absent(),
+          /* mavenCoords */ Optional.<String>absent(),
           /* manifestFile */ Optional.<SourcePath>absent(),
           /* isPrebuiltAar */ false);
     }

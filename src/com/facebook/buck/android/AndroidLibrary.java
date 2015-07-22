@@ -62,6 +62,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot,
+      Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
       boolean isPrebuiltAar) {
     super(
@@ -75,7 +76,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         providedDeps,
         additionalClasspathEntries,
         javacOptions,
-        resourcesRoot);
+        resourcesRoot,
+        mavenCoords);
     this.manifestFile = manifestFile;
     this.isPrebuiltAar = isPrebuiltAar;
   }

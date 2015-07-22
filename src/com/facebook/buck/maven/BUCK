@@ -6,6 +6,8 @@ java_library(
   ],
   deps = [
     '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/io:io',
     '//third-party/java/aether:aether-api',
     '//third-party/java/aether:aether-connector-basic',
     '//third-party/java/aether:aether-impl',
@@ -15,10 +17,14 @@ java_library(
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/maven:maven-aether-provider',
+    '//third-party/java/slf4j:slf4j-api',
     '//third-party/java/stringtemplate:stringtemplate',
   ],
   visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/maven:maven',
+    '//test/com/facebook/buck/maven:testutil',
   ],
 )
 

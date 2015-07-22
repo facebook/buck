@@ -142,6 +142,7 @@ public class AndroidLibraryDescription
           additionalClasspathEntries,
           javacOptions,
           args.resourcesRoot,
+          args.mavenCoords,
           args.manifest,
           /* isPrebuiltAar */ false);
     }

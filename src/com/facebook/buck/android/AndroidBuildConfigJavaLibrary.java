@@ -60,7 +60,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions,
-        /* resourcesRoot */ Optional.<Path>absent());
+        /* resourcesRoot */ Optional.<Path>absent(),
+        /* mavenCoords */ Optional.<String>absent());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getDeps().contains(androidBuildConfig),

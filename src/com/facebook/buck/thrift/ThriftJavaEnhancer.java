@@ -140,7 +140,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         templateOptions,
-        /* resourcesRoot */ Optional.<Path>absent());
+        /* resourcesRoot */ Optional.<Path>absent(),
+        /* mavenCoords */ Optional.<String>absent());
   }
 
   private ImmutableSet<BuildTarget> getImplicitDeps() {

@@ -1,0 +1,12 @@
+java_library(
+  name = 'foo',
+  maven_coords = 'com.example:foo:1.0',
+  srcs = glob(['*.java']),
+  resources = [
+  ],
+  deps = [
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

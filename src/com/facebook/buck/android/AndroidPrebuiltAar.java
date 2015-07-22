@@ -65,6 +65,7 @@ public class AndroidPrebuiltAar
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions,
         /* resourcesRoot */ Optional.<Path>absent(),
+        /* mavenCoords */ Optional.<String>absent(),
         /* manifestFile */ Optional.<SourcePath>absent(),
         /* isPrebuiltAar */ true);
     this.androidResource = androidResource;

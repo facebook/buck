@@ -18,6 +18,9 @@ package com.facebook.buck.testutil.integration;
 
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import com.google.common.base.Throwables;
 
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.server.Connector;
@@ -42,6 +45,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -54,7 +58,7 @@ public class HttpdForTests implements AutoCloseable {
 
   private final HandlerList handlerList;
   private Server server;
-  private boolean isRunning;
+  private AtomicBoolean isRunning = new AtomicBoolean(false);
 
   public HttpdForTests() {
     // Configure the logging for jetty. Which uses a singleton. Ho hum.
@@ -71,7 +75,7 @@ public class HttpdForTests implements AutoCloseable {
   }
 
   public void addHandler(Handler handler) {
-    assertFalse(isRunning);
+    assertFalse(isRunning.get());
 
     handlerList.addHandler(handler);
   }
@@ -81,7 +85,7 @@ public class HttpdForTests implements AutoCloseable {
   }
 
   public void start() throws Exception {
-    assertFalse(isRunning);
+    assertTrue(isRunning.compareAndSet(false, true));
 
     handlerList.addHandler(new DefaultHandler());
     server.setHandler(handlerList);
@@ -93,10 +97,22 @@ public class HttpdForTests implements AutoCloseable {
   public void close() throws Exception {
     server.stop();
     server.join();
-    isRunning = false;
+    isRunning.set(false);
+  }
+
+  public URI getRootUri() {
+    try {
+      return getUri("/");
+    } catch (URISyntaxException e) {
+      // Should never happen
+      throw Throwables.propagate(e);
+    }
   }
 
   public URI getUri(String path) throws URISyntaxException {
+    assertTrue("Server must be running before retrieving a URI, otherwise the resulting URI may " +
+            "not have an appropriate port",
+        isRunning.get());
     URI baseUri;
     try {
       baseUri = server.getURI();

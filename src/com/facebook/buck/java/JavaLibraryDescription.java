@@ -120,7 +120,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         resolver.getAllRules(args.providedDeps.get()),
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions,
-        args.resourcesRoot);
+        args.resourcesRoot,
+        args.mavenCoords);
   }
 
   // TODO(natthu): Consider adding a validateArg() method on Description which gets called before
@@ -295,6 +296,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableList<String>> postprocessClassesCommands;
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
+    public Optional<String> mavenCoords;
 
     public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
     public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;

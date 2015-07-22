@@ -16,7 +16,11 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -32,20 +36,49 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 
 public class Publisher {
+
+  public static final String MAVEN_CENTRAL_URL = "https://repo1.maven.org/maven2";
+  private static final URL MAVEN_CENTRAL;
+  static {
+    try {
+      MAVEN_CENTRAL = new URL(MAVEN_CENTRAL_URL);
+    } catch (MalformedURLException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+  private static final Logger LOG = Logger.get(Publisher.class);
 
   private final ServiceLocator locator;
   private final LocalRepository localRepo;
   private final RemoteRepository remoteRepo;
 
-  public Publisher(
-      Path localRepoPath,
-      String remoteRepoUrl) {
+  public Publisher(ProjectFilesystem repositoryFilesystem, Optional<URL> remoteRepoUrl) {
+    this(repositoryFilesystem.getRootPath(), remoteRepoUrl);
+  }
+
+  /**
+   * @param localRepoPath Typically obtained as
+   *                      {@link com.facebook.buck.io.ProjectFilesystem#getRootPath}
+   * @param remoteRepoUrl Canonically {@link #MAVEN_CENTRAL_URL}
+   */
+  public Publisher(Path localRepoPath, Optional<URL> remoteRepoUrl) {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
-    this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl);
+    this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl.or(MAVEN_CENTRAL));
     this.locator = AetherUtil.initServiceLocator();
+  }
+
+  /**
+   * @param coords Buildr-style artifact reference, e.g. "com.example:foo:1.0"
+   *
+   * @see DefaultArtifact#DefaultArtifact(String)
+   */
+  public void publish(String coords, File... toPublish) throws DeploymentException {
+    publish(new DefaultArtifact(coords), toPublish);
   }
 
   public void publish(
@@ -66,6 +99,14 @@ public class Publisher {
    *                  extension of each given file will be used as a maven "extension" coordinate
    */
   public void publish(Artifact descriptor, File... toPublish) throws DeploymentException {
+    String providedExtension = descriptor.getExtension();
+    if (!providedExtension.isEmpty()) {
+      LOG.warn(
+          "Provided extension %s of artifact %s to be published will be ignored. The extensions " +
+              "of the provided file(s) will be used",
+          providedExtension,
+          descriptor);
+    }
     Artifact[] artifacts = new Artifact[toPublish.length];
     for (int i = 0; i < toPublish.length; i++) {
       File file = toPublish[i];
@@ -84,7 +125,8 @@ public class Publisher {
    * @see Artifact#setFile
    */
   public void publish(Artifact... toPublish) throws DeploymentException {
-    RepositorySystem repoSys = locator.getService(RepositorySystem.class);
+    RepositorySystem repoSys = Preconditions.checkNotNull(
+        locator.getService(RepositorySystem.class));
 
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     session.setLocalRepositoryManager(repoSys.newLocalRepositoryManager(session, localRepo));
@@ -94,7 +136,7 @@ public class Publisher {
     for (Artifact artifact : toPublish) {
       File file = artifact.getFile();
       Preconditions.checkNotNull(file);
-      Preconditions.checkArgument(file.exists());
+      Preconditions.checkArgument(file.exists(), "No such file: %s", file.getAbsolutePath());
 
       deployRequest.addArtifact(artifact);
     }

@@ -125,6 +125,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             params.getBuildTarget(),
             resolver),
         args.resourcesRoot,
+        args.mavenCoords,
         testRuleTimeoutMs,
         args.getRunTestSeparately());
   }

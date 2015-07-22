@@ -14,6 +14,7 @@
   "javac": null,
   "javacJar": null,
   "javaVersion": null,
+  "mavenCoords":null,
   "name" : "test-library",
   "postprocessClassesCommands" : [ ],
   "proguardConfig" : null,

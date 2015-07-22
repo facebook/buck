@@ -31,9 +31,7 @@ prebuilt_jar(
   binary_jar = 'aether-api-1.0.2.v20150114.jar',
   source_jar = 'aether-api-1.0.2.v20150114-sources.jar',
   visibility = [
-    '//src/com/facebook/buck/maven:maven',
-    '//test/com/facebook/buck/maven:maven',
-    '//third-party/java/maven:maven-aether-provider',
+    'PUBLIC',
   ],
 )
 

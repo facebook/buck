@@ -1,7 +1,12 @@
+STANDARD_TEST_SRCS = [
+  '**/*Test.java',
+]
+
 java_test(
   name = 'maven',
-  srcs = glob(['*.java']),
+  srcs = glob(STANDARD_TEST_SRCS),
   deps = [
+    ':testutil',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/file:downloader',
@@ -24,4 +29,23 @@ java_test(
     '//third-party/java/jetty:jetty',
     '//third-party/java/junit:junit',
   ],
+)
+
+java_library(
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS),
+  deps = [
+      '//src/com/facebook/buck/maven:maven',
+      '//src/com/facebook/buck/io:io',
+      '//test/com/facebook/buck/testutil/integration:integration',
+      '//test/com/facebook/buck/testutil:testutil',
+      '//third-party/java/aether:aether-api',
+      '//third-party/java/guava:guava',
+      '//third-party/java/hamcrest:hamcrest',
+      '//third-party/java/jetty:jetty',
+      '//third-party/java/junit:junit',
+  ],
+  visibility = [
+      'PUBLIC',
+  ]
 )

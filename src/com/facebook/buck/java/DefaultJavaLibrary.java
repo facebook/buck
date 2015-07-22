@@ -112,6 +112,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final ImmutableSortedSet<SourcePath> resources;
   @AddToRuleKey(stringify = true)
   private final Optional<Path> resourcesRoot;
+  @AddToRuleKey
+  private final Optional<String> mavenCoords;
   private final Optional<Path> outputJar;
   @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
@@ -184,7 +186,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildRule> providedDeps,
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
-      Optional<Path> resourcesRoot) {
+      Optional<Path> resourcesRoot,
+      Optional<String> mavenCoords) {
     super(params, resolver);
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
@@ -207,6 +210,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.additionalClasspathEntries = additionalClasspathEntries;
     this.javacOptions = javacOptions;
     this.resourcesRoot = resourcesRoot;
+    this.mavenCoords = mavenCoords;
 
     if (!srcs.isEmpty() || !resources.isEmpty()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
@@ -745,6 +749,10 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             Sets.difference(
                 Sets.union(getDeclaredDeps(), exportedDeps),
                 providedDeps)));
+  }
+
+  public Optional<String> getMavenCoords() {
+    return mavenCoords;
   }
 
   @Override
