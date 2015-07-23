@@ -587,6 +587,7 @@
     <junit failureproperty="hasFailingTests"
            showoutput="true"
            forkmode="perBatch"
+           haltonfailure="on"
            haltonerror="on">
       <sysproperty key="buck.path_to_compile_asset_catalogs_py" value="${buck.path_to_compile_asset_catalogs_py}" />
       <sysproperty key="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${buck.path_to_compile_asset_catalogs_build_phase_sh}" />
