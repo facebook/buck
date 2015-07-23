@@ -12,10 +12,10 @@ prebuilt_jar(
   binary_jar = 'maven-model-builder-3.2.5.jar',
   source_jar = 'maven-model-builder-3.2.5-sources.jar',
   deps = [
+    ':maven-model',
     '//third-party/java/plexus:plexus-component-annotations',
     '//third-party/java/plexus:plexus-interpolation',
     '//third-party/java/plexus:plexus-utils',
-    ':maven-model',
   ],
 )
 
@@ -33,16 +33,17 @@ prebuilt_jar(
   binary_jar = 'maven-aether-provider-3.2.5.jar',
   source_jar = 'maven-aether-provider-3.2.5-sources.jar',
   deps = [
+    ':maven-model',
+    ':maven-model-builder',
+    ':maven-repository-metadata',
     '//third-party/java/aether:aether-api',
     '//third-party/java/aether:aether-impl',
     '//third-party/java/aether:aether-spi',
     '//third-party/java/aether:aether-util',
+    '//third-party/java/guava:guava',
+    '//third-party/java/guice:guice',
     '//third-party/java/plexus:plexus-component-annotations',
     '//third-party/java/plexus:plexus-utils',
-    '//third-party/java/sisu:sisu-guice',
-    ':maven-model',
-    ':maven-model-builder',
-    ':maven-repository-metadata',
   ],
   visibility = [
     '//src/com/facebook/buck/maven:maven',

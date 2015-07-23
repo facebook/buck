@@ -8,7 +8,9 @@ prebuilt_jar(
     '//third-party/java/jsr:jsr330',
   ],
   visibility = [
+    '//third-party/java/aether:aether-impl',
     '//third-party/java/closure-templates:closure-templates',
+    '//third-party/java/maven:maven-aether-provider',
   ],
 )
 

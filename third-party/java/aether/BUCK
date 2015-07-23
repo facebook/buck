@@ -70,8 +70,9 @@ prebuilt_jar(
   binary_jar = 'aether-impl-1.0.0.v20140518.jar',
   source_jar = 'aether-impl-1.0.0.v20140518-sources.jar',
   deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/guice:guice',
     '//third-party/java/jsr:jsr305',
-    '//third-party/java/sisu:sisu-guice',
     '//third-party/java/slf4j:slf4j-api',
     ':aether-api',
     ':aether-spi',
