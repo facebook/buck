@@ -67,7 +67,24 @@ public class NativeLinkables {
     }
 
     NativeLinkable linkable = (NativeLinkable) rule;
-    Linker.LinkableDepType depType = linkable.getPreferredLinkage(cxxPlatform).or(type);
+    NativeLinkable.Linkage depLinkage = linkable.getPreferredLinkage(cxxPlatform);
+    Linker.LinkableDepType depType;
+    switch (depLinkage) {
+      case STATIC: {
+        depType =
+            type == Linker.LinkableDepType.STATIC ?
+                Linker.LinkableDepType.STATIC :
+                Linker.LinkableDepType.STATIC_PIC;
+        break;
+      }
+      case ANY: {
+        depType = type;
+        break;
+      }
+      default: {
+        throw new IllegalStateException();
+      }
+    }
 
     // We want to get linkable info for this dep if we're linking statically, or if
     // this dep is linked dynamically.  More to the point: we want to avoid pulling

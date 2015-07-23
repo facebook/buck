@@ -206,11 +206,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
-    if (linkage == Linkage.STATIC) {
-      return Optional.of(Linker.LinkableDepType.STATIC);
-    }
-    return Optional.absent();
+  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    return linkage;
   }
 
   @Override
@@ -287,11 +284,6 @@ public class CxxLibrary extends AbstractCxxLibrary {
   @Override
   public boolean isTestedBy(BuildTarget testTarget) {
     return tests.contains(testTarget);
-  }
-
-  public enum Linkage {
-    ANY,
-    STATIC,
   }
 
 }

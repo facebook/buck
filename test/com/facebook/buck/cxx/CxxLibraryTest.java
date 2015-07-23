@@ -192,7 +192,7 @@ public class CxxLibraryTest {
         Functions.constant(ImmutableList.<String>of()),
         /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
         Functions.constant(ImmutableSet.<Path>of()),
-        CxxLibrary.Linkage.STATIC,
+        NativeLinkable.Linkage.STATIC,
         /* linkWhole */ false,
         Optional.<String>absent(),
         ImmutableSortedSet.<BuildTarget>of());

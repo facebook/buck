@@ -1,0 +1,20 @@
+cxx_library(
+  name = 'foo',
+  srcs = [
+    'foo.cpp',
+  ],
+  deps = [
+    ':bar',
+  ],
+)
+
+cxx_library(
+  name = 'bar',
+  force_static = True,
+  srcs = [
+    'bar.cpp',
+  ],
+  headers = [
+    'bar.h',
+  ],
+)

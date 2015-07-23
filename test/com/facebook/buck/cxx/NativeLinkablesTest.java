@@ -24,7 +24,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,14 +37,14 @@ public class NativeLinkablesTest {
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
 
     private final NativeLinkableInput nativeLinkableInput;
-    private final Optional<Linker.LinkableDepType> preferredLinkage;
+    private final NativeLinkable.Linkage preferredLinkage;
     private final ImmutableMap<String, SourcePath> sharedLibraries;
 
     public FakeNativeLinkable(
         String target,
         SourcePathResolver resolver,
         NativeLinkableInput nativeLinkableInput,
-        Optional<Linker.LinkableDepType> preferredLinkage,
+        NativeLinkable.Linkage preferredLinkage,
         ImmutableMap<String, SourcePath> sharedLibraries,
         BuildRule... deps) {
       super(target, resolver, deps);
@@ -62,7 +61,7 @@ public class NativeLinkablesTest {
     }
 
     @Override
-    public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
+    public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
       return preferredLinkage;
     }
 
@@ -112,7 +111,7 @@ public class NativeLinkablesTest {
         NativeLinkableInput.builder()
             .addArgs("d")
             .build(),
-        Optional.<Linker.LinkableDepType>absent(),
+        NativeLinkable.Linkage.ANY,
         ImmutableMap.<String, SourcePath>of());
 
     BuildRule c = new FakeNativeLinkable(
@@ -121,7 +120,7 @@ public class NativeLinkablesTest {
         NativeLinkableInput.builder()
             .addArgs("c")
             .build(),
-        Optional.of(Linker.LinkableDepType.STATIC),
+        NativeLinkable.Linkage.STATIC,
         ImmutableMap.<String, SourcePath>of(),
         d);
 
@@ -131,7 +130,7 @@ public class NativeLinkablesTest {
         NativeLinkableInput.builder()
             .addArgs("b")
             .build(),
-        Optional.<Linker.LinkableDepType>absent(),
+        NativeLinkable.Linkage.ANY,
         ImmutableMap.<String, SourcePath>of(),
         c);
 
@@ -141,7 +140,7 @@ public class NativeLinkablesTest {
         NativeLinkableInput.builder()
             .addArgs("a")
             .build(),
-        Optional.<Linker.LinkableDepType>absent(),
+        NativeLinkable.Linkage.ANY,
         ImmutableMap.<String, SourcePath>of(),
         b);
 
@@ -176,7 +175,7 @@ public class NativeLinkablesTest {
             "//:c",
             resolver,
             NativeLinkableInput.builder().build(),
-            Optional.<Linker.LinkableDepType>absent(),
+            NativeLinkable.Linkage.ANY,
             ImmutableMap.<String, SourcePath>of("libc.so", new TestSourcePath("libc.so")));
 
     BuildRule b =
@@ -184,7 +183,7 @@ public class NativeLinkablesTest {
             "//:b",
             resolver,
             NativeLinkableInput.builder().build(),
-            Optional.of(Linker.LinkableDepType.STATIC),
+            NativeLinkable.Linkage.STATIC,
             // Should be ignored, since this library supposed to be linked statically.
             ImmutableMap.<String, SourcePath>of("libb.so", new TestSourcePath("libb.so")),
             c);
@@ -194,7 +193,7 @@ public class NativeLinkablesTest {
             "//:a",
             resolver,
             NativeLinkableInput.builder().build(),
-            Optional.<Linker.LinkableDepType>absent(),
+            NativeLinkable.Linkage.ANY,
             ImmutableMap.<String, SourcePath>of("liba.so", new TestSourcePath("liba.so")),
             b);
 

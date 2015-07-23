@@ -857,7 +857,7 @@ public class CxxLibraryDescription implements
             return CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, input);
           }
         },
-        args.forceStatic.or(false) ? CxxLibrary.Linkage.STATIC : CxxLibrary.Linkage.ANY,
+        args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
         args.linkWhole.or(false),
         args.soname,
         args.tests.get());

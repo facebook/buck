@@ -134,8 +134,8 @@ public class CxxBinaryDescriptionTest {
       }
 
       @Override
-      public Optional<Linker.LinkableDepType> getPreferredLinkage(CxxPlatform cxxPlatform) {
-        return Optional.absent();
+      public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+        return Linkage.ANY;
       }
 
       @Override

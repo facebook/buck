@@ -98,4 +98,13 @@ public class CxxLibraryIntegrationTest {
         .isFile());
     result.assertSuccess();
   }
+
+  @Test
+  public void forceStaticLibLinkedIntoSharedContextIsBuiltWithPic() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "force_static_pic", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:foo#shared,default").assertSuccess();
+  }
+
 }
