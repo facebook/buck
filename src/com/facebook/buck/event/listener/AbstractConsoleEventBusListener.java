@@ -19,6 +19,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
@@ -58,6 +59,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected volatile ProjectBuildFileParseEvents.Finished projectBuildFileParseFinished;
 
   @Nullable
+  protected volatile ProjectGenerationEvent.Started projectGenerationStarted;
+  @Nullable
+  protected volatile ProjectGenerationEvent.Finished projectGenerationFinished;
+
+  @Nullable
   protected volatile ParseEvent.Started parseStarted;
   @Nullable
   protected volatile ParseEvent.Finished parseFinished;
@@ -88,6 +94,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.projectBuildFileParseStarted = null;
     this.projectBuildFileParseFinished = null;
+
+    this.projectGenerationStarted = null;
+    this.projectGenerationFinished = null;
 
     this.parseStarted = null;
     this.parseFinished = null;
@@ -179,6 +188,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void projectBuildFileParseFinished(ProjectBuildFileParseEvents.Finished finished) {
     projectBuildFileParseFinished = finished;
+  }
+
+  @Subscribe
+  public void projectGenerationStarted(ProjectGenerationEvent.Started started) {
+    projectGenerationStarted = started;
+  }
+
+  @Subscribe
+  public void projectGenerationFinished(ProjectGenerationEvent.Finished finished) {
+    projectGenerationFinished = finished;
   }
 
   @Subscribe

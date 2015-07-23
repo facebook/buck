@@ -209,6 +209,17 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         actionGraphFinished,
         lines);
 
+
+    logEventPair(
+            "GENERATING PROJECT",
+            Optional.<String>absent(),
+            currentTimeMillis,
+            0L,
+            projectGenerationStarted,
+            projectGenerationFinished,
+            lines
+    );
+
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
       // Log build time, excluding time spent in parsing.
