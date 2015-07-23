@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -41,6 +42,11 @@ public class WindowsLinker implements Linker {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return tool.getCommandPrefix(resolver);
+  }
+
+  @Override
+  public ImmutableList<FileScrubber> getScrubbers() {
+    return ImmutableList.of();
   }
 
   @Override

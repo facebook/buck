@@ -115,6 +115,10 @@ public class ObjectFileScrubbers {
     buffer.put(value.getBytes(Charsets.US_ASCII));
   }
 
+  public static void putBytes(ByteBuffer buffer, byte[] bytes) {
+    buffer.put(bytes);
+  }
+
   public static void putIntAsOctalString(ByteBuffer buffer, int len, int value) {
     putSpaceLeftPaddedString(buffer, len, String.format("0%o", value));
   }

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -42,7 +43,7 @@ public class CxxLink
     implements RuleKeyAppendable, SupportsInputBasedRuleKey {
 
   @AddToRuleKey
-  private final Tool linker;
+  private final Linker linker;
   @AddToRuleKey(stringify = true)
   private final Path output;
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -57,7 +58,7 @@ public class CxxLink
   public CxxLink(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Tool linker,
+      Linker linker,
       Path output,
       ImmutableList<SourcePath> inputs,
       ImmutableList<String> args,
@@ -99,7 +100,8 @@ public class CxxLink
             linker.getCommandPrefix(getResolver()),
             output,
             args,
-            frameworkRoots));
+            frameworkRoots),
+        new FileScrubberStep(output, linker.getScrubbers()));
   }
 
   @Override
