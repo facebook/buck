@@ -100,7 +100,8 @@ public class NewNativeTargetProjectMutator {
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescription.Arg> resources = ImmutableSet.of();
-  private ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs = ImmutableSet.of();
+  private ImmutableSet<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs = ImmutableSet.of();
+  private ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs = ImmutableSet.of();
   private Path assetCatalogBuildScript = Paths.get("");
   private Iterable<TargetNode<?>> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
@@ -222,16 +223,25 @@ public class NewNativeTargetProjectMutator {
 
   /**
    * @param assetCatalogBuildScript Path of the asset catalog build script relative to repo root.
-   * @param assetCatalogs List of asset catalog targets.
+   * @param recursiveAssetCatalogs List of asset catalog targets of targetNode and dependencies of
+   *                               targetNode.
    */
-  public NewNativeTargetProjectMutator setAssetCatalogs(
+  public NewNativeTargetProjectMutator setRecursiveAssetCatalogs(
       Path assetCatalogBuildScript,
-      Set<AppleAssetCatalogDescription.Arg> assetCatalogs) {
+      Set<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs) {
     this.assetCatalogBuildScript = assetCatalogBuildScript;
-    this.assetCatalogs = ImmutableSet.copyOf(assetCatalogs);
+    this.recursiveAssetCatalogs = ImmutableSet.copyOf(recursiveAssetCatalogs);
     return this;
   }
 
+  /**
+   * @param directAssetCatalogs List of asset catalog targets targetNode directly depends on
+   */
+  public NewNativeTargetProjectMutator setDirectAssetCatalogs(
+      Set<AppleAssetCatalogDescription.Arg> directAssetCatalogs) {
+    this.directAssetCatalogs = ImmutableSet.copyOf(directAssetCatalogs);
+    return this;
+  }
   public Result buildTargetAndAddToProject(PBXProject project)
       throws NoSuchBuildTargetException {
     PBXNativeTarget target = new PBXNativeTarget(targetName);
@@ -248,7 +258,8 @@ public class NewNativeTargetProjectMutator {
     addPhasesAndGroupsForSources(target, targetGroup);
     addFrameworksBuildPhase(project, target);
     addResourcesBuildPhase(target, targetGroup);
-    addAssetCatalogBuildPhase(target, targetGroup);
+    addAssetCatalogFileReference(targetGroup);
+    addAssetCatalogBuildPhase(target);
     target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
     addRunScriptBuildPhases(target, postBuildRunScriptPhases);
     addRawScriptBuildPhases(target);
@@ -508,13 +519,32 @@ public class NewNativeTargetProjectMutator {
     LOG.debug("Added resources build phase %s", phase);
   }
 
-  private void addAssetCatalogBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
-    if (assetCatalogs.isEmpty()) {
+  private void addAssetCatalogFileReference(PBXGroup targetGroup) {
+    if (directAssetCatalogs.isEmpty()) {
       return;
     }
 
     // Asset catalogs go in the resources group also.
     PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+
+    for (AppleAssetCatalogDescription.Arg assetCatalog : directAssetCatalogs) {
+      for (Path dir : assetCatalog.dirs) {
+        Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
+
+        resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SOURCE_ROOT,
+                pathRelativeToProjectRoot));
+
+        LOG.debug("Resolved asset catalog path %s, result %s", dir, pathRelativeToProjectRoot);
+      }
+    }
+  }
+
+  private void addAssetCatalogBuildPhase(PBXNativeTarget target) {
+    if (recursiveAssetCatalogs.isEmpty()) {
+      return;
+    }
 
     // Some asset catalogs should be copied to their sibling bundles, while others use the default
     // output format (which may be to copy individual files to the root resource output path or to
@@ -523,14 +553,9 @@ public class NewNativeTargetProjectMutator {
     ImmutableList.Builder<String> commonAssetCatalogsBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> assetCatalogsToSplitIntoBundlesBuilder =
         ImmutableList.builder();
-    for (AppleAssetCatalogDescription.Arg assetCatalog : assetCatalogs) {
+    for (AppleAssetCatalogDescription.Arg assetCatalog : recursiveAssetCatalogs) {
       for (Path dir : assetCatalog.dirs) {
         Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
-
-        resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativeToProjectRoot));
 
         LOG.debug("Resolved asset catalog path %s, result %s", dir, pathRelativeToProjectRoot);
 

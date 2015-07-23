@@ -596,6 +596,7 @@ public class ProjectGenerator {
         /* includeFrameworks */ true,
         AppleResources.collectRecursiveResources(targetGraph, ImmutableList.of(targetNode)),
         AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode)),
+        AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
         Optional.<Iterable<PBXBuildPhase>>of(copyFilesBuildPhases),
         bundleLoaderNode);
 
@@ -617,6 +618,7 @@ public class ProjectGenerator {
         /* includeFrameworks */ true,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
         ImmutableSet.<AppleAssetCatalogDescription.Arg>of(),
+        AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
         Optional.<Iterable<PBXBuildPhase>>absent(),
         Optional.<TargetNode<AppleBundleDescription.Arg>>absent());
     LOG.debug("Generated Apple binary target %s", target);
@@ -645,6 +647,7 @@ public class ProjectGenerator {
         /* includeFrameworks */ isShared,
         ImmutableSet.<AppleResourceDescription.Arg>of(),
         ImmutableSet.<AppleAssetCatalogDescription.Arg>of(),
+        AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
         Optional.<Iterable<PBXBuildPhase>>absent(),
         bundleLoaderNode);
     LOG.debug("Generated iOS library target %s", target);
@@ -660,7 +663,8 @@ public class ProjectGenerator {
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
       ImmutableSet<AppleResourceDescription.Arg> resources,
-      ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogs,
+      ImmutableSet<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs,
+      ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs,
       Optional<Iterable<PBXBuildPhase>> copyFilesPhases,
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
@@ -715,8 +719,14 @@ public class ProjectGenerator {
               .toList());
     }
 
-    if (!assetCatalogs.isEmpty()) {
-      mutator.setAssetCatalogs(getAndMarkAssetCatalogBuildScript(), assetCatalogs);
+    if (!recursiveAssetCatalogs.isEmpty()) {
+      mutator.setRecursiveAssetCatalogs(
+          getAndMarkAssetCatalogBuildScript(),
+          recursiveAssetCatalogs);
+    }
+
+    if (!directAssetCatalogs.isEmpty()) {
+      mutator.setDirectAssetCatalogs(directAssetCatalogs);
     }
 
     if (includeFrameworks) {
@@ -1005,7 +1015,7 @@ public class ProjectGenerator {
                     new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))))
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
         .setResources(AppleResources.collectRecursiveResources(targetGraph, tests))
-        .setAssetCatalogs(
+        .setRecursiveAssetCatalogs(
             getAndMarkAssetCatalogBuildScript(),
             AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, tests));
 

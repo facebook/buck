@@ -3251,6 +3251,70 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
   }
 
+  @Test
+  public void testAssetCatalogsUnderLibraryNotTest() throws IOException {
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget testTarget = BuildTarget.builder("//foo", "test").build();
+    BuildTarget assetCatalogTarget = BuildTarget.builder("//foo", "asset_catalog").build();
+
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setTests(Optional.of(ImmutableSortedSet.of(testTarget)))
+        .setDeps(Optional.of(ImmutableSortedSet.of(assetCatalogTarget)))
+        .build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Default",
+                    ImmutableMap.<String, String>of())))
+        .setUseBuckHeaderMaps(Optional.of(false))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
+    TargetNode<?> assetCatalogNode = AppleAssetCatalogBuilder
+        .createBuilder(assetCatalogTarget)
+        .setDirs(ImmutableSortedSet.of(Paths.get("AssetCatalog.xcassets")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, testNode, assetCatalogNode),
+        ImmutableSet.of(ProjectGenerator.Option.USE_SHORT_NAMES_FOR_TARGETS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup mainGroup = project.getMainGroup();
+
+    PBXTarget fooLibTarget = assertTargetExistsAndReturnTarget(
+        project,
+        "lib");
+    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(fooLibTarget));
+    PBXGroup libResourcesGroup = mainGroup
+        .getOrCreateChildGroupByName("lib")
+        .getOrCreateChildGroupByName("Resources");
+    PBXFileReference assetCatalogFile = (PBXFileReference) Iterables.get(
+          libResourcesGroup.getChildren(), 0);
+    assertEquals("AssetCatalog.xcassets", assetCatalogFile.getName());
+
+    PBXTarget fooTestTarget = assertTargetExistsAndReturnTarget(
+        project,
+        "test");
+    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(fooTestTarget));
+    boolean hasAssetCatalog = false;
+    PBXGroup testResourcesGroup = mainGroup
+        .getOrCreateChildGroupByName("test")
+        .getOrCreateChildGroupByName("Resources");
+    for (PBXReference reference : testResourcesGroup.getChildren()) {
+      if ("AssetCatalog.xcassets".equals(reference.getName())) {
+        hasAssetCatalog = true;
+        break;
+      }
+    }
+    assertFalse(hasAssetCatalog);
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(

@@ -389,7 +389,7 @@ public class NewNativeTargetProjectMutatorTest {
     arg2.copyToBundles = Optional.of(true);
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    mutator.setAssetCatalogs(
+    mutator.setRecursiveAssetCatalogs(
         Paths.get("compile_asset_catalogs"),
         ImmutableSet.of(arg1, arg2));
     NewNativeTargetProjectMutator.Result result =
@@ -413,7 +413,7 @@ public class NewNativeTargetProjectMutatorTest {
     }
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    mutator.setAssetCatalogs(
+    mutator.setRecursiveAssetCatalogs(
         Paths.get("compile_asset_catalogs"),
         assetsBuilder.build());
     NewNativeTargetProjectMutator.Result result =
