@@ -21,9 +21,12 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
+import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.ReadOnlyBufferException;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 
 public class ObjectFileScrubbers {
@@ -38,40 +41,40 @@ public class ObjectFileScrubbers {
       /**
        * Efficiently modifies the archive backed by the given buffer to remove any non-deterministic
        * meta-data such as timestamps, UIDs, and GIDs.
-       * @param file a {@link ByteBuffer} wrapping the contents of the archive.
        */
       @SuppressWarnings("PMD.AvoidUsingOctalValues")
       @Override
-      public void scrubFile(ByteBuffer file) throws ScrubException {
+      public void scrubFile(FileChannel file) throws IOException, ScrubException {
+        MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
         try {
 
           // Grab the global header chunk and verify it's accurate.
-          byte[] globalHeader = getBytes(file, expectedGlobalHeader.length);
+          byte[] globalHeader = getBytes(map, expectedGlobalHeader.length);
           checkArchive(
               Arrays.equals(expectedGlobalHeader, globalHeader),
               "invalid global header");
 
           // Iterate over all the file meta-data entries, injecting zero's for timestamp,
           // UID, and GID.
-          while (file.hasRemaining()) {
-        /* File name */ getBytes(file, 16);
+          while (map.hasRemaining()) {
+        /* File name */ getBytes(map, 16);
 
             // Inject 0's for the non-deterministic meta-data entries.
-        /* File modification timestamp */ putIntAsDecimalString(file, 12, 0);
-        /* Owner ID */ putIntAsDecimalString(file, 6, 0);
-        /* Group ID */ putIntAsDecimalString(file, 6, 0);
+        /* File modification timestamp */ putIntAsDecimalString(map, 12, 0);
+        /* Owner ID */ putIntAsDecimalString(map, 6, 0);
+        /* Group ID */ putIntAsDecimalString(map, 6, 0);
 
-        /* File mode */ putIntAsOctalString(file, 8, 0100644);
-            int fileSize = getDecimalStringAsInt(file, 10);
+        /* File mode */ putIntAsOctalString(map, 8, 0100644);
+            int fileSize = getDecimalStringAsInt(map, 10);
 
             // Lastly, grab the file magic entry and verify it's accurate.
-            byte[] fileMagic = getBytes(file, 2);
+            byte[] fileMagic = getBytes(map, 2);
             checkArchive(
                 Arrays.equals(END_OF_FILE_HEADER_MARKER, fileMagic),
                 "invalid file magic");
 
             // Skip the file data.
-            file.position(file.position() + fileSize + fileSize % 2);
+            map.position(map.position() + fileSize + fileSize % 2);
           }
 
           // Convert any low-level exceptions to `ArchiveExceptions`s.

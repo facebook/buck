@@ -16,7 +16,8 @@
 
 package com.facebook.buck.io;
 
-import java.nio.ByteBuffer;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 public interface FileScrubber {
 
@@ -28,6 +29,6 @@ public interface FileScrubber {
   }
 
 
-  void scrubFile(ByteBuffer file) throws ScrubException;
+  void scrubFile(FileChannel file) throws IOException, ScrubException;
 
 }

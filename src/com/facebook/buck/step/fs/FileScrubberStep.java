@@ -22,7 +22,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -52,8 +51,7 @@ public class FileScrubberStep implements Step {
     try {
       for (FileScrubber scrubber : scrubbers) {
         try (FileChannel channel = readWriteChannel(filePath)) {
-          MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-          scrubber.scrubFile(map);
+          scrubber.scrubFile(channel);
         }
       }
     } catch (IOException | FileScrubber.ScrubException e) {

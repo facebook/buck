@@ -25,7 +25,9 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.ByteBuffer;
+import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 
 public class BsdArchiver implements Archiver {
@@ -35,38 +37,39 @@ public class BsdArchiver implements Archiver {
 
   private static final FileScrubber SYMBOL_NAME_TABLE_PADDING_SCRUBBER = new FileScrubber() {
     @Override
-    public void scrubFile(ByteBuffer file) throws ScrubException {
+    public void scrubFile(FileChannel file) throws IOException, ScrubException {
+      MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
 
       // Grab the global header chunk and verify it's accurate.
-      byte[] globalHeader = ObjectFileScrubbers.getBytes(file, EXPECTED_GLOBAL_HEADER.length);
+      byte[] globalHeader = ObjectFileScrubbers.getBytes(map, EXPECTED_GLOBAL_HEADER.length);
       ObjectFileScrubbers.checkArchive(
           Arrays.equals(EXPECTED_GLOBAL_HEADER, globalHeader),
           "invalid global header");
 
-      byte[] marker = ObjectFileScrubbers.getBytes(file, 3);
+      byte[] marker = ObjectFileScrubbers.getBytes(map, 3);
       ObjectFileScrubbers.checkArchive(
           Arrays.equals(LONG_NAME_MARKER, marker),
           "unexpected short symbol table name");
 
-      int nameLength = ObjectFileScrubbers.getDecimalStringAsInt(file, 13);
+      int nameLength = ObjectFileScrubbers.getDecimalStringAsInt(map, 13);
 
-      /* File modification timestamp */ ObjectFileScrubbers.getDecimalStringAsInt(file, 12);
-      /* Owner ID */ ObjectFileScrubbers.getDecimalStringAsInt(file, 6);
-      /* Group ID */ ObjectFileScrubbers.getDecimalStringAsInt(file, 6);
+      /* File modification timestamp */ ObjectFileScrubbers.getDecimalStringAsInt(map, 12);
+      /* Owner ID */ ObjectFileScrubbers.getDecimalStringAsInt(map, 6);
+      /* Group ID */ ObjectFileScrubbers.getDecimalStringAsInt(map, 6);
 
-      /* File mode */ ObjectFileScrubbers.getOctalStringAsInt(file, 8);
-      /* File size */ ObjectFileScrubbers.getDecimalStringAsInt(file, 10);
+      /* File mode */ ObjectFileScrubbers.getOctalStringAsInt(map, 8);
+      /* File size */ ObjectFileScrubbers.getDecimalStringAsInt(map, 10);
 
       // Lastly, grab the file magic entry and verify it's accurate.
-      byte[] fileMagic = ObjectFileScrubbers.getBytes(file, 2);
+      byte[] fileMagic = ObjectFileScrubbers.getBytes(map, 2);
       ObjectFileScrubbers.checkArchive(
           Arrays.equals(ObjectFileScrubbers.END_OF_FILE_HEADER_MARKER, fileMagic),
           "invalid file magic");
 
       // Skip the file name
-      file.position(file.position() + nameLength);
+      map.position(map.position() + nameLength);
 
-      int descriptorsSize = ObjectFileScrubbers.getLittleEndian32BitLong(file);
+      int descriptorsSize = ObjectFileScrubbers.getLittleEndian32BitLong(map);
 
       if (descriptorsSize > 0) {
 
@@ -83,26 +86,26 @@ public class BsdArchiver implements Archiver {
           lastSymbolNameOffset =
               Math.max(
                   lastSymbolNameOffset,
-                  ObjectFileScrubbers.getLittleEndian32BitLong(file));
+                  ObjectFileScrubbers.getLittleEndian32BitLong(map));
           // Skip the corresponding object offset
-          ObjectFileScrubbers.getLittleEndian32BitLong(file);
+          ObjectFileScrubbers.getLittleEndian32BitLong(map);
         }
 
-        int symbolNameTableSize = ObjectFileScrubbers.getLittleEndian32BitLong(file);
-        int endOfSymbolNameTableOffset = file.position() + symbolNameTableSize;
+        int symbolNameTableSize = ObjectFileScrubbers.getLittleEndian32BitLong(map);
+        int endOfSymbolNameTableOffset = map.position() + symbolNameTableSize;
 
         // Skip to the last symbol name
-        file.position(file.position() + lastSymbolNameOffset);
+        map.position(map.position() + lastSymbolNameOffset);
 
         // Skip to the terminating null
-        while (file.get() != 0x00) { // NOPMD
+        while (map.get() != 0x00) { // NOPMD
         }
 
-        while (file.position() < endOfSymbolNameTableOffset) {
-          file.put((byte) 0x00);
+        while (map.position() < endOfSymbolNameTableOffset) {
+          map.put((byte) 0x00);
         }
       } else {
-        int symbolNameTableSize = ObjectFileScrubbers.getLittleEndian32BitLong(file);
+        int symbolNameTableSize = ObjectFileScrubbers.getLittleEndian32BitLong(map);
         ObjectFileScrubbers.checkArchive(
             symbolNameTableSize == 0,
             "archive has no symbol descriptors but has symbol names");
