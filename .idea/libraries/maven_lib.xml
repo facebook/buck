@@ -16,6 +16,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-component-annotations-1.5.5.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpclient-4.2.6.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpcore-4.2.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/jcl-over-slf4j-1.6.2.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
@@ -34,6 +35,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-interpolation-1.21-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpclient-4.2.6-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpcore-4.2.5-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/jcl-over-slf4j-1.6.2-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

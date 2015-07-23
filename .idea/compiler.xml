@@ -20,7 +20,8 @@
       <entry name="?*.tld" />
       <entry name="?*.ftl" />
       <entry name="?*.soy" />
-      <entry name="*.py" />
+      <entry name="?*.py" />
+      <entry name="?*.st" />
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">

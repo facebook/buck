@@ -52,7 +52,6 @@
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jetty" level="project" />
     <orderEntry type="library" name="slf4j-api-1.7.2" level="project" />
-    <orderEntry type="library" name="slf4j-log4j12-1.7.2" level="project" />
     <orderEntry type="library" name="soy-no-guava" level="project" />
     <orderEntry type="library" name="xz-java-1.3" level="project" />
     <orderEntry type="library" name="eclipse" level="project" />
@@ -60,7 +59,6 @@
     <orderEntry type="library" name="infer-annotations" level="project" />
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="immutables-annotations" level="project" />
-    <orderEntry type="module" module-name="maven" />
     <orderEntry type="library" name="maven-lib" level="project" />
   </component>
 </module>
