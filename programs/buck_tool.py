@@ -323,7 +323,9 @@ class BuckTool(object):
                         stderr=subprocess.STDOUT)
 
                 jsonresp = json.loads(response)
-                return jsonresp.get("watch"), jsonresp.get('relative_path')
+                root = jsonresp.get("watch", self._buck_project.root)
+                relative_path = jsonresp.get('relative_path')
+                return root, relative_path
             except CalledProcessError as e:
                 print(e.output, end='', file=sys.stderr)
                 raise
