@@ -31,6 +31,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -69,11 +70,12 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool executable,
+      ImmutableMap<String, String> env,
       ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
-    super(params, resolver, labels, contacts, sourceUnderTest);
+    super(params, resolver, env, labels, contacts, sourceUnderTest);
     this.executable = executable;
     this.additionalDeps = additionalDeps;
   }

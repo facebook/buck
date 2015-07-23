@@ -25,6 +25,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.FileOutputStream;
@@ -39,11 +40,17 @@ import java.nio.file.Path;
 public class CxxTestStep implements Step {
 
   private final ImmutableList<String> command;
+  private final ImmutableMap<String, String> env;
   private final Path exitCode;
   private final Path output;
 
-  public CxxTestStep(ImmutableList<String> command, Path exitCode, Path output) {
+  public CxxTestStep(
+      ImmutableList<String> command,
+      ImmutableMap<String, String> env,
+      Path exitCode,
+      Path output) {
     this.command = command;
+    this.env = env;
     this.exitCode = exitCode;
     this.output = output;
   }
@@ -62,6 +69,7 @@ public class CxxTestStep implements Step {
     // use when we parse the test output.
     ProcessBuilder builder = new ProcessBuilder();
     builder.command(command);
+    builder.environment().putAll(env);
     builder.redirectOutput(filesystem.resolve(output).toFile());
     builder.redirectErrorStream(true);
 
@@ -155,9 +163,14 @@ public class CxxTestStep implements Step {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("command", command)
+        .add("env", env)
         .add("exitCode", exitCode)
         .add("output", output)
         .toString();
+  }
+
+  public ImmutableMap<String, String> getEnv() {
+    return env;
   }
 
 }

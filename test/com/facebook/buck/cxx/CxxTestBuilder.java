@@ -18,6 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.Arg> {
 
@@ -31,6 +33,11 @@ public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.
 
   public CxxTestBuilder(BuildTarget target) {
     this(target, createDefaultConfig(), createDefaultPlatform(), createDefaultPlatforms());
+  }
+
+  public CxxTestBuilder setEnv(ImmutableMap<String, String> env) {
+    arg.env = Optional.of(env);
+    return this;
   }
 
 }

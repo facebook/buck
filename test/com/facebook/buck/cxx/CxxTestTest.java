@@ -36,6 +36,7 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -58,6 +59,7 @@ public class CxxTestTest {
       super(
           createBuildParams(),
           new SourcePathResolver(new BuildRuleResolver()),
+          ImmutableMap.<String, String>of(),
           ImmutableSet.<Label>of(),
           ImmutableSet.<String>of(),
           ImmutableSet.<BuildRule>of());
@@ -106,10 +108,12 @@ public class CxxTestTest {
         TestSelectorList.empty(),
         FakeTestRule.NOOP_REPORTING_CALLBACK);
 
-    CxxTestStep cxxTestStep = new CxxTestStep(
-        command,
-        cxxTest.getPathToTestExitCode(),
-        cxxTest.getPathToTestOutput());
+    CxxTestStep cxxTestStep =
+        new CxxTestStep(
+            command,
+            ImmutableMap.<String, String>of(),
+            cxxTest.getPathToTestExitCode(),
+            cxxTest.getPathToTestOutput());
 
     assertEquals(cxxTestStep, Iterables.getLast(actualSteps));
   }

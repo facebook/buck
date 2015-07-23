@@ -37,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -47,6 +48,7 @@ import java.util.concurrent.Callable;
  */
 public abstract class CxxTest extends NoopBuildRule implements TestRule {
 
+  private final ImmutableMap<String, String> env;
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
@@ -54,10 +56,12 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
   public CxxTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      ImmutableMap<String, String> env,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest) {
     super(params, resolver);
+    this.env = env;
     this.labels = labels;
     this.contacts = contacts;
     this.sourceUnderTest = sourceUnderTest;
@@ -111,6 +115,7 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
         new TouchStep(getPathToTestResults()),
         new CxxTestStep(
             getShellCommand(executionContext, getPathToTestResults()),
+            env,
             getPathToTestExitCode(),
             getPathToTestOutput()));
   }

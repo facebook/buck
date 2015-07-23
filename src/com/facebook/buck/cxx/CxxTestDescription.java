@@ -34,6 +34,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -117,6 +118,7 @@ public class CxxTestDescription implements
             testParams,
             pathResolver,
             cxxLinkAndCompileRules.executable,
+            args.env.or(ImmutableMap.<String, String>of()),
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
@@ -128,6 +130,7 @@ public class CxxTestDescription implements
             testParams,
             pathResolver,
             cxxLinkAndCompileRules.executable,
+            args.env.or(ImmutableMap.<String, String>of()),
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
@@ -198,6 +201,7 @@ public class CxxTestDescription implements
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<CxxTestType> framework;
+    public Optional<ImmutableMap<String, String>> env;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

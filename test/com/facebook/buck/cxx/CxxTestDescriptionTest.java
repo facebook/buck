@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -23,12 +24,21 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class CxxTestDescriptionTest {
@@ -56,6 +66,39 @@ public class CxxTestDescriptionTest {
         .findDepsForTargetFromConstructorArgs(target, constructorArg);
 
     assertTrue(Iterables.contains(implicit, gtest));
+  }
+
+  @Test
+  public void environmentIsPropagated() {
+    ImmutableMap<String, String> env = ImmutableMap.of("TEST", "value");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRule gtest =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtest"))
+            .setOut("out")
+            .build(resolver);
+    CxxTestBuilder builder =
+        new CxxTestBuilder(
+            BuildTargetFactory.newInstance("//:test"),
+            new CxxBuckConfig(
+                new FakeBuckConfig(
+                    ImmutableMap.of(
+                        "cxx",
+                        ImmutableMap.of("gtest_dep", gtest.getBuildTarget().toString())))),
+            CxxTestBuilder.createDefaultPlatform(),
+            CxxTestBuilder.createDefaultPlatforms());
+    CxxTest test = (CxxTest) builder
+          .setEnv(env)
+          .build(resolver);
+    ImmutableList<Step> steps =
+        test.runTests(
+            FakeBuildContext.NOOP_CONTEXT,
+            TestExecutionContext.newInstance(),
+            /* isDryRun */ false,
+            /* isShufflingTests */ false,
+            TestSelectorList.empty(),
+            TestRule.NOOP_REPORTING_CALLBACK);
+    CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
+    assertThat(testStep.getEnv(), Matchers.equalTo(env));
   }
 
 }

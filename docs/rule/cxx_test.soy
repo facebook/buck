@@ -45,6 +45,14 @@ it as part of <code>buck test</code>.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'env' /}
+  {{param default : '{}' /}}
+  {param desc}
+  A map of environment names and values to set when running the test.
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // close args

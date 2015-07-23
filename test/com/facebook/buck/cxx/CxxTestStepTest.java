@@ -22,6 +22,7 @@ import static org.junit.Assert.assertSame;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,7 +64,12 @@ public class CxxTestStepTest {
 
   @Test
   public void success() throws IOException, InterruptedException {
-    CxxTestStep step = new CxxTestStep(ImmutableList.of("true"), exitCode, output);
+    CxxTestStep step =
+        new CxxTestStep(
+            ImmutableList.of("true"),
+            ImmutableMap.<String, String>of(),
+            exitCode,
+            output);
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, "");
@@ -71,7 +77,12 @@ public class CxxTestStepTest {
 
   @Test
   public void failure() throws IOException, InterruptedException {
-    CxxTestStep step = new CxxTestStep(ImmutableList.of("false"), exitCode, output);
+    CxxTestStep step =
+        new CxxTestStep(
+            ImmutableList.of("false"),
+            ImmutableMap.<String, String>of(),
+            exitCode,
+            output);
     step.execute(context);
     assertSame(1, readExitCode(exitCode));
     assertContents(output, "");
@@ -80,7 +91,12 @@ public class CxxTestStepTest {
   @Test
   public void output() throws IOException, InterruptedException {
     String stdout = "hello world";
-    CxxTestStep step = new CxxTestStep(ImmutableList.of("echo", stdout), exitCode, output);
+    CxxTestStep step =
+        new CxxTestStep(
+            ImmutableList.of("echo", stdout),
+            ImmutableMap.<String, String>of(),
+            exitCode,
+            output);
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, stdout + System.lineSeparator());
