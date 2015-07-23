@@ -18,7 +18,6 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -44,15 +43,6 @@ import java.util.regex.Pattern;
 
 /**
  * Command used to compile java libraries with a variety of ways to handle dependencies.
- * <p>
- * If {@code buildDependencies} is set to {@link BuildDependencies#FIRST_ORDER_ONLY}, this class
- * will invoke javac using {@code declaredClasspathEntries} for the classpath.
- * If {@code buildDependencies} is set to {@link BuildDependencies#TRANSITIVE}, this class will
- * invoke javac using {@code transitiveClasspathEntries} for the classpath.
- * If {@code buildDependencies} is set to {@link BuildDependencies#WARN_ON_TRANSITIVE}, this class
- * will first compile using {@code declaredClasspathEntries}, and should that fail fall back to
- * {@code transitiveClasspathEntries} but warn the developer about which dependencies were in
- * the transitive classpath but not in the declared classpath.
  */
 public class JavacStep implements Step {
 
@@ -66,13 +56,9 @@ public class JavacStep implements Step {
 
   private final JavacOptions javacOptions;
 
-  private final ImmutableSet<Path> transitiveClasspathEntries;
-
   private final ImmutableSet<Path> declaredClasspathEntries;
 
   private final BuildTarget invokingRule;
-
-  private final BuildDependencies buildDependencies;
 
   private final Optional<SuggestBuildRules> suggestBuildRules;
 
@@ -119,23 +105,19 @@ public class JavacStep implements Step {
       Optional<Path> workingDirectory,
       Set<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
-      Set<Path> transitiveClasspathEntries,
       Set<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
-      BuildDependencies buildDependencies,
       Optional<SuggestBuildRules> suggestBuildRules,
       SourcePathResolver resolver) {
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
     this.pathToSrcsList = pathToSrcsList;
-    this.transitiveClasspathEntries = ImmutableSet.copyOf(transitiveClasspathEntries);
     this.javacOptions = javacOptions;
 
     this.declaredClasspathEntries = ImmutableSet.copyOf(declaredClasspathEntries);
     this.invokingRule = invokingRule;
-    this.buildDependencies = buildDependencies;
     this.suggestBuildRules = suggestBuildRules;
     this.resolver = resolver;
   }
@@ -143,34 +125,9 @@ public class JavacStep implements Step {
   @Override
   public final int execute(ExecutionContext context) throws IOException, InterruptedException {
     try {
-      return executeBuild(context);
+      return tryBuildWithFirstOrderDeps(context);
     } finally {
       isExecuted.set(true);
-    }
-  }
-
-  public int executeBuild(ExecutionContext context) throws IOException, InterruptedException {
-    // Build up the compilation task.
-    if (buildDependencies == BuildDependencies.FIRST_ORDER_ONLY) {
-      return getJavac().buildWithClasspath(
-          context,
-          resolver,
-          invokingRule,
-          getOptions(context, declaredClasspathEntries),
-          javaSourceFilePaths,
-          pathToSrcsList,
-          workingDirectory);
-    } else if (buildDependencies == BuildDependencies.WARN_ON_TRANSITIVE) {
-      return tryBuildWithFirstOrderDeps(context);
-    } else {
-      return getJavac().buildWithClasspath(
-          context,
-          resolver,
-          invokingRule,
-          getOptions(context, transitiveClasspathEntries),
-          javaSourceFilePaths,
-          pathToSrcsList,
-          workingDirectory);
     }
   }
 
@@ -194,36 +151,28 @@ public class JavacStep implements Step {
       String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
 
-      if (declaredDepsResult != 0) {
-        int transitiveResult = javac.buildWithClasspath(
-            context,
-            resolver,
-            invokingRule,
-            getOptions(context, transitiveClasspathEntries),
-            javaSourceFilePaths,
-            pathToSrcsList,
-            workingDirectory);
-        if (transitiveResult == 0) {
-          ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
-          ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
+      if (declaredDepsResult != 0 && suggestBuildRules.isPresent()) {
+        ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
+        ImmutableSet<String> suggestions = suggestBuildRules.get().suggest(
+            context.getProjectFilesystem(),
+            failedImports);
 
+        ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
+        errorMessage.add(firstOrderStderr);
+
+        if (!suggestions.isEmpty()) {
           String invoker = invokingRule.toString();
-          errorMessage.add(String.format("Rule %s builds with its transitive " +
-                  "dependencies but not with its first order dependencies.", invoker));
-          errorMessage.add("The following packages were missing:");
+          errorMessage.add(String.format("Rule %s has failed to build.", invoker));
           errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
-          if (suggestBuildRules.isPresent()) {
-            errorMessage.add("Try adding the following deps:");
-            errorMessage.add(Joiner.on(LINE_SEPARATOR)
-                .join(suggestBuildRules.get().suggest(context.getProjectFilesystem(),
-                        failedImports)));
-          }
+          errorMessage.add("Try adding the following deps:");
+          errorMessage.add(Joiner.on(LINE_SEPARATOR).join(suggestions));
           errorMessage.add("");
           errorMessage.add("");
-          context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
         }
-        return transitiveResult;
-      } else {
+
+        context.getStdOut().print(firstOrderStdout);
+        context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
+      } else if (declaredDepsResult != 0) {
         context.getStdOut().print(firstOrderStdout);
         context.getStdErr().print(firstOrderStderr);
       }
@@ -309,11 +258,7 @@ public class JavacStep implements Step {
    */
   @VisibleForTesting
   ImmutableSet<Path> getClasspathEntries() {
-    if (buildDependencies == BuildDependencies.TRANSITIVE) {
-      return transitiveClasspathEntries;
-    } else {
-      return declaredClasspathEntries;
-    }
+    return declaredClasspathEntries;
   }
 
   @VisibleForTesting

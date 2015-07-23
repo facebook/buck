@@ -175,19 +175,6 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
-  public void testBuildJavaLibraryWithTransitive() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "warn_on_transitive", tmp);
-    workspace.setUp();
-
-    // Run `buck build`.
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:raz", "-b", "TRANSITIVE");
-    buildResult.assertSuccess("Successful build should exit with 0.");
-
-    workspace.verify();
-  }
-
-  @Test
   public void testBuildJavaLibraryWithFirstOrder() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "warn_on_transitive", tmp);
@@ -204,28 +191,24 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
-  public void testBuildJavaLibraryWithWarnOnTransitive() throws IOException {
+  public void testBuildJavaLibraryShouldSuggestTransitiveImportsToInclude() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "warn_on_transitive", tmp);
     workspace.setUp();
 
     // Run `buck build`.
     ProcessResult buildResult = workspace.runBuckCommand("build",
-        "//:raz",
-        "-b",
-        "WARN_ON_TRANSITIVE");
+        "//:raz");
 
     String expectedWarning = Joiner.on("\n").join(
-      "Rule //:raz builds with its transitive dependencies but not with its first order " +
-          "dependencies.",
-      "The following packages were missing:",
+      "Rule //:raz has failed to build.",
       "Blargh",
       "Meh",
       "Try adding the following deps:",
       "//:foo",
       "//:blargh");
 
-    buildResult.assertSuccess("Build should have succeeded with warnings.");
+    buildResult.assertFailure("Build should have failed with warnings.");
 
     assertThat(
         buildResult.getStderr(),

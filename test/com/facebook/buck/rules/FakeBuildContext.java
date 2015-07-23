@@ -62,7 +62,6 @@ public class FakeBuildContext {
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
         .setArtifactCache(new NoopArtifactCache())
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setBuildDependencies(BuildDependencies.FIRST_ORDER_ONLY);
+        .setEventBus(BuckEventBusFactory.newInstance());
   }
 }

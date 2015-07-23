@@ -30,7 +30,6 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
@@ -74,7 +73,6 @@ public class BuildCommand extends AbstractCommand {
   private static final String NUM_THREADS_LONG_ARG = "--num-threads";
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
-  private static final String BUILD_DEPENDENCIES_LONG_ARG = "--build-dependencies";
   private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
   private static final String DEEP_LONG_ARG = "--deep";
@@ -94,12 +92,6 @@ public class BuildCommand extends AbstractCommand {
       usage = "File where build report will be written.")
   @Nullable
   private Path buildReport = null;
-
-  @Option(name = BUILD_DEPENDENCIES_LONG_ARG,
-      aliases = "-b",
-      usage = "How to handle including dependencies")
-  @Nullable
-  private BuildDependencies buildDependencies = null;
 
   @Nullable
   @Option(name = LOAD_LIMIT_LONG_ARG,
@@ -218,16 +210,6 @@ public class BuildCommand extends AbstractCommand {
         buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(buildReport));
   }
 
-  public BuildDependencies getBuildDependencies(BuckConfig buckConfig) {
-    if (buildDependencies != null) {
-      return buildDependencies;
-    } else if (buckConfig.getBuildDependencies().isPresent()) {
-      return buckConfig.getBuildDependencies().get();
-    } else {
-      return BuildDependencies.getDefault();
-    }
-  }
-
   Build createBuild(
       BuckConfig buckConfig,
       ActionGraph graph,
@@ -257,7 +239,6 @@ public class BuildCommand extends AbstractCommand {
         buckConfig.getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
         isDebugEnabled(),
-        getBuildDependencies(buckConfig),
         eventBus,
         platform,
         environment,
@@ -408,10 +389,6 @@ public class BuildCommand extends AbstractCommand {
     if (buildReport != null) {
       builder.add(BUILD_REPORT_LONG_ARG);
       builder.add(buildReport.toString());
-    }
-    if (buildDependencies != null) {
-      builder.add(BUILD_DEPENDENCIES_LONG_ARG);
-      builder.add(buildDependencies.toString());
     }
     if (loadLimit != null) {
       builder.add(LOAD_LIMIT_LONG_ARG);

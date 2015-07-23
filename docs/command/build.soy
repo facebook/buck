@@ -31,24 +31,6 @@ Buck. To build a rule, pass its target to buck build:
 {param params}
 
 {call buck.param}
-  {param name: 'build-dependencies' /}
-  {param alias: 'b'/}
-  {param desc}
-  How to handle including dependencies when building.  Valid values are:
-  <ul>
-    <li><code>TRANSITIVE</code>: Rules will compile against all of their
-    transitive dependencies when building.
-    <li><code>WARN_ON_TRANSITIVE</code>: Rules will first try to compile against
-    only their first order dependencies, and should that fail will build again
-    including their transitive dependencies and show a warning.
-    <li><code>FIRST_ORDER_ONLY</code>:  Rules will only compile against their
-    first order dependencies (e.g. dependencies listed in the
-    {sp}<code>deps</code> field of their rule).
-  </ul>
-  {/param}
-{/call}
-
-{call buck.param}
   {param name: 'build-report' /}
   {param desc}
   Specifies a file where a JSON summary of the build output should be written.

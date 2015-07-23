@@ -20,7 +20,6 @@ import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
@@ -68,13 +67,11 @@ public class RDotJava {
         Optional.<Path>absent(),
         javaSourceFilePaths,
         Optional.<Path>absent(),
-        /* transitive classpath */ ImmutableSet.<Path>of(),
         /* declared classpath */ ImmutableSet.<Path>of(),
         JavacOptions.builder(javacOptions)
             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
             .build(),
         buildTarget,
-        BuildDependencies.FIRST_ORDER_ONLY,
         Optional.<JavacStep.SuggestBuildRules>absent(),
         resolver);
   }

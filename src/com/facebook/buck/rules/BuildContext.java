@@ -93,11 +93,6 @@ public abstract class BuildContext {
     return DEFAULT_ANDROID_BOOTCLASSPATH_SUPPLIER;
   }
 
-  @Value.Default
-  public BuildDependencies getBuildDependencies() {
-    return BuildDependencies.getDefault();
-  }
-
   protected abstract BuildId getBuildId();
   protected abstract Map<String, String> getEnvironment();
 

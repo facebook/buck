@@ -26,7 +26,6 @@ import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DirArtifactCache;
@@ -47,7 +46,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -490,23 +488,6 @@ public class BuckConfig {
    */
   ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
     return getListWithoutComments("test", "excluded_labels");
-  }
-
-  @Beta
-  Optional<BuildDependencies> getBuildDependencies() {
-    Optional<String> buildDependenciesOptional = getValue("build", "build_dependencies");
-    if (buildDependenciesOptional.isPresent()) {
-      try {
-        return Optional.of(BuildDependencies.valueOf(buildDependenciesOptional.get()));
-      } catch (IllegalArgumentException e) {
-        throw new HumanReadableException(
-            "%s is not a valid value for build_dependencies.  Must be one of: %s",
-            buildDependenciesOptional.get(),
-            Joiner.on(", ").join(BuildDependencies.values()));
-      }
-    } else {
-      return Optional.absent();
-    }
   }
 
   /**

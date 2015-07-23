@@ -21,7 +21,6 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
@@ -123,11 +122,9 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
             Optional.<Path>absent(),
             ImmutableSet.of(fatJarSource, fatJarMainSource),
             Optional.<Path>absent(),
-            /* transitive classpath */ ImmutableSet.<Path>of(),
             /* declared classpath */ ImmutableSet.<Path>of(),
             javacOptions,
             getBuildTarget(),
-            BuildDependencies.FIRST_ORDER_ONLY,
             Optional.<JavacStep.SuggestBuildRules>absent(),
             getResolver()));
 

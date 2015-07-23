@@ -26,7 +26,6 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildDependencies;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
@@ -93,17 +92,12 @@ public class Build implements Closeable {
 
   private final JavaPackageFinder javaPackageFinder;
 
-  private final BuildDependencies buildDependencies;
-
   private final Clock clock;
 
   /** Not set until {@link #executeBuild(Iterable, boolean)} is invoked. */
   @Nullable
   private BuildContext buildContext;
 
-  /**
-   * @param buildDependencies How to include dependencies when building rules.
-   */
   public Build(
       ActionGraph actionGraph,
       Optional<TargetDevice> targetDevice,
@@ -116,7 +110,6 @@ public class Build implements Closeable {
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
-      BuildDependencies buildDependencies,
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
@@ -144,7 +137,6 @@ public class Build implements Closeable {
     this.buildEngine = buildEngine;
     this.stepRunner = new DefaultStepRunner(executionContext);
     this.javaPackageFinder = javaPackageFinder;
-    this.buildDependencies = buildDependencies;
     this.clock = clock;
   }
 
@@ -183,9 +175,9 @@ public class Build implements Closeable {
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
         .setEventBus(executionContext.getBuckEventBus())
-        .setAndroidBootclasspathSupplier(BuildContext.createBootclasspathSupplier(
-            executionContext.getAndroidPlatformTargetSupplier()))
-        .setBuildDependencies(buildDependencies)
+        .setAndroidBootclasspathSupplier(
+            BuildContext.createBootclasspathSupplier(
+                executionContext.getAndroidPlatformTargetSupplier()))
         .setBuildId(executionContext.getBuildId())
         .putAllEnvironment(executionContext.getEnvironment())
         .build();

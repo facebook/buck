@@ -94,8 +94,7 @@ function _buck_completion_run() {
 }
 
 function _buck_completion_try_build() {
-  _buck_completion_try_long_arg "--build-dependencies --help --no-cache --num-threads --verbose" \
-    || _buck_completion_try_build_dependencies "$@" \
+  _buck_completion_try_long_arg "--help --no-cache --num-threads --verbose" \
     || _buck_completion_try_target "$@"
 }
 
@@ -138,7 +137,6 @@ function _buck_completion_try_clean() {
 function _buck_completion_try_install() {
   _buck_completion_try_long_arg "
       --activity
-      --build-dependencies
       --help
       --no-cache
       --num-threads
@@ -152,7 +150,6 @@ function _buck_completion_try_install() {
       --device
       --serial" \
     || _buck_completion_try_short_arg "-all" \
-    || _buck_completion_try_build_dependencies "$@" \
     || _buck_completion_try_serial "$@" \
     || _buck_completion_try_target "$@"
 }
@@ -180,7 +177,6 @@ function _buck_completion_try_run() {
 
 function _buck_completion_try_targets() {
   _buck_completion_try_long_arg "
-      --build-dependencies
       --help
       --json
       --no-cache
@@ -191,7 +187,6 @@ function _buck_completion_try_targets() {
       --show-rulekey
       --type
       --verbose" \
-    || _buck_completion_try_build_dependencies "$@" \
     || _buck_completion_try_resolve_alias "$@"
   # TODO _buck_completion_try_referenced_file_set
 }
@@ -199,7 +194,6 @@ function _buck_completion_try_targets() {
 function _buck_completion_try_test() {
   _buck_completion_try_long_arg "
       --all
-      --build-dependencies
       --code-coverage
       --debug
       --dry-run
@@ -218,7 +212,6 @@ function _buck_completion_try_test() {
       --explain-test-selectors
       --exclude
       --always_exclude" \
-    || _buck_completion_try_build_dependencies "$@" \
     || _buck_completion_try_serial "$@" \
     || _buck_completion_try_target "$@"
 }
@@ -251,17 +244,6 @@ function _buck_completion_try_short_arg() {
   if [[ "$word" == -* ]]; then
     COMPREPLY=( $(compgen -W "$@" -- "$word") )
   fi
-
-  # Set return status
-  [[ "${#COMPREPLY[@]}" > 0 ]]
-}
-
-function _buck_completion_try_build_dependencies() {
-  case "$prev" in
-    -b | --build-dependencies)
-      COMPREPLY=( $(compgen -W "FIRST_ORDER_ONLY WARN_ON_TRANSITIVE TRANSITIVE" -- "$word") )
-      ;;
-  esac
 
   # Set return status
   [[ "${#COMPREPLY[@]}" > 0 ]]
