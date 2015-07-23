@@ -1,0 +1,13 @@
+Project Url:  http://bazel.io/
+
+Git repo to clone: https://github.com/google/bazel.git
+Git revision: 3fe87d7b03522c357efa804fffc41c35aa175ebd
+
+Description:
+This is the query engine component of Bazel build tool.
+
+Local modifications:
+- Only imported the "src/main/java/com/google/devtools/build/lib/query2/engine/" subdirectory,
+  excluding the class BlazeQueryEvalResult. This class has dependencies to a class outside the
+  package and it won't be used for buck query.
+- Added bazel/BUCK file in order to compile this library with Buck.
