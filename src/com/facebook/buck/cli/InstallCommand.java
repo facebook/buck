@@ -193,14 +193,15 @@ public class InstallCommand extends BuildCommand {
           build.getExecutionContext());
     } else if (buildRule instanceof AppleBundle) {
       AppleBundle appleBundle = (AppleBundle) buildRule;
-      params.getBuckEventBus().post(InstallEvent.started(appleBundle.getBuildTarget()));
+      InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
+      params.getBuckEventBus().post(started);
       InstallResult installResult = installAppleBundle(
           params,
           appleBundle,
           build.getExecutionContext().getProjectFilesystem(),
           build.getExecutionContext().getProcessExecutor());
       params.getBuckEventBus().post(InstallEvent.finished(
-          appleBundle.getBuildTarget(),
+          started,
           installResult.getExitCode() == 0,
           installResult.getLaunchedPid()));
       return installResult.getExitCode();

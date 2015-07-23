@@ -176,20 +176,24 @@ public class ChromeTraceBuildListenerTest {
         new BuildId("ChromeTraceBuildListenerTestBuildId"));
     eventBus.register(listener);
 
-    eventBus.post(CommandEvent.started("party",
+    CommandEvent.Started commandEventStarted = CommandEvent.started(
+        "party",
         ImmutableList.of("arg1", "arg2"),
-        /* isDaemon */ true));
-    eventBus.post(ArtifactCacheConnectEvent.started());
-    eventBus.post(ArtifactCacheConnectEvent.finished());
-    eventBus.post(BuildEvent.started(buildArgs));
-    eventBus.post(
-        ArtifactCacheEvent.started(
-            ArtifactCacheEvent.Operation.FETCH,
-            ImmutableSet.of(ruleKey)));
+        /* isDaemon */ true);
+    eventBus.post(commandEventStarted);
+    ArtifactCacheConnectEvent.Started artifactCacheConnectEventStarted =
+        ArtifactCacheConnectEvent.started();
+    eventBus.post(artifactCacheConnectEventStarted);
+    eventBus.post(ArtifactCacheConnectEvent.finished(artifactCacheConnectEventStarted));
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
+    eventBus.post(buildEventStarted);
+    ArtifactCacheEvent.Started artifactCacheEventStarted = ArtifactCacheEvent.started(
+        ArtifactCacheEvent.Operation.FETCH,
+        ImmutableSet.of(ruleKey));
+    eventBus.post(artifactCacheEventStarted);
     eventBus.post(
         ArtifactCacheEvent.finished(
-            ArtifactCacheEvent.Operation.FETCH,
-            ImmutableSet.of(ruleKey),
+            artifactCacheEventStarted,
             CacheResult.hit("http")));
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
@@ -198,13 +202,14 @@ public class ChromeTraceBuildListenerTest {
     AnnotationProcessingEvent.Operation operation = AnnotationProcessingEvent.Operation.PROCESS;
     int annotationRound = 1;
     boolean isLastRound = false;
-    eventBus.post(
+    AnnotationProcessingEvent.Started annotationProcessingEventStarted =
         AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName,
-            operation,
-            annotationRound,
-            isLastRound));
+        target,
+        annotationProcessorName,
+        operation,
+        annotationRound,
+        isLastRound);
+    eventBus.post(annotationProcessingEventStarted);
 
     final CompilerPluginDurationEvent.Started processingPartOneStarted =
         CompilerPluginDurationEvent.started(
@@ -218,15 +223,11 @@ public class ChromeTraceBuildListenerTest {
             processingPartOneStarted,
             ImmutableMap.<String, String>of()));
 
-    eventBus.post(
-        AnnotationProcessingEvent.finished(
-            target,
-            annotationProcessorName,
-            operation,
-            annotationRound,
-            isLastRound));
+    eventBus.post(AnnotationProcessingEvent.finished(annotationProcessingEventStarted));
 
-    eventBus.post(StepEvent.finished(stepShortName, stepDescription, stepUuid, 0));
+    eventBus.post(StepEvent.finished(
+            StepEvent.started(stepShortName, stepDescription, stepUuid),
+            0));
     eventBus.post(
         BuildRuleEvent.finished(
             rule,
@@ -244,11 +245,8 @@ public class ChromeTraceBuildListenerTest {
           ImmutableMap.of("success", "false")));
     }
 
-    eventBus.post(BuildEvent.finished(buildArgs, 0));
-    eventBus.post(CommandEvent.finished("party",
-        ImmutableList.of("arg1", "arg2"),
-        /* isDaemon */ true,
-        /* exitCode */ 0));
+    eventBus.post(BuildEvent.finished(buildEventStarted, 0));
+    eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ 0));
     listener.outputTrace(new BuildId("BUILD_ID"));
 
     File resultFile = new File(tmpDir.getRoot(), BuckConstant.BUCK_TRACE_DIR + "/build.trace");

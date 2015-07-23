@@ -33,8 +33,8 @@ public abstract class BuildEvent extends AbstractBuckEvent {
     return new Started(ImmutableSet.copyOf(buildArgs));
   }
 
-  public static Finished finished(Iterable<String> buildArgs, int exitCode) {
-    return new Finished(ImmutableSet.copyOf(buildArgs), exitCode);
+  public static Finished finished(Started started, int exitCode) {
+    return new Finished(started, exitCode);
   }
 
   public static RuleCountCalculated ruleCountCalculated(
@@ -86,9 +86,10 @@ public abstract class BuildEvent extends AbstractBuckEvent {
     private final ImmutableSet<String> buildArgs;
     private final int exitCode;
 
-    protected Finished(ImmutableSet<String> buildArgs, int exitCode) {
-      this.buildArgs = buildArgs;
+    protected Finished(Started started, int exitCode) {
+      this.buildArgs = started.getBuildArgs();
       this.exitCode = exitCode;
+      chain(started);
     }
 
     public ImmutableSet<String> getBuildArgs() {

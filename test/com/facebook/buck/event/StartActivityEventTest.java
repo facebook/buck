@@ -27,24 +27,18 @@ import org.junit.Test;
 public class StartActivityEventTest {
   @Test
   public void testEquals() throws Exception {
-    StartActivityEvent started =
+    StartActivityEvent.Started started =
         configureTestEvent(StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
             "com.foo.bar"));
-    StartActivityEvent startedTwo =
+    StartActivityEvent.Started startedTwo =
         configureTestEvent(StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
             "com.foo.bar"));
     StartActivityEvent finished =
-        configureTestEvent(StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
-            "com.foo.bar",
-            false));
+        configureTestEvent(StartActivityEvent.finished(started, false));
     StartActivityEvent finishedTwo =
-        configureTestEvent(StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
-            "com.foo.bar",
-            false));
+        configureTestEvent(StartActivityEvent.finished(started, false));
     StartActivityEvent finishedSucceed =
-        configureTestEvent(StartActivityEvent.finished(BuildTargetFactory.newInstance("//foo:bar"),
-            "com.foo.bar",
-            true));
+        configureTestEvent(StartActivityEvent.finished(started, true));
 
     assertEquals(started, started);
     assertNotEquals(started, finished);

@@ -19,10 +19,12 @@ package com.facebook.buck.java;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class AnnotationProcessingEventTest {
@@ -35,14 +37,14 @@ public class AnnotationProcessingEventTest {
     String annotationProcessorName2 = "com.facebook.FakeProcessor2";
 
 
-    AnnotationProcessingEvent initStartedEventOne = configureTestEvent(
+    AnnotationProcessingEvent.Started initStartedEventOne = configureTestEvent(
         AnnotationProcessingEvent.started(
             target,
             annotationProcessorName,
             AnnotationProcessingEvent.Operation.INIT,
             0,
             false));
-    AnnotationProcessingEvent initStartedEventTwo = configureTestEvent(
+    AnnotationProcessingEvent.Started initStartedEventTwo = configureTestEvent(
         AnnotationProcessingEvent.started(
             target,
             annotationProcessorName,
@@ -70,24 +72,15 @@ public class AnnotationProcessingEventTest {
             AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS,
             0,
             false));
-    AnnotationProcessingEvent roundOneFinishedEvent = configureTestEvent(
-        AnnotationProcessingEvent.finished(
-            target,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.PROCESS,
-            1,
-            false));
-    AnnotationProcessingEvent roundTwoFinishedEvent = configureTestEvent(
-        AnnotationProcessingEvent.finished(
-            target,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.PROCESS,
-            2,
-            false));
+    AnnotationProcessingEvent finishedInitEventOne = configureTestEvent(
+        AnnotationProcessingEvent.finished(initStartedEventOne));
+    AnnotationProcessingEvent finishedInitEventTwo = configureTestEvent(
+        AnnotationProcessingEvent.finished(initStartedEventTwo));
     assertEquals(initStartedEventOne, initStartedEventTwo);
     assertNotEquals(initStartedEventOne, targetTwoInitStartedEvent);
     assertNotEquals(initStartedEventOne, annotationProcessorTwoInitStartedEvent);
     assertNotEquals(initStartedEventOne, getSupportedOptionsStartedEvent);
-    assertNotEquals(roundOneFinishedEvent, roundTwoFinishedEvent);
+    assertEquals(finishedInitEventOne, finishedInitEventTwo);
+    assertThat(initStartedEventOne.isRelatedTo(finishedInitEventOne), Matchers.is(true));
   }
 }

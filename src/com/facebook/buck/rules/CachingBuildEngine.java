@@ -651,10 +651,10 @@ public class CachingBuildEngine implements BuildEngine {
     //
     // Unfortunately, this does not appear to work, in practice, because MoreFiles fails when trying
     // to resolve a Path for a zip entry against a file Path on disk.
-    buildContext.getEventBus().post(
-        ArtifactCacheEvent.started(
-            ArtifactCacheEvent.Operation.DECOMPRESS,
-            ImmutableSet.of(ruleKey)));
+    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
+        ArtifactCacheEvent.Operation.DECOMPRESS,
+        ImmutableSet.of(ruleKey));
+    buildContext.getEventBus().post(started);
     try {
       Unzip.extractZipFile(
           zipFile.toPath().toAbsolutePath(),
@@ -689,10 +689,7 @@ public class CachingBuildEngine implements BuildEngine {
               Throwables.getStackTraceAsString(e)));
       return CacheResult.miss();
     } finally {
-      buildContext.getEventBus().post(
-          ArtifactCacheEvent.finished(
-              ArtifactCacheEvent.Operation.DECOMPRESS,
-              ImmutableSet.of(rule.getRuleKey())));
+      buildContext.getEventBus().post(ArtifactCacheEvent.finished(started));
     }
 
     return cacheResult;

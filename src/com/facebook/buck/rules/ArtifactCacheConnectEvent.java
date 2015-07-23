@@ -53,8 +53,8 @@ public abstract class ArtifactCacheConnectEvent extends AbstractBuckEvent implem
     return new Started();
   }
 
-  public static Finished finished() {
-    return new Finished();
+  public static Finished finished(Started started) {
+    return new Finished(started);
   }
 
   public static class Started extends ArtifactCacheConnectEvent {
@@ -65,6 +65,11 @@ public abstract class ArtifactCacheConnectEvent extends AbstractBuckEvent implem
   }
 
   public static class Finished extends ArtifactCacheConnectEvent {
+
+    public Finished(Started started) {
+      chain(started);
+    }
+
     @Override
     public String getEventName() {
       return "ArtifactCacheConnectFinished";

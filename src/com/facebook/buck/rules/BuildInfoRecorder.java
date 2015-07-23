@@ -264,10 +264,10 @@ public class BuildInfoRecorder {
       return;
     }
 
-    eventBus.post(
-        ArtifactCacheEvent.started(
-            ArtifactCacheEvent.Operation.COMPRESS,
-            ruleKeys));
+    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
+        ArtifactCacheEvent.Operation.COMPRESS,
+        ruleKeys);
+    eventBus.post(started);
 
     File zip;
     ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.of();
@@ -286,10 +286,7 @@ public class BuildInfoRecorder {
       e.printStackTrace();
       return;
     } finally {
-      eventBus.post(
-          ArtifactCacheEvent.finished(
-              ArtifactCacheEvent.Operation.COMPRESS,
-              ruleKeys));
+      eventBus.post(ArtifactCacheEvent.finished(started));
     }
 
     // Store the artifact, including any additional metadata.

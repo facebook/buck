@@ -28,23 +28,25 @@ import org.junit.Test;
 public class InstallEventTest {
   @Test
   public void testEquals() throws Exception {
-    InstallEvent started = configureTestEvent(
+    InstallEvent.Started started = configureTestEvent(
         InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
-    InstallEvent startedTwo = configureTestEvent(
+    InstallEvent.Started startedTwo = configureTestEvent(
         InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
+    InstallEvent.Started startedDifferentEvent = configureTestEvent(
+        InstallEvent.started(BuildTargetFactory.newInstance("//foo:raz")));
     InstallEvent finished = configureTestEvent(
         InstallEvent.finished(
-            BuildTargetFactory.newInstance("//foo:bar"),
+            started,
             true,
             Optional.<Long>absent()));
     InstallEvent finishedDifferentEvent = configureTestEvent(
         InstallEvent.finished(
-            BuildTargetFactory.newInstance("//foo:raz"),
+            startedDifferentEvent,
             true,
             Optional.<Long>absent()));
     InstallEvent finishedFail = configureTestEvent(
         InstallEvent.finished(
-            BuildTargetFactory.newInstance("//foo:bar"),
+            started,
             false,
             Optional.<Long>absent()));
 
@@ -52,5 +54,8 @@ public class InstallEventTest {
     assertNotEquals(finished, finishedDifferentEvent);
     assertNotEquals(started, finished);
     assertNotEquals(finished, finishedFail);
+
+    assertNotEquals(started.getEventKey(), startedTwo.getEventKey());
+    assertEquals(started.getEventKey(), finished.getEventKey());
   }
 }

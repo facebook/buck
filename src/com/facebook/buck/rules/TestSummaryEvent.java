@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.test.TestResultSummary;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -33,6 +34,7 @@ public abstract class TestSummaryEvent extends AbstractBuckEvent implements Leaf
   private final String testName;
 
   private TestSummaryEvent(UUID uuid, String testCaseName, String testName) {
+    super(EventKey.of("TestSummaryEvent", uuid));
     this.uuid = uuid;
     this.testCaseName = testCaseName;
     this.testName = testName;

@@ -46,8 +46,8 @@ public abstract class DownloadEvent extends AbstractBuckEvent {
     return new Started(uri);
   }
 
-  public static Finished finished(URI uri) {
-    return new Finished(uri);
+  public static Finished finished(Started started) {
+    return new Finished(started);
   }
 
   public static class Started extends DownloadEvent {
@@ -62,8 +62,9 @@ public abstract class DownloadEvent extends AbstractBuckEvent {
   }
 
   public static class Finished extends DownloadEvent {
-    public Finished(URI uri) {
-      super(uri);
+    public Finished(Started started) {
+      super(started.uri);
+      chain(started);
     }
 
     @Override

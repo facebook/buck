@@ -62,7 +62,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.ProjectFilesystemWatcher;
 import com.facebook.buck.util.PropertyFinder;
-import com.facebook.buck.util.network.RemoteLoggerFactory;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
@@ -72,6 +71,7 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.network.RemoteLoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 import com.google.common.annotations.VisibleForTesting;
@@ -599,11 +599,11 @@ public final class Main {
           ? ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length))
           : ImmutableList.<String>of();
 
-      CommandEvent commandEvent = CommandEvent.started(
+      CommandEvent.Started startedEvent = CommandEvent.started(
           args.length > 0 ? args[0] : "",
           remainingArgs,
           isDaemon);
-      buildEventBus.post(commandEvent);
+      buildEventBus.post(startedEvent);
 
       // Create or get Parser and invalidate cached command parameters.
       Parser parser = null;
@@ -613,7 +613,7 @@ public final class Main {
           parser = getParserFromDaemon(
               context,
               rootRepository,
-              commandEvent,
+              startedEvent,
               buildEventBus,
               clock);
         } catch (WatchmanWatcherException | IOException e) {
@@ -682,12 +682,7 @@ public final class Main {
               buckConfig,
               fileHashCache));
       parser.cleanCache();
-      buildEventBus.post(
-          CommandEvent.finished(
-              args.length > 0 ? args[0] : "",
-              remainingArgs,
-              isDaemon,
-              exitCode));
+      buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
     } catch (Throwable t) {
       LOG.debug(t, "Failing build on exception.");
       closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.

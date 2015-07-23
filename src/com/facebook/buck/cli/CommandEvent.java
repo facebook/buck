@@ -81,11 +81,8 @@ public abstract class CommandEvent extends AbstractBuckEvent {
     return new Started(commandName, args, isDaemon);
   }
 
-  public static Finished finished(String commandName,
-      ImmutableList<String> args,
-      boolean isDaemon,
-      int exitCode) {
-    return new Finished(commandName, args, isDaemon, exitCode);
+  public static Finished finished(Started started, int exitCode) {
+    return new Finished(started, exitCode);
   }
 
   public static class Started extends CommandEvent {
@@ -102,12 +99,11 @@ public abstract class CommandEvent extends AbstractBuckEvent {
   public static class Finished extends CommandEvent {
     private final int exitCode;
 
-    private Finished(String commandName,
-        ImmutableList<String> args,
-        boolean isDaemon,
+    private Finished(Started started,
         int exitCode) {
-      super(commandName, args, isDaemon);
+      super(started.getCommandName(), started.getArgs(), started.isDaemon());
       this.exitCode = exitCode;
+      chain(started);
     }
 
     public int getExitCode() {

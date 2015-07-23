@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.test.TestResults;
 
 import java.util.Objects;
@@ -27,6 +28,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
   private int secret;
 
   private IndividualTestEvent(int secret) {
+    super(EventKey.of("IndividualTestEvent", secret));
     this.secret = secret;
   }
 

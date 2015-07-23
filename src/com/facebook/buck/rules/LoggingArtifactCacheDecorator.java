@@ -38,12 +38,13 @@ public class LoggingArtifactCacheDecorator {
       @Override
       public CacheResult fetch(RuleKey ruleKey, File output)
           throws InterruptedException {
-        eventBus.post(ArtifactCacheEvent.started(ArtifactCacheEvent.Operation.FETCH,
-            ImmutableSet.of(ruleKey)));
+        ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
+            ArtifactCacheEvent.Operation.FETCH,
+            ImmutableSet.of(ruleKey));
+        eventBus.post(started);
         CacheResult fetchResult = delegate.fetch(ruleKey, output);
         eventBus.post(ArtifactCacheEvent.finished(
-                ArtifactCacheEvent.Operation.FETCH,
-                ImmutableSet.of(ruleKey),
+                started,
                 fetchResult));
         return fetchResult;
       }
@@ -54,15 +55,12 @@ public class LoggingArtifactCacheDecorator {
           ImmutableMap<String, String> metadata,
           File output)
           throws InterruptedException {
-        eventBus.post(
-            ArtifactCacheEvent.started(
-                ArtifactCacheEvent.Operation.STORE,
-                ruleKeys));
+        ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
+            ArtifactCacheEvent.Operation.STORE,
+            ruleKeys);
+        eventBus.post(started);
         delegate.store(ruleKeys, metadata, output);
-        eventBus.post(
-            ArtifactCacheEvent.finished(
-                ArtifactCacheEvent.Operation.STORE,
-                ruleKeys));
+        eventBus.post(ArtifactCacheEvent.finished(started));
       }
 
       @Override

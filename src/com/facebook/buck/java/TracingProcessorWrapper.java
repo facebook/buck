@@ -53,41 +53,44 @@ class TracingProcessorWrapper implements Processor {
 
   @Override
   public Set<String> getSupportedOptions() {
-    begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS);
+    AnnotationProcessingEvent.Started started =
+        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS);
     try {
       return innerProcessor.getSupportedOptions();
     } finally {
-      end(AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS);
+      end(started);
     }
   }
 
   @Override
   public Set<String> getSupportedAnnotationTypes() {
-    begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_ANNOTATION_TYPES);
+    AnnotationProcessingEvent.Started started =
+        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_ANNOTATION_TYPES);
     try {
       return innerProcessor.getSupportedAnnotationTypes();
     } finally {
-      end(AnnotationProcessingEvent.Operation.GET_SUPPORTED_ANNOTATION_TYPES);
+      end(started);
     }
   }
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
-    begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_SOURCE_VERSION);
+    AnnotationProcessingEvent.Started started =
+        begin(AnnotationProcessingEvent.Operation.GET_SUPPORTED_SOURCE_VERSION);
     try {
       return innerProcessor.getSupportedSourceVersion();
     } finally {
-      end(AnnotationProcessingEvent.Operation.GET_SUPPORTED_SOURCE_VERSION);
+      end(started);
     }
   }
 
   @Override
   public void init(ProcessingEnvironment processingEnv) {
-    begin(AnnotationProcessingEvent.Operation.INIT);
+    AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.INIT);
     try {
       innerProcessor.init(processingEnv);
     } finally {
-      end(AnnotationProcessingEvent.Operation.INIT);
+      end(started);
     }
   }
 
@@ -96,42 +99,38 @@ class TracingProcessorWrapper implements Processor {
       Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     roundNumber += 1;
     isLastRound = roundEnv.processingOver();
-    begin(AnnotationProcessingEvent.Operation.PROCESS);
+    AnnotationProcessingEvent.Started started = begin(AnnotationProcessingEvent.Operation.PROCESS);
     try {
       return innerProcessor.process(annotations, roundEnv);
     } finally {
-      end(AnnotationProcessingEvent.Operation.PROCESS);
+      end(started);
     }
   }
 
   @Override
   public Iterable<? extends Completion> getCompletions(
       Element element, AnnotationMirror annotation, ExecutableElement member, String userText) {
-    begin(AnnotationProcessingEvent.Operation.GET_COMPLETIONS);
+    AnnotationProcessingEvent.Started started =
+        begin(AnnotationProcessingEvent.Operation.GET_COMPLETIONS);
     try {
       return innerProcessor.getCompletions(element, annotation, member, userText);
     } finally {
-      end(AnnotationProcessingEvent.Operation.GET_COMPLETIONS);
+      end(started);
     }
   }
 
-  private void begin(AnnotationProcessingEvent.Operation operation) {
-    eventBus.post(
-        AnnotationProcessingEvent.started(
-            buildTarget,
-            annotationProcessorName,
-            operation,
-            roundNumber,
-            isLastRound));
+  private AnnotationProcessingEvent.Started begin(AnnotationProcessingEvent.Operation operation) {
+    AnnotationProcessingEvent.Started started = AnnotationProcessingEvent.started(
+        buildTarget,
+        annotationProcessorName,
+        operation,
+        roundNumber,
+        isLastRound);
+    eventBus.post(started);
+    return started;
   }
 
-  private void end(AnnotationProcessingEvent.Operation operation) {
-    eventBus.post(
-        AnnotationProcessingEvent.finished(
-            buildTarget,
-            annotationProcessorName,
-            operation,
-            roundNumber,
-            isLastRound));
+  private void end(AnnotationProcessingEvent.Started started) {
+    eventBus.post(AnnotationProcessingEvent.finished(started));
   }
 }

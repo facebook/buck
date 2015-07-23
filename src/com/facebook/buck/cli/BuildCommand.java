@@ -290,12 +290,13 @@ public class BuildCommand extends AbstractCommand {
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
+    BuildEvent.Started started = BuildEvent.started(getArguments());
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
-          BuildEvent.started(getArguments()),
+          started,
           params.getParser().getParseStartTime().get());
     } else {
-      params.getBuckEventBus().post(BuildEvent.started(getArguments()));
+      params.getBuckEventBus().post(started);
     }
 
     // Parse the build files to create a ActionGraph.
@@ -369,7 +370,7 @@ public class BuildCommand extends AbstractCommand {
           isKeepGoing(),
           params.getConsole(),
           getPathToBuildReport(params.getBuckConfig()));
-      params.getBuckEventBus().post(BuildEvent.finished(getArguments(), exitCode));
+      params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
       return exitCode;
     }
   }

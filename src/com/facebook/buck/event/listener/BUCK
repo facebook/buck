@@ -1,4 +1,4 @@
-java_library(
+java_immutables_library(
   name = 'listener',
   srcs = glob(['*.java']),
   deps = [
@@ -19,13 +19,13 @@ java_library(
     '//src/com/facebook/buck/test/selectors:selectors',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/timing:timing',
-    '//src/com/facebook/buck/util/environment:environment',
-    '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util/network:network',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/environment:environment',
+    '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/util/network:network',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-annotations',
     '//third-party/java/jackson:jackson-core',

@@ -127,6 +127,7 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent impl
           startedEvent.getDurationName(),
           args);
       this.startedEvent = startedEvent;
+      chain(startedEvent);
     }
 
     public Started getStartedEvent() {

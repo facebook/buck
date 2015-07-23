@@ -193,7 +193,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
-    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
+    buckEventBus.post(
+        CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
     verifyAll();
 
     assertTrue(cache.hasArtifact(ruleToTest.getRuleKey()));
@@ -290,7 +291,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     //    "We expect build() to be synchronous in this case, " +
     //        "so the future should already be resolved.",
     //    MoreFutures.isSuccess(buildResult));
-    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
+    buckEventBus.post(
+        CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
 
     BuildResult result = buildResult.get();
     assertEquals(BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS, result.getSuccess());
@@ -373,7 +375,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             NOOP_RULE_KEY_FACTORY);
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
-    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
+    buckEventBus.post(
+        CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
 
     OnDiskBuildInfo onDiskBuildInfo =
         buildContext.createOnDiskBuildInfoFor(buildTarget.getBuildTarget());
@@ -555,7 +558,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             NOOP_RULE_KEY_FACTORY);
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
-    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
+    buckEventBus.post(
+        CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
     verifyAll();
 
     assertTrue(
@@ -630,7 +634,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             CachingBuildEngine.BuildMode.SHALLOW,
             NOOP_RULE_KEY_FACTORY);
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
-    buckEventBus.post(CommandEvent.finished("build", ImmutableList.<String>of(), false, 0));
+    buckEventBus.post(
+        CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
     verifyAll();
 
     BuildResult result = buildResult.get();

@@ -51,6 +51,11 @@ public interface BuckEvent {
    */
   boolean isRelatedTo(BuckEvent event);
 
+  /**
+   * @return key used to determine whether this event is related to another event.
+   */
+  EventKey getEventKey();
+
   @JsonProperty("type")
   public String getEventName();
 }

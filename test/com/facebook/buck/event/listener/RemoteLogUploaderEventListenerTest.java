@@ -237,7 +237,8 @@ public class RemoteLogUploaderEventListenerTest {
 
   private final Matcher<JsonNode> eventShapeMatcher = Matchers.allOf(
       hasJsonField("timestamp"),
-      hasJsonField("threadId")
+      hasJsonField("threadId"),
+      hasJsonField("eventKey")
   );
 
   /**

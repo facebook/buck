@@ -18,10 +18,10 @@ package com.facebook.buck.event.listener;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
@@ -71,9 +71,10 @@ public class SimpleConsoleEventBusListenerTest {
 
     final long threadId = 0;
 
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     rawEventBus.post(
         configureTestEventAtTime(
-            BuildEvent.started(buildArgs),
+            buildEventStarted,
             0L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -112,7 +113,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
     rawEventBus.post(configureTestEventAtTime(
-        BuildEvent.finished(buildArgs, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
+        BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
     final String buildingLine = "BUILT //banana:stand\n[-] BUILDING...FINISHED 0.8s\n";
 
@@ -129,15 +130,16 @@ public class SimpleConsoleEventBusListenerTest {
     assertEquals(parsingLine + buildingLine + logLine,
         console.getTextWrittenToStdErr());
 
-    rawEventBus.post(configureTestEventAtTime(
-        InstallEvent.started(fakeTarget), 2500L, TimeUnit.MILLISECONDS, threadId));
+    InstallEvent.Started installEventStarted = configureTestEventAtTime(
+        InstallEvent.started(fakeTarget), 2500L, TimeUnit.MILLISECONDS, threadId);
+    rawEventBus.post(installEventStarted);
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(parsingLine + buildingLine + logLine,
         console.getTextWrittenToStdErr());
 
     rawEventBus.post(configureTestEventAtTime(
-        InstallEvent.finished(fakeTarget, true, Optional.<Long>absent()),
+        InstallEvent.finished(installEventStarted, true, Optional.<Long>absent()),
         4000L,
         TimeUnit.MILLISECONDS,
         threadId));

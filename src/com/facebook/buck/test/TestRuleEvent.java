@@ -18,6 +18,7 @@ package com.facebook.buck.test;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildTarget;
 
 import java.util.Objects;
@@ -30,6 +31,7 @@ public abstract class TestRuleEvent extends AbstractBuckEvent {
   private final BuildTarget buildTarget;
 
   protected TestRuleEvent(BuildTarget buildTarget) {
+    super(EventKey.of("TestRuleEvent", buildTarget.getFullyQualifiedName()));
     this.buildTarget = buildTarget;
   }
 

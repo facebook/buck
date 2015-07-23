@@ -38,9 +38,16 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   private long threadId;
   @Nullable
   private BuildId buildId;
+  @Nullable
+  private EventKey eventKey;
+
+  protected AbstractBuckEvent(@Nullable EventKey eventKey) {
+    isConfigured = false;
+    this.eventKey = eventKey;
+  }
 
   protected AbstractBuckEvent() {
-    isConfigured = false;
+    this(null);
   }
 
   /**
@@ -88,12 +95,25 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   }
 
   @Override
-  public String toString() {
-    return String.format("%s(%s)", getEventName(), getValueString());
+  public final EventKey getEventKey() {
+    if (eventKey == null) {
+      eventKey = EventKey.of();
+    }
+    return eventKey;
+  }
+
+  protected void chain(AbstractBuckEvent event) {
+    Preconditions.checkState(eventKey == null);
+    eventKey = event.getEventKey();
   }
 
   @JsonIgnore
   protected abstract String getValueString();
+
+  @Override
+  public String toString() {
+    return String.format("%s(%s)", getEventName(), getValueString());
+  }
 
   /**
    * The default implementation of equals checks to see if two events are related, are on the same

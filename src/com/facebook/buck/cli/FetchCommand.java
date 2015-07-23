@@ -51,12 +51,13 @@ public class FetchCommand extends BuildCommand {
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
+    BuildEvent.Started started = BuildEvent.started(getArguments());
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
-          BuildEvent.started(getArguments()),
+          started,
           params.getParser().getParseStartTime().get());
     } else {
-      params.getBuckEventBus().post(BuildEvent.started(getArguments()));
+      params.getBuckEventBus().post(started);
     }
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
@@ -115,7 +116,7 @@ public class FetchCommand extends BuildCommand {
           getPathToBuildReport(params.getBuckConfig()));
     }
 
-    params.getBuckEventBus().post(BuildEvent.finished(getArguments(), exitCode));
+    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
 
     return exitCode;
   }

@@ -65,7 +65,8 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
   }
 
   private ActionGraph createActionGraph(final TargetGraph targetGraph) {
-    eventBus.post(ActionGraphEvent.started());
+    ActionGraphEvent.Started started = ActionGraphEvent.started();
+    eventBus.post(started);
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     final RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
@@ -109,7 +110,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
         };
     bottomUpTraversal.traverse();
     ActionGraph result = bottomUpTraversal.getResult();
-    eventBus.post(ActionGraphEvent.finished());
+    eventBus.post(ActionGraphEvent.finished(started));
     return result;
   }
 

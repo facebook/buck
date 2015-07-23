@@ -25,10 +25,10 @@ import org.junit.Test;
 public class UninstallEventTest {
   @Test
   public void testEquals() throws Exception {
-    UninstallEvent started = configureTestEvent(UninstallEvent.started("com.foo.bar"));
-    UninstallEvent startedTwo = configureTestEvent(UninstallEvent.started("com.foo.bar"));
-    UninstallEvent finished = configureTestEvent(UninstallEvent.finished("com.foo.bar", true));
-    UninstallEvent finishedFail = configureTestEvent(UninstallEvent.finished("com.foo.bar", false));
+    UninstallEvent.Started started = configureTestEvent(UninstallEvent.started("com.foo.bar"));
+    UninstallEvent.Started startedTwo = configureTestEvent(UninstallEvent.started("com.foo.bar"));
+    UninstallEvent finished = configureTestEvent(UninstallEvent.finished(started, true));
+    UninstallEvent finishedFail = configureTestEvent(UninstallEvent.finished(started, false));
 
     assertEquals(started, startedTwo);
     assertNotEquals(started, finished);

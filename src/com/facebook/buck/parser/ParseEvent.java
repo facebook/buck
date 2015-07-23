@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
@@ -35,6 +36,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
   private final ImmutableList<BuildTarget> buildTargets;
 
   protected ParseEvent(Iterable<BuildTarget> buildTargets) {
+    super(EventKey.of("ParseEvent", buildTargets));
     this.buildTargets = ImmutableList.copyOf(buildTargets);
   }
 

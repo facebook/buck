@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -31,6 +32,7 @@ public abstract class TestRunEvent extends AbstractBuckEvent {
   private final int secret;
 
   private TestRunEvent(int secret) {
+    super(EventKey.of("TestRunEvent", secret));
     this.secret = secret;
   }
 

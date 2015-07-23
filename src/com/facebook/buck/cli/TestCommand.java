@@ -211,12 +211,13 @@ public class TestCommand extends BuildCommand {
     LOG.debug("Running with arguments %s", getArguments());
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
+    BuildEvent.Started started = BuildEvent.started(getArguments());
     if (params.getParser().getParseStartTime().isPresent()) {
       params.getBuckEventBus().post(
-          BuildEvent.started(getArguments()),
+          started,
           params.getParser().getParseStartTime().get());
     } else {
-      params.getBuckEventBus().post(BuildEvent.started(getArguments()));
+      params.getBuckEventBus().post(started);
     }
 
     // The first step is to parse all of the build files. This will populate the parser and find all
@@ -347,7 +348,7 @@ public class TestCommand extends BuildCommand {
             isKeepGoing(),
             params.getConsole(),
             getPathToBuildReport(params.getBuckConfig()));
-        params.getBuckEventBus().post(BuildEvent.finished(getArguments(), exitCode));
+        params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
         if (exitCode != 0) {
           return exitCode;
         }

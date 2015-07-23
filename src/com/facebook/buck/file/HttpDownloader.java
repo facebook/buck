@@ -51,7 +51,8 @@ public class HttpDownloader implements Downloader {
       uri = MavenUrlDecoder.toHttpUrl(mavenRepo, uri);
     }
 
-    eventBus.post(DownloadEvent.started(uri));
+    DownloadEvent.Started started = DownloadEvent.started(uri);
+    eventBus.post(started);
 
     try {
       HttpURLConnection connection = createConnection(uri);
@@ -77,7 +78,7 @@ public class HttpDownloader implements Downloader {
         }
       }
     } finally {
-      eventBus.post(DownloadEvent.finished(uri));
+      eventBus.post(DownloadEvent.finished(started));
     }
   }
 

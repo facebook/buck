@@ -150,7 +150,8 @@ public class ExopackageInstaller {
    * Installs the app specified in the constructor.  This object should be discarded afterward.
    */
   public synchronized boolean install() throws InterruptedException {
-    eventBus.post(InstallEvent.started(apkRule.getBuildTarget()));
+    InstallEvent.Started started = InstallEvent.started(apkRule.getBuildTarget());
+    eventBus.post(started);
 
     boolean success = adbHelper.adbCall(
         new AdbHelper.AdbCallable() {
@@ -170,9 +171,9 @@ public class ExopackageInstaller {
         });
 
     eventBus.post(InstallEvent.finished(
-        apkRule.getBuildTarget(),
-        success,
-        Optional.<Long>absent()));
+            started,
+            success,
+            Optional.<Long>absent()));
     return success;
   }
 

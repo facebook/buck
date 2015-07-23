@@ -98,6 +98,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private boolean enableProfiling;
   @Nullable private NamedTemporaryFile profileOutputFile;
   @Nullable private Thread stderrConsumer;
+  @Nullable private ProjectBuildFileParseEvents.Started projectBuildFileParseEventStarted;
 
   protected ProjectBuildFileParser(
       Path projectRoot,
@@ -153,7 +154,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
    * Initialize the parser, starting buck.py.
    */
   private void init() throws IOException {
-    buckEventBus.post(new ProjectBuildFileParseEvents.Started());
+    projectBuildFileParseEventStarted = new ProjectBuildFileParseEvents.Started();
+    buckEventBus.post(projectBuildFileParseEventStarted);
 
     ProcessBuilder processBuilder = new ProcessBuilder(buildArgs());
     processBuilder.environment().clear();
@@ -337,8 +339,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
       }
     } finally {
+      if (isInitialized) {
+        buckEventBus.post(
+            new ProjectBuildFileParseEvents.Finished(
+                Preconditions.checkNotNull(projectBuildFileParseEventStarted)));
+      }
       isClosed = true;
-      buckEventBus.post(new ProjectBuildFileParseEvents.Finished());
     }
   }
 

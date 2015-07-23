@@ -17,6 +17,7 @@
 package com.facebook.buck.event;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -51,12 +52,14 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.HashSet;
 
 public class EventSerializationTest {
 
@@ -72,6 +75,7 @@ public class EventSerializationTest {
     nanoTime = clock.nanoTime();
     threadId = 0;
     buildId = new BuildId("Test");
+    EventKey.setSequenceValueForTest(4242L);
   }
 
   @Test
@@ -80,7 +84,8 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[],\"type\":\"ParseStarted\"}", message);
+        "\"buildTargets\":[],\"type\":\"ParseStarted\"," +
+        "\"eventKey\":{\"value\":\"ParseEvent,[]\"}}", message);
   }
 
   @Test
@@ -92,7 +97,8 @@ public class EventSerializationTest {
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"buildTargets\":[{\"repository\":{\"present\":false},\"baseName\":\"//base\"," +
-        "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\"}", message);
+        "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\"," +
+        "\"eventKey\":{\"value\":\"ParseEvent,[//base:short#flv]\"}}", message);
   }
 
   @Test
@@ -102,17 +108,21 @@ public class EventSerializationTest {
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+        "\"eventKey\":{\"value\":\"4242\"}," +
         "\"buildArgs\":[\"//base:short\"], \"type\":\"BuildStarted\"}",
         message);
   }
 
   @Test
   public void testBuildEventFinished() throws IOException {
-    BuildEvent.Finished event = BuildEvent.finished(ImmutableSet.of("//base:short"), 0);
+    BuildEvent.Finished event = BuildEvent.finished(
+        BuildEvent.started(ImmutableSet.of("//base:short")),
+        0);
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+        "\"eventKey\":{\"value\":\"4242\"}," +
         "\"buildArgs\":[\"//base:short\"], \"exitCode\":0,\"type\":\"BuildFinished\"}",
         message);
   }
@@ -124,8 +134,9 @@ public class EventSerializationTest {
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals(
         "{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-            "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
-            "\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleStarted\"}",
+        "\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
+        "\"ruleKeySafe\":\"aaaa\",\"type\":\"BuildRuleStarted\"," +
+        "\"eventKey\":{\"value\":\"BuildRuleEvent,//fake:rule\"}}",
         message);
   }
 
@@ -147,7 +158,8 @@ public class EventSerializationTest {
             "\"present\":false},\"cacheError\":{\"present\":false}," +
             "\"metadata\":{\"present\":false}}, \"buildRule\":{\"type\":" +
             "\"fake_build_rule\",\"name\":\"//fake:rule\"},\"ruleKeySafe\":\"aaaa\"," +
-            "\"type\":\"BuildRuleFinished\"}",
+            "\"type\":\"BuildRuleFinished\"," +
+            "\"eventKey\":{\"value\":\"BuildRuleEvent,//fake:rule\"}}",
         message);
   }
 
@@ -159,6 +171,7 @@ public class EventSerializationTest {
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
         "\"runAllTests\":true," +
+        "\"eventKey\":{\"value\":\"TestRunEvent,0\"}," +
         "\"targetNames\":[],\"type\":\"RunStarted\"}", message);
   }
 
@@ -177,7 +190,9 @@ public class EventSerializationTest {
         "\"success\":false}]," +
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
-        "\"success\":false}],\"type\":\"RunComplete\"}", message);
+        "\"success\":false}],\"type\":\"RunComplete\", \"eventKey\":" +
+        "{\"value\":\"TestRunEvent,-880905839\"}}",
+        message);
   }
 
   @Test
@@ -186,7 +201,8 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"type\":\"AwaitingResults\"}", message);
+        "\"type\":\"AwaitingResults\",\"eventKey\":{\"value\":\"IndividualTestEvent,31\"}}",
+        message);
   }
 
   @Test
@@ -196,6 +212,7 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+        "\"eventKey\":{\"value\":\"IndividualTestEvent,1\"}," +
         "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{\"testName\"" +
         ":null,\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0,\"message\":null," +
         "\"stacktrace\":null,\"stdOut\":null," +
@@ -226,6 +243,27 @@ public class EventSerializationTest {
     return new TestResults(testCases);
   }
 
+  private void matchJsonObjects(String path, JsonNode expected, JsonNode actual) {
+    if (expected != null && actual != null && expected.isObject()) {
+      assertTrue(actual.isObject());
+      HashSet<String> expectedFields = Sets.newHashSet(expected.fieldNames());
+      HashSet<String> actualFields = Sets.newHashSet(actual.fieldNames());
+
+      for (String field : expectedFields) {
+        assertTrue(
+            String.format("Expecting field %s at path %s", field, path),
+            actualFields.contains(field));
+        matchJsonObjects(path + "/" + field, expected.get(field), actual.get(field));
+      }
+      assertEquals("Found unexpected fields",
+          Sets.newHashSet(), Sets.difference(actualFields, expectedFields));
+    }
+    assertEquals(
+        "At path " + path,
+        expected,
+        actual);
+  }
+
   private void assertJsonEquals(String expected, String actual) throws IOException {
     ObjectMapper mapper = new ObjectMapper();
     JsonFactory factory = mapper.getJsonFactory();
@@ -234,6 +272,7 @@ public class EventSerializationTest {
     JsonNode expectedObject = mapper.readTree(jsonParser);
     jsonParser = factory.createJsonParser(actual);
     JsonNode actualObject = mapper.readTree(jsonParser);
+    matchJsonObjects("/", expectedObject, actualObject);
     assertEquals(expectedObject, actualObject);
   }
 }

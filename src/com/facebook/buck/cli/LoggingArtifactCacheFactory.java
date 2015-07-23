@@ -55,11 +55,12 @@ public class LoggingArtifactCacheFactory implements ArtifactCacheFactory {
     if (noop) {
       return new NoopArtifactCache();
     } else {
-      buckEventBus.post(ArtifactCacheConnectEvent.started());
+      ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
+      buckEventBus.post(started);
       ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buckEventBus)
           .decorate(
               buckConfig.createArtifactCache(executionEnvironment.getWifiSsid(), buckEventBus));
-      buckEventBus.post(ArtifactCacheConnectEvent.finished());
+      buckEventBus.post(ArtifactCacheConnectEvent.finished(started));
       createdArtifactCaches.add(artifactCache);
       return artifactCache;
     }
