@@ -95,6 +95,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ParserTest extends EasyMockSupport {
 
@@ -208,22 +209,55 @@ public class ParserTest extends EasyMockSupport {
         buildFileParserFactory,
         repository);
   }
+  private Parser createParser(
+      Supplier<BuildFileTree> buildFileTreeSupplier,
+      Iterable<Map<String, Object>> rules,
+      ProjectBuildFileParserFactory buildFileParserFactory,
+      Repository repository)
+      throws IOException, InterruptedException {
+    ParserConfig parserConfig = new ParserConfig(
+        new FakeBuckConfig(
+            ImmutableMap.of(
+                "project", ImmutableMap.of("temp_files", ".*\\.swp$"))));
+    return createParser(
+        buildFileTreeSupplier,
+        rules,
+        buildFileParserFactory,
+        repository,
+        parserConfig);
+  }
 
-    private Parser createParser(
-        Supplier<BuildFileTree> buildFileTreeSupplier,
-        Iterable<Map<String, Object>> rules,
-        ProjectBuildFileParserFactory buildFileParserFactory,
-        Repository repository)
-        throws IOException, InterruptedException {
-      ParserConfig parserConfig = new ParserConfig(
-          new FakeBuckConfig(
-              ImmutableMap.of(
-                  "project", ImmutableMap.of("temp_files", ".*\\.swp$"))));
-    Parser parser = new Parser(
+  private Parser createParser(
+      Supplier<BuildFileTree> buildFileTreeSupplier,
+      Iterable<Map<String, Object>> rules,
+      ProjectBuildFileParserFactory buildFileParserFactory,
+      Repository repository,
+      ParserConfig parserConfig)
+      throws IOException, InterruptedException {
+    return createParser(
+        buildFileTreeSupplier,
+        rules,
+        buildFileParserFactory,
         repository,
         parserConfig.getEnforceBuckPackageBoundary(),
         parserConfig.getTempFilePatterns(),
-        parserConfig.getBuildFileName(),
+        parserConfig.getBuildFileName());
+  }
+
+  private Parser createParser(
+      Supplier<BuildFileTree> buildFileTreeSupplier,
+      Iterable<Map<String, Object>> rules,
+      ProjectBuildFileParserFactory buildFileParserFactory,
+      Repository repository,
+      boolean enforcePackageBoundary,
+      ImmutableSet<Pattern> tempFilePatterns,
+      String buildFileName)
+      throws IOException, InterruptedException {
+    Parser parser = new Parser(
+        repository,
+        enforcePackageBoundary,
+        tempFilePatterns,
+        buildFileName,
         buildFileTreeSupplier,
         buildFileParserFactory);
 
@@ -845,6 +879,43 @@ public class ParserTest extends EasyMockSupport {
   }
 
   @Test
+  public void whenNotifiedOfContainedFileAddCachedAncestorsAreInvalidatedWithoutBoundaryChecks()
+      throws Exception {
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes);
+    Parser parser =
+        createParser(
+            ofInstance(
+                new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
+            emptyBuildTargets(),
+            new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes),
+            repository,
+            /* enforcePackageBoundary */ false,
+            /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
+            ParserConfig.DEFAULT_BUILD_FILE_NAME);
+
+    Path testAncestorBuildFile = tempDir.newFile("java/BUCK").toPath().toRealPath();
+    Files.write(
+        "java_library(name = 'root')\n",
+        testAncestorBuildFile.toFile(),
+        Charsets.UTF_8);
+
+    // Call parseBuildFile to populate the cache.
+    parseBuildFile(testAncestorBuildFile, parser, buildFileParserFactory);
+
+    // Process event.
+    WatchEvent<Path> event = createPathEvent(Paths.get("java/com/facebook/SomeClass.java"),
+        StandardWatchEventKinds.ENTRY_CREATE);
+    parser.onFileSystemChange(event);
+
+    // Call parseBuildFile to request cached rules.
+    parseBuildFile(testAncestorBuildFile, parser, buildFileParserFactory);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
+  }
+
+  @Test
   public void whenNotifiedOfContainedFileChangeThenCacheRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
@@ -888,7 +959,6 @@ public class ParserTest extends EasyMockSupport {
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, buildFileParserFactory.calls);
   }
-
 
   @Test
   public void whenNotifiedOfContainedTempFileAddThenCachedRulesAreNotInvalidated()

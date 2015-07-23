@@ -743,14 +743,31 @@ public class Parser {
    *             within the build file to find and invalidate.
    */
   private synchronized void invalidateContainingBuildFile(Path path) throws IOException {
+    List<Path> packageBuildFiles = Lists.newArrayList();
+
+    // Find the closest ancestor package for the input path.  We'll definitely need to invalidate
+    // that.
     Optional<Path> packageBuildFile = buildFileTreeCache.get().getBasePathOfAncestorTarget(path);
-    if (!packageBuildFile.isPresent()) {
-      return;
+    packageBuildFiles.addAll(packageBuildFile.asSet());
+
+    // If we're *not* enforcing package boundary checks, it's possible for multiple ancestor
+    // packages to reference the same file
+    if (!enforceBuckPackageBoundary) {
+      while (packageBuildFile.isPresent() && packageBuildFile.get().getParent() != null) {
+        packageBuildFile =
+            buildFileTreeCache.get()
+                .getBasePathOfAncestorTarget(packageBuildFile.get().getParent());
+        packageBuildFiles.addAll(packageBuildFile.asSet());
+      }
     }
-    state.invalidateDependents(
-        repository.getFilesystem().getPathForRelativePath(
-            packageBuildFile.get().resolve(
-                new ParserConfig(repository.getBuckConfig()).getBuildFileName())));
+
+    // Invalidate all the packages we found.
+    for (Path buildFile : packageBuildFiles) {
+      state.invalidateDependents(
+          repository.getFilesystem().getPathForRelativePath(
+              buildFile.resolve(
+                  new ParserConfig(repository.getBuckConfig()).getBuildFileName())));
+    }
   }
 
   private boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {
