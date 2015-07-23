@@ -826,12 +826,13 @@ public class CxxDescriptionEnhancer {
                   Predicates.instanceOf(NativeLinkable.class)));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
-      extraLdFlagsBuilder.add(
-          "-rpath",
-          String.format(
-              "%s/%s",
-              cxxPlatform.getLd().origin(),
-              output.getParent().relativize(sharedLibraries.getRoot()).toString()));
+      extraLdFlagsBuilder.addAll(
+          Linkers.iXlinker(
+              "-rpath",
+              String.format(
+                  "%s/%s",
+                  cxxPlatform.getLd().origin(),
+                  output.getParent().relativize(sharedLibraries.getRoot()).toString())));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
@@ -846,7 +847,6 @@ public class CxxDescriptionEnhancer {
             cxxPlatform,
             params,
             sourcePathResolver,
-            /* extraCxxLdFlags */ ImmutableList.<String>of(),
             extraLdFlagsBuilder.build(),
             createCxxLinkTarget(params.getBuildTarget()),
             Linker.LinkType.EXECUTABLE,

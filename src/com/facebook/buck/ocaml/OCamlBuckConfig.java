@@ -85,10 +85,6 @@ public class OCamlBuckConfig {
     return cxxPlatform.getCppflags();
   }
 
-  public List<String> getCLinkerFlags() {
-    return cxxPlatform.getCxxldflags();
-  }
-
   public List<String> getLdFlags() {
     return cxxPlatform.getLdflags();
   }

@@ -54,9 +54,6 @@ interface AbstractCxxPlatform {
   Tool getCxxpp();
   List<String> getCxxppflags();
 
-  Linker getCxxld();
-  List<String> getCxxldflags();
-
   Linker getLd();
   List<String> getLdflags();
   Multimap<Linker.LinkableDepType, String> getRuntimeLdflags();

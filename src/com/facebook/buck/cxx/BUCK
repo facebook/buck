@@ -13,6 +13,7 @@ PLATFORM_SRCS = [
   'GnuArchiver.java',
   'GnuLinker.java',
   'Linker.java',
+  'Linkers.java',
   'HashedFileTool.java',
   'ObjectFileScrubbers.java',
   'VersionedTool.java',

@@ -41,35 +41,6 @@ public class CxxLinkableEnhancer {
   private CxxLinkableEnhancer() {}
 
   /**
-   * Prefixes each of the given linker arguments with "-Xlinker" so that the compiler linker
-   * driver will pass these arguments directly down to the linker rather than interpreting them
-   * itself.
-   *
-   * e.g. ["-rpath", "hello/world"] -&gt; ["-Xlinker", "-rpath", "-Xlinker", "hello/world"]
-   *
-   * Arguments that do not contain commas can instead be passed using the shorter
-   * "-Wl,ARGUMENT" form.
-   *
-   * e.g., ["-rpath", "hello/world"] -&gt; ["-Wl,-rpath", "-Wl,hello/world" ]
-   *
-   * @param args arguments for the linker.
-   * @return arguments to be passed to the compiler linker driver.
-   */
-  public static Iterable<String> iXlinker(Iterable<String> args) {
-    ImmutableList.Builder<String> escaped = ImmutableList.builder();
-    for (String arg : args) {
-      if (arg.contains(",")) {
-        escaped.add("-Xlinker");
-        escaped.add(arg);
-      } else {
-        escaped.add("-Wl," + arg);
-      }
-    }
-
-    return escaped.build();
-  }
-
-  /**
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects
    * and a dependency tree of {@link NativeLinkable} dependencies.
    */
@@ -77,7 +48,6 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableList<String> extraCxxLdFlags,
       ImmutableList<String> extraLdFlags,
       BuildTarget target,
       Linker.LinkType linkType,
@@ -136,10 +106,8 @@ public class CxxLinkableEnhancer {
     ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
 
     // Pass any platform specific or extra linker flags.
-    argsBuilder.addAll(cxxPlatform.getCxxldflags());
-    argsBuilder.addAll(extraCxxLdFlags);
-    argsBuilder.addAll(iXlinker(cxxPlatform.getLdflags()));
-    argsBuilder.addAll(iXlinker(extraLdFlags));
+    argsBuilder.addAll(cxxPlatform.getLdflags());
+    argsBuilder.addAll(extraLdFlags);
 
     // If we're doing a shared build, pass the necessary flags to the linker, including setting
     // the soname.
@@ -153,24 +121,24 @@ public class CxxLinkableEnhancer {
       }
     }
     if (soname.isPresent()) {
-      argsBuilder.addAll(iXlinker(linker.soname(soname.get())));
+      argsBuilder.addAll(linker.soname(soname.get()));
     }
 
     // Add all the top-level inputs.  We wrap these in the --whole-archive since any top-level
     // inputs, even if archives, should be fully linked in.
     for (SourcePath input : inputs) {
-      argsBuilder.addAll(iXlinker(linker.linkWhole(resolver.getPath(input).toString())));
+      argsBuilder.addAll(linker.linkWhole(resolver.getPath(input).toString()));
     }
 
     // Add all arguments from our dependencies.
-    argsBuilder.addAll(iXlinker(linkableInput.getArgs()));
+    argsBuilder.addAll(linkableInput.getArgs());
 
     // Add all arguments needed to link in the C/C++ platform runtime.
     Linker.LinkableDepType runtimeDepType = depType;
     if (cxxRuntimeType.or(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
       runtimeDepType = Linker.LinkableDepType.STATIC;
     }
-    argsBuilder.addAll(iXlinker(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
+    argsBuilder.addAll(cxxPlatform.getRuntimeLdflags().get(runtimeDepType));
 
     ImmutableList<String> args = argsBuilder.build();
 
@@ -178,7 +146,7 @@ public class CxxLinkableEnhancer {
     return new CxxLink(
         linkParams,
         resolver,
-        cxxPlatform.getCxxld(),
+        cxxPlatform.getLd(),
         output,
         allInputs,
         args,

@@ -340,7 +340,7 @@ public class NdkCxxPlatforms {
                 version,
                 executableFinder))
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration, host, cxxRuntime))
-        .setCxxld(
+        .setLd(
             getCcLinkTool(
                 ndkRoot,
                 targetConfiguration,
@@ -349,33 +349,24 @@ public class NdkCxxPlatforms {
                 compilerType.getCxx(),
                 version,
                 executableFinder))
-        .addAllCxxldflags(
+        .addAllLdflags(
             targetConfiguration.getLinkerFlags(compilerType))
-        .setLd(
-            new GnuLinker(
-                getGccTool(
-                    ndkRoot,
-                    targetConfiguration,
-                    host,
-                    "ld.gold",
-                    version,
-                    executableFinder)))
         // Default linker flags added by the NDK
         .addLdflags(
             // Add a deterministic build ID to Android builds.
             // We use it to find symbols from arbitrary binaries.
-            "--build-id",
+            "-Wl,--build-id",
             // Enforce the NX (no execute) security feature
-            "-z", "noexecstack",
+            "-Wl,-z,noexecstack",
             // Strip unused code
-            "--gc-sections",
+            "-Wl,--gc-sections",
             // Refuse to produce dynamic objects with undefined symbols
-            "-z", "defs",
+            "-Wl,-z,defs",
             // Forbid dangerous copy "relocations"
-            "-z", "nocopyreloc",
+            "-Wl,-z,nocopyreloc",
             // We always pass the runtime library on the command line, so setting this flag
             // means the resulting link will only use it if it was actually needed it.
-            "--as-needed")
+            "-Wl,--as-needed")
         .setStrip(
             getGccTool(ndkRoot, targetConfiguration, host, "strip", version, executableFinder))
         .setAr(

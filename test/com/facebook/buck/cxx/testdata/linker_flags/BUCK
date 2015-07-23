@@ -4,7 +4,7 @@ cxx_binary(
     'main.cpp',
   ],
   linker_flags = [
-    '--bad-flag',
+    '-Wl,--bad-flag',
   ],
 )
 
@@ -34,7 +34,7 @@ cxx_library(
     'lib.cpp',
   ],
   linker_flags = [
-    '--bad-flag',
+    '-Wl,--bad-flag',
   ],
 )
 
@@ -44,7 +44,7 @@ cxx_library(
     'lib.cpp',
   ],
   exported_linker_flags = [
-    '--bad-flag',
+    '-Wl,--bad-flag',
   ],
 )
 
@@ -62,7 +62,7 @@ prebuilt_cxx_library(
   name = 'prebuilt_library_with_linker_flag',
   header_only = True,
   exported_linker_flags = [
-    '--bad-flag',
+    '-Wl,--bad-flag',
   ],
 )
 
@@ -72,7 +72,7 @@ cxx_binary(
     'bin.cpp',
   ],
   linker_flags = [
-    '--unresolved-symbols=ignore-all',
+    '-Wl,--unresolved-symbols=ignore-all',
   ],
 )
 
@@ -82,7 +82,6 @@ cxx_binary(
     'bin.cpp',
   ],
   linker_flags = [
-    '-flat_namespace',
-    '-undefined', 'suppress',
+    '-Wl,-flat_namespace,-undefined,suppress',
   ],
 )

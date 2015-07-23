@@ -48,7 +48,6 @@ public class CxxPlatformsTest {
           .setCpp(new HashedFileTool(Paths.get("borland")))
           .setCxx(new DefaultCompiler(new HashedFileTool(Paths.get("borland"))))
           .setCxxpp(new HashedFileTool(Paths.get("borland")))
-          .setCxxld(new GnuLinker(new HashedFileTool(Paths.get("borland"))))
           .setLd(new GnuLinker(new HashedFileTool(Paths.get("borland"))))
           .setStrip(new HashedFileTool(Paths.get("borland")))
           .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))

@@ -44,7 +44,7 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
-  public Iterable<String> linkWhole(String arg) {
+  public Iterable<String> linkWhole(String input) {
     return ImmutableList.of();
   }
 

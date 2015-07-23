@@ -365,19 +365,19 @@ public class CxxLibraryDescription implements
         params.getBuildTarget(),
         sharedLibrarySoname,
         cxxPlatform);
-    ImmutableList.Builder<String> extraCxxLdFlagsBuilder = ImmutableList.builder();
-    extraCxxLdFlagsBuilder.addAll(
+    ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
+    extraLdFlagsBuilder.addAll(linkerFlags);
+    extraLdFlagsBuilder.addAll(
         MoreIterables.zipAndConcat(
             Iterables.cycle("-F"),
             Iterables.transform(frameworkSearchPaths, Functions.toStringFunction())));
-    ImmutableList<String> extraCxxLdFlags = extraCxxLdFlagsBuilder.build();
+    ImmutableList<String> extraLdFlags = extraLdFlagsBuilder.build();
 
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxPlatform,
         params,
         pathResolver,
-        extraCxxLdFlags,
-        linkerFlags,
+        extraLdFlags,
         sharedTarget,
         linkType,
         Optional.of(sharedLibrarySoname),

@@ -28,7 +28,7 @@ public interface Linker extends Tool {
    * @return the platform-specific way to specify that the library represented by the
    *     given argument should be linked whole.
    */
-  Iterable<String> linkWhole(String arg);
+  Iterable<String> linkWhole(String input);
 
   /**
    * @return the platform-specific way to specify that linker should use the given soname

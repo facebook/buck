@@ -274,7 +274,6 @@ public class PrebuiltCxxLibraryDescription
         cxxPlatform,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         sharedTarget,
         Linker.LinkType.SHARED,

@@ -435,7 +435,7 @@ public class CxxLibraryDescriptionTest {
         -1,
         Collections.indexOfSubList(
             args,
-            ImmutableList.copyOf(CxxLinkableEnhancer.iXlinker(linker.soname(soname)))));
+            ImmutableList.copyOf(linker.soname(soname))));
   }
 
   @Test

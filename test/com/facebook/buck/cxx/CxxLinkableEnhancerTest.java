@@ -133,7 +133,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         params,
         new SourcePathResolver(resolver),
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.EXECUTABLE,
@@ -175,7 +174,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.EXECUTABLE,
@@ -222,7 +220,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.EXECUTABLE,
@@ -246,16 +243,13 @@ public class CxxLinkableEnhancerTest {
 
     String soname = "soname";
     ImmutableList<String> sonameArgs =
-        ImmutableList.copyOf(
-            CxxLinkableEnhancer.iXlinker(
-                CXX_PLATFORM.getLd().soname(soname)));
+        ImmutableList.copyOf(CXX_PLATFORM.getLd().soname(soname));
 
     // Construct a CxxLink object which links as an executable.
     CxxLink executable = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         CXX_PLATFORM,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.EXECUTABLE,
@@ -274,7 +268,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.SHARED,
@@ -293,7 +286,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.SHARED,
@@ -335,7 +327,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.EXECUTABLE,
@@ -356,7 +347,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.EXECUTABLE,
@@ -391,9 +381,9 @@ public class CxxLinkableEnhancerTest {
             Optional.of(Linker.CxxRuntimeType.STATIC));
 
     String expectedLibc[] = new String[] {
-      "-Wl,-ldummy-shared-libc",
-      "-Wl,-ldummy-shared-libc",
-      "-Wl,-ldummy-static-libc",
+      "-ldummy-shared-libc",
+      "-ldummy-shared-libc",
+      "-ldummy-static-libc",
     };
 
     for (int i = 0; i < expectedLibc.length; ++i) {
@@ -401,7 +391,6 @@ public class CxxLinkableEnhancerTest {
           cxxPlatform,
           params,
           pathResolver,
-          /* extraCxxLdFlags */ ImmutableList.<String>of(),
           /* extraLdFlags */ ImmutableList.<String>of(),
           target,
           Linker.LinkType.SHARED,
@@ -464,7 +453,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         params,
         new SourcePathResolver(resolver),
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         target,
         Linker.LinkType.MACH_O_BUNDLE,
@@ -494,7 +482,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         bundleLoaderParams,
         new SourcePathResolver(resolver),
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         bundleLoaderTarget,
         Linker.LinkType.EXECUTABLE,
@@ -514,7 +501,6 @@ public class CxxLinkableEnhancerTest {
         CXX_PLATFORM,
         bundleParams,
         new SourcePathResolver(resolver),
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ ImmutableList.<String>of(),
         bundleTarget,
         Linker.LinkType.MACH_O_BUNDLE,

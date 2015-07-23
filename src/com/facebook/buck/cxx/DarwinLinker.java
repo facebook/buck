@@ -45,13 +45,13 @@ public class DarwinLinker implements Linker {
   }
 
   @Override
-  public Iterable<String> linkWhole(String arg) {
-    return ImmutableList.of("-force_load", arg);
+  public Iterable<String> linkWhole(String input) {
+    return Linkers.iXlinker("-force_load", input);
   }
 
   @Override
   public Iterable<String> soname(String arg) {
-    return ImmutableList.of("-install_name", "@rpath/" + arg);
+    return Linkers.iXlinker("-install_name", "@rpath/" + arg);
   }
 
   @Override

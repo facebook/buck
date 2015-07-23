@@ -233,17 +233,14 @@ This section configures the paths to the C++ toolchain's binaries.
   # Path to the C compiler
   cc = /usr/bin/gcc
 
-  # Path to the C linker
-  ld = /usr/bin/ld
+  # Path to the C/C++ linker driver
+  ld = /usr/bin/g++
 
   # Path to the C++ preprocessor
   cxxpp = /usr/bin/g++
 
   # Path to the C++ compiler
   cxx = /usr/bin/g++
-
-  # Path to the c++ linker
-  cxxld = /usr/bin/g++
 
   # Path to the assembly preprocessor
   aspp = /usr/bin/gcc
@@ -271,7 +268,7 @@ It also configures configures the default flags to pass to all invocations of sa
   # Flags to pass to the C compiler and preprocessor
   cflags =
 
-  # Flags to pass to the C linker
+  # Flags to pass to the C/C++ linker driver
   ldflags =
 
   # Flags to pass to the C++ preprocessor
@@ -279,9 +276,6 @@ It also configures configures the default flags to pass to all invocations of sa
 
   # Flags to pass to the C++ compiler and preprocessor
   cxxflags =
-
-  # Flags to pass to the c++ linker
-  cxxldflags =
 
   # Flags to pass to the assembly preprocessor
   asppflags =

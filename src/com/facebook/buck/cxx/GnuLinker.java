@@ -45,13 +45,13 @@ public class GnuLinker implements Linker {
   }
 
   @Override
-  public Iterable<String> linkWhole(String arg) {
-    return ImmutableList.of("--whole-archive", arg, "--no-whole-archive");
+  public Iterable<String> linkWhole(String input) {
+    return ImmutableList.of("-Wl,--whole-archive", input, "-Wl,--no-whole-archive");
   }
 
   @Override
   public Iterable<String> soname(String arg) {
-    return ImmutableList.of("-soname", arg);
+    return Linkers.iXlinker("-soname", arg);
   }
 
   @Override

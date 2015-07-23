@@ -41,7 +41,6 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXPPFLAGS = ImmutableList.of();
-  private static final ImmutableList<String> DEFAULT_CXXLDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LEX_FLAGS = ImmutableList.of();
@@ -70,7 +69,6 @@ public class CxxPlatforms {
       Tool cpp,
       Tool cxxpp,
       Linker ld,
-      Linker cxxld,
       Iterable<String> ldFlags,
       Tool strip,
       Archiver ar,
@@ -96,7 +94,6 @@ public class CxxPlatforms {
         .setCxx(getTool(flavor, "cxx", config).transform(getCompiler(cxx.getClass())).or(cxx))
         .setCpp(getTool(flavor, "cpp", config).or(cpp))
         .setCxxpp(getTool(flavor, "cxxpp", config).or(cxxpp))
-        .setCxxld(getTool(flavor, "cxxld", config).transform(getLinker(cxxld.getClass())).or(cxxld))
         .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass())).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass())).or(ar))
@@ -110,7 +107,6 @@ public class CxxPlatforms {
     builder.addAllCxxflags(cflags);
     builder.addAllCppflags(cppflags);
     builder.addAllCxxppflags(cppflags);
-    builder.addAllCxxldflags(cflags);
     builder.addAllAsflags(asflags);
     builder.addAllAsppflags(asppflags);
     CxxPlatforms.addToolFlagsFromConfig(config, builder);
@@ -141,10 +137,6 @@ public class CxxPlatforms {
               .or(defaultPlatform.getCxx()))
       .setCpp(getTool(flavor, "cpp", config).or(defaultPlatform.getCpp()))
       .setCxxpp(getTool(flavor, "cxxpp", config).or(defaultPlatform.getCxxpp()))
-      .setCxxld(
-          getTool(flavor, "cxxld", config)
-              .transform(getLinker(defaultPlatform.getCxxld().getClass()))
-              .or(defaultPlatform.getCxxld()))
       .setLd(
           getTool(flavor, "ld", config)
               .transform(getLinker(defaultPlatform.getLd().getClass()))
@@ -224,7 +216,6 @@ public class CxxPlatforms {
         .addAllCppflags(cflags)
         .addAllCxxppflags(config.getFlags("cxxppflags").or(DEFAULT_CXXPPFLAGS))
         .addAllCxxppflags(cxxflags)
-        .addAllCxxldflags(config.getFlags("cxxldflags").or(DEFAULT_CXXLDFLAGS))
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
         .addAllLexFlags(config.getFlags("lexflags").or(DEFAULT_LEX_FLAGS))
@@ -244,7 +235,6 @@ public class CxxPlatforms {
         .addAllCppflags(platform.getCflags())
         .addAllCxxppflags(platform.getCxxflags())
         .addAllCxxppflags(platform.getCxxppflags())
-        .addAllCxxldflags(platform.getCxxldflags())
         .addAllLdflags(platform.getLdflags())
         .addAllArflags(platform.getArflags())
         .addAllLexFlags(platform.getLexFlags())

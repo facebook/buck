@@ -4,7 +4,7 @@ cxx_binary(
     'bin.cpp',
   ],
   platform_compiler_flags = [
-    ('nomatch', ['--bad-flag']),
+    ('nomatch', ['-Wl,--bad-flag']),
     ('default', ['-w']),
   ],
 )
@@ -15,7 +15,7 @@ cxx_binary(
     'bin.cpp',
   ],
   platform_compiler_flags = [
-    ('nomatch', ['--bad-flag']),
+    ('nomatch', ['-Wl,--bad-flag']),
     ('def.*', ['-w']),
   ],
 )
@@ -26,7 +26,7 @@ cxx_binary(
     'bin.cpp',
   ],
   platform_compiler_flags = [
-    ('nomatch', ['--bad-flag']),
+    ('nomatch', ['-Wl,--bad-flag']),
   ],
 )
 
@@ -46,7 +46,7 @@ cxx_library(
     'lib.cpp',
   ],
   platform_compiler_flags = [
-    ('nomatch', ['--bad-flag']),
+    ('nomatch', ['-Wl,--bad-flag']),
     ('def.*', ['-w']),
   ],
 )

@@ -178,7 +178,6 @@ public class CxxPythonExtensionDescription implements
         cxxPlatform,
         params,
         pathResolver,
-        /* extraCxxLdFlags */ ImmutableList.<String>of(),
         /* extraLdFlags */ CxxFlags.getFlags(
             args.linkerFlags,
             args.platformLinkerFlags,

@@ -41,7 +41,6 @@ public class DefaultCxxPlatforms {
   private static final Path DEFAULT_AS = Paths.get("/usr/bin/as");
   private static final Path DEFAULT_C_FRONTEND = Paths.get("/usr/bin/gcc");
   private static final Path DEFAULT_CXX_FRONTEND = Paths.get("/usr/bin/g++");
-  private static final Path DEFAULT_LD = Paths.get("/usr/bin/ld");
   private static final Path DEFAULT_AR = Paths.get("/usr/bin/ar");
   private static final Path DEFAULT_STRIP = Paths.get("/usr/bin/strip");
   private static final Path DEFAULT_LEX = Paths.get("/usr/bin/flex");
@@ -67,7 +66,6 @@ public class DefaultCxxPlatforms {
           new ClangCompiler(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
           new HashedFileTool(DEFAULT_OSX_C_FRONTEND),
           new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND),
-          new DarwinLinker(new HashedFileTool(DEFAULT_LD)),
           new DarwinLinker(new HashedFileTool(DEFAULT_OSX_CXX_FRONTEND)),
           ImmutableList.<String>of(),
           new HashedFileTool(DEFAULT_STRIP),
@@ -105,7 +103,6 @@ public class DefaultCxxPlatforms {
         new DefaultCompiler(new HashedFileTool(DEFAULT_CXX_FRONTEND)),
         new HashedFileTool(DEFAULT_C_FRONTEND),
         new HashedFileTool(DEFAULT_CXX_FRONTEND),
-        new GnuLinker(new HashedFileTool(DEFAULT_LD)),
         new GnuLinker(new HashedFileTool(DEFAULT_CXX_FRONTEND)),
         ImmutableList.<String>of(),
         new HashedFileTool(DEFAULT_STRIP),

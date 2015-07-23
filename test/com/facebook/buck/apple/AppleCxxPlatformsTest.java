@@ -174,8 +174,8 @@ public class AppleCxxPlatformsTest {
     assertThat(
         cxxPlatform.getLdflags(),
         hasConsecutiveItems(
-            "-sdk_version",
-            "8.0"));
+            "-Wl,-sdk_version",
+            "-Wl,8.0"));
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
         cxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
@@ -271,8 +271,8 @@ public class AppleCxxPlatformsTest {
     assertThat(
         cxxPlatform.getLdflags(),
         hasConsecutiveItems(
-            "-sdk_version",
-            "2.0"));
+            "-Wl,-sdk_version",
+            "-Wl,2.0"));
     assertEquals(
         Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++").toString(),
         cxxPlatform.getCxx().getCommandPrefix(resolver).get(0));
@@ -619,7 +619,7 @@ AppleSdkPaths appleSdkPaths =
         cxxPlatform.getCflags(),
         hasItem("-mios-simulator-version-min=7.0"));
     assertThat(
-        cxxPlatform.getCxxldflags(),
+        cxxPlatform.getLdflags(),
         hasItem("-mios-simulator-version-min=7.0"));
   }
 
@@ -675,7 +675,7 @@ AppleSdkPaths appleSdkPaths =
         cxxPlatform.getCflags(),
         hasItem("-mwatchos-simulator-version-min=2.0"));
     assertThat(
-        cxxPlatform.getCxxldflags(),
+        cxxPlatform.getLdflags(),
         hasItem("-mwatchos-simulator-version-min=2.0"));
   }
 
@@ -777,7 +777,6 @@ AppleSdkPaths appleSdkPaths =
               entry.getValue().getCxxPlatform(),
               BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
               pathResolver,
-              ImmutableList.<String>of(),
               ImmutableList.<String>of(),
               target,
               Linker.LinkType.EXECUTABLE,

@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.DarwinLinker;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -116,7 +117,8 @@ public class AppleCxxPlatforms {
         break;
     }
 
-    ImmutableList<String> ldflags = ImmutableList.of("-sdk_version", targetSdk.getVersion());
+    ImmutableList<String> ldflags =
+        ImmutableList.copyOf(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
     ImmutableList<String> asflags = ImmutableList.of("-arch", targetArchitecture);
 
     ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
@@ -218,9 +220,11 @@ public class AppleCxxPlatforms {
         new ClangCompiler(clangXxPath),
         clangPath,
         clangXxPath,
-        new DarwinLinker(clangPath),
         new DarwinLinker(clangXxPath),
-        ldflags,
+        ImmutableList.<String>builder()
+            .addAll(cflags)
+            .addAll(ldflags)
+            .build(),
         strip,
         new BsdArchiver(ar),
         asflags,

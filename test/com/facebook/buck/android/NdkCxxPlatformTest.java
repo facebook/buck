@@ -163,7 +163,6 @@ public class NdkCxxPlatformTest {
               BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
               pathResolver,
               ImmutableList.<String>of(),
-              ImmutableList.<String>of(),
               target,
               Linker.LinkType.EXECUTABLE,
               Optional.<String>absent(),

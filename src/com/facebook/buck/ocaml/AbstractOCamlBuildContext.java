@@ -72,7 +72,6 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
 
   protected abstract List<String> getCFlags();
   protected abstract Optional<String> getOCamlInteropIncludesDir();
-  protected abstract List<String> getCLinkerFlags();
   protected abstract List<String> getLdFlags();
 
   public ImmutableList<Path> getCInput() {
@@ -300,10 +299,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
   }
 
   public ImmutableList<String> getCommonCLinkerFlags() {
-    return addPrefix("-ccopt",
-        Iterables.concat(
-            getCLinkerFlags(),
-            addPrefix("-Xlinker", getLdFlags())));
+    return addPrefix("-ccopt", getLdFlags());
   }
 
   public static OCamlBuildContext.Builder builder(OCamlBuckConfig config) {
@@ -316,7 +312,6 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
         .setOcamlBytecodeCompiler(config.getOCamlBytecodeCompiler())
         .setOCamlInteropIncludesDir(config.getOCamlInteropIncludesDir())
         .setCFlags(config.getCFlags())
-        .setCLinkerFlags(config.getCLinkerFlags())
         .setLdFlags(config.getLdFlags());
   }
 
