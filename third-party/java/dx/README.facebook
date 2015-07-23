@@ -8,4 +8,33 @@ This is the dx component of the platform/dalvik repository from the Android
 Open Source Project.
 
 Local Changes:
-None.
+
+(GitHub Commit IDs)
+ae114af Fix patch application issues which caused the new dx not to compile and/or dx-tests to be runnable
+3e33b65 Build buck as a standalone PEX file
+03472dc Use weak values for three intern tables
+074299b Include DX's classes in buck
+7a783eb Clean up DX's handling of its output file
+6ee45e5 Clean up DX's thread pool handling
+555f0bc Comment out informational message from dex merger
+e89ec3b DX RegisterSpec optimization for de-interning: mapSourceRegisters
+0b71fc8 Use descriptor instead of Type for DX's CstType intern map
+839345e Disable interning for RegisterSpec
+fb0e5e6 DX RegisterSpec optimization for de-interning: intersect
+f812547 Simplify static analysis of DX's PhiTypeResolver
+1386d1a Enforce immutability in DX's IntList
+77c7964 Enforce immutability in DX's RegisterSpecSet
+2710d9e [Forward Port of 31ffac3557e61caf7b8c4192a08c8783ac21550c] Make DX's USAGE_MESSAGEs final
+eaea96e Make DX's CodeStatistics not use static variables
+6f205a0 Make DX's Optimizer not use static variables
+9e50c97 Make DX's DxConsole not use static variables
+fa30f67 Make DX's dump/Main not use static variables
+5f90c59 Make DX's OptimizerOptions not use static fields
+0113bee Make DX's dexer/Main use non-static fields and methods
+142da08 Update DX to use single-pass merging
+77cddf3 Eliminate EMPTY_VISITOR static in DX
+d2daff1 Update a comment in DexMerger
+3bd5449 Fix jasmin script in dx
+9cfede7 Make /etc/dx executable and update the libdir variable
+7b45eda Allow DexMerger to merge multiple dex files at a time
+
