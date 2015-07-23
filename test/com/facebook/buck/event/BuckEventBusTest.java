@@ -137,11 +137,6 @@ public class BuckEventBusTest {
     }
 
     @Override
-    public boolean isRelatedTo(BuckEvent event) {
-      return false;
-    }
-
-    @Override
     public String getEventName() {
       return null;
     }
@@ -159,11 +154,6 @@ public class BuckEventBusTest {
     @Override
     protected String getValueString() {
       return "Test event, please ignore.";
-    }
-
-    @Override
-    public boolean isRelatedTo(BuckEvent event) {
-      return false;
     }
 
     @Override

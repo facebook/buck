@@ -106,18 +106,6 @@ public class ConsoleEvent extends AbstractBuckEvent {
   }
 
   @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof ConsoleEvent)) {
-      return false;
-    }
-
-    ConsoleEvent that = (ConsoleEvent) event;
-
-    return Objects.equal(getLevel(), that.getLevel()) &&
-        Objects.equal(getMessage(), that.getMessage());
-  }
-
-  @Override
   public String toString() {
     return getMessage();
   }

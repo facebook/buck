@@ -43,17 +43,6 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
   }
 
   @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof InstallEvent)) {
-      return false;
-    }
-
-    InstallEvent that = (InstallEvent) event;
-
-    return Objects.equal(getBuildTarget(), that.getBuildTarget());
-  }
-
-  @Override
   public int hashCode() {
     return getBuildTarget().hashCode();
   }

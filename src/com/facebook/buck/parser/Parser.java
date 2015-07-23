@@ -798,11 +798,6 @@ public class Parser {
       }
 
       @Override
-      public boolean isRelatedTo(BuckEvent event) {
-        return false;
-      }
-
-      @Override
       public String getEventName() {
         return "ParseStartTime";
       }

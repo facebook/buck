@@ -34,7 +34,8 @@ public class ConsoleEventTest {
     ConsoleEvent event3 = configureTestEvent(ConsoleEvent.create(Level.SEVERE, "HELLO"));
     ConsoleEvent event4 = configureTestEvent(ConsoleEvent.severe("FOO"));
 
-    assertEquals(event1, event2);
+    assertEquals(event1.getLevel(), event2.getLevel());
+    assertEquals(event1.getMessage(), event2.getMessage());
     assertNotEquals(event1, event3);
     assertNotEquals(event3, event4);
   }

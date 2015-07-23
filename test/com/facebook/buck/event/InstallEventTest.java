@@ -19,10 +19,12 @@ package com.facebook.buck.event;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.base.Optional;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class InstallEventTest {
@@ -50,10 +52,13 @@ public class InstallEventTest {
             false,
             Optional.<Long>absent()));
 
-    assertEquals(started, startedTwo);
+    assertNotEquals(started, startedTwo);
     assertNotEquals(finished, finishedDifferentEvent);
     assertNotEquals(started, finished);
     assertNotEquals(finished, finishedFail);
+
+    assertThat(started.isRelatedTo(finished), Matchers.is(true));
+    assertThat(started.isRelatedTo(startedTwo), Matchers.is(false));
 
     assertNotEquals(started.getEventKey(), startedTwo.getEventKey());
     assertEquals(started.getEventKey(), finished.getEventKey());

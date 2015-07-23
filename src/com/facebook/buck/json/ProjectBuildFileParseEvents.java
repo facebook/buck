@@ -17,7 +17,6 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 
 /**
@@ -46,11 +45,6 @@ public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent impl
     protected String getValueString() {
       return "";
     }
-
-    @Override
-    public boolean isRelatedTo(BuckEvent event) {
-      return (event instanceof ProjectBuildFileParseEvents.Finished);
-    }
   }
 
   /**
@@ -75,11 +69,6 @@ public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent impl
     @Override
     protected String getValueString() {
       return "";
-    }
-
-    @Override
-    public boolean isRelatedTo(BuckEvent event) {
-      return (event instanceof ProjectBuildFileParseEvents.Started);
     }
   }
 }

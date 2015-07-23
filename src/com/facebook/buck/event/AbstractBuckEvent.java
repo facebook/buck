@@ -102,6 +102,11 @@ public abstract class AbstractBuckEvent implements BuckEvent {
     return eventKey;
   }
 
+  @Override
+  public final boolean isRelatedTo(BuckEvent event) {
+    return getEventKey().equals(event.getEventKey());
+  }
+
   protected void chain(AbstractBuckEvent event) {
     Preconditions.checkState(eventKey == null);
     eventKey = event.getEventKey();

@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
@@ -43,15 +42,6 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
   @Override
   public String getValueString() {
     return rule.getFullyQualifiedName();
-  }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof BuildRuleEvent)) {
-      return false;
-    }
-
-    return Objects.equal(getBuildRule(), ((BuildRuleEvent) event).getBuildRule());
   }
 
   @Override

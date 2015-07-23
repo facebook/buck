@@ -51,18 +51,6 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
   }
 
   @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof StartActivityEvent)) {
-      return false;
-    }
-
-    StartActivityEvent that = (StartActivityEvent) event;
-
-    return Objects.equal(getBuildTarget(), that.getBuildTarget()) &&
-        Objects.equal(getActivityName(), that.getActivityName());
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hashCode(getActivityName(), getBuildTarget());
   }

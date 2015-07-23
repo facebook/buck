@@ -65,27 +65,6 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent impl
     return pluginName + "." + durationName;
   }
 
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof CompilerPluginDurationEvent)) {
-      return false;
-    }
-
-    if (event == this) {
-      return true;
-    }
-
-    if (event instanceof Finished && ((Finished) event).getStartedEvent() == this) {
-      return true;
-    }
-
-    if (this instanceof Finished && ((Finished) this).getStartedEvent() == event) {
-      return true;
-    }
-
-    return false;
-  }
-
   public static Started started(
       BuildTarget buildTarget,
       String pluginName,
@@ -116,8 +95,6 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent impl
   }
 
   public static class Finished extends CompilerPluginDurationEvent {
-    private final Started startedEvent;
-
     public Finished(
         Started startedEvent,
         ImmutableMap<String, String> args) {
@@ -126,12 +103,7 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent impl
           startedEvent.getPluginName(),
           startedEvent.getDurationName(),
           args);
-      this.startedEvent = startedEvent;
       chain(startedEvent);
-    }
-
-    public Started getStartedEvent() {
-      return startedEvent;
     }
 
     @Override

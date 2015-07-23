@@ -17,25 +17,19 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.test.TestResultSummary;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.UUID;
 
 public abstract class TestSummaryEvent extends AbstractBuckEvent implements LeafEvent {
-
-  @JsonIgnore
-  private final UUID uuid;
 
   private final String testCaseName;
   private final String testName;
 
   private TestSummaryEvent(UUID uuid, String testCaseName, String testName) {
     super(EventKey.of("TestSummaryEvent", uuid));
-    this.uuid = uuid;
     this.testCaseName = testCaseName;
     this.testName = testName;
   }
@@ -62,20 +56,6 @@ public abstract class TestSummaryEvent extends AbstractBuckEvent implements Leaf
       UUID uuid, TestResultSummary testResultSummary) {
     return new Finished(uuid, testResultSummary);
   }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof TestSummaryEvent)) {
-      return false;
-    }
-
-    TestSummaryEvent that = (TestSummaryEvent) event;
-
-    return
-        this.uuid.equals(that.uuid) &&
-        !getClass().equals(that.getClass());
-  }
-
 
   public static class Started extends TestSummaryEvent {
     final String testCaseName;

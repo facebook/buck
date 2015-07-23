@@ -51,11 +51,6 @@ public class TraceEvent extends AbstractBuckEvent {
     return "";
   }
 
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    return false;
-  }
-
   public ChromeTraceEvent.Phase getPhase() {
     return phase;
   }

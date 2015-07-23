@@ -76,11 +76,13 @@ public class AnnotationProcessingEventTest {
         AnnotationProcessingEvent.finished(initStartedEventOne));
     AnnotationProcessingEvent finishedInitEventTwo = configureTestEvent(
         AnnotationProcessingEvent.finished(initStartedEventTwo));
-    assertEquals(initStartedEventOne, initStartedEventTwo);
+    assertEquals(initStartedEventOne, initStartedEventOne);
+    assertNotEquals(initStartedEventOne, initStartedEventTwo);
     assertNotEquals(initStartedEventOne, targetTwoInitStartedEvent);
     assertNotEquals(initStartedEventOne, annotationProcessorTwoInitStartedEvent);
     assertNotEquals(initStartedEventOne, getSupportedOptionsStartedEvent);
-    assertEquals(finishedInitEventOne, finishedInitEventTwo);
+    assertNotEquals(finishedInitEventOne, finishedInitEventTwo);
     assertThat(initStartedEventOne.isRelatedTo(finishedInitEventOne), Matchers.is(true));
+    assertThat(initStartedEventOne.isRelatedTo(finishedInitEventTwo), Matchers.is(false));
   }
 }

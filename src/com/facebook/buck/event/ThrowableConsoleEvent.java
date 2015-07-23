@@ -56,18 +56,6 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
   }
 
   @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof ThrowableConsoleEvent)) {
-      return false;
-    }
-
-    ThrowableConsoleEvent that = (ThrowableConsoleEvent) event;
-
-    return super.isRelatedTo(that) &&
-        Objects.equal(getThrowable(), that.getThrowable());
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hashCode(getMessage(), getLevel(), getThrowable());
   }

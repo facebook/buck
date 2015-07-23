@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.CaseFormat;
@@ -63,18 +62,6 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   public ImmutableSet<RuleKey> getRuleKeys() {
     return ruleKeys;
-  }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof ArtifactCacheEvent)) {
-      return false;
-    }
-
-    ArtifactCacheEvent that = (ArtifactCacheEvent) event;
-
-    return Objects.equal(getOperation(), that.getOperation()) &&
-        Objects.equal(getRuleKeys(), that.getRuleKeys());
   }
 
   @Override

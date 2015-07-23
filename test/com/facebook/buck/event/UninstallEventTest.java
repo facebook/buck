@@ -19,7 +19,9 @@ package com.facebook.buck.event;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class UninstallEventTest {
@@ -30,8 +32,14 @@ public class UninstallEventTest {
     UninstallEvent finished = configureTestEvent(UninstallEvent.finished(started, true));
     UninstallEvent finishedFail = configureTestEvent(UninstallEvent.finished(started, false));
 
-    assertEquals(started, startedTwo);
+    assertEquals(started, started);
+    assertNotEquals(started, startedTwo);
     assertNotEquals(started, finished);
     assertNotEquals(finished, finishedFail);
+
+    assertThat(started.isRelatedTo(finished), Matchers.is(true));
+    assertThat(finished.isRelatedTo(started), Matchers.is(true));
+
+    assertThat(started.isRelatedTo(startedTwo), Matchers.is(false));
   }
 }

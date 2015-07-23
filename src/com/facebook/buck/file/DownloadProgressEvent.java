@@ -17,7 +17,6 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.google.common.base.Preconditions;
 
 import java.net.URI;
@@ -38,14 +37,6 @@ public class DownloadProgressEvent extends AbstractBuckEvent {
   @Override
   protected String getValueString() {
     return String.format("%s -> %d/%s", uri, downloadedSoFar, size);
-  }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof DownloadProgressEvent)) {
-      return false;
-    }
-    return getValueString().equals(((DownloadProgressEvent) event).getValueString());
   }
 
   @Override

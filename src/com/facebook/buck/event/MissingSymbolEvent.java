@@ -63,9 +63,4 @@ public class MissingSymbolEvent extends AbstractBuckEvent {
     return
         "Missing symbol: " + symbol;
   }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    return false;
-  }
 }

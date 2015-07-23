@@ -17,19 +17,13 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.test.TestResults;
 
-import java.util.Objects;
-
 public abstract class IndividualTestEvent extends AbstractBuckEvent {
-
-  private int secret;
 
   private IndividualTestEvent(int secret) {
     super(EventKey.of("IndividualTestEvent", secret));
-    this.secret = secret;
   }
 
   public static Started started(Iterable<String> targets) {
@@ -39,17 +33,6 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent {
   public static Finished finished(Iterable<String> targets, TestResults results) {
     return new Finished(targets.hashCode(), results);
   }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof IndividualTestEvent)) {
-      return false;
-    }
-
-    return this.secret == ((IndividualTestEvent) event).secret &&
-        !Objects.equals(getClass(), event.getClass());
-  }
-
 
   public static class Started extends IndividualTestEvent {
 

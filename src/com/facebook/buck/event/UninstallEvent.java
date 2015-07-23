@@ -41,17 +41,6 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
   }
 
   @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof UninstallEvent)) {
-      return false;
-    }
-
-    UninstallEvent that = (UninstallEvent) event;
-
-    return Objects.equal(getPackageName(), that.getPackageName());
-  }
-
-  @Override
   public int hashCode() {
     return Objects.hashCode(getPackageName());
   }

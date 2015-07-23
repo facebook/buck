@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
@@ -53,17 +52,6 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
   @Override
   public String getValueString() {
     return Joiner.on(", ").join(buildTargets);
-  }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof ParseEvent)) {
-      return false;
-    }
-
-    ParseEvent that = (ParseEvent) event;
-
-    return Objects.equal(getBuildTargets(), that.getBuildTargets());
   }
 
   @Override

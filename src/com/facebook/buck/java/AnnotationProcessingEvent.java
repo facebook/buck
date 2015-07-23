@@ -17,11 +17,9 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Objects;
 
 /**
  * Base class for events about Java annotation processing.
@@ -49,7 +47,6 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent implem
       Operation operation,
       int round,
       boolean isLastRound) {
-    // We don't include isLastRound in the comparison because it's a property of the round.
     this.buildTarget = buildTarget;
     this.annotationProcessorName = annotationProcessorName;
     this.operation = operation;
@@ -87,23 +84,6 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent implem
     return annotationProcessorName +
         "." +
         CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, operation.toString());
-  }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof AnnotationProcessingEvent)) {
-      return false;
-    }
-
-    AnnotationProcessingEvent that = (AnnotationProcessingEvent) event;
-
-    return Objects.equal(getBuildTarget(), that.getBuildTarget()) &&
-        Objects.equal(getAnnotationProcessorName(), that.getAnnotationProcessorName()) &&
-        Objects.equal(getOperation(), that.getOperation()) &&
-        getRound() == that.getRound();
-
-    // We don't include isLastRound in the comparison because it's a property of the round, and
-    // we already compare the round
   }
 
   public static Started started(

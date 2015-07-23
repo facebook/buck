@@ -19,9 +19,11 @@ package com.facebook.buck.event;
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class StartActivityEventTest {
@@ -42,8 +44,14 @@ public class StartActivityEventTest {
 
     assertEquals(started, started);
     assertNotEquals(started, finished);
-    assertEquals(started, startedTwo);
+    assertNotEquals(started, startedTwo);
     assertEquals(finished, finishedTwo);
     assertNotEquals(finished, finishedSucceed);
+
+    assertThat(started.isRelatedTo(finished), Matchers.is(true));
+    assertThat(started.isRelatedTo(finishedTwo), Matchers.is(true));
+    assertThat(finished.isRelatedTo(started), Matchers.is(true));
+
+    assertThat(started.isRelatedTo(startedTwo), Matchers.is(false));
   }
 }

@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 
 /**
@@ -34,14 +33,6 @@ public abstract class ArtifactCacheConnectEvent extends AbstractBuckEvent implem
   @Override
   public String getValueString() {
     return "";
-  }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof ArtifactCacheConnectEvent)) {
-      return false;
-    }
-    return true;
   }
 
   @Override

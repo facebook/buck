@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.LeafEvent;
 
 
@@ -48,11 +47,6 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent implements Leaf
   public static class Started extends ActionGraphEvent {
 
     @Override
-    public boolean isRelatedTo(BuckEvent event) {
-      return event instanceof ActionGraphEvent.Finished;
-    }
-
-    @Override
     public String getEventName() {
       return "BuildActionGraphStarted";
     }
@@ -62,11 +56,6 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent implements Leaf
 
     public Finished(Started started) {
       chain(started);
-    }
-
-    @Override
-    public boolean isRelatedTo(BuckEvent event) {
-      return event instanceof ActionGraphEvent.Started;
     }
 
     @Override

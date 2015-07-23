@@ -17,7 +17,6 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -64,17 +63,6 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   @Override
   protected String getValueString() {
     return getShortStepName();
-  }
-
-  @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof StepEvent)) {
-      return false;
-    }
-
-    StepEvent that = (StepEvent) event;
-
-    return Objects.equal(uuid, that.uuid);
   }
 
   @Override
