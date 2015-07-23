@@ -28,12 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.IdentityPathAbsolutifier;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -194,16 +191,6 @@ public class JavacOptionsTest {
     assertOptionsContains(options, "-Xfoobar");
   }
 
-  @Test(expected = RuntimeException.class)
-  public void settingTheExternalJavacButNotTheProcessExecutorIsATerribleMistake() {
-    JavacOptions options = createStandardBuilder()
-        .setJavacPath(Paths.get("/example/javac"))
-        .setProcessExecutor(Optional.<ProcessExecutor>absent())
-        .build();
-
-    options.getJavac();
-  }
-
   @Test
   public void externalJavacVersionIsReadFromStderrBecauseThatIsWhereJavacWritesIt()
       throws IOException {
@@ -219,14 +206,13 @@ public class JavacOptionsTest {
 
     JavacOptions options = createStandardBuilder()
         .setJavacPath(tempPath)
-        .setProcessExecutor(new ProcessExecutor(new TestConsole()))
         .build();
 
     Javac javac = options.getJavac();
     assertTrue(javac instanceof ExternalJavac);
 
     JavacVersion seen = javac.getVersion();
-    assertEquals(JavacVersion.of("cover-version"), seen);
+    assertEquals(seen.toString(), JavacVersion.of("cover-version"), seen);
   }
 
   @Test
@@ -237,7 +223,6 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder()
         .setJavacPath(javacPath)
         .setJavacJarPath(javacJarPath)
-        .setProcessExecutor(new ProcessExecutor(new TestConsole()))
         .build();
 
     assertThat(

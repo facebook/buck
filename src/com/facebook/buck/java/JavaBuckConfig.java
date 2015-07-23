@@ -19,7 +19,6 @@ package com.facebook.buck.java;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +40,7 @@ public class JavaBuckConfig {
     this.delegate = delegate;
   }
 
-  public JavacOptions getDefaultJavacOptions(ProcessExecutor processExecutor) {
+  public JavacOptions getDefaultJavacOptions() {
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
     Optional<String> targetLevel = delegate.getValue("java", "target_level");
     ImmutableList<String> extraArguments = delegate.getListWithoutComments(
@@ -57,7 +56,6 @@ public class JavaBuckConfig {
     }
 
     return JavacOptions.builderForUseInJavaBuckConfig()
-        .setProcessExecutor(processExecutor)
         .setJavacPath(getJavacPath())
         .setJavacJarPath(getJavacJarPath())
         .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))

@@ -930,7 +930,7 @@ public final class Main {
 
 
     JavacOptions javacOptions = new JavaBuckConfig(config)
-        .getDefaultJavacOptions(new ProcessExecutor(console));
+        .getDefaultJavacOptions();
 
     eventListenersBuilder.add(MissingSymbolsHandler.createListener(
             projectFilesystem,

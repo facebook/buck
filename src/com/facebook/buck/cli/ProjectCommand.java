@@ -60,7 +60,6 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
@@ -443,7 +442,7 @@ public class ProjectCommand extends BuildCommand {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
 
     JavacOptions javacOptions = new JavaBuckConfig(params.getBuckConfig())
-        .getDefaultJavacOptions(new ProcessExecutor(params.getConsole()));
+        .getDefaultJavacOptions();
 
     IjProject project = new IjProject(
         targetGraphAndTargets,

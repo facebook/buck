@@ -22,10 +22,14 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.zip.Unzip;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -37,7 +41,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -48,7 +54,7 @@ public class ExternalJavac implements Javac {
   private final Path pathToJavac;
   private final Supplier<JavacVersion> version;
 
-  public ExternalJavac(final ProcessExecutor executor, final Path pathToJavac) {
+  public ExternalJavac(final Path pathToJavac) {
     this.pathToJavac = pathToJavac;
 
     this.version = Suppliers.memoize(
@@ -59,8 +65,10 @@ public class ExternalJavac implements Javac {
                 .setCommand(ImmutableList.of(pathToJavac.toString(), "-version"))
                 .build();
             ProcessExecutor.Result result;
-            try {
-              result = executor.launchAndExecute(params);
+            try (
+                PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
+                PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
+              result = createProcessExecutor(stdout, stderr).launchAndExecute(params);
             } catch (InterruptedException | IOException e) {
               throw new RuntimeException(e);
             }
@@ -75,13 +83,23 @@ public class ExternalJavac implements Javac {
         });
   }
 
-  public static Javac createJavac(ProcessExecutor processExecutor, Path pathToJavac) {
-    return new ExternalJavac(processExecutor, pathToJavac);
+  public static Javac createJavac(Path pathToJavac) {
+    return new ExternalJavac(pathToJavac);
   }
 
   @Override
   public JavacVersion getVersion() {
     return version.get();
+  }
+
+  @VisibleForTesting
+  ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
+    return new ProcessExecutor(
+              new Console(
+                  Verbosity.SILENT,
+                  stdout,
+                  stderr,
+                  Ansi.withoutTty()));
   }
 
   @Override

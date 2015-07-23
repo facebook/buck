@@ -22,7 +22,6 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -49,8 +48,6 @@ import java.util.Map;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractJavacOptions implements RuleKeyAppendable {
-
-  protected abstract Optional<ProcessExecutor> getProcessExecutor();
 
   protected abstract Optional<Path> getJavacPath();
   protected abstract Optional<SourcePath> getJavacJarPath();
@@ -86,12 +83,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   public Javac getJavac() {
     Optional<Path> externalJavac = getJavacPath();
     if (externalJavac.isPresent()) {
-
-      if (!getProcessExecutor().isPresent()) {
-        throw new RuntimeException("Misconfigured JavacOptions --- no process executor");
-      }
-
-      return ExternalJavac.createJavac(getProcessExecutor().get(), externalJavac.get());
+      return ExternalJavac.createJavac(externalJavac.get());
     }
 
     Optional<SourcePath> javacJarPath = getJavacJarPath();
@@ -226,7 +218,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     builder.setVerbose(options.isVerbose());
     builder.setProductionBuild(options.isProductionBuild());
 
-    builder.setProcessExecutor(options.getProcessExecutor());
     builder.setJavacPath(options.getJavacPath());
     builder.setJavacJarPath(options.getJavacJarPath());
     builder.setAnnotationProcessingParams(options.getAnnotationProcessingParams());

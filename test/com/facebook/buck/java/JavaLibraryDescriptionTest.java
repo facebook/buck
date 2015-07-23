@@ -42,13 +42,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -190,20 +186,11 @@ public class JavaLibraryDescriptionTest {
     Either<BuiltInJavac, SourcePath> either =
         Either.ofRight((SourcePath) new TestSourcePath(externalJavac.toString()));
 
-    ProcessExecutorParams version = ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.of(externalJavac.toString(), "-version"))
-        .build();
-    FakeProcess process = new FakeProcess(0, "", "1.2.3");
-    FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(version, process));
-    JavacOptions newDefaults = JavacOptions.builder(defaults)
-        .setProcessExecutor(executor)
-        .build();
-
     arg.compiler = Optional.of(either);
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
         resolver,
         arg,
-        newDefaults).build();
+        defaults).build();
 
     Javac javac = options.getJavac();
 
@@ -218,21 +205,12 @@ public class JavaLibraryDescriptionTest {
     SourcePath sourcePath = new TestSourcePath(externalJavac.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
-    ProcessExecutorParams version = ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.of(externalJavac.toString(), "-version"))
-        .build();
-    FakeProcess process = new FakeProcess(0, "", "1.2.3");
-    FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(version, process));
-    JavacOptions newDefaults = JavacOptions.builder(defaults)
-        .setProcessExecutor(executor)
-        .build();
-
     arg.compiler = Optional.of(either);
     arg.javac = Optional.of(Paths.get("does-not-exist"));
     JavacOptions options = JavaLibraryDescription.getJavacOptions(
         resolver,
         arg,
-        newDefaults).build();
+        defaults).build();
 
     Javac javac = options.getJavac();
 

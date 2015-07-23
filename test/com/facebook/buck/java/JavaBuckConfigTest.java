@@ -28,7 +28,6 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
@@ -37,6 +36,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -50,6 +50,12 @@ public class JavaBuckConfigTest {
 
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  private ProjectFilesystem defaultFilesystem;
+
+  @Before
+  public void setUpDefaultFilesystem() {
+    defaultFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+  }
 
   @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
@@ -60,7 +66,7 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacExistsAndIsExecutableThenCorrectPathIsReturned() throws IOException {
     File javac = temporaryFolder.newFile();
-    javac.setExecutable(true);
+    assertTrue(javac.setExecutable(true));
 
     Reader reader = new StringReader(
         Joiner.on('\n').join(
@@ -133,8 +139,7 @@ public class JavaBuckConfigTest {
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor();
-    JavacOptions options = config.getDefaultJavacOptions(processExecutor);
+    JavacOptions options = config.getDefaultJavacOptions();
 
     assertEquals(sourceLevel, options.getSourceLevel());
     assertEquals(targetLevel, options.getTargetLevel());
@@ -145,8 +150,7 @@ public class JavaBuckConfigTest {
       throws IOException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor();
-    JavacOptions options = config.getDefaultJavacOptions(processExecutor);
+    JavacOptions options = config.getDefaultJavacOptions();
 
     assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
     assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());
@@ -158,8 +162,7 @@ public class JavaBuckConfigTest {
     String localConfig = "[java]\nbootclasspath-6 = one.jar\nbootclasspath-7 = two.jar";
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    FakeProcessExecutor processExecutor = new FakeProcessExecutor();
-    JavacOptions options = config.getDefaultJavacOptions(processExecutor);
+    JavacOptions options = config.getDefaultJavacOptions();
 
     JavacOptions jse5 = JavacOptions.builder(options).setSourceLevel("5").build();
     JavacOptions jse6 = JavacOptions.builder(options).setSourceLevel("6").build();
@@ -180,10 +183,9 @@ public class JavaBuckConfigTest {
 
   private JavaBuckConfig createWithDefaultFilesystem(Reader reader)
       throws IOException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     BuckConfig raw = BuckConfigTestUtils.createFromReader(
         reader,
-        filesystem,
+        defaultFilesystem,
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
     return new JavaBuckConfig(raw);

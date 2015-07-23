@@ -25,6 +25,7 @@ import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.ExternalJavac;
@@ -37,11 +38,11 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.PythonEnvironment;
 import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.NullFileHashCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
@@ -49,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.Hashing;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -58,6 +60,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
@@ -218,8 +221,12 @@ public class KnownBuildRuleTypesTest {
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    Path javacPath = javac.toPath();
     DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(new NullFileHashCache(), resolver);
+        new DefaultRuleKeyBuilderFactory(
+            new FakeFileHashCache(
+                ImmutableMap.of(javacPath, MorePaths.asByteSource(javacPath).hash(Hashing.sha1()))),
+            resolver);
     RuleKey configuredKey = factory.newInstance(configuredRule).build();
     RuleKey libraryKey = factory.newInstance(libraryRule).build();
 
