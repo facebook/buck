@@ -31,6 +31,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -44,36 +46,42 @@ public class ExternalJavac implements Javac {
   private static final JavacVersion DEFAULT_VERSION = JavacVersion.of("unknown version");
 
   private final Path pathToJavac;
-  private final Optional<JavacVersion> version;
+  private final Supplier<JavacVersion> version;
 
-  public ExternalJavac(Path pathToJavac, Optional<JavacVersion> version) {
+  public ExternalJavac(final ProcessExecutor executor, final Path pathToJavac) {
     this.pathToJavac = pathToJavac;
-    this.version = version;
+
+    this.version = Suppliers.memoize(
+        new Supplier<JavacVersion>() {
+          @Override
+          public JavacVersion get() {
+            ProcessExecutorParams params = ProcessExecutorParams.builder()
+                .setCommand(ImmutableList.of(pathToJavac.toString(), "-version"))
+                .build();
+            ProcessExecutor.Result result;
+            try {
+              result = executor.launchAndExecute(params);
+            } catch (InterruptedException | IOException e) {
+              throw new RuntimeException(e);
+            }
+            Optional<String> stderr = result.getStderr();
+            String output = stderr.or("").trim();
+            if (Strings.isNullOrEmpty(output)) {
+              return DEFAULT_VERSION;
+            } else {
+              return JavacVersion.of(output);
+            }
+          }
+        });
   }
 
-  public static Javac createJavac(Path pathToJavac, ProcessExecutor processExecutor) {
-    ProcessExecutorParams params = ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.of(pathToJavac.toString(), "-version"))
-        .build();
-    ProcessExecutor.Result result;
-    try {
-      result = processExecutor.launchAndExecute(params);
-    } catch (InterruptedException | IOException e) {
-      throw new RuntimeException(e);
-    }
-    Optional<JavacVersion> version;
-    Optional<String> stderr = result.getStderr();
-    if (Strings.isNullOrEmpty(stderr.orNull())) {
-      version = Optional.absent();
-    } else {
-      version = Optional.of(JavacVersion.of(stderr.get()));
-    }
-    return new ExternalJavac(pathToJavac, version);
+  public static Javac createJavac(ProcessExecutor processExecutor, Path pathToJavac) {
+    return new ExternalJavac(processExecutor, pathToJavac);
   }
 
   @Override
   public JavacVersion getVersion() {
-    return version.or(DEFAULT_VERSION);
+    return version.get();
   }
 
   @Override
@@ -102,10 +110,11 @@ public class ExternalJavac implements Javac {
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-    if (version.isPresent()) {
-      return builder.setReflectively("javac.version", version.get().toString());
+    if (DEFAULT_VERSION.equals(getVersion())) {
+      return builder.setReflectively("javac", pathToJavac);
     }
-    return builder.setReflectively("javac", pathToJavac);
+
+    return builder.setReflectively("javac.version", getVersion().toString());
   }
 
   public Path getPath() {

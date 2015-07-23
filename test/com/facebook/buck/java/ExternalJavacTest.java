@@ -29,6 +29,9 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,8 +107,15 @@ public class ExternalJavacTest extends EasyMockSupport {
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKey expected = builder.build();
 
+    ProcessExecutorParams javacExe = ProcessExecutorParams.builder().addCommand(
+        javac.toAbsolutePath().toString(),
+        "-version").build();
+    FakeProcess javacProc = new FakeProcess(0, "", "");
+    FakeProcessExecutor executor = new FakeProcessExecutor(
+        ImmutableMap.of(javacExe, javacProc));
+
     builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
-    ExternalJavac compiler = new ExternalJavac(javac, Optional.<JavacVersion>absent());
+    ExternalJavac compiler = new ExternalJavac(executor, javac);
     builder.setReflectively("key", compiler);
     RuleKey seen = builder.build();
 
@@ -117,7 +127,9 @@ public class ExternalJavacTest extends EasyMockSupport {
       throws IOException {
     Path javac = Files.createTempFile("fake", "javac");
     javac.toFile().deleteOnExit();
-    JavacVersion javacVersion = JavacVersion.of("mozzarella");
+    String reportedJavacVersion = "mozzarella";
+
+    JavacVersion javacVersion = JavacVersion.of(reportedJavacVersion);
 
     Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
@@ -135,8 +147,15 @@ public class ExternalJavacTest extends EasyMockSupport {
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKey expected = builder.build();
 
+    ProcessExecutorParams javacExe = ProcessExecutorParams.builder().addCommand(
+        javac.toAbsolutePath().toString(),
+        "-version").build();
+    FakeProcess javacProc = new FakeProcess(0, "", reportedJavacVersion);
+    FakeProcessExecutor executor = new FakeProcessExecutor(
+        ImmutableMap.of(javacExe, javacProc));
+
     builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
-    ExternalJavac compiler = new ExternalJavac(javac, Optional.of(javacVersion));
+    ExternalJavac compiler = new ExternalJavac(executor, javac);
     builder.setReflectively("key", compiler);
     RuleKey seen = builder.build();
 
@@ -154,7 +173,6 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   private ExternalJavac createTestStep() {
     Path fakeJavac = Paths.get("fakeJavac");
-    return new ExternalJavac(
-        fakeJavac, Optional.of(JavacVersion.of("unknown")));
+    return new ExternalJavac(null, fakeJavac);
   }
 }

@@ -226,7 +226,7 @@ public class JavacOptionsTest {
     assertTrue(javac instanceof ExternalJavac);
 
     JavacVersion seen = javac.getVersion();
-    assertEquals(JavacVersion.of("cover-version\n"), seen);
+    assertEquals(JavacVersion.of("cover-version"), seen);
   }
 
   @Test

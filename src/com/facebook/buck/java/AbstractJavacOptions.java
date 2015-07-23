@@ -91,7 +91,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         throw new RuntimeException("Misconfigured JavacOptions --- no process executor");
       }
 
-      return ExternalJavac.createJavac(externalJavac.get(), getProcessExecutor().get());
+      return ExternalJavac.createJavac(getProcessExecutor().get(), externalJavac.get());
     }
 
     Optional<SourcePath> javacJarPath = getJavacJarPath();
