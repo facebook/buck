@@ -19,15 +19,6 @@ package com.facebook.buck.event;
 public abstract class ProjectGenerationEvent extends AbstractBuckEvent {
 
   @Override
-  public boolean isRelatedTo(BuckEvent event) {
-    if (!(event instanceof ProjectGenerationEvent)) {
-        return false;
-    }
-
-    return true;
-  }
-
-  @Override
   public String getValueString() {
     return "";
   }
