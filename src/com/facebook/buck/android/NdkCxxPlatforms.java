@@ -17,12 +17,15 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.ClangCompiler;
+import com.facebook.buck.cxx.ClangPreprocessor;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.DefaultCompiler;
+import com.facebook.buck.cxx.DefaultPreprocessor;
 import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.Preprocessor;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -295,15 +298,16 @@ public class NdkCxxPlatforms {
         // Default assembler flags added by the NDK to enforce the NX (no execute) security feature.
         .addAsflags("-Xassembler", "--noexecstack")
         .setAspp(
-            getCTool(
-                ndkRoot,
-                targetConfiguration,
-                host,
-                compilerType.getCc(),
-                version,
-                executableFinder))
+            compilerType.preprocessorFromTool(
+                getCTool(
+                    ndkRoot,
+                    targetConfiguration,
+                    host,
+                    compilerType.getCc(),
+                    version,
+                    executableFinder)))
         .setCc(
-            compilerType.fromTool(
+            compilerType.compilerFromTool(
                 getCTool(
                     ndkRoot,
                     targetConfiguration,
@@ -313,16 +317,17 @@ public class NdkCxxPlatforms {
                     executableFinder)))
         .addAllCflags(getCflagsInternal(ndkRoot, targetConfiguration, host))
         .setCpp(
-            getCTool(
-                ndkRoot,
-                targetConfiguration,
-                host,
-                compilerType.getCc(),
-                version,
-                executableFinder))
+            compilerType.preprocessorFromTool(
+                getCTool(
+                    ndkRoot,
+                    targetConfiguration,
+                    host,
+                    compilerType.getCc(),
+                    version,
+                    executableFinder)))
         .addAllCppflags(getCppflags(ndkRoot, targetConfiguration, host))
         .setCxx(
-            compilerType.fromTool(
+            compilerType.compilerFromTool(
                 getCTool(
                     ndkRoot,
                     targetConfiguration,
@@ -332,13 +337,14 @@ public class NdkCxxPlatforms {
                     executableFinder)))
         .addAllCxxflags(getCxxflagsInternal(ndkRoot, targetConfiguration, host))
         .setCxxpp(
-            getCTool(
-                ndkRoot,
-                targetConfiguration,
-                host,
-                compilerType.getCxx(),
-                version,
-                executableFinder))
+            compilerType.preprocessorFromTool(
+                getCTool(
+                    ndkRoot,
+                    targetConfiguration,
+                    host,
+                    compilerType.getCxx(),
+                    version,
+                    executableFinder)))
         .addAllCxxppflags(getCxxppflags(ndkRoot, targetConfiguration, host, cxxRuntime))
         .setLd(
             getCcLinkTool(
@@ -1071,12 +1077,22 @@ public class NdkCxxPlatforms {
         return cxx;
       }
 
-      public com.facebook.buck.cxx.Compiler fromTool(Tool tool) {
+      public com.facebook.buck.cxx.Compiler compilerFromTool(Tool tool) {
         switch (this) {
           case GCC:
             return new DefaultCompiler(tool);
           case CLANG:
             return new ClangCompiler(tool);
+        }
+        throw new RuntimeException("Invalid compiler type");
+      }
+
+      public Preprocessor preprocessorFromTool(Tool tool) {
+        switch (this) {
+          case GCC:
+            return new DefaultPreprocessor(tool);
+          case CLANG:
+            return new ClangPreprocessor(tool);
         }
         throw new RuntimeException("Invalid compiler type");
       }

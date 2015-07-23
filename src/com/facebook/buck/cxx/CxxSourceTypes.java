@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 
-import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -63,10 +62,10 @@ public class CxxSourceTypes {
   }
 
   /**
-   * @return the appropriate {@link Tool} representing the preprocessor.
+   * @return the appropriate {@link com.facebook.buck.rules.Tool} representing the preprocessor.
    */
-  public static Tool getPreprocessor(CxxPlatform cxxPlatform, CxxSource.Type type) {
-    Tool preprocessor;
+  public static Preprocessor getPreprocessor(CxxPlatform cxxPlatform, CxxSource.Type type) {
+    Preprocessor preprocessor;
 
     switch (type) {
       case ASSEMBLER_WITH_CPP:

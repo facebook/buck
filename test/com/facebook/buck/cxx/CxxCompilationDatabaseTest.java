@@ -32,7 +32,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -91,7 +90,8 @@ public class CxxCompilationDatabaseTest {
             new FakeBuildRuleParamsBuilder(preprocessTarget).build(),
             testSourcePathResolver,
             operation,
-            Optional.<Tool>of(new HashedFileTool(Paths.get("preprocessor"))),
+            Optional.<Preprocessor>of(
+                new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor")))),
             Optional.of(ImmutableList.<String>of()),
             Optional.of(ImmutableList.<String>of()),
             Optional.<Compiler>absent(),
@@ -128,7 +128,8 @@ public class CxxCompilationDatabaseTest {
             compileBuildRuleParams,
             testSourcePathResolver,
             operation,
-            Optional.<Tool>of(new HashedFileTool(Paths.get("preprocessor"))),
+            Optional.<Preprocessor>of(
+                new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor")))),
             Optional.of(ImmutableList.<String>of()),
             Optional.of(ImmutableList.<String>of()),
             Optional.<Compiler>of(new DefaultCompiler(new HashedFileTool(Paths.get("compiler")))),
@@ -250,7 +251,8 @@ public class CxxCompilationDatabaseTest {
         preprocessBuildRuleParams,
         testSourcePathResolver,
         CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-        Optional.<Tool>of(new HashedFileTool(Paths.get("compiler"))),
+        Optional.<Preprocessor>of(
+            new DefaultPreprocessor(new HashedFileTool(Paths.get("compiler")))),
         Optional.of(ImmutableList.<String>of()),
         Optional.of(ImmutableList.<String>of()),
         Optional.<Compiler>absent(),
@@ -279,7 +281,7 @@ public class CxxCompilationDatabaseTest {
         compileBuildRuleParams,
         testSourcePathResolver,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
-        Optional.<Tool>absent(),
+        Optional.<Preprocessor>absent(),
         Optional.<ImmutableList<String>>absent(),
         Optional.<ImmutableList<String>>absent(),
         Optional.<Compiler>of(new DefaultCompiler(new HashedFileTool(Paths.get("compiler")))),

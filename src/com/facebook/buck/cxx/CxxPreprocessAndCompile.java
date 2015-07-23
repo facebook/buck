@@ -25,13 +25,14 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -54,7 +55,7 @@ public class CxxPreprocessAndCompile
   @AddToRuleKey
   private final CxxPreprocessAndCompileStep.Operation operation;
   @AddToRuleKey
-  private final Optional<Tool> preprocessor;
+  private final Optional<Preprocessor> preprocessor;
   private final Optional<ImmutableList<String>> platformPreprocessorFlags;
   private final Optional<ImmutableList<String>> rulePreprocessorFlags;
   @AddToRuleKey
@@ -78,7 +79,7 @@ public class CxxPreprocessAndCompile
       BuildRuleParams params,
       SourcePathResolver resolver,
       CxxPreprocessAndCompileStep.Operation operation,
-      Optional<Tool> preprocessor,
+      Optional<Preprocessor> preprocessor,
       Optional<ImmutableList<String>> platformPreprocessorFlags,
       Optional<ImmutableList<String>> rulePreprocessorFlags,
       Optional<Compiler> compiler,
@@ -133,7 +134,7 @@ public class CxxPreprocessAndCompile
         params,
         resolver,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
-        Optional.<Tool>absent(),
+        Optional.<Preprocessor>absent(),
         Optional.<ImmutableList<String>>absent(),
         Optional.<ImmutableList<String>>absent(),
         Optional.of(compiler),
@@ -155,7 +156,7 @@ public class CxxPreprocessAndCompile
   public static CxxPreprocessAndCompile preprocess(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Tool preprocessor,
+      Preprocessor preprocessor,
       ImmutableList<String> platformFlags,
       ImmutableList<String> ruleFlags,
       Path output,
@@ -192,7 +193,7 @@ public class CxxPreprocessAndCompile
   public static CxxPreprocessAndCompile preprocessAndCompile(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Tool preprocessor,
+      Preprocessor preprocessor,
       ImmutableList<String> platformPreprocessorFlags,
       ImmutableList<String> rulePreprocessorFlags,
       Compiler compiler,
@@ -281,6 +282,7 @@ public class CxxPreprocessAndCompile
               .addAll(preprocessor.get().getCommandPrefix(getResolver()))
               .addAll(getPreprocessorPlatformPrefix())
               .addAll(getPreprocessorSuffix())
+              .addAll(preprocessor.get().getExtraFlags().or(ImmutableList.<String>of()))
               .build());
     } else {
       preprocessorCommand = Optional.absent();
@@ -306,7 +308,15 @@ public class CxxPreprocessAndCompile
         preprocessorCommand,
         compilerCommand,
         replacementPaths,
-        sanitizer);
+        sanitizer,
+        Optionals.bind(
+            preprocessor,
+            new Function<Preprocessor, Optional<Function<String, Iterable<String>>>>() {
+              @Override
+              public Optional<Function<String, Iterable<String>>> apply(Preprocessor input) {
+                return input.getExtraLineProcessor();
+              }
+            }));
   }
 
   @Override

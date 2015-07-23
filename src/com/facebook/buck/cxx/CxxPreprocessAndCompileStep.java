@@ -58,6 +58,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   private final Optional<ImmutableList<String>> compilerCommand;
   private final ImmutableMap<Path, Path> replacementPaths;
   private final DebugPathSanitizer sanitizer;
+  private final Optional<Function<String, Iterable<String>>> extraLineProcessor;
 
   // N.B. These include paths are special to GCC. They aren't real files and there is no remapping
   // needed, so we can just ignore them everywhere.
@@ -74,7 +75,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       Optional<ImmutableList<String>> preprocessorCommand,
       Optional<ImmutableList<String>> compilerCommand,
       ImmutableMap<Path, Path> replacementPaths,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer sanitizer,
+      Optional<Function<String, Iterable<String>>> extraLineProcessor) {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
     this.operation = operation;
@@ -85,6 +87,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.compilerCommand = compilerCommand;
     this.replacementPaths = replacementPaths;
     this.sanitizer = sanitizer;
+    this.extraLineProcessor = extraLineProcessor;
   }
 
   @Override
@@ -133,7 +136,14 @@ public class CxxPreprocessAndCompileStep implements Step {
               return ImmutableList.of("# " + num + " \"" + replacementPath + "\"" + rest);
             }
           }
+
+          return ImmutableList.of(line);
         }
+
+        if (extraLineProcessor.isPresent()) {
+          return extraLineProcessor.get().apply(line);
+        }
+
         return ImmutableList.of(line);
       }
     };

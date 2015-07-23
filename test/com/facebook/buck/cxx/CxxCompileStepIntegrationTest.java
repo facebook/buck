@@ -28,6 +28,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -81,7 +82,8 @@ public class CxxCompileStepIntegrationTest {
         Optional.of(preprocessorCommand.build()),
         Optional.of(compilerCommand.build()),
         ImmutableMap.<Path, Path>of(),
-        sanitizer);
+        sanitizer,
+        Optional.<Function<String, Iterable<String>>>absent());
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext =

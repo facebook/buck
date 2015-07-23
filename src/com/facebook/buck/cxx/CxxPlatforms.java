@@ -63,11 +63,11 @@ public class CxxPlatforms {
       Flavor flavor,
       CxxBuckConfig config,
       Tool as,
-      Tool aspp,
+      Preprocessor aspp,
       Compiler cc,
       Compiler cxx,
-      Tool cpp,
-      Tool cxxpp,
+      Preprocessor cpp,
+      Preprocessor cxxpp,
       Linker ld,
       Iterable<String> ldFlags,
       Tool strip,
@@ -87,13 +87,15 @@ public class CxxPlatforms {
     builder
         .setFlavor(flavor)
         .setAs(getTool(flavor, "as", config).or(as))
-        .setAspp(getTool(flavor, "aspp", config).or(aspp))
+        .setAspp(
+            getTool(flavor, "aspp", config).transform(getPreprocessor(aspp.getClass())).or(aspp))
         // TODO(user): Don't assume the compiler override specifies the same type of compiler as
         // the default one.
         .setCc(getTool(flavor, "cc", config).transform(getCompiler(cc.getClass())).or(cc))
         .setCxx(getTool(flavor, "cxx", config).transform(getCompiler(cxx.getClass())).or(cxx))
-        .setCpp(getTool(flavor, "cpp", config).or(cpp))
-        .setCxxpp(getTool(flavor, "cxxpp", config).or(cxxpp))
+        .setCpp(getTool(flavor, "cpp", config).transform(getPreprocessor(cpp.getClass())).or(cpp))
+        .setCxxpp(
+            getTool(flavor, "cxxpp", config).transform(getPreprocessor(cxxpp.getClass())).or(cxxpp))
         .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass())).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass())).or(ar))
@@ -124,29 +126,38 @@ public class CxxPlatforms {
   ) {
     CxxPlatform.Builder builder = CxxPlatform.builder();
     builder
-      .setFlavor(flavor)
-      .setAs(getTool(flavor, "as", config).or(defaultPlatform.getAs()))
-      .setAspp(getTool(flavor, "aspp", config).or(defaultPlatform.getAspp()))
-      .setCc(
-          getTool(flavor, "cc", config)
-              .transform(getCompiler(defaultPlatform.getCc().getClass()))
-              .or(defaultPlatform.getCc()))
-      .setCxx(
-          getTool(flavor, "cxx", config)
-              .transform(getCompiler(defaultPlatform.getCxx().getClass()))
-              .or(defaultPlatform.getCxx()))
-      .setCpp(getTool(flavor, "cpp", config).or(defaultPlatform.getCpp()))
-      .setCxxpp(getTool(flavor, "cxxpp", config).or(defaultPlatform.getCxxpp()))
-      .setLd(
-          getTool(flavor, "ld", config)
-              .transform(getLinker(defaultPlatform.getLd().getClass()))
-              .or(defaultPlatform.getLd()))
-      .setAr(new GnuArchiver(getTool(flavor, "ar", config).or(defaultPlatform.getAr())))
-      .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
-      .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
-      .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
-      .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
-      .setDebugPathSanitizer(defaultPlatform.getDebugPathSanitizer());
+        .setFlavor(flavor)
+        .setAs(getTool(flavor, "as", config).or(defaultPlatform.getAs()))
+        .setAspp(
+            getTool(flavor, "aspp", config)
+                .transform(getPreprocessor(defaultPlatform.getAspp().getClass()))
+                .or(defaultPlatform.getAspp()))
+        .setCc(
+            getTool(flavor, "cc", config)
+                .transform(getCompiler(defaultPlatform.getCc().getClass()))
+                .or(defaultPlatform.getCc()))
+        .setCxx(
+            getTool(flavor, "cxx", config)
+                .transform(getCompiler(defaultPlatform.getCxx().getClass()))
+                .or(defaultPlatform.getCxx()))
+        .setCpp(
+            getTool(flavor, "cpp", config)
+                .transform(getPreprocessor(defaultPlatform.getCpp().getClass()))
+                .or(defaultPlatform.getCpp()))
+        .setCxxpp(
+            getTool(flavor, "cxxpp", config)
+                .transform(getPreprocessor(defaultPlatform.getCxxpp().getClass()))
+                .or(defaultPlatform.getCxxpp()))
+        .setLd(
+            getTool(flavor, "ld", config)
+                .transform(getLinker(defaultPlatform.getLd().getClass()))
+                .or(defaultPlatform.getLd()))
+        .setAr(new GnuArchiver(getTool(flavor, "ar", config).or(defaultPlatform.getAr())))
+        .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
+        .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
+        .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
+        .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
+        .setDebugPathSanitizer(defaultPlatform.getDebugPathSanitizer());
 
     if (config.getDefaultPlatform().isPresent()) {
       // Try to add the tool flags from the default platform
@@ -162,6 +173,20 @@ public class CxxPlatforms {
       public Compiler apply(Tool input) {
         try {
           return ccClass.getConstructor(Tool.class).newInstance(input);
+        } catch (ReflectiveOperationException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+  }
+
+  private static Function<Tool, Preprocessor> getPreprocessor(
+      final Class<? extends Preprocessor> cppClass) {
+    return new Function<Tool, Preprocessor>() {
+      @Override
+      public Preprocessor apply(Tool input) {
+        try {
+          return cppClass.getConstructor(Tool.class).newInstance(input);
         } catch (ReflectiveOperationException e) {
           throw new RuntimeException(e);
         }

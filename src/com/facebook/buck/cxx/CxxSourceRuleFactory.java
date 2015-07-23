@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -225,7 +224,7 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createPreprocessBuildTarget(name, source.getType(), pic);
-    Tool tool = CxxSourceTypes.getPreprocessor(cxxPlatform, source.getType());
+    Preprocessor tool = CxxSourceTypes.getPreprocessor(cxxPlatform, source.getType());
 
     // Build up the list of dependencies for this rule.
     ImmutableSortedSet<BuildRule> dependencies =
@@ -349,8 +348,8 @@ public class CxxSourceRuleFactory {
   // compiler, and the C compiler for everything.
   private Compiler getCompiler(CxxSource.Type type) {
     return CxxSourceTypes.needsCxxCompiler(type) ?
-      cxxPlatform.getCxx() :
-      cxxPlatform.getCc();
+        cxxPlatform.getCxx() :
+        cxxPlatform.getCc();
   }
 
   private ImmutableList<String> getPlatformCompileFlags(CxxSource.Type type) {
@@ -480,6 +479,7 @@ public class CxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name, pic);
+    Preprocessor preprocessor = CxxSourceTypes.getPreprocessor(cxxPlatform, source.getType());
     Compiler compiler = getCompiler(source.getType());
 
     ImmutableSortedSet<BuildRule> dependencies =
@@ -516,7 +516,7 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(dependencies),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        compiler,
+        preprocessor,
         CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, source.getType()),
         preprocessorFlags.getUnchecked(source.getType()),
         compiler,

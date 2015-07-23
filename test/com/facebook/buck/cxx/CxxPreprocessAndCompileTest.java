@@ -25,13 +25,12 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -48,7 +47,8 @@ import java.nio.file.Paths;
 
 public class CxxPreprocessAndCompileTest {
 
-  private static final Tool DEFAULT_PREPROCESSOR = new HashedFileTool(Paths.get("preprocessor"));
+  private static final Preprocessor DEFAULT_PREPROCESSOR =
+      new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor")));
   private static final Compiler DEFAULT_COMPILER =
       new DefaultCompiler(new HashedFileTool(Paths.get("compiler")));
   private static final ImmutableList<String> DEFAULT_PLATFORM_FLAGS =
@@ -108,7 +108,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Tool>absent(),
+            Optional.<Preprocessor>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
@@ -130,7 +130,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Tool>absent(),
+            Optional.<Preprocessor>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<Compiler>of(new DefaultCompiler(new HashedFileTool(Paths.get("different")))),
@@ -176,7 +176,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Tool>absent(),
+            Optional.<Preprocessor>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
@@ -199,7 +199,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Tool>absent(),
+            Optional.<Preprocessor>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
@@ -222,7 +222,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Tool>absent(),
+            Optional.<Preprocessor>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
@@ -246,7 +246,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Tool>absent(),
+            Optional.<Preprocessor>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
@@ -270,7 +270,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Tool>absent(),
+            Optional.<Preprocessor>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
@@ -293,7 +293,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             pathResolver,
             CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Tool>absent(),
+            Optional.<Preprocessor>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.<ImmutableList<String>>absent(),
             Optional.of(DEFAULT_COMPILER),
@@ -410,7 +410,7 @@ public class CxxPreprocessAndCompileTest {
         params,
         pathResolver,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
-        Optional.<Tool>absent(),
+        Optional.<Preprocessor>absent(),
         Optional.<ImmutableList<String>>absent(),
         Optional.<ImmutableList<String>>absent(),
         Optional.of(DEFAULT_COMPILER),

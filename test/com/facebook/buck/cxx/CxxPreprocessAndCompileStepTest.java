@@ -63,7 +63,8 @@ public class CxxPreprocessAndCompileStepTest {
             Optional.of(compiler),
             Optional.<ImmutableList<String>>absent(),
             replacementPaths,
-            sanitizer);
+            sanitizer,
+            Optional.<Function<String, Iterable<String>>>absent());
 
     Function<String, Iterable<String>> processor =
         cxxPreprocessStep.createPreprocessOutputLineProcessor(compilationDirectory);
@@ -116,7 +117,8 @@ public class CxxPreprocessAndCompileStepTest {
             Optional.<ImmutableList<String>>absent(),
             Optional.of(compiler),
             replacementPaths,
-            sanitizer);
+            sanitizer,
+            Optional.<Function<String, Iterable<String>>>absent());
 
     Function<String, Iterable<String>> processor =
         cxxPreprocessStep.createErrorLineProcessor(compilationDirectory);
