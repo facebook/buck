@@ -293,6 +293,9 @@ public class CxxPreprocessAndCompileStep implements Step {
       int compileStatus = compile.waitFor();
       int preprocessStatus = preprocess.waitFor();
 
+      safeCloseProcessor(errorProcessorPreprocess);
+      safeCloseProcessor(errorProcessorCompile);
+
       String preprocessErr = new String(preprocessError.toByteArray());
       if (!preprocessErr.isEmpty()) {
         context.getConsole().printErrorText(preprocessErr);
