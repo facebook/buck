@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
@@ -60,8 +61,8 @@ public class JarBackedJavac extends Jsr199Javac {
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getInputs() {
-    return classpath;
+  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
+    return resolver.filterBuildRuleInputs(classpath);
   }
 
   @Override

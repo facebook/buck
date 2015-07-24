@@ -16,13 +16,13 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 public class DefaultCompiler implements Compiler {
 
@@ -38,8 +38,8 @@ public class DefaultCompiler implements Compiler {
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getInputs() {
-    return tool.getInputs();
+  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
+    return tool.getInputs(resolver);
   }
 
   @Override

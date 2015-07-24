@@ -47,8 +47,9 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
       BuildRule rule)
       throws MacroException {
     return ImmutableList.copyOf(
-        new SourcePathResolver(resolver)
-            .filterBuildRuleInputs(getBinaryRule(rule).getExecutableCommand().getInputs()));
+        getBinaryRule(rule)
+            .getExecutableCommand()
+            .getInputs(new SourcePathResolver(resolver)));
   }
 
   @Override

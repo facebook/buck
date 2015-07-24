@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * An abstraction for describing some tools used as part of the build.
@@ -25,9 +25,10 @@ import com.google.common.collect.ImmutableSortedSet;
 public interface Tool extends RuleKeyAppendable {
 
   /**
-   * @return all {@link SourcePath}s this tool requires to run.
+   * @return all {@link BuildRule}s this tool requires to run.
+   * @param resolver Used to resolve any build rules from {@link SourcePath}s.
    */
-  ImmutableSortedSet<SourcePath> getInputs();
+  ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver);
 
   /**
    * @return the prefix command use to run this tool.

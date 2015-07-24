@@ -101,8 +101,7 @@ public class CxxTestDescription implements
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.
     BuildRuleParams testParams =
-        params.appendExtraDeps(
-            pathResolver.filterBuildRuleInputs(cxxLinkAndCompileRules.executable.getInputs()));
+        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getInputs(pathResolver));
 
     CxxTest test;
 

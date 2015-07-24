@@ -165,8 +165,7 @@ public class CxxBinaryDescription implements
     //     By using another BuildRule, we can keep the original target graph dependency tree while
     //     preventing it from affecting link parallelism.
     return new CxxBinary(
-        params.appendExtraDeps(
-            pathResolver.filterBuildRuleInputs(cxxLinkAndCompileRules.executable.getInputs())),
+        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getInputs(pathResolver)),
         resolver,
         pathResolver,
         cxxLinkAndCompileRules.cxxLink.getOutput(),

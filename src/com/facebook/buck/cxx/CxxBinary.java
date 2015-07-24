@@ -108,7 +108,7 @@ public class CxxBinary
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.copyOf(getResolver().filterBuildRuleInputs(executable.getInputs()));
+    return ImmutableSortedSet.copyOf(executable.getInputs(getResolver()));
   }
 
 }

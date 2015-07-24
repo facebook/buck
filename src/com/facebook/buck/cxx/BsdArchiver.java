@@ -17,13 +17,13 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
@@ -127,8 +127,8 @@ public class BsdArchiver implements Archiver {
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getInputs() {
-    return tool.getInputs();
+  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
+    return tool.getInputs(resolver);
   }
 
   @Override

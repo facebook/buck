@@ -19,6 +19,7 @@ package com.facebook.buck.rust;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
@@ -27,6 +28,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -83,7 +85,7 @@ public class RustLinkableTest {
           Paths.get("somewhere"),
           new Tool() {
             @Override
-            public ImmutableSortedSet<SourcePath> getInputs() {
+            public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
               return ImmutableSortedSet.of();
             }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -46,12 +47,12 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> getInputs() {
-    ImmutableSortedSet.Builder<SourcePath> inputs = ImmutableSortedSet.naturalOrder();
+  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
+    ImmutableSortedSet.Builder<BuildRule> inputs = ImmutableSortedSet.naturalOrder();
     for (Arg arg : args) {
-      inputs.addAll(arg.getInputs());
+      inputs.addAll(resolver.filterBuildRuleInputs(arg.getInputs()));
     }
-    inputs.addAll(extraInputs);
+    inputs.addAll(resolver.filterBuildRuleInputs(extraInputs));
     return inputs.build();
   }
 

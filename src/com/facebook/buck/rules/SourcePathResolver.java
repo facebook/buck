@@ -224,7 +224,7 @@ public class SourcePathResolver {
     return filterInputsToCompareToOutput(Arrays.asList(sources));
   }
 
-  public Collection<BuildRule> filterBuildRuleInputs(
+  public ImmutableCollection<BuildRule> filterBuildRuleInputs(
       Iterable<? extends SourcePath> sources) {
     return FluentIterable.from(sources)
         .filter(BuildTargetSourcePath.class)

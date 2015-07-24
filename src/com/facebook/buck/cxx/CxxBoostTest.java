@@ -207,7 +207,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(getResolver().filterBuildRuleInputs(executable.getInputs()))
+        .addAll(executable.getInputs(getResolver()))
         .addAll(additionalDeps)
         .build();
   }

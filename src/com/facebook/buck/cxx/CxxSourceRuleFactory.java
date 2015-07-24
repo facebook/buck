@@ -230,7 +230,7 @@ public class CxxSourceRuleFactory {
     ImmutableSortedSet<BuildRule> dependencies =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             // Add dependencies on any build rules used to create the preprocessor.
-            .addAll(pathResolver.filterBuildRuleInputs(tool.getInputs()))
+            .addAll(tool.getInputs(pathResolver))
             // If a build rule generates our input source, add that as a dependency.
             .addAll(pathResolver.filterBuildRuleInputs(source.getPath()))
             // Depend on the rule that generates the sources and headers we're compiling.
@@ -407,7 +407,7 @@ public class CxxSourceRuleFactory {
     ImmutableSortedSet<BuildRule> dependencies =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             // Add dependencies on any build rules used to create the compiler.
-            .addAll(pathResolver.filterBuildRuleInputs(compiler.getInputs()))
+            .addAll(compiler.getInputs(pathResolver))
             // If a build rule generates our input source, add that as a dependency.
             .addAll(pathResolver.filterBuildRuleInputs(source.getPath()))
             .build();
@@ -485,7 +485,7 @@ public class CxxSourceRuleFactory {
     ImmutableSortedSet<BuildRule> dependencies =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             // Add dependencies on any build rules used to create the preprocessor.
-            .addAll(pathResolver.filterBuildRuleInputs(compiler.getInputs()))
+            .addAll(compiler.getInputs(pathResolver))
             // If a build rule generates our input source, add that as a dependency.
             .addAll(pathResolver.filterBuildRuleInputs(source.getPath()))
             // Add in all preprocessor deps.

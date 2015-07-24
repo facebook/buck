@@ -60,8 +60,8 @@ public class CommandToolTest {
         Matchers.contains(
             Preconditions.checkNotNull(rule.getPathToOutput()).toAbsolutePath().toString()));
     assertThat(
-        tool.getInputs(),
-        Matchers.contains(path));
+        tool.getInputs(pathResolver),
+        Matchers.contains(rule));
 
     // Test command and inputs when using the path in a format.
     tool =
@@ -74,8 +74,8 @@ public class CommandToolTest {
             "prefix:" +
             Preconditions.checkNotNull(rule.getPathToOutput()).toAbsolutePath().toString()));
     assertThat(
-        tool.getInputs(),
-        Matchers.contains(path));
+        tool.getInputs(pathResolver),
+        Matchers.contains(rule));
   }
 
   @Test
@@ -95,9 +95,6 @@ public class CommandToolTest {
     assertThat(
         tool.getCommandPrefix(pathResolver),
         Matchers.contains(pathResolver.getResolvedPath(path).toString()));
-    assertThat(
-        tool.getInputs(),
-        Matchers.contains(path));
 
     // Test command and inputs when using the path in a format.
     tool =
@@ -107,21 +104,24 @@ public class CommandToolTest {
     assertThat(
         tool.getCommandPrefix(pathResolver),
         Matchers.contains("prefix:" + pathResolver.getResolvedPath(path)));
-    assertThat(
-        tool.getInputs(),
-        Matchers.contains(path));
   }
 
   @Test
   public void extraInputs() {
-    SourcePath path = new TestSourcePath("input");
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    BuildRule rule = new FakeBuildRule("//some:target", pathResolver);
+    ruleResolver.addToIndex(rule);
+    SourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
+
     CommandTool tool =
         new CommandTool.Builder()
             .addInputs(ImmutableList.of(path))
             .build();
+
     assertThat(
-        tool.getInputs(),
-        Matchers.contains(path));
+        tool.getInputs(pathResolver),
+        Matchers.contains(rule));
   }
 
   @Test

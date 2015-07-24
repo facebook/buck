@@ -56,7 +56,7 @@ public class Archives {
         Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(resolver.filterBuildRuleInputs(inputs))
-                    .addAll(resolver.filterBuildRuleInputs(archiver.getInputs()))
+                    .addAll(archiver.getInputs(resolver))
                     .build()));
 
     return new Archive(
