@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
+import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
@@ -123,5 +124,36 @@ public class PlistProcessStepTest {
     assertThat(
         projectFilesystem.readFileIfItExists(OUTPUT_PATH),
         equalTo(Optional.of(dict.toXMLPropertyList())));
+  }
+
+  @Test
+  public void testHandlesNonDictionaryPlists() throws Exception {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    PlistProcessStep plistProcessStep = new PlistProcessStep(
+        INPUT_PATH,
+        OUTPUT_PATH,
+        ImmutableMap.<String, NSObject>of(),
+        ImmutableMap.<String, NSObject>of(
+            "Key1", new NSString("OverrideValue")),
+        PlistProcessStep.OutputFormat.XML);
+
+    NSArray array = new NSArray(
+        new NSString("Value1"),
+        new NSString("Value2"));
+    projectFilesystem.writeContentsToPath(
+        array.toXMLPropertyList(),
+        INPUT_PATH);
+
+    ExecutionContext executionContext = TestExecutionContext
+        .newBuilder()
+        .setProjectFilesystem(projectFilesystem)
+        .build();
+    int errorCode = plistProcessStep.execute(executionContext);
+    assertThat(errorCode, equalTo(0));
+
+    assertThat(
+        projectFilesystem.readFileIfItExists(OUTPUT_PATH),
+        equalTo(Optional.of(array.toXMLPropertyList())));
   }
 }

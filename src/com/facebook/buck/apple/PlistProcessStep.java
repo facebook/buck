@@ -45,7 +45,11 @@ public class PlistProcessStep implements Step {
 
   private final Path input;
   private final Path output;
+
+  /** Only valid if the input .plist is a NSDictionary; ignored otherwise. */
   private final ImmutableMap<String, NSObject> additionalKeys;
+
+  /** Only valid if the input .plist is a NSDictionary; ignored otherwise. */
   private final ImmutableMap<String, NSObject> overrideKeys;
   private final OutputFormat outputFormat;
 
@@ -67,20 +71,23 @@ public class PlistProcessStep implements Step {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
     try (InputStream stream = filesystem.newFileInputStream(input);
          BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
-      NSDictionary infoPlist;
+      NSObject infoPlist;
       try {
-        infoPlist = (NSDictionary) PropertyListParser.parse(bufferedStream);
+        infoPlist = PropertyListParser.parse(bufferedStream);
       } catch (Exception e) {
         throw new IOException(e);
       }
 
-      for (ImmutableMap.Entry<String, NSObject> entry : additionalKeys.entrySet()) {
-        if (!infoPlist.containsKey(entry.getKey())) {
-          infoPlist.put(entry.getKey(), entry.getValue());
+      if (infoPlist instanceof NSDictionary) {
+        NSDictionary dictionary = (NSDictionary) infoPlist;
+        for (ImmutableMap.Entry<String, NSObject> entry : additionalKeys.entrySet()) {
+          if (!dictionary.containsKey(entry.getKey())) {
+            dictionary.put(entry.getKey(), entry.getValue());
+          }
         }
-      }
 
-      infoPlist.putAll(overrideKeys);
+        dictionary.putAll(overrideKeys);
+      }
 
       switch (this.outputFormat) {
         case XML:
