@@ -99,6 +99,11 @@ public abstract class Jsr199Javac implements Javac {
     return "javac";
   }
 
+  @Override
+  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+    throw new UnsupportedOperationException("In memory javac may not be used externally");
+  }
+
   protected abstract JavaCompiler createCompiler(
       ExecutionContext context,
       SourcePathResolver resolver);

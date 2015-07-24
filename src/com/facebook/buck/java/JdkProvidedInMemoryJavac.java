@@ -17,9 +17,11 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.collect.ImmutableSortedSet;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -34,6 +36,11 @@ public class JdkProvidedInMemoryJavac extends Jsr199Javac {
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder.setReflectively("javac", "jsr199")
         .setReflectively("javac.version", "in-memory");
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getInputs() {
+    return ImmutableSortedSet.of();
   }
 
   @Override

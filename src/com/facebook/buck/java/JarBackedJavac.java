@@ -26,6 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.net.MalformedURLException;
@@ -51,11 +52,16 @@ public class JarBackedJavac extends Jsr199Javac {
   };
 
   private final String compilerClassName;
-  private final Iterable<SourcePath> classpath;
+  private final ImmutableSortedSet<SourcePath> classpath;
 
   JarBackedJavac(String compilerClassName, Iterable<SourcePath> classpath) {
     this.compilerClassName = compilerClassName;
-    this.classpath = classpath;
+    this.classpath = ImmutableSortedSet.copyOf(classpath);
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getInputs() {
+    return classpath;
   }
 
   @Override

@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.CharMatcher;
@@ -29,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 
-public interface Javac extends RuleKeyAppendable {
+public interface Javac extends RuleKeyAppendable, Tool {
 
   /**
    * An escaper for arguments written to @argfiles.
