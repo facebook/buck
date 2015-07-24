@@ -73,8 +73,11 @@
   </fileset>
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
-    <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="aopalliance/aopalliance.jar" />
+    <include name="android/sdk-common-24.2.3.jar" />
+    <include name="android/common-24.2.3.jar" />
+    <include name="android/layoutlib-api-24.2.3.jar" />
+    <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
     <include name="dd-plist/dd-plist.jar" />

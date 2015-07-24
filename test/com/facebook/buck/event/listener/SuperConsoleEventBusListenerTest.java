@@ -91,6 +91,8 @@ public class SuperConsoleEventBusListenerTest {
           }).toArray(String.class));
   }
 
+
+
   @Test
   public void testSimpleBuild() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());

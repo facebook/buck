@@ -60,5 +60,6 @@
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="immutables-annotations" level="project" />
     <orderEntry type="library" name="maven-lib" level="project" />
+    <orderEntry type="library" name="android-tools-24.2.3" level="project" />
   </component>
 </module>

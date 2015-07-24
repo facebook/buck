@@ -22,9 +22,13 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.CharStreams;
+
+import org.hamcrest.Matchers;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -58,6 +62,15 @@ public class ZipInspector {
   public void assertFilesDoNotExist(String...pathsRelativeToRoot) {
     for (String path : pathsRelativeToRoot) {
       assertFileDoesNotExist(path);
+    }
+  }
+
+  public void assertFileContents(String pathRelativeToRoot, String expected) throws IOException {
+    try (ZipFile zipFile = new ZipFile(this.zipFile)) {
+      ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      assertThat(
+          CharStreams.toString(new InputStreamReader(zipFile.getInputStream(entry))),
+          Matchers.equalTo(expected));
     }
   }
 

@@ -53,8 +53,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
   private final Path temp;
   private final AndroidManifest manifest;
   private final AndroidResource androidResource;
-  private final AssembleDirectories assembleResourceDirectories;
-  private final AssembleDirectories assembleAssetsDirectories;
+  private final Path assembledResourceDirectory;
+  private final Path assembledAssetsDirectory;
   private final ImmutableSet<SourcePath> nativeLibAssetsDirectories;
   private final ImmutableSet<SourcePath> nativeLibsDirectories;
 
@@ -63,8 +63,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
       SourcePathResolver resolver,
       AndroidManifest manifest,
       AndroidResource androidResource,
-      AssembleDirectories assembleResourceDirectories,
-      AssembleDirectories assembleAssetsDirectories,
+      Path assembledResourceDirectory,
+      Path assembledAssetsDirectory,
       ImmutableSet<SourcePath> nativeLibAssetsDirectories,
       ImmutableSet<SourcePath> nativeLibsDirectories) {
     super(params, resolver);
@@ -73,8 +73,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     this.temp = BuildTargets.getScratchPath(buildTarget, "__temp__%s");
     this.manifest = manifest;
     this.androidResource = androidResource;
-    this.assembleAssetsDirectories = assembleAssetsDirectories;
-    this.assembleResourceDirectories = assembleResourceDirectories;
+    this.assembledAssetsDirectory = assembledAssetsDirectory;
+    this.assembledResourceDirectory = assembledResourceDirectory;
     this.nativeLibAssetsDirectories = nativeLibAssetsDirectories;
     this.nativeLibsDirectories = nativeLibsDirectories;
   }
@@ -105,11 +105,11 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
 
     // put res/ and assets/ into tmp folder
     commands.add(CopyStep.forDirectory(
-            assembleResourceDirectories.getPathToOutput(),
+            assembledResourceDirectory,
             temp.resolve("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
     commands.add(CopyStep.forDirectory(
-            assembleAssetsDirectories.getPathToOutput(),
+            assembledAssetsDirectory,
             temp.resolve("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 

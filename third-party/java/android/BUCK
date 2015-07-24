@@ -5,3 +5,37 @@ prebuilt_jar(
     '//src/com/facebook/buck/android:steps',
   ]
 )
+
+java_library(
+  name = 'tools-sdk-common',
+  deps = [
+    ':sdklib',
+    ':layoutlib-api',
+  ],
+  exported_deps = [
+    ':common',
+    ':sdk-common',
+  ],
+  visibility = [
+    'PUBLIC'
+  ],
+)
+
+prebuilt_jar(
+  name = 'common',
+  binary_jar = 'common-24.2.3.jar',
+  source_jar = 'common-24.2.3-sources.jar',
+)
+
+prebuilt_jar(
+  name = 'sdk-common',
+  binary_jar = 'sdk-common-24.2.3.jar',
+  source_jar = 'sdk-common-24.2.3-sources.jar',
+)
+
+prebuilt_jar(
+  name = 'layoutlib-api',
+  binary_jar = 'layoutlib-api-24.2.3.jar',
+  source_jar = 'layoutlib-api-24.2.3-sources.jar',
+)
+

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -141,7 +142,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         Suppliers.ofInstance(androidResourceExtraDeps));
     ImmutableCollection<SourcePath> resDirectories =
         packageableCollection.getResourceDetails().getResourceDirectories();
-    AssembleDirectories assembleResourceDirectories = new AssembleDirectories(
+    MergeAndroidResourceSources assembleResourceDirectories = new MergeAndroidResourceSources(
         assembleResourceParams,
         pathResolver,
         resDirectories);
@@ -187,8 +188,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         pathResolver,
         manifest,
         androidResource,
-        assembleResourceDirectories,
-        assembleAssetsDirectories,
+        assembleResourceDirectories.getPathToOutput(),
+        assembleAssetsDirectories.getPathToOutput(),
         packageableCollection.getNativeLibAssetsDirectories(),
         packageableCollection.getNativeLibsDirectories());
   }
