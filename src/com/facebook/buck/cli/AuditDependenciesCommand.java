@@ -105,8 +105,41 @@ public class AuditDependenciesCommand extends AbstractCommand {
       return 1;
     }
 
+    try {
+      Multimap<BuildTarget, BuildTarget> targetsAndDependencies = getTargetsAndDependencies(
+          params,
+          getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
+          shouldShowTransitiveDependencies(),
+          shouldIncludeTests(),
+          getEnableProfiling());
+
+      if (shouldGenerateJsonOutput()) {
+        printJSON(params, targetsAndDependencies);
+      } else {
+        printToConsole(params, targetsAndDependencies);
+      }
+    } catch (BuildTargetException | BuildFileParseException e) {
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      return 1;
+    }
+
+    return 0;
+  }
+
+  @Override
+  public boolean isReadOnly() {
+    return true;
+  }
+
+  public static Multimap<BuildTarget, BuildTarget> getTargetsAndDependencies(
+      final CommandRunnerParams params,
+      final List<String> argumentsFormattedAsBuildTargets,
+      boolean showTransitive,
+      boolean showTests,
+      boolean enableProfiling)
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
+        .from(argumentsFormattedAsBuildTargets)
         .transform(
             new Function<String, BuildTarget>() {
               @Override
@@ -118,59 +151,52 @@ public class AuditDependenciesCommand extends AbstractCommand {
             })
         .toSet();
 
-    TargetGraph graph;
-    try {
-      graph = params.getParser().buildTargetGraphForBuildTargets(
-          targets,
-          new ParserConfig(params.getBuckConfig()),
-          params.getBuckEventBus(),
-          params.getConsole(),
-          params.getEnvironment(),
-          getEnableProfiling());
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
-      return 1;
-    }
+    TargetGraph graph = params.getParser().buildTargetGraphForBuildTargets(
+        targets,
+        new ParserConfig(params.getBuckConfig()),
+        params.getBuckEventBus(),
+        params.getConsole(),
+        params.getEnvironment(),
+        enableProfiling);
 
     TreeMultimap<BuildTarget, BuildTarget> targetsAndDependencies = TreeMultimap.create();
     for (BuildTarget target : targets) {
-      targetsAndDependencies.putAll(target, getDependenciesWithOptions(params, target, graph));
+      targetsAndDependencies.putAll(
+          target,
+          getDependenciesWithOptions(
+              params,
+              target,
+              graph,
+              showTransitive,
+              showTests,
+              enableProfiling));
     }
-
-    if (shouldGenerateJsonOutput()) {
-      printJSON(params, targetsAndDependencies);
-    } else {
-      printToConsole(params, targetsAndDependencies);
-    }
-
-    return 0;
+    return targetsAndDependencies;
   }
 
-  @Override
-  public boolean isReadOnly() {
-    return true;
-  }
-
-  ImmutableSet<BuildTarget> getDependenciesWithOptions(
+  static ImmutableSet<BuildTarget> getDependenciesWithOptions(
       CommandRunnerParams params,
       BuildTarget target,
-      TargetGraph graph) throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> targetsToPrint = shouldShowTransitiveDependencies() ?
+      TargetGraph graph,
+      boolean showTransitive,
+      boolean showTests,
+      boolean enableProfiling) throws IOException, InterruptedException {
+    ImmutableSet<BuildTarget> targetsToPrint = showTransitive ?
         getTransitiveDependencies(ImmutableSet.of(target), graph) :
         getImmediateDependencies(target, graph);
 
-    if (shouldIncludeTests()) {
+    if (showTests) {
       ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
       targetsToPrint = builder
           .addAll(targetsToPrint)
-          .addAll(getTestTargetDependencies(params, target, graph))
+          .addAll(getTestTargetDependencies(params, target, graph, showTransitive, enableProfiling))
           .build();
     }
     return targetsToPrint;
   }
 
   @VisibleForTesting
-  ImmutableSet<BuildTarget> getTransitiveDependencies(
+  static ImmutableSet<BuildTarget> getTransitiveDependencies(
       final ImmutableSet<BuildTarget> targets,
       TargetGraph graph) {
     final ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
@@ -198,16 +224,18 @@ public class AuditDependenciesCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  ImmutableSet<BuildTarget> getImmediateDependencies(BuildTarget target, TargetGraph graph) {
+  static ImmutableSet<BuildTarget> getImmediateDependencies(BuildTarget target, TargetGraph graph) {
     return Preconditions.checkNotNull(graph.get(target)).getDeps();
   }
 
   @VisibleForTesting
-  Collection<BuildTarget> getTestTargetDependencies(
+  static Collection<BuildTarget> getTestTargetDependencies(
       CommandRunnerParams params,
       BuildTarget target,
-      TargetGraph graph) throws IOException, InterruptedException {
-    if (!shouldShowTransitiveDependencies()) {
+      TargetGraph graph,
+      boolean showTransitive,
+      boolean enableProfiling) throws IOException, InterruptedException {
+    if (!showTransitive) {
       return TargetNodes.getTestTargetsForNode(Preconditions.checkNotNull(graph.get(target)));
     }
 
@@ -217,7 +245,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
         params.getBuckEventBus(),
         params.getConsole(),
         params.getEnvironment(),
-        getEnableProfiling());
+        enableProfiling);
 
     TargetGraph graphWithTests = TargetGraphTestParsing.expandedTargetGraphToIncludeTestsForTargets(
         projectGraphParser,

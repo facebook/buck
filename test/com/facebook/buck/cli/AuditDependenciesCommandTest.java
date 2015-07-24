@@ -37,8 +37,6 @@ import java.nio.file.Paths;
 
 public class AuditDependenciesCommandTest {
 
-  private AuditDependenciesCommand auditDependenciesCommand;
-
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
@@ -50,8 +48,6 @@ public class AuditDependenciesCommandTest {
     projectFilesystem.touch(Paths.get("src/com/facebook/TestJavaLibrary.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/TestJavaLibraryTwo.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/TestJavaLibraryThree.java"));
-
-    auditDependenciesCommand = new AuditDependenciesCommand();
   }
 
   @Test
@@ -81,7 +77,7 @@ public class AuditDependenciesCommandTest {
 
     ImmutableSet<BuildTarget> testInput = ImmutableSet.of(libraryTarget);
     ImmutableSet<BuildTarget> transitiveDependencies =
-        auditDependenciesCommand.getTransitiveDependencies(testInput, targetGraph);
+        AuditDependenciesCommand.getTransitiveDependencies(testInput, targetGraph);
     assertEquals(ImmutableSet.of(secondLibraryTarget, javaTarget), transitiveDependencies);
   }
 
@@ -111,7 +107,7 @@ public class AuditDependenciesCommandTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     ImmutableSet<BuildTarget> immediateDependencies =
-        auditDependenciesCommand.getImmediateDependencies(libraryTarget, targetGraph);
+        AuditDependenciesCommand.getImmediateDependencies(libraryTarget, targetGraph);
     assertEquals(ImmutableSet.of(secondLibraryTarget), immediateDependencies);
   }
 
@@ -157,7 +153,7 @@ public class AuditDependenciesCommandTest {
 
     ImmutableSet<BuildTarget> testInput = ImmutableSet.of(libraryTarget, javaTarget);
     ImmutableSet<BuildTarget> transitiveDependencies =
-        auditDependenciesCommand.getTransitiveDependencies(testInput, targetGraph);
+        AuditDependenciesCommand.getTransitiveDependencies(testInput, targetGraph);
     ImmutableSet<BuildTarget> expectedOutput =
         ImmutableSet.of(secondLibraryTarget, secondJavaTarget, thirdJavaTarget);
     assertEquals(expectedOutput, transitiveDependencies);
@@ -190,7 +186,7 @@ public class AuditDependenciesCommandTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     ImmutableSet<BuildTarget> transitiveDependencies =
-        auditDependenciesCommand.getImmediateDependencies(javaTarget, targetGraph);
+        AuditDependenciesCommand.getImmediateDependencies(javaTarget, targetGraph);
     ImmutableSet<BuildTarget> expectedOutput =
         ImmutableSet.of(secondJavaTarget, thirdJavaTarget);
     assertEquals(expectedOutput, transitiveDependencies);
@@ -238,7 +234,7 @@ public class AuditDependenciesCommandTest {
 
     ImmutableSet<BuildTarget> testInput = ImmutableSet.of(libraryTarget);
     ImmutableSet<BuildTarget> transitiveDependencies =
-        auditDependenciesCommand.getTransitiveDependencies(testInput, targetGraph);
+        AuditDependenciesCommand.getTransitiveDependencies(testInput, targetGraph);
     ImmutableSet<BuildTarget> expectedOutput =
         ImmutableSet.of(secondLibraryTarget, javaTarget, secondJavaTarget, thirdJavaTarget);
     assertEquals(expectedOutput, transitiveDependencies);
