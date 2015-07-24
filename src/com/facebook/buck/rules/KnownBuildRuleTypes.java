@@ -405,7 +405,7 @@ public class KnownBuildRuleTypes {
                 SmartDexingStep.determineOptimalThreadCount(),
                 new CommandThreadFactory("SmartDexing")));
 
-    builder.register(new AndroidAarDescription(new AndroidManifestDescription()));
+    builder.register(new AndroidAarDescription(new AndroidManifestDescription(), ndkCxxPlatforms));
     builder.register(
         new AndroidBinaryDescription(
             androidBinaryOptions,

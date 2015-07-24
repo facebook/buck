@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
@@ -61,6 +62,7 @@ public class MkdirStep implements Step {
    * @return Path of the directory to make.
    */
   public Path getPath(ExecutionContext context) {
-    return context.getProjectFilesystem().resolve(pathRelativeToProjectRoot);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    return projectFilesystem.resolve(pathRelativeToProjectRoot);
   }
 }

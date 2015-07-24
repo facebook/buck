@@ -26,20 +26,21 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Collection;
 
 /**
  * Description for a {@link BuildRule} that generates an {@code .aar} file.
@@ -65,9 +66,13 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
       ImmutableFlavor.of("aar_android_resource");
 
   private final AndroidManifestDescription androidManifestDescription;
+  private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
-  public AndroidAarDescription(AndroidManifestDescription androidManifestDescription) {
+  public AndroidAarDescription(
+      AndroidManifestDescription androidManifestDescription,
+      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.androidManifestDescription = androidManifestDescription;
+    this.nativePlatforms = nativePlatforms;
   }
 
   @Override
@@ -174,13 +179,27 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         /* hasWhitelistedStrings */ false);
     aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));
 
-    /* android_aar */
-    aarExtraDepsBuilder.addAll(
-        getTargetsAsRules(
-            packageableCollection.getNativeLibsTargets(),
-            BuildTarget.of(originalBuildTarget),
-            resolver));
+    /* native_libraries */
+    AndroidNativeLibsPackageableGraphEnhancer packageableGraphEnhancer =
+        new AndroidNativeLibsPackageableGraphEnhancer(
+            resolver,
+            originalBuildRuleParams,
+            nativePlatforms,
+            ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of()
+        );
+    Optional<CopyNativeLibraries> nativeLibrariesOptional =
+        packageableGraphEnhancer.getCopyNativeLibraries(packageableCollection);
+    if (nativeLibrariesOptional.isPresent()) {
+      aarExtraDepsBuilder.add(resolver.addToIndex(nativeLibrariesOptional.get()));
+    }
 
+    Optional<Path> assembledNativeLibsDir = nativeLibrariesOptional.transform(
+        new Function<CopyNativeLibraries, Path>() {
+          @Override
+          public Path apply(CopyNativeLibraries input) {
+            return input.getPathToNativeLibsDir();
+          }
+        });
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithExtraDeps(
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
     return new AndroidAar(
@@ -190,18 +209,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         androidResource,
         assembleResourceDirectories.getPathToOutput(),
         assembleAssetsDirectories.getPathToOutput(),
-        packageableCollection.getNativeLibAssetsDirectories(),
-        packageableCollection.getNativeLibsDirectories());
-  }
-
-  private ImmutableSortedSet<BuildRule> getTargetsAsRules(
-      Collection<BuildTarget> buildTargets,
-      BuildTarget originalBuildTarget,
-      BuildRuleResolver ruleResolver) {
-    return BuildRules.toBuildRulesFor(
-        originalBuildTarget,
-        ruleResolver,
-        buildTargets);
+        assembledNativeLibsDir,
+        packageableCollection.getNativeLibAssetsDirectories());
   }
 
   @SuppressFieldNotInitialized

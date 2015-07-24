@@ -50,6 +50,7 @@ RULES_SRCS = [
   'AndroidLibrary.java',
   'AndroidManifest.java',
   'AndroidManifestDescription.java',
+  'AndroidNativeLibsPackageableGraphEnhancer.java',
   'AndroidPrebuiltAar.java',
   'AndroidPrebuiltAarCollection.java',
   'AndroidPrebuiltAarDescription.java',

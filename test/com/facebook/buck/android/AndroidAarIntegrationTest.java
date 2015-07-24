@@ -115,6 +115,12 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("classes.jar");
     zipInspector.assertFileExists("R.txt");
     zipInspector.assertFileExists("res/");
+    zipInspector.assertFileExists("jni/armeabi/libdep.so");
+    zipInspector.assertFileExists("jni/armeabi/libnative.so");
+    zipInspector.assertFileExists("jni/armeabi-v7a/libdep.so");
+    zipInspector.assertFileExists("jni/armeabi-v7a/libnative.so");
+    zipInspector.assertFileExists("jni/x86/libdep.so");
+    zipInspector.assertFileExists("jni/x86/libnative.so");
   }
 
   @Test

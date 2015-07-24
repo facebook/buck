@@ -38,6 +38,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -67,7 +68,6 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
   private final ImmutableSet<SourcePath> nativeLibDirectories;
   @AddToRuleKey
   private final ImmutableSet<TargetCpuType> cpuFilters;
-
   /**
    * A map of native libraries to copy in which are already filtered using the above CPU filter.
    * The keys of the map are the tuple of {@link TargetCpuType} and shared library SONAME
@@ -103,6 +103,16 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
 
   private Path getBinPath() {
     return BuildTargets.getScratchPath(getBuildTarget(), "__native_libs_%s__");
+  }
+
+  @VisibleForTesting
+  ImmutableSet<SourcePath> getNativeLibDirectories() {
+    return nativeLibDirectories;
+  }
+
+  @VisibleForTesting
+  ImmutableMap<Pair<TargetCpuType, String>, SourcePath> getFilteredNativeLibraries() {
+    return filteredNativeLibraries;
   }
 
   @Override
