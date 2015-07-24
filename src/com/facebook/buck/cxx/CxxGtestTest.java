@@ -46,11 +46,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
 
   private static final Pattern START = Pattern.compile("^\\[\\s*RUN\\s*\\] (.*)$");
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
+  private static final String NOTRUN = "notrun";
 
   private final Tool executable;
   private final ImmutableSortedSet<BuildRule> additionalDeps;
@@ -119,10 +122,15 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
       Double time = Double.parseDouble(attributes.getNamedItem("time").getNodeValue()) * 1000;
       ResultType type = ResultType.SUCCESS;
       String message = "";
+      @Nullable List<String> testStdout = stdout.get(testFull);
       if (testcase.getChildNodes().getLength() > 0) {
         Node failure = testcase.getChildNodes().item(1);
         type = ResultType.FAILURE;
         message = failure.getAttributes().getNamedItem("message").getNodeValue();
+      } else if (attributes.getNamedItem("status").getNodeValue().equals(NOTRUN)) {
+        type = ResultType.ASSUMPTION_VIOLATION;
+        message = "DISABLED";
+        testStdout = Lists.newArrayList();
       }
       summariesBuilder.add(
           new TestResultSummary(
@@ -132,7 +140,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
               time.longValue(),
               message,
               "",
-              Joiner.on(System.lineSeparator()).join(stdout.get(testFull)),
+              Joiner.on(System.lineSeparator()).join(testStdout),
               ""));
     }
 

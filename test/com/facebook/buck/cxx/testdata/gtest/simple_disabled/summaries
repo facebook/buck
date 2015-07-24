@@ -1,0 +1,12 @@
+[
+  {
+    "message": "DISABLED",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "",
+    "testCase": "DISABLED_BAR",
+    "testCaseName": "FOO",
+    "time": 0,
+    "type": "ASSUMPTION_VIOLATION"
+  }
+]

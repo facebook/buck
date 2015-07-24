@@ -67,7 +67,8 @@ public class CxxGtestTestTest {
         ImmutableList.of(
             "simple_success",
             "simple_failure",
-            "simple_failure_with_output");
+            "simple_failure_with_output",
+            "simple_disabled");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     CxxGtestTest test = new CxxGtestTest(
