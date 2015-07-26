@@ -124,11 +124,7 @@ public class CxxPreprocessAndCompileStep implements Step {
                 .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
                 .or(replacementPath);
 
-            replacementPath =
-                sanitizer.sanitize(
-                    Optional.of(workingDir),
-                    replacementPath,
-                    /* expandPaths */ false);
+            replacementPath = sanitizer.sanitize(Optional.of(workingDir), replacementPath);
 
             if (!originalPath.equals(replacementPath)) {
               String num = m.group("num");
@@ -196,9 +192,8 @@ public class CxxPreprocessAndCompileStep implements Step {
     //
     builder.environment().put(
         "PWD",
-        // We only need to expand the working directory if compiling, as some compilers
-        // (e.g. clang) ignore overrides set in the preprocessed source when embedding the
-        // working directory in the debug info.
+        // We only need to expand the working directory if compiling, as we override it in the
+        // preprocessed otherwise.
         operation == Operation.COMPILE_MUNGE_DEBUGINFO ?
             sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()) :
             context.getProjectDirectoryRoot().toAbsolutePath().toString());

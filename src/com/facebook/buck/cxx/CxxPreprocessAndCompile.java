@@ -240,7 +240,7 @@ public class CxxPreprocessAndCompile
     builder.setReflectively("ruleCompilerFlags", sanitizeFlags(ruleCompilerFlags));
     ImmutableList<String> frameworkRoots = FluentIterable.from(this.frameworkRoots)
         .transform(Functions.toStringFunction())
-        .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
+        .transform(sanitizer.sanitize(Optional.<Path>absent()))
         .toList();
     builder.setReflectively("frameworkRoots", frameworkRoots);
 
@@ -255,7 +255,7 @@ public class CxxPreprocessAndCompile
 
   private ImmutableList<String> sanitizeFlags(Optional<ImmutableList<String>> flags) {
     return FluentIterable.from(flags.or(ImmutableList.<String>of()))
-        .transform(sanitizer.sanitize(Optional.<Path>absent(), /* expandPaths */ false))
+        .transform(sanitizer.sanitize(Optional.<Path>absent()))
         .toList();
   }
 

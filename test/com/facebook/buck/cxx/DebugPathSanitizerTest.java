@@ -47,84 +47,38 @@ public class DebugPathSanitizerTest {
   }
 
   @Test
-  public void sanitizeWithoutAnyMatchesWithExpandPaths() {
+  public void sanitizeWithoutAnyMatches() {
     assertThat(
         debugPathSanitizer.sanitize(
             Optional.of(Paths.get("/project/root")),
-            "an arbitrary string with no match",
-            /* expandPaths */ true),
+            "an arbitrary string with no match"),
         equalTo("an arbitrary string with no match"));
   }
 
   @Test
-  public void sanitizeWithoutAnyMatchesWithoutExpandPaths() {
+  public void sanitizeProjectRoot() {
     assertThat(
         debugPathSanitizer.sanitize(
             Optional.of(Paths.get("/project/root")),
-            "an arbitrary string with no match",
-            /* expandPaths */ false),
-        equalTo("an arbitrary string with no match"));
-  }
-
-  @Test
-  public void sanitizeProjectRootWithExpandPaths() {
-    assertThat(
-        debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "a string that mentions the /project/root somewhere",
-            /* expandPaths */ true),
-        equalTo("a string that mentions the ./////////////////////////////////////// somewhere"));
-  }
-
-  @Test
-  public void sanitizeProjectRootWithoutExpandPaths() {
-    assertThat(
-        debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "a string that mentions the /project/root somewhere",
-            /* expandPaths */ false),
+            "a string that mentions the /project/root somewhere"),
         equalTo("a string that mentions the . somewhere"));
   }
 
   @Test
-  public void sanitizeOtherDirectoriesWithExpandPaths() {
+  public void sanitizeOtherDirectories() {
     assertThat(
         debugPathSanitizer.sanitize(
             Optional.of(Paths.get("/project/root")),
-            "-I/some/absolute/path/dir -I/another/path",
-            /* expandPaths */ true),
-        equalTo(
-            "-ISYMBOLIC_NAME////////////////////////////dir " +
-                "-IOTHER_NAME//////////////////////////////"));
-  }
-
-  @Test
-  public void sanitizeOtherDirectoriesWithoutExpandPaths() {
-    assertThat(
-        debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "-I/some/absolute/path/dir -I/another/path",
-            /* expandPaths */ false),
+            "-I/some/absolute/path/dir -I/another/path"),
         equalTo("-ISYMBOLIC_NAME/dir -IOTHER_NAME"));
   }
 
   @Test
-  public void sanitizeDirectoriesThatArePrefixOfOtherDirectoriesWithExpandPaths() {
+  public void sanitizeDirectoriesThatArePrefixOfOtherDirectories() {
     assertThat(
         debugPathSanitizer.sanitize(
             Optional.of(Paths.get("/project/root")),
-            "-I/another/path/with/subdirectories/something",
-            /* expandPaths */ true),
-        equalTo("-IOTHER_NAME_WITH_SUFFIX///////////////////something"));
-  }
-
-  @Test
-  public void sanitizeDirectoriesThatArePrefixOfOtherDirectoriesWithoutExpandPaths() {
-    assertThat(
-        debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "-I/another/path/with/subdirectories/something",
-            /* expandPaths */ false),
+            "-I/another/path/with/subdirectories/something"),
         equalTo("-IOTHER_NAME_WITH_SUFFIX/something"));
   }
 

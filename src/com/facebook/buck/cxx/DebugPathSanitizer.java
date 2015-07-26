@@ -119,13 +119,11 @@ public class DebugPathSanitizer {
     return getExpandedPath(compilationDirectory);
   }
 
-  public Function<String, String> sanitize(
-      final Optional<Path> workingDir,
-      final boolean expandPaths) {
+  public Function<String, String> sanitize(final Optional<Path> workingDir) {
     return new Function<String, String>() {
       @Override
       public String apply(String input) {
-        return DebugPathSanitizer.this.sanitize(workingDir, input, expandPaths);
+        return DebugPathSanitizer.this.sanitize(workingDir, input);
       }
     };
   }
@@ -133,17 +131,11 @@ public class DebugPathSanitizer {
   /**
    * @param workingDir the current working directory, if applicable.
    * @param contents the string to sanitize.
-   * @param expandPaths whether to pad sanitized paths to {@code pathSize}.
    * @return a string with all matching paths replaced with their sanitized versions.
    */
-  public String sanitize(Optional<Path> workingDir, String contents, boolean expandPaths) {
+  public String sanitize(Optional<Path> workingDir, String contents) {
     for (Map.Entry<Path, Path> entry : getAllPaths(workingDir).entrySet()) {
-      String replacement;
-      if (expandPaths) {
-        replacement = getExpandedPath(entry.getValue());
-      } else {
-        replacement = entry.getValue().toString();
-      }
+      String replacement = entry.getValue().toString();
       String pathToReplace = entry.getKey().toString();
       if (contents.contains(pathToReplace)) {
         // String.replace creates a number of objects, and creates a fair
@@ -153,10 +145,6 @@ public class DebugPathSanitizer {
       }
     }
     return contents;
-  }
-
-  public String sanitize(Optional<Path> workingDir, String contents) {
-    return sanitize(workingDir, contents, /* expandPaths */ true);
   }
 
   public String restore(Optional<Path> workingDir, String contents) {
