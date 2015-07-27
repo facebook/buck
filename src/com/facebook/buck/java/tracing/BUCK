@@ -20,6 +20,31 @@ java_library(
   ],
 )
 
+java_binary(
+  name = 'javac-tracing-compiler-plugin',
+  deps = [
+    ':compiler-plugin',
+  ],
+)
+
+java_library(
+  name = 'compiler-plugin',
+  srcs = [
+    'TracingTaskListener.java',
+  ],
+  provided_deps = [
+    # Tools.jar is the compiler itself, and will already be present at runtime;
+    # don't need to depend on it strongly.
+    '//third-party/java/jdk:compiler-tree-api',
+
+    # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
+    ':api',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/java/tracing:tracing',
+  ],
+)
+
 java_library(
   name = 'api',
   srcs = [
@@ -31,5 +56,6 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
+    '//test/com/facebook/buck/java/tracing:tracing',
   ],
 )

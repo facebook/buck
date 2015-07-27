@@ -1,0 +1,15 @@
+# This is a stub jar for the Compiler Tree API
+# (http://docs.oracle.com/javase/7/docs/jdk/api/javac/tree/overview-summary.html)
+# It was created as follows:
+#   buck build src/com/facebook/buck/java/abi:api-stubber
+#   java -jar buck-out/gen/src/com/facebook/buck/java/abi/api-stubber.jar ${JAVA_HOME}/lib/tools.jar stub-compiler-tree-api.jar
+#   <a bunch of calls to `zip -d` to delete files that aren't part of the Tree API>
+prebuilt_jar(
+  name = 'compiler-tree-api',
+  binary_jar = 'stub-compiler-tree-api.jar',
+  visibility = [
+    '//src/com/facebook/buck/java/tracing:compiler-plugin',
+    '//test/com/facebook/buck/java/tracing:tracing',
+  ],
+)
+

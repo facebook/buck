@@ -15,6 +15,8 @@
   <property name="tracing-api.classes.dir" value="${build.dir}/tracing-api/classes" />
   <property name="tracing-api.jar" value="${build.dir}/tracing-api/tracing-api.jar"/>
   <property name="javac-tracing.src.dir" value="com/facebook/buck/java/tracing" />
+  <property name="javac-tracing.classes.dir" value="${build.dir}/javac-tracing/classes" />
+  <property name="javac-tracing.jar" value="${build.dir}/javac-tracing/javac-tracing-compiler-plugin.jar" />
   <property name="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh" />
   <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/pex.py" />
   <property name="buck.path_to_python_test_main" value="${basedir}/src/com/facebook/buck/python/__test_main__.py" />
@@ -161,7 +163,7 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client, report-generator-jar" />
+  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
@@ -225,6 +227,27 @@
     </ecj>
     <jar destfile="${tracing-api.jar}">
       <fileset dir="${tracing-api.classes.dir}"/>
+    </jar>
+  </target>
+
+  <path id="javac-tracing.classpath">
+    <!-- This jar is loaded in each compiler class loader, which is unrelated to Buck's class
+    loader. Do not take dependencies on Buck code outside of the bootstrapper here. Compiler
+    code (tools.jar) and third-party libraries are OK, though keep in mind that every class included
+    in the jar will be freshly loaded for each invocation of the compiler. -->
+    <pathelement location="${third-party.dir}/java/jdk/stub-compiler-tree-api.jar" />
+    <pathelement location="${bootstrapper.jar}" />
+  </path>
+
+  <target name="javac-tracing" depends="checkversion, tracing-api">
+    <mkdir dir="${javac-tracing.classes.dir}" />
+    <ecj destdir="${javac-tracing.classes.dir}" classpathref="javac-tracing.classpath">
+      <javac-params>
+        <include name="${javac-tracing.src.dir}/TracingTaskListener.java" />
+      </javac-params>
+    </ecj>
+    <jar destfile="${javac-tracing.jar}">
+      <fileset dir="${javac-tracing.classes.dir}"/>
     </jar>
   </target>
 
@@ -507,7 +530,7 @@
     </jar>
   </target>
 
-  <path id="tests.classpath">
+  <path id="tests.run.classpath">
     <path refid="classpath" />
     <fileset dir="${third-party.dir}/java">
       <include name="cglib/cglib-nodep-2.2.jar" />
@@ -523,6 +546,11 @@
     <pathelement location="${testrunner.classes.dir}" />
     <pathelement location="${immutables.gensrc.dir}" />
     <pathelement location="${immutables.gensrc.test.dir}" />
+  </path>
+
+  <path id="tests.compile.classpath">
+    <path refid="tests.run.classpath" />
+    <pathelement location="${third-party.dir}/java/jdk/stub-compiler-tree-api.jar" />
   </path>
 
   <!-- The set of Immutables value type source files which have not
@@ -561,7 +589,7 @@
     <mkdir dir="${immutables.gensrc.test.dir}" />
     <javac srcdir="${test.dir}:${immutables.gensrc.test.dir}"
            includes="${immutables-test-srcs-flattened}"
-           classpathref="tests.classpath"
+           classpathref="tests.compile.classpath"
            includeAntRuntime="no">
       <compilerarg value="-Werror" />
       <compilerarg value="-processorpath" />
@@ -579,7 +607,7 @@
     <mkdir dir="${immutables.gensrc.dir}" />
     <ecj srcdir="${test.dir}"
          destdir="${testclasses.dir}"
-         classpathref="tests.classpath"
+         classpathref="tests.compile.classpath"
          >
       <javac-params>
         <exclude name="**/testdata/**" />
@@ -666,7 +694,7 @@
         </fileset>
       </batchtest>
 
-      <classpath refid="tests.classpath" />
+      <classpath refid="tests.run.classpath" />
     </junit>
     <fail if="hasFailingTests" />
   </target>
@@ -817,7 +845,7 @@
   </target>
 
   <target name="forbidden-checks-tests" depends="compile-tests">
-    <forbiddenapis internalRuntimeForbidden="true" classpathref="tests.classpath" dir="${testclasses.dir}">
+    <forbiddenapis internalRuntimeForbidden="true" classpathref="tests.compile.classpath" dir="${testclasses.dir}">
       <bundledsignatures name="jdk-unsafe-1.7"/>
       <bundledsignatures name="jdk-deprecated-1.7"/>
       <signaturesFileset file="config/forbiddenapis.txt"/>
@@ -870,6 +898,9 @@
     <!-- Buck test runner has references to JUnit and TestNG. -->
     <pathelement location="${third-party.dir}/java/junit/junit-4.11.jar" />
     <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
+
+    <!-- Include the Compiler Tree API stub because its types are used in some places. -->
+    <pathelement location="${third-party.dir}/java/jdk/stub-compiler-tree-api.jar" />
   </path>
 
   <target name="javadoc"
