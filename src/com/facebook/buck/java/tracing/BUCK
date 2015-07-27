@@ -1,6 +1,8 @@
 java_library(
   name = 'tracing',
-  srcs = glob(['*.java']),
+  srcs = [
+    'JavacPhaseEvent.java',
+  ],
   deps = [
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/log:api',
@@ -15,5 +17,19 @@ java_library(
     '//src/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/java/tracing:tracing',
+  ],
+)
+
+java_library(
+  name = 'api',
+  srcs = [
+    'JavacPhaseTracer.java',
+  ],
+  deps = [
+    # Don't add deps; this is a super-light API that is loaded within javac. It can't access
+    # code outside of Buck's bootstrapper.
+  ],
+  visibility = [
+    '//src/com/facebook/buck/cli/bootstrapper:bootstrapper',
   ],
 )
