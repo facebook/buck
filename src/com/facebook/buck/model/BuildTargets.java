@@ -150,7 +150,7 @@ public class BuildTargets {
 
   /**
    * Propagate flavors represented by the given {@link FlavorDomain} objects from a parent
-   * target to it's dependencies.
+   * target to its dependencies.
    */
   public static ImmutableSortedSet<BuildTarget> propagateFlavorDomains(
       BuildTarget target,
