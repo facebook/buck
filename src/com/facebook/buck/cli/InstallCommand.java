@@ -237,7 +237,7 @@ public class InstallCommand extends BuildCommand {
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    if (!adbHelper.installApk(installableApk, shouldInstallViaSd())) {
+    if (!adbHelper.installApk(installableApk, shouldInstallViaSd(), false)) {
       return 1;
     }
 

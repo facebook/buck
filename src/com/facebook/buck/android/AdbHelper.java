@@ -221,7 +221,7 @@ public class AdbHelper {
     return isAdbInitialized(adb) ? adb : null;
   }
 
-  public List<IDevice> getDevices() throws InterruptedException {
+  public List<IDevice> getDevices(boolean quiet) throws InterruptedException {
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
     if (adb == null) {
@@ -240,8 +240,10 @@ public class AdbHelper {
                 devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
         return Lists.newArrayList();
       }
-      // Report if multiple devices are matching the filter.
-      console.getStdOut().printf("Found " + devices.size() + " matching devices.\n");
+      if (!quiet) {
+        // Report if multiple devices are matching the filter.
+        console.getStdOut().printf("Found " + devices.size() + " matching devices.\n");
+      }
     }
 
     if (devices == null && restartAdbOnFailure) {
@@ -268,11 +270,13 @@ public class AdbHelper {
    *  devices will be used to install the apk if needed.
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public boolean adbCall(AdbCallable adbCallable) throws InterruptedException {
+  public boolean adbCall(
+      AdbCallable adbCallable,
+      boolean quiet) throws InterruptedException {
     List<IDevice> devices;
 
     try (TraceEventLogger ignored = TraceEventLogger.start(buckEventBus, "set_up_adb_call")) {
-      devices = getDevices();
+      devices = getDevices(quiet);
       if (devices.size() == 0) {
         return false;
       }
@@ -328,7 +332,7 @@ public class AdbHelper {
     int failureCount = results.size() - successCount;
 
     // Report results.
-    if (successCount > 0) {
+    if (successCount > 0 && !quiet) {
       console.printSuccess(
           String.format("Successfully ran %s on %d device(s)", adbCallable, successCount));
     }
@@ -500,35 +504,41 @@ public class AdbHelper {
    */
   public boolean installApk(
       InstallableApk installableApk,
-      final boolean installViaSd) throws InterruptedException {
+      final boolean installViaSd,
+      final boolean quiet) throws InterruptedException {
     Optional<ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
     if (exopackageInfo.isPresent()) {
       return new ExopackageInstaller(
           context,
           this,
           installableApk)
-          .install();
+          .install(quiet);
     }
     InstallEvent.Started started = InstallEvent.started(installableApk.getBuildTarget());
-    getBuckEventBus().post(started);
+    if (!quiet) {
+      getBuckEventBus().post(started);
+    }
 
     final File apk = installableApk.getApkPath().toFile();
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
-            return installApkOnDevice(device, apk, installViaSd);
+            return installApkOnDevice(device, apk, installViaSd, quiet);
           }
 
           @Override
           public String toString() {
             return "install apk";
           }
-        });
-    getBuckEventBus().post(InstallEvent.finished(
-            started,
-            success,
-            Optional.<Long>absent()));
+        },
+        quiet);
+    if (!quiet) {
+      getBuckEventBus().post(InstallEvent.finished(
+              started,
+              success,
+              Optional.<Long>absent()));
+    }
 
     return success;
   }
@@ -537,7 +547,7 @@ public class AdbHelper {
    * Installs apk on specific device. Reports success or failure to console.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public boolean installApkOnDevice(IDevice device, File apk, boolean installViaSd) {
+  public boolean installApkOnDevice(IDevice device, File apk, boolean installViaSd, boolean quiet) {
     String name;
     if (device.isEmulator()) {
       name = device.getSerialNumber() + " (" + device.getAvdName() + ")";
@@ -553,7 +563,9 @@ public class AdbHelper {
       return false;
     }
 
-    getBuckEventBus().post(ConsoleEvent.info("Installing apk on %s.", name));
+    if (!quiet) {
+      getBuckEventBus().post(ConsoleEvent.info("Installing apk on %s.", name));
+    }
     try {
       String reason = null;
       if (installViaSd) {
@@ -747,7 +759,8 @@ public class AdbHelper {
           public String toString() {
             return "start activity";
           }
-        });
+        },
+        false);
     getBuckEventBus().post(StartActivityEvent.finished(started, success));
 
     return success ? 0 : 1;
@@ -804,7 +817,8 @@ public class AdbHelper {
       public String toString() {
         return "uninstall apk";
       }
-    });
+    },
+    false);
     getBuckEventBus().post(UninstallEvent.finished(started, success));
     return success;
   }
