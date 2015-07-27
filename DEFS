@@ -66,10 +66,10 @@ def java_test(
     target=target,
     deps=deps + [
       # When actually running Buck, the launcher script loads the bootstrapper, 
-      # which includes the event API, and the bootstrapper loads the rest of Buck.
-      # For unit tests, which don't run Buck, we have to add a direct dependency on
-      # the Event API in case they exercise code that uses it.
-      '//src/com/facebook/buck/event/api:api',
+      # and the bootstrapper loads the rest of Buck. For unit tests, which don't 
+      # run Buck, we have to add a direct dependency on the bootstrapper in case
+      # they exercise code that uses it.
+      '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',
     ],
     vm_args=[
       # Add -XX:-UseSplitVerifier by default to work around:
