@@ -18,6 +18,9 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -43,10 +46,19 @@ import java.util.Set;
 public class FilesystemBackedBuildFileTree extends BuildFileTree {
   private final ProjectFilesystem projectFilesystem;
   private final String buildFileName;
+  private final LoadingCache<Path, Boolean> pathExistenceCache;
 
   public FilesystemBackedBuildFileTree(ProjectFilesystem projectFilesystem, String buildFileName) {
     this.projectFilesystem = projectFilesystem;
     this.buildFileName = buildFileName;
+    this.pathExistenceCache = CacheBuilder.newBuilder().build(
+        new CacheLoader<Path, Boolean>() {
+          @Override
+          public Boolean load(Path key) throws Exception {
+            return FilesystemBackedBuildFileTree.this.projectFilesystem.isFile(key);
+          }
+        }
+    );
   }
 
   /**
@@ -70,7 +82,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
                 return FileVisitResult.CONTINUE;
               }
               Path buildFile = dir.resolve(buildFileName);
-              if (projectFilesystem.isFile(buildFile)) {
+              if (pathExistenceCache.getUnchecked(buildFile)) {
                 childPaths.add(basePath.relativize(dir));
                 return FileVisitResult.SKIP_SUBTREE;
               }
@@ -94,7 +106,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     while (filePath != null) {
       // If filePath names a directory with a build file, filePath is a base path.
       // If filePath or any of its parents are in ignoredPaths, we should keep looking.
-      if (projectFilesystem.isFile(filePath.resolve(buildFileName)) &&
+      if (pathExistenceCache.getUnchecked(filePath.resolve(buildFileName)) &&
           !projectFilesystem.isIgnored(filePath)) {
         return Optional.of(filePath);
       }
@@ -110,7 +122,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
 
     // No build file found in any directory, check the project root
     Path rootBuckFile = Paths.get(buildFileName);
-    if (projectFilesystem.isFile(rootBuckFile) &&
+    if (pathExistenceCache.getUnchecked(rootBuckFile) &&
         !projectFilesystem.isIgnored(rootBuckFile)) {
       return Optional.of(Paths.get(""));
     }
