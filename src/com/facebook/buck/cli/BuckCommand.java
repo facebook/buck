@@ -30,7 +30,9 @@ import javax.annotation.Nullable;
 
 public class BuckCommand extends AbstractContainerCommand {
 
-  @Argument(handler = AdditionalOptionsSubCommandHandler.class)
+  @Argument(
+      handler = AdditionalOptionsSubCommandHandler.class,
+      metaVar = "subcommand")
   @SubCommands({
       @SubCommand(name = "audit", impl = AuditCommand.class),
       @SubCommand(name = "build", impl = BuildCommand.class),
