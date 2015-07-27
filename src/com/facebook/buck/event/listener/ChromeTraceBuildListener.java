@@ -28,6 +28,7 @@ import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.io.PathListing;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AnnotationProcessingEvent;
+import com.facebook.buck.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
@@ -430,6 +431,26 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "artifact_connect",
         ChromeTraceEvent.Phase.END,
         ImmutableMap.<String, String>of(),
+        finished);
+  }
+
+  @Subscribe
+  public void javacPhaseStarted(JavacPhaseEvent.Started started) {
+    writeChromeTraceEvent(
+        "javac",
+        started.getPhase().toString(),
+        ChromeTraceEvent.Phase.BEGIN,
+        started.getArgs(),
+        started);
+  }
+
+  @Subscribe
+  public void javacPhaseFinished(JavacPhaseEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "javac",
+        finished.getPhase().toString(),
+        ChromeTraceEvent.Phase.END,
+        finished.getArgs(),
         finished);
   }
 

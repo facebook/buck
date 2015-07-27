@@ -35,6 +35,7 @@ import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AnnotationProcessingEvent;
+import com.facebook.buck.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -198,6 +199,12 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
 
+    JavacPhaseEvent.Started runProcessorsStartedEvent = JavacPhaseEvent.started(
+        target,
+        JavacPhaseEvent.Phase.RUN_ANNOTATION_PROCESSORS,
+        ImmutableMap.<String, String>of());
+    eventBus.post(runProcessorsStartedEvent);
+
     String annotationProcessorName = "com.facebook.FakeProcessor";
     AnnotationProcessingEvent.Operation operation = AnnotationProcessingEvent.Operation.PROCESS;
     int annotationRound = 1;
@@ -224,6 +231,9 @@ public class ChromeTraceBuildListenerTest {
             ImmutableMap.<String, String>of()));
 
     eventBus.post(AnnotationProcessingEvent.finished(annotationProcessingEventStarted));
+
+    eventBus.post(
+        JavacPhaseEvent.finished(runProcessorsStartedEvent, ImmutableMap.<String, String>of()));
 
     eventBus.post(StepEvent.finished(
             StepEvent.started(stepShortName, stepDescription, stepUuid),
@@ -318,6 +328,12 @@ public class ChromeTraceBuildListenerTest {
 
     assertNextResult(
         resultListCopy,
+        "run annotation processors",
+        ChromeTraceEvent.Phase.BEGIN,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
         "com.facebook.FakeProcessor.process",
         ChromeTraceEvent.Phase.BEGIN,
         emptyArgs);
@@ -337,6 +353,12 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy,
         "com.facebook.FakeProcessor.process",
+        ChromeTraceEvent.Phase.END,
+        emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "run annotation processors",
         ChromeTraceEvent.Phase.END,
         emptyArgs);
 
