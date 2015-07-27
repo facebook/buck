@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -109,18 +108,4 @@ public final class FileTypes {
         "file.storyboard"
     );
 
-  /**
-   * Multimap of Apple UTI (Uniform Type Identifier) to file extension(s).
-   */
-  public static final ImmutableMultimap<String, String> UTI_TO_FILE_EXTENSIONS;
-
-  static {
-    // Invert the map of (file extension -> UTI) pairs to
-    // (UTI -> [file extension 1, ...]) pairs.
-    ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap.builder();
-    for (ImmutableMap.Entry<String, String> entry : FILE_EXTENSION_TO_UTI.entrySet()) {
-      builder.put(entry.getValue(), entry.getKey());
-    }
-    UTI_TO_FILE_EXTENSIONS = builder.build();
-  }
 }

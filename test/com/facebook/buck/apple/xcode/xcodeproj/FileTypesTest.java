@@ -19,14 +19,13 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.google.common.collect.ImmutableList;
-
 import org.junit.Test;
 
 /**
  * Unit tests for {@link FileTypes}.
  */
 public class FileTypesTest {
+
   @Test
   public void testFileExtensionsContainNoDots() {
     for (String fileExtension : FileTypes.FILE_EXTENSION_TO_UTI.keySet()) {
@@ -39,15 +38,4 @@ public class FileTypesTest {
     assertEquals(FileTypes.FILE_EXTENSION_TO_UTI.get("cpp"), "sourcecode.cpp.cpp");
   }
 
-  @Test
-  public void testUTIMapsToSingleFileExtension() {
-    assertEquals(FileTypes.UTI_TO_FILE_EXTENSIONS.get("image.pdf"), ImmutableList.of("pdf"));
-  }
-
-  @Test
-  public void testUTIMapsToMultipleSingleFileExtensions() {
-    assertEquals(
-        FileTypes.UTI_TO_FILE_EXTENSIONS.get("sourcecode.cpp.cpp"),
-        ImmutableList.of("cc", "cpp", "cxx", "tcc"));
-  }
 }
