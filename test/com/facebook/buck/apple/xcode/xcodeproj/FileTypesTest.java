@@ -28,14 +28,14 @@ public class FileTypesTest {
 
   @Test
   public void testFileExtensionsContainNoDots() {
-    for (String fileExtension : FileTypes.FILE_EXTENSION_TO_UTI.keySet()) {
+    for (String fileExtension : FileTypes.FILE_EXTENSION_TO_IDENTIFIER.keySet()) {
       assertFalse(fileExtension.contains("."));
     }
   }
 
   @Test
-  public void testFileExtensionMapsToUTI() {
-    assertEquals(FileTypes.FILE_EXTENSION_TO_UTI.get("cpp"), "sourcecode.cpp.cpp");
+  public void testFileExtensionMapsToIdentifier() {
+    assertEquals(FileTypes.FILE_EXTENSION_TO_IDENTIFIER.get("cpp"), "sourcecode.cpp.cpp");
   }
 
 }

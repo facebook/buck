@@ -28,9 +28,9 @@ public final class FileTypes {
   private FileTypes() { }
 
   /**
-   * Map of file extension to Apple UTI (Uniform Type Identifier).
+   * Map of file extension to Xcode identifiers.
    */
-  public static final ImmutableMap<String, String> FILE_EXTENSION_TO_UTI =
+  public static final ImmutableMap<String, String> FILE_EXTENSION_TO_IDENTIFIER =
       ImmutableMap.<String, String>builder()
           .put("a", "archive.ar")
           .put("app", "wrapper.application")
@@ -97,12 +97,12 @@ public final class FileTypes {
           .build();
 
   /**
-   * Set of UTIs which only work as "lastKnownFileType" and not "explicitFileType"
+   * Set of identifiers which only work as "lastKnownFileType" and not "explicitFileType"
    * in a PBXFileReference.
    *
    * Yes, really. Because Xcode.
    */
-  public static final ImmutableSet<String> EXPLICIT_FILE_TYPE_BROKEN_UTIS =
+  public static final ImmutableSet<String> EXPLICIT_FILE_TYPE_BROKEN_IDENTIFIERS =
     ImmutableSet.of(
         "file.xib",
         "file.storyboard"
