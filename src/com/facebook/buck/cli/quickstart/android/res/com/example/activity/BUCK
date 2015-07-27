@@ -3,7 +3,7 @@ android_resource(
   res = 'res',
   package = 'com.example',
   visibility = [
-    '//apps/myapp:',
+    '//java/com/example/activity:',
   ],
 )
 

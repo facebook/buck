@@ -4,7 +4,6 @@ android_binary(
   keystore = ':debug_keystore',
   deps = [
     '//java/com/example/activity:activity',
-    '//res/com/example/activity:res',
   ],
 )
 
