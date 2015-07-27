@@ -100,6 +100,7 @@ public class MainIntegrationTest {
         "  install     builds and installs an application",
         "  project     generates project configuration files for an IDE",
         "  publish     builds and publishes a library to a central repository",
+        "  query       provides facilities to query information about the target nodes graph",
         "  quickstart  generates a default project directory",
         "  run         runs a target as a command",
         "  server      query and control the http server",

@@ -130,6 +130,7 @@ java_immutables_library(
     '//src/com/facebook/buck/timing:timing',
     '//third-party/java/aether:aether-api',
     '//third-party/java/args4j:args4j',
+    '//third-party/java/bazel:query-engine',
     '//third-party/java/ddmlib:ddmlib',
     '//third-party/java/guava:guava',
     '//third-party/java/infer-annotations:infer-annotations',
