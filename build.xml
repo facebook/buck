@@ -423,6 +423,8 @@
         </patternset>
         <or>
           <filename name="${javac-tracing.src.dir}/JavacPhaseEvent.java" />
+          <filename name="${javac-tracing.src.dir}/JavacPhaseEventLogger.java" />
+          <filename name="${javac-tracing.src.dir}/TranslatingJavacPhaseTracer.java" />
           <not>
             <filename name="${javac-tracing.src.dir}/**" />
           </not>
