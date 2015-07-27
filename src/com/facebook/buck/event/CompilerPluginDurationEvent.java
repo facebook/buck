@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Base class for events being reported by plugins to in-process compilers such as JSR199 javac.
  */
-public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent {
   private final BuildTarget buildTarget;
   private final String pluginName;
   private final String durationName;
@@ -58,11 +58,6 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent impl
   @Override
   protected String getValueString() {
     return "";
-  }
-
-  @Override
-  public String getCategory() {
-    return pluginName + "." + durationName;
   }
 
   public static Started started(

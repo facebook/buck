@@ -17,14 +17,13 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.CaseFormat;
 
 /**
  * Base class for events about Java annotation processing.
  */
-public abstract class AnnotationProcessingEvent extends AbstractBuckEvent implements LeafEvent {
+public abstract class AnnotationProcessingEvent extends AbstractBuckEvent {
 
   public enum Operation {
     GET_COMPLETIONS,
@@ -79,7 +78,6 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent implem
     return buildTarget.toString();
   }
 
-  @Override
   public String getCategory() {
     return annotationProcessorName +
         "." +
