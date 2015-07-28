@@ -137,7 +137,7 @@ public class SymlinkTree
       return new HumanReadableException(
           this,
           "Target '%s' has invalid symlink tree entry. %s",
-          buildTarget,
+          buildTarget.getUnflavoredBuildTarget(),
           getMessage());
     }
   }
