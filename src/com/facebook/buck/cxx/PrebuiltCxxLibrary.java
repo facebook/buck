@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -98,7 +99,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
    *
    * @return the {@link SourcePath} representing the actual shared library.
    */
-  private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform) {
+  private SourcePath requireSharedLibrary(TargetGraph targetGraph, CxxPlatform cxxPlatform) {
     Path sharedLibraryPath =
         PrebuiltCxxLibraryDescription.getSharedLibraryPath(
             getBuildTarget(),
@@ -114,6 +115,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     // Otherwise, generate it's build rule.
     BuildRule sharedLibrary =
         CxxDescriptionEnhancer.requireBuildRule(
+            targetGraph,
             params,
             ruleResolver,
             cxxPlatform.getFlavor(),
@@ -148,6 +150,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
     switch (headerVisibility) {
@@ -155,6 +158,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
         return CxxPreprocessorInput.builder()
             .from(
                 CxxPreprocessables.getCxxPreprocessorInput(
+                    targetGraph,
                     params,
                     ruleResolver,
                     cxxPlatform.getFlavor(),
@@ -176,19 +180,22 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
 
   @Override
-  public ImmutableMap<BuildTarget, CxxPreprocessorInput>
-      getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform,
-          HeaderVisibility headerVisibility) {
+  public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) {
     Pair<Flavor, HeaderVisibility> key = new Pair<>(cxxPlatform.getFlavor(), headerVisibility);
     ImmutableMap<BuildTarget, CxxPreprocessorInput> result = cxxPreprocessorInputCache.get(key);
     if (result == null) {
       Map<BuildTarget, CxxPreprocessorInput> builder = Maps.newLinkedHashMap();
-      builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+      builder.put(
+          getBuildTarget(),
+          getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
       for (BuildRule dep : getDeps()) {
         if (dep instanceof CxxPreprocessorDep) {
           builder.putAll(
               ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
+                  targetGraph,
                   cxxPlatform,
                   headerVisibility));
         }
@@ -201,9 +208,9 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
-
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
     ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
@@ -211,7 +218,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
     if (!headerOnly) {
       if (provided || type == Linker.LinkableDepType.SHARED) {
-        SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
+        SourcePath sharedLibrary = requireSharedLibrary(targetGraph, cxxPlatform);
         librariesBuilder.add(sharedLibrary);
         linkerArgsBuilder.add(pathResolver.getPath(sharedLibrary).toString());
       } else {
@@ -244,14 +251,16 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+  public PythonPackageComponents getPythonPackageComponents(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     String resolvedSoname =
         PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
 
     // Build up the shared library list to contribute to a python executable package.
     ImmutableMap.Builder<Path, SourcePath> nativeLibrariesBuilder = ImmutableMap.builder();
     if (!headerOnly && !provided) {
-      SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
+      SourcePath sharedLibrary = requireSharedLibrary(targetGraph, cxxPlatform);
       nativeLibrariesBuilder.put(
           Paths.get(resolvedSoname),
           sharedLibrary);
@@ -277,12 +286,14 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     String resolvedSoname =
         PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
     ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
     if (!headerOnly && !provided) {
-      SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
+      SourcePath sharedLibrary = requireSharedLibrary(targetGraph, cxxPlatform);
       solibs.put(resolvedSoname, sharedLibrary);
     }
     return solibs.build();

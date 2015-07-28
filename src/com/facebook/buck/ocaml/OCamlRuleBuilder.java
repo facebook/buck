@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -115,6 +116,7 @@ public class OCamlRuleBuilder {
 
   public static AbstractBuildRule createBuildRule(
       OCamlBuckConfig ocamlBuckConfig,
+      TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
@@ -131,6 +133,7 @@ public class OCamlRuleBuilder {
     if (noYaccOrLexSources) {
       return createFineGrainedBuildRule(
           ocamlBuckConfig,
+          targetGraph,
           params,
           resolver,
           srcs,
@@ -140,6 +143,7 @@ public class OCamlRuleBuilder {
     } else {
       return createBulkBuildRule(
           ocamlBuckConfig,
+          targetGraph,
           params,
           resolver,
           srcs,
@@ -151,6 +155,7 @@ public class OCamlRuleBuilder {
 
   public static AbstractBuildRule createBulkBuildRule(
       OCamlBuckConfig ocamlBuckConfig,
+      TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
@@ -161,6 +166,7 @@ public class OCamlRuleBuilder {
     try {
       cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+              targetGraph,
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -179,6 +185,7 @@ public class OCamlRuleBuilder {
         .toList();
 
     NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
+        targetGraph,
         ocamlBuckConfig.getCxxPlatform(),
         params.getDeps(),
         Linker.LinkableDepType.STATIC,
@@ -280,6 +287,7 @@ public class OCamlRuleBuilder {
 
   public static AbstractBuildRule createFineGrainedBuildRule(
       OCamlBuckConfig ocamlBuckConfig,
+      TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableList<OCamlSource> srcs,
@@ -290,6 +298,7 @@ public class OCamlRuleBuilder {
     try {
       cxxPreprocessorInputFromDeps = CxxPreprocessorInput.concat(
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+              targetGraph,
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
                   .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -308,6 +317,7 @@ public class OCamlRuleBuilder {
         .toList();
 
     NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
+        targetGraph,
         ocamlBuckConfig.getCxxPlatform(),
         params.getDeps(),
         Linker.LinkableDepType.STATIC,

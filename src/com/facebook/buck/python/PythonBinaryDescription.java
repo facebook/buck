@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -79,6 +80,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
 
   @Override
   public <A extends Arg> PythonBinary createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -128,6 +130,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
         /* zipSafe */ args.zipSafe);
     PythonPackageComponents allPackageComponents = PythonUtil.getAllComponents(
+        targetGraph,
         params,
         binaryPackageComponents,
         cxxPlatform);

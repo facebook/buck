@@ -32,6 +32,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -64,6 +65,7 @@ public class CxxPreprocessablesTest {
 
     @Override
     public CxxPreprocessorInput getCxxPreprocessorInput(
+        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
         HeaderVisibility headerVisibility) {
       return input;
@@ -71,14 +73,18 @@ public class CxxPreprocessablesTest {
 
     @Override
     public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
         HeaderVisibility headerVisibility) {
       ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder = ImmutableMap.builder();
-      builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+      builder.put(
+          getBuildTarget(),
+          getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
       for (BuildRule dep : getDeps()) {
         if (dep instanceof CxxPreprocessorDep) {
           builder.putAll(
               ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
+                  targetGraph,
                   cxxPlatform,
                   headerVisibility));
           }
@@ -183,6 +189,7 @@ public class CxxPreprocessablesTest {
     ImmutableList<CxxPreprocessorInput> expected = ImmutableList.of(nothing, input1, input2);
     ImmutableList<CxxPreprocessorInput> actual = ImmutableList.copyOf(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            TargetGraph.EMPTY,
             cxxPlatform,
             ImmutableList.<BuildRule>of(dep3)));
     assertEquals(expected, actual);
@@ -257,6 +264,7 @@ public class CxxPreprocessablesTest {
     // in the bottom input.
     CxxPreprocessorInput totalInput = CxxPreprocessorInput.concat(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            TargetGraph.EMPTY,
             cxxPlatform,
             ImmutableList.of(top)));
     assertTrue(bottomInput.getPreprocessorFlags().get(CxxSource.Type.C).contains(sentinal));
@@ -304,6 +312,7 @@ public class CxxPreprocessablesTest {
 
     CxxPreprocessorInput.concat(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            TargetGraph.EMPTY,
             cxxPlatform,
             ImmutableList.of(top)));
   }
@@ -359,6 +368,7 @@ public class CxxPreprocessablesTest {
         expected,
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                TargetGraph.EMPTY,
                 cxxPlatform,
                 ImmutableList.of(top))));
   }

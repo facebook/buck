@@ -36,6 +36,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -240,6 +241,7 @@ public class ThriftLibraryDescription
 
   @Override
   public <A extends ThriftConstructorArg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -365,6 +367,7 @@ public class ThriftLibraryDescription
 
     // Generate language specific rules.
     return enhancer.createBuildRule(
+        targetGraph,
         params,
         resolver,
         args,

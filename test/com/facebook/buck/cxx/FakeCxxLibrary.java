@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -84,6 +85,7 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
       switch (headerVisibility) {
@@ -103,13 +105,18 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) {
     ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder = ImmutableMap.builder();
-    builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+    builder.put(
+        getBuildTarget(),
+        getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
     for (BuildRule dep : getDeps()) {
       if (dep instanceof CxxPreprocessorDep) {
         builder.putAll(
             ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
+                targetGraph,
                 cxxPlatform,
                 headerVisibility));
       }
@@ -119,6 +126,7 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
     return type == Linker.LinkableDepType.STATIC ?
@@ -139,7 +147,9 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+  public PythonPackageComponents getPythonPackageComponents(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     return PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableMap.<Path, SourcePath>of(),
@@ -159,7 +169,9 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
   public void addToCollector(AndroidPackageableCollector collector) {}
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
 

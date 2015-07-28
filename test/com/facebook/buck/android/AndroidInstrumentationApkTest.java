@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -126,7 +127,7 @@ public class AndroidInstrumentationApkTest {
             DEFAULT_JAVAC_OPTIONS,
             ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
             MoreExecutors.newDirectExecutorService())
-                .createBuildRule(params, ruleResolver, arg);
+            .createBuildRule(TargetGraph.EMPTY, params, ruleResolver, arg);
 
     assertEquals(
         "//apps:app should have three JAR files to dex.",

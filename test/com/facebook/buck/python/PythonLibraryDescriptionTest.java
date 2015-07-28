@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
@@ -53,7 +54,8 @@ public class PythonLibraryDescriptionTest {
     // Run without a base module set and verify it defaults to using the build target
     // base name.
     arg.baseModule = Optional.absent();
-    PythonLibrary normalRule = desc.createBuildRule(params, resolver, arg);
+    PythonLibrary normalRule = desc
+        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     assertEquals(
         ImmutableMap.of(
             target.getBasePath().resolve(sourceName),
@@ -62,7 +64,8 @@ public class PythonLibraryDescriptionTest {
 
     // Run *with* a base module set and verify it gets used to build the main module path.
     arg.baseModule = Optional.of("blah");
-    PythonLibrary baseModuleRule = desc.createBuildRule(params, resolver, arg);
+    PythonLibrary baseModuleRule = desc
+        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     assertEquals(
         ImmutableMap.of(
             Paths.get(arg.baseModule.get()).resolve(sourceName),

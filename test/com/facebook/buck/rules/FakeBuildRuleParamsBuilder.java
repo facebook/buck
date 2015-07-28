@@ -35,7 +35,6 @@ public class FakeBuildRuleParamsBuilder {
   private ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.of();
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Optional<FileHashCache> fileHashCache = Optional.absent();
-  private TargetGraph targetGraph = TargetGraph.EMPTY;
 
   public FakeBuildRuleParamsBuilder(BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
@@ -65,11 +64,6 @@ public class FakeBuildRuleParamsBuilder {
     return this;
   }
 
-  public FakeBuildRuleParamsBuilder setTargetGraph(TargetGraph targetGraph) {
-    this.targetGraph = targetGraph;
-    return this;
-  }
-
   public BuildRuleParams build() {
     FileHashCache hashCache;
     if (fileHashCache.isPresent()) {
@@ -84,7 +78,6 @@ public class FakeBuildRuleParamsBuilder {
         filesystem,
         new DefaultRuleKeyBuilderFactory(
             hashCache,
-            new SourcePathResolver(new BuildRuleResolver())),
-        targetGraph);
+            new SourcePathResolver(new BuildRuleResolver())));
   }
 }

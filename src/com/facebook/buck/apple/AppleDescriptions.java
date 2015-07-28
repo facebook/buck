@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -354,17 +355,15 @@ public class AppleDescriptions {
   }
 
   public static CollectedAssetCatalogs createBuildRulesForTransitiveAssetCatalogDependencies(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
       ApplePlatform applePlatform,
       Tool actool) {
-    TargetNode<?> targetNode = Preconditions.checkNotNull(
-        params.getTargetGraph().get(params.getBuildTarget()));
+    TargetNode<?> targetNode = Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget()));
 
     ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogArgs =
-        AppleBuildRules.collectRecursiveAssetCatalogs(
-            params.getTargetGraph(),
-            ImmutableList.of(targetNode));
+        AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode));
 
     ImmutableSortedSet.Builder<Path> mergeableAssetCatalogDirsBuilder =
         ImmutableSortedSet.naturalOrder();
@@ -388,7 +387,8 @@ public class AppleDescriptions {
     if (!mergeableAssetCatalogDirs.isEmpty()) {
       BuildRuleParams assetCatalogParams = params.copyWithChanges(
           BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(AppleAssetCatalog.getFlavor(
+              .addFlavors(
+                  AppleAssetCatalog.getFlavor(
                       ActoolStep.BundlingMode.MERGE_BUNDLES,
                       MERGED_ASSET_CATALOG_NAME))
               .build(),

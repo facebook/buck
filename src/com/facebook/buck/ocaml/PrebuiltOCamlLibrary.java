@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -82,6 +83,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
 
@@ -128,7 +130,9 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
 

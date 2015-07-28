@@ -42,6 +42,7 @@ import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -83,6 +84,7 @@ public class AuditOwnerCommandTest {
 
     @Override
     public <A extends FakeArg> BuildRule createBuildRule(
+        TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {

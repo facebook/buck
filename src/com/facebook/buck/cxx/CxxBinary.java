@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -92,9 +93,11 @@ public class CxxBinary
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
     return CxxPreprocessables.getCxxPreprocessorInput(
+        targetGraph,
         params,
         ruleResolver,
         cxxPlatform.getFlavor(),

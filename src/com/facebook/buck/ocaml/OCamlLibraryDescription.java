@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -45,6 +46,7 @@ public class OCamlLibraryDescription implements Description<OCamlLibraryDescript
 
   @Override
   public <A extends Arg> AbstractBuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -58,7 +60,14 @@ public class OCamlLibraryDescription implements Description<OCamlLibraryDescript
     }
     ImmutableList<String> linkerflags = args.linkerFlags.get();
     return OCamlRuleBuilder.createBuildRule(
-        ocamlBuckConfig, params, resolver, srcs, /*isLibrary*/ true, flags.build(), linkerflags);
+        ocamlBuckConfig,
+        targetGraph,
+        params,
+        resolver,
+        srcs,
+        /*isLibrary*/ true,
+        flags.build(),
+        linkerflags);
   }
 
   @Override

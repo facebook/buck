@@ -36,6 +36,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -157,21 +158,21 @@ public class NdkCxxPlatformTest {
     ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys =
         ImmutableMap.builder();
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
-      BuildRule rule =
-          CxxLinkableEnhancer.createCxxLinkableBuildRule(
-              entry.getValue().getCxxPlatform(),
-              BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
-              pathResolver,
-              ImmutableList.<String>of(),
-              target,
-              Linker.LinkType.EXECUTABLE,
-              Optional.<String>absent(),
-              Paths.get("output"),
-              ImmutableList.<SourcePath>of(new TestSourcePath("input.o")),
-              Linker.LinkableDepType.SHARED,
-              ImmutableList.<BuildRule>of(),
-              Optional.<Linker.CxxRuntimeType>absent(),
-              Optional.<SourcePath>absent());
+      BuildRule rule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+          TargetGraph.EMPTY,
+          entry.getValue().getCxxPlatform(),
+          BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+          pathResolver,
+          ImmutableList.<String>of(),
+          target,
+          Linker.LinkType.EXECUTABLE,
+          Optional.<String>absent(),
+          Paths.get("output"),
+          ImmutableList.<SourcePath>of(new TestSourcePath("input.o")),
+          Linker.LinkableDepType.SHARED,
+          ImmutableList.<BuildRule>of(),
+          Optional.<Linker.CxxRuntimeType>absent(),
+          Optional.<SourcePath>absent());
       RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(rule);
       ruleKeys.put(entry.getKey(), builder.build());
     }

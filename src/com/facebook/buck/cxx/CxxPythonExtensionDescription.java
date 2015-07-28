@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -92,6 +93,7 @@ public class CxxPythonExtensionDescription implements
   }
 
   private <A extends Arg> BuildRule createExtensionBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
@@ -135,6 +137,7 @@ public class CxxPythonExtensionDescription implements
         HeaderVisibility.PRIVATE);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+            targetGraph,
             params,
             cxxPlatform,
             CxxFlags.getLanguageFlags(
@@ -146,6 +149,7 @@ public class CxxPythonExtensionDescription implements
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                targetGraph,
                 cxxPlatform,
                 params.getDeps()));
 
@@ -175,6 +179,7 @@ public class CxxPythonExtensionDescription implements
     String extensionName = getExtensionName(params.getBuildTarget());
     Path extensionPath = getExtensionPath(params.getBuildTarget(), cxxPlatform.getFlavor());
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        targetGraph,
         cxxPlatform,
         params,
         pathResolver,
@@ -195,6 +200,7 @@ public class CxxPythonExtensionDescription implements
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       A args) {
@@ -218,7 +224,12 @@ public class CxxPythonExtensionDescription implements
     if (type.isPresent()) {
       Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
       Preconditions.checkState(platform.isPresent());
-      return createExtensionBuildRule(params, ruleResolver, platform.get().getValue(), args);
+      return createExtensionBuildRule(
+          targetGraph,
+          params,
+          ruleResolver,
+          platform.get().getValue(),
+          args);
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use

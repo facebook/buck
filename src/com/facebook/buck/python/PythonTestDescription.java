@@ -36,6 +36,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -154,6 +155,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   @Override
   public <A extends Arg> PythonTest createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -220,7 +222,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         ImmutableSet.<SourcePath>of(),
         args.zipSafe);
     PythonPackageComponents allComponents =
-        PythonUtil.getAllComponents(params, testComponents, cxxPlatform);
+        PythonUtil.getAllComponents(targetGraph, params, testComponents, cxxPlatform);
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(

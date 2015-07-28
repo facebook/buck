@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -87,6 +88,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams originalBuildRuleParams,
       BuildRuleResolver resolver,
       A args) {
@@ -109,6 +111,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         Suppliers.ofInstance(originalBuildRuleParams.getExtraDeps()));
 
     AndroidManifest manifest = androidManifestDescription.createBuildRule(
+        targetGraph,
         androidManifestParams,
         resolver,
         androidManifestArgs);
@@ -188,7 +191,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of()
         );
     Optional<CopyNativeLibraries> nativeLibrariesOptional =
-        packageableGraphEnhancer.getCopyNativeLibraries(packageableCollection);
+        packageableGraphEnhancer.getCopyNativeLibraries(targetGraph, packageableCollection);
     if (nativeLibrariesOptional.isPresent()) {
       aarExtraDepsBuilder.add(resolver.addToIndex(nativeLibrariesOptional.get()));
     }

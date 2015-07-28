@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -59,8 +60,8 @@ public class AndroidManifestDescriptionTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:baz")
         .setDeps(buildRuleResolver.getAllRules(arg.deps.get()))
         .build();
-    AndroidManifest androidManifest = new AndroidManifestDescription()
-        .createBuildRule(params, buildRuleResolver, arg);
+    BuildRule androidManifest = new AndroidManifestDescription()
+        .createBuildRule(TargetGraph.EMPTY, params, buildRuleResolver, arg);
 
     assertEquals(
         ImmutableSortedSet.of(ruleWithOutput),

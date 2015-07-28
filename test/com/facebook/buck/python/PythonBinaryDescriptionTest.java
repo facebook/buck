@@ -38,6 +38,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -102,7 +103,7 @@ public class PythonBinaryDescriptionTest {
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
     arg.buildArgs = Optional.absent();
-    BuildRule rule = desc.createBuildRule(params, resolver, arg);
+    BuildRule rule = desc.createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
 
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule),
@@ -135,7 +136,7 @@ public class PythonBinaryDescriptionTest {
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
     arg.buildArgs = Optional.absent();
-    BuildRule rule = desc.createBuildRule(params, resolver, arg);
+    BuildRule rule = desc.createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule),
         rule.getDeps());
@@ -165,14 +166,16 @@ public class PythonBinaryDescriptionTest {
     // Run without a base module set and verify it defaults to using the build target
     // base name.
     arg.baseModule = Optional.absent();
-    PythonBinary normalRule = desc.createBuildRule(params, resolver, arg);
+    PythonBinary normalRule = desc
+        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     assertEquals(
         PythonUtil.toModuleName(target, target.getBasePath().resolve(mainName).toString()),
         normalRule.getMainModule());
 
     // Run *with* a base module set and verify it gets used to build the main module path.
     arg.baseModule = Optional.of("blah");
-    PythonBinary baseModuleRule = desc.createBuildRule(params, resolver, arg);
+    PythonBinary baseModuleRule = desc
+        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     assertEquals(
         PythonUtil.toModuleName(
             target,
@@ -200,7 +203,8 @@ public class PythonBinaryDescriptionTest {
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
     arg.buildArgs = Optional.absent();
-    PythonBinary rule = desc.createBuildRule(params, resolver, arg);
+    PythonBinary rule = desc
+        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     assertEquals(mainModule, rule.getMainModule());
   }
 
@@ -224,7 +228,8 @@ public class PythonBinaryDescriptionTest {
     arg.baseModule = Optional.absent();
     arg.zipSafe = Optional.absent();
     arg.buildArgs = Optional.absent();
-    PythonBinary rule = desc.createBuildRule(params, resolver, arg);
+    PythonBinary rule = desc
+        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     assertThat(
         Preconditions.checkNotNull(rule.getPathToOutput()).toString(),
         Matchers.endsWith(".different_extension"));

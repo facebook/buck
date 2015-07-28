@@ -30,6 +30,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
@@ -108,6 +109,7 @@ public class CxxLibraryDescription implements
   }
 
   private static ImmutableCollection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -128,7 +130,9 @@ public class CxxLibraryDescription implements
     Optional<BuildRule> rawRule = ruleResolver.getRuleOptional(rawTarget);
     if (rawRule.isPresent()) {
       CxxLibrary rule = (CxxLibrary) rawRule.get();
-      return rule.getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC).values();
+      return rule
+          .getTransitiveCxxPreprocessorInput(targetGraph, cxxPlatform, HeaderVisibility.PUBLIC)
+          .values();
     }
 
     // Otherwise, construct it ourselves.
@@ -161,6 +165,7 @@ public class CxxLibraryDescription implements
       if (rule instanceof CxxPreprocessorDep) {
         input.putAll(
             ((CxxPreprocessorDep) rule).getTransitiveCxxPreprocessorInput(
+                targetGraph,
                 cxxPlatform,
                 HeaderVisibility.PUBLIC));
       }
@@ -169,6 +174,7 @@ public class CxxLibraryDescription implements
   }
 
   private static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requireObjects(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -209,6 +215,7 @@ public class CxxLibraryDescription implements
 
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromDependencies =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+            targetGraph,
             params,
             cxxPlatform,
             preprocessorFlags,
@@ -216,6 +223,7 @@ public class CxxLibraryDescription implements
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.<Path>of(),
             getTransitiveCxxPreprocessorInput(
+                targetGraph,
                 params,
                 ruleResolver,
                 pathResolver,
@@ -249,6 +257,7 @@ public class CxxLibraryDescription implements
    * @return the {@link Archive} rule representing the actual static library.
    */
   private static BuildRule createStaticLibrary(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -268,6 +277,7 @@ public class CxxLibraryDescription implements
 
     // Create rules for compiling the non-PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
+        targetGraph,
         params,
         ruleResolver,
         pathResolver,
@@ -311,6 +321,7 @@ public class CxxLibraryDescription implements
    * @return the {@link CxxLink} rule representing the actual shared library.
    */
   private static BuildRule createSharedLibrary(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -335,6 +346,7 @@ public class CxxLibraryDescription implements
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
+        targetGraph,
         params,
         ruleResolver,
         pathResolver,
@@ -374,6 +386,7 @@ public class CxxLibraryDescription implements
     ImmutableList<String> extraLdFlags = extraLdFlagsBuilder.build();
 
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        targetGraph,
         cxxPlatform,
         params,
         pathResolver,
@@ -395,6 +408,7 @@ public class CxxLibraryDescription implements
    * @return the {@link CxxCompilationDatabase} rule representing the actual compilation database.
    */
   private static CxxCompilationDatabase createCompilationDatabase(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -416,6 +430,7 @@ public class CxxLibraryDescription implements
     // CxxSourceRuleFactory.requirePreprocessAndCompileRules(), which has the side-effect of
     // creating CxxPreprocessAndCompile rules and adding them to the ruleResolver.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
+        targetGraph,
         paramsWithoutCompilationDatabaseFlavor,
         ruleResolver,
         pathResolver,
@@ -532,6 +547,7 @@ public class CxxLibraryDescription implements
    * @return a {@link Archive} rule which builds a static library version of this C/C++ library.
    */
   public static <A extends Arg> BuildRule createStaticLibraryBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -539,6 +555,7 @@ public class CxxLibraryDescription implements
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) {
     return createStaticLibrary(
+        targetGraph,
         params,
         resolver,
         new SourcePathResolver(resolver),
@@ -572,6 +589,7 @@ public class CxxLibraryDescription implements
    * @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library.
    */
   public static <A extends Arg> BuildRule createSharedLibraryBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -595,6 +613,7 @@ public class CxxLibraryDescription implements
             cxxPlatform));
 
     return createSharedLibrary(
+        targetGraph,
         params,
         resolver,
         new SourcePathResolver(resolver),
@@ -634,12 +653,14 @@ public class CxxLibraryDescription implements
    * C/C++ library.
    */
   public static <A extends Arg> CxxCompilationDatabase createCompilationDatabaseBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args,
       CxxPreprocessMode preprocessMode) {
     return createCompilationDatabase(
+        targetGraph,
         params,
         resolver,
         new SourcePathResolver(resolver),
@@ -688,6 +709,7 @@ public class CxxLibraryDescription implements
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -695,6 +717,7 @@ public class CxxLibraryDescription implements
         params.getBuildTarget(),
         cxxPlatforms);
     return createBuildRule(
+        targetGraph,
         params,
         resolver,
         args,
@@ -704,6 +727,7 @@ public class CxxLibraryDescription implements
   }
 
   public <A extends Arg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args,
@@ -716,13 +740,14 @@ public class CxxLibraryDescription implements
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
       return createCompilationDatabaseBuildRule(
-          params,
-          resolver,
-          platform.isPresent()
-              ? platform.get().getValue()
-              : DefaultCxxPlatforms.build(cxxBuckConfig),
-          args,
-          preprocessMode);
+              targetGraph,
+              params,
+              resolver,
+              platform.isPresent()
+                  ? platform.get().getValue()
+                  : DefaultCxxPlatforms.build(cxxBuckConfig),
+              args,
+              preprocessMode);
     }
 
 
@@ -756,6 +781,7 @@ public class CxxLibraryDescription implements
               args);
       } else if (type.get().getValue().equals(Type.SHARED)) {
         return createSharedLibraryBuildRule(
+            targetGraph,
             typeParams,
             resolver,
             platform.get().getValue(),
@@ -766,6 +792,7 @@ public class CxxLibraryDescription implements
             Optional.<SourcePath>absent());
       } else if (type.get().getValue().equals(Type.MACH_O_BUNDLE)) {
         return createSharedLibraryBuildRule(
+            targetGraph,
             typeParams,
             resolver,
             platform.get().getValue(),
@@ -776,6 +803,7 @@ public class CxxLibraryDescription implements
             bundleLoader);
       } else if (type.get().getValue().equals(Type.STATIC)) {
         return createStaticLibraryBuildRule(
+            targetGraph,
             typeParams,
             resolver,
             platform.get().getValue(),
@@ -784,6 +812,7 @@ public class CxxLibraryDescription implements
             CxxSourceRuleFactory.PicType.PDC);
       } else {
         return createStaticLibraryBuildRule(
+            targetGraph,
             typeParams,
             resolver,
             platform.get().getValue(),

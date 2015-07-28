@@ -214,6 +214,7 @@ public class TargetNodeVisibilityTest {
 
     @Override
     public <A extends FakeArg> BuildRule createBuildRule(
+        TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {

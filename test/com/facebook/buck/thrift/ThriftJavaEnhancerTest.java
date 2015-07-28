@@ -36,6 +36,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeExportDependenciesRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -144,8 +145,7 @@ public class ThriftJavaEnhancerTest {
   public void createBuildRule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRuleParams flavoredParams =
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
+    BuildRuleParams flavoredParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
@@ -166,12 +166,8 @@ public class ThriftJavaEnhancerTest {
         createFakeBuildRule("//:dep", pathResolver));
 
     // Run the enhancer to create the language specific build rule.
-    DefaultJavaLibrary library = ENHANCER.createBuildRule(
-        flavoredParams,
-        resolver,
-        arg,
-        sources,
-        deps);
+    DefaultJavaLibrary library = ENHANCER
+        .createBuildRule(TargetGraph.EMPTY, flavoredParams, resolver, arg, sources, deps);
 
     // Verify that the first thrift source created a source zip rule with correct deps.
     BuildRule srcZip1 = resolver.getRule(
@@ -226,12 +222,14 @@ public class ThriftJavaEnhancerTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     // Run the enhancer to create the language specific build rule.
-    DefaultJavaLibrary library = ENHANCER.createBuildRule(
-        flavoredParams,
-        resolver,
-        arg,
-        sources,
-        ImmutableSortedSet.<BuildRule>of(exportingRule));
+    DefaultJavaLibrary library = ENHANCER
+        .createBuildRule(
+            TargetGraph.EMPTY,
+            flavoredParams,
+            resolver,
+            arg,
+            sources,
+            ImmutableSortedSet.<BuildRule>of(exportingRule));
 
     assertThat(library.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
   }

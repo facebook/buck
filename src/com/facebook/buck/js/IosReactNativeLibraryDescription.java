@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSet;
 
 public class IosReactNativeLibraryDescription
@@ -50,6 +51,7 @@ public class IosReactNativeLibraryDescription
 
   @Override
   public <A extends ReactNativeLibraryArgs> ReactNativeBundle createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {

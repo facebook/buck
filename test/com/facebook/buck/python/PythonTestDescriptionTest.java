@@ -38,6 +38,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.step.Step;
@@ -93,7 +94,8 @@ public class PythonTestDescriptionTest {
     arg.sourceUnderTest = Optional.absent();
     arg.zipSafe = Optional.absent();
     arg.buildArgs = Optional.absent();
-    PythonTest testRule = desc.createBuildRule(params, resolver, arg);
+    PythonTest testRule = desc
+        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
 
     PythonBinary binRule = (PythonBinary) resolver.getRule(
         desc.getBinaryBuildTarget(testRule.getBuildTarget()));
@@ -139,7 +141,7 @@ public class PythonTestDescriptionTest {
     // base name.
     arg.baseModule = Optional.absent();
     resolver = new BuildRuleResolver();
-    desc.createBuildRule(params, resolver, arg);
+    desc.createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     PythonBinary normalRule = (PythonBinary) resolver.getRule(
         desc.getBinaryBuildTarget(target));
     assertNotNull(normalRule);
@@ -149,7 +151,7 @@ public class PythonTestDescriptionTest {
     // Run *with* a base module set and verify it gets used to build the main module path.
     arg.baseModule = Optional.of("blah");
     resolver = new BuildRuleResolver();
-    desc.createBuildRule(params, resolver, arg);
+    desc.createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
     PythonBinary baseModuleRule = (PythonBinary) resolver.getRule(
         desc.getBinaryBuildTarget(target));
     assertNotNull(baseModuleRule);

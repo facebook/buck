@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -64,6 +65,7 @@ public class AndroidBinaryGraphEnhancer {
   public static final Flavor PACKAGE_STRING_ASSETS_FLAVOR =
       ImmutableFlavor.of("package_string_assets");
 
+  private final TargetGraph targetGraph;
   private final BuildTarget originalBuildTarget;
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final BuildRuleParams buildRuleParams;
@@ -92,6 +94,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ListeningExecutorService dxExecutorService;
 
   AndroidBinaryGraphEnhancer(
+      TargetGraph targetGraph,
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
       ResourceCompressionMode resourceCompressionMode,
@@ -115,6 +118,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Integer> xzCompressionLevel,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService) {
+    this.targetGraph = targetGraph;
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
@@ -305,6 +309,7 @@ public class AndroidBinaryGraphEnhancer {
         pathResolver.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
 
     Optional<CopyNativeLibraries> copyNativeLibraries = nativeLibsEnhancer.getCopyNativeLibraries(
+        targetGraph,
         packageableCollection);
     if (copyNativeLibraries.isPresent()) {
       ruleResolver.addToIndex(copyNativeLibraries.get());
@@ -390,8 +395,7 @@ public class AndroidBinaryGraphEnhancer {
           /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           buildRuleParams.getProjectFilesystem(),
-          buildRuleParams.getRuleKeyBuilderFactory(),
-          buildRuleParams.getTargetGraph());
+          buildRuleParams.getRuleKeyBuilderFactory());
       JavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription.createBuildRule(
           buildConfigParams,
           javaPackage,

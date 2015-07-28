@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -69,6 +70,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
   @Override
   public <A extends Arg> RobolectricTest createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -110,7 +112,12 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
-            params, args.useCxxLibraries, vmArgs, pathResolver, cxxPlatform);
+            targetGraph,
+            params,
+            args.useCxxLibraries,
+            vmArgs,
+            pathResolver,
+            cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
     vmArgs = cxxLibraryEnhancement.updatedVmArgs;
 

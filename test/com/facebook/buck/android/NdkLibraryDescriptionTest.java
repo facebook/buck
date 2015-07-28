@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -52,6 +53,7 @@ public class NdkLibraryDescriptionTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
+        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type) {
       return NativeLinkableInput.builder()
@@ -65,7 +67,9 @@ public class NdkLibraryDescriptionTest {
     }
 
     @Override
-    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+    public ImmutableMap<String, SourcePath> getSharedLibraries(
+        TargetGraph targetGraph,
+        CxxPlatform cxxPlatform) {
       return ImmutableMap.of();
     }
 

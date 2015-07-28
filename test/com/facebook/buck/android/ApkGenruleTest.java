@@ -49,6 +49,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -150,7 +151,8 @@ public class ApkGenruleTest {
                 return relativeToAbsolutePathFunction;
               }
             }).build();
-    ApkGenrule apkGenrule = description.createBuildRule(params, ruleResolver, arg);
+    ApkGenrule apkGenrule =
+        description.createBuildRule(TargetGraph.EMPTY, params, ruleResolver, arg);
     ruleResolver.addToIndex(apkGenrule);
 
     // Verify all of the observers of the Genrule.

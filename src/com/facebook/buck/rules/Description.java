@@ -47,11 +47,13 @@ public interface Description<T> {
    * {@link com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the
    * {@link Flavor} to create.
    *
+   *
    * @param resolver For querying for build rules by their targets.
    * @param args A constructor argument, as returned by {@link #createUnpopulatedConstructorArg()}.
    * @return The {@link BuildRule} that describes the default flavour of the rule being described.
    */
   <A extends T> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args);

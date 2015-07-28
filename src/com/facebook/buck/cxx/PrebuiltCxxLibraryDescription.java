@@ -32,6 +32,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.MacroException;
@@ -245,6 +246,7 @@ public class PrebuiltCxxLibraryDescription
    * @return a {@link CxxLink} rule for a shared library version of this prebuilt C/C++ library.
    */
   private <A extends Arg> BuildRule createSharedLibraryBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
@@ -271,6 +273,7 @@ public class PrebuiltCxxLibraryDescription
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath = BuildTargets.getGenPath(sharedTarget, "%s").resolve(soname);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        targetGraph,
         cxxPlatform,
         params,
         pathResolver,
@@ -289,6 +292,7 @@ public class PrebuiltCxxLibraryDescription
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args) {
@@ -324,6 +328,7 @@ public class PrebuiltCxxLibraryDescription
             args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
+            targetGraph,
             params,
             resolver,
             platform.get().getValue(),

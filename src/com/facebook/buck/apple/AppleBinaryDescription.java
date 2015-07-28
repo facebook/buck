@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -72,6 +73,7 @@ public class AppleBinaryDescription
 
   @Override
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -84,6 +86,6 @@ public class AppleBinaryDescription
         args,
         params.getBuildTarget());
 
-    return delegate.createBuildRule(params, resolver, delegateArg);
+    return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
   }
 }

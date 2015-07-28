@@ -35,21 +35,18 @@ public class BuildRuleParams {
   private final Supplier<ImmutableSortedSet<BuildRule>> totalDeps;
   private final ProjectFilesystem projectFilesystem;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
-  private final TargetGraph targetGraph;
 
   public BuildRuleParams(
       BuildTarget buildTarget,
       final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps,
       final Supplier<ImmutableSortedSet<BuildRule>> extraDeps,
       ProjectFilesystem projectFilesystem,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory,
-      TargetGraph targetGraph) {
+      RuleKeyBuilderFactory ruleKeyBuilderFactory) {
     this.buildTarget = buildTarget;
     this.declaredDeps = Suppliers.memoize(declaredDeps);
     this.extraDeps = Suppliers.memoize(extraDeps);
     this.projectFilesystem = projectFilesystem;
     this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
-    this.targetGraph = targetGraph;
 
     this.totalDeps = Suppliers.memoize(
         new Supplier<ImmutableSortedSet<BuildRule>>() {
@@ -107,8 +104,7 @@ public class BuildRuleParams {
         declaredDeps,
         extraDeps,
         projectFilesystem,
-        ruleKeyBuilderFactory,
-        targetGraph);
+        ruleKeyBuilderFactory);
   }
 
   public BuildTarget getBuildTarget() {
@@ -133,10 +129,6 @@ public class BuildRuleParams {
 
   public RuleKeyBuilderFactory getRuleKeyBuilderFactory() {
     return ruleKeyBuilderFactory;
-  }
-
-  public TargetGraph getTargetGraph() {
-    return targetGraph;
   }
 
 }

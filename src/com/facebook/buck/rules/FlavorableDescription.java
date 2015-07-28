@@ -37,7 +37,6 @@ public interface FlavorableDescription<T> extends Description<T> {
    * @param describedRule rule being flavored: has not been registered with ruleResolver yet.
    * @param projectFilesystem available to help construct a {@link BuildRuleParams}.
    * @param ruleKeyBuilderFactory available to help construct a {@link BuildRuleParams}.
-   * @param targetGraph used to create the action graph.
    * @param ruleResolver with which new flavors introduced by this method should be registered.
    */
   public void registerFlavors(
@@ -45,6 +44,5 @@ public interface FlavorableDescription<T> extends Description<T> {
       BuildRule describedRule,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
-      TargetGraph targetGraph,
       BuildRuleResolver ruleResolver);
 }

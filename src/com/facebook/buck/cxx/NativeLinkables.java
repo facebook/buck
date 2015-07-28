@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -45,12 +46,13 @@ public class NativeLinkables {
    * {@link NativeLinkable}.
    */
   public static Function<NativeLinkable, NativeLinkableInput> getNativeLinkableInput(
+      final TargetGraph targetGraph,
       final CxxPlatform cxxPlatform,
       final Linker.LinkableDepType type) {
     return new Function<NativeLinkable, NativeLinkableInput>() {
       @Override
       public NativeLinkableInput apply(NativeLinkable input) {
-        return input.getNativeLinkableInput(cxxPlatform, type);
+        return input.getNativeLinkableInput(targetGraph, cxxPlatform, type);
       }
     };
   }
@@ -175,6 +177,7 @@ public class NativeLinkables {
    * {@link com.facebook.buck.rules.BuildRule} roots.
    */
   public static NativeLinkableInput getTransitiveNativeLinkableInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
@@ -197,7 +200,7 @@ public class NativeLinkables {
         Linker.LinkableDepType type = result.getSecond().get(buildRule.getBuildTarget());
         if (type != null) {
           NativeLinkable linkable = (NativeLinkable) buildRule;
-          nativeLinkableInputs.add(linkable.getNativeLinkableInput(cxxPlatform, type));
+          nativeLinkableInputs.add(linkable.getNativeLinkableInput(targetGraph, cxxPlatform, type));
         }
       }
     }
@@ -206,11 +209,13 @@ public class NativeLinkables {
   }
 
   public static NativeLinkableInput getTransitiveNativeLinkableInput(
-      final CxxPlatform cxxPlatform,
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      final Linker.LinkableDepType depType,
+      Linker.LinkableDepType depType,
       boolean reverse) {
     return getTransitiveNativeLinkableInput(
+        targetGraph,
         cxxPlatform,
         inputs,
         depType,
@@ -226,6 +231,7 @@ public class NativeLinkables {
    * @return a mapping of library name to the library {@link SourcePath}.
    */
   public static ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
@@ -246,7 +252,7 @@ public class NativeLinkables {
         Linker.LinkableDepType type = result.getSecond().get(buildRule.getBuildTarget());
         if (type != null && type == Linker.LinkableDepType.SHARED) {
           NativeLinkable linkable = (NativeLinkable) buildRule;
-          libraries.putAll(linkable.getSharedLibraries(cxxPlatform));
+          libraries.putAll(linkable.getSharedLibraries(targetGraph, cxxPlatform));
         }
       }
     }

@@ -65,9 +65,9 @@ public abstract class AbstractNodeBuilder<A> {
       TargetGraph targetGraph) {
 
     // The BuildRule determines its deps by extracting them from the rule parameters.
-    BuildRuleParams params = createBuildRuleParams(resolver, filesystem, targetGraph);
+    BuildRuleParams params = createBuildRuleParams(resolver, filesystem);
 
-    BuildRule rule = description.createBuildRule(params, resolver, arg);
+    BuildRule rule = description.createBuildRule(targetGraph, params, resolver, arg);
     resolver.addToIndex(rule);
     return rule;
   }
@@ -87,12 +87,10 @@ public abstract class AbstractNodeBuilder<A> {
 
   public BuildRuleParams createBuildRuleParams(
       BuildRuleResolver resolver,
-      ProjectFilesystem filesystem,
-      TargetGraph targetGraph) {
+      ProjectFilesystem filesystem) {
     TargetNode<?> node = build();
     return new FakeBuildRuleParamsBuilder(target)
         .setProjectFilesystem(filesystem)
-        .setTargetGraph(targetGraph)
         .setDeps(resolver.getAllRules(node.getDeps()))
         .setExtraDeps(resolver.getAllRules(node.getExtraDeps()))
         .build();

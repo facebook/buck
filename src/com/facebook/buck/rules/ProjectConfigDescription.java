@@ -35,6 +35,7 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
 
   @Override
   public <A extends Arg> ProjectConfig createBuildRule(
+      TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {

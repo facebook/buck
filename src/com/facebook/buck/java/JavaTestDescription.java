@@ -32,6 +32,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -72,6 +73,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
   @Override
   public <A extends Arg> JavaTest createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -91,6 +93,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     JavacOptions javacOptions = javacOptionsBuilder.build();
 
     CxxLibraryEnhancement cxxLibraryEnhancement = new CxxLibraryEnhancement(
+        targetGraph,
         params,
         args.useCxxLibraries,
         args.vmArgs.or(ImmutableList.<String>of()),
@@ -177,6 +180,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     public final ImmutableList<String> updatedVmArgs;
 
     public CxxLibraryEnhancement(
+        TargetGraph targetGraph,
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
         ImmutableList<String> vmArgs,
@@ -184,7 +188,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         CxxPlatform cxxPlatform) {
       if (useCxxLibraries.or(false)) {
         SymlinkTree nativeLibsSymlinkTree =
-            buildNativeLibsSymlinkTreeRule(params, pathResolver, cxxPlatform);
+            buildNativeLibsSymlinkTreeRule(targetGraph, params, pathResolver, cxxPlatform);
         updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
             .add(nativeLibsSymlinkTree)
             // Add all the native libraries as first-order dependencies.
@@ -205,10 +209,12 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     }
 
     public static SymlinkTree buildNativeLibsSymlinkTreeRule(
+        TargetGraph targetGraph,
         BuildRuleParams buildRuleParams,
         SourcePathResolver pathResolver,
         CxxPlatform cxxPlatform) {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
+          targetGraph,
           buildRuleParams,
           pathResolver,
           cxxPlatform,

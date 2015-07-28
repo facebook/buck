@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,7 +48,9 @@ public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackag
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+  public PythonPackageComponents getPythonPackageComponents(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
     return PythonPackageComponents.of(

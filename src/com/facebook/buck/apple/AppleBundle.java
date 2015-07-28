@@ -16,11 +16,13 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSNumber;
+import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.NativeTestable;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -32,6 +34,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -46,10 +50,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
-
-import com.dd.plist.NSObject;
-import com.dd.plist.NSNumber;
-import com.dd.plist.NSString;
 
 import java.nio.file.Path;
 import java.util.Locale;
@@ -406,12 +406,16 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
     if (binary.isPresent()) {
       BuildRule binaryRule = binary.get();
       if (binaryRule instanceof NativeTestable) {
-        return ((NativeTestable) binaryRule).getCxxPreprocessorInput(cxxPlatform, headerVisibility);
+        return ((NativeTestable) binaryRule).getCxxPreprocessorInput(
+            targetGraph,
+            cxxPlatform,
+            headerVisibility);
       }
     }
     return CxxPreprocessorInput.EMPTY;

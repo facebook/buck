@@ -30,6 +30,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
@@ -72,6 +73,7 @@ public class CxxTestDescription implements
 
   @Override
   public <A extends Arg> CxxTest createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -92,6 +94,7 @@ public class CxxTestDescription implements
     // Generate the link rule that builds the test binary.
     CxxDescriptionEnhancer.CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+            targetGraph,
             params,
             resolver,
             cxxPlatform,

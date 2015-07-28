@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
@@ -188,6 +189,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
   @Override
   public BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ThriftConstructorArg args,
@@ -254,7 +256,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     langArgs.srcs = Optional.of(SourceWithFlagsList.ofNamedSources(srcs));
     langArgs.exportedHeaders = Optional.of(SourceList.ofNamedSources(headers));
 
-    return cxxLibraryDescription.createBuildRule(langParams, resolver, langArgs);
+    return cxxLibraryDescription.createBuildRule(targetGraph, langParams, resolver, langArgs);
   }
 
   private ImmutableSet<BuildTarget> getImplicitDepsFromOptions(

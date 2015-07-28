@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -68,6 +69,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   }
 
   public Optional<CopyNativeLibraries> getCopyNativeLibraries(
+      TargetGraph targetGraph,
       AndroidPackageableCollection packageableCollection) {
     // Iterate over all the {@link AndroidNativeLinkable}s from the collector and grab the shared
     // libraries for all the {@link TargetCpuType}s that we care about.  We deposit them into a map
@@ -87,6 +89,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
       for (JavaNativeLinkable nativeLinkable : packageableCollection.getNativeLinkables()) {
         ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
+            targetGraph,
             platform.getCxxPlatform());
         for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
           nativeLinkableLibsBuilder.put(

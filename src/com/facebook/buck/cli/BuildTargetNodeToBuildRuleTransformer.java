@@ -55,9 +55,9 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
         Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getDeclaredDeps())),
         Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
-        ruleKeyBuilderFactory,
-        targetGraph);
-    BuildRule buildRule = description.createBuildRule(params, ruleResolver, arg);
+        ruleKeyBuilderFactory);
+    BuildRule buildRule =
+        description.createBuildRule(targetGraph, params, ruleResolver, arg);
 
     // Note that describedRule has not been added to the BuildRuleResolver yet.
     if (description instanceof FlavorableDescription && !targetNode.getBuildTarget().isFlavored()) {
@@ -67,7 +67,6 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
           buildRule,
           ruleFactoryParams.getProjectFilesystem(),
           ruleKeyBuilderFactory,
-          targetGraph,
           ruleResolver);
     }
 

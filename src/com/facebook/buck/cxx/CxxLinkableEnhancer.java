@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -45,6 +46,7 @@ public class CxxLinkableEnhancer {
    * and a dependency tree of {@link NativeLinkable} dependencies.
    */
   public static CxxLink createCxxLinkableBuildRule(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -71,6 +73,7 @@ public class CxxLinkableEnhancer {
     // Collect and topologically sort our deps that contribute to the link.
     NativeLinkableInput linkableInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
+            targetGraph,
             cxxPlatform,
             nativeLinkableDeps,
             depType,

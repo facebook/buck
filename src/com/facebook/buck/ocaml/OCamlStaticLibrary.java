@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -71,6 +72,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
 
@@ -108,7 +110,9 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
 

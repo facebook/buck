@@ -39,6 +39,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
@@ -163,6 +164,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
    *     file and also appends relevant preprocessor and linker flags to use C/C++ library deps.
    */
   private Pair<BuildRule, Iterable<BuildRule>> generateMakefile(
+      TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver) {
 
@@ -180,6 +182,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         // NDK library rules.
         cxxPreprocessorInput = CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                targetGraph,
                 cxxPlatform,
                 params.getDeps(),
                 Predicates.instanceOf(NdkLibrary.class)));
@@ -215,6 +218,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // NDK library rules.
       NativeLinkableInput nativeLinkableInput =
           NativeLinkables.getTransitiveNativeLinkableInput(
+              targetGraph,
               cxxPlatform,
               params.getDeps(),
               Linker.LinkableDepType.SHARED,
@@ -350,11 +354,12 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
   @Override
   public <A extends Arg> NdkLibrary createBuildRule(
+      TargetGraph targetGraph,
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-
-    Pair<BuildRule, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
+    Pair<BuildRule, Iterable<BuildRule>> makefilePair =
+        generateMakefile(targetGraph, params, resolver);
     resolver.addToIndex(makefilePair.getFirst());
     return new NdkLibrary(
         params.appendExtraDeps(

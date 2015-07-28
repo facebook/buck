@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -83,6 +84,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   @Override
   public DefaultJavaLibrary createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ThriftConstructorArg args,

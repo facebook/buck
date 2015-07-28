@@ -46,7 +46,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
@@ -54,6 +53,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.NullFileHashCache;
@@ -114,9 +114,9 @@ public class AndroidBinaryGraphEnhancerTest {
         Suppliers.ofInstance(originalDeps),
         Suppliers.ofInstance(originalDeps),
         new FakeProjectFilesystem(),
-        ruleKeyBuilderFactory,
-        TargetGraph.EMPTY);
+        ruleKeyBuilderFactory);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.DISABLED,
@@ -238,6 +238,7 @@ public class AndroidBinaryGraphEnhancerTest {
     // set it up.
     Keystore keystore = createStrictMock(Keystore.class);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
@@ -356,6 +357,7 @@ public class AndroidBinaryGraphEnhancerTest {
             .setDeps(ImmutableSortedSet.<BuildRule>of(resource))
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
@@ -398,6 +400,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new FakeBuildRuleParamsBuilder(target)
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
@@ -466,6 +469,7 @@ public class AndroidBinaryGraphEnhancerTest {
             .setDeps(ImmutableSortedSet.<BuildRule>of(resource))
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        TargetGraph.EMPTY,
         originalParams,
         ruleResolver,
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,

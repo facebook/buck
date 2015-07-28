@@ -32,6 +32,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -567,6 +568,7 @@ public class CxxDescriptionEnhancer {
   }
 
   public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
@@ -590,6 +592,7 @@ public class CxxDescriptionEnhancer {
               params.getBuildTarget());
           cxxPreprocessorInputFromTestedRulesBuilder.add(
               testable.getCxxPreprocessorInput(
+                  targetGraph,
                   cxxPlatform,
                   HeaderVisibility.PRIVATE));
         }
@@ -722,6 +725,7 @@ public class CxxDescriptionEnhancer {
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -763,6 +767,7 @@ public class CxxDescriptionEnhancer {
         HeaderVisibility.PRIVATE);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         collectCxxPreprocessorInput(
+            targetGraph,
             params,
             cxxPlatform,
             CxxFlags.getLanguageFlags(
@@ -776,6 +781,7 @@ public class CxxDescriptionEnhancer {
                 args.frameworkSearchPaths,
                 cxxPlatform),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                targetGraph,
                 cxxPlatform,
                 FluentIterable.from(params.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -820,6 +826,7 @@ public class CxxDescriptionEnhancer {
       SymlinkTree sharedLibraries =
           resolver.addToIndex(
               createSharedLibrarySymlinkTree(
+                  targetGraph,
                   params,
                   sourcePathResolver,
                   cxxPlatform,
@@ -844,6 +851,7 @@ public class CxxDescriptionEnhancer {
     // target, so that it corresponds to the actual binary we build.
     CxxLink cxxLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            targetGraph,
             cxxPlatform,
             params,
             sourcePathResolver,
@@ -869,6 +877,7 @@ public class CxxDescriptionEnhancer {
   }
 
   private static <T> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       TargetNode<T> node,
@@ -877,12 +886,12 @@ public class CxxDescriptionEnhancer {
     Description<T> description = node.getDescription();
     T args = node.getConstructorArg();
     return description.createBuildRule(
+        targetGraph,
         params.copyWithChanges(
             target,
             Suppliers.ofInstance(params.getDeclaredDeps()),
             Suppliers.ofInstance(params.getExtraDeps())),
-        ruleResolver,
-        args);
+        ruleResolver, args);
   }
 
   /**
@@ -894,17 +903,18 @@ public class CxxDescriptionEnhancer {
    *     {@link BuildRuleParams}.
    */
   public static BuildRule requireBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       Flavor... flavors) {
     BuildTarget target = BuildTarget.builder(params.getBuildTarget()).addFlavors(flavors).build();
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
     if (!rule.isPresent()) {
-      TargetNode<?> node = params.getTargetGraph().get(params.getBuildTarget());
+      TargetNode<?> node = targetGraph.get(params.getBuildTarget());
       Preconditions.checkNotNull(
           node,
           String.format("%s not in target graph", params.getBuildTarget()));
-      rule = Optional.of(createBuildRule(params, ruleResolver, node, flavors));
+      rule = Optional.of(createBuildRule(targetGraph, params, ruleResolver, node, flavors));
       ruleResolver.addToIndex(rule.get());
     }
     return rule.get();
@@ -971,6 +981,7 @@ public class CxxDescriptionEnhancer {
    * transitive dependencies.
    */
   public static SymlinkTree createSharedLibrarySymlinkTree(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
@@ -985,12 +996,12 @@ public class CxxDescriptionEnhancer {
             params.getBuildTarget(),
             cxxPlatform.getFlavor());
 
-    ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkables.getTransitiveSharedLibraries(
-            cxxPlatform,
-            params.getDeps(),
-            Linker.LinkableDepType.SHARED,
-            traverse);
+    ImmutableSortedMap<String, SourcePath> libraries = NativeLinkables.getTransitiveSharedLibraries(
+        targetGraph,
+        cxxPlatform,
+        params.getDeps(),
+        Linker.LinkableDepType.SHARED,
+        traverse);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {

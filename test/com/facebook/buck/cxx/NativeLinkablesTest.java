@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -55,6 +56,7 @@ public class NativeLinkablesTest {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
+        TargetGraph targetGraph,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type) {
       return nativeLinkableInput;
@@ -66,7 +68,9 @@ public class NativeLinkablesTest {
     }
 
     @Override
-    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+    public ImmutableMap<String, SourcePath> getSharedLibraries(
+        TargetGraph targetGraph,
+        CxxPlatform cxxPlatform) {
       return sharedLibraries;
     }
 
@@ -148,6 +152,7 @@ public class NativeLinkablesTest {
     // python binary rule) and verify that we do *not* pull in input from `C`.
     NativeLinkableInput inputForTop =
         NativeLinkables.getTransitiveNativeLinkableInput(
+            TargetGraph.EMPTY,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Linker.LinkableDepType.SHARED,
@@ -159,6 +164,7 @@ public class NativeLinkablesTest {
     // input from `C`.
     NativeLinkableInput inputForB =
         NativeLinkables.getTransitiveNativeLinkableInput(
+            TargetGraph.EMPTY,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(c),
             Linker.LinkableDepType.SHARED,
@@ -201,6 +207,7 @@ public class NativeLinkablesTest {
     // input from `C`.
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
+            TargetGraph.EMPTY,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Linker.LinkableDepType.SHARED,

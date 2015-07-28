@@ -38,7 +38,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -60,11 +59,7 @@ public class CxxCompilationDatabaseTest {
         .addAllFlavors(
             ImmutableSet.of(CxxCompilationDatabase.COMPILATION_DATABASE))
         .build();
-    BuildRuleParams testBuildRuleParams = new FakeBuildRuleParamsBuilder(testBuildTarget)
-        .setTargetGraph(
-            TargetGraphFactory.newInstance(
-                new CxxLibraryBuilder(testBuildTarget).build()))
-        .build();
+    BuildRuleParams testBuildRuleParams = new FakeBuildRuleParamsBuilder(testBuildTarget).build();
 
     BuildRuleResolver testBuildRuleResolver = new BuildRuleResolver();
     SourcePathResolver testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
@@ -231,11 +226,7 @@ public class CxxCompilationDatabaseTest {
         .addAllFlavors(
             ImmutableSet.of(CxxCompilationDatabase.COMPILATION_DATABASE))
         .build();
-    BuildRuleParams testBuildRuleParams = new FakeBuildRuleParamsBuilder(testBuildTarget)
-        .setTargetGraph(
-            TargetGraphFactory.newInstance(
-                new CxxLibraryBuilder(testBuildTarget).build()))
-        .build();
+    BuildRuleParams testBuildRuleParams = new FakeBuildRuleParamsBuilder(testBuildTarget).build();
 
     BuildRuleResolver testBuildRuleResolver = new BuildRuleResolver();
     SourcePathResolver testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);

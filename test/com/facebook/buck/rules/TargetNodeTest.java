@@ -141,6 +141,7 @@ public class TargetNodeTest {
 
     @Override
     public <A extends Arg> BuildRule createBuildRule(
+        TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {

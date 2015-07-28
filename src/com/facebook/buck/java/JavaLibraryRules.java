@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Optional;
@@ -88,6 +89,7 @@ public class JavaLibraryRules {
    *     a map from their system-specific library names to their {@link SourcePath} objects.
    */
   public static ImmutableMap<String, SourcePath> getNativeLibraries(
+      final TargetGraph targetGraph,
       Iterable<BuildRule> deps,
       final CxxPlatform cxxPlatform) {
     final ImmutableMap.Builder<String, SourcePath> libraries = ImmutableMap.builder();
@@ -97,7 +99,7 @@ public class JavaLibraryRules {
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         if (rule instanceof JavaNativeLinkable) {
           JavaNativeLinkable linkable = (JavaNativeLinkable) rule;
-          libraries.putAll(linkable.getSharedLibraries(cxxPlatform));
+          libraries.putAll(linkable.getSharedLibraries(targetGraph, cxxPlatform));
         }
         if (rule instanceof JavaNativeLinkable ||
             rule instanceof JavaLibrary) {

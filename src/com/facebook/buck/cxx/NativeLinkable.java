@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -26,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 public interface NativeLinkable {
 
   NativeLinkableInput getNativeLinkableInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type);
 
@@ -35,7 +37,9 @@ public interface NativeLinkable {
    * @return a map of shared library SONAME to shared library path for the given
    *     {@link CxxPlatform}.
    */
-  ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform);
+  ImmutableMap<String, SourcePath> getSharedLibraries(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform);
 
   enum Linkage {
     ANY,

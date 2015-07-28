@@ -38,6 +38,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -182,6 +183,7 @@ public class CxxDescriptionEnhancerTest {
 
     ImmutableList<CxxPreprocessorInput> combinedInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+            TargetGraph.EMPTY,
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
@@ -189,6 +191,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableList.<SymlinkTree>of(),
             ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                TargetGraph.EMPTY,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
@@ -233,6 +236,7 @@ public class CxxDescriptionEnhancerTest {
 
     ImmutableList<CxxPreprocessorInput> otherInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
+            TargetGraph.EMPTY,
             otherLibDepParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
@@ -240,6 +244,7 @@ public class CxxDescriptionEnhancerTest {
             ImmutableList.<SymlinkTree>of(),
             ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+                TargetGraph.EMPTY,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(otherLibDepParams.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));

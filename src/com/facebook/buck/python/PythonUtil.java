@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
@@ -94,6 +95,7 @@ public class PythonUtil {
   }
 
   public static PythonPackageComponents getAllComponents(
+      final TargetGraph targetGraph,
       BuildRuleParams params,
       PythonPackageComponents packageComponents,
       final CxxPlatform cxxPlatform) {
@@ -116,7 +118,7 @@ public class PythonUtil {
           // Add all components from the python packable into our top-level
           // package.
           components.addComponent(
-              lib.getPythonPackageComponents(cxxPlatform),
+              lib.getPythonPackageComponents(targetGraph, cxxPlatform),
               rule.getBuildTarget());
 
           // Return all our deps to recurse on them.

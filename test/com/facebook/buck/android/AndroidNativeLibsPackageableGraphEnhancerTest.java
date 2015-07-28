@@ -83,7 +83,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ImmutableSet.<BuildRule>of(ndkLibrary)));
 
     Optional<CopyNativeLibraries> copyNativeLibrariesOptional =
-        enhancer.getCopyNativeLibraries(collector.build());
+        enhancer.getCopyNativeLibraries(TargetGraph.EMPTY, collector.build());
     CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
 
     assertThat(copyNativeLibraries.getFilteredNativeLibraries(), Matchers.anEmptyMap());
@@ -132,7 +132,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(ImmutableSortedSet.<BuildRule>of(cxxLibrary))
-            .setTargetGraph(targetGraph)
             .build();
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -153,7 +152,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     AndroidPackageableCollection packageableCollection = collector.build();
     Optional<CopyNativeLibraries> copyNativeLibrariesOptional =
-        enhancer.getCopyNativeLibraries(packageableCollection);
+        enhancer.getCopyNativeLibraries(targetGraph, packageableCollection);
     CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
 
     assertThat(

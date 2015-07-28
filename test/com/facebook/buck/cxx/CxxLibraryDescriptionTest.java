@@ -38,6 +38,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -117,6 +118,7 @@ public class CxxLibraryDescriptionTest {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         switch (headerVisibility) {
@@ -141,15 +143,17 @@ public class CxxLibraryDescriptionTest {
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return ImmutableMap.of(
             getBuildTarget(),
-            getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+            getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
       }
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return NativeLinkableInput.of(
@@ -165,7 +169,9 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+      public PythonPackageComponents getPythonPackageComponents(
+          TargetGraph targetGraph,
+          CxxPlatform cxxPlatform) {
         return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
@@ -183,7 +189,9 @@ public class CxxLibraryDescriptionTest {
       public void addToCollector(AndroidPackageableCollector collector) {}
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          TargetGraph targetGraph,
+          CxxPlatform cxxPlatform) {
         return ImmutableMap.of();
       }
 
@@ -218,15 +226,16 @@ public class CxxLibraryDescriptionTest {
                 Paths.get("/another/framework/path")))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
-    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(
-        resolver,
-        new FakeProjectFilesystem(),
-        TargetGraphFactory.newInstance(
-            cxxLibraryBuilder.build(),
-            genSourceBuilder.build(),
-            genHeaderBuilder.build(),
-            GenruleBuilder.newGenruleBuilder(depTarget)
-                .build()));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        cxxLibraryBuilder.build(),
+        genSourceBuilder.build(),
+        genHeaderBuilder.build(),
+        GenruleBuilder.newGenruleBuilder(depTarget).build());
+    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder
+        .build(
+            resolver,
+            new FakeProjectFilesystem(),
+            targetGraph);
 
     Path headerRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
@@ -265,6 +274,7 @@ public class CxxLibraryDescriptionTest {
                 Paths.get("/another/framework/path"))
             .build(),
         rule.getCxxPreprocessorInput(
+            targetGraph,
             cxxPlatform,
             HeaderVisibility.PUBLIC));
 
@@ -299,11 +309,12 @@ public class CxxLibraryDescriptionTest {
                 Paths.get("/another/framework/path"))
             .build(),
         rule.getCxxPreprocessorInput(
+            targetGraph,
             cxxPlatform,
             HeaderVisibility.PRIVATE));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
+    rule.getNativeLinkableInput(targetGraph, cxxPlatform, Linker.LinkableDepType.STATIC);
     BuildRule archiveRule = resolver.getRule(
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
             target,
@@ -413,13 +424,16 @@ public class CxxLibraryDescriptionTest {
     AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> ruleBuilder = new CxxLibraryBuilder(target)
         .setSoname(soname)
         .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
-    CxxLibrary rule = (CxxLibrary) ruleBuilder.build(
-        resolver,
-        filesystem,
-        TargetGraphFactory.newInstance(ruleBuilder.build()));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
+    CxxLibrary rule = (CxxLibrary) ruleBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
 
     Linker linker = cxxPlatform.getLd();
     NativeLinkableInput input = rule.getNativeLinkableInput(
+        targetGraph,
         cxxPlatform,
         Linker.LinkableDepType.SHARED);
 
@@ -458,14 +472,18 @@ public class CxxLibraryDescriptionTest {
 
     // First, create a cxx library without using link whole.
     CxxLibraryBuilder normalBuilder = new CxxLibraryBuilder(target);
-    CxxLibrary normal = (CxxLibrary) normalBuilder.build(
-        new BuildRuleResolver(),
-        filesystem,
-        TargetGraphFactory.newInstance(normalBuilder.build()));
+    TargetGraph normalGraph = TargetGraphFactory.newInstance(normalBuilder.build());
+    CxxLibrary normal = (CxxLibrary) normalBuilder
+        .build(
+            new BuildRuleResolver(),
+            filesystem,
+            normalGraph);
 
     // Verify that the linker args contains the link whole flags.
     assertNotContains(
-        normal.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC).getArgs(),
+        normal
+            .getNativeLinkableInput(normalGraph, cxxPlatform, Linker.LinkableDepType.STATIC)
+            .getArgs(),
         linkWholeFlags);
 
     // Create a cxx library using link whole.
@@ -474,14 +492,18 @@ public class CxxLibraryDescriptionTest {
             .setLinkWhole(true)
             .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
 
-    CxxLibrary linkWhole = (CxxLibrary) linkWholeBuilder.build(
-        new BuildRuleResolver(),
-        filesystem,
-        TargetGraphFactory.newInstance(linkWholeBuilder.build()));
+    TargetGraph linkWholeGraph = TargetGraphFactory.newInstance(linkWholeBuilder.build());
+    CxxLibrary linkWhole = (CxxLibrary) linkWholeBuilder
+        .build(
+            new BuildRuleResolver(),
+            filesystem,
+            linkWholeGraph);
 
     // Verify that the linker args contains the link whole flags.
     assertContains(
-        linkWhole.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC).getArgs(),
+        linkWhole
+            .getNativeLinkableInput(linkWholeGraph, cxxPlatform, Linker.LinkableDepType.STATIC)
+            .getArgs(),
         linkWholeFlags);
   }
 
@@ -526,6 +548,7 @@ public class CxxLibraryDescriptionTest {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.builder()
@@ -539,15 +562,17 @@ public class CxxLibraryDescriptionTest {
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return ImmutableMap.of(
             getBuildTarget(),
-            getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+            getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
       }
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
@@ -571,7 +596,9 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
-      public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+      public PythonPackageComponents getPythonPackageComponents(
+          TargetGraph targetGraph,
+          CxxPlatform cxxPlatform) {
         return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
@@ -591,7 +618,9 @@ public class CxxLibraryDescriptionTest {
       public void addToCollector(AndroidPackageableCollector collector) {}
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          TargetGraph targetGraph,
+          CxxPlatform cxxPlatform) {
         return ImmutableMap.of();
       }
 
@@ -628,15 +657,14 @@ public class CxxLibraryDescriptionTest {
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     // Construct C/C++ library build rules.
-    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(
-        resolver,
-        new FakeProjectFilesystem(),
-        TargetGraphFactory.newInstance(
-            cxxLibraryBuilder.build(),
-            genSourceBuilder.build(),
-            genHeaderBuilder.build(),
-            GenruleBuilder.newGenruleBuilder(depTarget)
-                .build()));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        cxxLibraryBuilder.build(),
+        genSourceBuilder.build(),
+        genHeaderBuilder.build(),
+        GenruleBuilder.newGenruleBuilder(depTarget)
+            .build());
+    CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder
+        .build(resolver, new FakeProjectFilesystem(), targetGraph);
 
     // Verify the C/C++ preprocessor input is setup correctly.
     Path headerRoot =
@@ -669,10 +697,10 @@ public class CxxLibraryDescriptionTest {
                 Paths.get("/some/framework/path"),
                 Paths.get("/another/framework/path"))
             .build(),
-        rule.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+        rule.getCxxPreprocessorInput(targetGraph, cxxPlatform, HeaderVisibility.PUBLIC));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC);
+    rule.getNativeLinkableInput(targetGraph, cxxPlatform, Linker.LinkableDepType.STATIC);
     BuildRule staticRule = resolver.getRule(
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
             target,
@@ -769,7 +797,7 @@ public class CxxLibraryDescriptionTest {
             .toSet());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED);
+    rule.getNativeLinkableInput(targetGraph, cxxPlatform, Linker.LinkableDepType.SHARED);
     BuildRule sharedRule = resolver.getRule(
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(target, cxxPlatform.getFlavor()));
     assertNotNull(sharedRule);
@@ -877,7 +905,7 @@ public class CxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedPythonPackageComponents,
-        rule.getPythonPackageComponents(cxxPlatform));
+        rule.getPythonPackageComponents(targetGraph, cxxPlatform));
   }
 
   @Test
@@ -890,44 +918,48 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryBuilder cxxLibraryBuilder =
         (CxxLibraryBuilder) new CxxLibraryBuilder(target)
             .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("test.c"))));
-    CxxLibrary cxxLibrary =
-        (CxxLibrary) cxxLibraryBuilder
-            .build(
-                new BuildRuleResolver(),
-                filesystem,
-                TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    TargetGraph targetGraph1 = TargetGraphFactory.newInstance(cxxLibraryBuilder.build());
+    CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder
+        .build(new BuildRuleResolver(), filesystem, targetGraph1);
     assertThat(
-        cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
+        cxxLibrary.getSharedLibraries(targetGraph1, CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
         Matchers.not(Matchers.empty()));
     assertThat(
-        cxxLibrary.getPythonPackageComponents(
-            CxxPlatformUtils.DEFAULT_PLATFORM).getNativeLibraries().entrySet(),
+        cxxLibrary
+            .getPythonPackageComponents(targetGraph1, CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLibraries()
+            .entrySet(),
         Matchers.not(Matchers.empty()));
     assertThat(
-        cxxLibrary.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.SHARED).getArgs(),
+        cxxLibrary
+            .getNativeLinkableInput(
+                targetGraph1,
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.SHARED)
+            .getArgs(),
         Matchers.not(Matchers.empty()));
 
     // Now, verify we get nothing when the supported platform regex excludes our platform.
     cxxLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
-    cxxLibrary =
-        (CxxLibrary) cxxLibraryBuilder
-            .build(
-                new BuildRuleResolver(),
-                filesystem,
-                TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
+    TargetGraph targetGraph2 = TargetGraphFactory.newInstance(cxxLibraryBuilder.build());
+    cxxLibrary = (CxxLibrary) cxxLibraryBuilder
+        .build(new BuildRuleResolver(), filesystem, targetGraph2);
     assertThat(
-        cxxLibrary.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
+        cxxLibrary.getSharedLibraries(targetGraph2, CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
         Matchers.empty());
     assertThat(
-        cxxLibrary.getPythonPackageComponents(
-            CxxPlatformUtils.DEFAULT_PLATFORM).getNativeLibraries().entrySet(),
+        cxxLibrary
+            .getPythonPackageComponents(targetGraph2, CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLibraries()
+            .entrySet(),
         Matchers.empty());
     assertThat(
-        cxxLibrary.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.SHARED).getArgs(),
+        cxxLibrary
+            .getNativeLinkableInput(
+                targetGraph2,
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.SHARED)
+            .getArgs(),
         Matchers.empty());
   }
 
@@ -941,13 +973,15 @@ public class CxxLibraryDescriptionTest {
     libBuilder.setSrcs(
         ImmutableList.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
-    CxxLibrary lib =
-        (CxxLibrary) libBuilder.build(
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
+    CxxLibrary lib = (CxxLibrary) libBuilder
+        .build(
             resolver,
             filesystem,
-            TargetGraphFactory.newInstance(libBuilder.build()));
+            targetGraph);
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
+            targetGraph,
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.STATIC_PIC);
     SourcePath input = nativeLinkableInput.getInputs().get(0);

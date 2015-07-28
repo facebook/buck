@@ -34,6 +34,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -82,6 +83,7 @@ public class AndroidInstrumentationApkDescription
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -113,6 +115,7 @@ public class AndroidInstrumentationApkDescription
 
     Path primaryDexPath = AndroidBinary.getPrimaryDexPath(params.getBuildTarget());
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
+        targetGraph,
         params,
         resolver,
         ResourceCompressionMode.DISABLED,

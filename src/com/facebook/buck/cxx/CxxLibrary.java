@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -103,9 +104,11 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
     return CxxPreprocessables.getCxxPreprocessorInput(
+        targetGraph,
         params,
         ruleResolver,
         cxxPlatform.getFlavor(),
@@ -116,19 +119,22 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public ImmutableMap<BuildTarget, CxxPreprocessorInput>
-      getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform,
-          HeaderVisibility headerVisibility) {
+  public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) {
     Pair<Flavor, HeaderVisibility> key = new Pair<>(cxxPlatform.getFlavor(), headerVisibility);
     ImmutableMap<BuildTarget, CxxPreprocessorInput> result = cxxPreprocessorInputCache.get(key);
     if (result == null) {
       Map<BuildTarget, CxxPreprocessorInput> builder = Maps.newLinkedHashMap();
-      builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+      builder.put(
+          getBuildTarget(),
+          getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
       for (BuildRule dep : getDeps()) {
         if (dep instanceof CxxPreprocessorDep) {
           builder.putAll(
               ((CxxPreprocessorDep) dep).getTransitiveCxxPreprocessorInput(
+                  targetGraph,
                   cxxPlatform,
                   headerVisibility));
         }
@@ -141,6 +147,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
+      TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
 
@@ -163,6 +170,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
     if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
       libraryRule = requireBuildRule(
+          targetGraph,
           cxxPlatform.getFlavor(),
           type == Linker.LinkableDepType.STATIC ?
               CxxDescriptionEnhancer.STATIC_FLAVOR :
@@ -190,6 +198,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
           sharedLibrarySoname,
           cxxPlatform);
       libraryRule = requireBuildRule(
+          targetGraph,
           cxxPlatform.getFlavor(),
           CxxDescriptionEnhancer.SHARED_FLAVOR);
       linkerArgsBuilder.add(sharedLibraryPath.toString());
@@ -203,8 +212,9 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   public BuildRule requireBuildRule(
+      TargetGraph targetGraph,
       Flavor ... flavors) {
-    return CxxDescriptionEnhancer.requireBuildRule(params, ruleResolver, flavors);
+    return CxxDescriptionEnhancer.requireBuildRule(targetGraph, params, ruleResolver, flavors);
   }
 
   @Override
@@ -213,7 +223,9 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+  public PythonPackageComponents getPythonPackageComponents(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     if (headerOnly.apply(cxxPlatform)) {
       return PythonPackageComponents.of();
     }
@@ -230,6 +242,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
                 getBuildTarget(),
                 cxxPlatform));
     BuildRule sharedLibraryBuildRule = requireBuildRule(
+        targetGraph,
         cxxPlatform.getFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(
@@ -254,7 +267,9 @@ public class CxxLibrary extends AbstractCxxLibrary {
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     if (headerOnly.apply(cxxPlatform)) {
       return ImmutableMap.of();
     }
@@ -271,6 +286,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
                 getBuildTarget(),
                 cxxPlatform));
     BuildRule sharedLibraryBuildRule = requireBuildRule(
+        targetGraph,
         cxxPlatform.getFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(

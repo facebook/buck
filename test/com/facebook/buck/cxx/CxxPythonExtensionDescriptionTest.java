@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -94,14 +95,17 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder normalBuilder = getBuilder(target);
     CxxPythonExtensionDescription desc =
         (CxxPythonExtensionDescription) normalBuilder.build().getDescription();
+    TargetGraph targetGraph1 = TargetGraphFactory.newInstance(
+        normalBuilder.build(),
+        pyDepBuilder.build());
     CxxPythonExtension normal = (CxxPythonExtension) normalBuilder
         .build(
             resolver,
             filesystem,
-            TargetGraphFactory.newInstance(
-                normalBuilder.build(),
-                pyDepBuilder.build()));
-    PythonPackageComponents normalComps = normal.getPythonPackageComponents(cxxPlatform);
+            targetGraph1);
+    PythonPackageComponents normalComps = normal.getPythonPackageComponents(
+        targetGraph1,
+        cxxPlatform);
     assertEquals(
         ImmutableSet.of(
             target.getBasePath().resolve(desc.getExtensionName(target))),
@@ -113,14 +117,17 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder baseModuleBuilder = getBuilder(target2)
         .setBaseModule(name);
     desc = (CxxPythonExtensionDescription) baseModuleBuilder.build().getDescription();
+    TargetGraph targetGraph2 = TargetGraphFactory.newInstance(
+        baseModuleBuilder.build(),
+        GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET).build());
     CxxPythonExtension baseModule = (CxxPythonExtension) baseModuleBuilder
         .build(
             resolver,
             filesystem,
-            TargetGraphFactory.newInstance(
-                baseModuleBuilder.build(),
-                GenruleBuilder.newGenruleBuilder(PYTHON_DEP_TARGET).build()));
-    PythonPackageComponents baseModuleComps = baseModule.getPythonPackageComponents(cxxPlatform);
+            targetGraph2);
+    PythonPackageComponents baseModuleComps = baseModule.getPythonPackageComponents(
+        targetGraph2,
+        cxxPlatform);
     assertEquals(
         ImmutableSet.of(
             Paths.get(name).resolve(desc.getExtensionName(target2))),
@@ -144,6 +151,7 @@ public class CxxPythonExtensionDescriptionTest {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.EMPTY;
@@ -151,15 +159,17 @@ public class CxxPythonExtensionDescriptionTest {
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return ImmutableMap.of(
             getBuildTarget(),
-            getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+            getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
       }
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
@@ -182,7 +192,9 @@ public class CxxPythonExtensionDescriptionTest {
       }
 
       @Override
-      public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+      public PythonPackageComponents getPythonPackageComponents(
+          TargetGraph targetGraph,
+          CxxPlatform cxxPlatform) {
         return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
@@ -202,7 +214,9 @@ public class CxxPythonExtensionDescriptionTest {
       public void addToCollector(AndroidPackageableCollector collector) {}
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          TargetGraph targetGraph,
+          CxxPlatform cxxPlatform) {
         return ImmutableMap.of();
       }
 
@@ -224,16 +238,18 @@ public class CxxPythonExtensionDescriptionTest {
         .setDeps(ImmutableSortedSet.of(depTarget));
     CxxPythonExtensionDescription desc =
         (CxxPythonExtensionDescription) extensionBuilder.build().getDescription();
-    CxxPythonExtension extension = (CxxPythonExtension) extensionBuilder.build(
-        resolver,
-        new FakeProjectFilesystem(),
-        TargetGraphFactory.newInstance(
-            extensionBuilder.build(),
-            pyDepBuilder.build(),
-            GenruleBuilder.newGenruleBuilder(depTarget).build()));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        extensionBuilder.build(),
+        pyDepBuilder.build(),
+        GenruleBuilder.newGenruleBuilder(depTarget).build());
+    CxxPythonExtension extension = (CxxPythonExtension) extensionBuilder
+        .build(
+            resolver,
+            new FakeProjectFilesystem(),
+            targetGraph);
 
     // Verify that the shared library dep propagated to the link rule.
-    extension.getPythonPackageComponents(cxxPlatform);
+    extension.getPythonPackageComponents(targetGraph, cxxPlatform);
     BuildRule rule = resolver.getRule(desc.getExtensionTarget(target, cxxPlatform.getFlavor()));
     assertEquals(
         ImmutableSortedSet.of(sharedLibraryDep),
@@ -256,15 +272,19 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtensionBuilder extensionBuilder = getBuilder(target);
     CxxPythonExtensionDescription desc =
         (CxxPythonExtensionDescription) extensionBuilder.build().getDescription();
-    CxxPythonExtension extension = (CxxPythonExtension) extensionBuilder.build(
-        resolver,
-        projectFilesystem,
-        TargetGraphFactory.newInstance(
-            extensionBuilder.build(),
-            pyDepBuilder.build()));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        extensionBuilder.build(),
+        pyDepBuilder.build());
+    CxxPythonExtension extension = (CxxPythonExtension) extensionBuilder
+        .build(
+            resolver,
+            projectFilesystem,
+            targetGraph);
 
     // Verify that we get the expected view from the python packageable interface.
-    PythonPackageComponents actualComponent = extension.getPythonPackageComponents(cxxPlatform);
+    PythonPackageComponents actualComponent = extension.getPythonPackageComponents(
+        targetGraph,
+        cxxPlatform);
     BuildRule rule = resolver.getRule(desc.getExtensionTarget(target, cxxPlatform.getFlavor()));
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(

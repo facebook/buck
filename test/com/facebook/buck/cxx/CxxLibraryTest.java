@@ -34,6 +34,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
@@ -106,6 +107,7 @@ public class CxxLibraryTest {
     assertEquals(
         expectedPublicCxxPreprocessorInput,
         cxxLibrary.getCxxPreprocessorInput(
+            TargetGraph.EMPTY,
             cxxPlatform,
             HeaderVisibility.PUBLIC));
 
@@ -116,6 +118,7 @@ public class CxxLibraryTest {
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
         cxxLibrary.getCxxPreprocessorInput(
+            TargetGraph.EMPTY,
             cxxPlatform,
             HeaderVisibility.PRIVATE));
 
@@ -129,6 +132,7 @@ public class CxxLibraryTest {
     assertEquals(
         expectedStaticNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
+            TargetGraph.EMPTY,
             cxxPlatform,
             Linker.LinkableDepType.STATIC));
 
@@ -142,6 +146,7 @@ public class CxxLibraryTest {
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
+            TargetGraph.EMPTY,
             cxxPlatform,
             Linker.LinkableDepType.SHARED));
 
@@ -156,7 +161,7 @@ public class CxxLibraryTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedPythonPackageComponents,
-        cxxLibrary.getPythonPackageComponents(cxxPlatform));
+        cxxLibrary.getPythonPackageComponents(TargetGraph.EMPTY, cxxPlatform));
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
@@ -198,10 +203,13 @@ public class CxxLibraryTest {
         ImmutableSortedSet.<BuildTarget>of());
 
     assertThat(
-        cxxLibrary.getSharedLibraries(cxxPlatform).entrySet(),
+        cxxLibrary.getSharedLibraries(TargetGraph.EMPTY, cxxPlatform).entrySet(),
         Matchers.empty());
     assertThat(
-        cxxLibrary.getPythonPackageComponents(cxxPlatform).getNativeLibraries().entrySet(),
+        cxxLibrary
+            .getPythonPackageComponents(TargetGraph.EMPTY, cxxPlatform)
+            .getNativeLibraries()
+            .entrySet(),
         Matchers.empty());
 
     // Verify that
@@ -218,6 +226,7 @@ public class CxxLibraryTest {
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
+            TargetGraph.EMPTY,
             cxxPlatform,
             Linker.LinkableDepType.SHARED));
   }

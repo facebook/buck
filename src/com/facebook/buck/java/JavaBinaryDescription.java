@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Optional;
@@ -69,13 +70,14 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
 
   @Override
   public <A extends Args> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ImmutableMap<String, SourcePath> nativeLibraries =
-        JavaLibraryRules.getNativeLibraries(params.getDeps(), cxxPlatform);
+        JavaLibraryRules.getNativeLibraries(targetGraph, params.getDeps(), cxxPlatform);
     BuildRuleParams binaryParams = params;
 
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and

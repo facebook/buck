@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,9 +50,12 @@ public class CxxPythonExtension extends NoopBuildRule implements PythonPackagabl
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+  public PythonPackageComponents getPythonPackageComponents(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform) {
     BuildRule extension =
         CxxDescriptionEnhancer.requireBuildRule(
+            targetGraph,
             params,
             ruleResolver,
             cxxPlatform.getFlavor(),

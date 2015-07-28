@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -80,6 +81,7 @@ public class CxxPreprocessables {
    * found while traversing the dependencies starting from the {@link BuildRule} objects given.
    */
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      final TargetGraph targetGraph,
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       final Predicate<Object> traverse) {
@@ -97,7 +99,10 @@ public class CxxPreprocessables {
             if (rule instanceof CxxPreprocessorDep) {
               CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
               deps.putAll(
-                  dep.getTransitiveCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
+                  dep.getTransitiveCxxPreprocessorInput(
+                      targetGraph,
+                      cxxPlatform,
+                      HeaderVisibility.PUBLIC));
               return ImmutableSet.of();
             }
             return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
@@ -110,9 +115,11 @@ public class CxxPreprocessables {
   }
 
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+      TargetGraph targetGraph,
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs) {
     return getTransitiveCxxPreprocessorInput(
+        targetGraph,
         cxxPlatform,
         inputs,
         Predicates.alwaysTrue());
@@ -148,6 +155,7 @@ public class CxxPreprocessables {
    * Builds a {@link CxxPreprocessorInput} for a rule.
    */
   public static CxxPreprocessorInput getCxxPreprocessorInput(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       Flavor flavor,
@@ -156,6 +164,7 @@ public class CxxPreprocessables {
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Iterable<Path> frameworkSearchPaths) {
     BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
+        targetGraph,
         params,
         ruleResolver,
         flavor,

@@ -103,6 +103,7 @@ public class KnownBuildRuleTypesTest {
 
     @Override
     public <A> BuildRule createBuildRule(
+        TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {
@@ -144,10 +145,8 @@ public class KnownBuildRuleTypesTest {
 
     JavaLibraryDescription.Arg arg = new JavaLibraryDescription.Arg();
     populateJavaArg(arg);
-    return (DefaultJavaLibrary) description.createBuildRule(
-        buildRuleParams,
-        new BuildRuleResolver(),
-        arg);
+    return (DefaultJavaLibrary) description
+        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
   }
 
   @Test
@@ -253,11 +252,8 @@ public class KnownBuildRuleTypesTest {
     AndroidLibraryDescription.Arg arg = new AndroidLibraryDescription.Arg();
     populateJavaArg(arg);
     arg.manifest = Optional.absent();
-    AndroidLibrary rule = (AndroidLibrary) description.createBuildRule(
-        buildRuleParams,
-        new BuildRuleResolver(),
-        arg);
-
+    AndroidLibrary rule = (AndroidLibrary) description
+        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
 
     Javac javac = rule.getJavacOptions().getJavac();
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
@@ -289,10 +285,9 @@ public class KnownBuildRuleTypesTest {
     AndroidLibraryDescription.Arg arg = new AndroidLibraryDescription.Arg();
     populateJavaArg(arg);
     arg.manifest = Optional.absent();
-    AndroidLibrary rule = (AndroidLibrary) description.createBuildRule(
-        buildRuleParams,
-        new BuildRuleResolver(),
-        arg);
+    AndroidLibrary rule = (AndroidLibrary) description
+        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
+
     assertEquals(javac.toPath(), ((ExternalJavac) rule.getJavacOptions().getJavac()).getPath());
   }
 

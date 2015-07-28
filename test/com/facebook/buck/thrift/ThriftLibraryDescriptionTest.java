@@ -37,6 +37,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -130,6 +131,7 @@ public class ThriftLibraryDescriptionTest {
 
     @Override
     public BuildRule createBuildRule(
+        TargetGraph targetGraph,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         ThriftConstructorArg args,
@@ -363,7 +365,7 @@ public class ThriftLibraryDescriptionTest {
     arg.flags = Optional.absent();
 
     // Build the thrift library rule and verify that it's setup correctly.
-    BuildRule rule = desc.createBuildRule(unflavoredParams, resolver, arg);
+    BuildRule rule = desc.createBuildRule(TargetGraph.EMPTY, unflavoredParams, resolver, arg);
     assertTrue(rule instanceof ThriftLibrary);
     ThriftLibrary me = (ThriftLibrary) rule;
     assertEquals(
@@ -504,11 +506,11 @@ public class ThriftLibraryDescriptionTest {
 
     // Setup the unflavored target, which should just produce a ThriftInclude, SymlinkTree, and
     // ThriftLibrary rule.
-    BuildRule rule = desc.createBuildRule(unflavoredParams, resolver, arg);
+    BuildRule rule = desc.createBuildRule(TargetGraph.EMPTY, unflavoredParams, resolver, arg);
     resolver.addToIndex(rule);
 
     // Now attempt to create the flavored thrift library.
-    desc.createBuildRule(flavoredParams, resolver, arg);
+    desc.createBuildRule(TargetGraph.EMPTY, flavoredParams, resolver, arg);
   }
 
   @Test

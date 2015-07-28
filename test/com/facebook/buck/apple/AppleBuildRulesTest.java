@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -81,9 +82,9 @@ public class AppleBuildRulesTest {
         new FakeBuildRuleParamsBuilder(BuildTarget.builder("//foo", "lib").build()).build();
     AppleNativeTargetDescriptionArg arg =
         createDescriptionArgWithDefaults(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
-    BuildRule libraryRule =
-        FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION.createBuildRule(
-            params, new BuildRuleResolver(), arg);
+    BuildRule libraryRule = FakeAppleRuleDescriptions
+        .LIBRARY_DESCRIPTION
+        .createBuildRule(TargetGraph.EMPTY, params, new BuildRuleResolver(), arg);
 
     assertFalse(AppleBuildRules.isXcodeTargetTestBuildRule(libraryRule));
   }

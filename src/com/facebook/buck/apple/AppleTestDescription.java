@@ -38,6 +38,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
@@ -121,6 +122,7 @@ public class AppleTestDescription implements
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -153,7 +155,7 @@ public class AppleTestDescription implements
     Optional<AppleBundle> testHostApp;
     Optional<SourcePath> testHostAppBinarySourcePath;
     if (args.testHostApp.isPresent()) {
-      TargetNode<?> testHostAppNode = params.getTargetGraph().get(args.testHostApp.get());
+      TargetNode<?> testHostAppNode = targetGraph.get(args.testHostApp.get());
       Preconditions.checkNotNull(testHostAppNode);
 
       if (testHostAppNode.getType() != AppleBundleDescription.TYPE) {
@@ -169,23 +171,25 @@ public class AppleTestDescription implements
           testHostAppNode.getConstructorArg();
 
       testHostApp = Optional.of(
-          appleBundleDescription.createBuildRule(
-              params.copyWithChanges(
-                  BuildTarget.builder(args.testHostApp.get())
-                      .addAllFlavors(nonLibraryFlavors)
-                      .build(),
-                  Suppliers.ofInstance(
-                      BuildRules.toBuildRulesFor(
-                          args.testHostApp.get(),
-                          resolver,
-                          testHostAppNode.getDeclaredDeps())),
-                  Suppliers.ofInstance(
-                      BuildRules.toBuildRulesFor(
-                          args.testHostApp.get(),
-                          resolver,
-                          testHostAppNode.getExtraDeps()))),
-              resolver,
-              testHostAppDescription));
+          appleBundleDescription
+              .createBuildRule(
+                  targetGraph,
+                  params.copyWithChanges(
+                      BuildTarget.builder(args.testHostApp.get())
+                          .addAllFlavors(nonLibraryFlavors)
+                          .build(),
+                      Suppliers.ofInstance(
+                          BuildRules.toBuildRulesFor(
+                              args.testHostApp.get(),
+                              resolver,
+                              testHostAppNode.getDeclaredDeps())),
+                      Suppliers.ofInstance(
+                          BuildRules.toBuildRulesFor(
+                              args.testHostApp.get(),
+                              resolver,
+                              testHostAppNode.getExtraDeps()))),
+                  resolver,
+                  testHostAppDescription));
       testHostAppBinarySourcePath = Optional.<SourcePath>of(
           new BuildTargetSourcePath(testHostAppDescription.binary));
     } else {
@@ -194,6 +198,7 @@ public class AppleTestDescription implements
     }
 
     BuildRule library = appleLibraryDescription.createBuildRule(
+        targetGraph,
         params.copyWithChanges(
             BuildTarget.builder(params.getBuildTarget())
                 .addAllFlavors(extraFlavorsBuilder.build())
@@ -238,8 +243,8 @@ public class AppleTestDescription implements
     ImmutableSet.Builder<SourcePath> resourceVariantFilesBuilder = ImmutableSet.builder();
 
     AppleResources.collectResourceDirsAndFiles(
-        params.getTargetGraph(),
-        Preconditions.checkNotNull(params.getTargetGraph().get(params.getBuildTarget())),
+        targetGraph,
+        Preconditions.checkNotNull(targetGraph.get(params.getBuildTarget())),
         resourceDirsBuilder,
         dirsContainingResourceDirsBuilder,
         resourceFilesBuilder,
@@ -252,6 +257,7 @@ public class AppleTestDescription implements
 
     CollectedAssetCatalogs collectedAssetCatalogs =
         AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
+            targetGraph,
             params,
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),

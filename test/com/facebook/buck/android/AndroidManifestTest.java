@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.BuckConstant;
@@ -83,7 +84,8 @@ public class AndroidManifestTest {
     AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.skeleton = new TestSourcePath("java/com/example/AndroidManifestSkeleton.xml");
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    return description.createBuildRule(buildRuleParams, new BuildRuleResolver(), arg);
+    return description
+        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
   }
 
   // TODO(user): Add another unit test that passes in a non-trivial DependencyGraph and verify that

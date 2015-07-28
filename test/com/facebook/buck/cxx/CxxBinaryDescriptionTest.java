@@ -103,6 +103,7 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public CxxPreprocessorInput getCxxPreprocessorInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return CxxPreprocessorInput.builder()
@@ -115,15 +116,17 @@ public class CxxBinaryDescriptionTest {
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           HeaderVisibility headerVisibility) {
         return ImmutableMap.of(
             getBuildTarget(),
-            getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+            getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
       }
 
       @Override
       public NativeLinkableInput getNativeLinkableInput(
+          TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return NativeLinkableInput.of(
@@ -139,7 +142,9 @@ public class CxxBinaryDescriptionTest {
       }
 
       @Override
-      public PythonPackageComponents getPythonPackageComponents(CxxPlatform cxxPlatform) {
+      public PythonPackageComponents getPythonPackageComponents(
+          TargetGraph targetGraph,
+          CxxPlatform cxxPlatform) {
         return PythonPackageComponents.of(
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
@@ -157,7 +162,9 @@ public class CxxBinaryDescriptionTest {
       public void addToCollector(AndroidPackageableCollector collector) {}
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(
+          TargetGraph targetGraph,
+          CxxPlatform cxxPlatform) {
         return ImmutableMap.of();
       }
 
@@ -187,7 +194,7 @@ public class CxxBinaryDescriptionTest {
     CxxLink rule = binRule.getRule();
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
-            cxxBinaryBuilder.createBuildRuleParams(resolver, projectFilesystem, TargetGraph.EMPTY),
+            cxxBinaryBuilder.createBuildRuleParams(resolver, projectFilesystem),
             resolver,
             pathResolver,
             cxxPlatform,

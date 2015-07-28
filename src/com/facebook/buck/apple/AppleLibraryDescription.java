@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -88,10 +89,12 @@ public class AppleLibraryDescription implements
 
   @Override
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
     return createBuildRule(
+        targetGraph,
         params,
         resolver,
         args,
@@ -100,6 +103,7 @@ public class AppleLibraryDescription implements
   }
 
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args,
@@ -120,6 +124,7 @@ public class AppleLibraryDescription implements
         !isSharedLibraryTarget(params.getBuildTarget()));
 
     return delegate.createBuildRule(
+        targetGraph,
         params,
         resolver,
         delegateArg,

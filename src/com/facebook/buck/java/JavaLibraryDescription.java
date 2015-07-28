@@ -77,6 +77,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   @Override
   public <A extends Arg> BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -211,7 +212,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       BuildRule buildRule,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
-      TargetGraph targetGraph,
       BuildRuleResolver ruleResolver) {
     BuildTarget originalBuildTarget = buildRule.getBuildTarget();
 
@@ -220,7 +220,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         originalBuildTarget,
         projectFilesystem,
         ruleKeyBuilderFactory,
-        targetGraph,
         arg);
     if (!gwtModuleOptional.isPresent()) {
       return;
@@ -242,7 +241,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
-      TargetGraph targetGraph,
       Arg arg) {
     if (arg.srcs.get().isEmpty() &&
         arg.resources.get().isEmpty() &&
@@ -269,8 +267,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             Suppliers.ofInstance(deps),
             /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
             projectFilesystem,
-            ruleKeyBuilderFactory,
-            targetGraph),
+            ruleKeyBuilderFactory),
         resolver,
         filesForGwtModule);
     return Optional.of(gwtModule);
