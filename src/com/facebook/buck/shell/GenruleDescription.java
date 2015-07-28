@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+
 public class GenruleDescription
     implements
     Description<GenruleDescription.Arg>,
@@ -95,7 +96,7 @@ public class GenruleDescription
         args.bash,
         args.cmdExe,
         args.out,
-        params.getPathAbsolutifier());
+        params.getProjectFilesystem().getAbsolutifier());
   }
 
   private ImmutableList<BuildRule> findExtraDepsFromArgs(

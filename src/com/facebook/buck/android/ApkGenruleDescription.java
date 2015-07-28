@@ -96,7 +96,7 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
         args.cmd,
         args.bash,
         args.cmdExe,
-        params.getPathAbsolutifier(),
+        params.getProjectFilesystem().getAbsolutifier(),
         (InstallableApk) installableApk);
   }
 

@@ -19,12 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.Beta;
-import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 /**
  * Standard set of parameters that is passed to all build rules.
@@ -128,10 +125,6 @@ public class BuildRuleParams {
 
   public ImmutableSortedSet<BuildRule> getExtraDeps() {
     return extraDeps.get();
-  }
-
-  public Function<Path, Path> getPathAbsolutifier() {
-    return projectFilesystem.getAbsolutifier();
   }
 
   public ProjectFilesystem getProjectFilesystem() {
