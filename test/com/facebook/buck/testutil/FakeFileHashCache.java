@@ -31,13 +31,10 @@ import java.util.Map;
  */
 public class FakeFileHashCache implements FileHashCache {
 
-  public static final FakeFileHashCache EMPTY_CACHE =
-      createFromStrings(Maps.<String, String>newHashMap());
-
-  private final ImmutableMap<Path, HashCode> pathsToHashes;
+  private final Map<Path, HashCode> pathsToHashes;
 
   public FakeFileHashCache(Map<Path, HashCode> pathsToHashes) {
-    this.pathsToHashes = ImmutableMap.copyOf(pathsToHashes);
+    this.pathsToHashes = Maps.newHashMap(pathsToHashes);
   }
 
   public static FakeFileHashCache createFromStrings(Map<String, String> pathsToHashes) {
@@ -51,6 +48,11 @@ public class FakeFileHashCache implements FileHashCache {
   @Override
   public boolean contains(Path path) {
     return pathsToHashes.containsKey(path);
+  }
+
+  @Override
+  public void invalidate(Path path) {
+    pathsToHashes.remove(path);
   }
 
   @Override

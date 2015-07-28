@@ -31,8 +31,13 @@ public class NullFileHashCache implements FileHashCache {
   }
 
   @Override
+  public void invalidate(Path path) {
+  }
+
+  @Override
   @Nullable
   public HashCode get(Path path) {
     return null;
   }
+
 }

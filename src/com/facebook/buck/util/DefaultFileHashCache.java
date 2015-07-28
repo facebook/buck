@@ -93,6 +93,11 @@ public class DefaultFileHashCache implements FileHashCache {
     return loadingCache.getIfPresent(path) != null;
   }
 
+  @Override
+  public void invalidate(Path path) {
+    loadingCache.invalidate(path);
+  }
+
   /**
    * @return The {@link com.google.common.hash.HashCode} of the contents of path.
    */

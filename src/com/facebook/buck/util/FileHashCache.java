@@ -25,7 +25,10 @@ import java.nio.file.Path;
  * based on a simplified subset of the java.util.Map&lt;Path, HashCode&gt; interface.
  */
 public interface FileHashCache {
+
   boolean contains(Path path);
+
+  void invalidate(Path path);
 
   HashCode get(Path path);
 

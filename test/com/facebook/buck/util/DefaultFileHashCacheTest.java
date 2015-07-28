@@ -172,4 +172,29 @@ public class DefaultFileHashCacheTest {
             StandardWatchEventKinds.ENTRY_CREATE));
     assertFalse("Cache should not contain path", cache.contains(dir));
   }
+
+  @Test
+  public void whenPathIsPutThenInvalidatedCacheDoesNotContainPath() {
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(new FakeProjectFilesystem());
+    Path path = new File("SomeClass.java").toPath();
+    HashCodeAndFileType value = HashCodeAndFileType.of(
+        HashCode.fromInt(42),
+        HashCodeAndFileType.Type.FILE);
+    cache.loadingCache.put(path, value);
+    assertTrue("Cache should contain path", cache.contains(path));
+    cache.invalidate(path);
+    assertFalse("Cache should not contain pain", cache.contains(path));
+  }
+
+  @Test
+  public void invalidatingNonExistentEntryDoesNotThrow() {
+    DefaultFileHashCache cache =
+        new DefaultFileHashCache(new FakeProjectFilesystem());
+    Path path = new File("SomeClass.java").toPath();
+    assertFalse("Cache should not contain pain", cache.contains(path));
+    cache.invalidate(path);
+    assertFalse("Cache should not contain pain", cache.contains(path));
+  }
+
 }

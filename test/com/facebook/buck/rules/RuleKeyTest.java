@@ -563,10 +563,15 @@ public class RuleKeyTest {
   }
 
   private RuleKey.Builder createEmptyRuleKey(SourcePathResolver resolver) {
-    FileHashCache fileHashCache = new FileHashCache() {
+    FileHashCache fileHashCache =
+        new FileHashCache() {
           @Override
           public boolean contains(Path path) {
             return true;
+          }
+
+          @Override
+          public void invalidate(Path path) {
           }
 
           @Override
