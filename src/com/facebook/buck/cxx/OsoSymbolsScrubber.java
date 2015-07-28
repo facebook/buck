@@ -17,41 +17,27 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileScrubber;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
+import java.nio.file.Path;
 
-public class LcUuidScrubber implements FileScrubber {
+public class OsoSymbolsScrubber implements FileScrubber {
 
-  private static final byte[] ZERO_UUID = new byte[16];
+  private final Path linkingDirectory;
+
+  public OsoSymbolsScrubber(Path linkingDirectory) {
+    this.linkingDirectory = linkingDirectory;
+  }
 
   @Override
   public void scrubFile(FileChannel file) throws IOException, ScrubException {
-    long size = file.size();
-    MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, size);
-
     try {
-      Machos.setUuid(map, ZERO_UUID);
+      Machos.relativizeOsoSymbols(file, linkingDirectory);
     } catch (Machos.MachoException e) {
       throw new ScrubException(e.getMessage());
     }
-    map.rewind();
 
-    Hasher hasher = Hashing.sha1().newHasher();
-    while (map.hasRemaining()) {
-      hasher.putByte(map.get());
-    }
-
-    map.rewind();
-    try {
-      Machos.setUuid(map, Arrays.copyOf(hasher.hash().asBytes(), 16));
-    } catch (Machos.MachoException e) {
-      throw new ScrubException(e.getMessage());
-    }
   }
 
 }

@@ -24,6 +24,8 @@ import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+
 /**
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
  */
@@ -46,8 +48,10 @@ public class DarwinLinker implements Linker {
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers() {
-    return ImmutableList.<FileScrubber>of(new LcUuidScrubber());
+  public ImmutableList<FileScrubber> getScrubbers(Path linkingDirectory) {
+    return ImmutableList.of(
+        new OsoSymbolsScrubber(linkingDirectory),
+        new LcUuidScrubber());
   }
 
   @Override

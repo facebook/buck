@@ -1,0 +1,6 @@
+apple_binary(
+  name = 'TestApp',
+  compiler_flags = ['-g'],
+  linker_flags = ['-lobjc'],
+  srcs = ['TestClass.m'],
+)

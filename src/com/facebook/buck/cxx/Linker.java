@@ -20,13 +20,15 @@ import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+
 /**
  * An object wrapping a linker, providing its source path and an interface to decorate
  * arguments with specific flags.
  */
 public interface Linker extends Tool {
 
-  ImmutableList<FileScrubber> getScrubbers();
+  ImmutableList<FileScrubber> getScrubbers(Path linkingDirectory);
 
   /**
    * @return the platform-specific way to specify that the library represented by the

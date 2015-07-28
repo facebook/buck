@@ -24,6 +24,8 @@ import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+
 /**
  * A specialization of {@link Linker} containing information specific to the Windows implementation.
  */
@@ -45,7 +47,7 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers() {
+  public ImmutableList<FileScrubber> getScrubbers(Path linkingDirectory) {
     return ImmutableList.of();
   }
 

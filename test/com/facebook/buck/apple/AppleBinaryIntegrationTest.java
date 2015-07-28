@@ -168,6 +168,43 @@ public class AppleBinaryIntegrationTest {
         stderr.contains(expectedSummary));
   }
 
+  @Test
+  public void testAppleBinaryIsHermetic() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_binary_is_hermetic", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult first = workspace.runBuckCommand(
+        workspace.getPath("first"),
+        "build",
+        "//Apps/TestApp:TestApp#iphonesimulator-x86_64");
+    first.assertSuccess();
+
+    ProjectWorkspace.ProcessResult second = workspace.runBuckCommand(
+        workspace.getPath("second"),
+        "build",
+        "//Apps/TestApp:TestApp#iphonesimulator-x86_64");
+    second.assertSuccess();
+
+    assertTrue(
+        com.google.common.io.Files.equal(
+            workspace.getFile(
+                "first/buck-out/gen/Apps/TestApp/" +
+                    "TestApp#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"),
+            workspace.getFile(
+                "second/buck-out/gen/Apps/TestApp/" +
+                    "TestApp#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o")));
+    assertTrue(
+        com.google.common.io.Files.equal(
+            workspace.getFile(
+                "first/buck-out/gen/Apps/TestApp/" +
+                    "TestApp#iphonesimulator-x86_64/TestApp#iphonesimulator-x86_64"),
+            workspace.getFile(
+                "second/buck-out/gen/Apps/TestApp/" +
+                    "TestApp#iphonesimulator-x86_64/TestApp#iphonesimulator-x86_64")));
+  }
+
   private static void assertIsSymbolicLink(
       Path link,
       Path target) throws IOException {

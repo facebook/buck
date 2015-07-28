@@ -20,6 +20,9 @@ import com.facebook.buck.io.FileScrubber;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Longs;
+import com.google.common.primitives.Shorts;
 
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
@@ -104,9 +107,42 @@ public class ObjectFileScrubbers {
     return Integer.parseInt(str.trim());
   }
 
-  public static int getLittleEndian32BitLong(ByteBuffer buffer) {
-    byte[] bytes = getBytes(buffer, 4);
-    return bytes[3] << 24 | (bytes[2] & 0xFF) << 16 | (bytes[1] & 0xFF) << 8 | (bytes[0] & 0xFF);
+  public static long getLittleEndianLong(ByteBuffer buffer) {
+    byte b1 = buffer.get();
+    byte b2 = buffer.get();
+    byte b3 = buffer.get();
+    byte b4 = buffer.get();
+    byte b5 = buffer.get();
+    byte b6 = buffer.get();
+    byte b7 = buffer.get();
+    byte b8 = buffer.get();
+    return Longs.fromBytes(b8, b7, b6, b5, b4, b3, b2, b1);
+  }
+
+  public static int getLittleEndianInt(ByteBuffer buffer) {
+    byte b1 = buffer.get();
+    byte b2 = buffer.get();
+    byte b3 = buffer.get();
+    byte b4 = buffer.get();
+    return Ints.fromBytes(b4, b3, b2, b1);
+  }
+
+  public static short getLittleEndianShort(ByteBuffer buffer) {
+    byte b1 = buffer.get();
+    byte b2 = buffer.get();
+    return Shorts.fromBytes(b2, b1);
+  }
+
+  public static String getAsciiString(ByteBuffer buffer) {
+    int position = buffer.position();
+    int length = 0;
+    do {
+      length++;
+    } while (buffer.get() != 0x00);
+    byte[] bytes = new byte[length - 1];
+    buffer.position(position);
+    buffer.get(bytes, 0, length - 1);
+    return new String(bytes, Charsets.US_ASCII);
   }
 
   public static void putSpaceLeftPaddedString(ByteBuffer buffer, int len, String value) {
@@ -125,6 +161,25 @@ public class ObjectFileScrubbers {
 
   public static void putIntAsDecimalString(ByteBuffer buffer, int len, int value) {
     putSpaceLeftPaddedString(buffer, len, String.format("%d", value));
+  }
+
+  public static void putLittleEndianLong(ByteBuffer buffer, long value) {
+    byte[] bytes = Longs.toByteArray(value);
+    byte[] flipped =
+        {bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]};
+    buffer.put(flipped);
+  }
+
+  public static void putLittleEndianInt(ByteBuffer buffer, int value) {
+    byte[] bytes = Ints.toByteArray(value);
+    byte[] flipped = { bytes[3], bytes[2], bytes[1], bytes[0]};
+    buffer.put(flipped);
+  }
+
+  public static void putAsciiString(ByteBuffer buffer, String string) {
+    byte[] bytes = string.getBytes(Charsets.US_ASCII);
+    buffer.put(bytes);
+    buffer.put((byte) 0x00);
   }
 
   public static void checkArchive(boolean expression, String msg)

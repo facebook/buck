@@ -101,7 +101,7 @@ public class CxxLink
             output,
             args,
             frameworkRoots),
-        new FileScrubberStep(output, linker.getScrubbers()));
+        new FileScrubberStep(output, linker.getScrubbers(context.getProjectRoot())));
   }
 
   @Override
