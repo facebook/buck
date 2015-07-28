@@ -280,14 +280,19 @@ public class ThriftLibraryDescription
       // Create the symlink tree build rule and add it to the resolver.
       Path includeRoot = getIncludeRoot(target);
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
-      SymlinkTree symlinkTree = new SymlinkTree(
-          params.copyWithChanges(
-              symlinkTreeTarget,
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-          pathResolver,
-          includeRoot,
-          includes);
+      SymlinkTree symlinkTree;
+      try {
+        symlinkTree = new SymlinkTree(
+            params.copyWithChanges(
+                symlinkTreeTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            includeRoot,
+            includes);
+      } catch (SymlinkTree.InvalidSymlinkTreeException e) {
+        throw e.getHumanReadableExceptionForBuildTarget(target);
+      }
       resolver.addToIndex(symlinkTree);
 
       // Create a dummy rule that dependents can use to grab the information they need

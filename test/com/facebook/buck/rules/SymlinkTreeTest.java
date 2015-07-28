@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
+import org.hamcrest.junit.ExpectedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,6 +57,9 @@ public class SymlinkTreeTest {
   @Rule
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
+  @Rule
+  public final ExpectedException exception = ExpectedException.none();
+
   private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
   private SymlinkTree symlinkTreeBuildRule;
@@ -63,7 +67,7 @@ public class SymlinkTreeTest {
   private Path outputPath;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws Exception {
     projectFilesystem = new FakeProjectFilesystem(tmpDir.getRoot());
 
     // Create a build target to use when building the symlink tree.
@@ -140,7 +144,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws IOException {
+  public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
 
     // Create a BuildRule wrapping the stock SymlinkTree buildable.
     //BuildRule rule1 = symlinkTreeBuildable;
@@ -208,7 +212,7 @@ public class SymlinkTreeTest {
   }
 
   @Test
-  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToDependencyChanges() {
+  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToDependencyChanges() throws Exception {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
@@ -242,7 +246,8 @@ public class SymlinkTreeTest {
 
 
   @Test
-  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges() {
+  public void testSymlinkTreeInputBasedRuleKeysAreImmuneToLinkSourceContentChanges()
+      throws Exception {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -282,6 +287,23 @@ public class SymlinkTreeTest {
 
     // Verify that the rules keys are the same.
     assertEquals(ruleKey1, ruleKey2);
+  }
+
+  @Test
+  public void constructorThrowsIfKeyContainsDotDot() throws Exception {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    exception.expect(SymlinkTree.InvalidSymlinkTreeException.class);
+    new SymlinkTree(
+        new FakeBuildRuleParamsBuilder(buildTarget).build(),
+        pathResolver,
+        outputPath,
+        ImmutableMap.<Path, SourcePath>of(
+            Paths.get("../something"),
+            new PathSourcePath(
+                projectFilesystem,
+                MorePaths.relativize(tmpDir.getRoot().toPath(), tmpDir.newFile().toPath()))));
   }
 
 }

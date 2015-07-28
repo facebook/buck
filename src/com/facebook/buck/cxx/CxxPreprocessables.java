@@ -129,16 +129,19 @@ public class CxxPreprocessables {
       BuildRuleParams params,
       Path root,
       ImmutableMap<Path, SourcePath> links) {
-
-    return new SymlinkTree(
-        params.copyWithChanges(
-            target,
-            // Symlink trees never need to depend on anything.
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-        resolver,
-        root,
-        links);
+    try {
+      return new SymlinkTree(
+          params.copyWithChanges(
+              target,
+              // Symlink trees never need to depend on anything.
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+          resolver,
+          root,
+          links);
+    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(target);
+    }
   }
 
   /**

@@ -87,7 +87,11 @@ public class ThriftLibraryDescriptionTest {
         new FakeBuildRuleParamsBuilder(target)
             .setDeps(ImmutableSortedSet.copyOf(deps))
             .build();
-    return new SymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
+    try {
+      return new SymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
+    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static class FakeThriftLanguageSpecificEnhancer

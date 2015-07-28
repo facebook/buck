@@ -16,10 +16,12 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -41,7 +43,7 @@ public class SymlinkTree
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path root,
-      ImmutableMap<Path, SourcePath> links) {
+      ImmutableMap<Path, SourcePath> links) throws InvalidSymlinkTreeException {
     super(params, resolver);
     this.root = root;
     this.links = ImmutableSortedMap.copyOf(links);
@@ -49,6 +51,15 @@ public class SymlinkTree
     ImmutableMap.Builder<Path, SourcePath> fullLinks = ImmutableMap.builder();
     // Maintain ordering
     for (ImmutableMap.Entry<Path, SourcePath> entry : this.links.entrySet()) {
+      for (Path pathPart : entry.getKey()) {
+        if (pathPart.toString().equals("..")) {
+          throw new InvalidSymlinkTreeException(
+              String.format(
+                  "Path '%s' should not contain '%s'.",
+                  entry.getKey(),
+                  pathPart));
+        }
+      }
       fullLinks.put(root.resolve(entry.getKey()), entry.getValue());
     }
     this.fullLinks = fullLinks.build();
@@ -114,6 +125,21 @@ public class SymlinkTree
 
   public ImmutableMap<Path, SourcePath> getFullLinks() {
     return fullLinks;
+  }
+
+  @SuppressWarnings("serial")
+  public static class InvalidSymlinkTreeException extends Exception {
+    public InvalidSymlinkTreeException(String message) {
+      super(message);
+    }
+
+    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
+      return new HumanReadableException(
+          this,
+          "Target '%s' has invalid symlink tree entry. %s",
+          buildTarget,
+          getMessage());
+    }
   }
 
 }
