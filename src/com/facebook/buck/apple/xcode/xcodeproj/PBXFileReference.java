@@ -30,8 +30,18 @@ public class PBXFileReference extends PBXReference {
   private Optional<String> explicitFileType;
   private Optional<String> lastKnownFileType;
 
-  public PBXFileReference(String name, @Nullable String path, SourceTree sourceTree) {
+  private PBXFileReference(
+      String name,
+      @Nullable String path,
+      SourceTree sourceTree,
+      boolean isFolder) {
     super(name, path, sourceTree);
+
+    if (isFolder) {
+      explicitFileType = Optional.of("folder");
+      lastKnownFileType = Optional.absent();
+      return;
+    }
 
     // PBXVariantGroups create file references where the name doesn't contain the file
     // extension.
@@ -62,6 +72,20 @@ public class PBXFileReference extends PBXReference {
 
   public void setExplicitFileType(Optional<String> explicitFileType) {
     this.explicitFileType = explicitFileType;
+  }
+
+  public static PBXFileReference ofAutodetectedType(
+      String name,
+      @Nullable String path,
+      SourceTree sourceTree) {
+    return new PBXFileReference(name, path, sourceTree, false);
+  }
+
+  public static PBXFileReference ofFolderType(
+      String name,
+      @Nullable String path,
+      SourceTree sourceTree) {
+    return new PBXFileReference(name, path, sourceTree, true);
   }
 
   @Override

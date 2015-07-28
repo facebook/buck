@@ -45,10 +45,7 @@ public class XCVersionGroup extends PBXReference {
         new CacheLoader<SourceTreePath, PBXFileReference>() {
           @Override
           public PBXFileReference load(SourceTreePath key) throws Exception {
-            PBXFileReference ref = new PBXFileReference(
-                key.getPath().getFileName().toString(),
-                key.getPath().toString(),
-                key.getSourceTree());
+            PBXFileReference ref = key.createFileReference();
             children.add(ref);
             return ref;
           }

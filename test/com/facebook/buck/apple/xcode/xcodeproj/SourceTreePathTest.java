@@ -28,10 +28,10 @@ import java.nio.file.Paths;
 public class SourceTreePathTest {
   @Test
   public void sourceTreePathsWithDifferentPathsAreDifferent() {
-    SourceTreePath path1 = new SourceTreePath(
+    SourceTreePath path1 = SourceTreePath.ofAutodetectedType(
         PBXReference.SourceTree.SOURCE_ROOT,
         Paths.get("foo/bar.c"));
-    SourceTreePath path2 = new SourceTreePath(
+    SourceTreePath path2 = SourceTreePath.ofAutodetectedType(
         PBXReference.SourceTree.SOURCE_ROOT,
         Paths.get("foo/baz.c"));
     assertNotEquals(path1, path2);

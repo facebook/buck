@@ -773,7 +773,7 @@ public class ProjectGenerator {
     }
     PBXGroup targetGroup = targetBuilderResult.targetGroup;
 
-    SourceTreePath buckFilePath = new SourceTreePath(
+    SourceTreePath buckFilePath = SourceTreePath.ofAutodetectedType(
         PBXReference.SourceTree.SOURCE_ROOT,
         pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName));
     PBXFileReference buckReference =
@@ -1172,7 +1172,7 @@ public class ProjectGenerator {
     return targetGroup
         .getOrCreateChildGroupByName("Configurations")
         .getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
+            SourceTreePath.ofAutodetectedType(
                 PBXReference.SourceTree.SOURCE_ROOT,
                 pathRelativizer.outputDirToRootRelative(xcconfigPath)));
   }
@@ -1281,7 +1281,7 @@ public class ProjectGenerator {
 
         final XCVersionGroup versionGroup =
             resourcesGroup.getOrCreateChildVersionGroupsBySourceTreePath(
-                new SourceTreePath(
+                SourceTreePath.ofAutodetectedType(
                     PBXReference.SourceTree.SOURCE_ROOT,
                     pathRelativizer.outputDirToRootRelative(dataModel.path)));
 
@@ -1294,7 +1294,7 @@ public class ProjectGenerator {
                   return FileVisitResult.CONTINUE;
                 }
                 versionGroup.getOrCreateFileReferenceBySourceTreePath(
-                    new SourceTreePath(
+                    SourceTreePath.ofAutodetectedType(
                         PBXReference.SourceTree.SOURCE_ROOT,
                         pathRelativizer.outputDirToRootRelative(dir)));
                 return FileVisitResult.SKIP_SUBTREE;
@@ -1320,7 +1320,7 @@ public class ProjectGenerator {
             throw new HumanReadableException("Malformed %s file.", currentVersionFileName);
           }
           PBXFileReference ref = versionGroup.getOrCreateFileReferenceBySourceTreePath(
-              new SourceTreePath(
+              SourceTreePath.ofAutodetectedType(
                   PBXReference.SourceTree.SOURCE_ROOT,
                   pathRelativizer.outputDirToRootRelative(
                       dataModel.path.resolve(currentVersionName.toString()))));
@@ -1334,7 +1334,7 @@ public class ProjectGenerator {
         }
       } else {
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
+            SourceTreePath.ofAutodetectedType(
                 PBXReference.SourceTree.SOURCE_ROOT,
                 pathRelativizer.outputDirToRootRelative(dataModel.path)));
       }
@@ -1872,7 +1872,7 @@ public class ProjectGenerator {
       throw new RuntimeException("Unexpected type: " + targetNode.getType());
     }
 
-    return new SourceTreePath(
+    return SourceTreePath.ofAutodetectedType(
         PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
         Paths.get(productOutputName));
   }
@@ -1905,7 +1905,7 @@ public class ProjectGenerator {
    */
   private PBXFileReference getOrCreateTestLibraryFileReference(
       TargetNode<AppleTestDescription.Arg> test) {
-    SourceTreePath path = new SourceTreePath(
+    SourceTreePath path = SourceTreePath.ofAutodetectedType(
         PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
         Paths.get(getBuiltProductsRelativeTargetOutputPath(test)).resolve(
             String.format(
