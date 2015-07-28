@@ -249,6 +249,10 @@
     <jar destfile="${javac-tracing.jar}">
       <fileset dir="${javac-tracing.classes.dir}"/>
     </jar>
+
+    <!-- Put the tracing jar in resources so it can be dynamically loaded at runtime. See
+     TranslatingJavacPhaseTracer -->
+    <copy file="${javac-tracing.jar}" todir="${classes.dir}/com/facebook/buck/java/tracing" />
   </target>
 
   <path id="immutables-classpath">
@@ -613,6 +617,12 @@
          >
       <javac-params>
         <exclude name="**/testdata/**" />
+
+        <!-- This test cannot build with the rest because it is testing TracingTaskListener,
+        which lives in the javac-tracing-compiler-plugin.jar, which is loaded dynamically at
+        runtime. This test is run in the Buck build, which is capable of more isolated testing
+        than the Ant build is. -->
+        <exclude name="com/facebook/buck/java/tracing/TracingTaskListenerCleanerTest.java" />
       </javac-params>
     </ecj>
   </target>
@@ -654,6 +664,7 @@
           <include name="com/facebook/buck/android/**/*${test.class}.java" />
           <include name="com/facebook/buck/dalvik/**/*${test.class}.java" />
 
+          <exclude name="com/facebook/buck/java/tracing/TracingTaskListenerCleanerTest.java" />
           <exclude name="**/testdata/**" />
         </fileset>
       </batchtest>

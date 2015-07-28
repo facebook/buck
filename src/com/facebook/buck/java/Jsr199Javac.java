@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -167,6 +168,12 @@ public abstract class Jsr199Javac implements Javac {
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new BuckTracingEventBusBridge(context.getBuckEventBus(), invokingRule));
     try {
+      TranslatingJavacPhaseTracer.setupTracing(
+          invokingRule,
+          context.getClassLoaderCache(),
+          context.getBuckEventBus(),
+          compilationTask);
+
       // Ensure annotation processors are loaded from their own classloader. If we don't do this,
       // then the evidence suggests that they get one polluted with Buck's own classpath, which
       // means that libraries that have dependencies on different versions of Buck's deps may choke
