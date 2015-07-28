@@ -160,10 +160,9 @@ public class CxxLibrary extends AbstractCxxLibrary {
     final BuildRule libraryRule;
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(exportedLinkerFlags.apply(cxxPlatform));
+
     if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
-      libraryRule = CxxDescriptionEnhancer.requireBuildRule(
-          params,
-          ruleResolver,
+      libraryRule = requireBuildRule(
           cxxPlatform.getFlavor(),
           type == Linker.LinkableDepType.STATIC ?
               CxxDescriptionEnhancer.STATIC_FLAVOR :
@@ -190,9 +189,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
           getBuildTarget(),
           sharedLibrarySoname,
           cxxPlatform);
-      libraryRule = CxxDescriptionEnhancer.requireBuildRule(
-          params,
-          ruleResolver,
+      libraryRule = requireBuildRule(
           cxxPlatform.getFlavor(),
           CxxDescriptionEnhancer.SHARED_FLAVOR);
       linkerArgsBuilder.add(sharedLibraryPath.toString());
@@ -203,6 +200,11 @@ public class CxxLibrary extends AbstractCxxLibrary {
         ImmutableList.<SourcePath>of(new BuildTargetSourcePath(libraryRule.getBuildTarget())),
         linkerArgs,
         Preconditions.checkNotNull(frameworkSearchPaths.apply(cxxPlatform)));
+  }
+
+  public BuildRule requireBuildRule(
+      Flavor ... flavors) {
+    return CxxDescriptionEnhancer.requireBuildRule(params, ruleResolver, flavors);
   }
 
   @Override
@@ -227,9 +229,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
             CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
                 getBuildTarget(),
                 cxxPlatform));
-    BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
-        params,
-        ruleResolver,
+    BuildRule sharedLibraryBuildRule = requireBuildRule(
         cxxPlatform.getFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(
@@ -270,9 +270,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
             CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
                 getBuildTarget(),
                 cxxPlatform));
-    BuildRule sharedLibraryBuildRule = CxxDescriptionEnhancer.requireBuildRule(
-        params,
-        ruleResolver,
+    BuildRule sharedLibraryBuildRule = requireBuildRule(
         cxxPlatform.getFlavor(),
         CxxDescriptionEnhancer.SHARED_FLAVOR);
     libs.put(
