@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
@@ -36,14 +37,22 @@ import org.junit.Test;
 
 public class TestResultFormatterTest {
 
-  private TestResultFormatter formatter;
   private TestResultSummary successTest;
   private TestResultSummary failingTest;
   private String stackTrace;
 
-  @Before
-  public void createFormatter() {
-    formatter = new TestResultFormatter(new Ansi(false), Verbosity.COMMANDS);
+  private TestResultFormatter createSilentFormatter() {
+    return new TestResultFormatter(
+        new Ansi(false),
+        Verbosity.COMMANDS,
+        TestResultSummaryVerbosity.of(false, false));
+  }
+
+  private TestResultFormatter createNoisyFormatter() {
+    return new TestResultFormatter(
+        new Ansi(false),
+        Verbosity.COMMANDS,
+        TestResultSummaryVerbosity.of(true, true));
   }
 
   @Before
@@ -73,6 +82,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldShowTargetsForTestsThatAreAboutToBeRun() {
+    TestResultFormatter formatter = createSilentFormatter();
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runStarted(
@@ -88,6 +98,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldSaySelectedTestsWillBeRun() {
+    TestResultFormatter formatter = createSilentFormatter();
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     TestSelectorList testSelectorList = TestSelectorList.builder()
@@ -109,6 +120,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldExplainWhichTestsWillBeSelected() {
+    TestResultFormatter formatter = createSilentFormatter();
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     TestSelectorList testSelectorList = TestSelectorList.builder()
@@ -137,6 +149,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldShowThatAllTestAreBeingRunWhenRunIsStarted() {
+    TestResultFormatter formatter = createSilentFormatter();
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
 
@@ -153,6 +166,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldShowThatAllTestAreBeingRunWhenRunIsStartedWithFormatModeAfterTestRun() {
+    TestResultFormatter formatter = createSilentFormatter();
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     ImmutableSet<String> targetNames = ImmutableSet.of("//:example", "//foo:bar");
 
@@ -169,6 +183,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldIndicateThatNoTestRanIfNoneRan() {
+    TestResultFormatter formatter = createSilentFormatter();
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(builder, ImmutableList.<TestResults>of());
@@ -178,6 +193,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void allTestsPassingShouldBeAcknowledged() {
+    TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
     TestResults results = new TestResults(ImmutableList.of(summary));
@@ -190,6 +206,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldReportTheNumberOfFailingTests() {
+    TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest, failingTest));
     TestResults results = new TestResults(
@@ -210,6 +227,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldReportTheNumberOfFailingTestsWithMoreThanOneTest() {
+    TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest",
         ImmutableList.of(
@@ -242,6 +260,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldReportMinimalInformationForAPassingTest() {
+    TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(successTest));
     TestResults results = new TestResults(ImmutableList.of(summary));
@@ -255,6 +274,7 @@ public class TestResultFormatterTest {
 
   @Test
   public void shouldOutputStackTraceStdOutAndStdErrOfFailingTest() {
+    TestResultFormatter formatter = createNoisyFormatter();
     TestCaseSummary summary = new TestCaseSummary(
         "com.example.FooTest", ImmutableList.of(failingTest));
     TestResults results = new TestResults(ImmutableList.of(summary));
@@ -276,6 +296,28 @@ public class TestResultFormatterTest {
         stackTrace,
         failingTest.getStdOut(),
         failingTest.getStdErr());
+
+    assertEquals(expected, toString(builder));
+  }
+
+  @Test
+  public void shouldNotOutputStackTraceStdOutAndStdErrOfFailingTest() {
+    TestResultFormatter formatter = createSilentFormatter();
+    TestCaseSummary summary = new TestCaseSummary(
+        "com.example.FooTest", ImmutableList.of(failingTest));
+    TestResults results = new TestResults(ImmutableList.of(summary));
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    formatter.reportResult(builder, results);
+
+    String expected = String.format(Joiner.on('\n').join(
+            "FAIL     200ms  0 Passed   0 Skipped   1 Failed   com.example.FooTest",
+            "FAILURE %s %s: %s",
+            "%s"),
+        failingTest.getTestCaseName(),
+        failingTest.getTestName(),
+        failingTest.getMessage(),
+        stackTrace);
 
     assertEquals(expected, toString(builder));
   }

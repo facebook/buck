@@ -1,6 +1,10 @@
+REPORT_FORMAT_SRCS = [
+  'CoverageReportFormat.java',
+]
+
 java_library(
   name = 'report-format',
-  srcs = [ 'CoverageReportFormat.java' ],
+  srcs = REPORT_FORMAT_SRCS,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/java:steps',
@@ -8,10 +12,32 @@ java_library(
   ],
 )
 
+CONFIG_SRCS = [
+  'TestConfig.java',
+  'AbstractTestResultSummaryVerbosity.java',
+]
+
+java_immutables_library(
+  name = 'config',
+  srcs = CONFIG_SRCS,
+  deps = [
+    '//src/com/facebook/buck/cli:config',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/event/listener:listener',
+    '//test/com/facebook/buck/event/listener:listener',
+    '//test/com/facebook/buck/test:test',
+  ],
+)
+
 # Sources for dealing with test results.
 java_library(
   name = 'test',
-  srcs = glob(['*.java'], excludes = ['CoverageReportFormat.java']),
+  srcs = glob(
+    ['*.java'],
+    excludes = REPORT_FORMAT_SRCS + CONFIG_SRCS
+  ),
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

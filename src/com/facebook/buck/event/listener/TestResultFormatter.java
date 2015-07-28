@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Ansi;
@@ -35,6 +36,7 @@ public class TestResultFormatter {
 
   private final Ansi ansi;
   private final Verbosity verbosity;
+  private TestResultSummaryVerbosity summaryVerbosity;
 
   public enum FormatMode {
       BEFORE_TEST_RUN,
@@ -43,9 +45,11 @@ public class TestResultFormatter {
 
   public TestResultFormatter(
       Ansi ansi,
-      Verbosity verbosity) {
+      Verbosity verbosity,
+      TestResultSummaryVerbosity summaryVerbosity) {
     this.ansi = ansi;
     this.verbosity = verbosity;
+    this.summaryVerbosity = summaryVerbosity;
   }
 
   public void runStarted(
@@ -125,11 +129,11 @@ public class TestResultFormatter {
       }
     }
 
-    if (testResult.getStdOut() != null) {
+    if (summaryVerbosity.getIncludeStdOut() && testResult.getStdOut() != null) {
       addTo.add("====STANDARD OUT====", testResult.getStdOut());
     }
 
-    if (testResult.getStdErr() != null) {
+    if (summaryVerbosity.getIncludeStdErr() && testResult.getStdErr() != null) {
       addTo.add("====STANDARD ERR====", testResult.getStdErr());
     }
   }

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -66,7 +67,10 @@ public class SimpleConsoleEventBusListenerTest {
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSortedSet.<BuildRule>of());
 
-    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(console, fakeClock);
+    SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
+        console,
+        fakeClock,
+        TestResultSummaryVerbosity.of(false, false));
     eventBus.register(listener);
 
     final long threadId = 0;

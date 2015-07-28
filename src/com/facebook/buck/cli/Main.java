@@ -47,6 +47,8 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
+import com.facebook.buck.test.TestConfig;
+import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.NanosAdjustedClock;
@@ -565,6 +567,8 @@ public final class Main {
         rootRepository,
         clock);
 
+    TestConfig testConfig = new TestConfig(buckConfig);
+
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
     // other resources before they are closed.
@@ -579,6 +583,7 @@ public final class Main {
              createConsoleEventListener(
                  clock,
                  console,
+                 testConfig.getResultSummaryVerbosity(),
                  executionEnvironment,
                  webServer);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
@@ -955,6 +960,7 @@ public final class Main {
   private AbstractConsoleEventBusListener createConsoleEventListener(
       Clock clock,
       Console console,
+      TestResultSummaryVerbosity testResultSummaryVerbosity,
       ExecutionEnvironment executionEnvironment,
       Optional<WebServer> webServer) {
     Verbosity verbosity = console.getVerbosity();
@@ -966,13 +972,14 @@ public final class Main {
       SuperConsoleEventBusListener superConsole = new SuperConsoleEventBusListener(
           console,
           clock,
+          testResultSummaryVerbosity,
           executionEnvironment,
           webServer);
       superConsole.startRenderScheduler(SUPER_CONSOLE_REFRESH_RATE.getDuration(),
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;
     }
-    return new SimpleConsoleEventBusListener(console, clock);
+    return new SimpleConsoleEventBusListener(console, clock, testResultSummaryVerbosity);
   }
 
   @VisibleForTesting

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -113,6 +114,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public SuperConsoleEventBusListener(
       Console console,
       Clock clock,
+      TestResultSummaryVerbosity summaryVerbosity,
       ExecutionEnvironment executionEnvironment,
       Optional<WebServer> webServer) {
     super(console, clock);
@@ -130,7 +132,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     this.renderScheduler = Executors.newScheduledThreadPool(1,
         new ThreadFactoryBuilder().setNameFormat(getClass().getSimpleName() + "-%d").build());
-    this.testFormatter = new TestResultFormatter(console.getAnsi(), console.getVerbosity());
+    this.testFormatter = new TestResultFormatter(
+        console.getAnsi(),
+        console.getVerbosity(),
+        summaryVerbosity);
     this.testRunStarted = new AtomicReference<>();
     this.testRunFinished = new AtomicReference<>();
   }

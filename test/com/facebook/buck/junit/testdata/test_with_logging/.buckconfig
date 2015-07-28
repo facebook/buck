@@ -1,0 +1,3 @@
+[test_summary]
+    include_std_err=true
+    include_std_out=true

@@ -22,6 +22,7 @@ java_test(
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/shell:steps',
     '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/test:config',
     '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/test/result/type:type',
     '//src/com/facebook/buck/test/selectors:selectors',

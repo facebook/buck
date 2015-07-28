@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Joiner;
@@ -38,11 +39,16 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private final AtomicLong parseTime;
   private final TestResultFormatter testFormatter;
 
-  public SimpleConsoleEventBusListener(Console console, Clock clock) {
+  public SimpleConsoleEventBusListener(
+      Console console,
+      Clock clock,
+      TestResultSummaryVerbosity summaryVerbosity) {
     super(console, clock);
-
     this.parseTime = new AtomicLong(0);
-    this.testFormatter = new TestResultFormatter(console.getAnsi(), console.getVerbosity());
+    this.testFormatter = new TestResultFormatter(
+        console.getAnsi(),
+        console.getVerbosity(),
+        summaryVerbosity);
   }
 
   @Override
