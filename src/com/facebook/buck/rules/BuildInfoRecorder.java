@@ -28,7 +28,6 @@ import com.facebook.buck.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -133,9 +132,6 @@ public class BuildInfoRecorder {
   private ImmutableMap<String, String> getBuildMetadata() throws IOException {
     return ImmutableMap.<String, String>builder()
         .put(
-            BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS,
-            toJson(Iterables.transform(getRecordedPaths(), Functions.toStringFunction())))
-        .put(
             BuildInfo.METADATA_KEY_FOR_ADDITIONAL_INFO,
             formatAdditionalArtifactInfo(
                 ImmutableMap.<String, String>builder()
@@ -191,7 +187,7 @@ public class BuildInfoRecorder {
     addMetadata(key, toJson(value));
   }
 
-  private ImmutableSortedSet<Path> getRecordedPaths() throws IOException {
+  public ImmutableSortedSet<Path> getRecordedPaths() throws IOException {
     final ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
 
     // Add metadata files.

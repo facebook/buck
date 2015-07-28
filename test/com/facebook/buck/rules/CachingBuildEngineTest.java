@@ -1250,6 +1250,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     writeEntriesToZip(
         artifact,
         ImmutableMap.of(
+            BuildInfo.getPathToMetadataDirectory(target)
+                .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).toString(),
+            new ObjectMapper().writeValueAsString(ImmutableList.of(output.toString())),
             output.toString(),
             "stuff"));
     cache.store(

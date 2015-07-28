@@ -22,7 +22,6 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -352,10 +351,9 @@ public class CachingBuildEngine implements BuildEngine {
             buildInfoRecorder.addBuildMetadata(
                 BuildInfo.METADATA_KEY_FOR_TARGET,
                 rule.getBuildTarget().toString());
-            buildInfoRecorder.addBuildMetadata(
-                BuildInfo.METADATA_KEY_FOR_DEPS,
-                FluentIterable.from(rule.getDeps())
-                    .transform(HasBuildTarget.TO_TARGET)
+            buildInfoRecorder.addMetadata(
+                BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS,
+                FluentIterable.from(buildInfoRecorder.getRecordedPaths())
                     .transform(Functions.toStringFunction()));
             if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
               try {
