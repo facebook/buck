@@ -18,6 +18,7 @@ package com.facebook.buck.java.abi;
 
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -27,7 +28,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Set;
 
+/**
+ * A {@link Walker} which operates on all files in a directory in sorted order.
+ */
 class DirectoryWalker implements Walker {
   private final Path root;
 
@@ -37,20 +42,27 @@ class DirectoryWalker implements Walker {
 
   @Override
   public void walk(final FileAction onFile) throws IOException {
+
+    // First find all dir entries and sort them to create a deterministic iteration order.
+    final Set<Path> files = Sets.newTreeSet();
     SimpleFileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
         Path relativized = root.relativize(file);
+        files.add(relativized);
 
-        try (
-            InputStream is = Files.newInputStream(file);
-          BufferedInputStream bis = new BufferedInputStream(is)) {
-          onFile.visit(relativized, bis);
-        }
 
         return FileVisitResult.CONTINUE;
       }
     };
     Files.walkFileTree(root, visitor);
+
+    // Now call the action on each of the files.
+    for (Path path : files) {
+      try (InputStream is = Files.newInputStream(root.resolve(path));
+           BufferedInputStream bis = new BufferedInputStream(is)) {
+        onFile.visit(path, bis);
+      }
+    }
   }
 }

@@ -17,15 +17,21 @@
 package com.facebook.buck.java.abi;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
+/**
+ * A {@link Walker} which iterates over entries of a ZIP file in sorted (name) order.
+ */
 class ZipWalker implements Walker {
   private final Path zipFile;
 
@@ -35,16 +41,27 @@ class ZipWalker implements Walker {
 
   @Override
   public void walk(FileAction onFile) throws IOException {
+    Set<String> names = Sets.newTreeSet();
+
+    // Get the set of all names and sort them, so that we get a deterministic iteration order.
     try (
         FileInputStream fis = new FileInputStream(zipFile.toFile());
         BufferedInputStream bis = new BufferedInputStream(fis);
-        JarInputStream jis = new JarInputStream(bis)) {
-      for (JarEntry entry = jis.getNextJarEntry(); entry != null; entry = jis.getNextJarEntry()) {
+        ZipInputStream zis = new ZipInputStream(bis)) {
+      for (ZipEntry entry = zis.getNextEntry(); entry != null; entry = zis.getNextEntry()) {
         if (entry.isDirectory()) {
           continue;
         }
+        names.add(entry.getName());
+      }
+    }
 
-        onFile.visit(Paths.get(entry.getName()), jis);
+    // Iterate over the file entries, calling the action on each one.
+    if (!names.isEmpty()) {
+      try (ZipFile zip = new ZipFile(zipFile.toFile())) {
+        for (String name : names) {
+          onFile.visit(Paths.get(name), zip.getInputStream(zip.getEntry(name)));
+        }
       }
     }
   }

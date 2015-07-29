@@ -22,7 +22,6 @@ import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 
 import org.objectweb.asm.ClassReader;
 
@@ -30,17 +29,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.SortedSet;
 import java.util.jar.JarOutputStream;
 
 public class StubJar {
 
   private final Path toMirror;
-  private final SortedSet<ClassMirror> classes;
 
   public StubJar(Path toMirror) {
     this.toMirror = Preconditions.checkNotNull(toMirror);
-    this.classes = Sets.newTreeSet();
   }
 
   public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
@@ -51,28 +47,24 @@ public class StubJar {
     }
 
     Walker walker = Walkers.getWalkerFor(toMirror);
-    walker.walk(
-        new FileAction() {
-          @Override
-          public void visit(Path relativizedPath, InputStream stream) throws IOException {
-            String fileName = relativizedPath.toString();
-            if (!fileName.endsWith(".class")) {
-              return;
-            }
-
-            ClassReader classReader = new ClassReader(stream);
-            ClassMirror visitor = new ClassMirror(fileName);
-            classes.add(visitor);
-            classReader.accept(visitor, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
-          }
-        });
-
     try (
         OutputStream fos = filesystem.newFileOutputStream(path);
         JarOutputStream jar = new JarOutputStream(fos)) {
-      for (ClassMirror aClass : classes) {
-        aClass.writeTo(jar);
-      }
+      walker.walk(
+          new FileAction() {
+            @Override
+            public void visit(Path relativizedPath, InputStream stream) throws IOException {
+              String fileName = relativizedPath.toString();
+              if (!fileName.endsWith(".class")) {
+                return;
+              }
+
+              ClassReader classReader = new ClassReader(stream);
+              ClassMirror visitor = new ClassMirror(fileName);
+              classReader.accept(visitor, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
+              visitor.writeTo(jar);
+            }
+          });
     }
   }
 }
