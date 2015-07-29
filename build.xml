@@ -62,6 +62,9 @@
   </condition>
 
   <fileset dir="${third-party.dir}/java" id="buck.jars">
+    <include name="android/sdk-common-24.2.3.jar" />
+    <include name="android/common-24.2.3.jar" />
+    <include name="android/layoutlib-api-24.2.3.jar" />
     <include name="args4j/args4j-2.0.30.jar" />
     <include name="ddmlib/ddmlib-22.5.3.jar" />
     <include name="guava/guava-18.0.jar" />
@@ -77,9 +80,6 @@
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
     <include name="aopalliance/aopalliance.jar" />
-    <include name="android/sdk-common-24.2.3.jar" />
-    <include name="android/common-24.2.3.jar" />
-    <include name="android/layoutlib-api-24.2.3.jar" />
     <include name="asm/asm-debug-all-5.0.3.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.8.1.jar" />
