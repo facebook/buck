@@ -346,7 +346,7 @@ public class ThriftCxxEnhancerTest {
             "Test.h",
             "Test.cpp"),
         ENHANCER_CPP.getGeneratedThriftSources(
-            ImmutableSet.of("frozen"),
+            ImmutableSet.of("frozen2"),
             "test.thrift",
             ImmutableList.of("Test")));
     assertEquals(
@@ -363,7 +363,7 @@ public class ThriftCxxEnhancerTest {
             "Test_client.cpp",
             "Test.tcc"),
         ENHANCER_CPP2.getGeneratedThriftSources(
-            ImmutableSet.of("frozen"),
+            ImmutableSet.of("frozen2"),
             "test.thrift",
             ImmutableList.of("Test")));
 

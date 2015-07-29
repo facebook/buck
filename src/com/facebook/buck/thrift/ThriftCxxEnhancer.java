@@ -81,7 +81,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     final String base = Files.getNameWithoutExtension(name);
     final boolean bootstrap = options.contains("bootstrap");
-    final boolean layouts = options.contains("frozen");
+    final boolean layouts = options.contains("frozen2");
     final boolean templates = cpp2 || options.contains("templates");
     final boolean perfhash = !cpp2 && options.contains("perfhash");
     final boolean separateProcessmap = cpp2 && options.contains("separate_processmap");
