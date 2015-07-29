@@ -494,8 +494,12 @@ public class NdkCxxPlatforms {
       String tool,
       ExecutableFinder executableFinder) {
     Path expected =
-        getToolchainBinPath(ndkRoot, targetConfiguration, host)
-            .resolve(tool);
+        getNdkToolRoot(ndkRoot, targetConfiguration, host.toString())
+            .resolve("bin")
+            .resolve(
+                (targetConfiguration.getCompiler().getType() == Compiler.Type.GCC ?
+                    targetConfiguration.getToolchainTarget().toString() + "-" :
+                    "") + tool);
     Optional<Path> path =
         executableFinder.getOptionalExecutable(expected, ImmutableMap.<String, String>of());
     Preconditions.checkState(path.isPresent(), expected.toString());
