@@ -26,7 +26,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -225,8 +224,15 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       // would require one of two conditions:
       // 1) The source path references parent directories, which we check for above.
       // 2) You don't have a build file above this file, which is impossible if it is referenced in
-      //    a build file.
-      Preconditions.checkState(ancestor.isPresent());
+      //    a build file *unless* you happen to be referencing something that is ignored.
+      if (!ancestor.isPresent()) {
+        throw new InvalidSourcePathInputException(
+            "'%s' in '%s' crosses a buck package boundary.  This is probably caused by " +
+                "specifying one of the folders in '%s' in your .buckconfig under `project.ignore`.",
+            path,
+            getBuildTarget(),
+            path);
+      }
       if (!ancestor.get().equals(basePath)) {
         throw new InvalidSourcePathInputException(
             "'%s' in '%s' crosses a buck package boundary.  This file is owned by '%s'.  Find " +
