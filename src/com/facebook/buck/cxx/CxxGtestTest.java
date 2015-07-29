@@ -110,10 +110,8 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
     }
 
     Document doc = XmlDomParser.parse(results.toFile());
-    Node testsuites = doc.getElementsByTagName("testsuites").item(0);
-    Node testsuite = testsuites.getChildNodes().item(1);
-    NodeList testcases = testsuite.getChildNodes();
-    for (int index = 1; index < testcases.getLength(); index += 2) {
+    NodeList testcases = doc.getElementsByTagName("testcase");
+    for (int index = 0; index < testcases.getLength(); index++) {
       Node testcase = testcases.item(index);
       NamedNodeMap attributes = testcase.getAttributes();
       String testCase = attributes.getNamedItem("classname").getNodeValue();

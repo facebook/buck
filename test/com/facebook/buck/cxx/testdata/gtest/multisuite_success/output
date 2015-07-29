@@ -1,0 +1,17 @@
+[==========] Running 3 tests from 2 test cases.
+[----------] Global test environment set-up.
+[----------] 1 test from FOO
+[ RUN      ] FOO.BAR
+[       OK ] FOO.BAR (0 ms)
+[----------] 1 test from FOO (0 ms total)
+
+[----------] 2 tests from BAZ
+[ RUN      ] BAZ.BAR
+[       OK ] BAZ.BAR (0 ms)
+[ RUN      ] BAZ.BOO
+[       OK ] BAZ.BOO (0 ms)
+[----------] 2 tests from FOO (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 2 test cases ran. (0 ms total)
+[  PASSED  ] 3 tests.

@@ -1,0 +1,32 @@
+[
+  {
+    "message": "",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "",
+    "testCase": "BAR",
+    "testCaseName": "FOO",
+    "time": 0,
+    "type": "SUCCESS"
+  },
+  {
+    "message": "",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "",
+    "testCase": "BAR",
+    "testCaseName": "BAZ",
+    "time": 0,
+    "type": "SUCCESS"
+  },
+  {
+    "message": "",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "",
+    "testCase": "BOO",
+    "testCaseName": "BAZ",
+    "time": 0,
+    "type": "SUCCESS"
+  }
+]
