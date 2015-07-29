@@ -187,6 +187,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         Optional.of(bundleVariantFiles),
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
+        appleCxxPlatform.getCxxPlatform().getStrip(),
         bundledAssetCatalogs,
         mergedAssetCatalog,
         args.getTests(),

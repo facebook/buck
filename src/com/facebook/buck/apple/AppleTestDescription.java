@@ -305,6 +305,7 @@ public class AppleTestDescription implements
         Optional.of(resourceVariantFiles),
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
+        appleCxxPlatform.getCxxPlatform().getStrip(),
         bundledAssetCatalogs,
         mergedAssetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),

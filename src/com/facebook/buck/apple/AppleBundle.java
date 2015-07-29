@@ -37,6 +37,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.Either;
+import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
@@ -98,6 +99,9 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final Tool dsymutil;
 
   @AddToRuleKey
+  private final Tool strip;
+
+  @AddToRuleKey
   private final ImmutableSortedSet<BuildTarget> tests;
 
   @AddToRuleKey
@@ -128,6 +132,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Optional<ImmutableSet<SourcePath>> resourceVariantFiles,
       Tool ibtool,
       Tool dsymutil,
+      Tool strip,
       Set<AppleAssetCatalog> bundledAssetCatalogs,
       Optional<AppleAssetCatalog> mergedAssetCatalog,
       Set<BuildTarget> tests,
@@ -147,6 +152,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.resourceVariantFiles = resourceVariantFiles;
     this.ibtool = ibtool;
     this.dsymutil = dsymutil;
+    this.strip = strip;
     this.bundledAssetCatalogs = ImmutableSet.copyOf(bundledAssetCatalogs);
     this.mergedAssetCatalog = mergedAssetCatalog;
     this.binaryName = getBinaryName(getBuildTarget());
@@ -240,6 +246,13 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
               bundleBinaryPath,
               bundleBinaryPath.resolveSibling(
                   bundleBinaryPath.getFileName().toString() + ".dSYM")));
+      stepsBuilder.add(
+          new DefaultShellStep(
+              ImmutableList.<String>builder()
+                  .addAll(strip.getCommandPrefix(getResolver()))
+                  .add("-S")
+                  .add(getProjectFilesystem().resolve(bundleBinaryPath).toString())
+                  .build()));
     }
 
     Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());

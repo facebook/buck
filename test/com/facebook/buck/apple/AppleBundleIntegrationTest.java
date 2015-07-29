@@ -16,8 +16,11 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -25,6 +28,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.HumanReadableException;
 
@@ -92,16 +96,25 @@ public class AppleBundleIntegrationTest {
 
     workspace.verify();
 
-    Path dwarfPath = tmp.getRootPath()
+    Path bundlePath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app")
-        .resolve("DemoApp.dSYM/Contents/Resources/DWARF/DemoApp");
+        .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app");
+    Path dwarfPath = bundlePath.resolve("DemoApp.dSYM/Contents/Resources/DWARF/DemoApp");
+    Path binaryPath = bundlePath.resolve("DemoApp");
     assertTrue(Files.exists(dwarfPath));
     String dwarfdumpMainStdout =
         workspace.runCommand("dwarfdump", "-n", "main", dwarfPath.toString()).getStdout().or("");
     assertTrue(dwarfdumpMainStdout.contains("AT_name"));
     assertTrue(dwarfdumpMainStdout.contains("AT_decl_file"));
     assertTrue(dwarfdumpMainStdout.contains("AT_decl_line"));
+
+    ProcessExecutor.Result result = workspace.runCommand(
+        "dsymutil",
+        "-o",
+        binaryPath.toString() + ".test.dSYM",
+        binaryPath.toString());
+    assertThat(result.getStdout().isPresent(), is(true));
+    assertThat(result.getStdout().get(), containsString("warning: no debug symbols in executable"));
   }
 
   @Test
