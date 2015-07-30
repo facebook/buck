@@ -34,7 +34,10 @@ import java.io.IOException;
 import java.util.List;
 
 public class PublishCommandIntegrationTest {
-  public static final String EXPECTED_PUT_URL_PATH = "/com/example/foo/1.0/foo-1.0.jar";
+  public static final String EXPECTED_PUT_URL_PATH_BASE = "/com/example/foo/1.0/foo-1.0";
+  public static final String JAR = ".jar";
+  public static final String SRC_ZIP = "-sources.zip";
+  public static final String SHA1 = ".sha1";
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -58,13 +61,16 @@ public class PublishCommandIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "publish",
+        PublishCommand.INCLUDE_SOURCE_LONG_ARG,
         PublishCommand.REMOTE_REPO_SHORT_ARG,
         publisher.getHttpd().getRootUri().toString(),
         "//:foo");
     result.assertSuccess();
     List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
-    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH));
-    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH + ".sha1"));
+    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR));
+    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR + SHA1));
+    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_ZIP));
+    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_ZIP + SHA1));
   }
 
   @Test

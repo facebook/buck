@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -88,7 +90,17 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     // creating the action graph from the target graph.
 
     if (target.getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, pathResolver, args.srcs.get());
+      return new JavaSourceJar(
+          params,
+          pathResolver,
+          args.srcs.get(),
+          args.mavenCoords.transform(
+            new Function<String, String>() {
+              @Override
+              public String apply(String input) {
+                return AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES);
+              }
+            }));
     }
 
     JavacOptions.Builder javacOptionsBuilder =

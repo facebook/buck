@@ -17,12 +17,20 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.DefaultJavaLibrary;
+import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetSpec;
+import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.eclipse.aether.deployment.DeploymentException;
 import org.kohsuke.args4j.Option;
@@ -36,6 +44,8 @@ import javax.annotation.Nullable;
 public class PublishCommand extends BuildCommand {
   public static final String REMOTE_REPO_LONG_ARG = "--remote-repo";
   public static final String REMOTE_REPO_SHORT_ARG = "-r";
+  public static final String INCLUDE_SOURCE_LONG_ARG = "--include-source";
+  public static final String INCLUDE_SOURCE_SHORT_ARG = "-s";
   public static final String TO_MAVEN_CENTRAL_LONG_ARG = "--to-maven-central";
 
   @Option(
@@ -49,6 +59,12 @@ public class PublishCommand extends BuildCommand {
       name = TO_MAVEN_CENTRAL_LONG_ARG,
       usage = "Same as \"" + REMOTE_REPO_LONG_ARG + " " + Publisher.MAVEN_CENTRAL_URL + "\"")
   private boolean toMavenCentral = false;
+
+  @Option(
+      name = INCLUDE_SOURCE_LONG_ARG,
+      aliases = INCLUDE_SOURCE_SHORT_ARG,
+      usage = "Publish source code as well")
+  private boolean includeSource = false;
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
@@ -82,23 +98,23 @@ public class PublishCommand extends BuildCommand {
     BuildRule buildRule = Preconditions.checkNotNull(
         getBuild().getActionGraph().findBuildRuleByTarget(buildTarget));
 
-    if (!(buildRule instanceof DefaultJavaLibrary)) {
+    if (!(buildRule instanceof MavenPublishable)) {
       printError(
           params,
           "Cannot retrieve maven coordinates for rule of type " + buildRule.getClass().getName());
       return false;
     }
 
-    DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) buildRule;
-    Optional<String> mavenCoords = javaLibrary.getMavenCoords();
+    MavenPublishable publishable = (MavenPublishable) buildRule;
+    Optional<String> mavenCoords = publishable.getMavenCoords();
     if (!mavenCoords.isPresent()) {
-      printError(params, "No maven coordinates specified for published rule " + buildRule);
+      printError(params, "No maven coordinates specified for published rule " + publishable);
       return false;
     }
 
-    Path relativePathToOutput = buildRule.getPathToOutput();
+    Path relativePathToOutput = publishable.getPathToOutput();
     if (relativePathToOutput == null) {
-      printError(params, "No path to output present in " + buildRule);
+      printError(params, "No path to output present in " + publishable);
       return false;
     }
 
@@ -119,6 +135,49 @@ public class PublishCommand extends BuildCommand {
     params.getConsole().printErrorText(errorMessage);
   }
 
+  @Override
+  public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
+      BuckConfig config, ImmutableSet<Path> ignorePaths, Iterable<String> targetsAsArgs) {
+    ImmutableList<TargetNodeSpec> specs = super.parseArgumentsAsTargetNodeSpecs(
+        config,
+        ignorePaths,
+        targetsAsArgs);
+
+    if (includeSource) {
+      specs = ImmutableList.<TargetNodeSpec>builder()
+          .addAll(specs)
+          .addAll(FluentIterable
+              .from(specs)
+              .filter(
+                  new Predicate<TargetNodeSpec>() {
+                    @Override
+                    public boolean apply(TargetNodeSpec input) {
+                      if (!(input instanceof BuildTargetSpec)) {
+                        throw new IllegalArgumentException(
+                            "Targets must be explicitly defined when using " +
+                                INCLUDE_SOURCE_LONG_ARG);
+                      }
+                      return !((BuildTargetSpec) input)
+                          .getBuildTarget()
+                          .getFlavors()
+                          .contains(JavaLibrary.SRC_JAR);
+                    }
+                  })
+              .transform(
+                  new Function<TargetNodeSpec, BuildTargetSpec>() {
+                    @Override
+                    public BuildTargetSpec apply(TargetNodeSpec input) {
+                      return BuildTargetSpec.of(
+                          ((BuildTargetSpec) input)
+                              .getBuildTarget()
+                              .withFlavors(JavaLibrary.SRC_JAR),
+                          input.getBuildFileSpec());
+                    }
+                  }))
+          .build();
+    }
+    return specs;
+  }
 
   @Override
   public String getShortDescription() {

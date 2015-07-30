@@ -75,7 +75,7 @@ public class AndroidLibraryDescription
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, pathResolver, args.srcs.get());
+      return new JavaSourceJar(params, pathResolver, args.srcs.get(), args.mavenCoords);
     }
 
     JavacOptions.Builder javacOptionsBuilder =

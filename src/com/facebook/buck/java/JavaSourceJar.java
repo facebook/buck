@@ -33,6 +33,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.zip.ZipStep;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,22 +43,25 @@ import java.nio.file.Path;
 import java.util.Set;
 
 
-public class JavaSourceJar extends AbstractBuildRule {
+public class JavaSourceJar extends AbstractBuildRule implements MavenPublishable {
 
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> sources;
   private final Path output;
   private final Path temp;
+  private final Optional<String> mavenCoords;
 
   public JavaSourceJar(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableSortedSet<SourcePath> sources) {
+      ImmutableSortedSet<SourcePath> sources,
+      Optional<String> mavenCoords) {
     super(params, resolver);
     this.sources = sources;
     BuildTarget target = params.getBuildTarget();
     this.output = BuildTargets.getGenPath(target, String.format("%%s%s", Javac.SRC_ZIP));
     this.temp = BuildTargets.getScratchPath(target, "%s-srcs");
+    this.mavenCoords = mavenCoords;
   }
 
   @Override
@@ -103,5 +107,10 @@ public class JavaSourceJar extends AbstractBuildRule {
   @Override
   public Path getPathToOutput() {
     return output;
+  }
+
+  @Override
+  public Optional<String> getMavenCoords() {
+    return mavenCoords;
   }
 }

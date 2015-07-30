@@ -19,6 +19,7 @@ package com.facebook.buck.maven;
 import static org.eclipse.aether.repository.RepositoryPolicy.CHECKSUM_POLICY_FAIL;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -33,6 +34,9 @@ import org.slf4j.helpers.NOPLoggerFactory;
 import java.net.URL;
 
 public class AetherUtil {
+
+  public static final String CLASSIFIER_SOURCES = "sources";
+  public static final String CLASSIFIER_JAVADOC = "javadoc";
 
   private AetherUtil() {
   }
@@ -68,5 +72,18 @@ public class AetherUtil {
     // Also requires log4j
 //    locator.addService(ILoggerFactory.class, Log4jLoggerFactory.class);
     return locator;
+  }
+
+  /**
+   * Transforms maven coordinates, adding the specified classifier
+   */
+  public static String addClassifier(String mavenCoords, String classifier) {
+    DefaultArtifact base = new DefaultArtifact(mavenCoords);
+    return new DefaultArtifact(
+        base.getGroupId(),
+        base.getArtifactId(),
+        classifier,
+        base.getExtension(),
+        base.getVersion()).toString();
   }
 }

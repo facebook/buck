@@ -38,6 +38,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +57,8 @@ public class JavaSourceJarTest {
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
         new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSortedSet.<SourcePath>of());
+        ImmutableSortedSet.<SourcePath>of(),
+        Optional.<String>absent());
 
     Path output = rule.getPathToOutput();
 
@@ -82,7 +84,8 @@ public class JavaSourceJarTest {
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
         pathResolver,
-        ImmutableSortedSet.of(fileBased, ruleBased));
+        ImmutableSortedSet.of(fileBased, ruleBased),
+        Optional.<String>absent());
 
     BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
         .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))

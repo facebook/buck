@@ -101,7 +101,7 @@ import javax.annotation.Nullable;
  */
 public class DefaultJavaLibrary extends AbstractBuildRule
     implements JavaLibrary, AbiRule, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable {
+    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable, MavenPublishable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -742,6 +742,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
                 providedDeps)));
   }
 
+  @Override
   public Optional<String> getMavenCoords() {
     return mavenCoords;
   }
