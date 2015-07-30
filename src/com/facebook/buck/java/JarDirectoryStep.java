@@ -121,7 +121,7 @@ public class JarDirectoryStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try {
-      JarDirectoryStepHelper.createJarFile(
+      return JarDirectoryStepHelper.createJarFile(
           pathToOutputFile,
           entriesToJar,
           mainClass,
@@ -133,6 +133,5 @@ public class JarDirectoryStep implements Step {
       e.printStackTrace(context.getStdErr());
       return 1;
     }
-    return 0;
   }
 }

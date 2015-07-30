@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
@@ -67,7 +68,7 @@ public class JarDirectoryStepTest {
     File zipup = folder.newFolder("zipup");
 
     File first = createZip(new File(zipup, "a.zip"), "example.txt");
-    File second = createZip(new File(zipup, "b.zip"), "example.txt");
+    File second = createZip(new File(zipup, "b.zip"), "example.txt", "com/example/Main.class");
 
     JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
         ImmutableSet.of(Paths.get(first.getName()), Paths.get(second.getName())),
@@ -84,9 +85,33 @@ public class JarDirectoryStepTest {
     File zip = new File(zipup, "output.jar");
     assertTrue(zip.exists());
 
-    // "example.txt" and the MANIFEST.MF.
-    assertZipFileCountIs(2, zip);
+    // "example.txt" "Main.class" and the MANIFEST.MF.
+    assertZipFileCountIs(3, zip);
     assertZipContains(zip, "example.txt");
+  }
+
+  @Test
+  public void shouldFailIfMainClassMissing() throws IOException {
+    File zipup = folder.newFolder("zipup");
+
+    File zip = createZip(new File(zipup, "a.zip"), "com/example/Main.class");
+
+    JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
+        ImmutableSet.of(Paths.get(zip.getName())),
+        "com.example.MissingMain",
+        /* manifest file */ null);
+    TestConsole console = new TestConsole();
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setConsole(console)
+        .setProjectFilesystem(new ProjectFilesystem(zipup.toPath()))
+        .build();
+
+    int returnCode = step.execute(context);
+
+    assertEquals(1, returnCode);
+    assertEquals(
+        "ERROR: Main class com.example.MissingMain does not exist.\n",
+        console.getTextWrittenToStdErr());
   }
 
   @Test
@@ -94,7 +119,11 @@ public class JarDirectoryStepTest {
     File zipup = folder.newFolder();
 
     File first = createZip(new File(zipup, "first.zip"), "dir/example.txt", "dir/root1file.txt");
-    File second = createZip(new File(zipup, "second.zip"), "dir/example.txt", "dir/root2file.txt");
+    File second = createZip(
+        new File(zipup, "second.zip"),
+        "dir/example.txt",
+        "dir/root2file.txt",
+        "com/example/Main.class");
 
     JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
         ImmutableSet.of(Paths.get(first.getName()), Paths.get(second.getName())),
@@ -111,8 +140,8 @@ public class JarDirectoryStepTest {
 
     File zip = new File(zipup, "output.jar");
 
-    // The three below plus the manifest.
-    assertZipFileCountIs(4, zip);
+    // The three below plus the manifest and Main.class.
+    assertZipFileCountIs(5, zip);
     assertZipContains(zip, "dir/example.txt", "dir/root1file.txt", "dir/root2file.txt");
   }
 
@@ -224,7 +253,11 @@ public class JarDirectoryStepTest {
   public void shouldNotIncludeFilesInBlacklist() throws IOException {
     File zipup = folder.newFolder();
 
-    File first = createZip(new File(zipup, "first.zip"), "dir/file1.txt", "dir/file2.txt");
+    File first = createZip(
+        new File(zipup, "first.zip"),
+        "dir/file1.txt",
+        "dir/file2.txt",
+        "com/example/Main.class");
 
     JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
         ImmutableSet.of(Paths.get(first.getName())),
@@ -243,8 +276,8 @@ public class JarDirectoryStepTest {
 
     File zip = new File(zipup, "output.jar");
 
-    // file1.txt plus the manifest.
-    assertZipFileCountIs(2, zip);
+    // file1.txt, Main.class, plus the manifest.
+    assertZipFileCountIs(3, zip);
     assertZipContains(zip, "dir/file1.txt");
     assertZipDoesNotContain(zip, "dir/file2.txt");
   }

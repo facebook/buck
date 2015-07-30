@@ -58,7 +58,7 @@ public class JarDirectoryStepHelper {
 
   private JarDirectoryStepHelper() {}
 
-  public static void createJarFile(
+  public static int createJarFile(
       Path pathToOutputFile,
       ImmutableSet<Path> entriesToJar,
       @Nullable String mainClass,
@@ -119,6 +119,14 @@ public class JarDirectoryStepHelper {
       // overwritten. To ensure that our main_class is set as expected, we
       // write it here.
       if (mainClass != null) {
+        if (!mainClassPresent(mainClass, alreadyAddedEntries)) {
+          context.getStdErr().print(
+              String.format(
+                  "ERROR: Main class %s does not exist.\n",
+                  mainClass));
+          return 1;
+        }
+
         manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass);
       }
 
@@ -127,6 +135,20 @@ public class JarDirectoryStepHelper {
       outputFile.putNextEntry(manifestEntry);
       manifest.write(outputFile);
     }
+
+    return 0;
+  }
+
+  private static boolean mainClassPresent(
+      String mainClass,
+      Set<String> alreadyAddedEntries) {
+    String mainClassPath = classNameToPath(mainClass);
+
+    return alreadyAddedEntries.contains(mainClassPath);
+  }
+
+  private static String classNameToPath(String className) {
+    return className.replace('.', '/') + ".class";
   }
 
   /**
