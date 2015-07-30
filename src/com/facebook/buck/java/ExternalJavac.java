@@ -233,9 +233,10 @@ public class ExternalJavac implements Javac {
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
     for (Path path : javaSourceFilePaths) {
-      if (path.toString().endsWith(".java")) {
+      String pathString = path.toString();
+      if (pathString.endsWith(".java")) {
         sources.add(path);
-      } else if (path.toString().endsWith(SRC_ZIP)) {
+      } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
         if (!workingDirectory.isPresent()) {
           throw new HumanReadableException(
               "Attempting to compile target %s which specified a .src.zip input %s but no " +

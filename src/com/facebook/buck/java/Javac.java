@@ -40,6 +40,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
           Escaper.Quoter.DOUBLE,
           CharMatcher.anyOf("#\"'").or(CharMatcher.WHITESPACE));
   String SRC_ZIP = ".src.zip";
+  String SRC_JAR = "-sources.jar";
 
   JavacVersion getVersion();
 

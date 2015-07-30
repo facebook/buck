@@ -53,7 +53,7 @@ import java.nio.file.Paths;
 public class JavaSourceJarTest {
 
   @Test
-  public void outputNameShouldIndicateThatTheOutputIsASrcZip() {
+  public void outputNameShouldIndicateThatTheOutputIsASrcJar() {
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
         new SourcePathResolver(new BuildRuleResolver()),
@@ -63,7 +63,7 @@ public class JavaSourceJarTest {
     Path output = rule.getPathToOutput();
 
     assertNotNull(output);
-    assertTrue(output.toString().endsWith(Javac.SRC_ZIP));
+    assertTrue(output.toString().endsWith(Javac.SRC_JAR));
   }
 
   @Test

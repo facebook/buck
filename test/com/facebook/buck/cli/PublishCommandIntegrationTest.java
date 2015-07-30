@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.java.Javac;
 import com.facebook.buck.maven.TestPublisher;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -36,7 +37,7 @@ import java.util.List;
 public class PublishCommandIntegrationTest {
   public static final String EXPECTED_PUT_URL_PATH_BASE = "/com/example/foo/1.0/foo-1.0";
   public static final String JAR = ".jar";
-  public static final String SRC_ZIP = "-sources.zip";
+  public static final String SRC_JAR = Javac.SRC_JAR;
   public static final String SHA1 = ".sha1";
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -69,8 +70,8 @@ public class PublishCommandIntegrationTest {
     List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR + SHA1));
-    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_ZIP));
-    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_ZIP + SHA1));
+    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_JAR));
+    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_JAR + SHA1));
   }
 
   @Test

@@ -337,12 +337,13 @@ public abstract class Jsr199Javac implements Javac {
       Set<Path> javaSourceFilePaths) throws IOException {
     List<JavaFileObject> compilationUnits = Lists.newArrayList();
     for (Path path : javaSourceFilePaths) {
-      if (path.toString().endsWith(".java")) {
+      String pathString = path.toString();
+      if (pathString.endsWith(".java")) {
         // For an ordinary .java file, create a corresponding JavaFileObject.
         Iterable<? extends JavaFileObject> javaFileObjects = fileManager.getJavaFileObjects(
             absolutifier.apply(path).toFile());
         compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
-      } else if (path.toString().endsWith(SRC_ZIP)) {
+      } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
         for (Enumeration<? extends ZipEntry> entries = zipFile.entries();

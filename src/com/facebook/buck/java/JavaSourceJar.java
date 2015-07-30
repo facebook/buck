@@ -59,7 +59,7 @@ public class JavaSourceJar extends AbstractBuildRule implements MavenPublishable
     super(params, resolver);
     this.sources = sources;
     BuildTarget target = params.getBuildTarget();
-    this.output = BuildTargets.getGenPath(target, String.format("%%s%s", Javac.SRC_ZIP));
+    this.output = BuildTargets.getGenPath(target, String.format("%%s%s", Javac.SRC_JAR));
     this.temp = BuildTargets.getScratchPath(target, "%s-srcs");
     this.mavenCoords = mavenCoords;
   }

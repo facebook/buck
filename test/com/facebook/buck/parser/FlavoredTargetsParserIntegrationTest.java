@@ -52,8 +52,8 @@ public class FlavoredTargetsParserIntegrationTest {
 
     // The output of the rule should be a normal jar. Verify that.
     assertTrue(output.getName().endsWith(".jar"));
-    // And just in case we ever rename "src.zip" to "sources.jar" to look like a maven output.
-    assertFalse(output.getName().endsWith(Javac.SRC_ZIP));
+    // Ensure the output name is not to be confused with a sources jar
+    assertFalse(output.getName().endsWith(Javac.SRC_JAR));
   }
 
   @Test
@@ -66,8 +66,8 @@ public class FlavoredTargetsParserIntegrationTest {
 
     File output = workspace.buildAndReturnOutput("//:example#src");
 
-    // The output of the rule should be a src zip. Verify that.
-    assertTrue(output.getName(), output.getName().endsWith(Javac.SRC_ZIP));
+    // The output of the rule should be a src jar. Verify that.
+    assertTrue(output.getName(), output.getName().endsWith(Javac.SRC_JAR));
   }
 
   @Test
