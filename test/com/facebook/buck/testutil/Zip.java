@@ -75,7 +75,7 @@ public class Zip implements AutoCloseable {
   public void add(String fileName, byte[] contents) throws IOException {
     Path zipPath = fs.getPath(root.toString(), fileName);
     if (Files.notExists(zipPath.getParent())) {
-      Files.createDirectory(zipPath.getParent());
+      Files.createDirectories(zipPath.getParent());
     }
     Files.write(zipPath, contents, CREATE, WRITE);
   }
@@ -87,7 +87,7 @@ public class Zip implements AutoCloseable {
   public void addDir(String dirName) throws IOException {
     Path zipPath = fs.getPath(root.toString(), dirName);
     if (Files.notExists(zipPath)) {
-      Files.createDirectory(zipPath);
+      Files.createDirectories(zipPath);
     }
   }
 
