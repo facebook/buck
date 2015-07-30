@@ -234,10 +234,19 @@ public class CxxPreprocessAndCompile
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
     // from contributing to the rule key.
-    builder.setReflectively("platformPreprocessorFlags", sanitizeFlags(platformPreprocessorFlags));
-    builder.setReflectively("rulePreprocessorFlags", sanitizeFlags(rulePreprocessorFlags));
-    builder.setReflectively("platformCompilerFlags", sanitizeFlags(platformCompilerFlags));
-    builder.setReflectively("ruleCompilerFlags", sanitizeFlags(ruleCompilerFlags));
+    builder.setReflectively(
+        "platformPreprocessorFlags",
+        sanitizer.sanitizeFlags(platformPreprocessorFlags));
+    builder.setReflectively(
+        "rulePreprocessorFlags",
+        sanitizer.sanitizeFlags(rulePreprocessorFlags));
+    builder.setReflectively(
+        "platformCompilerFlags",
+        sanitizer.sanitizeFlags(platformCompilerFlags));
+    builder.setReflectively(
+        "ruleCompilerFlags",
+        sanitizer.sanitizeFlags(ruleCompilerFlags));
+
     ImmutableList<String> frameworkRoots = FluentIterable.from(this.frameworkRoots)
         .transform(Functions.toStringFunction())
         .transform(sanitizer.sanitize(Optional.<Path>absent()))
@@ -251,12 +260,6 @@ public class CxxPreprocessAndCompile
     }
 
     return builder;
-  }
-
-  private ImmutableList<String> sanitizeFlags(Optional<ImmutableList<String>> flags) {
-    return FluentIterable.from(flags.or(ImmutableList.<String>of()))
-        .transform(sanitizer.sanitize(Optional.<Path>absent()))
-        .toList();
   }
 
   @VisibleForTesting

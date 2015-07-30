@@ -31,7 +31,9 @@ import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -126,6 +128,12 @@ public class DebugPathSanitizer {
         return DebugPathSanitizer.this.sanitize(workingDir, input);
       }
     };
+  }
+
+  public ImmutableList<String> sanitizeFlags(Optional<ImmutableList<String>> flags) {
+    return FluentIterable.from(flags.or(ImmutableList.<String>of()))
+        .transform(sanitize(Optional.<Path>absent()))
+        .toList();
   }
 
   /**
