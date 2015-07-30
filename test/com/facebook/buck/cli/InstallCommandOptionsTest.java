@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AdbOptions;
-import com.facebook.buck.android.TargetDeviceOptions;
+import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.step.TargetDeviceOptions;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

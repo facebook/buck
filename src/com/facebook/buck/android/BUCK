@@ -162,9 +162,7 @@ java_library(
 
 HELPERS_SRCS = [
   'AdbHelper.java',
-  'AdbOptions.java',
   'ExopackageInstaller.java',
-  'TargetDeviceOptions.java',
 ]
 
 java_library(

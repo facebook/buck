@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.step;
 
 public class AdbOptions {
 
-  static final String MULTI_INSTALL_MODE_SHORT_ARG = "-x";
+  public static final String MULTI_INSTALL_MODE_SHORT_ARG = "-x";
 
   private int adbThreadCount;
   private boolean multiInstallMode;

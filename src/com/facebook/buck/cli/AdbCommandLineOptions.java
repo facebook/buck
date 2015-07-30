@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AdbOptions;
+import com.facebook.buck.step.AdbOptions;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.kohsuke.args4j.Option;

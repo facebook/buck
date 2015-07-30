@@ -37,7 +37,9 @@ import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
@@ -111,6 +113,20 @@ public class AdbHelper {
     this.console = console;
     this.buckEventBus = buckEventBus;
     this.restartAdbOnFailure = restartAdbOnFailure;
+  }
+
+  public static AdbHelper get(
+      ExecutionContext context,
+      boolean restartOnFailure) {
+    Preconditions.checkArgument(context.getAdbOptions().isPresent());
+    Preconditions.checkArgument(context.getTargetDeviceOptions().isPresent());
+    return new AdbHelper(
+        context.getAdbOptions().get(),
+        context.getTargetDeviceOptions().get(),
+        context,
+        context.getConsole(),
+        context.getBuckEventBus(),
+        restartOnFailure);
   }
 
   private BuckEventBus getBuckEventBus() {

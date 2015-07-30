@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.step;
 
-import com.facebook.buck.step.TargetDevice;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 
