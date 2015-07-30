@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PropertyFinder;
+import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -165,7 +166,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
             repositoryPath);
       }
 
-      String newestVersion = "";
+      Optional<String> newestVersion = Optional.absent();
+      VersionStringComparator versionComparator = new VersionStringComparator();
       for (Path potentialNdkPath : repositoryPathContents) {
         if (potentialNdkPath.toFile().isDirectory()) {
           Optional<String> ndkVersion = findNdkVersionFromPath(potentialNdkPath);
@@ -181,9 +183,13 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
               if (targetNdkVersion.get().equals(ndkVersion.get())) {
                 return Optional.of(potentialNdkPath);
               }
-            } else if (ndkVersion.get().compareTo(newestVersion) > 0) {
-              path = Optional.of(potentialNdkPath);
-              newestVersion = ndkVersion.get();
+            } else {
+              if (!newestVersion.isPresent() || versionComparator.compare(
+                  ndkVersion.get(),
+                  newestVersion.get()) > 0) {
+                path = Optional.of(potentialNdkPath);
+                newestVersion = Optional.of(ndkVersion.get());
+              }
             }
           }
         }

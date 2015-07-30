@@ -17,7 +17,8 @@
 package com.facebook.buck.util;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -30,34 +31,66 @@ public class VersionStringComparatorTest {
 
   @Test
   public void testIsValidVersionString() {
-    assertTrue(VersionStringComparator.isValidVersionString("4"));
-    assertTrue(VersionStringComparator.isValidVersionString("4.2"));
-    assertTrue(VersionStringComparator.isValidVersionString("4.2.2"));
-    assertTrue(VersionStringComparator.isValidVersionString("4_rc1"));
-    assertTrue(VersionStringComparator.isValidVersionString("4.2_rc1"));
-    assertTrue(VersionStringComparator.isValidVersionString("4.2.2_rc1"));
+    String[] validVersions = {
+        "4",
+        "4.2",
+        "4.2.2",
+        "4_rc1",
+        "4.2_rc1",
+        "4.2.2_rc1",
+        "r9c",
+        "r10e-rc4"
+    };
+
+    for (String validVersion : validVersions) {
+      assertTrue(validVersion, VersionStringComparator.isValidVersionString(validVersion));
+    }
   }
 
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
   public void testCompare() {
+
+    // array of pairs of lower/higher strings
+    String[][] testPairs = {
+        {"4", "4.2.2"},
+        {"4", "5"},
+        {"4.2.2", "4.2.2.2"},
+        {"4.2.3", "4.3.2"},
+        {"4", "4_rc1"},
+        {"4.2.2_rc1", "4.2.2_rc2"},
+        {"4.2.2_rc1", "4.2.2_rc2-preview"},
+        // Android NDK versions
+        {"r9c", "r10e-rc4"},
+        {"r10e", "r10e-rc4"},
+        {"r10e-rc3", "r10e-rc4"},
+        {"r10ab-rc3", "r10ae-rc4"}
+    };
+
     VersionStringComparator comparator = new VersionStringComparator();
-    assertEquals(0, comparator.compare("4", "4"));
-    assertEquals(0, comparator.compare("4.2.2", "4.2.2"));
 
-    assertEquals(-1, comparator.compare("4", "5"));
-    assertEquals(1, comparator.compare("5", "4"));
+    for (String[] testPair : testPairs) {
+      String lower = testPair[0];
+      String higher = testPair[1];
 
-    assertEquals(-1, comparator.compare("4.2.2", "4.2.2.2"));
-    assertEquals(1, comparator.compare("4.2.2.2", "4.2.2"));
+      assertThat(
+          lower + " not equal to self",
+          comparator.compare(lower, lower), equalTo(0)
+      );
+      assertThat(
+          higher + " not equal to self",
+          comparator.compare(higher, higher), equalTo(0)
+      );
+      assertThat(
+          lower + " not less than " + higher,
+          comparator.compare(lower, higher), lessThan(0)
+      );
+      assertThat(
+          higher + " not higher than " + lower,
+          comparator.compare(higher, lower), greaterThan(0)
+      );
 
-    assertEquals(-1, comparator.compare("4.2.3", "4.3.2"));
-    assertEquals(1, comparator.compare("4.3.2", "4.2.3"));
-
-    assertThat(comparator.compare("4_rc1", "4"), equalTo(-1));
-    assertThat(comparator.compare("4", "4_rc1"), equalTo(1));
-    assertThat(comparator.compare("4.2.2_rc1", "4.2.2_rc2"), equalTo(-1));
-    assertThat(comparator.compare("4.2.2_rc2", "4.2.2"), equalTo(-1));
+    }
   }
 
   @Test(expected = RuntimeException.class)

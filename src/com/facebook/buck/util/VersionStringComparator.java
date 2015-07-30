@@ -16,19 +16,26 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Compares version strings such as "4.2.2" and "17.0".
+ * Compares version strings such as "4.2.2", "17.0", "r10e-rc4".
+ *
+ * Comparing different schemas e.g. "r10e-rc4" vs "4.2.2" is undefined.
  */
 public class VersionStringComparator implements Comparator<String> {
 
-  private static final Pattern VERSION_STRING_PATTERN =
-      Pattern.compile("(\\d+)(\\.\\d+)*?(_rc\\d+)*?(?:-preview)?$");
-
-  private static final Pattern VERSION_STRING_RC_PATTERN = Pattern.compile("_rc(\\d+)$");
+  private static final Pattern VERSION_STRING_PATTERN = Pattern.compile(
+          "^[rR]?(\\d+)[a-zA-Z]*(\\.\\d+)*?([-_]rc\\d+)*?(?:-preview)?$"
+  );
+  private static final Pattern IGNORED_FIELDS_PATTERN = Pattern.compile("(?:^[rR])|(?:-preview)");
+  private static final Pattern DELIMITER_PATTERN = Pattern.compile("\\.|(?:[-_]rc)");
+  private static final Pattern NUMBER_ALPHA_PATTERN = Pattern.compile("(\\d+)([a-zA-Z]+)");
 
   public static boolean isValidVersionString(String str) {
     return VERSION_STRING_PATTERN.matcher(str).matches();
@@ -44,42 +51,45 @@ public class VersionStringComparator implements Comparator<String> {
       throw new RuntimeException("Invalid version string: " + b);
     }
 
-    Matcher matcherA = VERSION_STRING_RC_PATTERN.matcher(a);
-    Matcher matcherB = VERSION_STRING_RC_PATTERN.matcher(b);
+    String cleanedA = IGNORED_FIELDS_PATTERN.matcher(a).replaceAll("");
+    String cleanedB = IGNORED_FIELDS_PATTERN.matcher(b).replaceAll("");
 
-    String[] partsA = matcherA.replaceFirst("").split("\\.");
-    String[] partsB = matcherB.replaceFirst("").split("\\.");
+    String[] partsA = DELIMITER_PATTERN.split(cleanedA);
+    String[] partsB = DELIMITER_PATTERN.split(cleanedB);
 
-    for (int i = 0; i < partsA.length; i++) {
-      if (i >= partsB.length) {
+    Iterator<Integer> valuesA = partsToValues(partsA).iterator();
+    Iterator<Integer> valuesB = partsToValues(partsB).iterator();
+
+    while (valuesA.hasNext()) {
+      if (!valuesB.hasNext()) {
         return 1;
       }
 
-      String partA = partsA[i];
-      String partB = partsB[i];
-
-      int valueA = Integer.parseInt(partA);
-      int valueB = Integer.parseInt(partB);
-      int delta = valueA - valueB;
-      if (delta != 0) {
-        return delta;
+      int comp = valuesA.next().compareTo(valuesB.next());
+      if (comp != 0) {
+        return comp;
       }
     }
 
-    if (partsA.length == partsB.length) {
-      if (matcherA.find(0) && !matcherB.find(0)) {
-        return -1;
-      } else if (!matcherA.find(0) && matcherB.find(0)) {
-        return 1;
-      } else if (matcherA.find(0) && matcherB.find(0)){
-        int valueA = Integer.parseInt(matcherA.group(1));
-        int valueB = Integer.parseInt(matcherB.group(1));
-        return valueA - valueB;
+    return valuesB.hasNext() ? -1 : 0;
+  }
+
+  private ImmutableList<Integer> partsToValues(String[] stringParts) {
+    ImmutableList.Builder<Integer> valuesBuilder = new ImmutableList.Builder<>();
+    for (String part : stringParts) {
+      Matcher matcher = NUMBER_ALPHA_PATTERN.matcher(part);
+      if (matcher.matches()) {
+        valuesBuilder.add(Integer.parseInt(matcher.group(1)));
+        String characters = matcher.group(2);
+        int value = 0;
+        for (int i = 0; i < characters.length(); i++) {
+          value += Math.pow(100, characters.length() - i) * characters.charAt(i);
+        }
+        valuesBuilder.add(value);
       } else {
-        return 0;
+        valuesBuilder.add(Integer.parseInt(part));
       }
-    } else {
-      return -1;
     }
+    return valuesBuilder.build();
   }
 }

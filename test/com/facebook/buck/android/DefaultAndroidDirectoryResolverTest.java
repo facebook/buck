@@ -60,7 +60,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
   public void testFindAndroidNdkDir() throws IOException {
     File ndkDir = tmpDir.newFolder("ndk-dir");
     File releaseFile = tmpDir.newFile("ndk-dir/RELEASE.TXT");
-    MoreFiles.writeLinesToFile(ImmutableList.of("r9d"), releaseFile);
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9d (64-bit)"), releaseFile);
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
@@ -186,9 +186,9 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     File releaseFile = tmpDir.newFile("ndk-dir-r9a/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9a"), releaseFile);
     releaseFile = tmpDir.newFile("ndk-dir-r9b/RELEASE.TXT");
-    MoreFiles.writeLinesToFile(ImmutableList.of("r9b"), releaseFile);
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9b (64-bit)"), releaseFile);
     releaseFile = tmpDir.newFile("ndk-dir-r9c/RELEASE.TXT");
-    MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), releaseFile);
+    MoreFiles.writeLinesToFile(ImmutableList.of("r9c (64-bit)"), releaseFile);
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
