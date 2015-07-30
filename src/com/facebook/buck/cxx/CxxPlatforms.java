@@ -96,7 +96,7 @@ public class CxxPlatforms {
         .setCpp(getTool(flavor, "cpp", config).transform(getPreprocessor(cpp.getClass())).or(cpp))
         .setCxxpp(
             getTool(flavor, "cxxpp", config).transform(getPreprocessor(cxxpp.getClass())).or(cxxpp))
-        .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass())).or(ld))
+        .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass(), config)).or(ld))
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass())).or(ar))
         .setStrip(getTool(flavor, "strip", config).or(strip))
@@ -150,7 +150,7 @@ public class CxxPlatforms {
                 .or(defaultPlatform.getCxxpp()))
         .setLd(
             getTool(flavor, "ld", config)
-                .transform(getLinker(defaultPlatform.getLd().getClass()))
+                .transform(getLinker(defaultPlatform.getLd().getClass(), config))
                 .or(defaultPlatform.getLd()))
         .setAr(new GnuArchiver(getTool(flavor, "ar", config).or(defaultPlatform.getAr())))
         .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
@@ -207,12 +207,13 @@ public class CxxPlatforms {
     };
   }
 
-  private static Function<Tool, Linker> getLinker(final Class<? extends Linker> ldClass) {
+  private static Function<Tool, Linker> getLinker(final Class<? extends Linker> ldClass,
+      final CxxBuckConfig config) {
     return new Function<Tool, Linker>() {
       @Override
       public Linker apply(Tool input) {
         try {
-          return ldClass.getConstructor(Tool.class).newInstance(input);
+          return config.getLinker(input).or(ldClass.getConstructor(Tool.class).newInstance(input));
         } catch (ReflectiveOperationException e) {
           throw new RuntimeException(e);
         }

@@ -20,6 +20,8 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -106,12 +108,6 @@ public class CxxBuckConfig {
     return delegate.getValue(cxxSection, "default_platform");
   }
 
-  public <T extends Enum<T>> Optional<T> getLinkerType(String flavor, Class<T> clazz) {
-    return delegate
-        .getEnum(cxxSection, flavor + "_ld_type", clazz)
-        .or(delegate.getEnum(cxxSection, "ld_type", clazz));
-  }
-
   public Optional<ImmutableList<String>> getFlags(
       String field) {
     Optional<String> value = delegate.getValue(cxxSection, field);
@@ -140,5 +136,31 @@ public class CxxBuckConfig {
             /* default*/ false)
         ? CxxPreprocessMode.COMBINED
         : CxxPreprocessMode.SEPARATE;
+  }
+
+  /*
+   * Constructs the appropriate Linker for the specified platform.
+   */
+  public Optional<Linker> getLinker(Tool ld) {
+    Optional<Platform> linkerPlatform = delegate
+        .getEnum(cxxSection, "linker_platform", Platform.class);
+    if (!linkerPlatform.isPresent()) {
+      return Optional.absent();
+    }
+    Linker result;
+    switch (linkerPlatform.get()) {
+      case MACOS:
+        result = new DarwinLinker(ld);
+        break;
+      case LINUX:
+      case WINDOWS:
+        result = new GnuLinker(ld);
+        break;
+      case UNKNOWN:
+      default:
+        throw new RuntimeException(
+            "Invalid platform for linker. Must be one of {MACOS, LINUX, WINDOWS}");
+    }
+    return Optional.of(result);
   }
 }

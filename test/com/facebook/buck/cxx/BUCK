@@ -66,6 +66,7 @@ java_test(
     '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
+    '//test/com/facebook/buck/timing:testutil',
     '//third-party/java/commons-compress:commons-compress',
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',

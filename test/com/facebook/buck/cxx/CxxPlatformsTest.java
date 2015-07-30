@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
@@ -25,8 +26,13 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.junit.ExpectedException;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -35,6 +41,9 @@ import java.nio.file.Paths;
  * Unit tests for {@link CxxPlatforms}.
  */
 public class CxxPlatformsTest {
+  @Rule
+  public final ExpectedException expectedException = ExpectedException.none();
+
   @Test
   public void returnsKnownDefaultPlatformSetInConfig() {
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
@@ -138,5 +147,41 @@ public class CxxPlatformsTest {
     assertThat(
         platform.getCxxppflags(),
         not(hasItem("-Wtest")));
+  }
+
+  public Linker getPlatformLinker(Platform linkerPlatform) {
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx", ImmutableMap.of(
+            "ld", Paths.get("fake_path").toString(),
+            "linker_platform", linkerPlatform.name()));
+
+    CxxBuckConfig buckConfig = new CxxBuckConfig(new FakeBuckConfig(sections,
+        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path")))));
+
+    return DefaultCxxPlatforms.build(buckConfig).getLd();
+  }
+
+  @Test
+  public void linkerOverriddenByConfig() {
+    assertThat("MACOS linker was not a DarwinLinker instance",
+        getPlatformLinker(Platform.MACOS), instanceOf(DarwinLinker.class));
+    assertThat("LINUX linker was not a GnuLinker instance",
+        getPlatformLinker(Platform.LINUX), instanceOf(GnuLinker.class));
+    assertThat("WINDOWS linker was not a GnuLinker instance",
+        getPlatformLinker(Platform.WINDOWS), instanceOf(GnuLinker.class));
+  }
+
+  @Test
+  public void invalidLinkerOverrideFails() {
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+      "cxx", ImmutableMap.of(
+            "ld", Paths.get("fake_path").toString(),
+            "linker_platform", "WRONG_PLATFORM"));
+
+    CxxBuckConfig buckConfig = new CxxBuckConfig(new FakeBuckConfig(sections,
+        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path")))));
+
+    expectedException.expect(RuntimeException.class);
+    DefaultCxxPlatforms.build(buckConfig);
   }
 }
