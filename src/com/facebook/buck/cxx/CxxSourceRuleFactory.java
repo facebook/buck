@@ -31,8 +31,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
@@ -45,8 +47,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -168,12 +173,21 @@ public class CxxSourceRuleFactory {
     this.compilerFlags = compilerFlags;
   }
 
+  private String getOutputName(String name) {
+    List<String> parts = Lists.newArrayList();
+    for (String part : Splitter.on(File.separator).omitEmptyStrings().split(name)) {
+      // TODO(#7877540): Remove once we prevent disabling package boundary checks.
+      parts.add(part.equals("..") ? "__PAR__" : part);
+    }
+    return Joiner.on(File.separator).join(parts);
+  }
+
   /**
    * @return the preprocessed file name for the given source name.
    */
   private String getPreprocessOutputName(CxxSource.Type type, String name) {
     CxxSource.Type outputType = CxxSourceTypes.getPreprocessorOutputType(type);
-    return name + "." + Iterables.get(outputType.getExtensions(), 0);
+    return getOutputName(name) + "." + Iterables.get(outputType.getExtensions(), 0);
   }
 
   /**
@@ -280,7 +294,7 @@ public class CxxSourceRuleFactory {
    * @return the object file name for the given source name.
    */
   private String getCompileOutputName(String name) {
-    return name + ".o";
+    return getOutputName(name) + ".o";
   }
 
   /**

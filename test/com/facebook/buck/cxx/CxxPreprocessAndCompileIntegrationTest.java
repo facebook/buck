@@ -294,6 +294,15 @@ public class CxxPreprocessAndCompileIntegrationTest {
         Matchers.not(Matchers.equalTo(firstRunEntry.getRuleKey())));
   }
 
+  @Test
+  public void parentDirectoryReferenceInSource() throws IOException {
+    Files.append(
+        "\n[project]\n  check_package_boundary = false\n",
+        workspace.getFile(".buckconfig"),
+        Charsets.UTF_8);
+    workspace.runBuckBuild("//parent_dir_ref:simple#default,static").assertSuccess();
+  }
+
   public void assumeNotUsingSeparateOrPipedModesWithClang() {
     assumeTrue(
         Platform.detect() != Platform.MACOS ||
