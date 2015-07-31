@@ -16,14 +16,15 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRuleType;
@@ -68,6 +69,8 @@ public class WorkspaceAndProjectGenerator {
   private final boolean combinedProject;
   private final boolean buildWithBuck;
   private final ImmutableList<String> buildWithBuckFlags;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final CxxPlatform defaultCxxPlatform;
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = ImmutableSet.of();
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
@@ -89,6 +92,8 @@ public class WorkspaceAndProjectGenerator {
       boolean combinedProject,
       boolean buildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxPlatform defaultCxxPlatform,
       String buildFileName,
       Function<TargetNode<?>, Path> outputPathOfNode) {
     this.projectFilesystem = projectFilesystem;
@@ -100,6 +105,8 @@ public class WorkspaceAndProjectGenerator {
     this.combinedProject = combinedProject;
     this.buildWithBuck = buildWithBuck;
     this.buildWithBuckFlags = buildWithBuckFlags;
+    this.cxxPlatforms = cxxPlatforms;
+    this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildFileName = buildFileName;
     this.outputPathOfNode = outputPathOfNode;
     this.combinedProjectGenerator = Optional.absent();
@@ -222,6 +229,8 @@ public class WorkspaceAndProjectGenerator {
           projectGeneratorOptions,
           targetToBuildWithBuck,
           buildWithBuckFlags,
+          cxxPlatforms,
+          defaultCxxPlatform,
           outputPathOfNode)
           .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
@@ -287,6 +296,8 @@ public class WorkspaceAndProjectGenerator {
                     }
                   }),
               buildWithBuckFlags,
+              cxxPlatforms,
+              defaultCxxPlatform,
               outputPathOfNode)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
@@ -317,6 +328,8 @@ public class WorkspaceAndProjectGenerator {
             projectGeneratorOptions,
             Optional.<BuildTarget>absent(),
             buildWithBuckFlags,
+            cxxPlatforms,
+            defaultCxxPlatform,
             outputPathOfNode);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTests)
@@ -355,10 +368,11 @@ public class WorkspaceAndProjectGenerator {
             PBXTarget first = targets.get(0);
             PBXTarget second = targets.get(1);
             Preconditions.checkState(
-                first instanceof PBXAggregateTarget ^ second instanceof PBXAggregateTarget);
+                first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX) ^
+                    second.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX));
             PBXTarget buildWithBuckTarget;
             PBXTarget buildWithXcodeTarget;
-            if (first instanceof PBXAggregateTarget) {
+            if (first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX)) {
               buildWithBuckTarget = first;
               buildWithXcodeTarget = second;
             } else {
@@ -756,9 +770,9 @@ public class WorkspaceAndProjectGenerator {
       Optional<BuildTarget> targetToBuildWithBuck = getTargetToBuildWithBuck();
       if (buildWithBuck && targetToBuildWithBuck.isPresent()) {
         runnablePath = Optional.of(
-            projectFilesystem
-                .resolve(AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app"))
-                .toString());
+            projectFilesystem.resolve(
+                ProjectGenerator.getScratchPathForAppBundle(
+                    targetToBuildWithBuck.get())).toString());
       } else {
         runnablePath = Optional.absent();
       }

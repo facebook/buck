@@ -242,6 +242,7 @@ public class NewNativeTargetProjectMutator {
     this.directAssetCatalogs = ImmutableSet.copyOf(directAssetCatalogs);
     return this;
   }
+
   public Result buildTargetAndAddToProject(PBXProject project)
       throws NoSuchBuildTargetException {
     PBXNativeTarget target = new PBXNativeTarget(targetName);

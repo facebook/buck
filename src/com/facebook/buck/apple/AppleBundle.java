@@ -164,7 +164,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.sdkName = sdkName;
   }
 
-  private static String getBinaryName(BuildTarget buildTarget) {
+  public static String getBinaryName(BuildTarget buildTarget) {
     return buildTarget.getShortName();
   }
 

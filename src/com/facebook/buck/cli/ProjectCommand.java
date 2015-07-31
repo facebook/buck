@@ -658,6 +658,8 @@ public class ProjectCommand extends BuildCommand {
           combinedProject,
           buildWithBuck,
           super.getOptions(),
+          params.getRepository().getKnownBuildRuleTypes().getCxxPlatforms(),
+          params.getRepository().getKnownBuildRuleTypes().getDefaultCxxPlatforms(),
           new ParserConfig(params.getBuckConfig()).getBuildFileName(),
           new Function<TargetNode<?>, Path>() {
             @Nullable

@@ -58,6 +58,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryBuilder;
@@ -65,6 +67,8 @@ import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -127,6 +131,9 @@ public class ProjectGeneratorTest {
       OUTPUT_DIRECTORY.resolve(PROJECT_CONTAINER);
   private static final Path OUTPUT_PROJECT_FILE_PATH =
       OUTPUT_PROJECT_BUNDLE_PATH.resolve("project.pbxproj");
+  private static final FlavorDomain<CxxPlatform> PLATFORMS =
+      new FlavorDomain<>("C/C++ platform", ImmutableMap.<Flavor, CxxPlatform>of());
+  private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
 
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
@@ -2976,6 +2983,8 @@ public class ProjectGeneratorTest {
         ProjectGenerator.SEPARATED_PROJECT_OPTIONS,
         Optional.<BuildTarget>absent(),
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         new Function<TargetNode<?>, Path>() {
           @Nullable
           @Override
@@ -3167,6 +3176,8 @@ public class ProjectGeneratorTest {
         ImmutableSet.<ProjectGenerator.Option>of(),
         Optional.of(binaryTarget),
         ImmutableList.of("--flag", "value with spaces"),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         Functions.<Path>constant(null));
     projectGenerator.createXcodeProjects();
 
@@ -3189,7 +3200,8 @@ public class ProjectGeneratorTest {
     PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
     assertThat(
         shellScriptBuildPhase.getShellScript(),
-        equalTo("buck build --flag 'value with spaces' " + binaryTarget.getFullyQualifiedName()));
+        containsString(
+            "buck build --flag 'value with spaces' " + binaryTarget.getFullyQualifiedName()));
   }
 
   @Test
@@ -3355,6 +3367,8 @@ public class ProjectGeneratorTest {
         projectGeneratorOptions,
         Optional.<BuildTarget>absent(),
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         Functions.<Path>constant(null));
   }
 

@@ -37,10 +37,14 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -86,6 +90,10 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public class WorkspaceAndProjectGeneratorTest {
+
+  private static final FlavorDomain<CxxPlatform> PLATFORMS =
+      new FlavorDomain<>("C/C++ platform", ImmutableMap.<Flavor, CxxPlatform>of());
+  private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
 
   private ProjectFilesystem projectFilesystem;
   private ReactNativeBuckConfig reactNativeBuckConfig;
@@ -234,6 +242,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -296,6 +306,8 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -343,6 +355,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -419,6 +433,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -464,6 +480,8 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -486,6 +504,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         true /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -582,6 +602,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
@@ -988,6 +1010,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
@@ -1133,6 +1157,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
         "BUCK",
         getOutputPathOfNodeFunction(targetGraph));
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();

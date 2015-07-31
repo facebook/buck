@@ -69,6 +69,7 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',
+    '//src/com/facebook/buck/java:support',
     '//test/com/facebook/buck/java/tracing:tracing',
   ],
 )

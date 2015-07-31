@@ -41,6 +41,7 @@ java_test(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//test/com/facebook/buck/cxx:testutil',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/io:testutil',
     '//test/com/facebook/buck/js:testutil',
