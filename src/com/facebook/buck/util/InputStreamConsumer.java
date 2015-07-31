@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Optional;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,7 +35,7 @@ public final class InputStreamConsumer implements Runnable {
 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
-  private final BufferedReader inputReader;
+  private final LineFetcher inputReader;
   private final PrintStream printStream;
   private final Ansi ansi;
   private final boolean flagOutputWrittenToStream;
@@ -65,7 +64,7 @@ public final class InputStreamConsumer implements Runnable {
       Ansi ansi,
       boolean flagOutputWrittenToStream,
       Optional<Handler> handler) {
-    this.inputReader = new BufferedReader(reader);
+    this.inputReader = new LineFetcher(reader);
     this.printStream = printStream;
     this.ansi = ansi;
     this.flagOutputWrittenToStream = flagOutputWrittenToStream;

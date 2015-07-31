@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,7 +38,7 @@ public abstract class LineProcessorThread extends ManagedThread {
 
   @Override
   protected void run() throws Exception {
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    try (LineFetcher reader = new LineFetcher(new InputStreamReader(inputStream));
          BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
       String line;
       while ((line = reader.readLine()) != null) {
