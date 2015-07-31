@@ -180,7 +180,7 @@ public class CxxBinaryDescriptionTest {
     CxxBinaryBuilder cxxBinaryBuilder =
         (CxxBinaryBuilder) new CxxBinaryBuilder(target)
               .setSrcs(
-                  ImmutableList.of(
+                  ImmutableSortedSet.of(
                       SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
                       SourceWithFlags.of(
                           new BuildTargetSourcePath(
@@ -293,7 +293,7 @@ public class CxxBinaryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     new CxxBinaryBuilder(target)
         .setSrcs(
-            ImmutableList.of(
+            ImmutableSortedSet.of(
                 SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))))
         .build(resolver, filesystem);
   }

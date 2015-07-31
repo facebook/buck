@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.SortedSet;
 
-public class SortedSetTypeCoercer<T extends Comparable<T>>
+public class SortedSetTypeCoercer<T extends Comparable<? super T>>
     extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
 
   private final TypeCoercer<T> elementTypeCoercer;

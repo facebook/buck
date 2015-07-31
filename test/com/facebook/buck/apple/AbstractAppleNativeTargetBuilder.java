@@ -79,7 +79,7 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
-  public BUILDER setSrcs(Optional<ImmutableList<SourceWithFlags>> srcs) {
+  public BUILDER setSrcs(Optional<ImmutableSortedSet<SourceWithFlags>> srcs) {
     arg.srcs = srcs;
     return getThis();
   }
@@ -98,7 +98,7 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return setHeaders(Optional.of(SourceList.ofUnnamedSources(headers)));
   }
 
-  public BUILDER setHeaders(ImmutableMap<String, SourcePath> headers) {
+  public BUILDER setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
     return setHeaders(Optional.of(SourceList.ofNamedSources(headers)));
   }
 
@@ -111,7 +111,7 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return setExportedHeaders(Optional.of(SourceList.ofUnnamedSources(exportedHeaders)));
   }
 
-  public BUILDER setExportedHeaders(ImmutableMap<String, SourcePath> exportedHeaders) {
+  public BUILDER setExportedHeaders(ImmutableSortedMap<String, SourcePath> exportedHeaders) {
     return setExportedHeaders(Optional.of(SourceList.ofNamedSources(exportedHeaders)));
   }
 

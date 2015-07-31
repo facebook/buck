@@ -19,8 +19,8 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
 
@@ -40,10 +40,10 @@ abstract class AbstractSourceWithFlagsList {
   public abstract Type getType();
 
   @Value.Parameter
-  public abstract Optional<ImmutableList<SourceWithFlags>> getUnnamedSources();
+  public abstract Optional<ImmutableSortedSet<SourceWithFlags>> getUnnamedSources();
 
   @Value.Parameter
-  public abstract Optional<ImmutableMap<String, SourceWithFlags>> getNamedSources();
+  public abstract Optional<ImmutableSortedMap<String, SourceWithFlags>> getNamedSources();
 
   @Value.Check
   protected void check() {
@@ -62,18 +62,18 @@ abstract class AbstractSourceWithFlagsList {
   }
 
   public static SourceWithFlagsList ofUnnamedSources(
-      ImmutableList<SourceWithFlags> unnamedSources) {
+      ImmutableSortedSet<SourceWithFlags> unnamedSources) {
     return SourceWithFlagsList.of(
         Type.UNNAMED,
         Optional.of(unnamedSources),
-        Optional.<ImmutableMap<String, SourceWithFlags>>absent());
+        Optional.<ImmutableSortedMap<String, SourceWithFlags>>absent());
   }
 
   public static SourceWithFlagsList ofNamedSources(
-      ImmutableMap<String, SourceWithFlags> namedSources) {
+      ImmutableSortedMap<String, SourceWithFlags> namedSources) {
     return SourceWithFlagsList.of(
         Type.NAMED,
-        Optional.<ImmutableList<SourceWithFlags>>absent(),
+        Optional.<ImmutableSortedSet<SourceWithFlags>>absent(),
         Optional.of(namedSources));
   }
 

@@ -39,7 +39,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -119,7 +118,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> cxxLibraryBuilder = new CxxLibraryBuilder(
         BuildTargetFactory.newInstance("//:cxxlib"))
         .setSoname("somelib.so")
-        .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("test/bar.cpp"))));
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("test/bar.cpp"))));
     TargetNode<CxxLibraryDescription.Arg> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(

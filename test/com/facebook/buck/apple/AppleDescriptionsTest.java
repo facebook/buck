@@ -33,6 +33,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -81,7 +82,7 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromMap() {
-    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>of(
+    ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.<String, SourcePath>of(
         "virtual/path.h", new TestSourcePath("path/to/some_file.h"),
         "another/path.h", new TestSourcePath("path/to/another_file.h"),
         "another/file.h", new TestSourcePath("different/path/to/a_file.h"),
@@ -96,7 +97,7 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromTheSameTargetFromMap() {
-    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>of(
+    ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.<String, SourcePath>of(
         "virtual/path.h", new TestSourcePath("path/to/some_file.h"),
         "another/path.h", new TestSourcePath("path/to/another_file.h"),
         "another/file.h", new TestSourcePath("different/path/to/a_file.h"),

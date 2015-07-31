@@ -20,7 +20,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
@@ -41,7 +41,7 @@ abstract class AbstractSourceList {
   public abstract Optional<ImmutableSortedSet<SourcePath>> getUnnamedSources();
 
   @Value.Parameter
-  public abstract Optional<ImmutableMap<String, SourcePath>> getNamedSources();
+  public abstract Optional<ImmutableSortedMap<String, SourcePath>> getNamedSources();
 
   @Value.Check
   protected void check() {
@@ -61,10 +61,10 @@ abstract class AbstractSourceList {
     return SourceList.of(
         Type.UNNAMED,
         Optional.of(unnamedSources),
-        Optional.<ImmutableMap<String, SourcePath>>absent());
+        Optional.<ImmutableSortedMap<String, SourcePath>>absent());
   }
 
-  public static SourceList ofNamedSources(ImmutableMap<String, SourcePath> namedSources) {
+  public static SourceList ofNamedSources(ImmutableSortedMap<String, SourcePath> namedSources) {
     return SourceList.of(
         Type.NAMED,
         Optional.<ImmutableSortedSet<SourcePath>>absent(),

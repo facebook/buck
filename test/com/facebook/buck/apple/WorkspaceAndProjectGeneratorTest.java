@@ -397,7 +397,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
-                ImmutableList.of(
+                ImmutableSortedSet.of(
                     SourceWithFlags.of(
                         new BuildTargetSourcePath(genruleTarget)))))
         .build();
@@ -442,7 +442,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
-                ImmutableList.of(
+                ImmutableSortedSet.of(
                     SourceWithFlags.of(
                         new BuildTargetSourcePath(genruleTarget)))))
         .build();

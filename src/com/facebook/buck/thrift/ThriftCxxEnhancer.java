@@ -39,6 +39,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
@@ -217,7 +218,8 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     // Merge the thrift generated headers with the ones passed in via the description.
-    ImmutableMap.Builder<String, SourcePath> headersBuilder = ImmutableMap.builder();
+    ImmutableSortedMap.Builder<String, SourcePath> headersBuilder =
+        ImmutableSortedMap.naturalOrder();
     headersBuilder.putAll(spec.getHeaders());
     if (args.cppExportedHeaders.isPresent()) {
       if (args.cppExportedHeaders.get().getNamedSources().isPresent()) {
@@ -230,10 +232,11 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
                 args.cppExportedHeaders.get().getUnnamedSources().get()));
       }
     }
-    ImmutableMap<String, SourcePath> headers = headersBuilder.build();
+    ImmutableSortedMap<String, SourcePath> headers = headersBuilder.build();
 
     // Merge the thrift generated sources with the ones passed in via the description.
-    ImmutableMap.Builder<String, SourceWithFlags> srcsBuilder = ImmutableMap.builder();
+    ImmutableSortedMap.Builder<String, SourceWithFlags> srcsBuilder =
+        ImmutableSortedMap.naturalOrder();
     srcsBuilder.putAll(spec.getSources());
     if (args.cppSrcs.isPresent()) {
       if (args.cppSrcs.get().getNamedSources().isPresent()) {
@@ -248,7 +251,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         }
       }
     }
-    ImmutableMap<String, SourceWithFlags> srcs = srcsBuilder.build();
+    ImmutableSortedMap<String, SourceWithFlags> srcs = srcsBuilder.build();
 
     // Construct the C/C++ library description argument to pass to the
     CxxLibraryDescription.Arg langArgs = CxxLibraryDescription.createEmptyConstructorArg();

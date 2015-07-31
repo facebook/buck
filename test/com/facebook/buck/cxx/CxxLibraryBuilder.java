@@ -21,7 +21,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.regex.Pattern;
@@ -49,7 +49,7 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     return this;
   }
 
-  public CxxLibraryBuilder setExportedHeaders(ImmutableMap<String, SourcePath> headers)  {
+  public CxxLibraryBuilder setExportedHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
     arg.exportedHeaders = Optional.of(SourceList.ofNamedSources(headers));
     return this;
   }

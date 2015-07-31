@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableSortedSet;
 @SuppressFieldNotInitialized
 public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
-  public Optional<ImmutableList<SourceWithFlags>> srcs;
+  public Optional<ImmutableSortedSet<SourceWithFlags>> srcs;
   public Optional<ImmutableList<SourcePath>> extraXcodeSources;
   public Optional<SourceList> headers;
   public Optional<SourceList> exportedHeaders;

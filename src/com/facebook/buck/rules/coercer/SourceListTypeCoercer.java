@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -27,13 +27,13 @@ import java.util.List;
 
 public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
   private final TypeCoercer<ImmutableSortedSet<SourcePath>> unnamedHeadersTypeCoercer;
-  private final TypeCoercer<ImmutableMap<String, SourcePath>> namedHeadersTypeCoercer;
+  private final TypeCoercer<ImmutableSortedMap<String, SourcePath>> namedHeadersTypeCoercer;
 
   SourceListTypeCoercer(
       TypeCoercer<String> stringTypeCoercer,
       TypeCoercer<SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SortedSetTypeCoercer<>(sourcePathTypeCoercer);
-    this.namedHeadersTypeCoercer = new MapTypeCoercer<>(
+    this.namedHeadersTypeCoercer = new SortedMapTypeCoercer<>(
         stringTypeCoercer,
         sourcePathTypeCoercer);
   }

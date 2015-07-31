@@ -406,7 +406,7 @@ public class TargetsCommandTest {
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
-                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(libraryNode);
@@ -445,7 +445,7 @@ public class TargetsCommandTest {
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
-                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
@@ -454,7 +454,7 @@ public class TargetsCommandTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
-                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -573,7 +573,7 @@ public class TargetsCommandTest {
         .createBuilder(libraryTarget)
         .setSrcs(
             Optional.of(
-                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
         .setTests(Optional.of(ImmutableSortedSet.of(libraryTestTarget1, libraryTestTarget2)))
         .build();
 
@@ -582,7 +582,7 @@ public class TargetsCommandTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
-                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo1.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo1.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -591,13 +591,13 @@ public class TargetsCommandTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
-                ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo2.m")))))
+                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/testfoo2.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))
         .build();
 
     TargetNode<?> testLibraryNode = AppleLibraryBuilder
         .createBuilder(testLibraryTarget)
-        .setSrcs(Optional.of(ImmutableList.of(
+        .setSrcs(Optional.of(ImmutableSortedSet.of(
                     SourceWithFlags.of(
                         new TestSourcePath("testlib/testlib.m")))))
         .setTests(Optional.of(ImmutableSortedSet.of(testLibraryTestTarget)))
@@ -608,7 +608,7 @@ public class TargetsCommandTest {
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setSrcs(
             Optional.of(
-                ImmutableList.of(
+                ImmutableSortedSet.of(
                     SourceWithFlags.of(
                         new TestSourcePath("testlib/testlib-test.m")))))
         .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))

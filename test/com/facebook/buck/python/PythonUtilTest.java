@@ -27,6 +27,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 
 import org.junit.Test;
 
@@ -43,7 +44,7 @@ public class PythonUtilTest {
         "srcs",
         target.getBasePath(), Optional.of(
             SourceList.ofNamedSources(
-                ImmutableMap.<String, SourcePath>of(
+                ImmutableSortedMap.<String, SourcePath>of(
                     "hello.py", new TestSourcePath("goodbye.py")))));
     assertEquals(
         ImmutableMap.<Path, SourcePath>of(

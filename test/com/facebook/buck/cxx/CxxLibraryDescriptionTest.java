@@ -49,6 +49,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
@@ -217,7 +218,7 @@ public class CxxLibraryDescriptionTest {
         .setHeaders(
             ImmutableSortedSet.<SourcePath>of(new TestSourcePath(privateHeaderName)))
         .setSrcs(
-            ImmutableList.of(
+            ImmutableSortedSet.of(
                 SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
                 SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
         .setFrameworkSearchPaths(
@@ -423,7 +424,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> ruleBuilder = new CxxLibraryBuilder(target)
         .setSoname(soname)
-        .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
     CxxLibrary rule = (CxxLibrary) ruleBuilder
         .build(
@@ -490,7 +491,7 @@ public class CxxLibraryDescriptionTest {
     AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> linkWholeBuilder =
         new CxxLibraryBuilder(target)
             .setLinkWhole(true)
-            .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
 
     TargetGraph linkWholeGraph = TargetGraphFactory.newInstance(linkWholeBuilder.build());
     CxxLibrary linkWhole = (CxxLibrary) linkWholeBuilder
@@ -642,10 +643,10 @@ public class CxxLibraryDescriptionTest {
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
     CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
         .setExportedHeaders(
-            ImmutableMap.<String, SourcePath>of(
+            ImmutableSortedMap.<String, SourcePath>of(
                 genHeaderName, new BuildTargetSourcePath(genHeaderTarget)))
         .setSrcs(
-            ImmutableMap.of(
+            ImmutableSortedMap.of(
                 sourceName,
                 SourceWithFlags.of(new TestSourcePath(sourceName)),
                 genSourceName,
@@ -917,7 +918,7 @@ public class CxxLibraryDescriptionTest {
     // methods.
     CxxLibraryBuilder cxxLibraryBuilder =
         (CxxLibraryBuilder) new CxxLibraryBuilder(target)
-            .setSrcs(ImmutableList.of(SourceWithFlags.of(new TestSourcePath("test.c"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("test.c"))));
     TargetGraph targetGraph1 = TargetGraphFactory.newInstance(cxxLibraryBuilder.build());
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder
         .build(new BuildRuleResolver(), filesystem, targetGraph1);
@@ -971,7 +972,7 @@ public class CxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
     libBuilder.setSrcs(
-        ImmutableList.of(
+        ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     CxxLibrary lib = (CxxLibrary) libBuilder

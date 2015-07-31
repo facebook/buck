@@ -24,8 +24,8 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -38,12 +38,12 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
     super(description, target);
   }
 
-  public AbstractCxxSourceBuilder<T> setSrcs(ImmutableList<SourceWithFlags> srcs)  {
+  public AbstractCxxSourceBuilder<T> setSrcs(ImmutableSortedSet<SourceWithFlags> srcs)  {
     arg.srcs = Optional.of(SourceWithFlagsList.ofUnnamedSources(srcs));
     return this;
   }
 
-  public AbstractCxxSourceBuilder<T> setSrcs(ImmutableMap<String, SourceWithFlags> srcs)  {
+  public AbstractCxxSourceBuilder<T> setSrcs(ImmutableSortedMap<String, SourceWithFlags> srcs)  {
     arg.srcs = Optional.of(SourceWithFlagsList.ofNamedSources(srcs));
     return this;
   }
@@ -58,7 +58,7 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
     return this;
   }
 
-  public AbstractCxxSourceBuilder<T> setHeaders(ImmutableMap<String, SourcePath> headers)  {
+  public AbstractCxxSourceBuilder<T> setHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
     arg.headers = Optional.of(SourceList.ofNamedSources(headers));
     return this;
   }

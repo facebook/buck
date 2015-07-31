@@ -18,21 +18,21 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.List;
 
 public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFlagsList> {
-  private final TypeCoercer<ImmutableList<SourceWithFlags>> unnamedSourcesTypeCoercer;
-  private final TypeCoercer<ImmutableMap<String, SourceWithFlags>> namedSourcesTypeCoercer;
+  private final TypeCoercer<ImmutableSortedSet<SourceWithFlags>> unnamedSourcesTypeCoercer;
+  private final TypeCoercer<ImmutableSortedMap<String, SourceWithFlags>> namedSourcesTypeCoercer;
 
   SourceWithFlagsListTypeCoercer(
       TypeCoercer<String> stringTypeCoercer,
       TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer) {
-    this.unnamedSourcesTypeCoercer = new ListTypeCoercer<>(sourceWithFlagsTypeCoercer);
-    this.namedSourcesTypeCoercer = new MapTypeCoercer<>(
+    this.unnamedSourcesTypeCoercer = new SortedSetTypeCoercer<>(sourceWithFlagsTypeCoercer);
+    this.namedSourcesTypeCoercer = new SortedMapTypeCoercer<>(
         stringTypeCoercer,
         sourceWithFlagsTypeCoercer);
   }
@@ -64,7 +64,9 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
 
   @Override
   public Optional<SourceWithFlagsList> getOptionalValue() {
-    return Optional.of(SourceWithFlagsList.ofUnnamedSources(ImmutableList.<SourceWithFlags>of()));
+    return Optional.of(
+        SourceWithFlagsList.ofUnnamedSources(
+            ImmutableSortedSet.<SourceWithFlags>of()));
   }
 
   @Override

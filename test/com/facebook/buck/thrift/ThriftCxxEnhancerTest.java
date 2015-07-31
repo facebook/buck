@@ -46,6 +46,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -550,11 +551,11 @@ public class ThriftCxxEnhancerTest {
     BuildRuleParams flavoredParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
 
     final String cppHeaderNamespace = "foo";
-    final ImmutableMap<String, SourcePath> cppHeaders =
-        ImmutableMap.<String, SourcePath>of(
+    final ImmutableSortedMap<String, SourcePath> cppHeaders =
+        ImmutableSortedMap.<String, SourcePath>of(
             "header.h", new TestSourcePath("header.h"));
-    final ImmutableMap<String, SourceWithFlags> cppSrcs =
-        ImmutableMap.of(
+    final ImmutableSortedMap<String, SourceWithFlags> cppSrcs =
+        ImmutableSortedMap.of(
             "source.cpp", SourceWithFlags.of(new TestSourcePath("source.cpp")));
 
     ThriftConstructorArg arg = new ThriftConstructorArg();
