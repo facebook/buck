@@ -103,7 +103,10 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
+import com.google.common.io.Resources;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+
+import org.stringtemplate.v4.ST;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -130,6 +133,7 @@ public class ProjectGenerator {
   public static final String BUILD_WITH_BUCK_POSTFIX = "-Buck";
 
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
+  private static final String BUILD_WITH_BUCK_TEMPLATE = "build-with-buck.st";
 
   public enum Option {
     /** Use short BuildTarget name instead of full name for targets */
@@ -435,7 +439,7 @@ public class ProjectGenerator {
     }
   }
 
-  private void generateBuildWithBuckTarget(TargetNode<?> targetNode) {
+  private void generateBuildWithBuckTarget(TargetNode<?> targetNode) throws IOException {
     CxxPlatform cxxPlatform;
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(targetNode.getBuildTarget().getFlavors());
     try {
@@ -452,6 +456,10 @@ public class ProjectGenerator {
     Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get());
 
     PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
+    ST template = new ST(Resources.toString(
+        Resources.getResource(ProjectGenerator.class, BUILD_WITH_BUCK_TEMPLATE),
+        Charsets.UTF_8));
+
     String compDir = cxxPlatform.getDebugPathSanitizer().getCompilationDirectory();
     // Use the hostname for padding instead of the directory, this way the directory matches without
     // having to resolve it.
@@ -459,35 +467,24 @@ public class ProjectGenerator {
         ":" + projectFilesystem.getRootPath().toString(),
         compDir.length(),
         'f');
+    String buildFlags = Joiner.on(' ').join(Iterables.transform(
+        buildWithBuckFlags,
+        Escaper.BASH_ESCAPER));
+    String escapedBuildTarget = Escaper.escapeAsBashString(buildTarget.getFullyQualifiedName());
+    Path resolvedBundleSource = projectFilesystem.resolve(
+        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app"));
+    Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
 
-    shellScriptBuildPhase.setShellScript(
-        Joiner.on('\n').join(
-            String.format(
-                "buck build %s %s",
-                Joiner.on(' ').join(Iterables.transform(buildWithBuckFlags, Escaper.BASH_ESCAPER)),
-                Escaper.escapeAsBashString(buildTarget.getFullyQualifiedName())),
-            String.format(
-                "rm -r %s 2> /dev/null || true",
-                projectFilesystem.resolve(bundleDestination)),
-            String.format("mkdir -p %s", projectFilesystem.resolve(bundleDestination).getParent()),
-            String.format(
-                "cp -r %s %s",
-                projectFilesystem
-                    .resolve(AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app")),
-                projectFilesystem.resolve(bundleDestination)),
-            "export LANG=C",
-            "export LC_ALL=C",
-            String.format(
-                "sed -i '' 's|%s|%s|g' %s",
-                compDir,
-                sourceDir,
-                projectFilesystem
-                    .resolve(bundleDestination)
-                    .resolve(binaryName + ".dSYM")
-                    .resolve("Contents")
-                    .resolve("Resources")
-                    .resolve("DWARF")
-                    .resolve(binaryName))));
+    template.add("comp_dir", compDir);
+    template.add("source_dir", sourceDir);
+    template.add("build_flags", buildFlags);
+    template.add("escaped_build_target", escapedBuildTarget);
+    template.add("resolved_bundle_source", resolvedBundleSource);
+    template.add("resolved_bundle_destination", resolvedBundleDestination);
+    template.add("resolved_bundle_destination_parent", resolvedBundleDestination.getParent());
+    template.add("binary_name", binaryName);
+
+    shellScriptBuildPhase.setShellScript(template.render());
 
     ImmutableMap<String, ImmutableMap<String, String>> configs =
         getAppleNativeNode(targetGraph, targetNode).get().getConstructorArg().configs.get();
