@@ -93,6 +93,7 @@ java_immutables_library(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java/abi:protocol',
+    '//src/com/facebook/buck/java/tracing:api',
     '//src/com/facebook/buck/java/tracing:tracing',
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/model:model',
