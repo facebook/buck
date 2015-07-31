@@ -67,6 +67,7 @@ public class CxxGtestTestTest {
         ImmutableList.of(
             "malformed_output",
             "multisuite_success",
+            "no_tests",
             "simple_success",
             "simple_failure",
             "simple_failure_with_output",
