@@ -65,6 +65,7 @@ public class CxxGtestTestTest {
 
     ImmutableList<String> samples =
         ImmutableList.of(
+            "malformed_output",
             "multisuite_success",
             "simple_success",
             "simple_failure",

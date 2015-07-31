@@ -26,6 +26,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.XmlDomParser;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -40,6 +41,11 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -93,19 +99,26 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
 
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();
 
-    List<String> outputLines = context.getProjectFilesystem().readLines(output);
+    // It's possible the test output had invalid characters in it's output, so make sure to
+    // ignore these as we parse the output lines.
     Optional<String> currentTest = Optional.absent();
     Map<String, List<String>> stdout = Maps.newHashMap();
-    for (String line : outputLines) {
-      Matcher matcher;
-      if ((matcher = START.matcher(line.trim())).matches()) {
-        String test = matcher.group(1);
-        currentTest = Optional.of(test);
-        stdout.put(test, Lists.<String>newArrayList());
-      } else if (END.matcher(line.trim()).matches()) {
-        currentTest = Optional.absent();
-      } else if (currentTest.isPresent()) {
-        stdout.get(currentTest.get()).add(line);
+    CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
+    decoder.onMalformedInput(CodingErrorAction.IGNORE);
+    try (InputStream input = context.getProjectFilesystem().newFileInputStream(output);
+         BufferedReader reader = new BufferedReader(new InputStreamReader(input, decoder))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        Matcher matcher;
+        if ((matcher = START.matcher(line.trim())).matches()) {
+          String test = matcher.group(1);
+          currentTest = Optional.of(test);
+          stdout.put(test, Lists.<String>newArrayList());
+        } else if (END.matcher(line.trim()).matches()) {
+          currentTest = Optional.absent();
+        } else if (currentTest.isPresent()) {
+          stdout.get(currentTest.get()).add(line);
+        }
       }
     }
 
