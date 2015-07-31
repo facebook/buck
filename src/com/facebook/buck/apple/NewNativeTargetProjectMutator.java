@@ -269,9 +269,7 @@ public class NewNativeTargetProjectMutator {
 
     PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
     PBXFileReference productReference = productsGroup.getOrCreateFileReferenceBySourceTreePath(
-        SourceTreePath.ofAutodetectedType(
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-            productOutputPath));
+        new SourceTreePath(PBXReference.SourceTree.BUILT_PRODUCTS_DIR, productOutputPath));
     target.setProductName(productName);
     target.setProductReference(productReference);
     target.setProductType(productType);
@@ -308,9 +306,10 @@ public class NewNativeTargetProjectMutator {
             privateHeaders));
 
     if (prefixHeader.isPresent()) {
-      SourceTreePath prefixHeaderSourceTreePath = SourceTreePath.ofAutodetectedType(
+      SourceTreePath prefixHeaderSourceTreePath = new SourceTreePath(
           PBXReference.SourceTree.GROUP,
-          pathRelativizer.outputPathToSourcePath(prefixHeader.get()));
+          pathRelativizer.outputPathToSourcePath(prefixHeader.get())
+      );
       sourcesGroup.getOrCreateFileReferenceBySourceTreePath(prefixHeaderSourceTreePath);
     }
 
@@ -381,7 +380,7 @@ public class NewNativeTargetProjectMutator {
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase) {
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-        SourceTreePath.ofAutodetectedType(
+        new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputDirToRootRelative(
                 sourcePathResolver.apply(sourceWithFlags.getSourcePath()))));
@@ -407,7 +406,7 @@ public class NewNativeTargetProjectMutator {
       Optional<PBXHeadersBuildPhase> headersBuildPhase,
       HeaderVisibility visibility) {
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
-        SourceTreePath.ofAutodetectedType(
+        new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputPathToSourcePath(headerPath)));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
@@ -451,7 +450,7 @@ public class NewNativeTargetProjectMutator {
       if (framework.getSourceTreePath().isPresent()) {
         sourceTreePath = framework.getSourceTreePath().get();
       } else if (framework.getSourcePath().isPresent()) {
-        sourceTreePath = SourceTreePath.ofAutodetectedType(
+        sourceTreePath = new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputPathToSourcePath(framework.getSourcePath().get()));
       } else {
@@ -476,17 +475,12 @@ public class NewNativeTargetProjectMutator {
     PBXBuildPhase phase = new PBXResourcesBuildPhase();
     target.getBuildPhases().add(phase);
     for (AppleResourceDescription.Arg resource : resources) {
-      for (Path path : Iterables.transform(resource.files, sourcePathResolver)) {
+      Iterable<Path> paths = Iterables.transform(
+          Iterables.concat(resource.files, resource.dirs),
+          sourcePathResolver);
+      for (Path path : paths) {
         PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            SourceTreePath.ofAutodetectedType(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(path)));
-        PBXBuildFile buildFile = new PBXBuildFile(fileReference);
-        phase.getFiles().add(buildFile);
-      }
-      for (Path path : Iterables.transform(resource.dirs, sourcePathResolver)) {
-        PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            SourceTreePath.ofFolderType(
+            new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
                 pathRelativizer.outputDirToRootRelative(path)));
         PBXBuildFile buildFile = new PBXBuildFile(fileReference);
@@ -515,7 +509,7 @@ public class NewNativeTargetProjectMutator {
           phase.getFiles().add(buildFile);
           variantGroups.put(variantFileName, variantGroup);
         }
-        SourceTreePath sourceTreePath = SourceTreePath.ofAutodetectedType(
+        SourceTreePath sourceTreePath = new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputPathToSourcePath(variantSourcePath));
         variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
@@ -539,7 +533,7 @@ public class NewNativeTargetProjectMutator {
         Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
 
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            SourceTreePath.ofAutodetectedType(
+            new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
                 pathRelativeToProjectRoot));
 

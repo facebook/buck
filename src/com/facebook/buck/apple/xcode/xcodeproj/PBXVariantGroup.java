@@ -36,9 +36,10 @@ public class PBXVariantGroup extends PBXGroup {
         new CacheLoader<VirtualNameAndSourceTreePath, PBXFileReference>() {
           @Override
           public PBXFileReference load(VirtualNameAndSourceTreePath key) throws Exception {
-            PBXFileReference ref = key
-                .getSourceTreePath()
-                .createFileReference(key.getVirtualName());
+            PBXFileReference ref = new PBXFileReference(
+                key.getVirtualName(),
+                key.getSourceTreePath().getPath().toString(),
+                key.getSourceTreePath().getSourceTree());
             getChildren().add(ref);
             return ref;
           }

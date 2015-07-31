@@ -90,7 +90,10 @@ public class PBXGroup extends PBXReference {
         new CacheLoader<SourceTreePath, PBXFileReference>() {
           @Override
           public PBXFileReference load(SourceTreePath key) throws Exception {
-            PBXFileReference ref = key.createFileReference();
+            PBXFileReference ref = new PBXFileReference(
+                key.getPath().getFileName().toString(),
+                key.getPath().toString(),
+                key.getSourceTree());
             children.add(ref);
             return ref;
           }
@@ -100,7 +103,10 @@ public class PBXGroup extends PBXReference {
         new CacheLoader<SourceTreePath, XCVersionGroup>() {
           @Override
           public XCVersionGroup load(SourceTreePath key) throws Exception {
-            XCVersionGroup ref = key.createVersionGroup();
+            XCVersionGroup ref = new XCVersionGroup(
+                key.getPath().getFileName().toString(),
+                key.getPath().toString(),
+                key.getSourceTree());
             children.add(ref);
             return ref;
           }
@@ -138,6 +144,10 @@ public class PBXGroup extends PBXReference {
 
   public void setSortPolicy(SortPolicy sortPolicy) {
     this.sortPolicy = sortPolicy;
+  }
+
+  public SortPolicy getSortPolicy() {
+    return sortPolicy;
   }
 
   @Override

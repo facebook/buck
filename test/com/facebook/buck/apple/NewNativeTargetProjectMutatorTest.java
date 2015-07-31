@@ -283,11 +283,11 @@ public class NewNativeTargetProjectMutatorTest {
     mutator.setFrameworks(
         ImmutableSet.of(
             FrameworkPath.ofSourceTreePath(
-                SourceTreePath.ofAutodetectedType(
+                new SourceTreePath(
                     PBXReference.SourceTree.SDKROOT, Paths.get("Foo.framework")))));
     mutator.setArchives(
         ImmutableSet.of(
-            PBXFileReference.ofAutodetectedType(
+            new PBXFileReference(
                 "libdep.a",
                 "libdep.a",
                 PBXReference.SourceTree.BUILT_PRODUCTS_DIR)));

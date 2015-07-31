@@ -97,9 +97,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
                 firstElement);
           }
           return FrameworkPath.ofSourceTreePath(
-              SourceTreePath.ofAutodetectedType(
-                  sourceTree.get(),
-                  path.subpath(1, path.getNameCount())));
+              new SourceTreePath(sourceTree.get(), path.subpath(1, path.getNameCount())));
         } else {
           throw new HumanReadableException(
               "Unknown SourceTree: '%s'. Should be one of: %s",

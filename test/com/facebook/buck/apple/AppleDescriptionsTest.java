@@ -157,13 +157,13 @@ public class AppleDescriptionsTest {
     ImmutableList<String> linkerFlags = frameworksToLinkerFlagsTransformer.apply(
         ImmutableSortedSet.of(
             FrameworkPath.ofSourceTreePath(
-                SourceTreePath.ofAutodetectedType(
+                new SourceTreePath(
                     PBXReference.SourceTree.SDKROOT,
                     Paths.get("usr/lib/libz.dylib"))),
             FrameworkPath.ofSourcePath(
                 new PathSourcePath(projectFilesystem, Paths.get("Vendor/Foo/libFoo.a"))),
             FrameworkPath.ofSourceTreePath(
-                SourceTreePath.ofAutodetectedType(
+                new SourceTreePath(
                     PBXReference.SourceTree.DEVELOPER_DIR,
                     Paths.get("Library/Frameworks/XCTest.framework"))),
             FrameworkPath.ofSourcePath(
@@ -199,13 +199,13 @@ public class AppleDescriptionsTest {
     ImmutableList<Path> searchPaths = frameworksToSearchPathsTransformer.apply(
         ImmutableSortedSet.of(
             FrameworkPath.ofSourceTreePath(
-                SourceTreePath.ofAutodetectedType(
+                new SourceTreePath(
                     PBXReference.SourceTree.SDKROOT,
                     Paths.get("usr/lib/libz.dylib"))),
             FrameworkPath.ofSourcePath(
                 new PathSourcePath(projectFilesystem, Paths.get("Vendor/Foo/libFoo.a"))),
             FrameworkPath.ofSourceTreePath(
-                SourceTreePath.ofAutodetectedType(
+                new SourceTreePath(
                     PBXReference.SourceTree.DEVELOPER_DIR,
                     Paths.get("Library/Frameworks/XCTest.framework"))),
             FrameworkPath.ofSourcePath(

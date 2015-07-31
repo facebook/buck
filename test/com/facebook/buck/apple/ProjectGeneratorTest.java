@@ -1299,7 +1299,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
         .build();
@@ -1317,7 +1317,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Test.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
@@ -1369,7 +1369,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
         .build();
@@ -1387,7 +1387,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Test.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
@@ -1434,7 +1434,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
         .build();
@@ -1449,7 +1449,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryDepTarget)))
@@ -1468,7 +1468,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Test.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
@@ -1521,7 +1521,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
         .build();
@@ -1587,7 +1587,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Library.framework"))))))
         .build();
@@ -1688,7 +1688,7 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("Foo.framework"))))))
         .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
@@ -2606,15 +2606,15 @@ public class ProjectGeneratorTest {
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
                             Paths.get("libfoo.a"))),
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("libfoo.a"))),
                     FrameworkPath.ofSourceTreePath(
-                        SourceTreePath.ofAutodetectedType(
+                        new SourceTreePath(
                             PBXReference.SourceTree.SOURCE_ROOT,
                             Paths.get("libfoo.a"))))))
         .build();
@@ -2923,7 +2923,7 @@ public class ProjectGeneratorTest {
                 Optional.of(
                     ImmutableSortedSet.of(
                         FrameworkPath.ofSourceTreePath(
-                            SourceTreePath.ofAutodetectedType(
+                            new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
                                 Paths.get("DeclaredInTestLibDep.framework"))))))
             .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepResource.getBuildTarget())))
@@ -2939,7 +2939,7 @@ public class ProjectGeneratorTest {
                 Optional.of(
                     ImmutableSortedSet.of(
                         FrameworkPath.ofSourceTreePath(
-                            SourceTreePath.ofAutodetectedType(
+                            new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
                                 Paths.get("DeclaredInTestLib.framework"))))))
             .build();
@@ -2956,7 +2956,7 @@ public class ProjectGeneratorTest {
                 Optional.of(
                     ImmutableSortedSet.of(
                         FrameworkPath.ofSourceTreePath(
-                            SourceTreePath.ofAutodetectedType(
+                            new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
                                 Paths.get("DeclaredInTest.framework"))))))
             .build();
