@@ -8,6 +8,9 @@ java_library(
   resources = [
     ':javac-tracing-compiler-plugin',
   ],
+  exported_deps = [
+    ':api',
+  ],
   provided_deps = [
     # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
     ':api',
