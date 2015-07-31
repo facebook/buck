@@ -1149,13 +1149,13 @@ public class DefaultJavaLibraryTest {
     assertTrue(steps.get(0) instanceof ShellStep);
     ShellStep step0 = (ShellStep) steps.get(0);
     assertEquals(
-        ImmutableList.of("bash", "-c", "tool arg1 " + outputDirectory),
+        ImmutableList.of("bash", "-c", "tool arg1", outputDirectory.toString()),
         step0.getShellCommand(executionContext));
 
     assertTrue(steps.get(1) instanceof ShellStep);
     ShellStep step1 = (ShellStep) steps.get(1);
     assertEquals(
-        ImmutableList.of("bash", "-c", "tool2 " + outputDirectory),
+        ImmutableList.of("bash", "-c", "tool2", outputDirectory.toString()),
         step1.getShellCommand(executionContext));
   }
 

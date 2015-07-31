@@ -17,8 +17,9 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+
+import java.util.Arrays;
 
 /**
  * Command that makes it possible to run an arbitrary command in Bash. Whenever possible, a more
@@ -28,14 +29,14 @@ import com.google.common.collect.ImmutableList;
  */
 public class BashStep extends ShellStep {
 
-  private final String bashCommand;
+  private final String[] bashCommand;
 
   /**
    * @param bashCommand command to execute. For convenience, multiple arguments are supported
    *     and will be joined with space characters if more than one is present.
    */
   public BashStep(String... bashCommand) {
-    this.bashCommand = Joiner.on(' ').join(bashCommand);
+    this.bashCommand = bashCommand;
   }
 
   @Override
@@ -46,7 +47,10 @@ public class BashStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(
       ExecutionContext context) {
-    return ImmutableList.of("bash", "-c", bashCommand);
+    return ImmutableList.<String>builder()
+        .add("bash")
+        .add("-c")
+        .addAll(Arrays.asList(bashCommand))
+        .build();
   }
-
 }
