@@ -152,7 +152,7 @@ public class MiniAaptTest {
     for (RDotTxtEntry definition : definitions) {
       if (definition.name.equals("MyNiceView")) {
         assertEquals(
-            "{ 0x7f000000,0x7f000000,0x7f000000,0x7f000000 }",
+            "{ 0x7f060001,0x7f060002,0x7f060003,0x7f060004 }",
             definition.idValue);
         foundElement = true;
       }

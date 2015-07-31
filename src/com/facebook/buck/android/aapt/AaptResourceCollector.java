@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -46,13 +47,9 @@ public class AaptResourceCollector {
   }
 
   public void addIntResourceIfNotPresent(RType rType, String name) {
-    if (!enumerators.containsKey(rType)) {
-      enumerators.put(rType, new ResourceIdEnumerator(currentTypeId++));
-    }
-
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
-      String idValue = String.format("0x%08x", checkNotNull(enumerators.get(rType)).next());
+      String idValue = String.format("0x%08x", getEnumerator(rType).next());
       addResource(rType, IdType.INT, name, idValue);
     }
   }
@@ -60,9 +57,13 @@ public class AaptResourceCollector {
   public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
     // Robolectric expects the array to be populated with the right number of values, irrespective
     // of what the values are.
+    ImmutableList.Builder<String> values = ImmutableList.builder();
+    for (int id = 0; id < numValues; id++) {
+      values.add(String.format("0x%x", getEnumerator(rType).next()));
+    }
     String idValue = String.format(
         "{ %s }",
-        Joiner.on(",").join(Collections.nCopies(numValues, "0x7f000000")));
+        Joiner.on(",").join(values.build()));
     addResource(rType, IdType.INT_ARRAY, name, idValue);
   }
 
@@ -72,6 +73,13 @@ public class AaptResourceCollector {
 
   public Set<RDotTxtEntry> getResources() {
     return Collections.unmodifiableSet(resources);
+  }
+
+  ResourceIdEnumerator getEnumerator(RType rType) {
+    if (!enumerators.containsKey(rType)) {
+      enumerators.put(rType, new ResourceIdEnumerator(currentTypeId++));
+    }
+    return checkNotNull(enumerators.get(rType));
   }
 
   private static class ResourceIdEnumerator {
