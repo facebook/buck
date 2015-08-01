@@ -17,8 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.AdbOptions;
-import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
@@ -38,7 +36,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.UnixUserIdFetcher;
@@ -187,10 +187,14 @@ public class InstallCommand extends BuildCommand {
         graph.findBuildRuleByTarget(getBuildTargets().get(0)));
 
     if (buildRule instanceof InstallableApk) {
+      ExecutionContext.Builder builder = ExecutionContext.builder()
+          .setExecutionContext(build.getExecutionContext())
+          .setAdbOptions(Optional.<AdbOptions>of(adbOptions()))
+          .setTargetDeviceOptions(Optional.<TargetDeviceOptions>of(targetDeviceOptions()));
       return installApk(
           params,
           (InstallableApk) buildRule,
-          build.getExecutionContext());
+          builder.build());
     } else if (buildRule instanceof AppleBundle) {
       AppleBundle appleBundle = (AppleBundle) buildRule;
       InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
@@ -220,12 +224,8 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params,
       InstallableApk installableApk,
       ExecutionContext executionContext) throws IOException, InterruptedException {
-    final AdbHelper adbHelper = new AdbHelper(
-        adbOptions(),
-        targetDeviceOptions(),
+    final AdbHelper adbHelper = AdbHelper.get(
         executionContext,
-        params.getConsole(),
-        params.getBuckEventBus(),
         params.getBuckConfig().getRestartAdbOnFailure());
 
     // Uninstall the app first, if requested.
@@ -237,7 +237,7 @@ public class InstallCommand extends BuildCommand {
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }
 
-    if (!adbHelper.installApk(installableApk, shouldInstallViaSd())) {
+    if (!adbHelper.installApk(installableApk, shouldInstallViaSd(), false)) {
       return 1;
     }
 

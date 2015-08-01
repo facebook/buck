@@ -1,0 +1,43 @@
+android_binary(
+  name = 'app',
+  manifest = 'AndroidManifest.xml',
+  keystore = ':debug_keystore',
+  deps = [
+    '//java/com/example/activity:activity',
+    '//res/com/example/activity:res',
+    '//test/com/example/activity:activity_test',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+android_binary(
+  name = 'app-exo',
+  manifest = 'AndroidManifest.xml',
+  keystore = ':debug_keystore',
+  use_split_dex = True,
+  exopackage_modes = [
+    'native_library',
+    'secondary_dex',
+  ],
+  primary_dex_patterns = [
+    '^com/example/app/AppShell^',
+    '^com/example/app/BuildConfig^',
+    '^com/facebook/buck/android/support/exopackage/'
+  ],
+  deps = [
+    '//java/com/example/app:app',
+    '//java/com/example/activity:activity',
+    '//res/com/example/activity:res',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+keystore(
+  name = 'debug_keystore',
+  store = 'debug.keystore',
+  properties = 'debug.keystore.properties',
+)
+
+project_config(
+  src_target = ':app',
+)

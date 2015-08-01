@@ -1,0 +1,17 @@
+android_library(
+  name = 'app',
+  srcs = ['AppShell.java'],
+  deps = [
+    '//:buck-android-support',
+    ':build_config',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+android_build_config(
+  name = 'build_config',
+  package = 'com.example.app',
+  values = [],
+)

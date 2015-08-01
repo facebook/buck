@@ -28,11 +28,14 @@ import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -361,8 +364,124 @@ public class AdbHelperTest {
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
 
-    assertTrue(basicAdbHelper.installApkOnDevice(device, apk, false));
+    assertTrue(basicAdbHelper.installApkOnDevice(device, apk, false, false));
     assertEquals(apk.getAbsolutePath(), apkPath.get());
+  }
+
+  @Test
+  public void testQuietDeviceInstall() throws InterruptedException {
+    final File apk = new File("/some/file.apk");
+    final AtomicReference<String> apkPath = new AtomicReference<>();
+
+    TestDevice device = new TestDevice() {
+        @Override
+        public String installPackage(
+            String s,
+            boolean b,
+            String... strings) throws InstallException {
+          apkPath.set(s);
+          return null;
+        }
+      };
+    device.setSerialNumber("serial#1");
+    device.setName("testDevice");
+
+    final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
+
+    TestConsole console = new TestConsole();
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    AdbHelper adbHelper = new AdbHelper(
+        new AdbOptions(),
+        new TargetDeviceOptions(),
+        TestExecutionContext.newInstance(),
+        console,
+        eventBus,
+        true) {
+      @Override
+      protected boolean isDeviceTempWritable(IDevice device, String name) {
+        return true;
+      }
+      @Override
+      public List<IDevice> getDevices(boolean quiet) {
+        return deviceList;
+      }
+    };
+    boolean success = adbHelper.adbCall(
+        new AdbHelper.AdbCallable() {
+          @Override
+          public boolean call(IDevice device) throws Exception {
+            return basicAdbHelper.installApkOnDevice(device, apk, false, true);
+          }
+
+          @Override
+          public String toString() {
+            return "install apk";
+          }
+        },
+        true);
+
+    assertTrue(success);
+    assertEquals(apk.getAbsolutePath(), apkPath.get());
+    assertEquals("", console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+  }
+
+  @Test
+  public void testNonQuietShowsOutput() throws InterruptedException {
+    final File apk = new File("/some/file.apk");
+    final AtomicReference<String> apkPath = new AtomicReference<>();
+
+    TestDevice device = new TestDevice() {
+        @Override
+        public String installPackage(
+            String s,
+            boolean b,
+            String... strings) throws InstallException {
+          apkPath.set(s);
+          return null;
+        }
+      };
+    device.setSerialNumber("serial#1");
+    device.setName("testDevice");
+
+    final List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
+
+    TestConsole console = new TestConsole();
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    AdbHelper adbHelper = new AdbHelper(
+        new AdbOptions(),
+        new TargetDeviceOptions(),
+        TestExecutionContext.newInstance(),
+        console,
+        eventBus,
+        true) {
+      @Override
+      protected boolean isDeviceTempWritable(IDevice device, String name) {
+        return true;
+      }
+      @Override
+      public List<IDevice> getDevices(boolean quiet) {
+        return deviceList;
+      }
+    };
+    boolean success = adbHelper.adbCall(
+        new AdbHelper.AdbCallable() {
+          @Override
+          public boolean call(IDevice device) throws Exception {
+            return basicAdbHelper.installApkOnDevice(device, apk, false, false);
+          }
+
+          @Override
+          public String toString() {
+            return "install apk";
+          }
+        },
+        false);
+
+    assertTrue(success);
+    assertEquals(apk.getAbsolutePath(), apkPath.get());
+    assertEquals("", console.getTextWrittenToStdOut());
+    assertEquals("Successfully ran install apk on 1 device(s)\n", console.getTextWrittenToStdErr());
   }
 
   /**
@@ -424,7 +543,7 @@ public class AdbHelperTest {
     };
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
-    assertFalse(basicAdbHelper.installApkOnDevice(device, apk, false));
+    assertFalse(basicAdbHelper.installApkOnDevice(device, apk, false, false));
   }
 
   /**
@@ -442,7 +561,7 @@ public class AdbHelperTest {
     };
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
-    assertFalse(basicAdbHelper.installApkOnDevice(device, apk, false));
+    assertFalse(basicAdbHelper.installApkOnDevice(device, apk, false, false));
   }
 
 }

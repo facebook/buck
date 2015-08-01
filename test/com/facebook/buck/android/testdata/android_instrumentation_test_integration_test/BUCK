@@ -1,0 +1,7 @@
+prebuilt_jar(
+  name = 'buck-android-support',
+  binary_jar = 'buck-android-support.jar',
+  visibility = [
+    'PUBLIC',
+  ],
+)

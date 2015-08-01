@@ -149,7 +149,7 @@ public class ExopackageInstaller {
   /**
    * Installs the app specified in the constructor.  This object should be discarded afterward.
    */
-  public synchronized boolean install() throws InterruptedException {
+  public synchronized boolean install(boolean quiet) throws InterruptedException {
     InstallEvent.Started started = InstallEvent.started(apkRule.getBuildTarget());
     eventBus.post(started);
 
@@ -168,7 +168,8 @@ public class ExopackageInstaller {
           public String toString() {
             return "install exopackage";
           }
-        });
+        },
+        quiet);
 
     eventBus.post(InstallEvent.finished(
             started,
@@ -223,7 +224,7 @@ public class ExopackageInstaller {
 
       if (shouldAppBeInstalled()) {
         try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_exo_apk")) {
-          boolean success = adbHelper.installApkOnDevice(device, apk, installViaSd);
+          boolean success = adbHelper.installApkOnDevice(device, apk, installViaSd, false);
           if (!success) {
             return false;
           }
@@ -431,7 +432,11 @@ public class ExopackageInstaller {
           throw new RuntimeException("Android agent apk path not specified in properties");
         }
         File apkPath = new File(apkFileName);
-        boolean success = adbHelper.installApkOnDevice(device, apkPath, /* installViaSd */ false);
+        boolean success = adbHelper.installApkOnDevice(
+            device,
+            apkPath,
+            /* installViaSd */ false,
+            /* quiet */ false);
         if (!success) {
           return Optional.absent();
         }
