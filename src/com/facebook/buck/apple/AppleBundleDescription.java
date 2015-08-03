@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -89,8 +90,17 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return appleLibraryDescription.hasFlavors(flavors) ||
-        appleBinaryDescription.hasFlavors(flavors);
+    if (appleLibraryDescription.hasFlavors(flavors)) {
+      return true;
+    }
+    ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
+    for (Flavor flavor : flavors) {
+      if (flavor.equals(ReactNativeFlavors.DO_NOT_BUNDLE)) {
+        continue;
+      }
+      flavorBuilder.add(flavor);
+    }
+    return appleBinaryDescription.hasFlavors(flavorBuilder.build());
   }
 
   @Override
@@ -219,7 +229,11 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         targetGraph,
         binaryRuleParams,
         resolver,
-        params.getBuildTarget().getFlavors().toArray(new Flavor[0]));
+        params
+            .getBuildTarget()
+            .withoutFlavors(ImmutableSet.of(ReactNativeFlavors.DO_NOT_BUNDLE))
+            .getFlavors()
+            .toArray(new Flavor[0]));
   }
 
   private static BuildRuleParams getBundleParamsWithUpdatedDeps(

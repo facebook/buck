@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
-import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
@@ -39,8 +38,7 @@ public class AppleBinaryDescription
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      CxxCompilationDatabase.COMPILATION_DATABASE,
-      ReactNativeFlavors.DO_NOT_BUNDLE);
+      CxxCompilationDatabase.COMPILATION_DATABASE);
 
   private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
     @Override
