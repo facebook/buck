@@ -64,7 +64,8 @@ public class PrebuiltJarTest {
         new PathSourcePath(filesystem, PATH_TO_JUNIT_JAR),
         Optional.<SourcePath>of(new TestSourcePath("lib/junit-4.11-sources.jar")),
         /* gwtJar */ Optional.<SourcePath>absent(),
-        Optional.of("http://junit-team.github.io/junit/javadoc/latest/"));
+        Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
+        /* mavenCoords */ Optional.<String>absent());
   }
 
   @Test

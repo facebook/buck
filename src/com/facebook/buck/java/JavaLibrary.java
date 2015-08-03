@@ -29,7 +29,7 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 
 public interface JavaLibrary extends BuildRule, HasClasspathEntries,
-    HasJavaAbi, HasJavaClassHashes {
+    HasJavaAbi, HasJavaClassHashes, MavenPublishable {
 
   /**
    * This Buildable is expected to support the GWT flavor, which is a {@link BuildRule} whose output

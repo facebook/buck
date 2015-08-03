@@ -145,7 +145,8 @@ public class AndroidPrebuiltAarDescription
             unzipAar.getPathToClassesJar()),
         /* sourceJar */ Optional.<SourcePath>absent(),
         /* gwtJar */ Optional.<SourcePath>absent(),
-        /* javadocUrl */ Optional.<String>absent());
+        /* javadocUrl */ Optional.<String>absent(),
+        /* mavenCoords */ Optional.<String>absent());
 
   }
 

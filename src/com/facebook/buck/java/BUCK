@@ -84,6 +84,7 @@ java_immutables_library(
     'JavacErrorParser.java',
     'JdkProvidedInMemoryJavac.java',
     'Jsr199Javac.java',
+    'MavenPublishable.java',
     'TracingProcessorWrapper.java',
   ],
   deps = [
@@ -150,7 +151,6 @@ java_library(
     'JavaTestDescription.java',
     'Keystore.java',
     'KeystoreDescription.java',
-    'MavenPublishable.java',
     'PrebuiltJar.java',
     'PrebuiltJarDescription.java',
   ],

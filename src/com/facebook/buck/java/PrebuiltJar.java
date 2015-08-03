@@ -69,6 +69,8 @@ public class PrebuiltJar extends AbstractBuildRule
   private final Optional<SourcePath> gwtJar;
   @AddToRuleKey
   private final Optional<String> javadocUrl;
+  @AddToRuleKey
+  private final Optional<String> mavenCoords;
   private final Path abiJar;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
@@ -84,12 +86,14 @@ public class PrebuiltJar extends AbstractBuildRule
       SourcePath binaryJar,
       Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
-      Optional<String> javadocUrl) {
+      Optional<String> javadocUrl,
+      Optional<String> mavenCoords) {
     super(params, resolver);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
     this.gwtJar = gwtJar;
     this.javadocUrl = javadocUrl;
+    this.mavenCoords = mavenCoords;
 
     this.abiJar = BuildTargets.getGenPath(getBuildTarget(), "%s-abi.jar");
 
@@ -233,4 +237,8 @@ public class PrebuiltJar extends AbstractBuildRule
     return new BuildTargetSourcePath(getBuildTarget());
   }
 
+  @Override
+  public Optional<String> getMavenCoords() {
+    return mavenCoords;
+  }
 }

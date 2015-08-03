@@ -129,4 +129,8 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
     collector.addClasspathEntry(this, new BuildTargetSourcePath(getBuildTarget()));
   }
 
+  @Override
+  public Optional<String> getMavenCoords() {
+    return Optional.absent();
+  }
 }
