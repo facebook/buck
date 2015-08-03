@@ -1,0 +1,8 @@
+prebuilt_jar(
+  name = 'kxml2',
+  binary_jar = 'kxml2-2.3.0.jar',
+  source_jar = 'kxml2-2.3.0-sources.jar',
+  visibility = [
+    '//third-party/java/ddmlib:ddmlib',
+  ],
+)

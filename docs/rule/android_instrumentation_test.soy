@@ -1,0 +1,77 @@
+{namespace android_instrumentation_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'android_instrumentation_test()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to run Android instrumentation tests.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+  A <code>android_instrumentation_test()</code> rule is used to define
+  apks that should be used to run Android instrumentation tests.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'apk' /}
+  {param desc}
+  The APK containing the tests.  Can be an {call buck.android_binary /},
+  an {call buck.apk_genrule /} or an {call buck.android_instrumentation_apk /}.
+  {/param}
+{/call}
+
+{call buck.test_label_arg /}
+
+{/param} // close args
+
+{param examples}
+Here is an example of an <code>android_instrumentation_test()</code>
+{sp}rule that tests an <code>android_binary()</code>.
+
+{literal}<pre class="prettyprint lang-py">
+android_binary(
+  name = 'messenger',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:prod',
+  package_type = 'release',
+  proguard_config = 'proguard.cfg',
+  deps = [
+    ...
+  ],
+)
+
+android_instrumentation_apk(
+  name = 'messenger_test',
+  manifest = 'AndroidInstrumentationManifest.xml',
+  apk = ':messenger',
+  deps = [
+    ...
+  ],
+)
+
+android_instrumentation_test(
+  name = 'messenger_instrumentation_test',
+  apk = ':messenger_test',
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

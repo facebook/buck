@@ -39,7 +39,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
+import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -227,7 +229,9 @@ public class BuildCommand extends AbstractCommand {
       Platform platform,
       ImmutableMap<String, String> environment,
       ObjectMapper objectMapper,
-      Clock clock) {
+      Clock clock,
+      Optional<AdbOptions> adbOptions,
+      Optional<TargetDeviceOptions> targetDeviceOptions) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
     }
@@ -248,7 +252,9 @@ public class BuildCommand extends AbstractCommand {
         environment,
         objectMapper,
         clock,
-        getConcurrencyLimit(buckConfig));
+        getConcurrencyLimit(buckConfig),
+        adbOptions,
+        targetDeviceOptions);
   }
 
   @Nullable private Build lastBuild;
@@ -348,7 +354,9 @@ public class BuildCommand extends AbstractCommand {
              params.getPlatform(),
              params.getEnvironment(),
              params.getObjectMapper(),
-             params.getClock())) {
+             params.getClock(),
+             Optional.<AdbOptions>absent(),
+             Optional.<TargetDeviceOptions>absent())) {
       lastBuild = build;
       int exitCode = build.executeAndPrintFailuresToConsole(
           buildTargets,

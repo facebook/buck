@@ -37,7 +37,9 @@ import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
@@ -111,6 +113,20 @@ public class AdbHelper {
     this.console = console;
     this.buckEventBus = buckEventBus;
     this.restartAdbOnFailure = restartAdbOnFailure;
+  }
+
+  public static AdbHelper get(
+      ExecutionContext context,
+      boolean restartOnFailure) {
+    Preconditions.checkArgument(context.getAdbOptions().isPresent());
+    Preconditions.checkArgument(context.getTargetDeviceOptions().isPresent());
+    return new AdbHelper(
+        context.getAdbOptions().get(),
+        context.getTargetDeviceOptions().get(),
+        context,
+        context.getConsole(),
+        context.getBuckEventBus(),
+        restartOnFailure);
   }
 
   private BuckEventBus getBuckEventBus() {
@@ -221,13 +237,12 @@ public class AdbHelper {
     return isAdbInitialized(adb) ? adb : null;
   }
 
-  @Nullable
-  public List<IDevice> getDevices() throws InterruptedException {
+  public List<IDevice> getDevices(boolean quiet) throws InterruptedException {
     // Initialize adb connection.
     AndroidDebugBridge adb = createAdb(context);
     if (adb == null) {
       console.printBuildFailure("Failed to create adb connection.");
-      return null;
+      return Lists.newArrayList();
     }
 
     // Build list of matching devices.
@@ -239,16 +254,21 @@ public class AdbHelper {
             String.format("%d device(s) matches specified device filter (1 expected).\n" +
                 "Either disconnect other devices or enable multi-install mode (%s).",
                 devices.size(), AdbOptions.MULTI_INSTALL_MODE_SHORT_ARG));
-        return null;
+        return Lists.newArrayList();
       }
-      // Report if multiple devices are matching the filter.
-      console.getStdOut().printf("Found " + devices.size() + " matching devices.\n");
+      if (!quiet) {
+        // Report if multiple devices are matching the filter.
+        console.getStdOut().printf("Found " + devices.size() + " matching devices.\n");
+      }
     }
 
     if (devices == null && restartAdbOnFailure) {
       console.printErrorText("No devices found with adb, restarting adb-server.");
       adb.restart();
       devices = filterDevices(adb.getDevices());
+    }
+    if (devices == null) {
+      return Lists.newArrayList();
     }
     return devices;
   }
@@ -266,12 +286,14 @@ public class AdbHelper {
    *  devices will be used to install the apk if needed.
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public boolean adbCall(AdbCallable adbCallable) throws InterruptedException {
+  public boolean adbCall(
+      AdbCallable adbCallable,
+      boolean quiet) throws InterruptedException {
     List<IDevice> devices;
 
     try (TraceEventLogger ignored = TraceEventLogger.start(buckEventBus, "set_up_adb_call")) {
-      devices = getDevices();
-      if (devices == null) {
+      devices = getDevices(quiet);
+      if (devices.size() == 0) {
         return false;
       }
     }
@@ -326,7 +348,7 @@ public class AdbHelper {
     int failureCount = results.size() - successCount;
 
     // Report results.
-    if (successCount > 0) {
+    if (successCount > 0 && !quiet) {
       console.printSuccess(
           String.format("Successfully ran %s on %d device(s)", adbCallable, successCount));
     }
@@ -498,35 +520,41 @@ public class AdbHelper {
    */
   public boolean installApk(
       InstallableApk installableApk,
-      final boolean installViaSd) throws InterruptedException {
+      final boolean installViaSd,
+      final boolean quiet) throws InterruptedException {
     Optional<ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
     if (exopackageInfo.isPresent()) {
       return new ExopackageInstaller(
           context,
           this,
           installableApk)
-          .install();
+          .install(quiet);
     }
     InstallEvent.Started started = InstallEvent.started(installableApk.getBuildTarget());
-    getBuckEventBus().post(started);
+    if (!quiet) {
+      getBuckEventBus().post(started);
+    }
 
     final File apk = installableApk.getApkPath().toFile();
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
-            return installApkOnDevice(device, apk, installViaSd);
+            return installApkOnDevice(device, apk, installViaSd, quiet);
           }
 
           @Override
           public String toString() {
             return "install apk";
           }
-        });
-    getBuckEventBus().post(InstallEvent.finished(
-            started,
-            success,
-            Optional.<Long>absent()));
+        },
+        quiet);
+    if (!quiet) {
+      getBuckEventBus().post(InstallEvent.finished(
+              started,
+              success,
+              Optional.<Long>absent()));
+    }
 
     return success;
   }
@@ -535,7 +563,7 @@ public class AdbHelper {
    * Installs apk on specific device. Reports success or failure to console.
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
-  public boolean installApkOnDevice(IDevice device, File apk, boolean installViaSd) {
+  public boolean installApkOnDevice(IDevice device, File apk, boolean installViaSd, boolean quiet) {
     String name;
     if (device.isEmulator()) {
       name = device.getSerialNumber() + " (" + device.getAvdName() + ")";
@@ -551,7 +579,9 @@ public class AdbHelper {
       return false;
     }
 
-    getBuckEventBus().post(ConsoleEvent.info("Installing apk on %s.", name));
+    if (!quiet) {
+      getBuckEventBus().post(ConsoleEvent.info("Installing apk on %s.", name));
+    }
     try {
       String reason = null;
       if (installViaSd) {
@@ -745,7 +775,8 @@ public class AdbHelper {
           public String toString() {
             return "start activity";
           }
-        });
+        },
+        false);
     getBuckEventBus().post(StartActivityEvent.finished(started, success));
 
     return success ? 0 : 1;
@@ -779,7 +810,7 @@ public class AdbHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(InstallableApk, boolean)
+   * @see #installApk(InstallableApk, boolean, boolean)
    */
   public boolean uninstallApp(
       final String packageName,
@@ -802,7 +833,8 @@ public class AdbHelper {
       public String toString() {
         return "uninstall apk";
       }
-    });
+    },
+    false);
     getBuckEventBus().post(UninstallEvent.finished(started, success));
     return success;
   }
@@ -903,6 +935,25 @@ public class AdbHelper {
     try {
       return DefaultAndroidManifestReader.forPath(pathToManifest, context.getProjectFilesystem())
           .getPackage();
+    } catch (IOException e) {
+      throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
+    }
+  }
+
+  public static String tryToExtractInstrumentationTestRunnerFromManifest(
+      InstallableApk androidBinaryRule,
+      ExecutionContext context) {
+    Path pathToManifest = androidBinaryRule.getManifestPath();
+
+    if (!Files.isRegularFile(pathToManifest)) {
+      throw new HumanReadableException(
+          "Manifest file %s does not exist, so could not extract package name.",
+          pathToManifest);
+    }
+
+    try {
+      return DefaultAndroidManifestReader.forPath(pathToManifest, context.getProjectFilesystem())
+          .getInstrumentationTestRunner();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
     }

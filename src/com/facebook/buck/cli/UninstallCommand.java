@@ -17,8 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.AdbOptions;
-import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -30,7 +28,9 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
+import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

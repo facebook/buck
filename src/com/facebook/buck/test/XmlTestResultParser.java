@@ -40,6 +40,48 @@ public class XmlTestResultParser {
   /** Utility Class:  Do not instantiate. */
   private XmlTestResultParser() {}
 
+  public static TestCaseSummary parseAndroid(Path xmlFile, String serialNumber)
+      throws IOException, SAXException {
+    String fileContents = new String(Files.readAllBytes(xmlFile), UTF_8);
+    Document doc = XmlDomParser.parse(new InputSource(new StringReader(fileContents)),
+        /* namespaceAware */ true);
+    Element root = doc.getDocumentElement();
+    Preconditions.checkState("testsuite".equals(root.getTagName()));
+    String testCaseName = root.getAttribute("name") + " (" + serialNumber + ")";
+
+    NodeList testElements = doc.getElementsByTagName("testcase");
+    List<TestResultSummary> testResults = Lists.newArrayListWithCapacity(testElements.getLength());
+    for (int i = 0; i < testElements.getLength(); i++) {
+      Element node = (Element) testElements.item(i);
+      String testName = node.getAttribute("name");
+      double time = Float.parseFloat(node.getAttribute("time"));
+
+      String message = null;
+      String stacktrace = null;
+      String stdOut = null;
+      String stdErr = null;
+      ResultType type = ResultType.SUCCESS;
+
+      NodeList failure = node.getElementsByTagName("failure");
+      if (failure.getLength() == 1) {
+        stdOut = failure.item(0).getTextContent();
+        type = ResultType.FAILURE;
+      }
+      TestResultSummary testResult = new TestResultSummary(
+          testCaseName,
+          testName,
+          type,
+          Math.round(time * 1000),
+          message,
+          stacktrace,
+          stdOut,
+          stdErr);
+      testResults.add(testResult);
+    }
+
+    return new TestCaseSummary(testCaseName, testResults);
+  }
+
   public static TestCaseSummary parse(Path xmlFile) throws IOException {
     String xmlFileContents = new String(Files.readAllBytes(xmlFile), UTF_8);
 

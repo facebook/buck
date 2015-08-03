@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.TargetDeviceOptions;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 

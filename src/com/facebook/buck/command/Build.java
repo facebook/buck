@@ -31,10 +31,12 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ImmutableBuildContext;
+import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
@@ -115,7 +117,9 @@ public class Build implements Closeable {
       ImmutableMap<String, String> environment,
       ObjectMapper objectMapper,
       Clock clock,
-      ConcurrencyLimit concurrencyLimit) {
+      ConcurrencyLimit concurrencyLimit,
+      Optional<AdbOptions> adbOptions,
+      Optional<TargetDeviceOptions> targetDeviceOptions) {
     this.actionGraph = actionGraph;
 
     this.executionContext = ExecutionContext.builder()
@@ -132,6 +136,8 @@ public class Build implements Closeable {
         .setJavaPackageFinder(javaPackageFinder)
         .setObjectMapper(objectMapper)
         .setConcurrencyLimit(concurrencyLimit)
+        .setAdbOptions(adbOptions)
+        .setTargetDeviceOptions(targetDeviceOptions)
         .build();
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;

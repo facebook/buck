@@ -52,6 +52,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/jetty/jetty-all-9.2.10.v20150310.jar",
     "third-party/java/jsr/javax.inject-1.jar",
     "third-party/java/jsr/jsr305.jar",
+    "third-party/java/kxml2/kxml2-2.3.0.jar",
     "third-party/java/nailgun/nailgun-server-0.9.2-SNAPSHOT.jar",
     "third-party/java/okhttp/okhttp-2.2.0.jar",
     "third-party/java/okio/okio-1.2.0.jar",

@@ -14,32 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.example.app;
 
-public class AdbOptions {
+import com.facebook.buck.android.support.exopackage.ExopackageApplication;
 
-  static final String MULTI_INSTALL_MODE_SHORT_ARG = "-x";
+public class AppShell extends ExopackageApplication {
 
-  private int adbThreadCount;
-  private boolean multiInstallMode;
-
-  public AdbOptions() {
-    this(0, false);
-  }
-
-  public AdbOptions(
-      int adbThreadCount,
-      boolean multiInstallMode) {
-    this.adbThreadCount = adbThreadCount;
-    this.multiInstallMode = multiInstallMode;
-  }
-
-  public int getAdbThreadCount() {
-    return adbThreadCount;
-  }
-
-  public boolean isMultiInstallModeEnabled() {
-    return multiInstallMode;
+  public AppShell() {
+    super(BuildConfig.EXOPACKAGE_FLAGS);
   }
 
 }

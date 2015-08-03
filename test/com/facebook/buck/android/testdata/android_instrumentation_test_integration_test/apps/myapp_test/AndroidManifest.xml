@@ -1,0 +1,15 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.tests">
+
+    <uses-permission android:name="android.permission.RUN_INSTRUMENTATION" />
+
+    <application>
+        <uses-library android:name="android.test.runner" />
+    </application>
+
+    <instrumentation
+	    android:name="android.test.InstrumentationTestRunner"
+        android:targetPackage="com.example"
+        android:label="Minimal Buck test project"/>
+
+</manifest>

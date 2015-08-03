@@ -58,6 +58,8 @@ RULES_SRCS = [
   'AndroidResource.java',
   'AndroidResourceDescription.java',
   'AndroidResourceHelper.java',
+  'AndroidInstrumentationTest.java',
+  'AndroidInstrumentationTestDescription.java',
   'AndroidTransitiveDependencyGraph.java',
   'ApkGenrule.java',
   'ApkGenruleDescription.java',
@@ -87,12 +89,17 @@ RULES_SRCS = [
   'RobolectricTest.java',
   'RDotJava.java',
   'UnsortedAndroidResourceDeps.java',
+  # This and the InstrumentationStep would make more sense in the steps
+  # library, but are added here to avoid circular dependencies.
+  'ApkInstallStep.java',
+  'InstrumentationStep.java',
 ]
 java_immutables_library(
   name = 'rules',
   srcs = RULES_SRCS,
   deps = [
     ':exceptions',
+    ':helpers',
     ':packageable',
     ':split_dex',
     ':steps',
@@ -124,18 +131,28 @@ java_immutables_library(
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/test/result/type:type',
+    '//src/com/facebook/buck/test/selectors:selectors',
+    '//src/com/facebook/buck/test:test',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:escaper',
     '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:steps',
     '//third-party/java/aosp:aosp',
+    '//third-party/java/ddmlib:ddmlib',
     '//third-party/java/guava:guava',
     '//third-party/java/infer-annotations:infer-annotations',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',
     '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/log:log',
+    '//src/com/facebook/buck/util/concurrent:concurrent',
+  ],
+  exported_deps = [
+    '//src/com/facebook/buck/rules:rules',
   ],
   visibility = ['PUBLIC'],
 )
@@ -162,9 +179,8 @@ java_library(
 
 HELPERS_SRCS = [
   'AdbHelper.java',
-  'AdbOptions.java',
+  'BuckXmlTestRunListener.java',
   'ExopackageInstaller.java',
-  'TargetDeviceOptions.java',
 ]
 
 java_library(

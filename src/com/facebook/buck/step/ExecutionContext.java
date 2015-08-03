@@ -101,6 +101,12 @@ public abstract class ExecutionContext implements Closeable {
   @Value.Parameter
   public abstract ConcurrencyLimit getConcurrencyLimit();
 
+  @Value.Parameter
+  public abstract Optional<AdbOptions> getAdbOptions();
+
+  @Value.Parameter
+  public abstract Optional<TargetDeviceOptions> getTargetDeviceOptions();
+
 
   @Value.Derived
   public Verbosity getVerbosity() {
@@ -200,6 +206,8 @@ public abstract class ExecutionContext implements Closeable {
         new ConcurrencyLimit(
             /* threadLimit */ Runtime.getRuntime().availableProcessors(),
             /* loadLimit */ Double.POSITIVE_INFINITY);
+    private Optional<AdbOptions> adbOptions = Optional.absent();
+    private Optional<TargetDeviceOptions> targetDeviceOptions = Optional.absent();
 
     private Builder() {}
 
@@ -219,7 +227,9 @@ public abstract class ExecutionContext implements Closeable {
           Preconditions.checkNotNull(javaPackageFinder),
           Preconditions.checkNotNull(objectMapper),
           Preconditions.checkNotNull(classLoaderCache),
-          Preconditions.checkNotNull(concurrencyLimit));
+          Preconditions.checkNotNull(concurrencyLimit),
+          adbOptions,
+          targetDeviceOptions);
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
@@ -236,6 +246,8 @@ public abstract class ExecutionContext implements Closeable {
       setJavaPackageFinder(executionContext.getJavaPackageFinder());
       setObjectMapper(executionContext.getObjectMapper());
       setConcurrencyLimit(executionContext.getConcurrencyLimit());
+      setAdbOptions(executionContext.getAdbOptions());
+      setTargetDeviceOptions(executionContext.getTargetDeviceOptions());
       return this;
     }
 
@@ -319,6 +331,16 @@ public abstract class ExecutionContext implements Closeable {
 
     public Builder setConcurrencyLimit(ConcurrencyLimit concurrencyLimit) {
       this.concurrencyLimit = concurrencyLimit;
+      return this;
+    }
+
+    public Builder setAdbOptions(Optional<AdbOptions> adbOptions) {
+      this.adbOptions = adbOptions;
+      return this;
+    }
+
+    public Builder setTargetDeviceOptions(Optional<TargetDeviceOptions> targetDeviceOptions) {
+      this.targetDeviceOptions = targetDeviceOptions;
       return this;
     }
   }

@@ -46,6 +46,16 @@ public class DefaultAndroidManifestReaderTest {
   }
 
   @Test
+  public void testReadInstrumentationTestRunner() throws IOException {
+    AndroidManifestReader manifestReader = DefaultAndroidManifestReader.forString(
+        "<manifest xmlns:android='http://schemas.android.com/apk/res/android'>" +
+        "  <instrumentation android:name='android.test.InstrumentationTestRunner' />" +
+        "</manifest>");
+    String instrumentationTestRunner = manifestReader.getInstrumentationTestRunner();
+    assertEquals("android.test.InstrumentationTestRunner", instrumentationTestRunner);
+  }
+
+  @Test
   public void testReadLauncherActivitiesNoneFound() throws IOException {
     AndroidManifestReader manifestReader = DefaultAndroidManifestReader.forString(
         "<manifest xmlns:android='http://schemas.android.com/apk/res/android'>" +

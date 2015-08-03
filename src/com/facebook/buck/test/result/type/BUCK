@@ -5,6 +5,7 @@ java_library(
     # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/junit/BUCK.
   ],
   visibility = [
+    '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/d:d',

@@ -2,6 +2,9 @@ prebuilt_jar(
   name = 'ddmlib',
   binary_jar = 'ddmlib-22.5.3.jar',
   source_jar = 'ddmlib-22.5.3-sources.jar',
+  deps = [
+    '//third-party/java/kxml2:kxml2',
+  ],
   visibility = [
     'PUBLIC',
   ],
