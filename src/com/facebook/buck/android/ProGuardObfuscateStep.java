@@ -32,10 +32,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +43,7 @@ import java.util.zip.ZipEntry;
 
 public final class ProGuardObfuscateStep extends ShellStep {
 
-  static enum SdkProguardType {
+  enum SdkProguardType {
     DEFAULT,
     OPTIMIZED,
     NONE,
@@ -163,12 +163,11 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
   private int ensureAllOutputsExist(ExecutionContext context) {
     for (Path outputJar : inputAndOutputEntries.values()) {
-      File outputJarFile = outputJar.toFile();
-      if (!outputJarFile.exists()) {
+      if (!Files.exists(outputJar)) {
         try {
-          createEmptyZip(outputJarFile);
+          createEmptyZip(outputJar);
         } catch (IOException e) {
-          context.logError(e, "Error creating empty zip file at: %s.", outputJarFile);
+          context.logError(e, "Error creating empty zip file at: %s.", outputJar);
           return 1;
         }
       }
@@ -177,8 +176,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
   }
 
   @VisibleForTesting
-  static void createEmptyZip(File file) throws IOException {
-    Files.createParentDirs(file);
+  static void createEmptyZip(Path file) throws IOException {
+    Files.createDirectories(file.getParent());
     CustomZipOutputStream out = ZipOutputStreams.newOutputStream(file);
     // Sun's java 6 runtime doesn't allow us to create a truly empty zip, but this should be enough
     // to pass through dx/split-zip without any issue.

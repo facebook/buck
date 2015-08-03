@@ -18,21 +18,22 @@ package com.facebook.buck.io;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class DirectoryTraversalTest {
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testDirectoryTraversalIgnorePaths() throws IOException {
@@ -42,16 +43,16 @@ public class DirectoryTraversalTest {
 
     // Write a recursive symlink. We could store this in version control, but `ant lint` emits a
     // warning about the recursive symlink.
-    Files.createDirectories(workspace.resolve(java.nio.file.Paths.get("loop/1")));
+    Files.createDirectories(workspace.resolve(Paths.get("loop/1")));
     Files.createSymbolicLink(
-        workspace.resolve(java.nio.file.Paths.get("loop/1/upwards")),
-        java.nio.file.Paths.get("../"));
+        workspace.resolve(Paths.get("loop/1/upwards")),
+        Paths.get("../"));
 
     // If the user has a local.properties file, it'll get copied into the root of
     // `workspace`. We can't ignore it below (DirectoryTraversal()'s ignorePaths arg
     // is a set of *directory* paths) so we'll delete it here instead; we don't need
     // it for this test.
-    Files.deleteIfExists(workspace.resolve(java.nio.file.Paths.get("local.properties")));
+    Files.deleteIfExists(workspace.resolve(Paths.get("local.properties")));
 
     // The workspace contains the following:
     //
@@ -82,7 +83,7 @@ public class DirectoryTraversalTest {
         temporaryFolder.getRoot(),
         MorePaths.asPaths(ImmutableSet.of("a", "b/c", "loop", "loop/1"))) {
       @Override
-      public void visit(File file, String relativePath) {
+      public void visit(Path file, String relativePath) {
         visitedPaths.add(relativePath);
       }
     }.traverse();

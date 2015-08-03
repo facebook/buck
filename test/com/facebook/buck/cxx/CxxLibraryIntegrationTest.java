@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assume.assumeThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -30,6 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class CxxLibraryIntegrationTest {
 
@@ -92,10 +93,10 @@ public class CxxLibraryIntegrationTest {
     workspace.setUp();
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
     assertTrue(
-        workspace.getFile(
-            "buck-out/gen/subdir/" +
-            "library#default,shared/libsubdir_library.so")
-        .isFile());
+        Files.isRegularFile(
+            workspace.getPath(
+                "buck-out/gen/subdir/" +
+                    "library#default,shared/libsubdir_library.so")));
     result.assertSuccess();
   }
 

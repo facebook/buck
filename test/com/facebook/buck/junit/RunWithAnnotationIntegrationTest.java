@@ -35,8 +35,10 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 public class RunWithAnnotationIntegrationTest {
 
@@ -76,9 +78,11 @@ public class RunWithAnnotationIntegrationTest {
     suiteTestResult.assertSuccess("Test should pass");
     assertThat(suiteTestResult.getStderr(), containsString("4 Passed"));
 
-    Document doc = XmlDomParser.parse(new InputSource(new FileReader(workspace.getFile(
-        "buck-out/gen/__java_test_ParametrizedTest_output__/com.example.ParametrizedTest.xml"))),
-        false);
+    Reader reader = Files.newBufferedReader(
+        workspace.getPath(
+            "buck-out/gen/__java_test_ParametrizedTest_output__/com.example.ParametrizedTest.xml"),
+        Charset.defaultCharset());
+    Document doc = XmlDomParser.parse(new InputSource(reader), false);
 
     NodeList testNodes = doc.getElementsByTagName("test");
     assertEquals(4, testNodes.getLength());

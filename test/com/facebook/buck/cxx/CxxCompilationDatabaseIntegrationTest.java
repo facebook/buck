@@ -33,9 +33,9 @@ import com.google.common.collect.Iterables;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -61,13 +61,13 @@ public class CxxCompilationDatabaseIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database", tmp);
     workspace.setUp();
-    File compilationDatabase = workspace.buildAndReturnOutput(
+    Path compilationDatabase = workspace.buildAndReturnOutput(
         "//:binary_with_dep#compilation-database");
 
     assertEquals(
         Paths.get(
             "buck-out/gen/__binary_with_dep#compilation-database.json"),
-        tmp.getRootPath().relativize(compilationDatabase.toPath()));
+        tmp.getRootPath().relativize(compilationDatabase));
 
     String binaryHeaderSymlinkTreeFolder =
         "buck-out/gen/binary_with_dep#default,header-symlink-tree";
@@ -112,12 +112,12 @@ public class CxxCompilationDatabaseIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database", tmp);
     workspace.setUp();
-    File compilationDatabase = workspace.buildAndReturnOutput(
+    Path compilationDatabase = workspace.buildAndReturnOutput(
         "//:library_with_header#default,compilation-database");
     assertEquals(
         Paths.get(
             "buck-out/gen/__library_with_header#compilation-database,default.json"),
-        tmp.getRootPath().relativize(compilationDatabase.toPath()));
+        tmp.getRootPath().relativize(compilationDatabase));
 
     String headerSymlinkTreeFolder = "buck-out/gen/library_with_header#default,header-symlink-tree";
     String exportedHeaderSymlinkTreeFoler =

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.test;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.XmlDomParser;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -29,9 +29,10 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 public class XmlTestResultParser {
@@ -39,8 +40,8 @@ public class XmlTestResultParser {
   /** Utility Class:  Do not instantiate. */
   private XmlTestResultParser() {}
 
-  public static TestCaseSummary parse(File xmlFile) throws IOException {
-    String xmlFileContents = Files.toString(xmlFile, Charsets.UTF_8);
+  public static TestCaseSummary parse(Path xmlFile) throws IOException {
+    String xmlFileContents = new String(Files.readAllBytes(xmlFile), UTF_8);
 
     try {
       return doParse(xmlFileContents);
@@ -108,9 +109,8 @@ public class XmlTestResultParser {
     return new TestCaseSummary(testCaseName, testResults);
   }
 
-  private static String createDetailedExceptionMessage(File xmlFile, String xmlFileContents) {
-    String message = "Error parsing test result data in " + xmlFile.getAbsolutePath() + ".\n" +
+  private static String createDetailedExceptionMessage(Path xmlFile, String xmlFileContents) {
+    return "Error parsing test result data in " + xmlFile.toAbsolutePath() + ".\n" +
         "File contents:\n" + xmlFileContents;
-    return message;
   }
 }

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxPreprocessMode;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -30,7 +31,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -146,10 +146,10 @@ public class NdkCxxPlatformIntegrationTest {
   public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths");
     workspace.runBuckBuild(String.format("//:lib#android-%s,static", arch)).assertSuccess();
-    java.io.File lib =
-        workspace.getFile(String.format("buck-out/gen/lib#android-%s,static/liblib.a", arch));
+    Path lib =
+        workspace.getPath(String.format("buck-out/gen/lib#android-%s,static/liblib.a", arch));
     String contents =
-        Files.asByteSource(lib)
+        MorePaths.asByteSource(lib)
             .asCharSource(Charsets.ISO_8859_1)
             .read();
 

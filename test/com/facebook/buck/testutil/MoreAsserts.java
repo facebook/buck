@@ -27,13 +27,20 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 
 import org.junit.Assert;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +52,8 @@ import javax.annotation.Nullable;
  * Additional assertions that delegate to JUnit assertions, but with better error messages.
  */
 public final class MoreAsserts {
+
+  private static final int BUFFER_SIZE = 8 * 1024;
 
   private MoreAsserts() {}
 
@@ -242,18 +251,6 @@ public final class MoreAsserts {
     fail(userMessage);
   }
 
-  public static void assertNotDepends(
-      String userMessage,
-      Collection<BuildRule> ruleDeps,
-      BuildTarget dep) {
-    for (BuildRule realDep : ruleDeps) {
-      BuildTarget target = realDep.getBuildTarget();
-      if (target.equals(dep)) {
-        fail(userMessage);
-      }
-    }
-  }
-
   public static <T> void assertOptionalValueEquals(
       String userMessage,
       T expectedValue,
@@ -263,6 +260,36 @@ public final class MoreAsserts {
     }
 
     assertEquals(userMessage, expectedValue, optionalValue.get());
+  }
+
+  public static void assertContentsEqual(Path one, Path two) throws IOException {
+    Preconditions.checkNotNull(one);
+    Preconditions.checkNotNull(two);
+
+    if (one.equals(two)) {
+      return;
+    }
+
+    if (Files.size(one) != Files.size(two)) {
+      fail(String.format("File sizes differ: %s, %s", one, two));
+    }
+
+    try (
+        InputStream ois = Files.newInputStream(one);
+        InputStream tis = Files.newInputStream(two)) {
+      byte[] bo = new byte[BUFFER_SIZE];
+      byte[] bt = new byte[BUFFER_SIZE];
+
+      while (true) {
+        int read1 = ByteStreams.read(ois, bo, 0, BUFFER_SIZE);
+        int read2 = ByteStreams.read(tis, bt, 0, BUFFER_SIZE);
+        if (read1 != read2 || !Arrays.equals(bo, bt)) {
+          fail(String.format("Contents of files differ: %s, %s", one, two));
+        } else if (read1 != BUFFER_SIZE) {
+          return;
+        }
+      }
+    }
   }
 
   private static String prefixWithUserMessage(

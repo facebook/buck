@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -191,22 +192,20 @@ public class AppleLibraryIntegrationTest {
         "//Libraries/TestLibrary:TestLibrary#static,iphonesimulator-x86_64");
     second.assertSuccess();
 
-    assertTrue(
-        com.google.common.io.Files.equal(
-            workspace.getFile(
-                "first/buck-out/gen/Libraries/TestLibrary/" +
-                    "TestLibrary#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"),
-            workspace.getFile(
-                "second/buck-out/gen/Libraries/TestLibrary/" +
-                    "TestLibrary#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o")));
-    assertTrue(
-        com.google.common.io.Files.equal(
-            workspace.getFile(
-                "first/buck-out/gen/Libraries/TestLibrary/" +
-                    "TestLibrary#iphonesimulator-x86_64,static/libTestLibrary.a"),
-            workspace.getFile(
-                "second/buck-out/gen/Libraries/TestLibrary/" +
-                    "TestLibrary#iphonesimulator-x86_64,static/libTestLibrary.a")));
+    MoreAsserts.assertContentsEqual(
+        workspace.getPath(
+            "first/buck-out/gen/Libraries/TestLibrary/" +
+                "TestLibrary#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"),
+        workspace.getPath(
+            "second/buck-out/gen/Libraries/TestLibrary/" +
+                "TestLibrary#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"));
+    MoreAsserts.assertContentsEqual(
+        workspace.getPath(
+            "first/buck-out/gen/Libraries/TestLibrary/" +
+                "TestLibrary#iphonesimulator-x86_64,static/libTestLibrary.a"),
+        workspace.getPath(
+            "second/buck-out/gen/Libraries/TestLibrary/" +
+                "TestLibrary#iphonesimulator-x86_64,static/libTestLibrary.a"));
   }
 
   private static void assertIsSymbolicLink(

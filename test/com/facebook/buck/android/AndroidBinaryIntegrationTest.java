@@ -21,23 +21,20 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.zip.ZipConstants;
 
 import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.hamcrest.Matchers;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,11 +45,10 @@ import java.util.zip.ZipInputStream;
 public class AndroidBinaryIntegrationTest {
 
   @ClassRule
-  public static DebuggableTemporaryFolder projectFolderWithPrebuiltTargets =
-      new DebuggableTemporaryFolder();
+  public static TemporaryPaths projectFolderWithPrebuiltTargets = new TemporaryPaths();
 
   @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
@@ -71,21 +67,17 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
   }
 
-  @AfterClass
-  public static void tearDownLast() {
-    projectFolderWithPrebuiltTargets.after();
-  }
-
   @Before
   public void setUp() throws IOException {
-    workspace = new ProjectWorkspace(projectFolderWithPrebuiltTargets.getRoot(), tmpFolder);
+    workspace = new ProjectWorkspace(
+        projectFolderWithPrebuiltTargets.getRoot(), tmpFolder.getRoot());
     workspace.setUp();
   }
 
   @Test
   public void testNonExopackageHasSecondary() throws IOException {
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
+        workspace.getPath(
             "buck-out/gen/apps/multidex/app.apk"));
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1.dex.jar");
@@ -102,7 +94,7 @@ public class AndroidBinaryIntegrationTest {
     result.assertSuccess();
 
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
+        workspace.getPath(
             "buck-out/gen/apps/multidex/app-art.apk"));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
 
@@ -116,7 +108,7 @@ public class AndroidBinaryIntegrationTest {
   @Test
   public void testDisguisedExecutableIsRenamed() throws IOException {
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
+        workspace.getPath(
             "buck-out/gen/apps/multidex/app.apk"));
 
     zipInspector.assertFileExists("lib/armeabi/libmybinary.so");
@@ -175,7 +167,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", "//apps/sample:app_cxx_lib_dep").assertSuccess();
 
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
+        workspace.getPath(
             "buck-out/gen/apps/sample/app_cxx_lib_dep.apk"));
     zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
@@ -190,7 +182,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", "//apps/sample:app_cxx_lib_dep_no_filters").assertSuccess();
 
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
+        workspace.getPath(
             "buck-out/gen/apps/sample/app_cxx_lib_dep_no_filters.apk"));
     zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
@@ -202,7 +194,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", "//apps/sample:app_no_cxx_deps").assertSuccess();
 
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile("buck-out/gen/apps/sample/app_no_cxx_deps.apk"));
+        workspace.getPath("buck-out/gen/apps/sample/app_no_cxx_deps.apk"));
     zipInspector.assertFileDoesNotExist("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libgnustl_shared.so");
@@ -223,7 +215,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckCommand("build", "//apps/sample:app_static_cxx_lib_dep").assertSuccess();
 
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
+        workspace.getPath(
             "buck-out/gen/apps/sample/app_static_cxx_lib_dep.apk"));
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
@@ -234,7 +226,7 @@ public class AndroidBinaryIntegrationTest {
   public void testHeaderOnlyCxxLibrary() throws IOException {
     workspace.runBuckCommand("build", "//apps/sample:app_header_only_cxx_lib_dep").assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
+        workspace.getPath(
             "buck-out/gen/apps/sample/app_header_only_cxx_lib_dep.apk"));
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_headeronly.so");
   }
@@ -243,7 +235,7 @@ public class AndroidBinaryIntegrationTest {
   public void testX86OnlyCxxLibrary() throws IOException {
     workspace.runBuckCommand("build", "//apps/sample:app_with_x86_lib").assertSuccess();
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
+        workspace.getPath(
             "buck-out/gen/apps/sample/app_with_x86_lib.apk"));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_x86-only.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libgnustl_shared.so");
@@ -259,9 +251,9 @@ public class AndroidBinaryIntegrationTest {
     result.assertSuccess();
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
-    File apk = workspace.getFile("buck-out/gen/apps/sample/app.apk");
+    Path apk = workspace.getPath("buck-out/gen/apps/sample/app.apk");
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_EPOCH_START));
-    try (ZipInputStream is = new ZipInputStream(new FileInputStream(apk))) {
+    try (ZipInputStream is = new ZipInputStream(Files.newInputStream(apk))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
       }

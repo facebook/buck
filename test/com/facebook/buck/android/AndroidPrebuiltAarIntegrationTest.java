@@ -47,7 +47,7 @@ public class AndroidPrebuiltAarIntegrationTest {
   @Test
   public void testBuildAndroidPrebuiltAar() throws IOException {
     workspace.runBuckBuild("//:app").assertSuccess();
-    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.apk"));
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/app.apk"));
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("resources.arsc");
     zipInspector.assertFileExists("classes.dex");

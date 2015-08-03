@@ -21,6 +21,7 @@ import com.google.common.io.ByteStreams;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
@@ -36,7 +37,7 @@ public class ZipWriteTest {
 
   public static void main(String[] args) throws IOException, InterruptedException {
     try (CustomZipOutputStream zipOut = ZipOutputStreams.newOutputStream(
-        new File("/dev/null"), ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP)) {
+        Paths.get("/dev/null"), ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP)) {
       try (ZipFile zipIn = new ZipFile(new File(args[0]))) {
         for (
             Enumeration<? extends ZipEntry> entries = zipIn.entries();

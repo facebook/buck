@@ -42,11 +42,10 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -60,9 +59,9 @@ public class SplitZipStepTest {
 
   @Test
   public void testMetaList() throws IOException {
-    File outJar = tempDir.newFile("test.jar");
+    Path outJar = tempDir.newFile("test.jar").toPath();
     ZipOutputStream zipOut = new ZipOutputStream(
-        new BufferedOutputStream(new FileOutputStream(outJar)));
+        new BufferedOutputStream(Files.newOutputStream(outJar)));
     Map<String, String> fileToClassName = ImmutableMap.of(
         "com/facebook/foo.class", "com.facebook.foo",
         "bar.class", "bar");

@@ -65,7 +65,7 @@ public class DirArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, File output) {
+  public CacheResult fetch(RuleKey ruleKey, Path output) {
     CacheResult result;
     try {
 
@@ -86,7 +86,7 @@ public class DirArtifactCache implements ArtifactCache {
       }
 
       // Now copy the artifact out.
-      filesystem.copyFile(cacheDir.resolve(ruleKey.toString()), output.toPath());
+      filesystem.copyFile(cacheDir.resolve(ruleKey.toString()), output);
 
       result = CacheResult.hit(name, metadata.build());
     } catch (NoSuchFileException e) {
@@ -96,14 +96,14 @@ public class DirArtifactCache implements ArtifactCache {
           e,
           "Artifact fetch(%s, %s) error",
           ruleKey,
-          output.getPath());
+          output);
       result = CacheResult.error(name, String.format("%s: %s", e.getClass(), e.getMessage()));
     }
 
     LOG.debug(
         "Artifact fetch(%s, %s) cache %s",
         ruleKey,
-        output.getPath(),
+        output,
         (result.getType().isSuccess() ? "hit" : "miss"));
     return result;
   }
@@ -112,7 +112,7 @@ public class DirArtifactCache implements ArtifactCache {
   public void store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      File output) {
+      Path output) {
 
     if (!doStore) {
       return;
@@ -127,7 +127,7 @@ public class DirArtifactCache implements ArtifactCache {
         // as valid artifacts during subsequent buck runs.
         Path tmp = filesystem.createTempFile(filesystem.resolve(cacheDir), "artifact", ".tmp");
         try {
-          filesystem.copyFile(output.toPath(), tmp);
+          filesystem.copyFile(output, tmp);
           filesystem.move(tmp, cacheDir.resolve(ruleKey.toString()));
         } finally {
           filesystem.deleteFileAtPathIfExists(tmp);
@@ -156,7 +156,7 @@ public class DirArtifactCache implements ArtifactCache {
           e,
           "Artifact store(%s, %s) error",
           ruleKeys,
-          output.getPath());
+          output);
     }
   }
 

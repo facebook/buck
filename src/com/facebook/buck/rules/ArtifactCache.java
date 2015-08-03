@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.Closeable;
-import java.io.File;
+import java.nio.file.Path;
 
 public interface ArtifactCache extends Closeable {
   /**
@@ -32,7 +32,7 @@ public interface ArtifactCache extends Closeable {
    * @return whether it was a {@link AbstractCacheResult.Type#MISS} (indicating a failure) or some
    *     type of hit.
    */
-  CacheResult fetch(RuleKey ruleKey, File output) throws InterruptedException;
+  CacheResult fetch(RuleKey ruleKey, Path output) throws InterruptedException;
 
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched
@@ -45,7 +45,7 @@ public interface ArtifactCache extends Closeable {
    * @param metadata additional information to store with the artifact
    * @param output path to read artifact from
    */
-  void store(ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata, File output)
+  void store(ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata, Path output)
       throws InterruptedException;
 
   /**

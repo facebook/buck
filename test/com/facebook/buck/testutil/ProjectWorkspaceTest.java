@@ -18,8 +18,8 @@ package com.facebook.buck.testutil;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -35,7 +35,7 @@ import java.nio.file.Paths;
 public class ProjectWorkspaceTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Test
   public void testWriteContentsToPath() throws IOException {
@@ -46,7 +46,7 @@ public class ProjectWorkspaceTest {
     ProjectWorkspace workspace = new ProjectWorkspace(templateDir, tmpFolder);
     workspace.writeContentsToPath("bye world", "test.file");
 
-    assertEquals("bye world", Files.toString(workspace.getFile("test.file"), Charsets.UTF_8));
+    assertEquals("bye world", workspace.getFileContents("test.file"));
   }
 
   @Test
@@ -65,9 +65,9 @@ public class ProjectWorkspaceTest {
 
     assertEquals(
         "Hello world\n",
-        Files.toString(workspace.getFile("destdir/subdir/test.file"), Charsets.UTF_8));
+        workspace.getFileContents("destdir/subdir/test.file"));
     assertEquals(
         "Goodbye world\n",
-        Files.toString(workspace.getFile("destdir/subdir/test.file2"), Charsets.UTF_8));
+        workspace.getFileContents("destdir/subdir/test.file2"));
   }
 }

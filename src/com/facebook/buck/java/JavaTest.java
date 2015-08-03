@@ -55,6 +55,7 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -280,13 +281,13 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
       return true;
     }
 
-    File outputDirectory = executionContext.getProjectFilesystem().getFileForRelativePath(
-        getPathToTestOutputDirectory());
+    Path outputDirectory = executionContext.getProjectFilesystem()
+        .getPathForRelativePath(getPathToTestOutputDirectory());
     for (String testClass : testClassNames) {
       // We never use cached results when using test selectors, so there's no need to incorporate
       // the .test_selectors suffix here if we are using selectors.
-      File testResultFile = new File(outputDirectory, testClass + ".xml");
-      if (!testResultFile.isFile()) {
+      Path testResultFile = outputDirectory.resolve(testClass + ".xml");
+      if (!Files.isRegularFile(testResultFile)) {
         return false;
       }
     }
@@ -371,9 +372,9 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
             testSelectorSuffix += ".dry_run";
           }
           String path = String.format("%s%s.xml", testClass, testSelectorSuffix);
-          File testResultFile = filesystem.getFileForRelativePath(
+          Path testResultFile = filesystem.getPathForRelativePath(
               getPathToTestOutputDirectory().resolve(path));
-          if (!isUsingTestSelectors && !testResultFile.isFile()) {
+          if (!isUsingTestSelectors && !Files.isRegularFile(testResultFile)) {
             String message;
             if (Preconditions.checkNotNull(junit).hasTimedOut()) {
               message = "test timed out before generating results file";
@@ -389,7 +390,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
           // ignore it.  This is another result of the fact that JUnit is the only thing that can
           // definitively say whether or not a class should be run.  It's not possible, for example,
           // to filter testClassNames here at the buck end.
-          } else if (testResultFile.isFile()) {
+          } else if (Files.isRegularFile(testResultFile)) {
             summaries.add(XmlTestResultParser.parse(testResultFile));
           }
         }
@@ -472,7 +473,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
       }
 
       final ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();
-      File jarFile = projectFilesystem.getFileForRelativePath(jarFilePath);
+      Path jarFile = projectFilesystem.getPathForRelativePath(jarFilePath);
       ZipFileTraversal traversal = new ZipFileTraversal(jarFile) {
 
         @Override

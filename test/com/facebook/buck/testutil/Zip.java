@@ -21,11 +21,11 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
@@ -60,11 +60,13 @@ public class Zip implements AutoCloseable {
    * @param forWriting Whether the zip file should be opened for writing or not.
    * @throws IOException Should something terrible occur.
    */
-  public Zip(File zip, boolean forWriting) throws IOException {
-    assertTrue("zip name must end with .zip for file type detection to work",
-        zip.getName().endsWith(".zip") || zip.getName().endsWith(".jar"));
+  public Zip(Path zip, boolean forWriting) throws IOException {
+    String extension = MorePaths.getFileExtension(zip);
+    assertTrue(
+        "zip name must end with .zip for file type detection to work",
+        "zip".equals(extension) || "jar".equals(extension));
 
-    URI uri = URI.create("jar:" + zip.toURI());
+    URI uri = URI.create("jar:" + zip.toUri());
     fs = FileSystems.newFileSystem(
         uri, ImmutableMap.of("create", String.valueOf(forWriting)));
 

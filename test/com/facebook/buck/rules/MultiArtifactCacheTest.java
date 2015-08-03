@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -30,19 +30,20 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.annotation.Nullable;
 
 public class MultiArtifactCacheTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private static final RuleKey dummyRuleKey =
       new RuleKey("76b1c1beae69428db2d1befb31cf743ac8ce90df");
-  private static final File dummyFile = new File("dummy");
+  private static final Path dummyFile = Paths.get("dummy");
 
   class DummyArtifactCache extends NoopArtifactCache {
 
@@ -53,7 +54,7 @@ public class MultiArtifactCacheTest {
     }
 
     @Override
-    public CacheResult fetch(RuleKey ruleKey, File output) {
+    public CacheResult fetch(RuleKey ruleKey, Path output) {
       return ruleKey.equals(storeKey) ? CacheResult.hit("cache") : CacheResult.miss();
     }
 
@@ -61,7 +62,7 @@ public class MultiArtifactCacheTest {
     public void store(
         ImmutableSet<RuleKey> ruleKeys,
         ImmutableMap<String, String> metadata,
-        File output) {
+        Path output) {
       storeKey = Iterables.getFirst(ruleKeys, null);
     }
 
@@ -76,7 +77,7 @@ public class MultiArtifactCacheTest {
   class ErroringArtifactCache extends NoopArtifactCache {
 
     @Override
-    public CacheResult fetch(RuleKey ruleKey, File output) {
+    public CacheResult fetch(RuleKey ruleKey, Path output) {
       return CacheResult.error("cache", "error");
     }
 
@@ -159,7 +160,7 @@ public class MultiArtifactCacheTest {
             cache1,
             cache2));
 
-    File output = tmp.newFile();
+    Path output = tmp.newFile();
 
     ImmutableMap<String, String> metadata = ImmutableMap.of("hello", "world");
     cache2.store(ImmutableSet.of(dummyRuleKey), metadata, new byte[0]);

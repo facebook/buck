@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -119,29 +118,29 @@ public class ApkBuilderStep implements Step {
     try {
       PrivateKeyAndCertificate privateKeyAndCertificate = createKeystoreProperties(context);
       ApkBuilder builder = new ApkBuilder(
-          projectFilesystem.getFileForRelativePath(pathToOutputApkFile),
-          projectFilesystem.getFileForRelativePath(resourceApk),
-          projectFilesystem.getFileForRelativePath(dexFile),
+          projectFilesystem.getPathForRelativePath(pathToOutputApkFile).toFile(),
+          projectFilesystem.getPathForRelativePath(resourceApk).toFile(),
+          projectFilesystem.getPathForRelativePath(dexFile).toFile(),
           privateKeyAndCertificate.privateKey,
           privateKeyAndCertificate.certificate,
           output);
       builder.setDebugMode(debugMode);
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(
-            projectFilesystem.getFileForRelativePath(nativeLibraryDirectory));
+            projectFilesystem.getPathForRelativePath(nativeLibraryDirectory).toFile());
       }
       for (Path assetDirectory : assetDirectories) {
-        builder.addSourceFolder(projectFilesystem.getFileForRelativePath(assetDirectory));
+        builder.addSourceFolder(projectFilesystem.getPathForRelativePath(assetDirectory).toFile());
       }
       for (Path zipFile : zipFiles) {
         // TODO(natthu): Skipping silently is bad. These should really be assertions.
         if (projectFilesystem.exists(zipFile) && projectFilesystem.isFile(zipFile)) {
-          builder.addZipFile(projectFilesystem.getFileForRelativePath(zipFile));
+          builder.addZipFile(projectFilesystem.getPathForRelativePath(zipFile).toFile());
         }
       }
       for (Path jarFileThatMayContainResources : jarFilesThatMayContainResources) {
-        File jarFile  = projectFilesystem.getFileForRelativePath(jarFileThatMayContainResources);
-        builder.addResourcesFromJar(jarFile);
+        Path jarFile  = projectFilesystem.getPathForRelativePath(jarFileThatMayContainResources);
+        builder.addResourcesFromJar(jarFile.toFile());
       }
 
       // Build the APK

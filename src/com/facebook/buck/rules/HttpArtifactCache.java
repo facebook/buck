@@ -42,7 +42,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -115,7 +114,7 @@ public class HttpArtifactCache implements ArtifactCache {
     }
   }
 
-  public CacheResult fetchImpl(RuleKey ruleKey, File file) throws IOException {
+  public CacheResult fetchImpl(RuleKey ruleKey, Path file) throws IOException {
     Request request =
         new Request.Builder()
             .url(new URL(url, "artifacts/key/" + ruleKey.toString()))
@@ -148,11 +147,10 @@ public class HttpArtifactCache implements ArtifactCache {
 
     // Setup a temporary file, which sits next to the destination, to write to and
     // make sure all parent dirs exist.
-    Path path = file.toPath();
-    projectFilesystem.createParentDirs(path);
+    projectFilesystem.createParentDirs(file);
     Path temp = projectFilesystem.createTempFile(
-        path.getParent(),
-        path.getFileName().toString(),
+        file.getParent(),
+        file.getFileName().toString(),
         ".tmp");
 
     // Open the input stream from the server and start processing data.
@@ -227,14 +225,14 @@ public class HttpArtifactCache implements ArtifactCache {
     }
 
     // Finally, move the temp file into it's final place.
-    projectFilesystem.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
+    projectFilesystem.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
 
     LOGGER.info("fetch(%s, %s): cache hit", url, ruleKey);
     return CacheResult.hit(name, metadata);
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, File output) throws InterruptedException {
+  public CacheResult fetch(RuleKey ruleKey, Path output) throws InterruptedException {
     try {
       return fetchImpl(ruleKey, output);
     } catch (IOException e) {
@@ -301,7 +299,7 @@ public class HttpArtifactCache implements ArtifactCache {
   protected void storeImpl(
       ImmutableSet<RuleKey> ruleKeys,
       final ImmutableMap<String, String> metadata,
-      final File file)
+      final Path file)
       throws IOException {
 
     // Build the request, hitting the multi-key endpoint.
@@ -319,7 +317,7 @@ public class HttpArtifactCache implements ArtifactCache {
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
-                return projectFilesystem.newFileInputStream(file.toPath());
+                return projectFilesystem.newFileInputStream(file);
               }
             },
             hashFunction);
@@ -338,7 +336,7 @@ public class HttpArtifactCache implements ArtifactCache {
                 rawKeys.length +
                 Integer.SIZE / Byte.SIZE +
                 rawMetadata.length +
-                projectFilesystem.getFileSize(file.toPath());
+                projectFilesystem.getFileSize(file);
           }
 
           @Override
@@ -346,7 +344,7 @@ public class HttpArtifactCache implements ArtifactCache {
             bufferedSink.write(rawKeys);
             bufferedSink.writeInt(rawMetadata.length);
             bufferedSink.write(rawMetadata);
-            try (BufferedSource fileSource = projectFilesystem.newSource(file.toPath())) {
+            try (BufferedSource fileSource = projectFilesystem.newSource(file)) {
               bufferedSink.writeAll(fileSource);
             }
           }
@@ -364,7 +362,7 @@ public class HttpArtifactCache implements ArtifactCache {
   public void store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      File output)
+      Path output)
       throws InterruptedException {
     if (!isStoreSupported()) {
       return;

@@ -23,15 +23,15 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class BuildTargetSourcePathAsSrcIntegrationTest {
 
@@ -40,7 +40,7 @@ public class BuildTargetSourcePathAsSrcIntegrationTest {
 
   @Test
   public void testNewGenfileIsIncludedInJar() throws IOException {
-    final Charset charsetForTest = Charsets.UTF_8;
+    final Charset charsetForTest = StandardCharsets.UTF_8;
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "build_rule_source_path_as_src_test", tmp);
     workspace.setUp();
@@ -50,8 +50,8 @@ public class BuildTargetSourcePathAsSrcIntegrationTest {
     result.assertSuccess();
 
     // Edit the test so it should fail and then make sure that it fails.
-    File testFile = workspace.getFile("resource.base.txt");
-    Files.write("Different text", testFile, charsetForTest);
+    Path testFile = workspace.getPath("resource.base.txt");
+    Files.write(testFile, "Different text".getBytes(charsetForTest));
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test");
 
     workspace.getBuildLog().assertTargetBuiltLocally("//:library");

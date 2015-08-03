@@ -16,19 +16,19 @@
 
 package com.facebook.buck.dalvik;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.java.classes.FileLike;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -43,23 +43,22 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private final ZipOutputStream outStream;
   private final Set<String> entryNames = Sets.newHashSet();
   private final long linearAllocLimit;
-  private final File reportFile;
+  private final Path reportFile;
   private final DalvikStatsCache dalvikStatsCache;
 
   private final Set<DalvikStatsTool.MethodReference> currentMethodReferences = Sets.newHashSet();
   private long currentLinearAllocSize;
 
   DalvikAwareOutputStreamHelper(
-      File outputFile,
+      Path outputFile,
       long linearAllocLimit,
-      File reportDir,
+      Path reportDir,
       DalvikStatsCache dalvikStatsCache)
-      throws FileNotFoundException {
-    this.outStream = new ZipOutputStream(
-      new BufferedOutputStream(
-          new FileOutputStream(outputFile)));
+      throws IOException {
+    this.outStream =
+        new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outputFile)));
     this.linearAllocLimit = linearAllocLimit;
-    this.reportFile = new File(reportDir, outputFile.getName() + ".txt");
+    this.reportFile = reportDir.resolve(outputFile.getFileName().toString() + ".txt");
     this.dalvikStatsCache = dalvikStatsCache;
   }
 
@@ -107,7 +106,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
       String report = String.format(
           "%d %d %s\n",
           stats.estimatedLinearAllocSize, stats.methodReferences.size(), name);
-      Files.append(report, reportFile, Charsets.UTF_8);
+      MorePaths.append(reportFile, report, UTF_8);
     }
   }
 

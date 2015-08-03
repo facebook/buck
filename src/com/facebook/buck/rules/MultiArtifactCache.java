@@ -20,8 +20,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * MultiArtifactCache encapsulates a set of ArtifactCache instances such that fetch() succeeds if
@@ -51,7 +51,7 @@ public class MultiArtifactCache implements ArtifactCache {
    * artifact to one or more of the other encapsulated ArtifactCaches as a side effect.
    */
   @Override
-  public CacheResult fetch(RuleKey ruleKey, File output)
+  public CacheResult fetch(RuleKey ruleKey, Path output)
       throws InterruptedException {
     CacheResult cacheResult = CacheResult.miss();
     for (ArtifactCache artifactCache : artifactCaches) {
@@ -78,7 +78,7 @@ public class MultiArtifactCache implements ArtifactCache {
   public void store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      File output)
+      Path output)
       throws InterruptedException {
     for (ArtifactCache artifactCache : artifactCaches) {
       artifactCache.store(ruleKeys, metadata, output);

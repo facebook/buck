@@ -176,9 +176,9 @@ public final class MoreFiles {
   /**
    * Writes the specified lines to the specified file, encoded as UTF-8.
    */
-  public static void writeLinesToFile(Iterable<String> lines, File file)
+  public static void writeLinesToFile(Iterable<String> lines, Path file)
       throws IOException {
-    try (BufferedWriter writer = Files.newBufferedWriter(file.toPath(), Charsets.UTF_8)) {
+    try (BufferedWriter writer = Files.newBufferedWriter(file, Charsets.UTF_8)) {
       for (String line : lines) {
         writer.write(line);
         writer.newLine();
@@ -242,10 +242,9 @@ public final class MoreFiles {
    * If the file system does not support the executable permission or the operation fails,
    * a {@code java.io.IOException} is thrown.
    */
-  public static void makeExecutable(File file) throws IOException {
+  public static void makeExecutable(Path file) throws IOException {
     if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
-      Path path = file.toPath();
-      Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
+      Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file);
 
       if (permissions.contains(PosixFilePermission.OWNER_READ)) {
         permissions.add(PosixFilePermission.OWNER_EXECUTE);
@@ -257,9 +256,9 @@ public final class MoreFiles {
         permissions.add(PosixFilePermission.OTHERS_EXECUTE);
       }
 
-      Files.setPosixFilePermissions(path, permissions);
+      Files.setPosixFilePermissions(file, permissions);
     } else {
-      if (!file.setExecutable(/* executable */ true, /* ownerOnly */ true)) {
+      if (!file.toFile().setExecutable(/* executable */ true, /* ownerOnly */ true)) {
         throw new IOException("The file could not be made executable");
       }
     }
@@ -273,4 +272,5 @@ public final class MoreFiles {
   public static String sanitize(String name) {
     return CharMatcher.anyOf(ILLEGAL_FILE_NAME_CHARACTERS).replaceFrom(name, "_");
   }
+
 }

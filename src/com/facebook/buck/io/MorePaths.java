@@ -29,6 +29,8 @@ import com.google.common.io.ByteSource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -301,4 +303,23 @@ public class MorePaths {
     }
   }
 
+  public static String getFileExtension(Path path) {
+    String name = path.getFileName().toString();
+    int index = name.lastIndexOf('.');
+    return index == -1 ? "" : name.substring(index + 1);
+  }
+
+  public static String getNameWithoutExtension(Path file) {
+    String name = file.getFileName().toString();
+    int index = name.lastIndexOf('.');
+    return index == -1 ? name : name.substring(0, index);
+  }
+
+
+  public static void append(Path path, String text, Charset charset) throws IOException{
+    try (Writer writer = Files.newBufferedWriter(path, charset)) {
+      writer.append(text);
+      writer.flush();
+    }
+  }
 }

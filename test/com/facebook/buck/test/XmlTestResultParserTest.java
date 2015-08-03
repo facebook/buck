@@ -16,24 +16,24 @@
 
 package com.facebook.buck.test;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class XmlTestResultParserTest {
 
   @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testParseMalformedXml() throws IOException {
@@ -42,8 +42,8 @@ public class XmlTestResultParserTest {
         "<testcase name='com.facebook.buck.test.XmlTestResultParserTest'>\n" +
         "  <test name='testParseMalformedXml' success='true' time='too meta'/>\n" +
         "</testcase>\n";
-    File xmlFile = tmp.newFile("result.xml");
-    Files.write(xml, xmlFile, Charsets.UTF_8);
+    Path xmlFile = tmp.newFile("result.xml");
+    Files.write(xmlFile, xml.getBytes(UTF_8));
 
     try {
       XmlTestResultParser.parse(xmlFile);
@@ -54,7 +54,7 @@ public class XmlTestResultParserTest {
 
       assertEquals(
           "Exception should include the path to the file as well as its contents.",
-          "Error parsing test result data in " + xmlFile.getAbsolutePath() + ".\n" +
+          "Error parsing test result data in " + xmlFile.toAbsolutePath() + ".\n" +
               "File contents:\n" + xml,
           e.getMessage());
     }

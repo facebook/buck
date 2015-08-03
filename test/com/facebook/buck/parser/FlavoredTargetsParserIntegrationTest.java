@@ -16,9 +16,11 @@
 
 package com.facebook.buck.parser;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.java.Javac;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -30,8 +32,9 @@ import com.google.common.collect.Lists;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -48,12 +51,12 @@ public class FlavoredTargetsParserIntegrationTest {
         tempFolder);
     workspace.setUp();
 
-    File output = workspace.buildAndReturnOutput("//:example");
+    Path output = workspace.buildAndReturnOutput("//:example");
 
     // The output of the rule should be a normal jar. Verify that.
-    assertTrue(output.getName().endsWith(".jar"));
+    assertEquals("jar", MorePaths.getFileExtension(output));
     // Ensure the output name is not to be confused with a sources jar
-    assertFalse(output.getName().endsWith(Javac.SRC_JAR));
+    assertFalse(output.getFileName().toString().endsWith(Javac.SRC_JAR));
   }
 
   @Test
@@ -64,10 +67,10 @@ public class FlavoredTargetsParserIntegrationTest {
         tempFolder);
     workspace.setUp();
 
-    File output = workspace.buildAndReturnOutput("//:example#src");
+    Path output = workspace.buildAndReturnOutput("//:example#src");
 
     // The output of the rule should be a src jar. Verify that.
-    assertTrue(output.getName(), output.getName().endsWith(Javac.SRC_JAR));
+    assertTrue(output.toString(), output.toString().endsWith(Javac.SRC_JAR));
   }
 
   @Test
@@ -93,11 +96,11 @@ public class FlavoredTargetsParserIntegrationTest {
     assertTrue(paths.toString(), paths.size() > 1);
 
     // The last two are the paths to the outputs
-    File first = workspace.getFile(paths.get(0).split("\\s+")[1]);
-    File second = workspace.getFile(paths.get(1).split("\\s+")[1]);
+    Path first = workspace.getPath(paths.get(0).split("\\s+")[1]);
+    Path second = workspace.getPath(paths.get(1).split("\\s+")[1]);
 
-    assertTrue(first.exists());
-    assertTrue(second.exists());
+    assertTrue(Files.exists(first));
+    assertTrue(Files.exists(second));
   }
 
   @Test
@@ -108,7 +111,7 @@ public class FlavoredTargetsParserIntegrationTest {
         tempFolder);
     workspace.setUp();
 
-    File output = workspace.buildAndReturnOutput("//:example");
+    Path output = workspace.buildAndReturnOutput("//:example");
 
     // Take a look at the contents of 'output'. It should be a source jar.
     try (Zip zip = new Zip(output, /* for writing? */ false)) {

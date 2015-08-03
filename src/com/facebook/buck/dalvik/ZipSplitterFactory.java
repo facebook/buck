@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Set;
 
@@ -53,16 +52,16 @@ public interface ZipSplitterFactory {
    * @param reportDir Directory where to publish a report of which classes were written to which
    *     zip files with a corresponding size estimate.
    */
-  public ZipSplitter newInstance(
+  ZipSplitter newInstance(
       ProjectFilesystem filesystem,
       Set<Path> inFiles,
-      File outPrimary,
-      File outSecondaryDir,
+      Path outPrimary,
+      Path outSecondaryDir,
       String secondaryPattern,
       Predicate<String> requiredInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
       ImmutableSet<String> secondaryTailSet,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
-      File reportDir);
+      Path reportDir);
 }

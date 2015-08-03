@@ -21,6 +21,7 @@ import com.facebook.buck.dalvik.DefaultZipSplitterFactory;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.dalvik.ZipSplitterFactory;
 import com.facebook.buck.dalvik.firstorder.FirstOrderHelper;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -44,10 +45,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -127,7 +126,7 @@ public class SplitZipStep implements Step {
   private final Optional<Path> secondaryDexTailClassesFile;
 
   @Nullable
-  private List<File> outputFiles;
+  private List<Path> outputFiles;
 
   /**
    * @param inputPathsToSplit Input paths that would otherwise have been passed to a single dx --dex
@@ -204,19 +203,18 @@ public class SplitZipStep implements Step {
       }
 
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-      File primaryJarFile = primaryJarPath.toFile();
       outputFiles = zipSplitterFactory.newInstance(
           projectFilesystem,
           inputJarPaths,
-          primaryJarFile,
-          secondaryJarDir.toFile(),
+          primaryJarPath,
+          secondaryJarDir,
           secondaryJarPattern,
           requiredInPrimaryZip,
           secondaryHeadSet,
           secondaryTailSet,
           dexSplitMode.getDexSplitStrategy(),
           ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
-          projectFilesystem.getFileForRelativePath(pathToReportDir))
+          projectFilesystem.getPathForRelativePath(pathToReportDir))
           .execute();
 
       try (BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
@@ -397,7 +395,7 @@ public class SplitZipStep implements Step {
   @VisibleForTesting
   static void writeMetaList(
       BufferedWriter writer,
-      List<File> jarFiles,
+      List<Path> jarFiles,
       DexStore dexStore) throws IOException {
     for (int i = 0; i < jarFiles.size(); i++) {
       String filename = dexStore.fileNameForSecondary(i);
@@ -409,8 +407,8 @@ public class SplitZipStep implements Step {
     }
   }
 
-  private static String findAnyClass(File jarFile) throws IOException {
-    try (ZipFile inZip = new ZipFile(jarFile)) {
+  private static String findAnyClass(Path jarFile) throws IOException {
+    try (ZipFile inZip = new ZipFile(jarFile.toFile())) {
       for (ZipEntry entry : Collections.list(inZip.entries())) {
         Matcher m = CLASS_FILE_PATTERN.matcher(entry.getName());
         if (m.matches()) {
@@ -419,11 +417,11 @@ public class SplitZipStep implements Step {
       }
     }
     // TODO(user): It's possible for this to happen by chance, so we should handle it better.
-    throw new IllegalStateException("Couldn't find any class in " + jarFile.getAbsolutePath());
+    throw new IllegalStateException("Couldn't find any class in " + jarFile.toAbsolutePath());
   }
 
-  private static String hexSha1(File file) throws IOException {
-    return Files.hash(file, Hashing.sha1()).toString();
+  private static String hexSha1(Path file) throws IOException {
+    return MorePaths.asByteSource(file).hash(Hashing.sha1()).toString();
   }
 
   @Override
@@ -454,7 +452,7 @@ public class SplitZipStep implements Step {
         for (int i = 0; i < outputFiles.size(); i++) {
           Path outputDexPath =
               secondaryOutputDir.resolve(dexSplitMode.getDexStore().fileNameForSecondary(i));
-          builder.put(outputDexPath, Paths.get(outputFiles.get(i).getPath()));
+          builder.put(outputDexPath, outputFiles.get(i));
         }
         return builder.build();
       }

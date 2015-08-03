@@ -76,8 +76,16 @@ public class TestDataHelper {
   public static ProjectWorkspace createProjectWorkspaceForScenario(
       Object testCase,
       String scenario,
+      TemporaryPaths temporaryFolder) {
+    Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
+    return new ProjectWorkspace(templateDir, temporaryFolder.getRoot());
+  }
+
+  public static ProjectWorkspace createProjectWorkspaceForScenario(
+      Object testCase,
+      String scenario,
       DebuggableTemporaryFolder temporaryFolder) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
-    return new ProjectWorkspace(templateDir, temporaryFolder);
+    return new ProjectWorkspace(templateDir, temporaryFolder.getRoot().toPath());
   }
 }

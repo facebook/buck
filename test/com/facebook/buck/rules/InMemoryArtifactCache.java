@@ -22,10 +22,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 public class InMemoryArtifactCache implements ArtifactCache {
@@ -41,13 +41,13 @@ public class InMemoryArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, File output) {
+  public CacheResult fetch(RuleKey ruleKey, Path output) {
     Artifact artifact = artifacts.get(ruleKey);
     if (artifact == null) {
       return CacheResult.miss();
     }
     try {
-      Files.write(output.toPath(), artifact.data);
+      Files.write(output, artifact.data);
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
@@ -70,8 +70,8 @@ public class InMemoryArtifactCache implements ArtifactCache {
   public void store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      File output) {
-    try (InputStream inputStream = Files.newInputStream(output.toPath())) {
+      Path output) {
+    try (InputStream inputStream = Files.newInputStream(output)) {
       store(ruleKeys, metadata, ByteStreams.toByteArray(inputStream));
     } catch (IOException e) {
       throw Throwables.propagate(e);

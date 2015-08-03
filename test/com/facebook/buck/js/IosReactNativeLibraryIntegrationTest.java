@@ -30,8 +30,9 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class IosReactNativeLibraryIntegrationTest {
 
@@ -62,11 +63,11 @@ public class IosReactNativeLibraryIntegrationTest {
   public void testFlavoredBundleOutputDoesNotContainJSAndResources() throws IOException {
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle").assertSuccess();
 
-    File appDir = workspace.getFile(
+    Path appDir = workspace.getPath(
         "buck-out/gen/DemoApp#iphonesimulator-x86_64,rn_no_bundle/DemoApp.app");
-    assertTrue(appDir.exists() && appDir.isDirectory());
+    assertTrue(Files.isDirectory(appDir));
 
-    File bundle = new File(appDir, "Apps/DemoApp/DemoApp.bundle");
-    assertFalse(bundle.exists());
+    Path bundle = appDir.resolve("Apps/DemoApp/DemoApp.bundle");
+    assertFalse(Files.exists(bundle));
   }
 }

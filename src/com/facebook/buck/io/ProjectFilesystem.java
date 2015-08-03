@@ -201,14 +201,6 @@ public class ProjectFilesystem {
         : getPathForRelativePath(pathRelativeToProjectRoot).toFile();
   }
 
-  /**
-   * // @deprecated Prefer operating on {@code Path}s directly, replaced by
-   *    {@link #getPathForRelativePath(java.nio.file.Path)}.
-   */
-  public File getFileForRelativePath(Path pathRelativeToProjectRoot) {
-    return getPathForRelativePath(pathRelativeToProjectRoot).toFile();
-  }
-
   public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
     return projectRoot.resolve(pathRelativeToProjectRoot);
   }
@@ -238,7 +230,7 @@ public class ProjectFilesystem {
   }
 
   /**
-   * As {@link #getFileForRelativePath(java.nio.file.Path)}, but with the added twist that the
+   * As {@link #getPathForRelativePath(java.nio.file.Path)}, but with the added twist that the
    * existence of the path is checked before returning.
    */
   public Path getPathForRelativeExistingPath(Path pathRelativeToProjectRoot) {
@@ -804,17 +796,17 @@ public class ProjectFilesystem {
    * Takes a sequence of paths relative to the project root and writes a zip file to {@code out}
    * with the contents and structure that matches that of the specified paths.
    */
-  public void createZip(Collection<Path> pathsToIncludeInZip, File out) throws IOException {
+  public void createZip(Collection<Path> pathsToIncludeInZip, Path out) throws IOException {
     createZip(pathsToIncludeInZip, out, ImmutableMap.<Path, String>of());
   }
 
   /**
-   * Similar to {@link #createZip(Collection, File)}, but also takes a list of additional files to
+   * Similar to {@link #createZip(Collection, Path)}, but also takes a list of additional files to
    * write in the zip, including their contents, as a map.
    */
   public void createZip(
       Collection<Path> pathsToIncludeInZip,
-      File out,
+      Path out,
       ImmutableMap<Path, String> additionalFileContents) throws IOException {
     try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
       for (Path path : pathsToIncludeInZip) {

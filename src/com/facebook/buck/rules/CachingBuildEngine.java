@@ -50,7 +50,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -616,9 +615,9 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
     // that we are creating a zip-based FileSystem.
-    File zipFile;
+    Path zipFile;
     try {
-      zipFile = File.createTempFile(
+      zipFile = Files.createTempFile(
           "buck_artifact_" + MoreFiles.sanitize(rule.getBuildTarget().getShortName()),
           ".zip");
     } catch (IOException e) {
@@ -632,7 +631,7 @@ public class CachingBuildEngine implements BuildEngine {
         buildInfoRecorder.fetchArtifactForBuildable(ruleKey, zipFile, artifactCache);
     if (!cacheResult.getType().isSuccess()) {
       try {
-        Files.delete(zipFile.toPath());
+        Files.delete(zipFile);
       } catch (IOException e) {
         LOG.warn(e, "failed to delete %s", zipFile);
       }
@@ -655,13 +654,13 @@ public class CachingBuildEngine implements BuildEngine {
     buildContext.getEventBus().post(started);
     try {
       Unzip.extractZipFile(
-          zipFile.toPath().toAbsolutePath(),
+          zipFile.toAbsolutePath(),
           filesystem,
           Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.
-      Files.delete(zipFile.toPath());
+      Files.delete(zipFile);
 
       if (cacheResult.getType() == CacheResult.Type.HIT) {
 
@@ -683,7 +682,7 @@ public class CachingBuildEngine implements BuildEngine {
                   "The rule will be built locally, " +
                   "but here is the stacktrace of the failed unzip call:\n" +
                   rule.getBuildTarget(),
-              zipFile.getAbsolutePath(),
+              zipFile.toAbsolutePath(),
               Throwables.getStackTraceAsString(e)));
       return CacheResult.miss();
     } finally {

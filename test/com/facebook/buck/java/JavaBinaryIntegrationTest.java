@@ -30,8 +30,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class JavaBinaryIntegrationTest {
 
@@ -56,7 +56,7 @@ public class JavaBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "fat_jar", tmp);
     workspace.setUp();
-    File jar = workspace.buildAndReturnOutput("//:bin-output");
+    Path jar = workspace.buildAndReturnOutput("//:bin-output");
     ProcessExecutor.Result result = workspace.runJar(jar);
     assertEquals("output", result.getStdout().get().trim());
     assertEquals("error", result.getStderr().get().trim());

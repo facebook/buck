@@ -257,7 +257,7 @@ public class CompileStringsStep implements Step {
     TreeMap<Integer, ImmutableList<String>> arraysMap = Maps.newTreeMap();
 
     for (Path stringFilePath : filepaths) {
-      Document dom = XmlDomParser.parse(filesystem.getFileForRelativePath(stringFilePath));
+      Document dom = XmlDomParser.parse(filesystem.getPathForRelativePath(stringFilePath));
 
       NodeList stringNodes = dom.getElementsByTagName("string");
       scrapeStringNodes(stringNodes, stringsMap);

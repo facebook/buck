@@ -19,10 +19,10 @@ package com.facebook.buck.dalvik;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Function;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -30,11 +30,9 @@ import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
@@ -45,11 +43,11 @@ import java.util.zip.ZipOutputStream;
 public class DefaultZipSplitterTest {
 
   @Rule
-  public TemporaryFolder tmpDir = new TemporaryFolder();
+  public TemporaryPaths tmpDir = new TemporaryPaths();
 
-  private File testInZip;
-  private Set<File> testInZips;
-  private File outPrimary;
+  private Path testInZip;
+  private Set<Path> testInZips;
+  private Path outPrimary;
   private String secondaryPattern;
   private Predicate<String> processor = new Predicate<String>() {
     @Override
@@ -63,10 +61,10 @@ public class DefaultZipSplitterTest {
     byte[] fakeData = {0, 0, 0, 0};
 
     // Map of output file => [ zip entry, ... ]
-    Multimap<File, String> outputToInputMap = LinkedHashMultimap.create();
+    Multimap<Path, String> outputToInputMap = LinkedHashMultimap.create();
 
     // Uber in zip for tests.
-    testInZip = new File(tmpDir.getRoot(), "in.zip");
+    testInZip = tmpDir.getRoot().resolve("in.zip");
     outputToInputMap.putAll(testInZip, ImmutableList.of(
         "secondary-1",
         "secondary-2",
@@ -76,7 +74,7 @@ public class DefaultZipSplitterTest {
 
     // Tests with multiple input zips.
     testInZips = Sets.newLinkedHashSet();
-    File inA = new File(tmpDir.getRoot(), "in-a.zip");
+    Path inA = tmpDir.getRoot().resolve("in-a.zip");
     testInZips.add(inA);
     outputToInputMap.putAll(inA, ImmutableList.of(
         "primary-a-1",
@@ -85,12 +83,12 @@ public class DefaultZipSplitterTest {
         "secondary-a-1",
         "secondary-a-2",
         "secondary-a-3"));
-    File inB = new File(tmpDir.getRoot(), "in-b.zip");
+    Path inB = tmpDir.getRoot().resolve("in-b.zip");
     testInZips.add(inB);
     outputToInputMap.putAll(inB, ImmutableList.of(
         "secondary-b-1",
         "secondary-b-2"));
-    File inC = new File(tmpDir.getRoot(), "in-c.zip");
+    Path inC = tmpDir.getRoot().resolve("in-c.zip");
     testInZips.add(inC);
     outputToInputMap.putAll(inC, ImmutableList.of(
         "secondary-c-1",
@@ -98,8 +96,8 @@ public class DefaultZipSplitterTest {
         "secondary-c-3"));
 
     // Write the output files.
-    for (File outputFile : outputToInputMap.keySet()) {
-      ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outputFile));
+    for (Path outputFile : outputToInputMap.keySet()) {
+      ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(outputFile));
       for (String name : outputToInputMap.get(outputFile)) {
         zipOut.putNextEntry(new ZipEntry(name));
         zipOut.write(fakeData);
@@ -107,15 +105,15 @@ public class DefaultZipSplitterTest {
       zipOut.close();
     }
 
-    outPrimary = new File(tmpDir.getRoot(), "primary.zip");
+    outPrimary = tmpDir.getRoot().resolve("primary.zip");
     secondaryPattern = "secondary-%d.zip";
   }
 
   @Test
   public void testBigLimit() throws IOException {
     DefaultZipSplitter.splitZip(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        Collections.singleton(testInZip.toPath()),
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -136,8 +134,8 @@ public class DefaultZipSplitterTest {
   @Test
   public void testMediumLimit() throws IOException {
     DefaultZipSplitter.splitZip(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        Collections.singleton(testInZip.toPath()),
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -158,8 +156,8 @@ public class DefaultZipSplitterTest {
   @Test
   public void testSmallLimit() throws IOException {
     DefaultZipSplitter.splitZip(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        Collections.singleton(testInZip.toPath()),
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -180,8 +178,8 @@ public class DefaultZipSplitterTest {
   @Test
   public void testBigLimitMinimizePrimaryZip() throws IOException {
     DefaultZipSplitter.splitZip(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        Collections.singleton(testInZip.toPath()),
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -202,8 +200,8 @@ public class DefaultZipSplitterTest {
   @Test
   public void testMediumLimitMinimizePrimaryZip() throws IOException {
     DefaultZipSplitter.splitZip(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        Collections.singleton(testInZip.toPath()),
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -224,8 +222,8 @@ public class DefaultZipSplitterTest {
   @Test
   public void testSmallLimitMinimizePrimaryZip() throws IOException {
     DefaultZipSplitter.splitZip(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        Collections.singleton(testInZip.toPath()),
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -246,15 +244,8 @@ public class DefaultZipSplitterTest {
   @Test
   public void testSoftLimit() throws IOException {
     DefaultZipSplitter.splitZip(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        FluentIterable.from(testInZips)
-            .transform(new Function<File, Path>() {
-              @Override
-              public Path apply(File file) {
-                return file.toPath();
-              }
-            })
-            .toSet(),
+        new ProjectFilesystem(tmpDir.getRoot()),
+        ImmutableSet.copyOf(testInZips),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -281,8 +272,8 @@ public class DefaultZipSplitterTest {
   @Test
   public void testCanary() throws IOException {
     DefaultZipSplitter.splitZip(
-        new ProjectFilesystem(tmpDir.getRoot().toPath()),
-        Collections.singleton(testInZip.toPath()),
+        new ProjectFilesystem(tmpDir.getRoot()),
+        Collections.singleton(testInZip),
         outPrimary,
         tmpDir.getRoot(),
         secondaryPattern,
@@ -305,11 +296,11 @@ public class DefaultZipSplitterTest {
 
   private boolean nthSecondaryZipContains(int index, String name) throws IOException {
     String zipName = String.format(secondaryPattern, index);
-    return zipContains(new File(tmpDir.getRoot(), zipName), name);
+    return zipContains(tmpDir.getRoot().resolve(zipName), name);
   }
 
-  private static boolean zipContains(File file, String name) throws IOException {
-    ZipFile zip = new ZipFile(file);
+  private static boolean zipContains(Path file, String name) throws IOException {
+    ZipFile zip = new ZipFile(file.toFile());
     try {
       return zip.getEntry(name) != null;
     } finally {

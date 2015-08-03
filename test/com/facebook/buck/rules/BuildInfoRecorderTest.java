@@ -48,7 +48,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -171,7 +170,7 @@ public class BuildInfoRecorderTest {
           public void store(
               ImmutableSet<RuleKey> ruleKeys,
               ImmutableMap<String, String> metadata,
-              File output) {
+              Path output) {
             stored.set(true);
 
             // Verify the build metadata.

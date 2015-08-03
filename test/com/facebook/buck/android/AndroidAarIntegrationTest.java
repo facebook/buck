@@ -29,7 +29,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.jar.JarFile;
@@ -53,7 +52,7 @@ public class AndroidAarIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:app").assertSuccess();
 
-    File aar = workspace.getFile("buck-out/gen/app.aar");
+    Path aar = workspace.getPath("buck-out/gen/app.aar");
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -68,7 +67,7 @@ public class AndroidAarIntegrationTest {
     );
 
     Path contents = tmp.getRootPath().resolve("aar-contents");
-    Unzip.extractZipFile(aar.toPath(), contents, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
@@ -84,7 +83,7 @@ public class AndroidAarIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:app").assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.aar"));
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/app.aar"));
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
     zipInspector.assertFileExists("R.txt");
@@ -110,7 +109,7 @@ public class AndroidAarIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:app").assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.aar"));
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/app.aar"));
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
     zipInspector.assertFileExists("R.txt");
@@ -133,7 +132,7 @@ public class AndroidAarIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:app").assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(workspace.getFile("buck-out/gen/app.aar"));
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/app.aar"));
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
     zipInspector.assertFileExists("R.txt");

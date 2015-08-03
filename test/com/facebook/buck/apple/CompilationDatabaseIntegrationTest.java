@@ -35,7 +35,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,12 +70,12 @@ public class CompilationDatabaseIntegrationTest {
   @Test
   public void testCreateCompilationDatabaseForAppleLibraryWithNoDeps() throws IOException {
     // buck build the #compilation-database.
-    File compilationDatabase = workspace.buildAndReturnOutput(
+    Path compilationDatabase = workspace.buildAndReturnOutput(
         "//Libraries/EXExample:EXExample#compilation-database,iphonesimulator-x86_64");
     assertEquals(
         Paths.get("buck-out/gen/Libraries/EXExample/" +
             "__EXExample#compilation-database,iphonesimulator-x86_64.json"),
-        tmp.getRootPath().relativize(compilationDatabase.toPath()));
+        tmp.getRootPath().relativize(compilationDatabase));
 
     // Parse the compilation_database.json file.
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
@@ -121,12 +120,12 @@ public class CompilationDatabaseIntegrationTest {
   @Test
   public void testCreateCompilationDatabaseForAppleBinaryWithDeps() throws IOException {
     // buck build the #compilation-database.
-    File compilationDatabase = workspace.buildAndReturnOutput(
+    Path compilationDatabase = workspace.buildAndReturnOutput(
         "//Apps/Weather:Weather#iphonesimulator-x86_64,compilation-database");
     assertEquals(
         Paths.get("buck-out/gen/Apps/Weather/" +
             "__Weather#compilation-database,iphonesimulator-x86_64.json"),
-        tmp.getRootPath().relativize(compilationDatabase.toPath()));
+        tmp.getRootPath().relativize(compilationDatabase));
 
     // Parse the compilation_database.json file.
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =

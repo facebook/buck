@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +33,6 @@ import com.google.common.collect.ImmutableSet;
 import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -45,15 +45,15 @@ import java.util.zip.ZipFile;
 
 public class ProGuardObfuscateStepTest extends EasyMockSupport {
   @Rule
-  public final TemporaryFolder tmpDir = new TemporaryFolder();
+  public final TemporaryPaths tmpDir = new TemporaryPaths();
 
   @Test
   public void testCreateEmptyZip() throws Exception {
-    File tmpFile = tmpDir.newFile();
+    Path tmpFile = tmpDir.newFile();
     ProGuardObfuscateStep.createEmptyZip(tmpFile);
 
     // Try to read it.
-    try (ZipFile zipFile = new ZipFile(tmpFile)) {
+    try (ZipFile zipFile = new ZipFile(tmpFile.toFile())) {
       int totalSize = 0;
       List<? extends ZipEntry> entries = Collections.list(zipFile.entries());
 

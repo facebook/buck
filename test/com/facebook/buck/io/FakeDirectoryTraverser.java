@@ -18,8 +18,8 @@ package com.facebook.buck.io;
 
 import com.google.common.collect.ImmutableMap;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
@@ -32,13 +32,13 @@ import javax.annotation.Nullable;
 public class FakeDirectoryTraverser implements DirectoryTraverser {
 
   /**
-   * A (file, path) pair passed to {@link DirectoryTraversal#visit(File, String)}.
+   * A (file, path) pair passed to {@link DirectoryTraversal#visit(Path, String)}.
    */
   public static class Entry {
-    public final File file;
+    public final Path file;
     public final String path;
 
-    public Entry(@Nullable File file, String path) {
+    public Entry(@Nullable Path file, String path) {
       this.file = file;
       this.path = path;
     }
@@ -64,7 +64,7 @@ public class FakeDirectoryTraverser implements DirectoryTraverser {
 
   @Override
   public void traverse(DirectoryTraversal traversal) throws IOException {
-    String traversalRootPath = MorePaths.pathWithUnixSeparators(traversal.getRoot().toPath());
+    String traversalRootPath = MorePaths.pathWithUnixSeparators(traversal.getRoot());
     Collection<Entry> entries = pathsToEntries.get(traversalRootPath);
     if (entries == null) {
       throw new RuntimeException("Unexpected: no traversal for root path: " + traversalRootPath);

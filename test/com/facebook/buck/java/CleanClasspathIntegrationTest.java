@@ -22,15 +22,15 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Integration test to verify that when a {@code java_library} rule is built, the classpath that is
@@ -52,17 +52,17 @@ public class CleanClasspathIntegrationTest {
     processResult1.assertSuccess();
     assertTrue(
         "example.jar should be written. This should not be on the classpath on the next build.",
-        workspace.getFile("buck-out/gen/lib__example__output/example.jar").isFile());
+        Files.isRegularFile(workspace.getPath("buck-out/gen/lib__example__output/example.jar")));
 
     // Overwrite the existing BUCK file, redefining the java_library rule to exclude Bar.java from
     // its srcs.
-    File buildFile = workspace.getFile("BUCK");
+    Path buildFile = workspace.getPath("BUCK");
     String newBuildFileContents = Joiner.on('\n').join(
         "java_library(",
         "  name = 'example',",
         "  srcs = [ 'Foo.java' ], ",
         ")");
-    Files.write(newBuildFileContents, buildFile, Charsets.UTF_8);
+    Files.write(buildFile, newBuildFileContents.getBytes(StandardCharsets.UTF_8));
 
     // Rebuilding //:example should fail even though Bar.class is in
     // buck-out/gen/lib__example__output/example.jar.

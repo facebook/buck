@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.FakePropertyFinder;
 import com.facebook.buck.util.PropertyFinder;
 import com.google.common.base.Optional;
@@ -30,15 +31,13 @@ import com.google.common.collect.ImmutableMap;
 import org.easymock.EasyMockSupport;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
   @Rule
-  public TemporaryFolder tmpDir = new TemporaryFolder();
+  public TemporaryPaths tmpDir = new TemporaryPaths();
 
   @Test
   public void testFindAndroidNdkDirEmpty() {
@@ -49,7 +48,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             propertyFinder);
 
@@ -58,59 +57,59 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
 
   @Test
   public void testFindAndroidNdkDir() throws IOException {
-    File ndkDir = tmpDir.newFolder("ndk-dir");
-    File releaseFile = tmpDir.newFile("ndk-dir/RELEASE.TXT");
+    Path ndkDir = tmpDir.newFolder("ndk-dir");
+    Path releaseFile = tmpDir.newFile("ndk-dir/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9d (64-bit)"), releaseFile);
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir.toPath()),
+            "ndk.dir", Optional.of(ndkDir),
             "ndk.repository", Optional.<Path>absent()));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.of("r9d"),
             propertyFinder);
 
-    assertEquals(Optional.of(ndkDir.toPath()),
+    assertEquals(Optional.of(ndkDir),
         androidDirectoryResolver.findAndroidNdkDir());
   }
 
 
   @Test
   public void testFindAndroidNdkDirAbsent() throws IOException {
-    File ndkDir = tmpDir.newFolder("ndk-dir");
-    File releaseFile = tmpDir.newFile("ndk-dir/RELEASE.TXT");
+    Path ndkDir = tmpDir.newFolder("ndk-dir");
+    Path releaseFile = tmpDir.newFile("ndk-dir/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9e"), releaseFile);
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir.toPath()),
+            "ndk.dir", Optional.of(ndkDir),
             "ndk.repository", Optional.<Path>absent()));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             propertyFinder);
 
-    assertEquals(Optional.of(ndkDir.toPath()),
+    assertEquals(Optional.of(ndkDir),
         androidDirectoryResolver.findAndroidNdkDir());
   }
 
   @Test
   public void testFindAndroidNdkDirThrowOnFailedRead() throws IOException {
-    File ndkDir = tmpDir.newFolder("ndk-dir");
+    Path ndkDir = tmpDir.newFolder("ndk-dir");
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir.toPath()),
+            "ndk.dir", Optional.of(ndkDir),
             "ndk.repository", Optional.<Path>absent()));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             propertyFinder);
 
@@ -118,25 +117,25 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
       androidDirectoryResolver.findAndroidNdkDir();
       fail("Should have thrown an exception for malformed NDK directory.");
     } catch (Exception e) {
-      assertEquals("Failed to read NDK version from " + ndkDir.getAbsolutePath(),
+      assertEquals("Failed to read NDK version from " + ndkDir.toAbsolutePath(),
           e.getMessage());
     }
   }
 
   @Test
   public void testFindAndroidNdkDirThrowOnUsupportedVersion() throws IOException {
-    File ndkDir = tmpDir.newFolder("ndk-dir");
-    File releaseFile = tmpDir.newFile("ndk-dir/RELEASE.TXT");
+    Path ndkDir = tmpDir.newFolder("ndk-dir");
+    Path releaseFile = tmpDir.newFile("ndk-dir/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9q"), releaseFile);
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
-            "ndk.dir", Optional.of(ndkDir.toPath()),
+            "ndk.dir", Optional.of(ndkDir),
             "ndk.repository", Optional.<Path>absent()));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.of("r9e"),
             propertyFinder);
 
@@ -155,17 +154,17 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     tmpDir.newFolder("ndk-dir-r9a");
     tmpDir.newFolder("ndk-dir-r9b");
     tmpDir.newFolder("ndk-dir-r9c");
-    File releaseFile = tmpDir.newFile("ndk-dir-r9c/RELEASE.TXT");
+    Path releaseFile = tmpDir.newFile("ndk-dir-r9c/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), releaseFile);
 
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
             "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot().toPath())));
+            "ndk.repository", Optional.of(tmpDir.getRoot())));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.of("r9e"),
             propertyFinder);
 
@@ -173,7 +172,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
       androidDirectoryResolver.findAndroidNdkDir();
       fail("Should have thrown an exception for malformed NDK directory.");
     } catch (Exception e) {
-      assertEquals("Couldn't find a valid NDK under " + tmpDir.getRoot().getAbsolutePath(),
+      assertEquals("Couldn't find a valid NDK under " + tmpDir.getRoot().toAbsolutePath(),
           e.getMessage());
     }
   }
@@ -183,7 +182,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     tmpDir.newFolder("ndk-dir-r9a");
     tmpDir.newFolder("ndk-dir-r9b");
     tmpDir.newFolder("ndk-dir-r9c");
-    File releaseFile = tmpDir.newFile("ndk-dir-r9a/RELEASE.TXT");
+    Path releaseFile = tmpDir.newFile("ndk-dir-r9a/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9a"), releaseFile);
     releaseFile = tmpDir.newFile("ndk-dir-r9b/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9b (64-bit)"), releaseFile);
@@ -193,15 +192,15 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
             "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot().toPath())));
+            "ndk.repository", Optional.of(tmpDir.getRoot())));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.<String>absent(),
             propertyFinder);
 
-    assertEquals(Optional.of(releaseFile.toPath().getParent()),
+    assertEquals(Optional.of(releaseFile.getParent()),
         androidDirectoryResolver.findAndroidNdkDir());
   }
 
@@ -209,7 +208,7 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
   public void notEqualWhenNdkIsDifferent() throws IOException {
     tmpDir.newFolder("ndk-dir-r9a");
     tmpDir.newFolder("ndk-dir-r9b");
-    File releaseFile = tmpDir.newFile("ndk-dir-r9a/RELEASE.TXT");
+    Path releaseFile = tmpDir.newFile("ndk-dir-r9a/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9a"), releaseFile);
     releaseFile = tmpDir.newFile("ndk-dir-r9b/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9b"), releaseFile);
@@ -217,16 +216,16 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
             "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot().toPath())));
+            "ndk.repository", Optional.of(tmpDir.getRoot())));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver1 =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.of("r9a"),
             propertyFinder);
     DefaultAndroidDirectoryResolver androidDirectoryResolver2 =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.of("r9b"),
             propertyFinder);
 
@@ -236,9 +235,9 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
   @Test
   public void testFindAndroidNdkDirScanTakesVersion() throws IOException {
     tmpDir.newFolder("ndk-dir-r9a");
-    Path expectedPath = tmpDir.newFolder("ndk-dir-r9b").toPath();
+    Path expectedPath = tmpDir.newFolder("ndk-dir-r9b");
     tmpDir.newFolder("ndk-dir-r9c");
-    File releaseFile = tmpDir.newFile("ndk-dir-r9a/RELEASE.TXT");
+    Path releaseFile = tmpDir.newFile("ndk-dir-r9a/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9a"), releaseFile);
     releaseFile = tmpDir.newFile("ndk-dir-r9b/RELEASE.TXT");
     MoreFiles.writeLinesToFile(ImmutableList.of("r9b"), releaseFile);
@@ -248,11 +247,11 @@ public class DefaultAndroidDirectoryResolverTest extends EasyMockSupport {
     PropertyFinder propertyFinder = new FakePropertyFinder(
         ImmutableMap.of(
             "ndk.dir", Optional.<Path>absent(),
-            "ndk.repository", Optional.of(tmpDir.getRoot().toPath())));
+            "ndk.repository", Optional.of(tmpDir.getRoot())));
 
     DefaultAndroidDirectoryResolver androidDirectoryResolver =
         new DefaultAndroidDirectoryResolver(
-            new ProjectFilesystem(tmpDir.getRoot().toPath()),
+            new ProjectFilesystem(tmpDir.getRoot()),
             Optional.of("r9b"),
             propertyFinder);
 

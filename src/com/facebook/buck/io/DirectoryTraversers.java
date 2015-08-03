@@ -18,7 +18,6 @@ package com.facebook.buck.io;
 
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,16 +37,15 @@ public class DirectoryTraversers {
    * relative to the project root.
    * @param pathToDirectory path to directory to traverse. The directory may not contain symlinks to
    *     other directories.
-   * @param traverser
    * @return a set of all files in paths, sorted alphabetically
    */
   public ImmutableSortedSet<Path> findFiles(final String pathToDirectory,
       DirectoryTraverser traverser) throws IOException {
     final ImmutableSortedSet.Builder<Path> allFiles = ImmutableSortedSet.naturalOrder();
 
-    traverser.traverse(new DirectoryTraversal(new File(pathToDirectory)) {
+    traverser.traverse(new DirectoryTraversal(Paths.get(pathToDirectory)) {
       @Override
-      public void visit(File file, String relativePath) {
+      public void visit(Path file, String relativePath) {
         allFiles.add(Paths.get(pathToDirectory, relativePath));
       }
     });

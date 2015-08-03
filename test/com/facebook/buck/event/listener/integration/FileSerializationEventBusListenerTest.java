@@ -27,10 +27,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 public class FileSerializationEventBusListenerTest {
@@ -44,16 +44,16 @@ public class FileSerializationEventBusListenerTest {
         this, "simple_project", temporaryFolder);
     workspace.setUp();
 
-    File eventsOutputFile = workspace.getFile("events.json");
+    Path eventsOutputFile = workspace.getPath("events.json");
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "test",
         "--all",
         "--output-test-events-to-file",
-        eventsOutputFile.getAbsolutePath());
+        eventsOutputFile.toAbsolutePath().toString());
     result.assertSuccess();
 
-    List<String> lines = Files.readAllLines(eventsOutputFile.toPath(), StandardCharsets.UTF_8);
+    List<String> lines = Files.readAllLines(eventsOutputFile, StandardCharsets.UTF_8);
     assertFalse(
         "The events output file should not be empty",
         lines.isEmpty());

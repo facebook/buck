@@ -33,6 +33,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Verifies that {@code buck build --keep-going} works as intended.
@@ -72,8 +74,8 @@ public class BuildKeepGoingIntegrationTest {
         "OK   //:rule_with_output BUILT_LOCALLY " + pathToOutputFile + "\n" +
         "FAIL //:failing_rule\n";
     assertThat(result.getStderr(), containsString(expectedReport));
-    File outputFile = workspace.getFile(pathToOutputFile);
-    assertTrue(outputFile.exists());
+    Path outputFile = workspace.getPath(pathToOutputFile);
+    assertTrue(Files.exists(outputFile));
   }
 
   @Test

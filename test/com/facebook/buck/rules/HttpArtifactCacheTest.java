@@ -46,10 +46,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -105,14 +106,14 @@ public class HttpArtifactCacheTest {
     CacheResult result =
         cache.fetch(
             new RuleKey("00000000000000000000000000000000"),
-            new File("output/file"));
+            Paths.get("output/file"));
     assertEquals(result.getType(), CacheResult.Type.MISS);
     cache.close();
   }
 
   @Test
   public void testFetchOK() throws Exception {
-    File output = new File("output/file");
+    Path output = Paths.get("output/file");
     final String data = "test";
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -143,7 +144,7 @@ public class HttpArtifactCacheTest {
         };
     CacheResult result = cache.fetch(ruleKey, output);
     assertEquals(result.cacheError().or(""), CacheResult.Type.HIT, result.getType());
-    assertEquals(Optional.of(data), filesystem.readFileIfItExists(output.toPath()));
+    assertEquals(Optional.of(data), filesystem.readFileIfItExists(output));
     cache.close();
   }
 
@@ -177,7 +178,7 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    cache.fetch(ruleKey, new File("output/file"));
+    cache.fetch(ruleKey, Paths.get("output/file"));
     cache.close();
   }
 
@@ -210,10 +211,10 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    File output = new File("output/file");
+    Path output = Paths.get("output/file");
     CacheResult result = cache.fetch(ruleKey, output);
     assertEquals(CacheResult.Type.ERROR, result.getType());
-    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
+    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     cache.close();
   }
 
@@ -246,10 +247,10 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    File output = new File("output/file");
+    Path output = Paths.get("output/file");
     CacheResult result = cache.fetch(ruleKey, output);
     assertEquals(CacheResult.Type.ERROR, result.getType());
-    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
+    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     cache.close();
   }
 
@@ -271,10 +272,10 @@ public class HttpArtifactCacheTest {
             throw new IOException();
           }
         };
-    File output = new File("output/file");
+    Path output = Paths.get("output/file");
     CacheResult result = cache.fetch(new RuleKey("00000000000000000000000000000000"), output);
     assertEquals(CacheResult.Type.ERROR, result.getType());
-    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
+    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     cache.close();
   }
 
@@ -283,8 +284,8 @@ public class HttpArtifactCacheTest {
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final String data = "data";
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    File output = new File("output/file");
-    filesystem.writeContentsToPath(data, output.toPath());
+    Path output = Paths.get("output/file");
+    filesystem.writeContentsToPath(data, output);
     final AtomicBoolean hasCalled = new AtomicBoolean(false);
     HttpArtifactCache cache =
         new HttpArtifactCache(
@@ -337,8 +338,8 @@ public class HttpArtifactCacheTest {
   @Test(expected = IOException.class)
   public void testStoreIOException() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    File output = new File("output/file");
-    filesystem.writeContentsToPath("data", output.toPath());
+    Path output = Paths.get("output/file");
+    filesystem.writeContentsToPath("data", output);
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
@@ -367,8 +368,8 @@ public class HttpArtifactCacheTest {
     final RuleKey ruleKey2 = new RuleKey("11111111111111111111111111111111");
     final String data = "data";
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    File output = new File("output/file");
-    filesystem.writeContentsToPath(data, output.toPath());
+    Path output = Paths.get("output/file");
+    filesystem.writeContentsToPath(data, output);
     final Set<RuleKey> stored = Sets.newHashSet();
     HttpArtifactCache cache =
         new HttpArtifactCache(
@@ -436,16 +437,16 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    File output = new File("output/file");
+    Path output = Paths.get("output/file");
     CacheResult result = cache.fetch(ruleKey, output);
     assertEquals(CacheResult.Type.ERROR, result.getType());
-    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output.toPath()));
+    assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     cache.close();
   }
 
   @Test
   public void testFetchMetadata() throws Exception {
-    File output = new File("output/file");
+    Path output = Paths.get("output/file");
     final String data = "test";
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final ImmutableMap<String, String> metadata = ImmutableMap.of("some", "metadata");

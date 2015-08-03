@@ -28,8 +28,8 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class GwtBinaryIntegrationTest {
 
@@ -50,7 +50,7 @@ public class GwtBinaryIntegrationTest {
 
     result.assertSuccess();
 
-    File zip = workspace.buildAndReturnOutput("//:binary");
+    Path zip = workspace.buildAndReturnOutput("//:binary");
     ZipInspector inspector = new ZipInspector(zip);
     inspector.assertFileExists("a/a.devmode.js");
     inspector.assertFileExists("a/a.nocache.js");

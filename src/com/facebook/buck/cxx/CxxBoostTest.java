@@ -194,7 +194,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
     }
 
     // Parse the XML result file for the actual test result summaries.
-    Document doc = XmlDomParser.parse(results.toFile());
+    Document doc = XmlDomParser.parse(results);
     Node testResult = doc.getElementsByTagName("TestResult").item(0);
     Node testSuite = testResult.getFirstChild();
     visitTestSuite(summariesBuilder, messages, stdout, times, "", testSuite);

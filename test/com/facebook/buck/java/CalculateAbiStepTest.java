@@ -74,7 +74,7 @@ public class CalculateAbiStepTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(outDir);
 
     Path binJar = outDir.resolve("bad.jar");
-    try (Zip zip = new Zip(binJar.toFile(), true)){
+    try (Zip zip = new Zip(binJar, true)){
       zip.add("Broken.class", "cafebabe bacon and cheese".getBytes(UTF_8));
     }
     String expectedHash = filesystem.computeSha1(binJar);

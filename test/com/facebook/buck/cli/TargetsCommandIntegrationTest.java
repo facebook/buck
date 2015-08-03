@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -27,16 +28,15 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 public class TargetsCommandIntegrationTest {
@@ -236,7 +236,7 @@ public class TargetsCommandIntegrationTest {
         result.getStdout());
 
     String fileName = "test/Test.m";
-    Files.write("// This is not a test\n".getBytes(Charsets.UTF_8), workspace.getFile(fileName));
+    Files.write(workspace.getPath(fileName), "// This is not a test\n".getBytes(UTF_8));
     ProcessResult result2 = workspace.runBuckCommand(
         "targets",
         "--show-target-hash",
@@ -267,7 +267,7 @@ public class TargetsCommandIntegrationTest {
         result.getStdout());
 
     String fileName = "test/Test.m";
-    workspace.getFile(fileName).delete();
+    Files.delete(workspace.getPath(fileName));
     ProcessResult result2 = workspace.runBuckCommand(
         "targets",
         "--show-target-hash",
@@ -330,7 +330,7 @@ public class TargetsCommandIntegrationTest {
     workspace.setUp();
 
     String pathToNonExistentFile = "modules/dep1/dep2/hello.txt";
-    assertFalse(workspace.getFile(pathToNonExistentFile).exists());
+    assertFalse(Files.exists(workspace.getPath(pathToNonExistentFile)));
     ProcessResult result = workspace.runBuckCommand(
         "targets",
         "--referenced-file",

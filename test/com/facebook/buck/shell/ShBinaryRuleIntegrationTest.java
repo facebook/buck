@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -31,15 +32,14 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 public class ShBinaryRuleIntegrationTest {
@@ -59,8 +59,8 @@ public class ShBinaryRuleIntegrationTest {
     buildResult.assertSuccess();
 
     // Verify contents of example_out.txt
-    File outputFile = workspace.getFile("buck-out/gen/example_out.txt");
-    String output = Files.toString(outputFile, Charsets.US_ASCII);
+    Path outputFile = workspace.getPath("buck-out/gen/example_out.txt");
+    String output = new String(Files.readAllBytes(outputFile), US_ASCII);
     assertEquals("arg1\narg2\n", output);
   }
 
@@ -78,13 +78,13 @@ public class ShBinaryRuleIntegrationTest {
 
     // Make sure the sh_binary output is executable to begin with.
     String outputPath = "buck-out/gen/__example_sh__/example_sh.sh";
-    File output = workspace.getFile(outputPath);
-    assertTrue("Output file should be written to '" + outputPath + "'.", output.exists());
-    assertTrue("Output file must be executable.", output.canExecute());
+    Path output = workspace.getPath(outputPath);
+    assertTrue("Output file should be written to '" + outputPath + "'.", Files.exists(output));
+    assertTrue("Output file must be executable.", Files.isExecutable(output));
 
     // Now delete the buck-out directory (but not buck-cache).
-    File buckOutDir = workspace.getFile("buck-out");
-    MoreFiles.deleteRecursivelyIfExists(buckOutDir.toPath());
+    Path buckOutDir = workspace.getPath("buck-out");
+    MoreFiles.deleteRecursivelyIfExists(buckOutDir);
 
     // Now run the genrule that depends on the sh_binary above. This will force buck to fetch the
     // sh_binary output from cache. If the executable flag is lost somewhere along the way, this
@@ -93,8 +93,10 @@ public class ShBinaryRuleIntegrationTest {
     buildResult.assertSuccess("Build failed when rerunning sh_binary from cache.");
 
     // In addition to running the build, explicitly check that the output file is still executable.
-    assertTrue("Output file must be retrieved from cache at '" + outputPath + ".", output.exists());
-    assertTrue("Output file retrieved from cache must be executable.", output.canExecute());
+    assertTrue(
+        "Output file must be retrieved from cache at '" + outputPath + ".",
+        Files.exists(output));
+    assertTrue("Output file retrieved from cache must be executable.", Files.isExecutable(output));
   }
 
   @Test
@@ -109,8 +111,8 @@ public class ShBinaryRuleIntegrationTest {
     buildResult.assertSuccess();
 
     // Verify contents of output.txt
-    File outputFile = workspace.getFile("buck-out/gen/app/output.txt");
-    List<String> lines = Files.readLines(outputFile, Charsets.US_ASCII);
+    Path outputFile = workspace.getPath("buck-out/gen/app/output.txt");
+    List<String> lines = Files.readAllLines(outputFile, US_ASCII);
     ExecutionEnvironment executionEnvironment =
         new DefaultExecutionEnvironment(
             new FakeProcessExecutor(),

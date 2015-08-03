@@ -20,21 +20,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 /**
@@ -43,10 +43,10 @@ import java.util.Properties;
 public class QuickstartIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder quickstartDirectory = new DebuggableTemporaryFolder();
+  public TemporaryPaths quickstartDirectory = new TemporaryPaths();
 
   @Rule
-  public DebuggableTemporaryFolder destDir = new DebuggableTemporaryFolder();
+  public TemporaryPaths destDir = new TemporaryPaths();
 
   /**
    * Test that project is created when it is given various parameters.
@@ -61,7 +61,7 @@ public class QuickstartIntegrationTest {
     ProcessResult result = quickstartWorkspace.runBuckCommand(
         "quickstart",
         "--dest-dir",
-        destDir.getRoot().getAbsolutePath()).assertSuccess();
+        destDir.getRoot().toAbsolutePath().toString()).assertSuccess();
 
     ProjectWorkspace destinationWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -70,17 +70,19 @@ public class QuickstartIntegrationTest {
     destinationWorkspace.setUp();
     destinationWorkspace.verify(); // Verifies the project was generated as expected.
 
-    File readme = new File(destDir.getRoot(), "README.md");
-    assertTrue("`buck quickstart` should create a README file.", readme.isFile());
+    Path readme = destDir.getRoot().resolve("README.md");
+    assertTrue("`buck quickstart` should create a README file.", Files.isRegularFile(readme));
     assertEquals(
         "`buck quickstart` should output the contents of the README file to standard output.",
-        Files.toString(readme, StandardCharsets.UTF_8),
+        new String(Files.readAllBytes(readme), StandardCharsets.UTF_8),
         result.getStdout());
 
-    File localProp = new File(destDir.getRoot(), "local.properties");
+    Path localProp = destDir.getRoot().resolve("local.properties");
     Properties prop = new Properties();
-    prop.load(new FileInputStream(localProp));
-    assertTrue("`buck quickstart` should create a local.properties file.", localProp.isFile());
+    prop.load(Files.newInputStream(localProp));
+    assertTrue(
+        "`buck quickstart` should create a local.properties file.",
+        Files.isRegularFile(localProp));
     String androidSdk = prop.getProperty("sdk.dir");
     assertTrue(
         "`buck quickstart` should put the Android SDK in the local.properties file.",
@@ -104,7 +106,7 @@ public class QuickstartIntegrationTest {
 
     destinationWorkspace.runBuckCommand("build", "app").assertSuccess();
 
-    File buckOut = destinationWorkspace.getFile("buck-out");
-    assertTrue("`buck build` should create a buck-out directory.", buckOut.isDirectory());
+    Path buckOut = destinationWorkspace.getPath("buck-out");
+    assertTrue("`buck build` should create a buck-out directory.", Files.isDirectory(buckOut));
   }
 }

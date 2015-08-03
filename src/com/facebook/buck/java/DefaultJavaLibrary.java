@@ -153,7 +153,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
       ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
       try {
-        Path classPath = filesystem.getFileForRelativePath(relativeClassPath).toPath();
+        Path classPath = filesystem.getPathForRelativePath(relativeClassPath);
         ClassLoader loader = URLClassLoader.newInstance(
             new URL[]{classPath.toUri().toURL()},
           /* parent */ null);

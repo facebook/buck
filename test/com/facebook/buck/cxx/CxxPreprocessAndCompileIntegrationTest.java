@@ -16,12 +16,14 @@
 
 package com.facebook.buck.cxx;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleSuccessType;
@@ -296,10 +298,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void parentDirectoryReferenceInSource() throws IOException {
-    Files.append(
+    MorePaths.append(
+        workspace.getPath(".buckconfig"),
         "\n[project]\n  check_package_boundary = false\n",
-        workspace.getFile(".buckconfig"),
-        Charsets.UTF_8);
+        UTF_8);
     workspace.runBuckBuild("//parent_dir_ref:simple#default,static").assertSuccess();
   }
 

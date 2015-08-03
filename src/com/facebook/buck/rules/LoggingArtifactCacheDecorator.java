@@ -19,8 +19,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
@@ -36,7 +36,7 @@ public class LoggingArtifactCacheDecorator {
   public final ArtifactCache decorate(final ArtifactCache delegate) {
     return new ArtifactCache() {
       @Override
-      public CacheResult fetch(RuleKey ruleKey, File output)
+      public CacheResult fetch(RuleKey ruleKey, Path output)
           throws InterruptedException {
         ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
             ArtifactCacheEvent.Operation.FETCH,
@@ -53,7 +53,7 @@ public class LoggingArtifactCacheDecorator {
       public void store(
           ImmutableSet<RuleKey> ruleKeys,
           ImmutableMap<String, String> metadata,
-          File output)
+          Path output)
           throws InterruptedException {
         ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
             ArtifactCacheEvent.Operation.STORE,

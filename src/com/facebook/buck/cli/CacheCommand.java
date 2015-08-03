@@ -21,12 +21,12 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
 import org.kohsuke.args4j.Argument;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -62,12 +62,12 @@ public class CacheCommand extends AbstractCommand {
 
     ArtifactCache cache = getArtifactCache(params);
 
-    File tmpDir = Files.createTempDir();
+    Path tmpDir = Files.createTempDirectory("buck-cache-command");
     int exitCode = 0;
     for (String arg : arguments) {
       // Do the fetch.
       RuleKey ruleKey = new RuleKey(arg);
-      File artifact = new File(tmpDir, arg);
+      Path artifact = tmpDir.resolve(arg);
       CacheResult success = cache.fetch(ruleKey, artifact);
 
       // Display the result.

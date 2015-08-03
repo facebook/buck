@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -36,7 +36,6 @@ import com.google.common.io.CharStreams;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -55,7 +54,7 @@ import java.util.List;
 public class FakeProjectFilesystemTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testFilesystemReturnsAddedContents() throws IOException {
@@ -403,7 +402,7 @@ public class FakeProjectFilesystemTest {
     filesystem.mkdirs(dir);
     filesystem.writeBytesToPath(contents, dir.resolve("file"));
 
-    File output = tmp.newFile("output.zip");
+    Path output = tmp.newFile("output.zip");
     filesystem.createZip(ImmutableList.of(file, dir, dir.resolve("file")), output);
 
     try (Zip zip = new Zip(output, /* forWriting */ false)) {

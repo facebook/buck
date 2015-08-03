@@ -31,14 +31,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.Map;
@@ -73,13 +71,13 @@ public class JarDirectoryStepHelper {
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
     try (CustomZipOutputStream outputFile = ZipOutputStreams.newOutputStream(
-        filesystem.getFileForRelativePath(pathToOutputFile), APPEND_TO_ZIP)) {
+        filesystem.getPathForRelativePath(pathToOutputFile), APPEND_TO_ZIP)) {
 
       Set<String> alreadyAddedEntries = Sets.newHashSet();
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       for (Path entry : entriesToJar) {
-        File file = projectFilesystem.getFileForRelativePath(entry);
-        if (file.isFile()) {
+        Path file = projectFilesystem.getPathForRelativePath(entry);
+        if (Files.isRegularFile(file)) {
           // Assume the file is a ZIP/JAR file.
           copyZipEntriesToJar(file,
               outputFile,
@@ -87,7 +85,7 @@ public class JarDirectoryStepHelper {
               alreadyAddedEntries,
               context.getBuckEventBus(),
               blacklist);
-        } else if (file.isDirectory()) {
+        } else if (Files.isDirectory(file)) {
           addFilesInDirectoryToJar(
               file,
               outputFile,
@@ -101,8 +99,8 @@ public class JarDirectoryStepHelper {
       // Read the user supplied manifest file, allowing it to overwrite existing entries in the
       // uber manifest we've built.
       if (manifestFile != null) {
-        try (FileInputStream manifestStream = new FileInputStream(
-            filesystem.getFileForRelativePath(manifestFile))) {
+        try (InputStream manifestStream = Files.newInputStream(
+            filesystem.getPathForRelativePath(manifestFile))) {
           Manifest userSupplied = new Manifest(manifestStream);
 
           // In the common case, we want to use the merged manifests. In the uncommon case, we just
@@ -157,13 +155,14 @@ public class JarDirectoryStepHelper {
    * @param manifest that should get a copy of (@code jar}'s manifest entries.
    * @param alreadyAddedEntries is used to avoid duplicate entries.
    */
-  private static void copyZipEntriesToJar(File file,
+  private static void copyZipEntriesToJar(
+      Path file,
       final CustomZipOutputStream jar,
       Manifest manifest,
       Set<String> alreadyAddedEntries,
       BuckEventBus eventBus,
       Iterable<Pattern> blacklist) throws IOException {
-    try (ZipFile zip = new ZipFile(file)) {
+    try (ZipFile zip = new ZipFile(file.toFile())) {
       zipEntryLoop:
       for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
         ZipEntry entry = entries.nextElement();
@@ -239,19 +238,20 @@ public class JarDirectoryStepHelper {
    * @param directory that must not contain symlinks with loops.
    * @param jar is the file being written.
    */
-  private static void addFilesInDirectoryToJar(File directory,
+  private static void addFilesInDirectoryToJar(
+      Path directory,
       CustomZipOutputStream jar,
       final Set<String> alreadyAddedEntries,
       final BuckEventBus eventBus) throws IOException {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
-    final Map<String, Pair<JarEntry, Optional<File>>> entries = Maps.newTreeMap();
+    final Map<String, Pair<JarEntry, Optional<Path>>> entries = Maps.newTreeMap();
 
     new DirectoryTraversal(directory) {
 
       @Override
-      public void visit(File file, String relativePath) {
+      public void visit(Path file, String relativePath) {
         JarEntry entry = new JarEntry(relativePath.replace('\\', '/'));
         String entryName = entry.getName();
         entry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
@@ -271,7 +271,7 @@ public class JarDirectoryStepHelper {
       }
 
       @Override
-      public void visitDirectory(File directory, String relativePath) throws IOException {
+      public void visitDirectory(Path directory, String relativePath) throws IOException {
         if (relativePath.isEmpty()) {
           // root of the tree. Skip.
           return;
@@ -282,12 +282,12 @@ public class JarDirectoryStepHelper {
         }
         JarEntry entry = new JarEntry(entryName);
         entry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
-        entries.put(entry.getName(), new Pair<>(entry, Optional.<File>absent()));
+        entries.put(entry.getName(), new Pair<>(entry, Optional.<Path>absent()));
       }
     }.traverse();
 
     // Write the entries out using the iteration order of the tree map above.
-    for (Pair<JarEntry, Optional<File>> entry : entries.values()) {
+    for (Pair<JarEntry, Optional<Path>> entry : entries.values()) {
       jar.putNextEntry(entry.getFirst());
       if (entry.getSecond().isPresent()) {
         Files.copy(entry.getSecond().get(), jar);

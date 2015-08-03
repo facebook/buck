@@ -164,7 +164,7 @@ public class Unzip {
           Set<PosixFilePermission> permissions =
               MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
           if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
-            MoreFiles.makeExecutable(filesystem.resolve(target).toFile());
+            MoreFiles.makeExecutable(filesystem.resolve(target));
           }
 
         }

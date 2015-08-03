@@ -22,8 +22,9 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 /**
@@ -84,8 +85,8 @@ public class CanaryFactory {
   private static FileLike getCanaryClass(final String relativePath, final byte[] canaryClass) {
     return new AbstractFileLike() {
       @Override
-      public File getContainer() {
-        return new File(":memory:");
+      public Path getContainer() {
+        return Paths.get(":memory:");
       }
 
       @Override

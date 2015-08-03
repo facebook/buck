@@ -22,19 +22,19 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class CachedTestRunReportingIntegrationTest {
 
-  private static final Charset CHARSET_FOR_TEST = Charsets.UTF_8;
+  private static final Charset CHARSET_FOR_TEST = StandardCharsets.UTF_8;
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -60,11 +60,11 @@ public class CachedTestRunReportingIntegrationTest {
         isTestRunCached(workspace, true));
 
     // Make the test fail.
-    File testFile = workspace.getFile("LameTest.java");
-    String originalJavaCode = Files.toString(testFile, CHARSET_FOR_TEST);
+    Path testFile = workspace.getPath("LameTest.java");
+    String originalJavaCode = new String(Files.readAllBytes(testFile), CHARSET_FOR_TEST);
     String failingJavaCode = originalJavaCode.replace("String str = \"I am not null.\";",
         "String str = null;");
-    Files.write(failingJavaCode, testFile, CHARSET_FOR_TEST);
+    Files.write(testFile, failingJavaCode.getBytes(CHARSET_FOR_TEST));
 
     // No caching for this run.
     assertFalse(

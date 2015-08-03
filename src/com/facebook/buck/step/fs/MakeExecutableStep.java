@@ -32,7 +32,7 @@ public class MakeExecutableStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws IOException, InterruptedException {
-    MoreFiles.makeExecutable(context.getProjectFilesystem().resolve(file).toFile());
+    MoreFiles.makeExecutable(context.getProjectFilesystem().resolve(file));
     return 0;
   }
 

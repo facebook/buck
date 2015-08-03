@@ -32,9 +32,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -126,7 +126,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     try {
       ObjectMapper mapper = new ObjectMapper();
       ProjectFilesystem filesystem = context.getProjectFilesystem();
-      mapper.writeValue(filesystem.getFileForRelativePath(outputPath), nativeStrings);
+      mapper.writeValue(filesystem.getPathForRelativePath(outputPath).toFile(), nativeStrings);
     } catch (IOException ex) {
       context.logError(
           ex, "Failed when trying to save the output file: '%s'", outputPath.toString());
@@ -143,8 +143,8 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
 
     for (Path resDir : resDirectories) {
       Path stringsPath = resDir.resolve("values").resolve("strings.xml");
-      File stringsFile = filesystem.getFileForRelativePath(stringsPath);
-      if (stringsFile.exists()) {
+      Path stringsFile = filesystem.getPathForRelativePath(stringsPath);
+      if (Files.exists(stringsFile)) {
         try {
           Document dom = XmlDomParser.parse(stringsFile);
 

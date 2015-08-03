@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -41,8 +40,8 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
@@ -86,7 +85,7 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "//apps/sample:app");
     result.assertSuccess();
 
-    File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app"));
+    Path apkFile = workspace.getPath(String.format(APK_PATH_FORMAT, "app"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -106,7 +105,7 @@ public class AndroidResourceFilterIntegrationTest {
         workspace.runBuckCommand("build", "//apps/sample:app_mdpi");
     result.assertSuccess();
 
-    File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_mdpi"));
+    Path apkFile = workspace.getPath(String.format(APK_PATH_FORMAT, "app_mdpi"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -125,7 +124,7 @@ public class AndroidResourceFilterIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//apps/sample:app_mdpi");
     result.assertSuccess();
 
-    File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_mdpi"));
+    Path apkFile = workspace.getPath(String.format(APK_PATH_FORMAT, "app_mdpi"));
     String iconPath = isBuildToolsNew
         ? "res/drawable-mdpi-v4/app_icon.png"
         : "res/drawable-mdpi/app_icon.png";
@@ -142,7 +141,7 @@ public class AndroidResourceFilterIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/sample:app_mdpi");
 
-    apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_mdpi"));
+    apkFile = workspace.getPath(String.format(APK_PATH_FORMAT, "app_mdpi"));
     long secondImageCrc = new ZipInspector(apkFile).getCrc(iconPath);
 
     assertNotEquals(firstImageCrc, secondImageCrc);
@@ -154,7 +153,7 @@ public class AndroidResourceFilterIntegrationTest {
         workspace.runBuckCommand("build", "//apps/sample:app_hdpi_xhdpi");
     result.assertSuccess();
 
-    File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_hdpi_xhdpi"));
+    Path apkFile = workspace.getPath(String.format(APK_PATH_FORMAT, "app_hdpi_xhdpi"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     if (isBuildToolsNew) {
@@ -174,7 +173,7 @@ public class AndroidResourceFilterIntegrationTest {
         workspace.runBuckCommand("build", "//apps/sample:app_comp_str");
     result.assertSuccess();
 
-    File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_comp_str"));
+    Path apkFile = workspace.getPath(String.format(APK_PATH_FORMAT, "app_comp_str"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
@@ -186,8 +185,8 @@ public class AndroidResourceFilterIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     Sha1HashCode androidBinaryRuleKey = buildLog.getRuleKey("//apps/sample:app_comp_str");
-    File cachedFile = workspace.getFile("buck-cache/" + androidBinaryRuleKey.getHash());
-    assertTrue(cachedFile.delete());
+    Path cachedFile = workspace.getPath("buck-cache/" + androidBinaryRuleKey.getHash());
+    Files.delete(cachedFile);
 
     workspace.runBuckCommand("clean").assertSuccess();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
@@ -199,7 +198,7 @@ public class AndroidResourceFilterIntegrationTest {
         workspace.runBuckBuild("//apps/sample:app_comp_str_xhdpi");
     result.assertSuccess();
 
-    File apkFile = workspace.getFile(String.format(APK_PATH_FORMAT, "app_comp_str_xhdpi"));
+    Path apkFile = workspace.getPath(String.format(APK_PATH_FORMAT, "app_comp_str_xhdpi"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
@@ -221,7 +220,7 @@ public class AndroidResourceFilterIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
     String apkFilePath = String.format(APK_PATH_FORMAT, "app");
 
-    File apkFile = workspace.getFile(apkFilePath);
+    Path apkFile = workspace.getPath(apkFilePath);
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
     long firstCrc = zipInspector.getCrc("assets/asset_file.txt");
@@ -232,7 +231,7 @@ public class AndroidResourceFilterIntegrationTest {
         "Bye");
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
 
-    apkFile = workspace.getFile(apkFilePath);
+    apkFile = workspace.getPath(apkFilePath);
     zipInspector = new ZipInspector(apkFile);
 
     long secondCrc = zipInspector.getCrc("assets/asset_file.txt");
@@ -245,26 +244,26 @@ public class AndroidResourceFilterIntegrationTest {
       throws IOException, InterruptedException {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
     String apkFilePath = String.format(APK_PATH_FORMAT, "app");
-    File apkFile = workspace.getFile(apkFilePath);
+    Path apkFile = workspace.getPath(apkFilePath);
 
     int matchingLines = runAaptDumpResources(apkFile);
     assertEquals(2, matchingLines);
 
     workspace.runBuckBuild("//apps/sample:app_en").assertSuccess();
     apkFilePath = String.format(APK_PATH_FORMAT, "app_en");
-    apkFile = workspace.getFile(apkFilePath);
+    apkFile = workspace.getPath(apkFilePath);
 
     matchingLines = runAaptDumpResources(apkFile);
     assertEquals(1, matchingLines);
   }
 
-  private int runAaptDumpResources(File apkFile) throws IOException, InterruptedException {
+  private int runAaptDumpResources(Path apkFile) throws IOException, InterruptedException {
     final Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
     ProcessExecutor.Result result = workspace.runCommand(
         pathToAapt.toAbsolutePath().toString(),
         "dump",
         "resources",
-        apkFile.getAbsolutePath());
+        apkFile.toAbsolutePath().toString());
     assertEquals(0, result.getExitCode());
     return FluentIterable.from(
         Splitter.on('\n').split(result.getStdout().or(""))).filter(

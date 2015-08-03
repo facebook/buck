@@ -16,6 +16,7 @@
 
 package com.facebook.buck.test.cache;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -23,9 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.io.Files;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -33,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class TestCacheIntegrationTest {
 
@@ -72,7 +72,7 @@ public class TestCacheIntegrationTest {
     String newBuckProject = Joiner.on('\n').join(
         "[test]",
         "  use_cached_results = no");
-    Files.write(newBuckProject, workspace.getFile(".buckconfig"), Charsets.UTF_8);
+    Files.write(workspace.getPath(".buckconfig"), newBuckProject.getBytes(UTF_8));
 
     assertThat("First run should not be cached",
         run("test", "--all"), not(containsString("CACHED")));

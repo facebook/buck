@@ -357,11 +357,6 @@ public class CompileStringsStepTest extends EasyMockSupport {
     }
 
     @Override
-    public File getFileForRelativePath(Path path) {
-      return path.toFile();
-    }
-
-    @Override
     public List<String> readLines(Path path) throws IOException {
       Path fullPath = testdataDir.resolve(path);
       return Files.readLines(fullPath.toFile(), Charset.defaultCharset());

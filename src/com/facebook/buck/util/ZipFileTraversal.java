@@ -16,23 +16,23 @@
 
 package com.facebook.buck.util;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public abstract class ZipFileTraversal {
-  private final File file;
+  private final Path file;
 
-  public ZipFileTraversal(File file) {
+  public ZipFileTraversal(Path file) {
     this.file = file;
   }
 
   public abstract void visit(ZipFile zipFile, ZipEntry zipEntry) throws IOException;
 
   public final void traverse() throws IOException {
-    try (ZipFile zipFile = new ZipFile(file)) {
+    try (ZipFile zipFile = new ZipFile(file.toFile())) {
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
         ZipEntry entry = entries.nextElement();

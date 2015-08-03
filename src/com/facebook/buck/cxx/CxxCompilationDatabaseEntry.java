@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import static java.nio.charset.Charset.defaultCharset;
+
 import com.facebook.buck.util.Escaper;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
@@ -32,10 +34,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -103,11 +106,11 @@ public class CxxCompilationDatabaseEntry {
   }
 
   public static Map<String, CxxCompilationDatabaseEntry> parseCompilationDatabaseJsonFile(
-      File compilationDatabase) throws IOException {
+      Path compilationDatabase) throws IOException {
     Gson gson = new GsonBuilder()
         .registerTypeAdapter(ImmutableList.class, new ArgsJsonDeserializer())
         .create();
-    try (FileReader fileReader = new FileReader(compilationDatabase)) {
+    try (Reader fileReader = Files.newBufferedReader(compilationDatabase, defaultCharset())) {
       List<CxxCompilationDatabaseEntry> entries = gson
           .fromJson(
               fileReader, new TypeToken<List<CxxCompilationDatabaseEntry>>() {

@@ -32,8 +32,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class TestSelectorsIntegrationTest {
 
@@ -133,8 +133,8 @@ public class TestSelectorsIntegrationTest {
 
   @Test
   public void shouldFilterFromFile() throws IOException {
-    File testSelectorsFile = workspace.getFile("test-selectors.txt");
-    String arg = String.format("@%s", testSelectorsFile.getAbsolutePath());
+    Path testSelectorsFile = workspace.getPath("test-selectors.txt");
+    String arg = String.format("@%s", testSelectorsFile.toAbsolutePath().toString());
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "test", "--all", "--filter", arg);
     result.assertSuccess();

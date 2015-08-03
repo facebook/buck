@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,16 +25,15 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.WatchEvents;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.zip.ZipConstants;
-import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -42,15 +42,14 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -72,13 +71,13 @@ import java.util.zip.ZipInputStream;
 /** Unit test for {@link com.facebook.buck.io.ProjectFilesystem}. */
 public class ProjectFilesystemTest {
 
-  @Rule public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
 
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -95,41 +94,41 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testSetLastModifiedTime() throws IOException {
-    Path path = tmp.newFile("somefile").toPath();
+    Path path = tmp.newFile("somefile");
     filesystem.setLastModifiedTime(path, FileTime.fromMillis(0));
-    assertEquals(java.nio.file.Files.getLastModifiedTime(path).toMillis(), 0);
+    assertEquals(Files.getLastModifiedTime(path).toMillis(), 0);
   }
 
   @Test
   public void testIsDirectory() throws IOException {
-    File dir = tmp.newFolder("src");
-    File file = tmp.newFile("BUCK");
-    assertTrue(filesystem.isDirectory(Paths.get(dir.getName())));
-    assertFalse(filesystem.isDirectory(Paths.get(file.getName())));
+    Path dir = tmp.newFolder("src");
+    Path file = tmp.newFile("BUCK");
+    assertTrue(filesystem.isDirectory(dir));
+    assertFalse(filesystem.isDirectory(file));
   }
 
   @Test
   public void testMkdirsCanCreateNestedFolders() throws IOException {
     filesystem.mkdirs(new File("foo/bar/baz").toPath());
-    assertTrue(new File(tmp.getRoot(), "foo/bar/baz").isDirectory());
+    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo/bar/baz")));
   }
 
   @Test
   public void testCreateNewFile() throws IOException {
     Path path = Paths.get("somefile");
     filesystem.createNewFile(path);
-    assertTrue(Paths.get(tmp.getRoot().getAbsolutePath()).resolve(path).toFile().exists());
+    assertTrue(Files.exists(tmp.getRoot().toAbsolutePath().resolve(path)));
   }
 
   @Test
   public void testCreateParentDirs() throws IOException {
     Path pathRelativeToProjectRoot = Paths.get("foo/bar/baz.txt");
     filesystem.createParentDirs(pathRelativeToProjectRoot);
-    assertTrue(new File(tmp.getRoot(), "foo").isDirectory());
-    assertTrue(new File(tmp.getRoot(), "foo/bar").isDirectory());
+    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo")));
+    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo/bar")));
     assertFalse(
         "createParentDirs() should create directories, but not the leaf/file part of the path.",
-        new File(tmp.getRoot(), "foo/bar/baz.txt").exists());
+        Files.exists(tmp.getRoot().resolve("foo/bar/baz.txt")));
   }
 
   @Test(expected = NullPointerException.class)
@@ -149,23 +148,23 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testReadFirstLineWithEmptyFile() throws IOException {
-    File emptyFile = tmp.newFile("foo.txt");
-    Files.write(new byte[0], emptyFile);
-    assertTrue(emptyFile.isFile());
+    Path emptyFile = tmp.newFile("foo.txt");
+    Files.write(emptyFile, new byte[0]);
+    assertTrue(Files.isRegularFile(emptyFile));
     assertEquals(Optional.absent(), filesystem.readFirstLine("foo.txt"));
   }
 
   @Test
   public void testReadFirstLineFromMultiLineFile() throws IOException {
-    File multiLineFile = tmp.newFile("foo.txt");
-    Files.write("foo\nbar\nbaz\n", multiLineFile, Charsets.UTF_8);
+    Path multiLineFile = tmp.newFile("foo.txt");
+    Files.write(multiLineFile, "foo\nbar\nbaz\n".getBytes(UTF_8));
     assertEquals(Optional.of("foo"), filesystem.readFirstLine("foo.txt"));
   }
 
   @Test
   public void getReaderIfFileExists() throws IOException {
-    File file = tmp.newFile("foo.txt");
-    Files.write("fooooo\nbar\nbaz\n", file, Charsets.UTF_8);
+    Path file = tmp.newFile("foo.txt");
+    Files.write(file, "fooooo\nbar\nbaz\n".getBytes(UTF_8));
     assertEquals(
         "fooooo\nbar\nbaz\n",
         CharStreams.toString(filesystem.getReaderIfFileExists(Paths.get("foo.txt")).get()));
@@ -178,9 +177,9 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testGetFileSize() throws IOException {
-    File wordsFile = tmp.newFile("words.txt");
+    Path wordsFile = tmp.newFile("words.txt");
     String content = "Here\nare\nsome\nwords.\n";
-    Files.write(content, wordsFile, Charsets.UTF_8);
+    Files.write(wordsFile, content.getBytes(UTF_8));
 
     assertEquals(content.length(), filesystem.getFileSize(Paths.get("words.txt")));
   }
@@ -195,7 +194,7 @@ public class ProjectFilesystemTest {
     Iterable<String> lines = ImmutableList.of("foo", "bar", "baz");
     filesystem.writeLinesToPath(lines, Paths.get("lines.txt"));
 
-    String contents = Files.toString(new File(tmp.getRoot(), "lines.txt"), Charsets.UTF_8);
+    String contents = new String(Files.readAllBytes(tmp.getRoot().resolve("lines.txt")), UTF_8);
     assertEquals("foo\nbar\nbaz\n", contents);
   }
 
@@ -206,7 +205,7 @@ public class ProjectFilesystemTest {
     filesystem.writeBytesToPath(bytes, Paths.get("hello.txt"));
     assertEquals(
         content,
-        Files.toString(new File(tmp.getRoot(), "hello.txt"), Charsets.UTF_8));
+        new String(Files.readAllBytes(tmp.getRoot().resolve("hello.txt")), UTF_8));
   }
 
   @Test
@@ -217,7 +216,7 @@ public class ProjectFilesystemTest {
     assertEquals(
         "The bytes on disk should match those from the InputStream.",
         "Hello, world!",
-        Files.toString(new File(tmp.getRoot(), "bytes.txt"), Charsets.UTF_8));
+        new String(Files.readAllBytes(tmp.getRoot().resolve("bytes.txt")), UTF_8));
   }
 
   @Test
@@ -234,7 +233,7 @@ public class ProjectFilesystemTest {
     assertEquals(
         "The bytes on disk should match those from the second InputStream.",
         "hello again!",
-        Files.toString(new File(tmp.getRoot(), "replace_me.txt"), Charsets.UTF_8));
+        new String(Files.readAllBytes(tmp.getRoot().resolve("replace_me.txt")), UTF_8));
   }
 
   @Test
@@ -254,10 +253,10 @@ public class ProjectFilesystemTest {
     tmp.newFolder("dest");
     filesystem.copyFolder(Paths.get("src"), Paths.get("dest"));
 
-    assertTrue(new File(tmp.getRoot(), "dest/com/example/foo/Foo.java").exists());
-    assertTrue(new File(tmp.getRoot(), "dest/com/example/foo/package.html").exists());
-    assertTrue(new File(tmp.getRoot(), "dest/com/example/bar/Bar.java").exists());
-    assertTrue(new File(tmp.getRoot(), "dest/com/example/bar/package.html").exists());
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/foo/Foo.java")));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/foo/package.html")));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/bar/Bar.java")));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/bar/package.html")));
   }
 
   @Test
@@ -277,37 +276,37 @@ public class ProjectFilesystemTest {
     tmp.newFolder("dest");
     filesystem.copy(Paths.get("src"), Paths.get("dest"), CopySourceMode.DIRECTORY_AND_CONTENTS);
 
-    assertTrue(new File(tmp.getRoot(), "dest/src/com/example/foo/Foo.java").exists());
-    assertTrue(new File(tmp.getRoot(), "dest/src/com/example/foo/package.html").exists());
-    assertTrue(new File(tmp.getRoot(), "dest/src/com/example/bar/Bar.java").exists());
-    assertTrue(new File(tmp.getRoot(), "dest/src/com/example/bar/package.html").exists());
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/foo/Foo.java")));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/foo/package.html")));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/bar/Bar.java")));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/bar/package.html")));
   }
 
   @Test
   public void testCopyFile() throws IOException {
     tmp.newFolder("foo");
-    File file = tmp.newFile("foo/bar.txt");
+    Path file = tmp.newFile("foo/bar.txt");
     String content = "Hello, World!";
-    Files.write(content, file, Charsets.UTF_8);
+    Files.write(file, content.getBytes(UTF_8));
 
     filesystem.copyFile(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"));
     assertEquals(
         content,
-        Files.toString(new File(tmp.getRoot(), "foo/baz.txt"), Charsets.UTF_8));
+        new String(Files.readAllBytes(tmp.getRoot().resolve("foo/baz.txt")), UTF_8));
   }
 
   @Test
   public void testDeleteFileAtPath() throws IOException {
     Path path = Paths.get("foo.txt");
-    File file = tmp.newFile(path.toString());
-    assertTrue(file.exists());
+    Path file = tmp.newFile(path.toString());
+    assertTrue(Files.exists(file));
     filesystem.deleteFileAtPath(path);
-    assertFalse(file.exists());
+    assertFalse(Files.exists(file));
   }
 
   @Test
   public void testCreateContextStringForModifyEvent() throws IOException {
-    Path file = tmp.newFile("foo.txt").toPath();
+    Path file = tmp.newFile("foo.txt");
     WatchEvent<Path> modifyEvent = WatchEvents.createPathEvent(
         file,
         StandardWatchEventKinds.ENTRY_MODIFY);
@@ -393,9 +392,9 @@ public class ProjectFilesystemTest {
   public void testWalkFileTreeFollowsSymlinks() throws IOException {
     tmp.newFolder("dir");
     tmp.newFile("dir/file.txt");
-    java.nio.file.Files.createSymbolicLink(
-        tmp.getRoot().toPath().resolve("linkdir"),
-        tmp.getRoot().toPath().resolve("dir"));
+    Files.createSymbolicLink(
+        tmp.getRoot().resolve("linkdir"),
+        tmp.getRoot().resolve("dir"));
 
     final ImmutableList.Builder<Path> filePaths = ImmutableList.builder();
 
@@ -459,17 +458,17 @@ public class ProjectFilesystemTest {
   public void testCreateZipPreservesExecutablePermissions() throws IOException {
 
     // Create a empty executable file.
-    File exe = tmp.newFile("test.exe");
-    exe.setExecutable(true);
+    Path exe = tmp.newFile("test.exe");
+    MoreFiles.makeExecutable(exe);
 
     // Archive it into a zipfile using `ProjectFileSystem.createZip`.
-    File zipFile = new File(tmp.getRoot().toPath().toString() + "/test.zip");
-    filesystem.createZip(ImmutableList.of(exe.toPath()), zipFile);
+    Path zipFile = tmp.getRoot().resolve("test.zip");
+    filesystem.createZip(ImmutableList.of(exe), zipFile);
 
     // Now unpack the archive (using apache's common-compress, as it preserves
     // executable permissions) and verify that the archive entry has executable
     // permissions.
-    try (ZipFile zip = new ZipFile(zipFile)) {
+    try (ZipFile zip = new ZipFile(zipFile.toFile())) {
       Enumeration<ZipArchiveEntry> entries = zip.getEntries();
       assertTrue(entries.hasMoreElements());
       ZipArchiveEntry entry = entries.nextElement();
@@ -485,18 +484,18 @@ public class ProjectFilesystemTest {
   public void testCreateZipIgnoresMtimes() throws IOException {
 
     // Create a empty executable file.
-    File exe = tmp.newFile("foo");
+    Path exe = tmp.newFile("foo");
 
     // Archive it into a zipfile using `ProjectFileSystem.createZip`.
-    File zipFile = new File(tmp.getRoot().toPath().toString() + "/test.zip");
+    Path zipFile = tmp.getRoot().resolve("test.zip");
     filesystem.createZip(
-        ImmutableList.of(exe.toPath()),
+        ImmutableList.of(exe),
         zipFile,
         ImmutableMap.of(Paths.get("additional"), "info"));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_EPOCH_START));
-    try (ZipInputStream is = new ZipInputStream(new FileInputStream(zipFile))) {
+    try (ZipInputStream is = new ZipInputStream(Files.newInputStream(zipFile))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));
       }
@@ -531,7 +530,7 @@ public class ProjectFilesystemTest {
     tmp.newFile("foo/bar.txt");
     tmp.newFile("foo/baz.txt");
 
-    File output = tmp.newFile("out.zip");
+    Path output = tmp.newFile("out.zip");
 
     filesystem.createZip(
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
@@ -550,7 +549,7 @@ public class ProjectFilesystemTest {
     tmp.newFile("foo/baz.txt");
     tmp.newFolder("empty");
 
-    File output = tmp.newFile("out.zip");
+    Path output = tmp.newFile("out.zip");
 
     filesystem.createZip(
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"), Paths.get("empty")),
@@ -568,7 +567,7 @@ public class ProjectFilesystemTest {
     tmp.newFile("foo/bar.txt");
     tmp.newFile("foo/baz.txt");
 
-    File output = tmp.newFile("out.zip");
+    Path output = tmp.newFile("out.zip");
 
     filesystem.createZip(
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
@@ -583,8 +582,8 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testIsSymLinkReturnsTrueForSymLink() throws IOException {
-    Path rootPath = tmp.getRoot().toPath();
-    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
+    Path rootPath = tmp.getRoot();
+    Files.createSymbolicLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
     assertTrue(filesystem.isSymLink(Paths.get("foo")));
   }
 
@@ -602,12 +601,12 @@ public class ProjectFilesystemTest {
   @Test
   public void testSortedDirectoryContents() throws IOException {
     tmp.newFolder("foo");
-    Path a = tmp.newFile("foo/a.txt").toPath();
-    java.nio.file.Files.setLastModifiedTime(a, FileTime.fromMillis(1000));
-    Path b = tmp.newFile("foo/b.txt").toPath();
-    java.nio.file.Files.setLastModifiedTime(b, FileTime.fromMillis(2000));
-    Path c = tmp.newFile("foo/c.txt").toPath();
-    java.nio.file.Files.setLastModifiedTime(c, FileTime.fromMillis(3000));
+    Path a = tmp.newFile("foo/a.txt");
+    Files.setLastModifiedTime(a, FileTime.fromMillis(1000));
+    Path b = tmp.newFile("foo/b.txt");
+    Files.setLastModifiedTime(b, FileTime.fromMillis(2000));
+    Path c = tmp.newFile("foo/c.txt");
+    Files.setLastModifiedTime(c, FileTime.fromMillis(3000));
     tmp.newFile("foo/non-matching");
 
     assertEquals(

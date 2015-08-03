@@ -45,8 +45,7 @@ public class AndroidInstrumentationApkIntegrationTest {
     workspace.runBuckCommand("build", "//:app_cxx_lib_dep").assertSuccess();
 
     ZipInspector zipInspector = new ZipInspector(
-        workspace.getFile(
-            "buck-out/gen/app_cxx_lib_dep.apk"));
+        workspace.getPath("buck-out/gen/app_cxx_lib_dep.apk"));
     zipInspector.assertFileExists("lib/armeabi/libcxx.so");
     zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libcxx.so");

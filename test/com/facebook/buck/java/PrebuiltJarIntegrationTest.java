@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -32,13 +33,12 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -68,14 +68,14 @@ public class PrebuiltJarIntegrationTest {
     assertEquals(CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT, finished.getCacheResult().getType());
 
     // We expect the binary jar to have a different hash to the stub jar.
-    File binaryJar = workspace.getFile("junit.jar");
-    HashCode originalHash = Files.asByteSource(binaryJar).hash(Hashing.sha1());
+    Path binaryJar = workspace.getPath("junit.jar");
+    HashCode originalHash = MorePaths.asByteSource(binaryJar).hash(Hashing.sha1());
     Path expectedOut =
         BuildTargets.getGenPath(BuildTarget.builder("//", "jar").build(), "%s-abi.jar");
-    File abiJar = workspace.getFile(expectedOut.toString());
-    HashCode abiHash = Files.asByteSource(abiJar).hash(Hashing.sha1());
+    Path abiJar = workspace.getPath(expectedOut.toString());
+    HashCode abiHash = MorePaths.asByteSource(abiJar).hash(Hashing.sha1());
 
-    assertTrue(abiJar.exists());
+    assertTrue(Files.exists(abiJar));
     assertNotEquals(originalHash, abiHash);
   }
 
@@ -87,7 +87,7 @@ public class PrebuiltJarIntegrationTest {
         temp);
     workspace.setUp();
     workspace.runBuckBuild("//:jar_from_gen").assertSuccess();
-    assertTrue(java.nio.file.Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/jar_from_gen.jar")));
   }
 
   private BuildRuleEvent.Finished getRuleFinished(List<BuckEvent> capturedEvents) {

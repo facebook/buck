@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -30,8 +31,8 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class ExternalJavacIntegrationTest {
 
@@ -48,10 +49,10 @@ public class ExternalJavacIntegrationTest {
 
     workspace.setUp();
 
-    File javac = workspace.getFile("javac.sh");
-    javac.setExecutable(true);
+    Path javac = workspace.getPath("javac.sh");
+    MoreFiles.makeExecutable(javac);
 
-    workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.getAbsolutePath());
+    workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
     workspace.runBuckCommand("build", "example").assertSuccess();
   }
 
@@ -66,10 +67,10 @@ public class ExternalJavacIntegrationTest {
 
     workspace.setUp();
 
-    File javac = workspace.getFile("javac.sh");
-    javac.setExecutable(true);
+    Path javac = workspace.getPath("javac.sh");
+    MoreFiles.makeExecutable(javac);
 
-    workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.getAbsolutePath());
+    workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
 
     workspace.runBuckCommand("build", "//:lib", "-v", "2").assertSuccess();
   }
@@ -83,10 +84,10 @@ public class ExternalJavacIntegrationTest {
         this, "external_javac", tmp);
     workspace.setUp();
 
-    File error = workspace.getFile("error.sh");
-    error.setExecutable(true);
+    Path error = workspace.getPath("error.sh");
+    MoreFiles.makeExecutable(error);
 
-    workspace.replaceFileContents(".buckconfig", "@JAVAC@", error.getAbsolutePath());
+    workspace.replaceFileContents(".buckconfig", "@JAVAC@", error.toAbsolutePath().toString());
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "example");
 
     assertThat(
@@ -103,10 +104,10 @@ public class ExternalJavacIntegrationTest {
         this, "external_javac", tmp);
     workspace.setUp();
 
-    File javac = workspace.getFile("check_env.sh");
-    javac.setExecutable(true);
+    Path javac = workspace.getPath("check_env.sh");
+    MoreFiles.makeExecutable(javac);
 
-    workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.getAbsolutePath());
+    workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
     workspace.runBuckdCommand(
         ImmutableMap.of(
             "CHECK_THIS_VARIABLE", "1",

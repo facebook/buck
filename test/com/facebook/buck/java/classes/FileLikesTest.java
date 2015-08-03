@@ -24,9 +24,9 @@ import com.google.common.base.Preconditions;
 
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 
 public class FileLikesTest {
 
@@ -63,7 +63,7 @@ public class FileLikesTest {
     }
 
     @Override
-    public File getContainer() {
+    public Path getContainer() {
       throw new UnsupportedOperationException();
     }
 

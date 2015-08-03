@@ -25,8 +25,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -38,10 +36,10 @@ import javax.annotation.Nullable;
 public class DefaultZipSplitter implements ZipSplitter {
 
   private final Set<Path> inFiles;
-  private final File outPrimary;
+  private final Path outPrimary;
   private final Predicate<String> requiredInPrimaryZip;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
-  private final File reportDir;
+  private final Path reportDir;
   private final MySecondaryDexHelper secondaryDexWriter;
   private final long zipSizeSoftLimit;
   private final long zipSizeHardLimit;
@@ -52,22 +50,22 @@ public class DefaultZipSplitter implements ZipSplitter {
   private long remainingSize;
 
   /**
-   * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, File, File, String, Predicate,
+   * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, Path, Path, String, Predicate,
    *     ImmutableSet, ImmutableSet, com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
-   *     com.facebook.buck.dalvik.ZipSplitter.CanaryStrategy, File)
+   *     com.facebook.buck.dalvik.ZipSplitter.CanaryStrategy, Path)
    */
   private DefaultZipSplitter(
       ProjectFilesystem filesystem,
       Set<Path> inFiles,
-      File outPrimary,
-      File outSecondaryDir,
+      Path outPrimary,
+      Path outSecondaryDir,
       String secondaryPattern,
       long zipSizeSoftLimit,
       long zipSizeHardLimit,
       Predicate<String> requiredInPrimaryZip,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
-      File reportDir) {
+      Path reportDir) {
     this.filesystem = filesystem;
     this.inFiles = ImmutableSet.copyOf(inFiles);
     this.outPrimary = outPrimary;
@@ -83,15 +81,15 @@ public class DefaultZipSplitter implements ZipSplitter {
   public static DefaultZipSplitter splitZip(
       ProjectFilesystem filesystem,
       Set<Path> inFiles,
-      File outPrimary,
-      File outSecondaryDir,
+      Path outPrimary,
+      Path outSecondaryDir,
       String secondaryPattern,
       long zipSizeSoftLimit,
       long zipSizeHardLimit,
       Predicate<String> requiredInPrimaryZip,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       ZipSplitter.CanaryStrategy canaryStrategy,
-      File reportDir) {
+      Path reportDir) {
     return new DefaultZipSplitter(
         filesystem,
         inFiles,
@@ -108,7 +106,7 @@ public class DefaultZipSplitter implements ZipSplitter {
 
   // Not safe to execute multiple times.
   @Override
-  public List<File> execute() throws IOException {
+  public List<Path> execute() throws IOException {
     ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
 
     // Compute the total size of the inputs so that we can figure out whether its safe
@@ -120,7 +118,12 @@ public class DefaultZipSplitter implements ZipSplitter {
     classpathTraverser.traverse(new ClasspathTraversal(inFiles, filesystem) {
       @Override
       public void visit(FileLike entry) {
-        long entrySize = entry.getSize();
+        long entrySize = 0;
+        try {
+          entrySize = entry.getSize();
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
         if (entrySize > 0) {
           remainingSize += entrySize;
         }
@@ -197,21 +200,21 @@ public class DefaultZipSplitter implements ZipSplitter {
     remainingSize -= entrySize;
   }
 
-  private DefaultZipOutputStreamHelper newZipOutput(File file) throws FileNotFoundException {
+  private DefaultZipOutputStreamHelper newZipOutput(Path file) throws IOException {
     return new DefaultZipOutputStreamHelper(file, zipSizeHardLimit, reportDir);
   }
 
   private class MySecondaryDexHelper extends SecondaryDexHelper<DefaultZipOutputStreamHelper> {
 
     MySecondaryDexHelper(
-        File outSecondaryDir,
+        Path outSecondaryDir,
         String secondaryPattern,
         CanaryStrategy canaryStrategy) {
       super(outSecondaryDir, secondaryPattern, canaryStrategy);
     }
 
     @Override
-    protected DefaultZipOutputStreamHelper newZipOutput(File file) throws IOException {
+    protected DefaultZipOutputStreamHelper newZipOutput(Path file) throws IOException {
       return DefaultZipSplitter.this.newZipOutput(file);
     }
   }

@@ -46,12 +46,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Calendar;
 import java.util.Date;
@@ -65,11 +65,11 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipOutputStreamTest {
 
-  private File output;
+  private Path output;
 
   @Before
   public void createZipFileDestination() throws IOException {
-    output = File.createTempFile("example", ".zip");
+    output = Files.createTempFile("example", ".zip");
   }
 
   @Test
@@ -129,7 +129,7 @@ public class ZipOutputStreamTest {
       ref.putNextEntry(entry);
     }
 
-    byte[] seen = Files.readAllBytes(output.toPath());
+    byte[] seen = Files.readAllBytes(output);
     byte[] expected = Files.readAllBytes(reference.toPath());
 
     assertArrayEquals(expected, seen);
@@ -149,7 +149,7 @@ public class ZipOutputStreamTest {
       ref.putNextEntry(entry);
     }
 
-    byte[] seen = Files.readAllBytes(output.toPath());
+    byte[] seen = Files.readAllBytes(output);
     byte[] expected = Files.readAllBytes(reference.toPath());
 
     assertArrayEquals(expected, seen);
@@ -174,7 +174,7 @@ public class ZipOutputStreamTest {
       ref.putNextEntry(entry2);
     }
 
-    byte[] seen = Files.readAllBytes(output.toPath());
+    byte[] seen = Files.readAllBytes(output);
     byte[] expected = Files.readAllBytes(reference.toPath());
 
     assertArrayEquals(expected, seen);
@@ -197,7 +197,7 @@ public class ZipOutputStreamTest {
       ref.write(bytes);
     }
 
-    byte[] seen = Files.readAllBytes(output.toPath());
+    byte[] seen = Files.readAllBytes(output);
     byte[] expected = Files.readAllBytes(reference.toPath());
 
     assertArrayEquals(expected, seen);
@@ -234,7 +234,7 @@ public class ZipOutputStreamTest {
       ref.write(bytes);
     }
 
-    byte[] seen = Files.readAllBytes(output.toPath());
+    byte[] seen = Files.readAllBytes(output);
     byte[] expected = Files.readAllBytes(reference.toPath());
 
     assertArrayEquals(expected, seen);
@@ -254,7 +254,7 @@ public class ZipOutputStreamTest {
     }
 
     List<String> names = Lists.newArrayList();
-    try (ZipInputStream in = new ZipInputStream(new FileInputStream(output))) {
+    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
         names.add(entry.getName());
       }
@@ -277,7 +277,7 @@ public class ZipOutputStreamTest {
     }
 
     List<String> names = Lists.newArrayList();
-    try (ZipInputStream in = new ZipInputStream(new FileInputStream(output))) {
+    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
         assertEquals("example.txt", entry.getName());
         names.add(entry.getName());
@@ -307,7 +307,7 @@ public class ZipOutputStreamTest {
       out.putNextEntry(current);
     }
 
-    try (ZipInputStream in = new ZipInputStream(new FileInputStream(output))) {
+    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
       ZipEntry entry = in.getNextEntry();
       assertEquals("oldAndValid", entry.getName());
       assertEquals(old, entry.getTime());
@@ -364,7 +364,7 @@ public class ZipOutputStreamTest {
       out.write(input);
     }
 
-    try (ZipInputStream in = new ZipInputStream(new FileInputStream(output))) {
+    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
       ZipEntry entry = in.getNextEntry();
       assertEquals("default", entry.getName());
       ByteStreams.copy(in, ByteStreams.nullOutputStream());
@@ -399,7 +399,7 @@ public class ZipOutputStreamTest {
 
   @Test
   public void canWriteContentToStoredZips() throws IOException {
-    File overwriteZip = File.createTempFile("overwrite", ".zip");
+    Path overwriteZip = Files.createTempFile("overwrite", ".zip");
 
     byte[] input = "I like cheese".getBytes(UTF_8);
 
@@ -438,11 +438,11 @@ public class ZipOutputStreamTest {
       ref.write(input);
     }
 
-    byte[] seen = Files.readAllBytes(output.toPath());
+    byte[] seen = Files.readAllBytes(output);
     byte[] expected = Files.readAllBytes(reference.toPath());
 
     // Make sure the output is valid.
-    try (ZipInputStream in = new ZipInputStream(new FileInputStream(output))) {
+    try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
       ZipEntry entry = in.getNextEntry();
       assertEquals("macbeth.properties", entry.getName());
       assertNull(in.getNextEntry());
@@ -479,7 +479,7 @@ public class ZipOutputStreamTest {
 
       // Now re-read the zip file using apache's commons-compress, which supports parsing
       // the external attributes field.
-      try (ZipFile in = new ZipFile(output)) {
+      try (ZipFile in = new ZipFile(output.toFile())) {
         Enumeration<ZipArchiveEntry> entries = in.getEntries();
         ZipArchiveEntry entry = entries.nextElement();
         assertEquals(mode, entry.getExternalAttributes() >> 16);

@@ -76,14 +76,6 @@ public class FilterResourcesStepTest {
     // Mock a ProjectFilesystem. This will be called into by the image downscaling step.
     ProjectFilesystem filesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(filesystem.getRootPath()).andStubReturn(Paths.get("."));
-    EasyMock
-      .expect(filesystem.getFileForRelativePath(EasyMock.<Path>anyObject()))
-      .andAnswer(new IAnswer<File>(){
-          @Override
-          public File answer() throws Throwable {
-             return ((Path) EasyMock.getCurrentArguments()[0]).toFile();
-          }})
-      .anyTimes();
     filesystem.createParentDirs(scaleDest);
     filesystem.deleteFileAtPath(scaleSource);
     Path scaleSourceDir = scaleSource.getParent();
@@ -237,7 +229,7 @@ public class FilterResourcesStepTest {
   @Test
   public void testUsingWhitelistIgnoresLocaleFilter() throws IOException {
     Predicate<Path> filePredicate = getTestPathPredicate(
-        true, ImmutableSet.<Path>of(Paths.get("com/example/res")), ImmutableSet.of("es", "es_US"));
+        true, ImmutableSet.of(Paths.get("com/example/res")), ImmutableSet.of("es", "es_US"));
 
     assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));

@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,10 +50,10 @@ public class BuildInfoRecorderIntegrationTest {
             @Override
             public void createZip(
                 Collection<Path> pathsToIncludeInZip,
-                File out,
+                Path out,
                 ImmutableMap<Path, String> additionalFileContents) throws IOException {
               // For this test, nothing really cares about the content, so just write out the name.
-              writeBytesToPath(out.toString().getBytes(), out.toPath());
+              writeBytesToPath(out.toString().getBytes(), out);
             }
         });
     DebuggableTemporaryFolder cacheDir = new DebuggableTemporaryFolder();

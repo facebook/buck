@@ -46,10 +46,10 @@ import com.google.common.io.ByteStreams;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -265,12 +265,12 @@ public class BuildInfoRecorder {
         ruleKeys);
     eventBus.post(started);
 
-    File zip;
+    Path zip;
     ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.of();
     ImmutableMap<String, String> buildMetadata;
     try {
       pathsToIncludeInZip = getRecordedPaths();
-      zip = File.createTempFile(
+      zip = Files.createTempFile(
           "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()),
           ".zip");
       buildMetadata = getBuildMetadata();
@@ -287,7 +287,11 @@ public class BuildInfoRecorder {
 
     // Store the artifact, including any additional metadata.
     artifactCache.store(ruleKeys, buildMetadata, zip);
-    zip.delete();
+    try {
+      Files.delete(zip);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
@@ -296,7 +300,7 @@ public class BuildInfoRecorder {
    */
   public CacheResult fetchArtifactForBuildable(
       RuleKey ruleKey,
-      File outputFile,
+      Path outputFile,
       ArtifactCache artifactCache)
       throws InterruptedException {
     return artifactCache.fetch(ruleKey, outputFile);

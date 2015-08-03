@@ -20,8 +20,8 @@ import com.facebook.buck.java.classes.FileLike;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  */
 abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStreamHelper> {
 
-  private final File outSecondaryDir;
+  private final Path outSecondaryDir;
   private final String secondaryPattern;
   private final ZipSplitter.CanaryStrategy canaryStrategy;
 
@@ -40,10 +40,10 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
   @Nullable
   private ZIP_OUTPUT_STREAM_HELPER currentSecondaryOut;
   private boolean newSecondaryOutOnNextEntry;
-  private ImmutableList.Builder<File> secondaryFiles;
+  private ImmutableList.Builder<Path> secondaryFiles;
 
   SecondaryDexHelper(
-      File outSecondaryDir,
+      Path outSecondaryDir,
       String secondaryPattern,
       ZipSplitter.CanaryStrategy canaryStrategy) {
     this.outSecondaryDir = outSecondaryDir;
@@ -76,8 +76,7 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
         currentSecondaryOut.close();
       }
       currentSecondaryIndex++;
-      File newSecondaryFile = new File(
-          outSecondaryDir,
+      Path newSecondaryFile = outSecondaryDir.resolve(
           String.format(secondaryPattern, currentSecondaryIndex));
       secondaryFiles.add(newSecondaryFile);
       currentSecondaryOut = newZipOutput(newSecondaryFile);
@@ -100,9 +99,9 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
     }
   }
 
-  List<File> getFiles() {
+  List<Path> getFiles() {
     return secondaryFiles.build();
   }
 
-  protected abstract ZIP_OUTPUT_STREAM_HELPER newZipOutput(File file) throws IOException;
+  protected abstract ZIP_OUTPUT_STREAM_HELPER newZipOutput(Path file) throws IOException;
 }

@@ -21,10 +21,10 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ZipOutputStreams {
 
@@ -39,10 +39,10 @@ public class ZipOutputStreams {
    *
    * @param zipFile The file to write to.
    */
-  public static CustomZipOutputStream newOutputStream(File zipFile) {
+  public static CustomZipOutputStream newOutputStream(Path zipFile) {
     try {
-      return newOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)));
-    } catch (FileNotFoundException e) {
+      return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)));
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -65,10 +65,10 @@ public class ZipOutputStreams {
    * @param zipFile The file to write to.
    * @param mode How to handle duplicate entries.
    */
-  public static CustomZipOutputStream newOutputStream(File zipFile, HandleDuplicates mode)
-      throws FileNotFoundException {
+  public static CustomZipOutputStream newOutputStream(Path zipFile, HandleDuplicates mode)
+      throws IOException {
 
-    return newOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)), mode);
+    return newOutputStream(new BufferedOutputStream(Files.newOutputStream(zipFile)), mode);
   }
 
   /**

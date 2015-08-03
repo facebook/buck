@@ -16,9 +16,9 @@
 
 package com.facebook.buck.java.classes;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 
 /**
  * Provides a file-like interface for objects which may be present within more specialized
@@ -28,18 +28,18 @@ public interface FileLike {
   /**
    * Returns the containing file for this file-like entry.
    */
-  public File getContainer();
+  Path getContainer();
 
   /**
    * Returns the relative path for the entry.  For example, if this were a
    * zip file, this would be the relative path of a particular item in the zip file.
    */
-  public String getRelativePath();
+  String getRelativePath();
 
   /**
    * Returns the size of the entry in bytes.
    */
-  public long getSize();
+  long getSize() throws IOException;
 
   /**
    * Opens a new input stream for the entry.  This can be repeated to open the file-like
@@ -48,5 +48,5 @@ public interface FileLike {
    * @return Newly opened input stream.
    * @throws java.io.IOException An error occurred opening the stream.
    */
-  public InputStream getInput() throws IOException;
+  InputStream getInput() throws IOException;
 }

@@ -16,23 +16,22 @@
 
 package com.facebook.buck.cli;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class NumThreadsIntegrationTest {
 
@@ -58,8 +57,8 @@ public class NumThreadsIntegrationTest {
         buildResult2.getStderr(),
         containsString("Creating a build with 27 threads.\n"));
 
-    File buckconfig = workspace.getFile(".buckconfig");
-    assertTrue(buckconfig.delete());
+    Path buckconfig = workspace.getPath(".buckconfig");
+    Files.delete(buckconfig);
 
     int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
     ProcessResult buildResult3 = workspace.runBuckCommand(
@@ -85,7 +84,7 @@ public class NumThreadsIntegrationTest {
     String newBuckProject = Joiner.on('\n').join(
         "[project]",
         "  initial_targets = //:noop");
-    Files.write(newBuckProject, workspace.getFile(".buckconfig"), Charsets.UTF_8);
+    Files.write(workspace.getPath(".buckconfig"), newBuckProject.getBytes(UTF_8));
     int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
     ProcessResult buildResult2 = workspace.runBuckCommand("project", "--verbose", "10");
     assertThat(

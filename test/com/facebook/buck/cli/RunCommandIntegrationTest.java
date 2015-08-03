@@ -46,7 +46,7 @@ public class RunCommandIntegrationTest extends EasyMockSupport {
         "run",
         "//cmd:command",
         "one_arg",
-        workspace.getFile("output").toPath().toAbsolutePath().toString());
+        workspace.getPath("output").toAbsolutePath().toString());
     result.assertSuccess("buck run should succeed");
     assertEquals("SUCCESS\n", result.getStdout());
     workspace.verify();

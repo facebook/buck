@@ -17,8 +17,8 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
@@ -26,13 +26,13 @@ import com.facebook.buck.util.ProcessExecutor;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class ResourcesRootIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testResourcePathRelativeToResourcesRoot() throws IOException, InterruptedException {
@@ -40,7 +40,7 @@ public class ResourcesRootIntegrationTest {
         this, "resources_root", temporaryFolder);
     workspace.setUp();
 
-    File supWorldJar = workspace.buildAndReturnOutput("//java/com/example:SupWorld");
+    Path supWorldJar = workspace.buildAndReturnOutput("//java/com/example:SupWorld");
     ZipInspector inspector = new ZipInspector(supWorldJar);
     inspector.assertFileExists("com/another/supworld.txt");
 

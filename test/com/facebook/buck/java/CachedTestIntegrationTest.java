@@ -23,15 +23,15 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class CachedTestIntegrationTest {
 
@@ -133,24 +133,24 @@ public class CachedTestIntegrationTest {
   private static class CachedTestUtil {
 
     private static final String TEST_FILE = "LameTest.java";
-    private static final Charset CHARSET = Charsets.UTF_8;
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
     private final String originalJavaCode;
-    private final File testFile;
+    private final Path testFile;
     private final String failingJavaCode;
 
     CachedTestUtil(ProjectWorkspace workspace) throws IOException {
-      this.testFile = workspace.getFile(TEST_FILE);
-      this.originalJavaCode = Files.toString(testFile, CHARSET);
+      this.testFile = workspace.getPath(TEST_FILE);
+      this.originalJavaCode = new String(Files.readAllBytes(testFile), CHARSET);
       this.failingJavaCode = originalJavaCode.replace("String str = \"I am not null.\";",
           "String str = null;");
     }
 
     public void makeTestFail() throws IOException {
-      Files.write(failingJavaCode, testFile, CHARSET);
+      Files.write(testFile, failingJavaCode.getBytes(CHARSET));
     }
 
     public void makeTestSucceed() throws IOException {
-      Files.write(originalJavaCode, testFile, CHARSET);
+      Files.write(testFile, originalJavaCode.getBytes(CHARSET));
     }
   }
 }

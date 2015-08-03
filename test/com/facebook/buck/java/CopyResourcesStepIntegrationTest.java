@@ -26,8 +26,8 @@ import com.facebook.buck.util.ProcessExecutor;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class CopyResourcesStepIntegrationTest {
 
@@ -41,12 +41,12 @@ public class CopyResourcesStepIntegrationTest {
         this, "generated_resources", temporaryFolder);
     workspace.setUp();
 
-    File exampleJar = workspace.buildAndReturnOutput("//java/com/example:example");
+    Path exampleJar = workspace.buildAndReturnOutput("//java/com/example:example");
     ZipInspector exampleInspector = new ZipInspector(exampleJar);
     exampleInspector.assertFileExists("com/example/HelloWorld.class");
     exampleInspector.assertFileExists("com/example/res/helloworld.txt");
 
-    File helloWorldJar = workspace.buildAndReturnOutput("//java/com/example:HelloWorld");
+    Path helloWorldJar = workspace.buildAndReturnOutput("//java/com/example:HelloWorld");
     ProcessExecutor.Result result = workspace.runJar(helloWorldJar);
     assertEquals("hello world\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());

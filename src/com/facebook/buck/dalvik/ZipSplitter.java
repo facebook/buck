@@ -16,19 +16,19 @@
 
 package com.facebook.buck.dalvik;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public interface ZipSplitter {
 
-  public static enum DexSplitStrategy {
+  enum DexSplitStrategy {
     MAXIMIZE_PRIMARY_DEX_SIZE,
     MINIMIZE_PRIMARY_DEX_SIZE,
     ;
   }
 
-  public static enum CanaryStrategy {
+  enum CanaryStrategy {
     INCLUDE_CANARIES,
     DONT_INCLUDE_CANARIES,
     ;
@@ -38,5 +38,5 @@ public interface ZipSplitter {
    * Writes the primary zip file and if necessary, the secondary zip files.
    * @return Secondary output zip files.
    */
-  public List<File> execute() throws IOException;
+  List<Path> execute() throws IOException;
 }

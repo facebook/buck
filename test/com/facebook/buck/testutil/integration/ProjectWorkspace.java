@@ -16,17 +16,21 @@
 
 package com.facebook.buck.testutil.integration;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import com.dd.plist.BinaryPropertyListParser;
+import com.dd.plist.NSObject;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -40,11 +44,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.io.Files;
 import com.martiansoftware.nailgun.NGContext;
-
-import com.dd.plist.BinaryPropertyListParser;
-import com.dd.plist.NSObject;
 
 import org.junit.rules.TemporaryFolder;
 
@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -79,7 +80,7 @@ import javax.annotation.Nullable;
  */
 public class ProjectWorkspace {
 
-  private static final String EXPECTED_SUFFIX = ".expected";
+  private static final String EXPECTED_SUFFIX = "expected";
 
   private static final String PATH_TO_BUILD_LOG = "buck-out/bin/build.log";
 
@@ -102,20 +103,25 @@ public class ProjectWorkspace {
 
   /**
    * @param templateDir The directory that contains the template version of the project.
-   * @param temporaryFolder The directory where the clone of the template directory should be
+   * @param targetFolder The directory where the clone of the template directory should be
    *     written. By requiring a {@link TemporaryFolder} rather than a {@link File}, we can ensure
    *     that JUnit will clean up the test correctly.
    */
-  public ProjectWorkspace(Path templateDir, DebuggableTemporaryFolder temporaryFolder) {
+  public ProjectWorkspace(Path templateDir, Path targetFolder) {
     Preconditions.checkNotNull(templateDir);
-    Preconditions.checkNotNull(temporaryFolder);
+    Preconditions.checkNotNull(targetFolder);
     this.templatePath = templateDir;
-    this.destPath = temporaryFolder.getRoot().toPath();
+    this.destPath = targetFolder;
   }
 
-  public ProjectWorkspace(File templateDir, DebuggableTemporaryFolder temporaryFolder) {
-    this(templateDir.toPath(), temporaryFolder);
+  public ProjectWorkspace(File templateDir, TemporaryPaths temporaryFolder) {
+    this(templateDir.toPath(), temporaryFolder.getRoot());
   }
+
+  public ProjectWorkspace(Path templateDir, TemporaryPaths temporaryFolder) {
+    this(templateDir, temporaryFolder.getRoot());
+  }
+
 
   /**
    * This will copy the template directory, renaming files named {@code BUCK.test} to {@code BUCK}
@@ -130,7 +136,7 @@ public class ProjectWorkspace {
     Path destLocalProperties = destPath.resolve(localProperties.getFileName());
 
     if (localProperties.toFile().exists() && !destLocalProperties.toFile().exists()) {
-      java.nio.file.Files.copy(localProperties, destLocalProperties);
+      Files.copy(localProperties, destLocalProperties);
     }
 
     if (Platform.detect() == Platform.WINDOWS) {
@@ -143,23 +149,19 @@ public class ProjectWorkspace {
           // files are trued to locate. Once the pointed file is found, it will be copied to target.
           // On NTFS length of path must be greater than 0 and less than 4096.
           if (attrs.size() > 0 && attrs.size() <= 4096) {
-            File file = path.toFile();
-            String linkTo = Files.toString(file, Charsets.UTF_8);
-            File linkToFile = new File(templatePath.toFile(), linkTo);
-            if (linkToFile.isFile()) {
-              java.nio.file.Files.copy(
-                  linkToFile.toPath(), path, StandardCopyOption.REPLACE_EXISTING);
-            } else if (linkToFile.isDirectory()) {
-              if (!file.delete()) {
-                throw new IOException();
-              }
-              MoreFiles.copyRecursively(linkToFile.toPath(), path);
+            String linkTo = new String(Files.readAllBytes(path), UTF_8);
+            Path linkToFile = templatePath.resolve(linkTo);
+            if (Files.isRegularFile(linkToFile)) {
+              Files.copy(linkToFile, path, StandardCopyOption.REPLACE_EXISTING);
+            } else if (Files.isDirectory(linkToFile)) {
+              Files.delete(path);
+              MoreFiles.copyRecursively(linkToFile, path);
             }
           }
           return FileVisitResult.CONTINUE;
         }
       };
-      java.nio.file.Files.walkFileTree(destPath, copyDirVisitor);
+      Files.walkFileTree(destPath, copyDirVisitor);
     }
     isSetUp = true;
     return this;
@@ -172,9 +174,9 @@ public class ProjectWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  public File buildAndReturnOutput(String target) throws IOException {
+  public Path buildAndReturnOutput(String target) throws IOException {
     // Build the java_library.
-    ProjectWorkspace.ProcessResult buildResult = runBuckBuild(target.toString());
+    ProjectWorkspace.ProcessResult buildResult = runBuckBuild(target);
     buildResult.assertSuccess();
 
     // Use `buck targets` to find the output JAR file.
@@ -182,13 +184,13 @@ public class ProjectWorkspace {
     ProjectWorkspace.ProcessResult outputFileResult = runBuckCommand(
         "targets",
         "--show-output",
-        target.toString());
+        target);
     outputFileResult.assertSuccess();
     String pathToGeneratedJarFile = outputFileResult.getStdout().split(" ")[1].trim();
-    return getFile(pathToGeneratedJarFile);
+    return getPath(pathToGeneratedJarFile);
   }
 
-  public ProcessExecutor.Result runJar(File jar, String... args)
+  public ProcessExecutor.Result runJar(Path jar, String... args)
       throws IOException, InterruptedException {
     List<String> command = ImmutableList.<String>builder()
         .add("java")
@@ -367,19 +369,12 @@ public class ProjectWorkspace {
         capturedEventsListBuilder.build());
   }
 
-  /**
-   * @return the {@link File} that corresponds to the {@code pathRelativeToProjectRoot}.
-   */
-  public File getFile(String pathRelativeToProjectRoot) {
-    return getPath(pathRelativeToProjectRoot).toFile();
-  }
-
   public Path getPath(String pathRelativeToProjectRoot) {
     return destPath.resolve(pathRelativeToProjectRoot);
   }
 
   public String getFileContents(String pathRelativeToProjectRoot) throws IOException {
-    return Files.toString(getFile(pathRelativeToProjectRoot), Charsets.UTF_8);
+    return new String(Files.readAllBytes(getPath(pathRelativeToProjectRoot)), UTF_8);
   }
 
   public void enableDirCache() throws IOException {
@@ -387,7 +382,9 @@ public class ProjectWorkspace {
   }
 
   public void copyFile(String source, String dest) throws IOException {
-    Files.copy(getFile(source), getFile(dest));
+    Path destination = getPath(dest);
+    Files.deleteIfExists(destination);
+    Files.copy(getPath(source), destination);
   }
 
   public void copyRecursively(Path source, Path pathRelativeToProjectRoot) throws IOException {
@@ -395,7 +392,7 @@ public class ProjectWorkspace {
   }
 
   public void move(String source, String dest) throws IOException {
-    Files.move(getFile(source), getFile(dest));
+    Files.move(getPath(source), getPath(dest));
   }
 
   public void replaceFileContents(String pathRelativeToProjectRoot,
@@ -408,7 +405,7 @@ public class ProjectWorkspace {
 
   public void writeContentsToPath(String contents, String pathRelativeToProjectRoot)
       throws IOException {
-    Files.write(contents.getBytes(Charsets.UTF_8), getFile(pathRelativeToProjectRoot));
+    Files.write(getPath(pathRelativeToProjectRoot), contents.getBytes(UTF_8));
   }
 
   /**
@@ -428,7 +425,7 @@ public class ProjectWorkspace {
 
   public BuckBuildLog getBuildLog() throws IOException {
     return BuckBuildLog.fromLogContents(
-        Files.readLines(getFile(PATH_TO_BUILD_LOG), Charsets.UTF_8));
+        Files.readAllLines(getPath(PATH_TO_BUILD_LOG), UTF_8));
   }
 
   /** The result of running {@code buck} from the command line. */
@@ -522,12 +519,12 @@ public class ProjectWorkspace {
     }
   }
 
-  private void assertFileContentsEqual(File expectedFile, File observedFile) throws IOException {
+  private void assertFileContentsEqual(Path expectedFile, Path observedFile) throws IOException {
     String cleanPathToObservedFile = MoreStrings.withoutSuffix(
-        templatePath.relativize(expectedFile.toPath()).toString(), EXPECTED_SUFFIX);
+        templatePath.relativize(expectedFile).toString(), EXPECTED_SUFFIX);
 
-    String expectedFileContent = Files.toString(expectedFile, Charsets.UTF_8);
-    String observedFileContent = Files.toString(observedFile, Charsets.UTF_8);
+    String expectedFileContent = new String(Files.readAllBytes(expectedFile), UTF_8);
+    String observedFileContent = new String(Files.readAllBytes(observedFile), UTF_8);
     // It is possible, on Windows, to have Git keep "\n"-style newlines, or convert them to
     // "\r\n"-style newlines.  Support both ways by normalizing to "\n"-style newlines.
     // See https://help.github.com/articles/dealing-with-line-endings/ for more information.
@@ -555,14 +552,14 @@ public class ProjectWorkspace {
         if (fileName.endsWith(EXPECTED_SUFFIX)) {
           // Get File for the file that should be written, but without the ".expected" suffix.
           Path generatedFileWithSuffix = destPath.resolve(templatePath.relativize(file));
-          File directory = generatedFileWithSuffix.getParent().toFile();
-          File observedFile = new File(directory, Files.getNameWithoutExtension(fileName));
+          Path directory = generatedFileWithSuffix.getParent();
+          Path observedFile = directory.resolve(MorePaths.getNameWithoutExtension(file));
 
-          if (!observedFile.isFile()) {
+          if (!Files.isRegularFile(observedFile)) {
             fail("Expected file " + observedFile + " could not be found.");
           }
 
-          String extension = Files.getFileExtension(observedFile.getName());
+          String extension = MorePaths.getFileExtension(observedFile);
           String cleanPathToObservedFile = MoreStrings.withoutSuffix(
               templatePath.relativize(file).toString(), EXPECTED_SUFFIX);
 
@@ -583,7 +580,7 @@ public class ProjectWorkspace {
 
               NSObject observedObject;
               try {
-                observedObject = BinaryPropertyListParser.parse(observedFile);
+                observedObject = BinaryPropertyListParser.parse(observedFile.toFile());
               } catch (Exception e) {
                 // Not binary format.
                 observedObject = null;
@@ -605,17 +602,17 @@ public class ProjectWorkspace {
                     observedObject);
                 break;
               } else {
-                assertFileContentsEqual(file.toFile(), observedFile);
+                assertFileContentsEqual(file, observedFile);
               }
               break;
 
             default:
-              assertFileContentsEqual(file.toFile(), observedFile);
+              assertFileContentsEqual(file, observedFile);
           }
         }
         return FileVisitResult.CONTINUE;
       }
     };
-    java.nio.file.Files.walkFileTree(templatePath, copyDirVisitor);
+    Files.walkFileTree(templatePath, copyDirVisitor);
   }
 }

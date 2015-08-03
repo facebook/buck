@@ -50,8 +50,9 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.RuleMap;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.FileHashCache;
@@ -67,7 +68,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -76,12 +76,11 @@ import org.easymock.EasyMockSupport;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
@@ -109,7 +108,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           new SourcePathResolver(new BuildRuleResolver()));
 
   @Rule
-  public TemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   /**
    * Tests what should happen when a rule is built for the first time: it should have no cached
@@ -443,7 +442,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                   public void store(
                       ImmutableSet<RuleKey> ruleKeys,
                       ImmutableMap<String, String> metadata,
-                      File output) {
+                      Path output) {
                     try {
                       Thread.sleep(500);
                     } catch (InterruptedException e) {
@@ -528,7 +527,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(
         artifactCache.fetch(
             eq(buildRule.getRuleKey()),
-            isA(File.class)))
+            isA(Path.class)))
         .andDelegateTo(
             new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
@@ -605,7 +604,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     expect(
         artifactCache.fetch(
             eq(buildRule.getRuleKey()),
-            isA(File.class)))
+            isA(Path.class)))
         .andDelegateTo(
             new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
@@ -1032,7 +1031,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     ArtifactCache cache =
         new NoopArtifactCache() {
           @Override
-          public CacheResult fetch(RuleKey ruleKey, File output) {
+          public CacheResult fetch(RuleKey ruleKey, Path output) {
             return CacheResult.error("cache", "error");
           }
         };
@@ -1191,7 +1190,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         Matchers.equalTo(Optional.of(rule.getRuleKey())));
 
     // Verify that the artifact is re-cached correctly under the main rule key.
-    File fetchedArtifact = tmp.newFile("fetched_artifact.zip");
+    Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
     assertThat(
         cache.fetch(rule.getRuleKey(), fetchedArtifact).getType(),
         Matchers.equalTo(CacheResult.Type.HIT));
@@ -1246,7 +1245,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
     // Prepopulate the cache with an artifact indexed by the input-based rule key.
-    File artifact = tmp.newFile("artifact.zip");
+    Path artifact = tmp.newFile("artifact.zip");
     writeEntriesToZip(
         artifact,
         ImmutableMap.of(
@@ -1285,14 +1284,14 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         Matchers.equalTo(Optional.of(inputRuleKey)));
 
     // Verify that the artifact is re-cached correctly under the main rule key.
-    File fetchedArtifact = tmp.newFile("fetched_artifact.zip");
+    Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
     assertThat(
         cache.fetch(rule.getRuleKey(), fetchedArtifact).getType(),
         Matchers.equalTo(CacheResult.Type.HIT));
     assertEquals(
         new ZipInspector(artifact).getZipFileEntries(),
         new ZipInspector(fetchedArtifact).getZipFileEntries());
-    assertTrue(Files.equal(artifact, fetchedArtifact));
+    MoreAsserts.assertContentsEqual(artifact, fetchedArtifact);
   }
 
 
@@ -1480,7 +1479,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
    * its constructor.
    * <p>
    * This makes it possible to react to a call to
-   * {@link ArtifactCache#store(ImmutableSet, ImmutableMap, File)} and ensure that there will be a
+   * {@link ArtifactCache#store(ImmutableSet, ImmutableMap, Path)} and ensure that there will be a
    * zip file in place immediately after the captured method has been invoked.
    */
   private static class FakeArtifactCacheThatWritesAZipFile implements ArtifactCache {
@@ -1492,7 +1491,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public CacheResult fetch(RuleKey ruleKey, File file) throws InterruptedException {
+    public CacheResult fetch(RuleKey ruleKey, Path file) throws InterruptedException {
       try {
         writeEntriesToZip(file, ImmutableMap.copyOf(desiredEntries));
       } catch (IOException e) {
@@ -1505,7 +1504,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     public void store(
         ImmutableSet<RuleKey> ruleKeys,
         ImmutableMap<String, String> metadata,
-        File output) {
+        Path output) {
       throw new UnsupportedOperationException();
     }
 
@@ -1586,11 +1585,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
   }
 
-  private static void writeEntriesToZip(File file, ImmutableMap<String, String> entries)
+  private static void writeEntriesToZip(Path file, ImmutableMap<String, String> entries)
       throws IOException {
     try (ZipOutputStream zip = new ZipOutputStream(
-        new BufferedOutputStream(
-            new FileOutputStream(file)))) {
+        new BufferedOutputStream(Files.newOutputStream(file)))) {
       for (Map.Entry<String, String> mapEntry : entries.entrySet()) {
         ZipEntry entry = new ZipEntry(mapEntry.getKey());
         entry.setTime(0);

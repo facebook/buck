@@ -27,8 +27,9 @@ import com.google.common.collect.Maps;
 
 import org.junit.rules.ExternalResource;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -103,8 +104,8 @@ class VacationFixture extends ExternalResource {
 
   void setTestToFail(TestName testName) throws IOException {
     String flagFile = String.format("flags/%s/pass", testName.toString());
-    File file = workspace.getFile(flagFile);
-    file.delete();
+    Path file = workspace.getPath(flagFile);
+    Files.delete(file);
   }
 
   enum ResultType { PASS, FAIL, DROP }

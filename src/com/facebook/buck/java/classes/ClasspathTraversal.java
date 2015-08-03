@@ -17,14 +17,13 @@
 package com.facebook.buck.java.classes;
 
 import com.facebook.buck.io.DirectoryTraversal;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
-import com.google.common.io.Files;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.zip.ZipEntry;
@@ -64,18 +63,18 @@ public abstract class ClasspathTraversal {
 
   public final void traverse() throws IOException {
     for (Path path : paths) {
-      ClasspathTraverser adapter = createTraversalAdapter(filesystem.getFileForRelativePath(path));
+      ClasspathTraverser adapter = createTraversalAdapter(filesystem.getPathForRelativePath(path));
       adapter.traverse(this);
     }
   }
 
-  private ClasspathTraverser createTraversalAdapter(File path) {
-    String extension = Files.getFileExtension(path.getName());
+  private ClasspathTraverser createTraversalAdapter(Path path) {
+    String extension = MorePaths.getFileExtension(path);
     if (extension.equalsIgnoreCase("jar") || extension.equalsIgnoreCase("zip")) {
       return new ZipFileTraversalAdapter(path);
-    } else if (path.isDirectory()) {
+    } else if (Files.isDirectory(path)) {
       return new DirectoryTraversalAdapter(path);
-    } else if (path.isFile()) {
+    } else if (Files.isRegularFile(path)) {
       return new FileTraversalAdapter(path);
     } else {
       throw new IllegalArgumentException("Unsupported classpath traversal input: " + path);
@@ -83,9 +82,9 @@ public abstract class ClasspathTraversal {
   }
 
   private static class ZipFileTraversalAdapter implements ClasspathTraverser {
-    private final File file;
+    private final Path file;
 
-    public ZipFileTraversalAdapter(File file) {
+    public ZipFileTraversalAdapter(Path file) {
       this.file = file;
     }
 
@@ -101,18 +100,18 @@ public abstract class ClasspathTraversal {
     }
 
     private static class FileLikeInZip extends AbstractFileLike {
-      private final File container;
+      private final Path container;
       private final ZipFile zipFile;
       private final ZipEntry entry;
 
-      public FileLikeInZip(File container, ZipFile zipFile, ZipEntry entry) {
+      public FileLikeInZip(Path container, ZipFile zipFile, ZipEntry entry) {
         this.container = container;
         this.zipFile = zipFile;
         this.entry = entry;
       }
 
       @Override
-      public File getContainer() {
+      public Path getContainer() {
         return container;
       }
 
@@ -134,9 +133,9 @@ public abstract class ClasspathTraversal {
   }
 
   private static class DirectoryTraversalAdapter implements ClasspathTraverser {
-    private final File file;
+    private final Path file;
 
-    public DirectoryTraversalAdapter(File file) {
+    public DirectoryTraversalAdapter(Path file) {
       this.file = file;
     }
 
@@ -144,7 +143,7 @@ public abstract class ClasspathTraversal {
     public void traverse(final ClasspathTraversal traversal) throws IOException {
       DirectoryTraversal impl = new DirectoryTraversal(file) {
         @Override
-        public void visit(File file, String relativePath) throws IOException {
+        public void visit(Path file, String relativePath) throws IOException {
           traversal.visit(new FileLikeInDirectory(file, relativePath));
         }
       };
@@ -153,23 +152,23 @@ public abstract class ClasspathTraversal {
   }
 
   private static class FileTraversalAdapter implements ClasspathTraverser {
-    private final File file;
+    private final Path file;
 
-    public FileTraversalAdapter(File file) {
+    public FileTraversalAdapter(Path file) {
       this.file = file;
     }
 
     @Override
     public void traverse(ClasspathTraversal traversal) throws IOException {
-      traversal.visit(new FileLikeInDirectory(file, file.getName()));
+      traversal.visit(new FileLikeInDirectory(file, file.getFileName().toString()));
     }
   }
 
   private static class FileLikeInDirectory extends AbstractFileLike {
-    private final File file;
+    private final Path file;
     private final String relativePath;
 
-    public FileLikeInDirectory(File file, String relativePath) {
+    public FileLikeInDirectory(Path file, String relativePath) {
       // Currently, the only instances of FileLikeInDirectory appear to be the .class files
       // generated from an R.java in Android. The only exception is in unit tests.
       this.file = file;
@@ -177,7 +176,7 @@ public abstract class ClasspathTraversal {
     }
 
     @Override
-    public File getContainer() {
+    public Path getContainer() {
       return file;
     }
 
@@ -187,13 +186,13 @@ public abstract class ClasspathTraversal {
     }
 
     @Override
-    public long getSize() {
-      return file.length();
+    public long getSize() throws IOException {
+      return Files.size(file);
     }
 
     @Override
     public InputStream getInput() throws IOException {
-      return new FileInputStream(file);
+      return Files.newInputStream(file);
     }
   }
 }

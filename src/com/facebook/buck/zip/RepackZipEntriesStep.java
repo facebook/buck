@@ -26,10 +26,9 @@ import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -82,11 +81,11 @@ public class RepackZipEntriesStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     ProjectFilesystem filesystem = context.getProjectFilesystem();
-    File inputFile = filesystem.getFileForRelativePath(inputPath);
-    File outputFile = filesystem.getFileForRelativePath(outputPath);
+    Path inputFile = filesystem.getPathForRelativePath(inputPath);
+    Path outputFile = filesystem.getPathForRelativePath(outputPath);
     try (
         ZipInputStream in =
-            new ZipInputStream(new BufferedInputStream(new FileInputStream(inputFile)));
+            new ZipInputStream(new BufferedInputStream(Files.newInputStream(inputFile)));
         CustomZipOutputStream out = ZipOutputStreams.newOutputStream(outputFile)
     ) {
       for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {

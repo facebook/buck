@@ -16,6 +16,7 @@
 
 package com.facebook.buck.zip;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -26,12 +27,11 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -39,11 +39,10 @@ import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
@@ -56,26 +55,26 @@ import java.util.zip.ZipInputStream;
 public class ZipStepTest {
 
   @Rule
-  public TemporaryFolder tmp = new TemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private ExecutionContext executionContext;
 
   @Before
   public void setUp() {
     executionContext = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
+        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
         .build();
   }
 
   @Test
   public void shouldCreateANewZipFileFromScratch() throws IOException {
-    File parent = tmp.newFolder("zipstep");
-    File out = new File(parent, "output.zip");
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
 
-    File toZip = tmp.newFolder("zipdir");
-    Files.touch(new File(toZip, "file1.txt"));
-    Files.touch(new File(toZip, "file2.txt"));
-    Files.touch(new File(toZip, "file3.txt"));
+    Path toZip = tmp.newFolder("zipdir");
+    Files.createFile(toZip.resolve("file1.txt"));
+    Files.createFile(toZip.resolve("file2.txt"));
+    Files.createFile(toZip.resolve("file3.txt"));
 
     ZipStep step = new ZipStep(
         Paths.get("zipstep/output.zip"),
@@ -92,13 +91,14 @@ public class ZipStepTest {
 
   @Test
   public void willOnlyIncludeEntriesInThePathsArgumentIfAnyAreSet() throws IOException {
-    File parent = tmp.newFolder("zipstep");
-    File out = new File(parent, "output.zip");
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
 
-    File toZip = tmp.newFolder("zipdir");
-    Files.touch(new File(toZip, "file1.txt"));
-    Files.touch(new File(toZip, "file2.txt"));
-    Files.touch(new File(toZip, "file3.txt"));
+    Path toZip = tmp.newFolder("zipdir");
+
+    Files.createFile(toZip.resolve("file1.txt"));
+    Files.createFile(toZip.resolve("file2.txt"));
+    Files.createFile(toZip.resolve("file3.txt"));
 
     ZipStep step = new ZipStep(
         Paths.get("zipstep/output.zip"),
@@ -115,13 +115,13 @@ public class ZipStepTest {
 
   @Test
   public void willRecurseIntoSubdirectories() throws IOException {
-    File parent = tmp.newFolder("zipstep");
-    File out = new File(parent, "output.zip");
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
 
-    File toZip = tmp.newFolder("zipdir");
-    Files.touch(new File(toZip, "file1.txt"));
-    assertTrue(new File(toZip, "child").mkdir());
-    Files.touch(new File(toZip, "child/file2.txt"));
+    Path toZip = tmp.newFolder("zipdir");
+    Files.createFile(toZip.resolve("file1.txt"));
+    Files.createDirectories(toZip.resolve("child"));
+    Files.createFile(toZip.resolve("child/file2.txt"));
 
     ZipStep step = new ZipStep(
         Paths.get("zipstep/output.zip"),
@@ -141,14 +141,14 @@ public class ZipStepTest {
     // Symlinks on Windows are _hard_. Let's go shopping.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    File parent = tmp.newFolder("zipstep");
-    File out = new File(parent, "output.zip");
-    File target = new File(parent, "target");
-    Files.write("example content", target, Charsets.UTF_8);
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
+    Path target = parent.resolve("target");
+    Files.write(target, "example content".getBytes(UTF_8));
 
-    File toZip = tmp.newFolder("zipdir");
-    Path path = toZip.toPath().resolve("file.txt");
-    java.nio.file.Files.createSymbolicLink(path, target.toPath());
+    Path toZip = tmp.newFolder("zipdir");
+    Path path = toZip.resolve("file.txt");
+    Files.createSymbolicLink(path, target);
 
     ZipStep step = new ZipStep(
         Paths.get("zipstep/output.zip"),
@@ -168,8 +168,8 @@ public class ZipStepTest {
 
   @Test
   public void overwritingAnExistingZipFileIsAnError() throws IOException {
-    File parent = tmp.newFolder("zipstep");
-    File out = new File(parent, "output.zip");
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
 
     try (Zip zip = new Zip(out, true)) {
       zip.add("file1.txt", "");
@@ -187,12 +187,12 @@ public class ZipStepTest {
 
   @Test
   public void shouldBeAbleToJunkPaths() throws IOException {
-    File parent = tmp.newFolder("zipstep");
-    File out = new File(parent, "output.zip");
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
 
-    File toZip = tmp.newFolder("zipdir");
-    assertTrue(new File(toZip, "child").mkdir());
-    Files.touch(new File(toZip, "child/file1.txt"));
+    Path toZip = tmp.newFolder("zipdir");
+    Files.createDirectories(toZip.resolve("child"));
+    Files.createFile(toZip.resolve("child/file1.txt"));
 
     ZipStep step = new ZipStep(
         Paths.get("zipstep/output.zip"),
@@ -209,8 +209,8 @@ public class ZipStepTest {
 
   @Test
   public void zipWithEmptyDir() throws IOException {
-    File parent = tmp.newFolder("zipstep");
-    File out = new File(parent, "output.zip");
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
 
     tmp.newFolder("zipdir");
     tmp.newFolder("zipdir/foo/");
@@ -237,14 +237,14 @@ public class ZipStepTest {
    */
   @Test
   public void minCompressionWritesCorrectZipFile() throws IOException {
-    File parent = tmp.newFolder("zipstep");
-    File out = new File(parent, "output.zip");
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
 
-    File toZip = tmp.newFolder("zipdir");
+    Path toZip = tmp.newFolder("zipdir");
     byte[] contents = "hello world".getBytes();
-    Files.write(contents, new File(toZip, "file1.txt"));
-    Files.write(contents, new File(toZip, "file2.txt"));
-    Files.write(contents, new File(toZip, "file3.txt"));
+    Files.write(toZip.resolve("file1.txt"), contents);
+    Files.write(toZip.resolve("file2.txt"), contents);
+    Files.write(toZip.resolve("file3.txt"), contents);
 
     ZipStep step = new ZipStep(
         Paths.get("zipstep/output.zip"),
@@ -256,7 +256,7 @@ public class ZipStepTest {
 
     // Use apache's common-compress to parse the zip file, since it reads the central
     // directory and will verify it's valid.
-    try (ZipFile zip = new ZipFile(out)) {
+    try (ZipFile zip = new ZipFile(out.toFile())) {
       Enumeration<ZipArchiveEntry> entries = zip.getEntries();
       ZipArchiveEntry entry1 = entries.nextElement();
       assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry1)));
@@ -269,13 +269,13 @@ public class ZipStepTest {
 
   @Test
   public void timesAreSanitized() throws IOException {
-    File parent = tmp.newFolder("zipstep");
+    Path parent = tmp.newFolder("zipstep");
 
     // Create a zip file with a file and a directory.
-    File toZip = tmp.newFolder("zipdir");
-    assertTrue(new File(toZip, "child").mkdir());
-    Files.touch(new File(toZip, "child/file.txt"));
-    Path outputZip = parent.toPath().resolve("output.zip");
+    Path toZip = tmp.newFolder("zipdir");
+    Files.createDirectories(toZip.resolve("child"));
+    Files.createFile(toZip.resolve("child/file.txt"));
+    Path outputZip = parent.resolve("output.zip");
     ZipStep step = new ZipStep(
         outputZip,
         ImmutableSet.<Path>of(),
@@ -285,7 +285,7 @@ public class ZipStepTest {
     assertEquals(0, step.execute(executionContext));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
-    assertTrue(java.nio.file.Files.exists(outputZip));
+    assertTrue(Files.exists(outputZip));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_EPOCH_START));
     try (ZipInputStream is = new ZipInputStream(new FileInputStream(outputZip.toFile()))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
@@ -298,8 +298,8 @@ public class ZipStepTest {
   public void zipMaintainsExecutablePermissions() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    Path parent = tmp.newFolder("zipstep").toPath();
-    Path toZip = tmp.newFolder("zipdir").toPath();
+    Path parent = tmp.newFolder("zipstep");
+    Path toZip = tmp.newFolder("zipdir");
     Path file = toZip.resolve("foo.sh");
     ImmutableSet<PosixFilePermission> filePermissions =
         ImmutableSet.of(
@@ -308,7 +308,7 @@ public class ZipStepTest {
             PosixFilePermission.OWNER_EXECUTE,
             PosixFilePermission.GROUP_READ,
             PosixFilePermission.OTHERS_READ);
-    java.nio.file.Files.createFile(
+    Files.createFile(
         file,
         PosixFilePermissions.asFileAttribute(filePermissions));
     Path outputZip = parent.resolve("output.zip");
@@ -320,9 +320,9 @@ public class ZipStepTest {
         Paths.get("zipdir"));
     assertEquals(0, step.execute(executionContext));
 
-    Path destination = tmp.newFolder("output").toPath();
+    Path destination = tmp.newFolder("output");
     Unzip.extractZipFile(outputZip, destination, Unzip.ExistingFileMode.OVERWRITE);
-    assertTrue(java.nio.file.Files.isExecutable(destination.resolve("foo.sh")));
+    assertTrue(Files.isExecutable(destination.resolve("foo.sh")));
   }
 
   @Test

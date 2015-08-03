@@ -81,8 +81,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -812,13 +812,13 @@ public class TestRunning {
         // Traverse the file system from the parent directory of the java file until we hit the
         // parent of the src root directory.
         ImmutableSet<String> pathElements = defaultJavaPackageFinder.getPathElements();
-        File directory = filesystem.getFileForRelativePath(javaSrcPath.getParent());
-        while (directory != null && !pathElements.contains(directory.getName())) {
-          directory = directory.getParentFile();
+        Path directory = filesystem.getPathForRelativePath(javaSrcPath.getParent());
+        while (directory != null && !pathElements.contains(directory.getFileName().toString())) {
+          directory = directory.getParent();
         }
 
         if (directory != null) {
-          String directoryPath = directory.getPath();
+          String directoryPath = directory.toString();
           if (!directoryPath.endsWith("/")) {
             directoryPath += "/";
           }

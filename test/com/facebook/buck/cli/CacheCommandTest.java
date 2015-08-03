@@ -35,8 +35,8 @@ import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class CacheCommandTest extends EasyMockSupport {
 
@@ -62,7 +62,7 @@ public class CacheCommandTest extends EasyMockSupport {
     expect(
         cache.fetch(
             eq(new RuleKey(ruleKeyHash)),
-            isA(File.class)))
+            isA(Path.class)))
         .andReturn(CacheResult.hit("http"));
     ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(cache);
 
@@ -95,7 +95,7 @@ public class CacheCommandTest extends EasyMockSupport {
     expect(
         cache.fetch(
             eq(new RuleKey(ruleKeyHash)),
-            isA(File.class)))
+            isA(Path.class)))
         .andReturn(CacheResult.miss());
     ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(cache);
 
