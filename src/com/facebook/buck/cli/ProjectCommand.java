@@ -456,11 +456,19 @@ public class ProjectCommand extends BuildCommand {
 
     if (!requiredBuildTargets.isEmpty()) {
       BuildCommand buildCommand = new BuildCommand();
+      buildCommand.setKeepGoing(true);
       buildCommand.setArguments(
           FluentIterable.from(requiredBuildTargets)
               .transform(Functions.toStringFunction())
               .toList());
-      return buildCommand.run(params);
+      int exitCode = buildCommand.run(params);
+      if (exitCode != 0) {
+        params.getConsole().getAnsi().printHighlightedSuccessText(
+            params.getConsole().getStdErr(),
+            "Because the build did not complete successfully some parts of the project may not\n" +
+            "work correctly with IntelliJ. Please fix the errors and run this command again.\n");
+      }
+      return exitCode;
     }
 
     return 0;

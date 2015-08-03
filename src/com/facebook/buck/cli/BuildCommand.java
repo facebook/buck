@@ -179,6 +179,10 @@ public class BuildCommand extends AbstractCommand {
     return keepGoing;
   }
 
+  public void setKeepGoing(boolean keepGoing) {
+    this.keepGoing = keepGoing;
+  }
+
   public double getLoadLimit(BuckConfig buckConfig) {
     if (loadLimit == null) {
       ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
