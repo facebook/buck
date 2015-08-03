@@ -194,7 +194,7 @@ public class Resolver {
 
     Path relativePath = resolveArtifact(jar, repoSys, session, project);
 
-    Prebuilt library = new Prebuilt(jar.getArtifactId(), relativePath);
+    Prebuilt library = new Prebuilt(jar.getArtifactId(), jar.toString(), relativePath);
 
     downloadSources(jar, repoSys, session, project, library);
     return library;
@@ -488,19 +488,26 @@ public class Resolver {
   private static class Prebuilt implements Comparable<Prebuilt> {
 
     private final String name;
+    private final String mavenCoords;
     private final Path binaryJar;
-    private Path sourceJar;
+    @Nullable private Path sourceJar;
     private final SortedSet<String> deps = new TreeSet<>(new BuckDepComparator());
     private final SortedSet<String> visibilities = new TreeSet<>(new BuckDepComparator());
 
-    public Prebuilt(String name, Path binaryJar) {
+    public Prebuilt(String name, String mavenCoords, Path binaryJar) {
       this.name = name;
+      this.mavenCoords = mavenCoords;
       this.binaryJar = binaryJar;
     }
 
     @SuppressWarnings("unused") // This method is read reflectively.
     public String getName() {
       return name;
+    }
+
+    @SuppressWarnings("unused") // This method is read reflectively.
+    public String getMavenCoords() {
+      return mavenCoords;
     }
 
     @SuppressWarnings("unused") // This method is read reflectively.
@@ -512,7 +519,7 @@ public class Resolver {
       this.sourceJar = sourceJar;
     }
 
-    @SuppressWarnings("unused") // This method is read reflectively.
+    @Nullable
     public Path getSourceJar() {
       return sourceJar;
     }

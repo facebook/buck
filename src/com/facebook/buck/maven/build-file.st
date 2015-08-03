@@ -5,6 +5,7 @@ prebuilts(data) ::= <<
 prebuilt(data) ::= <<
 prebuilt_jar(
   name = '<data.name>',
+  maven_coords = '<data.mavenCoords>',
   binary_jar = '<data.binaryJar>',
   <if(data.sourceJar)>source_jar = '<data.sourceJar>',<endif>
   <if(data.deps)>
