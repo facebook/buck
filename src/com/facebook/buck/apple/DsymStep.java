@@ -54,7 +54,6 @@ public class DsymStep extends ShellStep {
 
     commandBuilder.addAll(command);
     commandBuilder.add(
-        "--oso-prepend-path=" + context.getProjectFilesystem().getRootPath().toString() + "/",
         "-o", context.getProjectFilesystem().resolve(output).toString(),
         context.getProjectFilesystem().resolve(input).toString());
 

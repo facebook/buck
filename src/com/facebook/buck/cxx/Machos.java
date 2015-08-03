@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.util.MoreStrings;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
@@ -204,12 +205,21 @@ public class Machos {
           stringTable.position(stringTableIndex);
           String string = ObjectFileScrubbers.getAsciiString(stringTable);
           if (type == N_OSO) {
-            string = MoreStrings.stripPrefix(string, prefix).or(string);
+            string = MoreStrings
+                .stripPrefix(string, prefix)
+                .transform(
+                    new Function<String, String>() {
+                      @Override
+                      public String apply(String input) {
+                        return "./" + input;
+                      }
+                    })
+                .or(string);
             map.position(valuePosition);
             if (header.getIs64Bit()) {
-              ObjectFileScrubbers.putLittleEndianLong(map, Ints.MAX_POWER_OF_TWO);
+              ObjectFileScrubbers.putLittleEndianLong(map, 0);
             } else {
-              ObjectFileScrubbers.putLittleEndianInt(map, Ints.MAX_POWER_OF_TWO);
+              ObjectFileScrubbers.putLittleEndianInt(map, 0);
             }
           }
           map.position(currentStringTableOffset);
