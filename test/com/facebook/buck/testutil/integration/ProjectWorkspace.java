@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -150,7 +151,14 @@ public class ProjectWorkspace {
           // On NTFS length of path must be greater than 0 and less than 4096.
           if (attrs.size() > 0 && attrs.size() <= 4096) {
             String linkTo = new String(Files.readAllBytes(path), UTF_8);
-            Path linkToFile = templatePath.resolve(linkTo);
+            Path linkToFile = null;
+            try {
+              linkToFile = templatePath.resolve(linkTo);
+            } catch (InvalidPathException e) {
+              // Let's assume we were reading a normal text file, and not something meant to be a
+              // link.
+              return FileVisitResult.CONTINUE;
+            }
             if (Files.isRegularFile(linkToFile)) {
               Files.copy(linkToFile, path, StandardCopyOption.REPLACE_EXISTING);
             } else if (Files.isDirectory(linkToFile)) {
