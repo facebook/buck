@@ -389,7 +389,8 @@ public class Parser {
             buildTargets,
             parserConfig,
             buildFileParser,
-            environment);
+            environment,
+            eventBus);
         return new Pair<>(buildTargets, graph);
       } finally {
         eventBus.post(ParseEvent.finished(buildTargets, Optional.fromNullable(graph)));
@@ -442,62 +443,77 @@ public class Parser {
       Iterable<BuildTarget> toExplore,
       final ParserConfig parserConfig,
       final ProjectBuildFileParser buildFileParser,
-      final ImmutableMap<String, String> environment) throws IOException, InterruptedException {
+      final ImmutableMap<String, String> environment,
+      final BuckEventBus eventBus) throws IOException, InterruptedException {
 
     final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+
+    final Optional<BuckEventBus> eventBusOptional = Optional.of(eventBus);
 
     AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget> traversal =
         new AbstractAcyclicDepthFirstPostOrderTraversal<BuildTarget>() {
           @Override
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget)
               throws IOException, InterruptedException {
-            BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
-                BuildTargetPatternParser.forBaseName(buildTarget.getBaseName());
+            eventBus.post(GetTargetDependenciesEvent.started(buildTarget));
+            try {
+              BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
+                  BuildTargetPatternParser.forBaseName(buildTarget.getBaseName());
 
-            // Verify that the BuildTarget actually exists in the map of known BuildTargets
-            // before trying to recurse through its children.
-            TargetNode<?> targetNode = getTargetNode(buildTarget);
-            if (targetNode == null) {
-              throw new HumanReadableException(
-                  NoSuchBuildTargetException.createForMissingBuildRule(
-                      buildTarget,
-                      buildTargetPatternParser,
-                      parserConfig.getBuildFileName()));
-            }
-
-            Set<BuildTarget> deps = Sets.newHashSet();
-            for (BuildTarget buildTargetForDep : targetNode.getDeps()) {
-              try {
-                TargetNode<?> depTargetNode = getTargetNode(buildTargetForDep);
-                if (depTargetNode == null) {
-                  parseBuildFileContainingTarget(
-                      buildTargetForDep,
-                      parserConfig,
-                      buildFileParser,
-                      environment);
-                  depTargetNode = getTargetNode(buildTargetForDep);
-                  if (depTargetNode == null) {
-                    throw new HumanReadableException(
-                        NoSuchBuildTargetException.createForMissingBuildRule(
-                            buildTargetForDep,
-                            BuildTargetPatternParser.forBaseName(
-                                buildTargetForDep.getBaseName()),
-                            parserConfig.getBuildFileName()));
-                  }
-                }
-                depTargetNode.checkVisibility(buildTarget);
-                deps.add(buildTargetForDep);
-              } catch (HumanReadableException | BuildTargetException | BuildFileParseException e) {
+              // Verify that the BuildTarget actually exists in the map of known BuildTargets
+              // before trying to recurse through its children.
+              eventBus.post(GetTargetNodeEvent.started(buildTarget));
+              TargetNode<?> targetNode = state.get(buildTarget, eventBusOptional);
+              eventBus.post(GetTargetNodeEvent.finished(buildTarget));
+              if (targetNode == null) {
                 throw new HumanReadableException(
-                    e,
-                    "Couldn't get dependency '%s' of target '%s':\n%s",
-                    buildTargetForDep,
-                    buildTarget,
-                    e.getHumanReadableErrorMessage());
+                    NoSuchBuildTargetException.createForMissingBuildRule(
+                        buildTarget,
+                        buildTargetPatternParser,
+                        parserConfig.getBuildFileName()));
               }
-            }
 
-            return deps.iterator();
+              Set<BuildTarget> deps = Sets.newHashSet();
+              for (BuildTarget buildTargetForDep : targetNode.getDeps()) {
+                try {
+                  eventBus.post(GetTargetNodeEvent.started(buildTargetForDep));
+                  TargetNode<?> depTargetNode = state.get(buildTargetForDep, eventBusOptional);
+                  eventBus.post(GetTargetNodeEvent.finished(buildTargetForDep));
+                  if (depTargetNode == null) {
+                    parseBuildFileContainingTarget(
+                        buildTargetForDep,
+                        parserConfig,
+                        buildFileParser,
+                        environment);
+                    eventBus.post(GetTargetNodeEvent.started(buildTargetForDep));
+                    depTargetNode = state.get(buildTargetForDep, eventBusOptional);
+                    eventBus.post(GetTargetNodeEvent.finished(buildTargetForDep));
+                    if (depTargetNode == null) {
+                      throw new HumanReadableException(
+                          NoSuchBuildTargetException.createForMissingBuildRule(
+                              buildTargetForDep,
+                              BuildTargetPatternParser.forBaseName(
+                                  buildTargetForDep.getBaseName()),
+                              parserConfig.getBuildFileName()));
+                    }
+                  }
+                  depTargetNode.checkVisibility(buildTarget);
+                  deps.add(buildTargetForDep);
+                } catch (HumanReadableException | BuildTargetException | BuildFileParseException
+                             e) {
+                  throw new HumanReadableException(
+                      e,
+                      "Couldn't get dependency '%s' of target '%s':\n%s",
+                      buildTargetForDep,
+                      buildTarget,
+                      e.getHumanReadableErrorMessage());
+                }
+              }
+
+              return deps.iterator();
+            } finally {
+              eventBus.post(GetTargetDependenciesEvent.finished(buildTarget));
+            }
           }
 
           @Override
@@ -1040,8 +1056,15 @@ public class Parser {
     }
 
     @Nullable
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public TargetNode<?> get(BuildTarget buildTarget) throws IOException, InterruptedException {
+      return get(buildTarget, Optional.<BuckEventBus>absent());
+    }
+
+    @Nullable
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public TargetNode<?> get(
+        BuildTarget buildTarget,
+        Optional<BuckEventBus> eventBus) throws IOException, InterruptedException {
       // Fast path.
       TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);
       if (toReturn != null) {
@@ -1122,6 +1145,9 @@ public class Parser {
         try {
           ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
           ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
+          if (eventBus.isPresent()) {
+            eventBus.get().post(MarshalConstructorArgsEvent.started(buildTarget));
+          }
           marshaller.populate(
               targetRepo.getFilesystem(),
               factoryParams,
@@ -1129,12 +1155,21 @@ public class Parser {
               declaredDeps,
               visibilityPatterns,
               map);
+          if (eventBus.isPresent()) {
+            eventBus.get().post(MarshalConstructorArgsEvent.finished(buildTarget));
+          }
+          if (eventBus.isPresent()) {
+            eventBus.get().post(CreateTargetNodeEvent.started(buildTarget));
+          }
           targetNode = new TargetNode(
               description,
               constructorArg,
               factoryParams,
               declaredDeps.build(),
               visibilityPatterns.build());
+          if (eventBus.isPresent()) {
+            eventBus.get().post(CreateTargetNodeEvent.finished(buildTarget));
+          }
         } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
           throw new HumanReadableException(e);
         } catch (ConstructorArgMarshalException e) {

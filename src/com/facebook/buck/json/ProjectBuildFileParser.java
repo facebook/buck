@@ -252,6 +252,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Preconditions.checkNotNull(buckPyStdinWriter);
     Preconditions.checkNotNull(buckPyProcess);
 
+    buckEventBus.post(ParseBuckFileEvent.started(buildFile));
     String buildFileString = buildFile.toString();
     LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
     buckPyStdinWriter.write(buildFileString);
@@ -261,7 +262,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
     LOG.debug("Parsing output of process %s...", buckPyProcess);
     List<Map<String, Object>> result = buckPyStdoutParser.nextRules();
     LOG.verbose("Got rules: %s", result);
-    LOG.debug("Parsed %d rules from process", result.size());
+    int numRules = result.size();
+    LOG.debug("Parsed %d rules from process", numRules);
+    buckEventBus.post(ParseBuckFileEvent.finished(buildFile, numRules));
     return result;
   }
 

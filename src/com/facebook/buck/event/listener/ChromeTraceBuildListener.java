@@ -27,11 +27,16 @@ import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.io.PathListing;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.java.AnnotationProcessingEvent;
 import com.facebook.buck.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.parser.CreateTargetNodeEvent;
+import com.facebook.buck.parser.MarshalConstructorArgsEvent;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.parser.GetTargetDependenciesEvent;
+import com.facebook.buck.parser.GetTargetNodeEvent;
 import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
@@ -306,6 +311,128 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ImmutableMap.of(
             "targets",
             Joiner.on(",").join(finished.getBuildTargets())),
+        finished);
+  }
+
+  @Subscribe
+  public void getTargetDependenciesStarted(GetTargetDependenciesEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        "get_target_deps",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "target",
+            started.getBuildTarget().toString()),
+        started);
+  }
+
+  @Subscribe
+  public void getTargetDependenciesFinished(GetTargetDependenciesEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        "get_target_deps",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "target",
+            finished.getBuildTarget().toString()),
+        finished);
+  }
+
+  @Subscribe
+  public void getTargetNodeStarted(GetTargetNodeEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        "get_target_node",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "target",
+            started.getBuildTarget().toString()),
+        started);
+  }
+
+  @Subscribe
+  public void getTargetNodeFinished(GetTargetNodeEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        "get_target_node",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "target",
+            finished.getBuildTarget().toString()),
+        finished);
+  }
+
+  @Subscribe
+  public void marshalConstructorArgsStarted(MarshalConstructorArgsEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        "marshal_constructor_args",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "target",
+            started.getBuildTarget().toString()),
+        started);
+  }
+
+  @Subscribe
+  public void marshalConstructorArgsFinished(MarshalConstructorArgsEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        "marshal_constructor_args",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "target",
+            finished.getBuildTarget().toString()),
+        finished);
+  }
+
+  @Subscribe
+  public void createTargetNodeStarted(CreateTargetNodeEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        "create_target_node",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "target",
+            started.getBuildTarget().toString()),
+        started);
+  }
+
+  @Subscribe
+  public void createTargetNodeFinished(CreateTargetNodeEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        "create_target_node",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "target",
+            finished.getBuildTarget().toString()),
+        finished);
+  }
+
+  @Subscribe
+  public void parseBuckFileStarted(ParseBuckFileEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        "parse_file",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "path",
+            started.getBuckFilePath().toString()),
+        started);
+  }
+
+  @Subscribe
+  public void parseBuckFileFinished(ParseBuckFileEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        "parse_file",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "path",
+            finished.getBuckFilePath().toString(),
+            "num_rules",
+            Integer.toString(finished.getNumRules())),
         finished);
   }
 
