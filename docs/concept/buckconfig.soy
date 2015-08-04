@@ -236,6 +236,10 @@ This section configures the paths to the C++ toolchain's binaries.
   # Path to the C/C++ linker driver
   ld = /usr/bin/g++
 
+  # Platform for the linker which is one of {MACOS, LINUX, WINDOWS, UNKNOWN}
+  # Note that the platform is normally auto-detected
+  linker_platform = MACOS
+
   # Path to the C++ preprocessor
   cxxpp = /usr/bin/g++
 
@@ -250,6 +254,10 @@ This section configures the paths to the C++ toolchain's binaries.
 
   # Path to the archiver
   ar = /usr/bin/ar
+
+  # Platform for the archiver which is one of {MACOS, LINUX, WINDOWS, UNKNOWN}
+  # Note that the platform is normally auto-detected
+  archiver_platform = MACOS
 
   # Path to the lexer
   lex = /usr/bin/flex

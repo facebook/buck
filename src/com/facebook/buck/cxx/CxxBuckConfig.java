@@ -161,7 +161,35 @@ public class CxxBuckConfig {
         break;
       default:
         throw new RuntimeException(
-            "Invalid platform for linker. Must be one of {MACOS, LINUX, WINDOWS}");
+            "Invalid platform for linker. Must be one of {MACOS, LINUX, WINDOWS, UNKNOWN}");
+    }
+    return Optional.of(result);
+  }
+
+  /*
+   * Constructs the appropriate Archiver for the specified platform.
+   */
+  public Optional<Archiver> getArchiver(Tool ar) {
+    Optional<Platform> archiverPlatform = delegate
+        .getEnum(cxxSection, "archiver_platform", Platform.class);
+    if (!archiverPlatform.isPresent()) {
+      return Optional.absent();
+    }
+    Archiver result;
+    switch (archiverPlatform.get()) {
+      case MACOS:
+        result = new BsdArchiver(ar);
+        break;
+      case LINUX:
+      case WINDOWS:
+        result = new GnuArchiver(ar);
+        break;
+      case UNKNOWN:
+        result = new UnknownArchiver(ar);
+        break;
+      default:
+        throw new RuntimeException(
+            "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS, UNKNOWN}");
     }
     return Optional.of(result);
   }

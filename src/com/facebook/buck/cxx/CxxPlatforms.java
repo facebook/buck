@@ -98,7 +98,7 @@ public class CxxPlatforms {
             getTool(flavor, "cxxpp", config).transform(getPreprocessor(cxxpp.getClass())).or(cxxpp))
         .setLd(getTool(flavor, "ld", config).transform(getLinker(ld.getClass(), config)).or(ld))
         .addAllLdflags(ldFlags)
-        .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass())).or(ar))
+        .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
         .setStrip(getTool(flavor, "strip", config).or(strip))
         .setLex(getTool(flavor, "lex", config).or(lex))
         .setYacc(getTool(flavor, "yacc", config).or(yacc))
@@ -152,7 +152,9 @@ public class CxxPlatforms {
             getTool(flavor, "ld", config)
                 .transform(getLinker(defaultPlatform.getLd().getClass(), config))
                 .or(defaultPlatform.getLd()))
-        .setAr(new GnuArchiver(getTool(flavor, "ar", config).or(defaultPlatform.getAr())))
+        .setAr(getTool(flavor, "ar", config)
+                .transform(getArchiver(defaultPlatform.getAr().getClass(), config))
+                .or(defaultPlatform.getAr()))
         .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
         .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
         .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
@@ -194,12 +196,14 @@ public class CxxPlatforms {
     };
   }
 
-  private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass) {
+  private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass,
+      final CxxBuckConfig config) {
     return new Function<Tool, Archiver>() {
       @Override
       public Archiver apply(Tool input) {
         try {
-          return arClass.getConstructor(Tool.class).newInstance(input);
+          return config.getArchiver(input)
+              .or(arClass.getConstructor(Tool.class).newInstance(input));
         } catch (ReflectiveOperationException e) {
           throw new RuntimeException(e);
         }

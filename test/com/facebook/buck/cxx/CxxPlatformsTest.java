@@ -186,4 +186,42 @@ public class CxxPlatformsTest {
     expectedException.expect(RuntimeException.class);
     DefaultCxxPlatforms.build(buckConfig);
   }
+
+  public Archiver getPlatformArchiver(Platform archiverPlatform) {
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+        "cxx", ImmutableMap.of(
+            "ar", Paths.get("fake_path").toString(),
+            "archiver_platform", archiverPlatform.name()));
+
+    CxxBuckConfig buckConfig = new CxxBuckConfig(new FakeBuckConfig(sections,
+        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path")))));
+
+    return DefaultCxxPlatforms.build(buckConfig).getAr();
+  }
+
+  @Test
+  public void archiverrOverriddenByConfig() {
+    assertThat("MACOS archiver was not a BsdArchiver instance",
+        getPlatformArchiver(Platform.MACOS), instanceOf(BsdArchiver.class));
+    assertThat("LINUX archiver was not a GnuArchiver instance",
+        getPlatformArchiver(Platform.LINUX), instanceOf(GnuArchiver.class));
+    assertThat("WINDOWS archiver was not a GnuArchiver instance",
+        getPlatformArchiver(Platform.WINDOWS), instanceOf(GnuArchiver.class));
+    assertThat("UNKNOWN archiver was not a UnknownArchiver instance",
+        getPlatformArchiver(Platform.UNKNOWN), instanceOf(UnknownArchiver.class));
+  }
+
+  @Test
+  public void invalidArchiverOverrideFails() {
+    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
+      "cxx", ImmutableMap.of(
+            "ar", Paths.get("fake_path").toString(),
+            "archiver_platform", "WRONG_PLATFORM"));
+
+    CxxBuckConfig buckConfig = new CxxBuckConfig(new FakeBuckConfig(sections,
+        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path")))));
+
+    expectedException.expect(RuntimeException.class);
+    DefaultCxxPlatforms.build(buckConfig);
+  }
 }
