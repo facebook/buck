@@ -251,7 +251,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   /**
    * @param outputDirectory Directory to write class files to
-   * @param transitiveClasspathEntries Classpaths of all transitive dependencies.
    * @param declaredClasspathEntries Classpaths of all declared dependencies.
    * @param javacOptions javac configuration.
    * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
@@ -260,7 +259,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @VisibleForTesting
   void createCommandsForJavac(
       Path outputDirectory,
-      ImmutableSet<Path> transitiveClasspathEntries,
       ImmutableSet<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
@@ -510,11 +508,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .filter(Predicates.notNull())
         .toSet();
 
-    ImmutableSet<Path> transitive = ImmutableSet.<Path>builder()
-        .addAll(transitiveClasspathEntries.values())
-        .addAll(provided)
-        .build();
-
     ImmutableSet<Path> declared = ImmutableSet.<Path>builder()
         .addAll(declaredClasspathEntries.values())
         .addAll(provided)
@@ -523,7 +516,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     // This adds the javac command, along with any supporting commands.
     createCommandsForJavac(
         outputDirectory,
-        transitive,
         declared,
         javacOptions,
         suggestBuildRule,
