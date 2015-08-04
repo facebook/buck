@@ -35,4 +35,9 @@ abstract class AbstractProjectBuildFileParserOptions {
   abstract String getBuildFileName();
   abstract List<String> getDefaultIncludes();
   abstract ImmutableSet<Description<?>> getDescriptions();
+
+  @Value.Default
+  public boolean getUseWatchmanGlob() {
+    return false;
+  }
 }

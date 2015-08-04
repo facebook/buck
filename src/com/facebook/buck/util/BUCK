@@ -88,6 +88,7 @@ java_library(
   srcs = WATCHMAN_WATCHER_SRCS,
   deps = [
     ':exceptions',
+    ':io',
     ':util',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',

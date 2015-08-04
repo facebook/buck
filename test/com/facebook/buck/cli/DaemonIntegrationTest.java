@@ -45,11 +45,14 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -489,6 +492,15 @@ public class DaemonIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     ObjectMapper objectMapper = new ObjectMapper();
 
+    ProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
+        new Function<ProcessExecutorParams, FakeProcess>() {
+          @Override
+          public FakeProcess apply(ProcessExecutorParams params) {
+            return new FakeProcess(0);
+          }
+        },
+        new TestConsole());
+
     Object daemon = Main.getDaemon(
         new TestRepositoryBuilder().setBuckConfig(
             new FakeBuckConfig(
@@ -496,7 +508,8 @@ public class DaemonIntegrationTest {
             .setFilesystem(filesystem)
             .build(),
         new FakeClock(0),
-        objectMapper);
+        objectMapper,
+        fakeProcessExecutor);
 
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
@@ -507,7 +520,8 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             new FakeClock(0),
-            objectMapper));
+            objectMapper,
+            fakeProcessExecutor));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -520,7 +534,8 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             new FakeClock(0),
-            objectMapper));
+            objectMapper,
+            fakeProcessExecutor));
   }
 
   @Test
@@ -551,6 +566,14 @@ public class DaemonIntegrationTest {
       throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     ObjectMapper objectMapper = new ObjectMapper();
+    ProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
+        new Function<ProcessExecutorParams, FakeProcess>() {
+          @Override
+          public FakeProcess apply(ProcessExecutorParams params) {
+            return new FakeProcess(0);
+          }
+        },
+        new TestConsole());
 
     Object daemon = Main.getDaemon(
         new TestRepositoryBuilder()
@@ -562,7 +585,8 @@ public class DaemonIntegrationTest {
             .setFilesystem(filesystem)
             .build(),
         new FakeClock(0),
-        objectMapper);
+        objectMapper,
+        fakeProcessExecutor);
 
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
@@ -576,7 +600,8 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             new FakeClock(0),
-            objectMapper));
+            objectMapper,
+            fakeProcessExecutor));
   }
 
   private void waitForChange(final Path path) throws IOException, InterruptedException {

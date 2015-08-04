@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.ByteArrayInputStream;
@@ -34,6 +35,7 @@ public class FakeProcess extends Process {
   private final ByteArrayOutputStream outputMirror;
   private final InputStream inputStream;
   private final InputStream errorStream;
+  private final Optional<InterruptedException> waitForException;
   private boolean isDestroyed;
   private boolean isWaitedFor;
 
@@ -45,11 +47,20 @@ public class FakeProcess extends Process {
       int exitValue,
       String stdout,
       String stderr) {
+    this(exitValue, stdout, stderr, Optional.<InterruptedException>absent());
+  }
+
+  public FakeProcess(
+      int exitValue,
+      String stdout,
+      String stderr,
+      Optional<InterruptedException> waitForException) {
     this(
         exitValue,
         new ByteArrayOutputStream(),
         new ByteArrayInputStream(Preconditions.checkNotNull(stdout).getBytes(Charsets.UTF_8)),
-        new ByteArrayInputStream(Preconditions.checkNotNull(stderr).getBytes(Charsets.UTF_8)));
+        new ByteArrayInputStream(Preconditions.checkNotNull(stderr).getBytes(Charsets.UTF_8)),
+        waitForException);
   }
 
   public FakeProcess(
@@ -57,11 +68,26 @@ public class FakeProcess extends Process {
       OutputStream outputStream,
       InputStream inputStream,
       InputStream errorStream) {
+    this(
+        exitValue,
+        outputStream,
+        inputStream,
+        errorStream,
+        Optional.<InterruptedException>absent());
+  }
+
+  public FakeProcess(
+      int exitValue,
+      OutputStream outputStream,
+      InputStream inputStream,
+      InputStream errorStream,
+      Optional<InterruptedException> waitForException) {
     this.exitValue = exitValue;
     this.outputStream = Preconditions.checkNotNull(outputStream);
     this.outputMirror = new ByteArrayOutputStream();
     this.inputStream = Preconditions.checkNotNull(inputStream);
     this.errorStream = Preconditions.checkNotNull(errorStream);
+    this.waitForException = waitForException;
   }
 
   @Override
@@ -108,9 +134,16 @@ public class FakeProcess extends Process {
   }
 
   @Override
-  public int waitFor() {
-    isWaitedFor = true;
-    return exitValue;
+  public int waitFor() throws InterruptedException {
+    if (isWaitedFor) {
+      return exitValue;
+    } else {
+      isWaitedFor = true;
+      if (waitForException.isPresent()) {
+        throw waitForException.get();
+      }
+      return exitValue;
+    }
   }
 
   /**

@@ -197,7 +197,8 @@ public class Parser {
       boolean enforceBuckPackageBoundary,
       ImmutableSet<Pattern> tempFilePatterns,
       final String buildFileName,
-      Iterable<String> defaultIncludes)
+      Iterable<String> defaultIncludes,
+      boolean useWatchmanGlob)
       throws IOException, InterruptedException {
     return new Parser(
         repository,
@@ -223,6 +224,7 @@ public class Parser {
                 .setBuildFileName(buildFileName)
                 .setDefaultIncludes(defaultIncludes)
                 .setDescriptions(repository.getAllDescriptions())
+                .setUseWatchmanGlob(useWatchmanGlob)
                 .build()));
   }
 

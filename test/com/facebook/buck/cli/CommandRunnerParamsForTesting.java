@@ -81,7 +81,8 @@ public class CommandRunnerParamsForTesting {
             parserConfig.getEnforceBuckPackageBoundary(),
             parserConfig.getTempFilePatterns(),
             parserConfig.getBuildFileName(),
-            parserConfig.getDefaultIncludes()),
+            parserConfig.getDefaultIncludes(),
+            false), // useWatchmanGlob
         platform,
         environment,
         javaPackageFinder,
