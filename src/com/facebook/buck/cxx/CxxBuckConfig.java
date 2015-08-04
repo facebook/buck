@@ -157,6 +157,8 @@ public class CxxBuckConfig {
         result = new GnuLinker(ld);
         break;
       case UNKNOWN:
+        result = new UnknownLinker(ld);
+        break;
       default:
         throw new RuntimeException(
             "Invalid platform for linker. Must be one of {MACOS, LINUX, WINDOWS}");

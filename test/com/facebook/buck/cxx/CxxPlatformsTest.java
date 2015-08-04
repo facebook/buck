@@ -169,6 +169,8 @@ public class CxxPlatformsTest {
         getPlatformLinker(Platform.LINUX), instanceOf(GnuLinker.class));
     assertThat("WINDOWS linker was not a GnuLinker instance",
         getPlatformLinker(Platform.WINDOWS), instanceOf(GnuLinker.class));
+    assertThat("UNKNOWN linker was not a UnknownLinker instance",
+        getPlatformLinker(Platform.UNKNOWN), instanceOf(UnknownLinker.class));
   }
 
   @Test
