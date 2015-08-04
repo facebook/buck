@@ -18,12 +18,18 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.BuildTargetParser;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.TreeMultimap;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryException;
 
@@ -33,6 +39,7 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.MissingFormatArgumentException;
 import java.util.Set;
 
 public class QueryCommand extends AbstractCommand {
@@ -59,19 +66,75 @@ public class QueryCommand extends AbstractCommand {
     this.arguments = arguments;
   }
 
+  public List<String> getMultipleQueryInputsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    // Don't consider the first argument as input because it is the query expression format.
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(
+        arguments.subList(1, arguments.size()));
+  }
+
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    if (getArguments().isEmpty()) {
+      params.getConsole().printBuildFailure("Must specify at least a the query expression");
+      return 1;
+    }
 
-    if (getArguments().size() != 1) {
-      params.getConsole().printBuildFailure("Specify a single argument: the query expression");
+    // We're not using any of Bazel's settings.
+    Set<QueryEnvironment.Setting> settings = new HashSet<>();
+    BuckQueryEnvironment env = new BuckQueryEnvironment(params, settings, getEnableProfiling());
+
+    String query = getArguments().get(0);
+    if (query.contains("%s")) {
+      return runMultipleQuery(params, env);
+    } else {
+      return runSingleQuery(params, env);
+    }
+  }
+
+  /**
+   * Evaluate multiple queries in a single `buck query` run. Usage:
+   *   buck query <query format> <input1> <input2> <...> <inputN>
+   */
+  private int runMultipleQuery(CommandRunnerParams params, BuckQueryEnvironment env)
+      throws IOException, InterruptedException {
+    if (getArguments().size() < 2) {
+      params.getConsole().printBuildFailure(
+          "Specify one or more input targets after the query expression format");
       return 1;
     }
 
     try {
-      // We're not using any of Bazel's settings.
-      Set<QueryEnvironment.Setting> settings = new HashSet<>();
-      BuckQueryEnvironment env = new BuckQueryEnvironment(params, settings, getEnableProfiling());
+      String queryFormat = getArguments().get(0);
+      TreeMultimap<BuildTarget, BuildTarget> queryResultMap = TreeMultimap.create();
 
+      for (String input : getMultipleQueryInputsFormattedAsBuildTargets(params.getBuckConfig())) {
+        BuildTarget target = BuildTargetParser.INSTANCE.parse(
+            input,
+            BuildTargetPatternParser.fullyQualified());
+        String query = String.format(queryFormat, input);
+        Set<BuildTarget> queryResult = env.evaluateQuery(query);
+        queryResultMap.putAll(target, queryResult);
+      }
+
+      LOG.debug("Printing out the following targets: " + queryResultMap);
+      if (shouldGenerateJsonOutput()) {
+        printJSON(params, queryResultMap);
+      } else {
+        printToConsole(params, queryResultMap);
+      }
+    } catch (QueryException e) {
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      return 1;
+    } catch (MissingFormatArgumentException e) {
+      params.getConsole().printBuildFailure(
+          "The query expression should contain only one format specifier");
+    }
+    return 0;
+  }
+
+  private int runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env)
+      throws IOException, InterruptedException {
+    try {
       String query = getArguments().get(0);
       Set<BuildTarget> queryResult = env.evaluateQuery(query);
 
@@ -85,13 +148,29 @@ public class QueryCommand extends AbstractCommand {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
-
     return 0;
   }
 
   @Override
   public boolean isReadOnly() {
     return true;
+  }
+
+  private void printJSON(
+      CommandRunnerParams params,
+      Multimap<BuildTarget, BuildTarget> targetsAndResults)
+      throws IOException {
+    Multimap<BuildTarget, String> targetsAndResultsNames =
+        Multimaps.transformValues(
+            targetsAndResults, new Function<BuildTarget, String>() {
+              @Override
+              public String apply(BuildTarget input) {
+                return Preconditions.checkNotNull(input.getFullyQualifiedName());
+              }
+            });
+    params.getObjectMapper().writeValue(
+        params.getConsole().getStdOut(),
+        targetsAndResultsNames.asMap());
   }
 
   private void printJSON(
@@ -109,6 +188,14 @@ public class QueryCommand extends AbstractCommand {
     params.getObjectMapper().writeValue(
       params.getConsole().getStdOut(),
       targetsNames);
+  }
+
+  private void printToConsole(
+      CommandRunnerParams params,
+      Multimap<BuildTarget, BuildTarget> targetsAndDependencies) {
+    for (BuildTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
+      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
+    }
   }
 
   private void printToConsole(

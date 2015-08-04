@@ -61,7 +61,7 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
-  public void testGetTestsFromSelfAndDirectDependencies() throws IOException {
+  public void testGetTestsFromSelfAndDirectDependenciesJSON() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "query_dependencies", tmp);
     workspace.setUp();
@@ -76,7 +76,7 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
-  public void testGetTestsFromSelfAnd2LevelDependencies() throws IOException {
+  public void testGetTestsFromSelfAnd2LevelDependenciesJSON() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "query_dependencies", tmp);
     workspace.setUp();
@@ -88,5 +88,57 @@ public class QueryCommandIntegrationTest {
         "testsof(deps(//example:two, 2))");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-two-deps2lvl-tests.json"), result.getStdout());
+  }
+
+  @Test
+  public void testMultipleQueryGetTestsFromSelfAndDirectDependencies() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "testsof(deps(%s, 1))",
+        "//example:two");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-two-deps-tests"), result.getStdout());
+  }
+
+  @Test
+  public void testMultipleQueryGetTestsFromSelfAndDirectDependenciesJSON() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "testsof(deps(%s, 1))",
+        "//example:two");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-two-deps-tests-map.json"), result.getStdout());
+  }
+
+  @Test
+  public void testMultipleGetAllTestsFromSelfAndDirectDependenciesJSON() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "testsof(deps(%s))",
+        "//example:one",
+        "//example:two",
+        "//example:three",
+        "//example:four",
+        "//example:five",
+        "//example:six");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-all-deps-tests-map.json"), result.getStdout());
   }
 }
