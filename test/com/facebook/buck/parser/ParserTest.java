@@ -42,6 +42,7 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -168,12 +169,14 @@ public class ParserTest extends EasyMockSupport {
         new ExecutableFinder());
     DefaultProjectBuildFileParserFactory testBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
-            filesystem.getRootPath(),
-            pythonBuckConfig.getPythonInterpreter(),
-            parserConfig.getAllowEmptyGlobs(),
-            parserConfig.getBuildFileName(),
-            parserConfig.getDefaultIncludes(),
-            buildRuleTypes.getAllDescriptions());
+            ProjectBuildFileParserOptions.builder()
+                .setProjectRoot(filesystem.getRootPath())
+                .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
+                .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+                .setBuildFileName(parserConfig.getBuildFileName())
+                .setDefaultIncludes(parserConfig.getDefaultIncludes())
+                .setDescriptions(buildRuleTypes.getAllDescriptions())
+                .build());
     testParser = createParser(emptyBuildTargets(), testBuildFileParserFactory);
   }
 
@@ -1788,12 +1791,14 @@ public class ParserTest extends EasyMockSupport {
     private class TestProjectBuildFileParser extends ProjectBuildFileParser {
       public TestProjectBuildFileParser(String pythonInterpreter) {
         super(
-            projectRoot,
-            pythonInterpreter,
-            ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS,
-            ParserConfig.DEFAULT_BUILD_FILE_NAME,
-            ImmutableSet.of("//java/com/facebook/defaultIncludeFile"),
-            buildRuleTypes.getAllDescriptions(),
+            ProjectBuildFileParserOptions.builder()
+                .setProjectRoot(projectRoot)
+                .setPythonInterpreter(pythonInterpreter)
+                .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
+                .setBuildFileName(ParserConfig.DEFAULT_BUILD_FILE_NAME)
+                .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
+                .setDescriptions(buildRuleTypes.getAllDescriptions())
+                .build(),
             new TestConsole(),
             ImmutableMap.<String, String>of(),
             BuckEventBusFactory.newInstance());

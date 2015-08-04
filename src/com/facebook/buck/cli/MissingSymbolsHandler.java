@@ -26,6 +26,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.SrcRootsFinder;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.ParserConfig;
@@ -74,12 +75,14 @@ public class MissingSymbolsHandler {
         new ExecutableFinder());
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
-            projectFilesystem.getRootPath(),
-            pythonBuckConfig.getPythonInterpreter(),
-            parserConfig.getAllowEmptyGlobs(),
-            parserConfig.getBuildFileName(),
-            parserConfig.getDefaultIncludes(),
-            descriptions);
+        ProjectBuildFileParserOptions.builder()
+            .setProjectRoot(projectFilesystem.getRootPath())
+            .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
+            .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+            .setBuildFileName(parserConfig.getBuildFileName())
+            .setDefaultIncludes(parserConfig.getDefaultIncludes())
+            .setDescriptions(descriptions)
+            .build());
     JavaSymbolFinder javaSymbolFinder = new JavaSymbolFinder(
         projectFilesystem,
         srcRootsFinder,

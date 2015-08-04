@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
@@ -97,13 +98,16 @@ public class AuditRulesCommand extends AbstractCommand {
         params.getBuckConfig(),
         new ExecutableFinder());
     ProjectBuildFileParserFactory factory = new DefaultProjectBuildFileParserFactory(
-        projectFilesystem.getRootPath(),
-        pythonBuckConfig.getPythonInterpreter(),
-        parserConfig.getAllowEmptyGlobs(),
-        parserConfig.getBuildFileName(),
-        parserConfig.getDefaultIncludes(),
-        // TODO(simons): When we land dynamic loading, this MUST change.
-        params.getRepository().getAllDescriptions());
+        ProjectBuildFileParserOptions.builder()
+            .setProjectRoot(projectFilesystem.getRootPath())
+            .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
+            .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+            .setBuildFileName(parserConfig.getBuildFileName())
+            .setDefaultIncludes(parserConfig.getDefaultIncludes())
+            .setDescriptions(
+              // TODO(simons): When we land dynamic loading, this MUST change.
+              params.getRepository().getAllDescriptions())
+            .build());
     try (ProjectBuildFileParser parser = factory.createParser(
         params.getConsole(),
         params.getEnvironment(),

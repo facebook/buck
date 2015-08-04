@@ -15,7 +15,7 @@ java_library(
   ],
 )
 
-java_library(
+java_immutables_library(
   name = 'json',
   srcs = glob(['*.java'], excludes = RAW_PARSER_SRCS),
   resources = [

@@ -26,6 +26,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
@@ -76,12 +77,14 @@ public class JavaSymbolFinderIntegrationTest {
     SrcRootsFinder srcRootsFinder = new SrcRootsFinder(projectFilesystem);
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
-            projectFilesystem.getRootPath(),
-            pythonBuckConfig.getPythonInterpreter(),
-            parserConfig.getAllowEmptyGlobs(),
-            parserConfig.getBuildFileName(),
-            parserConfig.getDefaultIncludes(),
-            allDescriptions);
+            ProjectBuildFileParserOptions.builder()
+                .setProjectRoot(projectFilesystem.getRootPath())
+                .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
+                .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+                .setBuildFileName(parserConfig.getBuildFileName())
+                .setDefaultIncludes(parserConfig.getDefaultIncludes())
+                .setDescriptions(allDescriptions)
+                .build());
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     JavaSymbolFinder finder = new JavaSymbolFinder(
         projectFilesystem,

@@ -30,6 +30,7 @@ import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
@@ -215,12 +216,14 @@ public class Parser {
         },
         // TODO(jacko): Get rid of this global BuildTargetParser completely.
         new DefaultProjectBuildFileParserFactory(
-            repository.getFilesystem().getRootPath(),
-            pythonInterpreter,
-            allowEmptyGlobs,
-            buildFileName,
-            defaultIncludes,
-            repository.getAllDescriptions()));
+            ProjectBuildFileParserOptions.builder()
+                .setProjectRoot(repository.getFilesystem().getRootPath())
+                .setPythonInterpreter(pythonInterpreter)
+                .setAllowEmptyGlobs(allowEmptyGlobs)
+                .setBuildFileName(buildFileName)
+                .setDefaultIncludes(defaultIncludes)
+                .setDescriptions(repository.getAllDescriptions())
+                .build()));
   }
 
   /**

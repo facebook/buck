@@ -35,6 +35,7 @@ import com.facebook.buck.java.PrebuiltJarDescription;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.Description;
@@ -106,12 +107,14 @@ public class ResolverIntegrationTest {
         new PrebuiltJarDescription());
 
     DefaultProjectBuildFileParserFactory parserFactory = new DefaultProjectBuildFileParserFactory(
-        filesystem.getRootPath(),
-        pythonBuckConfig.getPythonInterpreter(),
-        parserConfig.getAllowEmptyGlobs(),
-        parserConfig.getBuildFileName(),
-        parserConfig.getDefaultIncludes(),
-        descriptions);
+        ProjectBuildFileParserOptions.builder()
+            .setProjectRoot(filesystem.getRootPath())
+            .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
+            .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+            .setBuildFileName(parserConfig.getBuildFileName())
+            .setDefaultIncludes(parserConfig.getDefaultIncludes())
+            .setDescriptions(descriptions)
+            .build());
     buildFileParser = parserFactory.createParser(
         new TestConsole(),
         ImmutableMap.<String, String>of(),
