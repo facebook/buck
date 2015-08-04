@@ -970,7 +970,7 @@ public class ProjectGenerator {
     setTargetBuildConfigurations(
         getConfigurationNameToXcconfigPath(buildTarget),
         target,
-        targetGroup,
+        project.getMainGroup(),
         targetNode.getConstructorArg().configs.get(),
         extraSettingsBuilder.build(),
         defaultSettingsBuilder.build(),
@@ -1108,7 +1108,7 @@ public class ProjectGenerator {
           }
         },
         result.target,
-        result.targetGroup,
+        project.getMainGroup(),
         key.getConfigs().get(),
         overrideBuildSettingsBuilder.build(),
         ImmutableMap.of(
@@ -1227,6 +1227,7 @@ public class ProjectGenerator {
   private PBXFileReference getConfigurationFileReference(PBXGroup targetGroup, Path xcconfigPath) {
     return targetGroup
         .getOrCreateChildGroupByName("Configurations")
+        .getOrCreateChildGroupByName("Buck (Do Not Modify)")
         .getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,

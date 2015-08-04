@@ -1262,6 +1262,7 @@ public class ProjectGeneratorTest {
     assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
+    assertKeepsConfigurationsInMainGroup(projectGenerator.getGeneratedProject(), target);
     XCBuildConfiguration configuration = target
         .getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     assertEquals(configuration.getBuildSettings().count(), 0);
@@ -3191,6 +3192,10 @@ public class ProjectGeneratorTest {
     assertThat(buildWithBuckTarget, is(notNullValue()));
 
     assertHasConfigurations(buildWithBuckTarget, "Debug");
+    assertKeepsConfigurationsInMainGroup(
+        projectGenerator.getGeneratedProject(),
+        buildWithBuckTarget);
+
     assertEquals(
         "Should have exact number of build phases",
         1,
@@ -3416,6 +3421,41 @@ public class ProjectGeneratorTest {
       assertTrue(
           "Configuration has xcconfig file",
           configuration.getBaseConfigurationReference().getPath().endsWith(".xcconfig"));
+    }
+  }
+
+  private void assertKeepsConfigurationsInMainGroup(PBXProject project, PBXTarget target) {
+    Map<String, XCBuildConfiguration> buildConfigurationMap =
+        target.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
+
+    PBXGroup configsGroup = project
+        .getMainGroup()
+        .getOrCreateChildGroupByName("Configurations")
+        .getOrCreateChildGroupByName("Buck (Do Not Modify)");
+
+    assertNotNull("Configuration group exists", configsGroup);
+
+    List<PBXReference> configReferences = configsGroup.getChildren();
+    assertFalse("Configuration file references exist", configReferences.isEmpty());
+
+    for (XCBuildConfiguration configuration : buildConfigurationMap.values()) {
+      String path = configuration.getBaseConfigurationReference().getPath();
+
+      PBXReference foundReference = null;
+      for (PBXReference reference : configReferences) {
+        assertTrue(
+            "References in the configuration group should point to xcconfigs",
+            reference.getPath().endsWith(".xcconfig"));
+
+        if (reference.getPath().equals(path)) {
+          foundReference = reference;
+          break;
+        }
+      }
+
+      assertNotNull(
+          "File reference for configuration " + path + " should be in main group",
+          foundReference);
     }
   }
 
