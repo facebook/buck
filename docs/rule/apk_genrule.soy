@@ -38,50 +38,17 @@ produce APKs, so commands like <code>buck install</code> or
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'srcs' /}
-  {param desc}
-  Same as <code>genrule()</code>.
-  {/param}
-{/call}
+{call genrule_common.srcs_arg /}
 
-{call buck.arg}
-  {param name: 'deps' /}
-  {param desc}
-  Same as <code>genrule()</code>.
-  {/param}
-{/call}
+{call genrule_common.cmd_arg /}
 
-{call buck.arg}
-  {param name: 'cmd' /}
-  {param default: 'None' /}
-  {param desc}
-  Same as <code>genrule()</code>.
-  {/param}
-{/call}
+{call genrule_common.bash_arg /}
 
-{call buck.arg}
-  {param name: 'bash' /}
-  {param default: 'None' /}
-  {param desc}
-  Same as <code>genrule()</code>.
-  {/param}
-{/call}
+{call genrule_common.cmd_exe_arg /}
 
-{call buck.arg}
-  {param name: 'cmd_exe' /}
-  {param default: 'None' /}
-  {param desc}
-  Same as <code>genrule()</code>.
-  {/param}
-{/call}
+{call genrule_common.out_arg /}
 
-{call buck.arg}
-  {param name: 'out' /}
-  {param desc}
-  Same as <code>genrule()</code>.
-  {/param}
-{/call}
+{call genrule_common.deps_arg /}
 
 {call buck.visibility_arg /}
 
