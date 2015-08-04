@@ -49,11 +49,9 @@ public class ReactNativeLibraryGraphEnhancer {
   private ReactNativeDeps createReactNativeDeps(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      ReactNativeLibraryArgs args,
-      ReactNativePlatform platform) {
+      ReactNativeLibraryArgs args) {
     BuildTarget originalBuildTarget = params.getBuildTarget();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-
 
     BuildTarget depsFinderTarget = BuildTarget.builder(originalBuildTarget)
         .addFlavors(REACT_NATIVE_DEPS_FLAVOR)
@@ -64,8 +62,7 @@ public class ReactNativeLibraryGraphEnhancer {
         sourcePathResolver,
         buckConfig.getPackager(),
         args.srcs.get(),
-        args.entryPath,
-        platform);
+        args.entryPath);
     return resolver.addToIndex(depsFinder);
   }
 
@@ -73,8 +70,7 @@ public class ReactNativeLibraryGraphEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       AndroidReactNativeLibraryDescription.Args args) {
-    final ReactNativeDeps reactNativeDeps =
-        createReactNativeDeps(params, resolver, args, ReactNativePlatform.ANDROID);
+    final ReactNativeDeps reactNativeDeps = createReactNativeDeps(params, resolver, args);
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
@@ -93,7 +89,6 @@ public class ReactNativeLibraryGraphEnhancer {
         ReactNativeFlavors.isDevMode(originalBuildTarget),
         args.bundleName,
         buckConfig.getPackager(),
-        ReactNativePlatform.ANDROID,
         reactNativeDeps);
     resolver.addToIndex(bundle);
 
@@ -141,8 +136,7 @@ public class ReactNativeLibraryGraphEnhancer {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ReactNativeLibraryArgs args) {
-    ReactNativeDeps reactNativeDeps =
-        createReactNativeDeps(params, resolver, args, ReactNativePlatform.IOS);
+    ReactNativeDeps reactNativeDeps = createReactNativeDeps(params, resolver, args);
 
     return new ReactNativeBundle(
         params.appendExtraDeps(ImmutableList.of((BuildRule) reactNativeDeps)),
@@ -151,7 +145,6 @@ public class ReactNativeLibraryGraphEnhancer {
         ReactNativeFlavors.isDevMode(params.getBuildTarget()),
         args.bundleName,
         buckConfig.getPackager(),
-        ReactNativePlatform.IOS,
         reactNativeDeps);
   }
 }

@@ -64,9 +64,6 @@ public class ReactNativeDeps extends AbstractBuildRule
   private final SourcePath entryPath;
 
   @AddToRuleKey
-  private final ReactNativePlatform platform;
-
-  @AddToRuleKey
   private final SourcePath jsPackager;
 
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
@@ -76,13 +73,11 @@ public class ReactNativeDeps extends AbstractBuildRule
       SourcePathResolver resolver,
       SourcePath jsPackager,
       ImmutableSortedSet<SourcePath> srcs,
-      SourcePath entryPath,
-      ReactNativePlatform platform) {
+      SourcePath entryPath) {
     super(ruleParams, resolver);
     this.jsPackager = jsPackager;
     this.srcs = srcs;
     this.entryPath = entryPath;
-    this.platform = platform;
     this.outputInitializer = new BuildOutputInitializer<>(ruleParams.getBuildTarget(), this);
   }
 
@@ -103,7 +98,6 @@ public class ReactNativeDeps extends AbstractBuildRule
         return ImmutableList.of(
             getResolver().getPath(jsPackager).toString(),
             "list-dependencies",
-            platform.toString(),
             filesystem.resolve(getResolver().getPath(entryPath)).toString(),
             "--output",
             filesystem.resolve(output).toString());

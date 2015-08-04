@@ -54,9 +54,6 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   private final SourcePath jsPackager;
 
   @AddToRuleKey
-  private final ReactNativePlatform platform;
-
-  @AddToRuleKey
   private final String bundleName;
 
   private final ReactNativeDeps depsFinder;
@@ -70,14 +67,12 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       boolean isDevMode,
       String bundleName,
       SourcePath jsPackager,
-      ReactNativePlatform platform,
       ReactNativeDeps depsFinder) {
     super(ruleParams, resolver);
     this.entryPath = entryPath;
     this.isDevMode = isDevMode;
     this.bundleName = bundleName;
     this.jsPackager = jsPackager;
-    this.platform = platform;
     this.depsFinder = depsFinder;
     BuildTarget buildTarget = ruleParams.getBuildTarget();
     this.jsOutputDir = getPathToJSBundleDir(buildTarget);
@@ -108,7 +103,6 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
             return getBundleScript(
                 getResolver().getPath(jsPackager),
                 filesystem.resolve(getResolver().getPath(entryPath)),
-                platform,
                 isDevMode,
                 filesystem.resolve(jsOutput).toString(),
                 filesystem.resolve(resource).toString(),
@@ -155,7 +149,6 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   public static ImmutableList<String> getBundleScript(
       Path jsPackager,
       Path absoluteEntryPath,
-      ReactNativePlatform platform,
       boolean isDevMode,
       String absoluteBundleOutputPath,
       String absoluteResourceOutputPath,
@@ -164,7 +157,6 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
         jsPackager.toString(),
         "bundle",
         "--entry-file", absoluteEntryPath.toString(),
-        "--platform", platform.toString(),
         "--dev", isDevMode ? "true" : "false",
         "--bundle-output", absoluteBundleOutputPath,
         "--assets-dest", absoluteResourceOutputPath,

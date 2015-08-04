@@ -40,7 +40,6 @@ import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
-import com.facebook.buck.js.ReactNativePlatform;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
@@ -687,7 +686,6 @@ public class NewNativeTargetProjectMutator {
                   filesystem.resolve(
                       sourcePathResolver.apply(description.getReactNativePackager())),
                   filesystem.resolve(sourcePathResolver.apply(args.entryPath)),
-                  ReactNativePlatform.IOS,
                   ReactNativeFlavors.isDevMode(targetNode.getBuildTarget()),
                   "${JS_OUT}",
                   "${BASE_DIR}",
