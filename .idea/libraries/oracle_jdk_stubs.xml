@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="oracle-jdk-stubs">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/jdk/stub-compiler-tree-api.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
