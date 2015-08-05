@@ -17,12 +17,14 @@
 package com.facebook.buck.java;
 
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -169,4 +171,17 @@ public class JavaTestIntegrationTest {
     workspace.runBuckCommand("test", "//:simple").assertTestFailure();
   }
 
+  @Test
+  public void staticInitializationException() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "static_initialization_test",
+        temp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:npe");
+    result.assertTestFailure();
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString("com.facebook.buck.example.StaticErrorTest"));
+  }
 }
