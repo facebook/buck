@@ -321,6 +321,7 @@ public class ParserTest extends EasyMockSupport {
     thrown.expectMessage(
         "No rule found when resolving target //java/com/facebook:raz in build file " +
             "//java/com/facebook/BUCK");
+    thrown.expectMessage("Defined in file: " + repository.getAbsolutePathToBuildFile(razTarget));
 
     testParser.buildTargetGraphForBuildTargets(
         buildTargets,
@@ -395,6 +396,8 @@ public class ParserTest extends EasyMockSupport {
 
     BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook/invalid", "foo").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
+
+    thrown.expectMessage("Defined in file: " + repository.getAbsolutePathToBuildFile(fooTarget));
 
     testParser.buildTargetGraphForBuildTargets(
         buildTargets,

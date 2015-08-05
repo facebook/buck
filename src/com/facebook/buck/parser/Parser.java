@@ -472,7 +472,8 @@ public class Parser {
                     NoSuchBuildTargetException.createForMissingBuildRule(
                         buildTarget,
                         buildTargetPatternParser,
-                        parserConfig.getBuildFileName()));
+                        parserConfig.getBuildFileName(),
+                        getDefinedFilepathMessage(buildTarget)));
               }
 
               Set<BuildTarget> deps = Sets.newHashSet();
@@ -496,7 +497,8 @@ public class Parser {
                               buildTargetForDep,
                               BuildTargetPatternParser.forBaseName(
                                   buildTargetForDep.getBaseName()),
-                              parserConfig.getBuildFileName()));
+                              parserConfig.getBuildFileName(),
+                              getDefinedFilepathMessage(buildTarget)));
                     }
                   }
                   depTargetNode.checkVisibility(buildTarget);
@@ -552,8 +554,9 @@ public class Parser {
 
     if (buildTarget.getRepository().isPresent()) {
       throw new HumanReadableException(
-          "Buck does not currently support multiple repositories: %d",
-          buildTarget);
+          "Buck does not currently support multiple repositories: %d\n%s",
+          buildTarget,
+          getDefinedFilepathMessage(buildTarget));
     }
     Repository targetRepo = repository;
     Path buildFile = targetRepo.getAbsolutePathToBuildFile(buildTarget);
@@ -844,6 +847,21 @@ public class Parser {
     } else {
       eventBus.post(ParseEvent.started(buildTargets));
     }
+  }
+
+  /**
+   * Returns error message which contains reference to the BUCK file that causes the exception
+   * @param buildTarget
+   * @return Error message with BUCK filepath
+   */
+  private String getDefinedFilepathMessage(BuildTarget buildTarget) {
+    String filePath;
+    try {
+      filePath = repository.getAbsolutePathToBuildFile(buildTarget).toString();
+    } catch (Repository.MissingBuildFileException e) {
+      return e.getHumanReadableErrorMessage();
+    }
+    return "Defined in file: " + filePath;
   }
 
   private class CachedState {
