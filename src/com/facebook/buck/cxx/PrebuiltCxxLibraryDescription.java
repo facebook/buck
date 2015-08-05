@@ -31,7 +31,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -195,9 +194,9 @@ public class PrebuiltCxxLibraryDescription
   }
 
   /**
-   * @return a {@link SymlinkTree} for the exported headers of this prebuilt C/C++ library.
+   * @return a {@link HeaderSymlinkTree} for the exported headers of this prebuilt C/C++ library.
    */
-  public static <A extends Arg> SymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+  public static <A extends Arg> HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,

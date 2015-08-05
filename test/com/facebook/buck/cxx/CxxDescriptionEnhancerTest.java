@@ -37,7 +37,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
@@ -188,7 +187,7 @@ public class CxxDescriptionEnhancerTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
             ImmutableList.<SourcePath>of(),
-            ImmutableList.<SymlinkTree>of(),
+            ImmutableList.<HeaderSymlinkTree>of(),
             ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 TargetGraph.EMPTY,
@@ -241,7 +240,7 @@ public class CxxDescriptionEnhancerTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
             ImmutableList.<SourcePath>of(),
-            ImmutableList.<SymlinkTree>of(),
+            ImmutableList.<HeaderSymlinkTree>of(),
             ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 TargetGraph.EMPTY,

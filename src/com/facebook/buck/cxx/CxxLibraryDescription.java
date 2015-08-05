@@ -29,7 +29,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -136,7 +135,7 @@ public class CxxLibraryDescription implements
     }
 
     // Otherwise, construct it ourselves.
-    SymlinkTree symlinkTree =
+    HeaderSymlinkTree symlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
@@ -158,7 +157,7 @@ public class CxxLibraryDescription implements
                     .putAllNameToPathMap(symlinkTree.getLinks())
                     .putAllFullNameToPathMap(symlinkTree.getFullLinks())
                     .build())
-            .addIncludeRoots(symlinkTree.getRoot())
+            .addIncludeRoots(symlinkTree.getIncludePath())
             .addAllFrameworkRoots(frameworkSearchPaths)
             .build());
     for (BuildRule rule : params.getDeps()) {
@@ -201,7 +200,7 @@ public class CxxLibraryDescription implements
             lexSources,
             yaccSources);
 
-    SymlinkTree headerSymlinkTree =
+    HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
@@ -504,9 +503,9 @@ public class CxxLibraryDescription implements
   }
 
   /**
-   * @return a {@link SymlinkTree} for the headers of this C/C++ library.
+   * @return a {@link HeaderSymlinkTree} for the headers of this C/C++ library.
    */
-  public static <A extends Arg> SymlinkTree createHeaderSymlinkTreeBuildRule(
+  public static <A extends Arg> HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
@@ -524,9 +523,9 @@ public class CxxLibraryDescription implements
   }
 
   /**
-   * @return a {@link SymlinkTree} for the exported headers of this C/C++ library.
+   * @return a {@link HeaderSymlinkTree} for the exported headers of this C/C++ library.
    */
-  public static <A extends Arg> SymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+  public static <A extends Arg> HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,

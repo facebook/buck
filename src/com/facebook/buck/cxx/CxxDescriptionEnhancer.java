@@ -126,7 +126,7 @@ public class CxxDescriptionEnhancer {
     return lexYaccSources;
   }
 
-  public static SymlinkTree createHeaderSymlinkTree(
+  public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -172,7 +172,7 @@ public class CxxDescriptionEnhancer {
             .build());
   }
 
-  public static SymlinkTree requireHeaderSymlinkTree(
+  public static HeaderSymlinkTree requireHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
@@ -191,11 +191,11 @@ public class CxxDescriptionEnhancer {
     // Check the cache...
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(headerSymlinkTreeTarget);
     if (rule.isPresent()) {
-      Preconditions.checkState(rule.get() instanceof SymlinkTree);
-      return (SymlinkTree) rule.get();
+      Preconditions.checkState(rule.get() instanceof HeaderSymlinkTree);
+      return (HeaderSymlinkTree) rule.get();
     }
 
-    SymlinkTree symlinkTree = createHeaderSymlinkTree(
+    HeaderSymlinkTree symlinkTree = createHeaderSymlinkTree(
         params,
         ruleResolver,
         pathResolver,
@@ -573,7 +573,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<SourcePath> prefixHeaders,
-      ImmutableList<SymlinkTree> headerSymlinkTrees,
+      ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       ImmutableSet<Path> frameworkSearchPaths,
       Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps) {
 
@@ -609,10 +609,10 @@ public class CxxDescriptionEnhancer {
     ImmutableMap.Builder<Path, SourcePath> allLinks = ImmutableMap.builder();
     ImmutableMap.Builder<Path, SourcePath> allFullLinks = ImmutableMap.builder();
     ImmutableList.Builder<Path> allIncludeRoots = ImmutableList.builder();
-    for (SymlinkTree headerSymlinkTree : headerSymlinkTrees) {
+    for (HeaderSymlinkTree headerSymlinkTree : headerSymlinkTrees) {
       allLinks.putAll(headerSymlinkTree.getLinks());
       allFullLinks.putAll(headerSymlinkTree.getFullLinks());
-      allIncludeRoots.add(headerSymlinkTree.getRoot());
+      allIncludeRoots.add(headerSymlinkTree.getIncludePath());
     }
 
     CxxPreprocessorInput localPreprocessorInput =
@@ -755,7 +755,7 @@ public class CxxDescriptionEnhancer {
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
-    SymlinkTree headerSymlinkTree = requireHeaderSymlinkTree(
+    HeaderSymlinkTree headerSymlinkTree = requireHeaderSymlinkTree(
         params,
         resolver,
         sourcePathResolver,
@@ -977,7 +977,7 @@ public class CxxDescriptionEnhancer {
   }
 
   /**
-   * Build a {@link SymlinkTree} of all the shared libraries found via the top-level rule's
+   * Build a {@link HeaderSymlinkTree} of all the shared libraries found via the top-level rule's
    * transitive dependencies.
    */
   public static SymlinkTree createSharedLibrarySymlinkTree(

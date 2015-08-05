@@ -22,6 +22,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -79,7 +80,7 @@ public class ThriftLibraryDescriptionTest {
         resolver);
   }
 
-  private static SymlinkTree createFakeSymlinkTree(
+  private static HeaderSymlinkTree createFakeSymlinkTree(
       BuildTarget target,
       SourcePathResolver resolver,
       Path root,
@@ -89,7 +90,7 @@ public class ThriftLibraryDescriptionTest {
             .setDeps(ImmutableSortedSet.copyOf(deps))
             .build();
     try {
-      return new SymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
+      return new HeaderSymlinkTree(params, resolver, root, ImmutableMap.<Path, SourcePath>of());
     } catch (SymlinkTree.InvalidSymlinkTreeException e) {
       throw new RuntimeException(e);
     }
@@ -231,7 +232,7 @@ public class ThriftLibraryDescriptionTest {
 
     // Lets do this again, but pass in a ThriftLibrary deps, wrapping some includes we need.
     Path includeRoot = desc.getIncludeRoot(unflavoredTarget);
-    SymlinkTree thriftIncludeSymlinkTree = createFakeSymlinkTree(
+    HeaderSymlinkTree thriftIncludeSymlinkTree = createFakeSymlinkTree(
         desc.createThriftIncludeSymlinkTreeTarget(unflavoredTarget),
         pathResolver,
         includeRoot);
@@ -347,7 +348,7 @@ public class ThriftLibraryDescriptionTest {
     // Create a dep and verify it gets attached.
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     Path depIncludeRoot = desc.getIncludeRoot(depTarget);
-    SymlinkTree depIncludeSymlinkTree =
+    HeaderSymlinkTree depIncludeSymlinkTree =
         createFakeSymlinkTree(depTarget, pathResolver, depIncludeRoot);
     ThriftLibrary dep = new ThriftLibrary(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget),
@@ -373,7 +374,7 @@ public class ThriftLibraryDescriptionTest {
         me.getThriftDeps());
     assertEquals(
         desc.getIncludeRoot(unflavoredTarget),
-        me.getIncludeTreeRule().getRoot());
+        me.getIncludeTreeRule().getIncludePath());
   }
 
   @Test

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.thrift;
 
+import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -164,16 +165,16 @@ public class ThriftLibraryDescription
     // Build up the include roots to find thrift file deps and also the build rules that
     // generate them.
     ImmutableMap.Builder<Path, SourcePath> includesBuilder = ImmutableMap.builder();
-    ImmutableSortedSet.Builder<SymlinkTree> includeTreeRulesBuilder =
+    ImmutableSortedSet.Builder<HeaderSymlinkTree> includeTreeRulesBuilder =
         ImmutableSortedSet.naturalOrder();
     ImmutableList.Builder<Path> includeRootsBuilder = ImmutableList.builder();
     for (ThriftLibrary dep : deps) {
       includesBuilder.putAll(dep.getIncludes());
       includeTreeRulesBuilder.add(dep.getIncludeTreeRule());
-      includeRootsBuilder.add(dep.getIncludeTreeRule().getRoot());
+      includeRootsBuilder.add(dep.getIncludeTreeRule().getIncludePath());
     }
     ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
-    ImmutableSortedSet<SymlinkTree> includeTreeRules = includeTreeRulesBuilder.build();
+    ImmutableSortedSet<HeaderSymlinkTree> includeTreeRules = includeTreeRulesBuilder.build();
     ImmutableList<Path> includeRoots = includeRootsBuilder.build();
 
     // For each thrift source, add a thrift compile rule to generate it's sources.
@@ -282,9 +283,9 @@ public class ThriftLibraryDescription
       // Create the symlink tree build rule and add it to the resolver.
       Path includeRoot = getIncludeRoot(target);
       BuildTarget symlinkTreeTarget = createThriftIncludeSymlinkTreeTarget(target);
-      SymlinkTree symlinkTree;
+      HeaderSymlinkTree symlinkTree;
       try {
-        symlinkTree = new SymlinkTree(
+        symlinkTree = new HeaderSymlinkTree(
             params.copyWithChanges(
                 symlinkTreeTarget,
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),

@@ -16,11 +16,11 @@
 
 package com.facebook.buck.thrift;
 
+import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -34,14 +34,14 @@ import java.nio.file.Path;
 public class ThriftLibrary extends NoopBuildRule {
 
   private final ImmutableSortedSet<ThriftLibrary> thriftDeps;
-  private final SymlinkTree includeTreeRule;
+  private final HeaderSymlinkTree includeTreeRule;
   private final ImmutableMap<Path, SourcePath> includes;
 
   public ThriftLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       ImmutableSortedSet<ThriftLibrary> thriftDeps,
-      SymlinkTree includeTreeRule,
+      HeaderSymlinkTree includeTreeRule,
       ImmutableMap<Path, SourcePath> includes) {
     super(params, resolver);
     this.thriftDeps = thriftDeps;
@@ -57,7 +57,7 @@ public class ThriftLibrary extends NoopBuildRule {
     return includes;
   }
 
-  public SymlinkTree getIncludeTreeRule() {
+  public HeaderSymlinkTree getIncludeTreeRule() {
     return includeTreeRule;
   }
 
