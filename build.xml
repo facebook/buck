@@ -45,6 +45,8 @@
 
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
   <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
+  <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
+  <property name="pywatchman.install.dir" value="${build.dir}/pywatchman" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.11.jar" />
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
@@ -164,12 +166,29 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar" />
+  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar, compile-pywatchman" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
     <available property="jdk7" classname="java.nio.file.Files"/>
     <fail message="Require JDK 7 or higher" unless="jdk7"/>
+  </target>
+
+  <target name="pywatchman-check-build">
+    <uptodate property="pywatchman-build-not-required" targetfile="${pywatchman.install.dir}/pywatchman/__init__.pyc">
+      <srcfiles dir="${pywatchman.dir}" includes="**/*.py,**/*.c" />
+    </uptodate>
+  </target>
+
+  <target name="compile-pywatchman" depends="pywatchman-check-build" unless="pywatchman-build-not-required">
+    <mkdir dir="${pywatchman.install.dir}" />
+    <exec executable="python" failonerror="true" dir="${pywatchman.dir}">
+      <env key="CFLAGS" value="-Wno-unused-const-variable" />
+      <arg value="setup.py" />
+      <arg value="--quiet" />
+      <arg value="install" />
+      <arg value="--install-lib=${pywatchman.install.dir}" />
+    </exec>
   </target>
 
   <target name="compile-testrunner" depends="checkversion">

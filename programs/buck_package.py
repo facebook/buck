@@ -62,3 +62,7 @@ class BuckPackage(BuckTool):
 
     def _get_java_classpath(self):
         return self._get_resource(SERVER)
+
+    def _get_pywatchman_path(self):
+        # TODO(agallagher): Update this to return the path to the pywatchman resource directory.
+        return None

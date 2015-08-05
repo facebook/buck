@@ -75,6 +75,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
           "buck.path_to_pathlib_py",
           "third-party/py/pathlib/pathlib.py"));
 
+  private static final Path PATH_TO_PYWATCHMAN = Paths.get(
+      System.getProperty(
+          "buck.path_to_pywatchman",
+          "build/pywatchman"));
+
   private static final Logger LOG = Logger.get(ProjectBuildFileParser.class);
 
   private final ImmutableMap<String, String> environment;
@@ -399,11 +404,15 @@ public class ProjectBuildFileParser implements AutoCloseable {
     try (Writer out = Files.newBufferedWriter(buckDotPy, UTF_8)) {
       URL resource = Resources.getResource(BUCK_PY_RESOURCE);
       String pathlibDir = PATH_TO_PATHLIB_PY.getParent().toString();
+      String watchmanDir = PATH_TO_PYWATCHMAN.toString();
       out.write(
           "from __future__ import with_statement\n" +
           "import sys\n" +
           "sys.path.insert(0, \"" +
-              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pathlibDir)) + "\")\n");
+              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pathlibDir)) + "\")\n" +
+          "sys.path.insert(0, \"" +
+              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(watchmanDir)) + "\")\n");
+
       Resources.asCharSource(resource, UTF_8).copyTo(out);
       out.write("\n\n");
 

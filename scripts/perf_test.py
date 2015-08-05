@@ -18,6 +18,7 @@ For each revision to test:
 
 """
 import argparse
+import distutils.sysconfig
 import re
 import subprocess
 import os
@@ -99,11 +100,21 @@ def git_reset(cwd, revision):
         cwd=cwd)
 
 
+def run_buck_cmd(args, cwd, cmd, extra_env={}, **kwargs):
+    env = os.environ.copy()
+    env.update(extra_env)
+    # Work around broken python installs which can't find libpython.so.
+    env['LIBRARY_PATH'] = os.path.join(distutils.sysconfig.PREFIX, 'lib')
+    subprocess.check_call(
+        [args.path_to_buck] + cmd,
+        cwd=cwd,
+        env=env,
+        **kwargs)
+
+
 def buck_clean(args, cwd):
     log('Running buck clean.')
-    subprocess.check_call(
-        [args.path_to_buck, 'clean'],
-        cwd=cwd)
+    run_buck_cmd(args, cwd, ['clean'])
 
 
 def git_get_revisions(args):
@@ -155,7 +166,7 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
         bucklogging_properties.write(
             '''.level=FINER
             java.util.logging.FileHandler.level=FINER''')
-    env = os.environ.copy()
+    env = {}
     # Force buck to pretend it's repo is clean.
     env.update({
         'BUCK_REPOSITORY_DIRTY': '0'
@@ -169,12 +180,13 @@ def buck_build_target(args, cwd, target, perftest_side, log_as_perftest=True):
     start = datetime.now()
     tmpFile = tempfile.TemporaryFile()
     try:
-        subprocess.check_call(
-            [args.path_to_buck, 'build', target, '-v', '5'],
+        run_buck_cmd(
+            args,
+            cwd,
+            ['build', target, '-v', '5'],
+            extra_env=env,
             stdout=tmpFile,
-            stderr=tmpFile,
-            cwd=cwd,
-            env=env)
+            stderr=tmpFile)
     except:
         tmpFile.seek(0)
         log('Buck build failed: %s' % tmpFile.read())

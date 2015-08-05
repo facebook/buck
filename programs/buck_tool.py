@@ -191,6 +191,9 @@ class BuckTool(object):
             command.append("-Dbuck.watchman_root={0}".format(watchman_root))
             if watchman_prefix:
                 command.append("-Dbuck.watchman_project_prefix={0}".format(watchman_prefix))
+            pywatchman_path = self._get_pywatchman_path()
+            if pywatchman_path:
+                command.append("-Dbuck.path_to_pywatchman={0}".format(pywatchman_path))
             command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
             command.append("-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
                 ngserver_output_path))
@@ -374,6 +377,9 @@ class BuckTool(object):
         raise NotImplementedError()
 
     def _get_java_classpath(self):
+        raise NotImplementedError()
+
+    def _get_pywatchman_path(self):
         raise NotImplementedError()
 
     def _get_extra_java_args(self):

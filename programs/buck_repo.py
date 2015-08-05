@@ -341,3 +341,6 @@ class BuckRepo(BuckTool):
 
     def _get_java_classpath(self):
         return self._pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
+
+    def _get_pywatchman_path(self):
+        return self._join_buck_dir("build/pywatchman")

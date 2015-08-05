@@ -2,6 +2,7 @@
 #
 # from __future__ import with_statement
 # import sys
+# sys.path.insert(0, "/path/to/build/pywatchman")
 # sys.path.insert(0, "/path/to/pathlib")
 
 import __builtin__
@@ -59,14 +60,14 @@ class BuildFileContext(object):
 
     type = BuildContextType.BUILD_FILE
 
-    def __init__(self, base_path, dirname, allow_empty_globs, use_watchman_glob, project_root,
-                 sync_cookie_state):
+    def __init__(self, base_path, dirname, allow_empty_globs, watchman_client,
+                 project_root, sync_cookie_state):
         self.globals = {}
         self.includes = set()
         self.base_path = base_path
         self.dirname = dirname
         self.allow_empty_globs = allow_empty_globs
-        self.use_watchman_glob = use_watchman_glob
+        self.watchman_client = watchman_client
         self.project_root = project_root
         self.sync_cookie_state = sync_cookie_state
         self.rules = {}
@@ -169,14 +170,15 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
 
     if not includes:
         results = []
-    elif build_env.use_watchman_glob:
+    elif build_env.watchman_client:
         results = glob_watchman(
             includes,
             excludes,
             include_dotfiles,
             build_env.base_path,
             build_env.project_root,
-            build_env.sync_cookie_state)
+            build_env.sync_cookie_state,
+            build_env.watchman_client)
     else:
         search_base = Path(build_env.dirname)
         results = glob_internal(
@@ -197,7 +199,7 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
 
 @memoized
 def glob_watchman(includes, excludes, include_dotfiles, base_path, project_root,
-                  sync_cookie_state):
+                  sync_cookie_state, watchman_client):
     assert includes, "The includes argument must be a non-empty list of strings."
     match_exprs = ["allof", "exists"]
     match_flags = {}
@@ -228,14 +230,7 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, project_root,
         query_params["sync_timeout"] = 0
 
     query = ["query", project_root, query_params]
-    # TODO(user): Use pywatchman so we don't have to fork (or use JSON) for each query.
-    process = subprocess.Popen(
-        ['watchman', '-j', '--no-pretty'],
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-    (stdout, _) = process.communicate(input=json.dumps(query))
-    res = json.loads(stdout)
+    res = watchman_client.query(*query)
     if res.get('error'):
         raise RuntimeError('Error from Watchman query {}: {}'.format(
             query,
@@ -317,7 +312,7 @@ def add_deps(name, deps=[], build_env=None):
 
 class BuildFileProcessor(object):
 
-    def __init__(self, project_root, build_file_name, allow_empty_globs, use_watchman_glob,
+    def __init__(self, project_root, build_file_name, allow_empty_globs, watchman_client,
                  implicit_includes=[]):
         self._cache = {}
         self._build_env_stack = []
@@ -327,7 +322,7 @@ class BuildFileProcessor(object):
         self._build_file_name = build_file_name
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
-        self._use_watchman_glob = use_watchman_glob
+        self._watchman_client = watchman_client
 
         lazy_functions = {}
         for func in BUILD_FUNCTIONS:
@@ -506,7 +501,7 @@ class BuildFileProcessor(object):
             base_path,
             dirname,
             self._allow_empty_globs,
-            self._use_watchman_glob,
+            self._watchman_client,
             self._project_root,
             self._sync_cookie_state)
 
@@ -597,11 +592,26 @@ def main():
     options.project_root = cygwin_adjusted_path(options.project_root)
     project_root = os.path.abspath(options.project_root)
 
+    watchman_client = None
+    if options.use_watchman_glob:
+        try:
+            # pywatchman may not be built, so fall back to non-watchman
+            # in that case.
+            import pywatchman
+            watchman_client = pywatchman.client()
+        except ImportError, e:
+            # TODO(agallagher): Restore this when the PEX builds pywatchman.
+            # print >> sys.stderr, \
+            #     'Could not import pywatchman (sys.path {}): {}'.format(
+            #         sys.path,
+            #         repr(e))
+            pass
+
     buildFileProcessor = BuildFileProcessor(
         project_root,
         options.build_file_name,
         options.allow_empty_globs,
-        options.use_watchman_glob,
+        watchman_client,
         implicit_includes=options.include or [])
 
     buildFileProcessor.install_builtins(__builtin__.__dict__)

@@ -40,6 +40,10 @@
 # From building Jacoco with Ant.
 /third-party/java/jacoco-0.6.4/report-generator-build/
 
+# From building pywatchman with Ant.
+/third-party/py/pywatchman/build/
+/third-party/py/pywatchman/pywatchman.egg-info/
+
 # OS X
 .DS_Store
 
