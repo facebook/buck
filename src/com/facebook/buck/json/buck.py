@@ -593,12 +593,16 @@ def main():
     project_root = os.path.abspath(options.project_root)
 
     watchman_client = None
+    output_format = 'JSON'
+    output_encode = lambda val: json.dumps(val, sort_keys=True)
     if options.use_watchman_glob:
         try:
             # pywatchman may not be built, so fall back to non-watchman
             # in that case.
             import pywatchman
             watchman_client = pywatchman.client()
+            output_format = 'BSER'
+            output_encode = lambda val: pywatchman.bser.dumps(val)
         except ImportError, e:
             # TODO(agallagher): Restore this when the PEX builds pywatchman.
             # print >> sys.stderr, \
@@ -616,17 +620,20 @@ def main():
 
     buildFileProcessor.install_builtins(__builtin__.__dict__)
 
+    to_parent.write(output_format + '\n')
+    to_parent.flush()
+
     for build_file in args:
         build_file = cygwin_adjusted_path(build_file)
         values = buildFileProcessor.process(build_file)
-        to_parent.write(json.dumps(values, sort_keys=True))
+        to_parent.write(output_encode(values))
         to_parent.flush()
 
     # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
     for build_file in iter(sys.stdin.readline, ''):
         build_file = cygwin_adjusted_path(build_file)
         values = buildFileProcessor.process(build_file.rstrip())
-        to_parent.write(json.dumps(values, sort_keys=True))
+        to_parent.write(output_encode(values))
         to_parent.flush()
 
     # Python tries to flush/close stdout when it quits, and if there's a dead

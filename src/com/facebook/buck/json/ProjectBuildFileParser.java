@@ -18,6 +18,7 @@ package com.facebook.buck.json;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.bser.BserDeserializer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
@@ -82,11 +83,17 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   private static final Logger LOG = Logger.get(ProjectBuildFileParser.class);
 
+  private enum BuckPyOutputFormat {
+    JSON,
+    BSER
+  };
+
   private final ImmutableMap<String, String> environment;
 
   private Optional<Path> pathToBuckPy;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
+  private BuckPyOutputFormat buckPyOutputFormat;
   @Nullable BuildFileToJsonParser buckPyStdoutParser;
   @Nullable private BufferedWriter buckPyStdinWriter;
 
@@ -94,6 +101,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final Console console;
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
+  private final BserDeserializer bserDeserializer;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -115,6 +123,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.environment = environment;
     this.buckEventBus = buckEventBus;
     this.processExecutor = processExecutor;
+    this.bserDeserializer = new BserDeserializer(BserDeserializer.KeyOrdering.SORTED);
   }
 
   public void setEnableProfiling(boolean enableProfiling) {
@@ -184,7 +193,17 @@ public class ProjectBuildFileParser implements AutoCloseable {
     buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
 
     Reader reader = new InputStreamReader(buckPyProcess.getInputStream(), Charsets.UTF_8);
-    buckPyStdoutParser = new BuildFileToJsonParser(reader);
+    // We explicitly do not close this reader, since it closes the underlying stream.
+    BufferedReader bufferedReader = new BufferedReader(reader);
+    String format = bufferedReader.readLine();
+    if (format == null) {
+      throw new RuntimeException("Cannot determine buck.py output format");
+    }
+    buckPyOutputFormat = BuckPyOutputFormat.valueOf(format);
+
+    if (buckPyOutputFormat == BuckPyOutputFormat.JSON) {
+      buckPyStdoutParser = new BuildFileToJsonParser(reader);
+    }
   }
 
   private ImmutableList<String> buildArgs() throws IOException {
@@ -257,13 +276,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   @VisibleForTesting
+  @SuppressWarnings("unchecked")
   protected List<Map<String, Object>> getAllRulesInternal(Path buildFile)
       throws IOException {
     ensureNotClosed();
     initIfNeeded();
 
     // Check isInitialized implications (to avoid Eradicate warnings).
-    Preconditions.checkNotNull(buckPyStdoutParser);
     Preconditions.checkNotNull(buckPyStdinWriter);
     Preconditions.checkNotNull(buckPyProcess);
 
@@ -274,8 +293,17 @@ public class ProjectBuildFileParser implements AutoCloseable {
     buckPyStdinWriter.newLine();
     buckPyStdinWriter.flush();
 
-    LOG.debug("Parsing output of process %s...", buckPyProcess);
-    List<Map<String, Object>> result = buckPyStdoutParser.nextRules();
+    LOG.debug("Parsing output of process %s using format %s...", buckPyProcess, buckPyOutputFormat);
+    List<Map<String, Object>> result;
+    if (buckPyOutputFormat == BuckPyOutputFormat.BSER) {
+      Object deserializedValue = bserDeserializer.deserializeBserValue(
+          buckPyProcess.getInputStream());
+      Preconditions.checkState(deserializedValue instanceof List<?>);
+      result = (List<Map<String, Object>>) deserializedValue;
+    } else {
+      Preconditions.checkNotNull(buckPyStdoutParser);
+      result = buckPyStdoutParser.nextRules();
+    }
     LOG.verbose("Got rules: %s", result);
     int numRules = result.size();
     LOG.debug("Parsed %d rules from process", numRules);
@@ -294,14 +322,15 @@ public class ProjectBuildFileParser implements AutoCloseable {
       if (isInitialized) {
 
         // Check isInitialized implications (to avoid Eradicate warnings).
-        Preconditions.checkNotNull(buckPyStdoutParser);
         Preconditions.checkNotNull(buckPyStdinWriter);
         Preconditions.checkNotNull(buckPyProcess);
 
-        try {
-          buckPyStdoutParser.close();
-        } catch (IOException e) {
-          // This is bad, but we swallow this so we can still close the other objects.
+        if (buckPyStdoutParser != null) {
+          try {
+            buckPyStdoutParser.close();
+          } catch (IOException e) {
+            // This is bad, but we swallow this so we can still close the other objects.
+          }
         }
 
         // Allow buck.py to terminate gracefully.
