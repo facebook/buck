@@ -24,13 +24,9 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodes;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.TreeMultimap;
 
 import org.kohsuke.args4j.Argument;
@@ -86,9 +82,9 @@ public class AuditTestsCommand extends AbstractCommand {
       LOG.debug("Printing out the following targets: " + targetsToPrint);
 
       if (shouldGenerateJsonOutput()) {
-        printJSON(params, targetsToPrint);
+        CommandHelper.printJSON(params, targetsToPrint);
       } else {
-        printToConsole(params, targetsToPrint);
+        CommandHelper.printToConsole(params, targetsToPrint);
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
@@ -123,31 +119,6 @@ public class AuditTestsCommand extends AbstractCommand {
           TargetNodes.getTestTargetsForNode(Preconditions.checkNotNull(graph.get(target))));
     }
     return multimap;
-  }
-
-  private void printJSON(
-      CommandRunnerParams params,
-      Multimap<BuildTarget, BuildTarget> targetsAndTests)
-      throws IOException {
-    Multimap<BuildTarget, String> targetsAndTestNames =
-        Multimaps.transformValues(
-            targetsAndTests, new Function<BuildTarget, String>() {
-              @Override
-              public String apply(BuildTarget input) {
-                return Preconditions.checkNotNull(input.getFullyQualifiedName());
-              }
-            });
-    params.getObjectMapper().writeValue(
-        params.getConsole().getStdOut(),
-        targetsAndTestNames.asMap());
-  }
-
-  private void printToConsole(
-      CommandRunnerParams params,
-      Multimap<BuildTarget, BuildTarget> targetsAndTests) {
-    for (BuildTarget target : ImmutableSortedSet.copyOf(targetsAndTests.values())) {
-      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
-    }
   }
 
   @Override

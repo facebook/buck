@@ -33,10 +33,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 
@@ -114,9 +112,9 @@ public class AuditDependenciesCommand extends AbstractCommand {
           getEnableProfiling());
 
       if (shouldGenerateJsonOutput()) {
-        printJSON(params, targetsAndDependencies);
+        CommandHelper.printJSON(params, targetsAndDependencies);
       } else {
-        printToConsole(params, targetsAndDependencies);
+        CommandHelper.printToConsole(params, targetsAndDependencies);
       }
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
@@ -264,30 +262,6 @@ public class AuditDependenciesCommand extends AbstractCommand {
     // Tests normally depend on the code they are testing, but we don't want to include that in our
     // output, so explicitly filter that here.
     return Sets.difference(testsWithDependencies, ImmutableSet.of(target));
-  }
-
-  private void printJSON(
-      CommandRunnerParams params,
-      Multimap<BuildTarget, BuildTarget> targetsAndDependencies) throws IOException {
-    Multimap<BuildTarget, String> targetsAndDependenciesNames =
-        Multimaps.transformValues(
-            targetsAndDependencies, new Function<BuildTarget, String>() {
-              @Override
-              public String apply(BuildTarget input) {
-                return Preconditions.checkNotNull(input.getFullyQualifiedName());
-              }
-            });
-    params.getObjectMapper().writeValue(
-        params.getConsole().getStdOut(),
-        targetsAndDependenciesNames.asMap());
-  }
-
-  private void printToConsole(
-      CommandRunnerParams params,
-      Multimap<BuildTarget, BuildTarget> targetsAndDependencies) {
-    for (BuildTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
-      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
-    }
   }
 
   @Override

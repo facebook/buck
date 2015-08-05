@@ -21,14 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.TreeMultimap;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryException;
@@ -118,9 +111,9 @@ public class QueryCommand extends AbstractCommand {
 
       LOG.debug("Printing out the following targets: " + queryResultMap);
       if (shouldGenerateJsonOutput()) {
-        printJSON(params, queryResultMap);
+        CommandHelper.printJSON(params, queryResultMap);
       } else {
-        printToConsole(params, queryResultMap);
+        CommandHelper.printToConsole(params, queryResultMap);
       }
     } catch (QueryException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
@@ -140,9 +133,9 @@ public class QueryCommand extends AbstractCommand {
 
       LOG.debug("Printing out the following targets: " + queryResult);
       if (shouldGenerateJsonOutput()) {
-        printJSON(params, queryResult);
+        CommandHelper.printJSON(params, queryResult);
       } else {
-        printToConsole(params, queryResult);
+        CommandHelper.printToConsole(params, queryResult);
       }
     } catch (QueryException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
@@ -154,56 +147,6 @@ public class QueryCommand extends AbstractCommand {
   @Override
   public boolean isReadOnly() {
     return true;
-  }
-
-  private void printJSON(
-      CommandRunnerParams params,
-      Multimap<BuildTarget, BuildTarget> targetsAndResults)
-      throws IOException {
-    Multimap<BuildTarget, String> targetsAndResultsNames =
-        Multimaps.transformValues(
-            targetsAndResults, new Function<BuildTarget, String>() {
-              @Override
-              public String apply(BuildTarget input) {
-                return Preconditions.checkNotNull(input.getFullyQualifiedName());
-              }
-            });
-    params.getObjectMapper().writeValue(
-        params.getConsole().getStdOut(),
-        targetsAndResultsNames.asMap());
-  }
-
-  private void printJSON(
-      CommandRunnerParams params,
-      Set<BuildTarget> targets) throws IOException {
-    Set<String> targetsNames = ImmutableSet.copyOf(
-        Collections2.transform(
-            targets,
-            new Function<BuildTarget, String>() {
-              @Override
-              public String apply(BuildTarget input) {
-                return Preconditions.checkNotNull(input.getFullyQualifiedName());
-              }
-            }));
-    params.getObjectMapper().writeValue(
-      params.getConsole().getStdOut(),
-      targetsNames);
-  }
-
-  private void printToConsole(
-      CommandRunnerParams params,
-      Multimap<BuildTarget, BuildTarget> targetsAndDependencies) {
-    for (BuildTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
-      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
-    }
-  }
-
-  private void printToConsole(
-      CommandRunnerParams params,
-      Set<BuildTarget> targets) {
-    for (BuildTarget target : targets) {
-      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
-    }
   }
 
   @Override
