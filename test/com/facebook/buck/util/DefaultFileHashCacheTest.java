@@ -31,11 +31,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
+import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -44,6 +46,9 @@ public class DefaultFileHashCacheTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void whenPathIsPutCacheContainsPath() {
@@ -58,7 +63,7 @@ public class DefaultFileHashCacheTest {
   }
 
   @Test
-  public void whenPathIsPutPathGetReturnsHash() {
+  public void whenPathIsPutPathGetReturnsHash() throws IOException {
     DefaultFileHashCache cache =
         new DefaultFileHashCache(new FakeProjectFilesystem());
     Path path = new File("SomeClass.java").toPath();
@@ -195,6 +200,13 @@ public class DefaultFileHashCacheTest {
     assertFalse("Cache should not contain pain", cache.contains(path));
     cache.invalidate(path);
     assertFalse("Cache should not contain pain", cache.contains(path));
+  }
+
+  @Test
+  public void missingEntryThrowsNoSuchFileException() throws IOException {
+    DefaultFileHashCache cache = new DefaultFileHashCache(new FakeProjectFilesystem());
+    expectedException.expect(NoSuchFileException.class);
+    cache.get(Paths.get("hello.java"));
   }
 
 }

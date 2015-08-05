@@ -54,6 +54,7 @@ public class RuleKeyTest {
    */
   @Test
   public void testRuleKeyDependsOnDeps() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver1 = new BuildRuleResolver();
     BuildRuleResolver ruleResolver2 = new BuildRuleResolver();
 
@@ -64,19 +65,17 @@ public class RuleKeyTest {
     builder.build(ruleResolver2);
 
     // Create a java_library() rule with no deps.
+    Path mainSrc = Paths.get("src/com/facebook/buck/cli/Main.java");
+    filesystem.mkdirs(mainSrc.getParent());
+    filesystem.writeContentsToPath("hello", mainSrc);
     JavaLibraryBuilder javaLibraryBuilder = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//src/com/facebook/buck/cli:cli"))
-            // The source file must be an existing file or else RuleKey.Builder.setVal(File) will
-            // throw an IOException, which is caught and then results in the rule being flagged as
-            // "not idempotent", which screws up this test.
-            // TODO(mbolin): Update RuleKey.Builder.setVal(File) to use a ProjectFilesystem so that
-            // file access can be mocked appropriately during a unit test.
-        .addSrc(Paths.get("src/com/facebook/buck/cli/Main.java"));
-    BuildRule libraryNoCommon = javaLibraryBuilder.build(ruleResolver1);
+        .addSrc(mainSrc);
+    BuildRule libraryNoCommon = javaLibraryBuilder.build(ruleResolver1, filesystem);
 
     // Create the same java_library() rule, but with a dep on //src/com/facebook/buck/cli:common.
     javaLibraryBuilder.addDep(commonJavaLibrary.getBuildTarget());
-    BuildRule libraryWithCommon = javaLibraryBuilder.build(ruleResolver2);
+    BuildRule libraryWithCommon = javaLibraryBuilder.build(ruleResolver2, filesystem);
 
     // Assert that the RuleKeys are distinct.
     RuleKey r1 = libraryNoCommon.getRuleKey();

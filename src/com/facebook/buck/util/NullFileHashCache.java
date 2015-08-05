@@ -18,9 +18,9 @@ package com.facebook.buck.util;
 
 import com.google.common.hash.HashCode;
 
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 // TODO(mbolin): This should be renamed to DummyFileHashCache and moved under the test/ directory.
 public class NullFileHashCache implements FileHashCache {
@@ -35,9 +35,8 @@ public class NullFileHashCache implements FileHashCache {
   }
 
   @Override
-  @Nullable
-  public HashCode get(Path path) {
-    return null;
+  public HashCode get(Path path) throws IOException {
+    throw new NoSuchFileException(path.toString());
   }
 
 }

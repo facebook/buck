@@ -17,11 +17,12 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.FileHashCache;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.hash.HashCode;
 
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -56,8 +57,12 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   @Override
-  public HashCode get(Path path) {
-    return Preconditions.checkNotNull(pathsToHashes.get(path), path.toString());
+  public HashCode get(Path path) throws IOException {
+    HashCode hashCode = pathsToHashes.get(path);
+    if (hashCode == null) {
+      throw new NoSuchFileException(path.toString());
+    }
+    return hashCode;
   }
 
 }

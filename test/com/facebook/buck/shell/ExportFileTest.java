@@ -16,14 +16,12 @@
 package com.facebook.buck.shell;
 
 import static com.facebook.buck.testutil.MoreAsserts.assertIterablesEquals;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
@@ -38,6 +36,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.ImmutableBuildContext;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -182,18 +181,17 @@ public class ExportFileTest {
   public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws IOException {
     Path root = Files.createTempDirectory("root");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root.toFile());
-    Path temp = Files.createTempFile(root, "example", "file");
-    temp.toFile().deleteOnExit();
+    Path temp = Paths.get("example_file");
 
     FileHashCache hashCache = new DefaultFileHashCache(filesystem);
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     RuleKeyBuilderFactory ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache, resolver);
 
-    Files.write(temp, "I like cheese".getBytes(UTF_8));
+    filesystem.writeContentsToPath("I like cheese", temp);
 
     ExportFileBuilder builder = ExportFileBuilder
         .newExportFileBuilder(BuildTargetFactory.newInstance("//some:file"))
-        .setSrc(new TestSourcePath(MorePaths.relativize(root, temp).toString()));
+        .setSrc(new PathSourcePath(filesystem, temp));
 
     ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver(), filesystem);
 
@@ -201,7 +199,7 @@ public class ExportFileTest {
             .newInstance(rule)
             .build();
 
-    Files.write(temp, "I really like cheese".getBytes(UTF_8));
+    filesystem.writeContentsToPath("I really like cheese", temp);
 
     // Create a new rule. The FileHashCache held by the existing rule will retain a reference to the
     // previous content of the file, so we need to create an identical rule.

@@ -30,6 +30,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
@@ -37,6 +38,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Primitives;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
@@ -257,6 +259,14 @@ public class RuleKey {
       return setSingleValue(val);
     }
 
+    private HashCode getHash(Path path) {
+      try {
+        return hashCache.get(path);
+      } catch (IOException e) {
+        throw Throwables.propagate(e);
+      }
+    }
+
     protected Builder setSingleValue(@Nullable Object val) {
 
       if (val == null) { // Null value first
@@ -293,7 +303,7 @@ public class RuleKey {
         // file without changing the contents, we have a cache miss. We're going to assume that this
         // doesn't happen that often in practice.
         Path path = (Path) val;
-        HashCode sha1 = hashCache.get(path);
+        HashCode sha1 = getHash(path);
         if (sha1 == null) {
           throw new RuntimeException("No SHA for " + val);
         }

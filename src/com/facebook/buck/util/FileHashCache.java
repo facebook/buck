@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.google.common.hash.HashCode;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -30,6 +31,6 @@ public interface FileHashCache {
 
   void invalidate(Path path);
 
-  HashCode get(Path path);
+  HashCode get(Path path) throws IOException;
 
 }
