@@ -109,6 +109,7 @@ public class ThriftCxxEnhancerTest {
         "language",
         ImmutableSet.<String>of(),
         ImmutableList.<Path>of(),
+        ImmutableSet.<Path>of(),
         ImmutableMap.<Path, SourcePath>of());
   }
 

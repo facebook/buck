@@ -27,4 +27,6 @@ public interface Preprocessor extends Tool {
 
   Optional<Function<String, Iterable<String>>> getExtraLineProcessor();
 
+  boolean supportsHeaderMaps();
+
 }

@@ -69,6 +69,9 @@ public class CxxPreprocessAndCompileTest {
   private static final ImmutableSet<Path> DEFAULT_SYSTEM_INCLUDE_ROOTS = ImmutableSet.of(
       Paths.get("/usr/include"),
       Paths.get("/include"));
+  private static final ImmutableSet<Path> DEFAULT_HEADER_MAPS = ImmutableSet.of(
+      Paths.get("some/thing.hmap"),
+      Paths.get("another/file.hmap"));
   private static final ImmutableSet<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableSet.of();
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
       CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
@@ -119,6 +122,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
@@ -141,6 +145,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
@@ -164,6 +169,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
@@ -187,6 +193,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
@@ -210,6 +217,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
@@ -233,6 +241,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
@@ -257,6 +266,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             ImmutableSet.of(Paths.get("different")),
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
@@ -281,10 +291,36 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             ImmutableSet.of(Paths.get("different")),
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertEquals(defaultRuleKey, systemIncludesChange);
+
+    // Verify that changing the header maps does *not* cause a rulekey change, since we use a
+    // different mechanism to track header changes.
+    RuleKey headerMapsIncludesChange = generateRuleKey(
+        ruleKeyBuilderFactory,
+        new CxxPreprocessAndCompile(
+            params,
+            pathResolver,
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
+            Optional.<Preprocessor>absent(),
+            Optional.<ImmutableList<String>>absent(),
+            Optional.<ImmutableList<String>>absent(),
+            Optional.of(DEFAULT_COMPILER),
+            Optional.of(DEFAULT_PLATFORM_FLAGS),
+            Optional.of(DEFAULT_RULE_FLAGS),
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
+            DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            ImmutableSet.<Path>of(Paths.get("different")),
+            DEFAULT_FRAMEWORK_ROOTS,
+            DEFAULT_INCLUDES,
+            DEFAULT_SANITIZER));
+    assertEquals(defaultRuleKey, headerMapsIncludesChange);
 
     // Verify that changing the framework roots causes a rulekey change.
     RuleKey frameworkRootsChange = generateRuleKey(
@@ -304,6 +340,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             ImmutableSet.of(Paths.get("different")),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
@@ -363,6 +400,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             sanitizer1));
@@ -387,6 +425,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_INCLUDES,
             sanitizer2));
@@ -419,6 +458,7 @@ public class CxxPreprocessAndCompileTest {
         output,
         new TestSourcePath(input.toString()),
         DEFAULT_INPUT_TYPE,
+        ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
@@ -463,6 +503,7 @@ public class CxxPreprocessAndCompileTest {
         output,
         new TestSourcePath(input.toString()),
         DEFAULT_INPUT_TYPE,
+        ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,

@@ -147,6 +147,15 @@ public class CxxDescriptionEnhancer {
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             headerVisibility);
+    Optional<Path> headerMapLocation = Optional.absent();
+    if (cxxPlatform.getCpp().supportsHeaderMaps() && cxxPlatform.getCxxpp().supportsHeaderMaps()) {
+      headerMapLocation =
+          Optional.of(
+              getHeaderMapPath(
+                  params.getBuildTarget(),
+                  cxxPlatform.getFlavor(),
+                  headerVisibility));
+    }
 
     CxxHeaderSourceSpec lexYaccSources;
     if (includeLexYaccHeaders) {
@@ -166,6 +175,7 @@ public class CxxDescriptionEnhancer {
         headerSymlinkTreeTarget,
         params,
         headerSymlinkTreeRoot,
+        headerMapLocation,
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(headers)
             .putAll(lexYaccSources.getCxxHeaders())
@@ -249,6 +259,17 @@ public class CxxDescriptionEnhancer {
     }
   }
 
+  /**
+   * @return the {@link Path} to use for the header map for the given symlink tree.
+   */
+  public static Path getHeaderMapPath(
+      BuildTarget target,
+      Flavor platform,
+      HeaderVisibility headerVisibility) {
+    return BuildTargets.getGenPath(
+        createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
+        "%s.hmap");
+  }
   /**
    * @return a map of header locations to input {@link SourcePath} objects formed by parsing the
    *    input {@link SourcePath} objects for the "headers" parameter.
@@ -609,10 +630,12 @@ public class CxxDescriptionEnhancer {
     ImmutableMap.Builder<Path, SourcePath> allLinks = ImmutableMap.builder();
     ImmutableMap.Builder<Path, SourcePath> allFullLinks = ImmutableMap.builder();
     ImmutableList.Builder<Path> allIncludeRoots = ImmutableList.builder();
+    ImmutableSet.Builder<Path> allHeaderMaps = ImmutableSet.builder();
     for (HeaderSymlinkTree headerSymlinkTree : headerSymlinkTrees) {
       allLinks.putAll(headerSymlinkTree.getLinks());
       allFullLinks.putAll(headerSymlinkTree.getFullLinks());
       allIncludeRoots.add(headerSymlinkTree.getIncludePath());
+      allHeaderMaps.addAll(headerSymlinkTree.getHeaderMap().asSet());
     }
 
     CxxPreprocessorInput localPreprocessorInput =
@@ -626,6 +649,7 @@ public class CxxDescriptionEnhancer {
                     .putAllFullNameToPathMap(allFullLinks.build())
                     .build())
             .addAllIncludeRoots(allIncludeRoots.build())
+            .addAllHeaderMaps(allHeaderMaps.build())
             .addAllFrameworkRoots(frameworkSearchPaths)
             .build();
 

@@ -32,6 +32,7 @@ java_test(
   deps = [
     ':testutil',
     '//src/com/facebook/buck/android:packageable',
+    '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
@@ -51,6 +52,7 @@ java_test(
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/test/selectors:selectors',
     '//src/com/facebook/buck/test:test',
+    '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',

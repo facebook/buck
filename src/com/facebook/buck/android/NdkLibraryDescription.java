@@ -206,6 +206,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
           cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C),
           MoreIterables.zipAndConcat(
               Iterables.cycle("-I"),
+              FluentIterable.from(cxxPreprocessorInput.getHeaderMaps())
+                  .transform(Functions.toStringFunction())),
+          MoreIterables.zipAndConcat(
+              Iterables.cycle("-I"),
               FluentIterable.from(cxxPreprocessorInput.getIncludeRoots())
                   .transform(Functions.toStringFunction())),
           MoreIterables.zipAndConcat(

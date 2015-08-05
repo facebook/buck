@@ -100,6 +100,7 @@ public class CxxCompilationDatabaseTest {
                 Paths.get("test")),
             ImmutableSet.<Path>of(),
             ImmutableSet.<Path>of(),
+            ImmutableSet.<Path>of(),
             ImmutableList.<CxxHeaders>of(),
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
@@ -136,6 +137,7 @@ public class CxxCompilationDatabaseTest {
             ImmutableSet.of(
                 Paths.get("foo/bar"),
                 Paths.get("test")),
+            ImmutableSet.<Path>of(),
             ImmutableSet.<Path>of(),
             ImmutableSet.<Path>of(),
             ImmutableList.<CxxHeaders>of(),
@@ -257,6 +259,7 @@ public class CxxCompilationDatabaseTest {
             Paths.get("test")),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
         ImmutableList.<CxxHeaders>of(),
         CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
 
@@ -281,6 +284,7 @@ public class CxxCompilationDatabaseTest {
         Paths.get("test.o"),
         new TestSourcePath("test.ii"),
         CxxSource.Type.CXX_CPP_OUTPUT,
+        ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),

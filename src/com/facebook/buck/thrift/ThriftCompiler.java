@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,6 +50,7 @@ public class ThriftCompiler extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableSet<String> options;
   private final ImmutableList<Path> includeRoots;
+  private final ImmutableSet<Path> headerMaps;
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final ImmutableMap<String, SourcePath> includes;
@@ -63,6 +65,7 @@ public class ThriftCompiler extends AbstractBuildRule {
       String language,
       ImmutableSet<String> options,
       ImmutableList<Path> includeRoots,
+      ImmutableSet<Path> headerMaps,
       ImmutableMap<Path, SourcePath> includes) {
     super(params, resolver);
     this.compiler = compiler;
@@ -72,6 +75,7 @@ public class ThriftCompiler extends AbstractBuildRule {
     this.language = language;
     this.options = options;
     this.includeRoots = includeRoots;
+    this.headerMaps = headerMaps;
 
     // Hash the layout of each potentially included thrift file dependency and it's contents.
     // We do this here, rather than returning them from `getInputsToCompareToOutput` so that
@@ -98,7 +102,9 @@ public class ThriftCompiler extends AbstractBuildRule {
             getResolver().getPath(input),
             language,
             options,
-            includeRoots));
+            FluentIterable.from(headerMaps)
+                .append(includeRoots)
+                .toList()));
   }
 
   @Nullable

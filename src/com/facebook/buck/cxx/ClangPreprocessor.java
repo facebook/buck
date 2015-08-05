@@ -76,6 +76,11 @@ public class ClangPreprocessor implements Preprocessor {
   }
 
   @Override
+  public boolean supportsHeaderMaps() {
+    return true;
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
     return tool.getInputs(resolver);
   }

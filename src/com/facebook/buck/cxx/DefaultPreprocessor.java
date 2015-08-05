@@ -44,6 +44,11 @@ public class DefaultPreprocessor implements Preprocessor {
   }
 
   @Override
+  public boolean supportsHeaderMaps() {
+    return false;
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
     return tool.getInputs(resolver);
   }

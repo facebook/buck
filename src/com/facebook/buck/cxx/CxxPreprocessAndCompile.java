@@ -69,6 +69,7 @@ public class CxxPreprocessAndCompile
   private final CxxSource.Type inputType;
   private final ImmutableSet<Path> includeRoots;
   private final ImmutableSet<Path> systemIncludeRoots;
+  private final ImmutableSet<Path> headerMaps;
   private final ImmutableSet<Path> frameworkRoots;
   @AddToRuleKey
   private final ImmutableList<CxxHeaders> includes;
@@ -90,6 +91,7 @@ public class CxxPreprocessAndCompile
       CxxSource.Type inputType,
       ImmutableSet<Path> includeRoots,
       ImmutableSet<Path> systemIncludeRoots,
+      ImmutableSet<Path> headerMaps,
       ImmutableSet<Path> frameworkRoots,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer) {
@@ -112,6 +114,7 @@ public class CxxPreprocessAndCompile
     this.inputType = inputType;
     this.includeRoots = includeRoots;
     this.systemIncludeRoots = systemIncludeRoots;
+    this.headerMaps = headerMaps;
     this.frameworkRoots = frameworkRoots;
     this.includes = includes;
     this.sanitizer = sanitizer;
@@ -146,6 +149,7 @@ public class CxxPreprocessAndCompile
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
+        ImmutableSet.<Path>of(),
         ImmutableList.<CxxHeaders>of(),
         sanitizer);
   }
@@ -164,6 +168,7 @@ public class CxxPreprocessAndCompile
       CxxSource.Type inputType,
       ImmutableSet<Path> includeRoots,
       ImmutableSet<Path> systemIncludeRoots,
+      ImmutableSet<Path> headerMaps,
       ImmutableSet<Path> frameworkRoots,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer) {
@@ -182,6 +187,7 @@ public class CxxPreprocessAndCompile
         inputType,
         includeRoots,
         systemIncludeRoots,
+        headerMaps,
         frameworkRoots,
         includes,
         sanitizer);
@@ -204,6 +210,7 @@ public class CxxPreprocessAndCompile
       CxxSource.Type inputType,
       ImmutableSet<Path> includeRoots,
       ImmutableSet<Path> systemIncludeRoots,
+      ImmutableSet<Path> headerMaps,
       ImmutableSet<Path> frameworkRoots,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer,
@@ -225,6 +232,7 @@ public class CxxPreprocessAndCompile
         inputType,
         includeRoots,
         systemIncludeRoots,
+        headerMaps,
         frameworkRoots,
         includes,
         sanitizer);
@@ -361,6 +369,10 @@ public class CxxPreprocessAndCompile
                 FluentIterable.from(prefixHeaders.build())
                     .transform(getResolver().getPathFunction())
                     .transform(Functions.toStringFunction())))
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-I"),
+                Iterables.transform(headerMaps, Functions.toStringFunction())))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),

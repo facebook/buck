@@ -158,6 +158,7 @@ public class CxxLibraryDescription implements
                     .putAllFullNameToPathMap(symlinkTree.getFullLinks())
                     .build())
             .addIncludeRoots(symlinkTree.getIncludePath())
+            .addAllHeaderMaps(symlinkTree.getHeaderMap().asSet())
             .addAllFrameworkRoots(frameworkSearchPaths)
             .build());
     for (BuildRule rule : params.getDeps()) {

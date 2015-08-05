@@ -44,6 +44,7 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -75,6 +76,35 @@ public class CxxLibraryDescriptionTest {
   private static <T> void assertNotContains(List<T> container, Iterable<T> items) {
     for (T item : items) {
       assertThat(container, Matchers.not(Matchers.hasItem(item)));
+    }
+  }
+
+  private static Path getHeaderSymlinkTreeIncludePath(
+      BuildTarget target,
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) {
+    if (cxxPlatform.getCpp().supportsHeaderMaps() && cxxPlatform.getCxxpp().supportsHeaderMaps()) {
+      return BuckConstant.BUCK_OUTPUT_PATH;
+    } else {
+      return CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+          target,
+          cxxPlatform.getFlavor(),
+          headerVisibility);
+    }
+  }
+
+  private static ImmutableSet<Path> getHeaderMaps(
+      BuildTarget target,
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) {
+    if (cxxPlatform.getCpp().supportsHeaderMaps() && cxxPlatform.getCxxpp().supportsHeaderMaps()) {
+      return ImmutableSet.of(
+          CxxDescriptionEnhancer.getHeaderMapPath(
+              target,
+              cxxPlatform.getFlavor(),
+              headerVisibility));
+    } else {
+      return ImmutableSet.of();
     }
   }
 
@@ -266,9 +296,14 @@ public class CxxLibraryDescriptionTest {
                         new BuildTargetSourcePath(genHeaderTarget))
                     .build())
             .addIncludeRoots(
-                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                getHeaderSymlinkTreeIncludePath(
                     target,
-                    cxxPlatform.getFlavor(),
+                    cxxPlatform,
+                    HeaderVisibility.PUBLIC))
+            .addAllHeaderMaps(
+                getHeaderMaps(
+                    target,
+                    cxxPlatform,
                     HeaderVisibility.PUBLIC))
             .addFrameworkRoots(
                 Paths.get("/some/framework/path"),
@@ -301,9 +336,14 @@ public class CxxLibraryDescriptionTest {
                         new TestSourcePath(privateHeaderName))
                     .build())
             .addIncludeRoots(
-                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                getHeaderSymlinkTreeIncludePath(
                     target,
-                    cxxPlatform.getFlavor(),
+                    cxxPlatform,
+                    HeaderVisibility.PRIVATE))
+            .addAllHeaderMaps(
+                getHeaderMaps(
+                    target,
+                    cxxPlatform,
                     HeaderVisibility.PRIVATE))
             .addFrameworkRoots(
                 Paths.get("/some/framework/path"),
@@ -690,9 +730,14 @@ public class CxxLibraryDescriptionTest {
                         new BuildTargetSourcePath(genHeaderTarget))
                     .build())
             .addIncludeRoots(
-                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
+                getHeaderSymlinkTreeIncludePath(
                     target,
-                    cxxPlatform.getFlavor(),
+                    cxxPlatform,
+                    HeaderVisibility.PUBLIC))
+            .addAllHeaderMaps(
+                getHeaderMaps(
+                    target,
+                    cxxPlatform,
                     HeaderVisibility.PUBLIC))
             .addFrameworkRoots(
                 Paths.get("/some/framework/path"),

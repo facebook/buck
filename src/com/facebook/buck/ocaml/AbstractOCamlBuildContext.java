@@ -266,6 +266,10 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
 
     CxxPreprocessorInput cxxPreprocessorInput = getCxxPreprocessorInput();
 
+    for (Path headerMap : cxxPreprocessorInput.getHeaderMaps()) {
+      compileFlags.add("-ccopt", "-I" + headerMap.toString());
+    }
+
     for (Path includes : cxxPreprocessorInput.getIncludeRoots()) {
       compileFlags.add("-ccopt", "-I" + includes.toString());
     }

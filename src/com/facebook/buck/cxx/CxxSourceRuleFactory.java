@@ -121,6 +121,17 @@ public class CxxSourceRuleFactory {
             }
           });
 
+  private final Supplier<ImmutableSet<Path>> headerMaps =
+      Suppliers.memoize(
+          new Supplier<ImmutableSet<Path>>() {
+            @Override
+            public ImmutableSet<Path> get() {
+              return FluentIterable.from(cxxPreprocessorInput)
+                  .transformAndConcat(CxxPreprocessorInput.GET_HEADER_MAPS)
+                  .toSet();
+            }
+          });
+
   private final Supplier<ImmutableSet<Path>> frameworkRoots =
       Suppliers.memoize(
           new Supplier<ImmutableSet<Path>>() {
@@ -266,6 +277,7 @@ public class CxxSourceRuleFactory {
         source.getType(),
         includeRoots.get(),
         systemIncludeRoots.get(),
+        headerMaps.get(),
         frameworkRoots.get(),
         includes.get(),
         cxxPlatform.getDebugPathSanitizer());
@@ -562,6 +574,7 @@ public class CxxSourceRuleFactory {
         source.getType(),
         includeRoots.get(),
         systemIncludeRoots.get(),
+        headerMaps.get(),
         frameworkRoots.get(),
         includes.get(),
         cxxPlatform.getDebugPathSanitizer(),

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -135,17 +136,30 @@ public class CxxPreprocessables {
       BuildTarget target,
       BuildRuleParams params,
       Path root,
+      Optional<Path> headerMapPath,
       ImmutableMap<Path, SourcePath> links) {
+    // Symlink trees never need to depend on anything.
+    BuildRuleParams paramsWithoutDeps =
+        params.copyWithChanges(
+            target,
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+
     try {
-      return new HeaderSymlinkTree(
-          params.copyWithChanges(
-              target,
-              // Symlink trees never need to depend on anything.
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-          resolver,
-          root,
-          links);
+      if (headerMapPath.isPresent()) {
+        return new HeaderSymlinkTreeWithHeaderMap(
+            paramsWithoutDeps,
+            resolver,
+            root,
+            headerMapPath.get(),
+            links);
+      } else {
+        return new HeaderSymlinkTree(
+            paramsWithoutDeps,
+            resolver,
+            root,
+            links);
+      }
     } catch (SymlinkTree.InvalidSymlinkTreeException e) {
       throw e.getHumanReadableExceptionForBuildTarget(target);
     }
@@ -184,9 +198,10 @@ public class CxxPreprocessables {
     switch(includeType) {
       case LOCAL:
         builder.addIncludeRoots(symlinkTree.getIncludePath());
+        builder.addAllHeaderMaps(symlinkTree.getHeaderMap().asSet());
         break;
       case SYSTEM:
-        builder.addSystemIncludeRoots(symlinkTree.getIncludePath());
+        builder.addSystemIncludeRoots(symlinkTree.getSystemIncludePath());
         break;
     }
     return builder.build();

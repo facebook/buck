@@ -24,6 +24,7 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -84,10 +85,13 @@ public class CompilationDatabaseIntegrationTest {
     ImmutableSet<String> frameworks = ImmutableSet.of(
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString());
     String pathToPrivateHeaders = "buck-out/gen/Libraries/EXExample/" +
-        "EXExample#header-symlink-tree,iphonesimulator-x86_64";
+        "EXExample#header-symlink-tree,iphonesimulator-x86_64.hmap";
     String pathToPublicHeaders = "buck-out/gen/Libraries/EXExample/" +
-        "EXExample#exported-header-symlink-tree,iphonesimulator-x86_64";
-    Iterable<String> includes = ImmutableList.of(pathToPrivateHeaders, pathToPublicHeaders);
+        "EXExample#exported-header-symlink-tree,iphonesimulator-x86_64.hmap";
+    Iterable<String> includes = ImmutableList.of(
+        pathToPrivateHeaders,
+        pathToPublicHeaders,
+        BuckConstant.BUCK_OUTPUT_DIRECTORY);
 
     // Verify the entries in the compilation database.
     assertFlags(
@@ -135,10 +139,13 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
         Paths.get("/System/Library/Frameworks/UIKit.framework").getParent().toString());
     String pathToPrivateHeaders = "buck-out/gen/Apps/Weather/" +
-        "Weather#header-symlink-tree,iphonesimulator-x86_64";
+        "Weather#header-symlink-tree,iphonesimulator-x86_64.hmap";
     String pathToPublicHeaders = "buck-out/gen/Libraries/" +
-        "EXExample/EXExample#exported-header-symlink-tree,iphonesimulator-x86_64";
-    Iterable<String> includes = ImmutableList.of(pathToPrivateHeaders, pathToPublicHeaders);
+        "EXExample/EXExample#exported-header-symlink-tree,iphonesimulator-x86_64.hmap";
+    Iterable<String> includes = ImmutableList.of(
+        pathToPrivateHeaders,
+        pathToPublicHeaders,
+        BuckConstant.BUCK_OUTPUT_DIRECTORY);
 
     assertFlags(
         "Apps/Weather/Weather/EXViewController.m",

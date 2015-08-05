@@ -56,6 +56,8 @@ public class ThriftCompilerTest {
   private static final ImmutableSet<String> DEFAULT_OPTIONS = ImmutableSet.of("templates");
   private static final ImmutableList<Path> DEFAULT_INCLUDE_ROOTS =
       ImmutableList.of(Paths.get("blah-dir"));
+  private static final ImmutableSet<Path> DEFAULT_HEADER_MAPS =
+      ImmutableSet.of(Paths.get("some-header-map"));
   private static final ImmutableMap<Path, SourcePath> DEFAULT_INCLUDES =
       ImmutableMap.<Path, SourcePath>of(
           Paths.get("something.thrift"),
@@ -98,6 +100,7 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_INCLUDES));
 
     // Verify that changing the compiler causes a rulekey change.
@@ -113,6 +116,7 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, compilerChange);
 
@@ -129,6 +133,7 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, flagsChange);
 
@@ -145,6 +150,7 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, outputDirChange);
 
@@ -161,6 +167,7 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, inputChange);
 
@@ -177,6 +184,7 @@ public class ThriftCompilerTest {
             "different",
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, languageChange);
 
@@ -193,6 +201,7 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             ImmutableSet.of("different"),
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             DEFAULT_INCLUDES));
     assertNotEquals(defaultRuleKey, optionsChange);
 
@@ -210,8 +219,27 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             ImmutableList.of(Paths.get("different")),
+            DEFAULT_HEADER_MAPS,
             DEFAULT_INCLUDES));
     assertEquals(defaultRuleKey, includeRootsChange);
+
+    // Verify that changing the header maps does *not* cause a rulekey change, since we use a
+    // different mechanism to track header changes.
+    RuleKey headerMapKeyChange = generateRuleKey(
+        ruleKeyBuilderFactory,
+        new ThriftCompiler(
+            params,
+            resolver,
+            DEFAULT_COMPILER,
+            DEFAULT_FLAGS,
+            DEFAULT_OUTPUT_DIR,
+            DEFAULT_INPUT,
+            DEFAULT_LANGUAGE,
+            DEFAULT_OPTIONS,
+            DEFAULT_INCLUDE_ROOTS,
+            ImmutableSet.of(Paths.get("different-header-map")),
+            DEFAULT_INCLUDES));
+    assertEquals(defaultRuleKey, headerMapKeyChange);
 
     // Verify that changing the name of the include causes a rulekey change.
     RuleKey includesKeyChange = generateRuleKey(
@@ -226,6 +254,7 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             ImmutableMap.<Path, SourcePath>of(
                 DEFAULT_INCLUDES.entrySet().iterator().next().getKey(),
                 new TestSourcePath("different"))));
@@ -244,6 +273,7 @@ public class ThriftCompilerTest {
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
+            DEFAULT_HEADER_MAPS,
             ImmutableMap.of(
                 Paths.get("different"),
                 DEFAULT_INCLUDES.entrySet().iterator().next().getValue())));
@@ -266,6 +296,7 @@ public class ThriftCompilerTest {
         DEFAULT_LANGUAGE,
         DEFAULT_OPTIONS,
         DEFAULT_INCLUDE_ROOTS,
+        DEFAULT_HEADER_MAPS,
         DEFAULT_INCLUDES);
 
     ImmutableList<Step> expected = ImmutableList.of(
@@ -277,7 +308,10 @@ public class ThriftCompilerTest {
             pathResolver.getPath(DEFAULT_INPUT),
             DEFAULT_LANGUAGE,
             DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS));
+            ImmutableList.<Path>builder()
+                .addAll(DEFAULT_HEADER_MAPS)
+                .addAll(DEFAULT_INCLUDE_ROOTS)
+                .build()));
     ImmutableList<Step> actual = thriftCompiler.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());

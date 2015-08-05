@@ -168,14 +168,17 @@ public class ThriftLibraryDescription
     ImmutableSortedSet.Builder<HeaderSymlinkTree> includeTreeRulesBuilder =
         ImmutableSortedSet.naturalOrder();
     ImmutableList.Builder<Path> includeRootsBuilder = ImmutableList.builder();
+    ImmutableSet.Builder<Path> headerMapsBuilder = ImmutableSet.builder();
     for (ThriftLibrary dep : deps) {
       includesBuilder.putAll(dep.getIncludes());
       includeTreeRulesBuilder.add(dep.getIncludeTreeRule());
       includeRootsBuilder.add(dep.getIncludeTreeRule().getIncludePath());
+      headerMapsBuilder.addAll(dep.getIncludeTreeRule().getHeaderMap().asSet());
     }
     ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
     ImmutableSortedSet<HeaderSymlinkTree> includeTreeRules = includeTreeRulesBuilder.build();
     ImmutableList<Path> includeRoots = includeRootsBuilder.build();
+    ImmutableSet<Path> headerMaps = headerMapsBuilder.build();
 
     // For each thrift source, add a thrift compile rule to generate it's sources.
     ImmutableMap.Builder<String, ThriftCompiler> compileRules = ImmutableMap.builder();
@@ -211,6 +214,7 @@ public class ThriftLibraryDescription
               language,
               options,
               includeRoots,
+              headerMaps,
               includes));
     }
 
