@@ -715,7 +715,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       List<String> postprocessClassesCommands,
       Path outputDirectory) {
     for (final String postprocessClassesCommand : postprocessClassesCommands) {
-      BashStep bashStep = new BashStep(postprocessClassesCommand, outputDirectory.toString());
+      BashStep bashStep = new BashStep(postprocessClassesCommand + " " + outputDirectory);
       commands.add(bashStep);
     }
   }
