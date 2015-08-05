@@ -900,13 +900,19 @@ public class ProjectGenerator {
 
     ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
 
+    ImmutableSet<Path> recursiveHeaderMaps = collectRecursiveHeaderMaps(targetNode);
+    ImmutableSet<Path> headerMapBases = recursiveHeaderMaps.isEmpty() ?
+        ImmutableSet.<Path>of() :
+        ImmutableSet.of(pathRelativizer.outputDirToRootRelative(BuckConstant.BUCK_OUTPUT_PATH));
+
     appendConfigsBuilder
         .put(
             "HEADER_SEARCH_PATHS",
             Joiner.on(' ').join(
                 Iterables.concat(
                     collectRecursiveHeaderSearchPaths(targetNode),
-                    collectRecursiveHeaderMaps(targetNode))))
+                    recursiveHeaderMaps,
+                    headerMapBases)))
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(
@@ -1298,7 +1304,9 @@ public class ProjectGenerator {
       for (Map.Entry<String, SourcePath> entry : contents.entrySet()) {
         headerMapBuilder.add(
             entry.getKey(),
-            projectFilesystem.resolve(headerSymlinkTreeRoot).resolve(entry.getKey()));
+            BuckConstant.BUCK_OUTPUT_PATH
+                .relativize(headerSymlinkTreeRoot)
+                .resolve(entry.getKey()));
       }
       projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
     }

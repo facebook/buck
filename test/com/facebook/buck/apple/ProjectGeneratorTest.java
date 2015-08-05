@@ -577,7 +577,8 @@ public class ProjectGeneratorTest {
             "../buck-out/gen/foo/test-private-header-symlink-tree/.tree.hmap " +
             "../buck-out/gen/foo/test-public-header-symlink-tree/.tree.hmap " +
             "../buck-out/gen/foo/lib-public-header-symlink-tree/.tree.hmap " +
-            "../buck-out/gen/foo/lib-private-header-symlink-tree/.tree.hmap",
+            "../buck-out/gen/foo/lib-private-header-symlink-tree/.tree.hmap " +
+            "../buck-out",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -641,7 +642,8 @@ public class ProjectGeneratorTest {
             "../buck-out/gen/foo/test-private-header-symlink-tree/.tree.hmap " +
             "../buck-out/gen/foo/test-public-header-symlink-tree/.tree.hmap " +
             "../buck-out/gen/foo/lib-public-header-symlink-tree/.tree.hmap " +
-            "../buck-out/gen/foo/lib-private-header-symlink-tree/.tree.hmap",
+            "../buck-out/gen/foo/lib-private-header-symlink-tree/.tree.hmap " +
+            "../buck-out",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -705,7 +707,8 @@ public class ProjectGeneratorTest {
             "../buck-out/gen/foo/test-private-header-symlink-tree/.tree.hmap " +
             "../buck-out/gen/foo/test-public-header-symlink-tree/.tree.hmap " +
             "../buck-out/gen/foo/bin-public-header-symlink-tree/.tree.hmap " +
-            "../buck-out/gen/foo/bin-private-header-symlink-tree/.tree.hmap",
+            "../buck-out/gen/foo/bin-private-header-symlink-tree/.tree.hmap " +
+            "../buck-out",
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -736,7 +739,7 @@ public class ProjectGeneratorTest {
     for (String key : content.keySet()) {
       assertThat(
           headerMap.lookup(key),
-          equalTo(projectFilesystem.resolve(root).resolve(key).toString()));
+          equalTo(BuckConstant.BUCK_OUTPUT_PATH.relativize(root).resolve(key).toString()));
     }
   }
 
