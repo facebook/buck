@@ -18,6 +18,7 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
@@ -36,6 +37,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         options,
         console,
         environment,
-        buckEventBus);
+        buckEventBus,
+        new ProcessExecutor(console));
   }
 }

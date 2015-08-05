@@ -27,7 +27,6 @@
     "test/com/facebook/buck/test/cache/testdata",
     "test/com/facebook/buck/test/labels/testdata",
     "test/com/facebook/buck/test/result/groups/testdata",
-    "test/com/facebook/buck/thrift/testdata",
-    "third-party/java/dx"
+    "test/com/facebook/buck/thrift/testdata"
   ]
 }

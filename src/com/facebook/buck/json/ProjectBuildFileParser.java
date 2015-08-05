@@ -29,6 +29,8 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -79,13 +81,14 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   private Optional<Path> pathToBuckPy;
 
-  @Nullable private Process buckPyProcess;
+  @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
   @Nullable BuildFileToJsonParser buckPyStdoutParser;
   @Nullable private BufferedWriter buckPyStdinWriter;
 
   private final ProjectBuildFileParserOptions options;
   private final Console console;
   private final BuckEventBus buckEventBus;
+  private final ProcessExecutor processExecutor;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -99,12 +102,14 @@ public class ProjectBuildFileParser implements AutoCloseable {
       ProjectBuildFileParserOptions options,
       Console console,
       ImmutableMap<String, String> environment,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      ProcessExecutor processExecutor) {
     this.pathToBuckPy = Optional.absent();
     this.options = options;
     this.console = console;
     this.environment = environment;
     this.buckEventBus = buckEventBus;
+    this.processExecutor = processExecutor;
   }
 
   public void setEnableProfiling(boolean enableProfiling) {
@@ -142,15 +147,16 @@ public class ProjectBuildFileParser implements AutoCloseable {
     projectBuildFileParseEventStarted = new ProjectBuildFileParseEvents.Started();
     buckEventBus.post(projectBuildFileParseEventStarted);
 
-    ProcessBuilder processBuilder = new ProcessBuilder(buildArgs());
-    processBuilder.environment().clear();
-    processBuilder.environment().putAll(environment);
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(buildArgs())
+        .setEnvironment(environment)
+        .build();
 
     LOG.debug(
         "Starting buck.py command: %s environment: %s",
-        processBuilder.command(),
-        processBuilder.environment());
-    buckPyProcess = processBuilder.start();
+        params.getCommand(),
+        params.getEnvironment());
+    buckPyProcess = processExecutor.launchProcess(params);
     LOG.debug("Started process %s successfully", buckPyProcess);
 
     OutputStream stdin = buckPyProcess.getOutputStream();
@@ -198,6 +204,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     if (options.getAllowEmptyGlobs()) {
       argBuilder.add("--allow_empty_globs");
+    }
+
+    if (options.getUseWatchmanGlob()) {
+      argBuilder.add("--use_watchman_glob");
     }
 
     argBuilder.add("--project_root", options.getProjectRoot().toAbsolutePath().toString());
@@ -307,7 +317,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
         }
 
         LOG.debug("Waiting for process %s to exit...", buckPyProcess);
-        int exitCode = buckPyProcess.waitFor();
+        int exitCode = processExecutor.waitForLaunchedProcess(buckPyProcess);
         if (exitCode != 0) {
           LOG.error("Process %s exited with error code %d", buckPyProcess, exitCode);
           throw BuildFileParseException.createForUnknownParseError(

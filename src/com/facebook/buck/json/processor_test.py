@@ -40,6 +40,7 @@ class BuckTest(unittest.TestCase):
             self.project_root,
             self.build_file_name,
             self.allow_empty_globs,
+            None,
             includes)
 
     def test_sibling_includes_use_separate_globals(self):
