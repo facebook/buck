@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -39,8 +40,13 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class AppleBundleIntegrationTest {
+
+  private static final int numCodeSigningIdentities =
+      AppleConfig.createCodeSignIdentitiesSupplier(
+        new ProcessExecutor(new TestConsole())).get().size();
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -48,8 +54,27 @@ public class AppleBundleIntegrationTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
+  private boolean checkCodeSigning(ProjectWorkspace workspace, String relativeBundlePath)
+      throws IOException, InterruptedException {
+    String absoluteBundlePath = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve(Paths.get(relativeBundlePath))
+        .toString();
+
+    ProcessExecutor.Result result = workspace.runCommand("codesign", "-vvvv", absoluteBundlePath);
+    if (result.getExitCode() != 0) {
+      return false;
+    }
+
+    if (result.getStderr().isPresent()) {
+      return result.getStderr().get().contains(": satisfies its Designated Requirement");
+    } else {
+      return false;
+    }
+  }
+
   @Test
-  public void simpleApplicationBundle() throws IOException{
+  public void simpleApplicationBundle() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -66,6 +91,57 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
+
+    assertFalse(checkCodeSigning(workspace, "DemoApp#iphonesimulator-x86_64/DemoApp.app"));
+  }
+
+  @Test
+  public void simpleApplicationBundleWithCodeSigning() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(numCodeSigningIdentities > 0);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle_with_codesigning",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp#iphoneos-arm64").assertSuccess();
+
+    workspace.verify();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp#iphoneos-arm64/DemoApp.app/DemoApp")));
+
+    assertTrue(checkCodeSigning(workspace, "DemoApp#iphoneos-arm64/DemoApp.app"));
+  }
+
+  @Test
+  public void simpleApplicationBundleWithCodeSigningAndEntitlements()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(numCodeSigningIdentities > 0);
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle_with_codesigning_and_entitlements",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoApp#iphoneos-arm64").assertSuccess();
+
+    workspace.verify();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoApp#iphoneos-arm64/DemoApp.app/DemoApp")));
+
+    assertTrue(checkCodeSigning(workspace, "DemoApp#iphoneos-arm64/DemoApp.app"));
   }
 
   @Test

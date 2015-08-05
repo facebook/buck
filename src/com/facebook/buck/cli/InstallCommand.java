@@ -20,6 +20,7 @@ import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
@@ -254,6 +255,23 @@ public class InstallCommand extends BuildCommand {
   }
 
   private InstallResult installAppleBundle(
+      CommandRunnerParams params,
+      AppleBundle appleBundle,
+      ProjectFilesystem projectFilesystem,
+      ProcessExecutor processExecutor) throws IOException, InterruptedException {
+    switch (appleBundle.getPlatformName()) {
+      case ApplePlatform.Name.IPHONESIMULATOR:
+        return installAppleBundleForSimulator(params, appleBundle, projectFilesystem,
+            processExecutor);
+
+      default:
+        params.getConsole().printBuildFailure("Install not yet supported for platform " +
+            appleBundle.getPlatformName() + ".");
+        return FAILURE;
+    }
+  }
+
+  private InstallResult installAppleBundleForSimulator(
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,

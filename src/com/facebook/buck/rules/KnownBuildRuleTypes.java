@@ -51,6 +51,7 @@ import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.AppleToolchain;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
+import com.facebook.buck.apple.CodeSignIdentity;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
@@ -423,6 +424,9 @@ public class KnownBuildRuleTypes {
                 SmartDexingStep.determineOptimalThreadCount(),
                 new CommandThreadFactory("SmartDexing")));
 
+    Supplier<ImmutableSet<CodeSignIdentity>> codeSignIdentitiesSupplier =
+        AppleConfig.createCodeSignIdentitiesSupplier(processExecutor);
+
     builder.register(new AndroidAarDescription(new AndroidManifestDescription(), ndkCxxPlatforms));
     builder.register(
         new AndroidBinaryDescription(
@@ -450,7 +454,8 @@ public class KnownBuildRuleTypes {
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform);
+            defaultCxxPlatform,
+            codeSignIdentitiesSupplier.get());
     builder.register(appleBundleDescription);
     builder.register(new AppleResourceDescription());
     builder.register(
@@ -460,7 +465,8 @@ public class KnownBuildRuleTypes {
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform));
+            defaultCxxPlatform,
+            codeSignIdentitiesSupplier.get()));
     builder.register(new CoreDataModelDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);

@@ -1,0 +1,61 @@
+blah blah blah
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AppIDName</key>
+	<string>Example</string>
+	<key>ApplicationIdentifierPrefix</key>
+	<array>
+	<string>ABCDE12345</string>
+	</array>
+	<key>CreationDate</key>
+	<date>2015-07-08T20:27:14Z</date>
+	<key>Platform</key>
+	<array>
+		<string>iOS</string>
+	</array>
+	<key>DeveloperCertificates</key>
+	<array>
+	</array>
+	<key>Entitlements</key>
+	<dict>
+		<key>keychain-access-groups</key>
+		<array>
+			<string>ABCDE12345.*</string>
+		</array>
+		<key>get-task-allow</key>
+		<true/>
+		<key>application-identifier</key>
+		<string>ABCDE12345.*</string>
+		<key>com.apple.security.application-groups</key>
+		<array>
+			<string>group.com.example</string>
+		</array>
+		<key>com.apple.developer.team-identifier</key>
+		<string>12345ABCDE</string>
+	</dict>
+	<key>ExpirationDate</key>
+	<date>9999-03-05T01:33:40Z</date>
+	<key>Name</key>
+	<string>Example</string>
+	<key>ProvisionsAllDevices</key>
+	<true/>
+	<key>TeamIdentifier</key>
+	<array>
+		<string>12345ABCDE</string>
+	</array>
+	<key>TeamName</key>
+	<string>Example</string>
+	<key>TimeToLive</key>
+	<integer>240</integer>
+	<key>UUID</key>
+	<string>00000000-0000-0000-0000-000000000000</string>
+	<key>Version</key>
+	<integer>1</integer>
+</dict>
+</plist>
+
+blah blah blah
+

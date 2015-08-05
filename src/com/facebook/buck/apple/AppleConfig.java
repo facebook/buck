@@ -27,16 +27,20 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Set;
 
 public class AppleConfig {
-
+  private static final Pattern CODE_SIGN_IDENTITY_PATTERN =
+      Pattern.compile("([A-F0-9]{40}) \"(iPhone.*)\"");
   private static final Logger LOG = Logger.get(AppleConfig.class);
 
   private final BuckConfig delegate;
@@ -105,6 +109,63 @@ public class AppleConfig {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * @return a memoizing {@link Supplier} that caches the output of
+   *     {@code security -v -p codesigning} to find all valid code signing identities.
+   */
+  public static Supplier<ImmutableSet<CodeSignIdentity>> createCodeSignIdentitiesSupplier(
+      final ProcessExecutor processExecutor) {
+    return Suppliers.memoize(new Supplier<ImmutableSet<CodeSignIdentity>>() {
+      @Override
+      public ImmutableSet<CodeSignIdentity> get() {
+        ProcessExecutorParams processExecutorParams =
+            ProcessExecutorParams.builder()
+                .setCommand(
+                    ImmutableList.of(
+                        "security", "find-identity",
+                        "-v", "-p", "codesigning"))
+                .build();
+        // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
+        Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+        ProcessExecutor.Result result;
+        try {
+          result = processExecutor.launchAndExecute(
+              processExecutorParams,
+              options,
+              /* stdin */ Optional.<String>absent(),
+              /* timeOutMs */ Optional.<Long>absent(),
+              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+        } catch (InterruptedException | IOException e) {
+          LOG.warn("Could not execute security, continuing without codesign identity.");
+          return ImmutableSet.of();
+        }
+
+        if (result.getExitCode() != 0) {
+          throw new RuntimeException("security -v -p codesigning failed: " + result.getStderr());
+        }
+
+        Matcher matcher = CODE_SIGN_IDENTITY_PATTERN.matcher(result.getStdout().get());
+        ImmutableSet.Builder<CodeSignIdentity> builder = ImmutableSet.builder();
+        while (matcher.find()) {
+          String hash = matcher.group(1);
+          String fullName = matcher.group(2);
+          CodeSignIdentity identity = CodeSignIdentity.builder()
+              .setHash(hash).setFullName(fullName).build();
+          builder.add(identity);
+          LOG.debug("Found code signing identity: " + identity.toString());
+        }
+        ImmutableSet<CodeSignIdentity> allValidIdentities = builder.build();
+        if (allValidIdentities.isEmpty()) {
+          LOG.warn("No valid code signing identities found.  Device build/install won't work.");
+        } else if (allValidIdentities.size() > 1) {
+          LOG.warn("More than 1 valid identity found.  This could potentially " +
+              "cause the wrong one to be used unless explicitly specified via CODE_SIGN_IDENTITY.");
+        }
+        return allValidIdentities;
+      }
+    });
   }
 
   /**

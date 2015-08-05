@@ -1,0 +1,26 @@
+apple_bundle(
+  name = 'DemoApp',
+  binary = ':DemoAppBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+  provisioning_profile_search_path = 'provisioning_profiles',
+  info_plist_substitutions = {
+    'CODE_SIGN_ENTITLEMENTS': '$(SOURCE_ROOT)/Entitlements.plist',
+  },
+)
+
+apple_binary(
+  name = 'DemoAppBinary',
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = glob([
+    '*.h',
+  ]),
+  srcs = glob([
+    '*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$SDKROOT/usr/lib/libobjc.dylib',
+  ],
+)

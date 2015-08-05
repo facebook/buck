@@ -75,6 +75,7 @@ java_test(
   resources = glob(['testdata/**']),
   deps = [
     ':testutil',
+    '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',

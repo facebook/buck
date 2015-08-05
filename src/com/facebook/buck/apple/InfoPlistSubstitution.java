@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,14 +54,58 @@ public class InfoPlistSubstitution {
   private static final Pattern PLIST_VARIABLE_PATTERN =
       Pattern.compile(
           "\\$(?<" + OPEN_PAREN_GROUP_NAME + ">[\\{\\(])" +
-          "(?<" + VARIABLE_GROUP_NAME + ">[^\\}\\):]+)" +
-          "(?::(?<" + MODIFIER_GROUP_NAME + ">[^\\}\\)]+))?" +
-          "(?<" + CLOSE_PAREN_GROUP_NAME + ">[\\}\\)])");
+              "(?<" + VARIABLE_GROUP_NAME + ">[^\\}\\):]+)" +
+              "(?::(?<" + MODIFIER_GROUP_NAME + ">[^\\}\\)]+))?" +
+              "(?<" + CLOSE_PAREN_GROUP_NAME + ">[\\}\\)])");
 
   private static final ImmutableMap<String, String> MATCHING_PARENS = ImmutableMap.of(
       "{", "}",
       "(", ")"
   );
+
+  /**
+   * Returns a variable expansion for keys which may depend on platform name,
+   * trying from most to least specific.  While it doesn't capture all arbitrary
+   * wildcard expansions, it should handle everything likely to occur in practice.
+   *
+   * e.g.<code>VALID_ARCHS[sdk=iphoneos*]</code>
+   *
+   * @param keyName           The name of the parent key.  e.g. "VALID_ARCHS"
+   * @param platformName      The name of the platform.  e.g. "iphoneos"
+   * @param variablesToExpand The mapping of variable keys to values.
+   * @return Optional containing the string value if found, or absent.
+   */
+  public static Optional<String> getVariableExpansionForPlatform(
+      String keyName,
+      String platformName,
+      Map<String, String> variablesToExpand) {
+    final String[] keysToTry;
+    if (platformName.equals("iphoneos") || platformName.equals("iphonesimulator")) {
+      keysToTry = new String[] {
+          keyName + "[sdk=" + platformName + "]",
+          keyName + "[sdk=" + platformName + "*]",
+          keyName + "[sdk=iphone*]",
+          keyName
+      };
+    } else {
+      keysToTry = new String[] {
+          keyName + "[sdk=" + platformName + "]",
+          keyName + "[sdk=" + platformName + "*]",
+          keyName
+      };
+    }
+
+    for (String keyToTry : keysToTry) {
+      if (variablesToExpand.containsKey(keyToTry)) {
+        return Optional.of(
+            InfoPlistSubstitution.replaceVariablesInString(
+                variablesToExpand.get(keyToTry),
+                variablesToExpand));
+      }
+    }
+
+    return Optional.absent();
+  }
 
   public static String replaceVariablesInString(
       String input,

@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
@@ -140,5 +141,41 @@ public class InfoPlistSubstitutionTest {
                 "FOO", "${BAZ}",
                 "BAZ", "$BAR")),
         equalTo("Hello $BAR world"));
+  }
+
+  @Test
+  public void testVariableExpansionForPlatform() {
+    assertThat(
+        InfoPlistSubstitution.getVariableExpansionForPlatform("FOO",
+            "iphoneos",
+            ImmutableMap.of(
+                "FOO", "BAR",
+                "FOO[sdk=iphoneos]", "BARiphoneos",
+                "FOO[sdk=iphonesimulator]", "BARiphonesimulator")),
+        equalTo(Optional.of("BARiphoneos")));
+  }
+
+  @Test
+  public void testVariableExpansionForPlatformWithUnknownKey() {
+    assertThat(
+        InfoPlistSubstitution.getVariableExpansionForPlatform("BAZ",
+            "iphoneos",
+            ImmutableMap.of(
+                "FOO", "BAR",
+                "FOO[sdk=iphoneos]", "BARiphoneos",
+                "FOO[sdk=iphonesimulator]", "BARiphonesimulator")),
+        equalTo(Optional.<String>absent()));
+  }
+
+  @Test
+  public void testVariableExpansionForPlatformWithUnknownPlatform() {
+    assertThat(
+        InfoPlistSubstitution.getVariableExpansionForPlatform("FOO",
+            "baz",
+            ImmutableMap.of(
+                "FOO", "BAR",
+                "FOO[sdk=iphoneos]", "BARiphoneos",
+                "FOO[sdk=iphonesimulator]", "BARiphonesimulator")),
+        equalTo(Optional.of("BAR")));
   }
 }

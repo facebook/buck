@@ -75,7 +75,7 @@ public class PlistProcessStep implements Step {
       try {
         infoPlist = PropertyListParser.parse(bufferedStream);
       } catch (Exception e) {
-        throw new IOException(e);
+        throw new IOException(input.toString() + ": " + e);
       }
 
       if (infoPlist instanceof NSDictionary) {

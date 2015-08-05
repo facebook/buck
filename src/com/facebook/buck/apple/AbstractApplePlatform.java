@@ -23,7 +23,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform> {
-  class Name {
+  public class Name {
     public static final String IPHONEOS = "iphoneos";
     public static final String IPHONESIMULATOR = "iphonesimulator";
     public static final String WATCHOS = "watchos";
@@ -37,6 +37,10 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
    * The full name of the platform. For example: {@code macosx}.
    */
   public abstract String getName();
+
+  public static boolean needsCodeSign(String name) {
+    return name.equals(Name.IPHONEOS) || name.equals(Name.WATCHOS);
+  }
 
   @Override
   public int compareTo(AbstractApplePlatform other) {

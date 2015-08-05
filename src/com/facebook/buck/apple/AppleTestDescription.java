@@ -87,6 +87,7 @@ public class AppleTestDescription implements
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
+  private final ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities;
 
   public AppleTestDescription(
       AppleConfig appleConfig,
@@ -94,7 +95,8 @@ public class AppleTestDescription implements
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
+      CxxPlatform defaultCxxPlatform,
+      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities) {
     this.appleConfig = appleConfig;
     this.appleBundleDescription = appleBundleDescription;
     this.appleLibraryDescription = appleLibraryDescription;
@@ -102,6 +104,7 @@ public class AppleTestDescription implements
     this.platformFlavorsToAppleCxxPlatforms =
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.allValidCodeSignIdentities = allValidCodeSignIdentities;
   }
 
   @Override
@@ -267,7 +270,6 @@ public class AppleTestDescription implements
     ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs =
         collectedAssetCatalogs.getBundledAssetCatalogs();
 
-    String sdkName = appleCxxPlatform.getAppleSdk().getName();
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
     AppleBundle bundle = new AppleBundle(
@@ -309,8 +311,9 @@ public class AppleTestDescription implements
         bundledAssetCatalogs,
         mergedAssetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),
-        platformName,
-        sdkName);
+        appleCxxPlatform.getAppleSdk(),
+        allValidCodeSignIdentities,
+        args.provisioningProfileSearchPath);
 
 
     Optional<BuildRule> xctoolZipBuildRule;
@@ -368,6 +371,7 @@ public class AppleTestDescription implements
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
     public Optional<String> resourcePrefixDir;
+    public Optional<SourcePath> provisioningProfileSearchPath;
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {

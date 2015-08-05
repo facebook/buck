@@ -130,7 +130,8 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION,
           DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
-          DEFAULT_PLATFORM);
+          DEFAULT_PLATFORM,
+          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC));
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.
@@ -142,5 +143,6 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION,
           DEFAULT_IPHONEOS_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
-          DEFAULT_PLATFORM);
+          DEFAULT_PLATFORM,
+          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC));
 }

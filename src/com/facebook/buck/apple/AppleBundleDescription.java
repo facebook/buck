@@ -63,19 +63,22 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
+  private final ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
+      CxxPlatform defaultCxxPlatform,
+      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.platformFlavorsToAppleCxxPlatforms =
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.allValidCodeSignIdentities = allValidCodeSignIdentities;
   }
 
   @Override
@@ -201,8 +204,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         bundledAssetCatalogs,
         mergedAssetCatalog,
         args.getTests(),
-        appleCxxPlatform.getAppleSdk().getApplePlatform().getName(),
-        appleCxxPlatform.getAppleSdk().getName());
+        appleCxxPlatform.getAppleSdk(),
+        allValidCodeSignIdentities,
+        args.provisioningProfileSearchPath);
   }
 
   private static <A extends Arg> BuildRule getFlavoredBinaryRule(
@@ -265,6 +269,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<ImmutableMap<String, SourcePath>> headers;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<SourcePath> provisioningProfileSearchPath;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
     public Optional<String> xcodeProductType;
 
