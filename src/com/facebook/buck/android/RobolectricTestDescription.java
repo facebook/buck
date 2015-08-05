@@ -149,7 +149,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         args.mavenCoords,
         dummyRDotJava,
         testRuleTimeoutMs,
-        args.getRunTestSeparately());
+        args.getRunTestSeparately(),
+        args.stdOutLogLevel,
+        args.stdErrLogLevel);
   }
 
   @SuppressFieldNotInitialized

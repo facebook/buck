@@ -59,11 +59,28 @@ public final class JUnitRunner extends BaseRunner {
   static final String JUL_DEBUG_LOGS_HEADER = "====DEBUG LOGS====\n\n";
   static final String JUL_ERROR_LOGS_HEADER = "====ERROR LOGS====\n\n";
 
+  private static final String STD_OUT_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdOutLogLevel";
+  private static final String STD_ERR_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdErrLogLevel";
+
   public JUnitRunner() {
   }
 
   @Override
   public void run() throws Throwable {
+    Level stdOutLogLevel = Level.FINE;
+    Level stdErrLogLevel = Level.WARNING;
+
+    String unparsedStdOutLogLevel = System.getProperty(STD_OUT_LOG_LEVEL_PROPERTY);
+    String unparsedStdErrLogLevel = System.getProperty(STD_ERR_LOG_LEVEL_PROPERTY);
+
+    if (unparsedStdOutLogLevel != null) {
+      stdOutLogLevel = Level.parse(unparsedStdOutLogLevel);
+    }
+
+    if (unparsedStdErrLogLevel != null) {
+      stdErrLogLevel = Level.parse(unparsedStdErrLogLevel);
+    }
+
     Filter filter = new Filter() {
       @Override
       public boolean shouldRun(Description description) {
@@ -111,7 +128,7 @@ public final class JUnitRunner extends BaseRunner {
         Request request = Request.runner(suite);
         request = request.filterWith(filter);
 
-        jUnitCore.addListener(new TestListener(results));
+        jUnitCore.addListener(new TestListener(results, stdOutLogLevel, stdErrLogLevel));
         jUnitCore.run(request);
       }
 
@@ -270,6 +287,8 @@ public final class JUnitRunner extends BaseRunner {
    */
   private static class TestListener extends RunListener {
     private final List<TestResult> results;
+    private final Level stdErrLogLevel;
+    private final Level stdOutLogLevel;
     private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
     private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
     private ByteArrayOutputStream julLogBytes, julErrLogBytes;
@@ -282,8 +301,13 @@ public final class JUnitRunner extends BaseRunner {
     // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
     private long startTime = System.currentTimeMillis();
 
-    public TestListener(List<TestResult> results) {
+    public TestListener(
+        List<TestResult> results,
+        Level stdOutLogLevel,
+        Level stdErrLogLevel) {
       this.results = results;
+      this.stdOutLogLevel = stdOutLogLevel;
+      this.stdErrLogLevel = stdErrLogLevel;
     }
 
     @Override
@@ -312,8 +336,8 @@ public final class JUnitRunner extends BaseRunner {
       }
 
       JulLogFormatter formatter = new JulLogFormatter();
-      julLogHandler = addStreamHandler(rootLogger, julLogBytes, formatter, Level.FINE);
-      julErrLogHandler = addStreamHandler(rootLogger, julErrLogBytes, formatter, Level.WARNING);
+      julLogHandler = addStreamHandler(rootLogger, julLogBytes, formatter, stdOutLogLevel);
+      julErrLogHandler = addStreamHandler(rootLogger, julErrLogBytes, formatter, stdErrLogLevel);
 
       // Prepare single-test result.
       result = new Result();

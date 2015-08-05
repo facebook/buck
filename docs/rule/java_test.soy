@@ -116,6 +116,24 @@ A <code>java_test()</code> rule is used to define a set of
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'std_out_log_level' /}
+  {param default : 'FINE' /}
+  {param desc}
+  Log level for messages from the source under test that buck will output to
+  std out.
+  <p>Value must be a valid <code>java.util.logging.Level</code> value.</p>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'std_err_log_level' /}
+  {param default : 'WARNING' /}
+  {param desc}
+  Same as <code>std_out_log_level</code>, but for std err.
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // close args

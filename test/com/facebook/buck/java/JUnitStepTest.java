@@ -41,6 +41,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 public class JUnitStepTest {
 
@@ -88,7 +89,9 @@ public class JUnitStepTest {
         /* isDryRun */ false,
         TestType.JUNIT,
         testRunnerClasspath,
-        /* testRuleTimeoutMs*/ Optional.<Long>absent());
+        /* testRuleTimeoutMs*/ Optional.<Long>absent(),
+        /* stdOutLogLevel */ Optional.<Level>absent(),
+        /* stdErrLogLevel */ Optional.<Level>absent());
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(executionContext.getProjectFilesystem()).andReturn(filesystem).anyTimes();
@@ -167,7 +170,9 @@ public class JUnitStepTest {
         /* isDryRun */ false,
         TestType.JUNIT,
         testRunnerClasspath,
-        /* testRuleTimeoutMs*/ Optional.<Long>absent());
+        /* testRuleTimeoutMs*/ Optional.<Long>absent(),
+        /* stdOutLogLevel */ Optional.<Level>absent(),
+        /* stdErrLogLevel */ Optional.<Level>absent());
 
     TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext executionContext = TestExecutionContext.newBuilder()

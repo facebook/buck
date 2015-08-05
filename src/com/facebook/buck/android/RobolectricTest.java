@@ -46,6 +46,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class RobolectricTest extends JavaTest {
@@ -88,7 +89,9 @@ public class RobolectricTest extends JavaTest {
       Optional<String> mavenCoords,
       Optional<DummyRDotJava> optionalDummyRDotJava,
       Optional<Long> testRuleTimeoutMs,
-      boolean runTestSeparately) {
+      boolean runTestSeparately,
+      Optional<Level> stdOutLogLevel,
+      Optional<Level> stdErrLogLevel) {
     super(
         buildRuleParams,
         resolver,
@@ -105,7 +108,10 @@ public class RobolectricTest extends JavaTest {
         resourcesRoot,
         mavenCoords,
         testRuleTimeoutMs,
-        runTestSeparately);
+        runTestSeparately,
+        stdOutLogLevel,
+        stdErrLogLevel
+    );
     this.optionalDummyRDotJava = optionalDummyRDotJava;
   }
 

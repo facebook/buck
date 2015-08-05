@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -85,6 +86,9 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
   private ImmutableSet<BuildRule> sourceUnderTest;
 
   private final ImmutableSet<Path> additionalClasspathEntries;
+
+  private final Optional<Level> stdOutLogLevel;
+  private final Optional<Level> stdErrLogLevel;
 
   @AddToRuleKey
   private final TestType testType;
@@ -117,7 +121,9 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<Long> testRuleTimeoutMs,
-      boolean runTestSeparately) {
+      boolean runTestSeparately,
+      Optional<Level> stdOutLogLevel,
+      Optional<Level> stdErrLogLevel) {
     super(
         params,
         resolver,
@@ -139,6 +145,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
     this.testType = testType;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.runTestSeparately = runTestSeparately;
+    this.stdOutLogLevel = stdOutLogLevel;
+    this.stdErrLogLevel = stdErrLogLevel;
   }
 
   @Override
@@ -219,7 +227,10 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         testSelectorList,
         isDryRun,
         testType,
-        testRuleTimeoutMs);
+        testRuleTimeoutMs,
+        stdOutLogLevel,
+        stdErrLogLevel
+    );
     steps.add(junit);
 
     return steps.build();

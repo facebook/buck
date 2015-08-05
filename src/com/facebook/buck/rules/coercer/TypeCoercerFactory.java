@@ -102,6 +102,7 @@ public class TypeCoercerFactory {
         new FrameworkPathTypeCoercer(sourcePathTypeCoercer),
         new SourceWithFlagsListTypeCoercer(stringTypeCoercer, sourceWithFlagsTypeCoercer),
         new SourceListTypeCoercer(stringTypeCoercer, sourcePathTypeCoercer),
+        new LogLevelTypeCoercer(),
         patternTypeCoercer,
     };
   }

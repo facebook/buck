@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.logging.Level;
 
 public class JavaTestDescription implements Description<JavaTestDescription.Arg> {
 
@@ -130,7 +131,10 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         args.resourcesRoot,
         args.mavenCoords,
         testRuleTimeoutMs,
-        args.getRunTestSeparately());
+        args.getRunTestSeparately(),
+        args.stdOutLogLevel,
+        args.stdErrLogLevel
+    );
   }
 
   public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(
@@ -163,6 +167,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     public Optional<ImmutableList<String>> vmArgs;
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
+    public Optional<Level> stdErrLogLevel;
+    public Optional<Level> stdOutLogLevel;
     public Optional<Boolean> useCxxLibraries;
 
     @Override
