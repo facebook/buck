@@ -17,6 +17,7 @@
 package com.facebook.buck.maven;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.java.MavenPublishable;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -70,6 +71,20 @@ public class Publisher {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
     this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl.or(MAVEN_CENTRAL));
     this.locator = AetherUtil.initServiceLocator();
+  }
+
+  public void publish(MavenPublishable... mavenPublishables) throws DeploymentException {
+    for (MavenPublishable publishable : mavenPublishables) {
+      String coords = Preconditions.checkNotNull(
+          publishable.getMavenCoords().get(),
+          "No maven coordinates specified for published rule ",
+          publishable);
+      Path relativePathToOutput = Preconditions.checkNotNull(
+          publishable.getPathToOutput(),
+          "No path to output present in ",
+          publishable);
+      publish(coords, publishable.getProjectFilesystem().resolve(relativePathToOutput).toFile());
+    }
   }
 
   /**

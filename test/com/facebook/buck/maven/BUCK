@@ -13,6 +13,7 @@ java_test(
     '//src/com/facebook/buck/file:file',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java:rules',
+    '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/json:json',
     '//src/com/facebook/buck/maven:maven',
     '//src/com/facebook/buck/parser:config',

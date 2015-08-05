@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
@@ -105,25 +104,12 @@ public class PublishCommand extends BuildCommand {
       return false;
     }
 
-    MavenPublishable publishable = (MavenPublishable) buildRule;
-    Optional<String> mavenCoords = publishable.getMavenCoords();
-    if (!mavenCoords.isPresent()) {
-      printError(params, "No maven coordinates specified for published rule " + publishable);
-      return false;
-    }
-
-    Path relativePathToOutput = publishable.getPathToOutput();
-    if (relativePathToOutput == null) {
-      printError(params, "No path to output present in " + publishable);
-      return false;
-    }
-
-    ProjectFilesystem projectFilesystem = params.getRepository().getFilesystem();
-    Path pathToOutput = projectFilesystem.resolve(relativePathToOutput);
-    Publisher publisher = new Publisher(projectFilesystem, Optional.fromNullable(remoteRepo));
+    Publisher publisher = new Publisher(
+        params.getRepository().getFilesystem(),
+        Optional.fromNullable(remoteRepo));
 
     try {
-      publisher.publish(mavenCoords.get(), pathToOutput.toFile());
+      publisher.publish((MavenPublishable) buildRule);
     } catch (DeploymentException e) {
       params.getConsole().printBuildFailureWithoutStacktraceDontUnwrap(e);
       return false;
