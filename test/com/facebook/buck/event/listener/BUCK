@@ -47,6 +47,7 @@ java_test(
     '//third-party/java/gson:gson',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/immutables:processor',
     '//third-party/java/jackson:jackson-annotations',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',

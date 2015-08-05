@@ -612,6 +612,7 @@ public final class Main {
 
       eventListeners = addEventListeners(buildEventBus,
           rootRepository.getFilesystem(),
+          buildId,
           rootRepository.getBuckConfig(),
           webServer,
           clock,
@@ -917,6 +918,7 @@ public final class Main {
   private ImmutableList<BuckEventListener> addEventListeners(
       BuckEventBus buckEvents,
       ProjectFilesystem projectFilesystem,
+      BuildId buildId,
       BuckConfig config,
       Optional<WebServer> webServer,
       Clock clock,
@@ -928,16 +930,19 @@ public final class Main {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())
-            .add(
-                new ChromeTraceBuildListener(
-                    projectFilesystem,
-                    clock,
-                    objectMapper,
-                    config.getMaxTraces(),
-                    config.getCompressTraces()))
             .add(consoleEventBusListener)
             .add(new LoggingBuildListener());
-
+    try {
+      eventListenersBuilder.add(new ChromeTraceBuildListener(
+          projectFilesystem,
+          buildId,
+          clock,
+          objectMapper,
+          config.getMaxTraces(),
+          config.getCompressTraces()));
+    } catch (IOException e) {
+      LOG.error("Unable to create ChromeTrace listener!");
+    }
     if (webServer.isPresent()) {
       eventListenersBuilder.add(webServer.get().createListener());
     }
