@@ -38,6 +38,7 @@ public class AndroidPrebuiltAar
     implements HasAndroidResourceDeps, HasRuntimeDeps {
 
   private final AndroidResource androidResource;
+  private final BuildRule unzipRule;
   private final SourcePath nativeLibsDirectory;
   private final PrebuiltJar prebuiltJar;
 
@@ -48,6 +49,7 @@ public class AndroidPrebuiltAar
       SourcePath nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       AndroidResource androidResource,
+      BuildRule unzipRule,
       JavacOptions javacOptions,
       Iterable<PrebuiltJar> exportedDeps) {
     super(
@@ -69,6 +71,7 @@ public class AndroidPrebuiltAar
         /* manifestFile */ Optional.<SourcePath>absent(),
         /* isPrebuiltAar */ true);
     this.androidResource = androidResource;
+    this.unzipRule = unzipRule;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
   }
@@ -120,7 +123,7 @@ public class AndroidPrebuiltAar
   // a dependent is building against us.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>of(androidResource);
+    return ImmutableSortedSet.<BuildRule>of(androidResource, unzipRule);
   }
 
 }

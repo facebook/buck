@@ -122,6 +122,7 @@ public class AndroidPrebuiltAarDescription
             unzipAar.getNativeLibsDirectory()),
         /* prebuiltJar */ prebuiltJar,
         /* androidResource */ androidResource,
+        /* unzipRule */ unzipAar,
         /* javacOptions */ javacOptions,
         /* exportedDeps */ javaDeps));
   }
