@@ -80,7 +80,8 @@ public class CxxBoostTestTest {
         ImmutableSortedSet.<BuildRule>of(),
         ImmutableSet.<Label>of(),
         ImmutableSet.<String>of(),
-        ImmutableSet.<BuildRule>of());
+        ImmutableSet.<BuildRule>of(),
+        /* runTestSeparately */ false);
 
     ExecutionContext context =
         TestExecutionContext.newBuilder()

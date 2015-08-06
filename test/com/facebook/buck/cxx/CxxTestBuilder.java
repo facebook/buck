@@ -40,4 +40,14 @@ public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.
     return this;
   }
 
+  public CxxTestBuilder setRunTestSeparately(boolean runTestSeparately) {
+    arg.runTestSeparately = Optional.of(runTestSeparately);
+    return this;
+  }
+
+  public CxxTestBuilder setFramework(CxxTestType framework) {
+    arg.framework = Optional.of(framework);
+    return this;
+  }
+
 }

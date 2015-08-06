@@ -62,7 +62,8 @@ public class CxxTestTest {
           ImmutableMap.<String, String>of(),
           ImmutableSet.<Label>of(),
           ImmutableSet.<String>of(),
-          ImmutableSet.<BuildRule>of());
+          ImmutableSet.<BuildRule>of(),
+          /* runTestSeparately */ false);
     }
 
     @Override

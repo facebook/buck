@@ -74,8 +74,9 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
       ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
-      ImmutableSet<BuildRule> sourceUnderTest) {
-    super(params, resolver, env, labels, contacts, sourceUnderTest);
+      ImmutableSet<BuildRule> sourceUnderTest,
+      boolean runTestSeparately) {
+    super(params, resolver, env, labels, contacts, sourceUnderTest, runTestSeparately);
     this.executable = executable;
     this.additionalDeps = additionalDeps;
   }

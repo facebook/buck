@@ -52,6 +52,7 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
+  private final boolean runTestSeparately;
 
   public CxxTest(
       BuildRuleParams params,
@@ -59,12 +60,14 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
       ImmutableMap<String, String> env,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
-      ImmutableSet<BuildRule> sourceUnderTest) {
+      ImmutableSet<BuildRule> sourceUnderTest,
+      boolean runTestSeparately) {
     super(params, resolver);
     this.env = env;
     this.labels = labels;
     this.contacts = contacts;
     this.sourceUnderTest = sourceUnderTest;
+    this.runTestSeparately = runTestSeparately;
   }
 
   /**
@@ -181,7 +184,7 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
 
   @Override
   public boolean runTestSeparately() {
-    return false;
+    return runTestSeparately;
   }
 
   @Override

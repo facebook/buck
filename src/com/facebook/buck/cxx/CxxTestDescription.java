@@ -124,7 +124,8 @@ public class CxxTestDescription implements
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
-            resolver.getAllRules(args.sourceUnderTest.get()));
+            resolver.getAllRules(args.sourceUnderTest.get()),
+            args.runTestSeparately.or(false));
         break;
       }
       case BOOST: {
@@ -136,7 +137,8 @@ public class CxxTestDescription implements
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
-            resolver.getAllRules(args.sourceUnderTest.get()));
+            resolver.getAllRules(args.sourceUnderTest.get()),
+            args.runTestSeparately.or(false));
         break;
       }
       default: {
@@ -204,6 +206,7 @@ public class CxxTestDescription implements
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<CxxTestType> framework;
     public Optional<ImmutableMap<String, String>> env;
+    public Optional<Boolean> runTestSeparately;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

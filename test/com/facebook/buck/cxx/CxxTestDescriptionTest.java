@@ -101,4 +101,32 @@ public class CxxTestDescriptionTest {
     assertThat(testStep.getEnv(), Matchers.equalTo(env));
   }
 
+  @Test
+  public void runTestSeparately() {
+    for (CxxTestType framework : CxxTestType.values()) {
+      BuildRuleResolver resolver = new BuildRuleResolver();
+      BuildRule frameworkRule =
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtest"))
+              .setOut("out")
+              .build(resolver);
+      CxxTestBuilder builder =
+          new CxxTestBuilder(
+              BuildTargetFactory.newInstance("//:test"),
+              new CxxBuckConfig(
+                  new FakeBuckConfig(
+                      ImmutableMap.of(
+                          "cxx",
+                          ImmutableMap.of(
+                              "gtest_dep", frameworkRule.getBuildTarget().toString(),
+                              "boost_test_dep", frameworkRule.getBuildTarget().toString())))),
+              CxxTestBuilder.createDefaultPlatform(),
+              CxxTestBuilder.createDefaultPlatforms());
+      CxxTest test = (CxxTest) builder
+          .setRunTestSeparately(true)
+          .setFramework(framework)
+          .build(resolver);
+      assertTrue(test.runTestSeparately());
+    }
+  }
+
 }
