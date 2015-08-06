@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Contains platform independent settings for C/C++ rules.
@@ -99,9 +100,16 @@ public class CxxBuckConfig {
   }
 
   public Optional<Path> getPath(String flavor, String name) {
-    return delegate
-        .getPath(cxxSection, flavor + "_" + name)
-        .or(delegate.getPath(cxxSection, name));
+    Optional<String> rawPath = delegate
+        .getValue(cxxSection, flavor + "_" + name)
+        .or(delegate.getValue(cxxSection, name));
+
+    if (!rawPath.isPresent()) {
+      return Optional.absent();
+    }
+
+    return Optional.fromNullable(
+        delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(rawPath.get())));
   }
 
   public Optional<String> getDefaultPlatform() {
