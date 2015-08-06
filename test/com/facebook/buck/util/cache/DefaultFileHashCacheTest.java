@@ -28,7 +28,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.HashCodeAndFileType;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
@@ -125,21 +124,6 @@ public class DefaultFileHashCacheTest {
     cache.loadingCache.put(path, value);
     cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_DELETE));
     assertFalse("Cache should not contain path", cache.contains(path));
-  }
-
-  @Test
-  public void whenPathIsIgnoredThenCacheDoesNotContainPath() throws IOException {
-    String ignoredFolder = "buck-out";
-    String ignoredFile = ignoredFolder + "/SomeClass.java";
-    DefaultFileHashCache cache =
-        new DefaultFileHashCache(
-            new ProjectFilesystem(
-                tmp.getRoot().toPath(),
-                ImmutableSet.of(tmp.newFolder(ignoredFolder).toPath())));
-    File inputFile = tmp.newFile(ignoredFile);
-    Files.write("class SomeClass {}".getBytes(Charsets.US_ASCII), inputFile);
-    cache.get(Paths.get(ignoredFile));
-    assertFalse("Cache should not contain path.", cache.contains(inputFile.toPath()));
   }
 
   @Test

@@ -67,6 +67,9 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
+import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.MultiProjectFileHashCache;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
@@ -574,12 +577,28 @@ public final class Main {
         // TODO(user): Thread through properties from client environment.
         System.getProperties());
 
-    DefaultFileHashCache fileHashCache;
+    ProjectFileHashCache repoHashCache;
     if (isDaemon) {
-      fileHashCache = getFileHashCacheFromDaemon(rootRepository, clock, processExecutor);
+      repoHashCache = getFileHashCacheFromDaemon(rootRepository, clock, processExecutor);
     } else {
-      fileHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
+      repoHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
     }
+
+    // Build up the hash cache, which is a collection of the stateful repo cache and some per-run
+    // caches.
+    FileHashCache fileHashCache =
+        new MultiProjectFileHashCache(
+            ImmutableList.of(
+                repoHashCache,
+                // A cache which caches hashes of repo-relative paths which may have been ignore by
+                // the main repo cache, and only serves to prevent rehashing the same file multiple
+                // times in a single run.
+                new DefaultFileHashCache(
+                    new ProjectFilesystem(rootRepository.getFilesystem().getRootPath())),
+                // A cache which caches hashes of absolute paths which my be accessed by certain
+                // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
+                // multiple times in a single run.
+                new DefaultFileHashCache(new ProjectFilesystem(Paths.get("/")))));
 
     @Nullable ArtifactCacheFactory artifactCacheFactory = null;
     Optional<WebServer> webServer = getWebServerIfDaemon(
