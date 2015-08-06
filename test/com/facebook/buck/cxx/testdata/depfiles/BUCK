@@ -1,0 +1,10 @@
+cxx_binary(
+  name = 'test',
+  headers = [
+    'used.h',
+    'unused.h',
+  ],
+  srcs = [
+    'test.cpp',
+  ],
+)

@@ -52,7 +52,7 @@ abstract class AbstractCxxSource {
     private final String preprocessedLanguage;
     private final ImmutableSet<String> extensions;
 
-    private Type(String language, String preprocessedLanguage, String... extensions) {
+    Type(String language, String preprocessedLanguage, String... extensions) {
       this.language = language;
       this.preprocessedLanguage = preprocessedLanguage;
       this.extensions = ImmutableSet.copyOf(extensions);
@@ -73,6 +73,10 @@ abstract class AbstractCxxSource {
 
     public String getPreprocessedLanguage() {
       return preprocessedLanguage;
+    }
+
+    public boolean isPreprocessable() {
+      return !preprocessedLanguage.equals(language);
     }
 
     public ImmutableSet<String> getExtensions() {

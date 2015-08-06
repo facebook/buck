@@ -236,6 +236,9 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-x");
     commandArgs.add(language);
     commandArgs.add("-c");
+    commandArgs.add("-MD");
+    commandArgs.add("-MF");
+    commandArgs.add(output + ".dep.tmp");
     commandArgs.add(source);
     commandArgs.add("-o");
     commandArgs.add(output);

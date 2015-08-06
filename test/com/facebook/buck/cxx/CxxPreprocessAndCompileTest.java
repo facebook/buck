@@ -443,6 +443,7 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> platformFlags = ImmutableList.of("-ffunction-sections");
     ImmutableList<String> ruleFlags = ImmutableList.of("-O3");
     Path output = Paths.get("test.o");
+    Path depFile = Paths.get("test.o.dep");
     Path input = Paths.get("test.ii");
 
     CxxPreprocessAndCompile buildRule = new CxxPreprocessAndCompile(
@@ -471,6 +472,9 @@ public class CxxPreprocessAndCompileTest {
         .add("-O3")
         .add("-x", "c++")
         .add("-c")
+        .add("-MD")
+        .add("-MF")
+        .add(depFile.toString() + ".tmp")
         .add(input.toString())
         .add("-o", output.toString())
         .build();
@@ -488,6 +492,7 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> platformFlags = ImmutableList.of("-Dtest=blah");
     ImmutableList<String> ruleFlags = ImmutableList.of("-Dfoo=bar");
     Path output = Paths.get("test.ii");
+    Path depFile = Paths.get("test.ii.dep");
     Path input = Paths.get("test.cpp");
 
     CxxPreprocessAndCompile buildRule = new CxxPreprocessAndCompile(
@@ -517,6 +522,9 @@ public class CxxPreprocessAndCompileTest {
         .add("-Dfoo=bar")
         .add("-x", "c++")
         .add("-E")
+        .add("-MD")
+        .add("-MF")
+        .add(depFile.toString() + ".tmp")
         .add(input.toString())
         .build();
     ImmutableList<String> actualPreprocessCommand = buildRule.makeMainStep().getCommand();

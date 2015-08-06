@@ -79,11 +79,13 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.setUp();
     workspace.writeContentsToPath(
         "[cxx]\n" +
-            "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
-            "  cppflags = -g\n" +
-            "  cflags = -g\n" +
-            "  cxxppflags = -g\n" +
-            "  cxxflags = -g\n",
+        "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
+        "  cppflags = -g\n" +
+        "  cflags = -g\n" +
+        "  cxxppflags = -g\n" +
+        "  cxxflags = -g\n" +
+        "[build]\n" +
+        "  depfiles = false\n",
         ".buckconfig");
   }
 

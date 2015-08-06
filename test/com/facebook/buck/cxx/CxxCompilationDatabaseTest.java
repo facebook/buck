@@ -199,6 +199,9 @@ public class CxxCompilationDatabaseTest {
             "-x",
             "c++",
             "-c",
+            "-MD",
+            "-MF",
+            "test.o.dep.tmp",
             "test.cpp",
             "-o",
             "test.o"));

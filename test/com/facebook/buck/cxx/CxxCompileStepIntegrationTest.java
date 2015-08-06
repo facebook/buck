@@ -56,6 +56,7 @@ public class CxxCompileStepIntegrationTest {
     ImmutableList<String> compiler = platform.getCc().getCommandPrefix(
         new SourcePathResolver(new BuildRuleResolver()));
     Path output = filesystem.resolve(Paths.get("output.o"));
+    Path depFile = filesystem.resolve(Paths.get("output.dep"));
     Path relativeInput = Paths.get("input.c");
     Path input = filesystem.resolve(relativeInput);
     filesystem.writeContentsToPath("int main() {}", relativeInput);
@@ -77,6 +78,7 @@ public class CxxCompileStepIntegrationTest {
     CxxPreprocessAndCompileStep step = new CxxPreprocessAndCompileStep(
         CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
         output,
+        depFile,
         relativeInput,
         CxxSource.Type.C,
         Optional.of(preprocessorCommand.build()),

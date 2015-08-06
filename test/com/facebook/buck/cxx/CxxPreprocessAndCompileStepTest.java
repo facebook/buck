@@ -44,6 +44,7 @@ public class CxxPreprocessAndCompileStepTest {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
     ImmutableList<String> compiler = ImmutableList.of("compiler");
     Path output = Paths.get("test.ii");
+    Path depFile = Paths.get("test.dep");
     Path input = Paths.get("test.cpp");
 
     Path compilationDirectory = Paths.get("compDir");
@@ -58,6 +59,7 @@ public class CxxPreprocessAndCompileStepTest {
         new CxxPreprocessAndCompileStep(
             CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             output,
+            depFile,
             input,
             CxxSource.Type.CXX,
             Optional.of(compiler),
@@ -94,6 +96,7 @@ public class CxxPreprocessAndCompileStepTest {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
     ImmutableList<String> compiler = ImmutableList.of("compiler");
     Path output = Paths.get("test.ii");
+    Path depFile = Paths.get("test.dep");
     Path input = Paths.get("test.cpp");
 
     ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of(original, replacement);
@@ -112,6 +115,7 @@ public class CxxPreprocessAndCompileStepTest {
         new CxxPreprocessAndCompileStep(
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             output,
+            depFile,
             input,
             CxxSource.Type.CXX,
             Optional.<ImmutableList<String>>absent(),

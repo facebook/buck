@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -25,6 +26,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -41,16 +43,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A build rule which preprocesses and/or compiles a C/C++ source in a single step.
  */
 public class CxxPreprocessAndCompile
     extends AbstractBuildRule
-    implements RuleKeyAppendable, SupportsInputBasedRuleKey {
+    implements RuleKeyAppendable, SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
 
   @AddToRuleKey
   private final CxxPreprocessAndCompileStep.Operation operation;
@@ -270,6 +275,10 @@ public class CxxPreprocessAndCompile
     return builder;
   }
 
+  private Path getDepFilePath() {
+    return output.getFileSystem().getPath(output.toString() + ".dep");
+  }
+
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep() {
 
@@ -314,6 +323,7 @@ public class CxxPreprocessAndCompile
     return new CxxPreprocessAndCompileStep(
         operation,
         output,
+        getDepFilePath(),
         getResolver().getPath(input),
         inputType,
         preprocessorCommand,
@@ -466,6 +476,37 @@ public class CxxPreprocessAndCompile
 
   public ImmutableList<CxxHeaders> getIncludes() {
     return includes;
+  }
+
+  @Override
+  public boolean useDependencyFileRuleKeys() {
+    return operation.isPreprocess();
+  }
+
+  @Override
+  public ImmutableList<Path> getInputsAfterBuildingLocally() throws IOException {
+    SourcePathResolver resolver = getResolver();
+    ImmutableList.Builder<Path> inputs = ImmutableList.builder();
+
+    // Add the input.
+    inputs.add(resolver.getPath(input));
+
+    // All all prefix headers.
+    Set<Path> prefixHeaders = Sets.newTreeSet();
+    for (CxxHeaders headers : includes) {
+      for (SourcePath prefixHeader : headers.getPrefixHeaders()) {
+        prefixHeaders.add(resolver.getPath(prefixHeader));
+      }
+    }
+    inputs.addAll(prefixHeaders);
+
+    // Add all dynamically detected header dependencies.
+    inputs.addAll(
+        Iterables.transform(
+            getProjectFilesystem().readLines(getDepFilePath()),
+            MorePaths.TO_PATH));
+
+    return inputs.build();
   }
 
 }

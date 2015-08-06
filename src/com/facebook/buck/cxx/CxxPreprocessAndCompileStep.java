@@ -33,9 +33,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
@@ -52,6 +57,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private final Operation operation;
   private final Path output;
+  private final Path depFile;
   private final Path input;
   private final CxxSource.Type inputType;
   private final Optional<ImmutableList<String>> preprocessorCommand;
@@ -70,6 +76,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   public CxxPreprocessAndCompileStep(
       Operation operation,
       Path output,
+      Path depFile,
       Path input,
       CxxSource.Type inputType,
       Optional<ImmutableList<String>> preprocessorCommand,
@@ -81,6 +88,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
     this.operation = operation;
     this.output = output;
+    this.depFile = depFile;
     this.input = input;
     this.inputType = inputType;
     this.preprocessorCommand = preprocessorCommand;
@@ -201,11 +209,20 @@ public class CxxPreprocessAndCompileStep implements Step {
     return builder;
   }
 
+  private Path getDepTemp() {
+    return depFile.getFileSystem().getPath(depFile + ".tmp");
+  }
+
+  private ImmutableList<String> getDepFileArgs(Path depFile) {
+    return ImmutableList.of("-MD", "-MF", depFile.toString());
+  }
+
   private ImmutableList<String> makePreprocessCommand() {
     return ImmutableList.<String>builder()
         .addAll(preprocessorCommand.get())
         .add("-x", inputType.getLanguage())
         .add("-E")
+        .addAll(getDepFileArgs(getDepTemp()))
         .add(input.toString())
         .build();
   }
@@ -217,6 +234,10 @@ public class CxxPreprocessAndCompileStep implements Step {
         .addAll(compilerCommand.get())
         .add("-x", inputLanguage)
         .add("-c")
+        .addAll(
+            inputType.isPreprocessable() ?
+                getDepFileArgs(getDepTemp()) :
+                ImmutableList.<String>of())
         .add(inputFileName)
         .add("-o")
         .add(output.toString())
@@ -421,6 +442,22 @@ public class CxxPreprocessAndCompileStep implements Step {
         exitCode = executePiped(context);
       } else {
         exitCode = executeOther(context);
+      }
+
+      // Process the dependency file, fixing up the paths, and write it out to it's final location.
+      if (operation.isPreprocess()) {
+        try (InputStream input = context.getProjectFilesystem().newFileInputStream(getDepTemp());
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+             OutputStream output = context.getProjectFilesystem().newFileOutputStream(depFile);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output))) {
+          for (String prereq : Makefiles.parseMakefile(reader).getRules().get(0).getPrereqs()) {
+            Path replacement = replacementPaths.get(Paths.get(prereq));
+            if (replacement != null) {
+              writer.write(replacement.toString());
+              writer.newLine();
+            }
+          }
+        }
       }
 
       // If the compilation completed successfully and we didn't effect debug-info normalization
