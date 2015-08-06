@@ -30,6 +30,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.deployment.DeployRequest;
+import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -40,6 +41,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 public class Publisher {
 
@@ -57,34 +59,44 @@ public class Publisher {
   private final ServiceLocator locator;
   private final LocalRepository localRepo;
   private final RemoteRepository remoteRepo;
+  private final boolean dryRun;
 
-  public Publisher(ProjectFilesystem repositoryFilesystem, Optional<URL> remoteRepoUrl) {
-    this(repositoryFilesystem.getRootPath(), remoteRepoUrl);
+  public Publisher(
+      ProjectFilesystem repositoryFilesystem,
+      Optional<URL> remoteRepoUrl,
+      boolean dryRun) {
+    this(repositoryFilesystem.getRootPath(), remoteRepoUrl, dryRun);
   }
 
   /**
    * @param localRepoPath Typically obtained as
    *                      {@link com.facebook.buck.io.ProjectFilesystem#getRootPath}
    * @param remoteRepoUrl Canonically {@link #MAVEN_CENTRAL_URL}
+   * @param dryRun if true, a dummy {@link DeployResult} will be returned, with the fully
+   *               constructed {@link DeployRequest}. No actual publishing will happen
    */
-  public Publisher(Path localRepoPath, Optional<URL> remoteRepoUrl) {
+  public Publisher(
+      Path localRepoPath,
+      Optional<URL> remoteRepoUrl,
+      boolean dryRun) {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
     this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl.or(MAVEN_CENTRAL));
     this.locator = AetherUtil.initServiceLocator();
+    this.dryRun = dryRun;
   }
 
-  public void publish(MavenPublishable... mavenPublishables) throws DeploymentException {
-    for (MavenPublishable publishable : mavenPublishables) {
-      String coords = Preconditions.checkNotNull(
-          publishable.getMavenCoords().get(),
-          "No maven coordinates specified for published rule ",
-          publishable);
-      Path relativePathToOutput = Preconditions.checkNotNull(
-          publishable.getPathToOutput(),
-          "No path to output present in ",
-          publishable);
-      publish(coords, publishable.getProjectFilesystem().resolve(relativePathToOutput).toFile());
-    }
+  public DeployResult publish(MavenPublishable publishable) throws DeploymentException {
+    String coords = Preconditions.checkNotNull(
+        publishable.getMavenCoords().get(),
+        "No maven coordinates specified for published rule ",
+        publishable);
+    Path relativePathToOutput = Preconditions.checkNotNull(
+        publishable.getPathToOutput(),
+        "No path to output present in ",
+        publishable);
+    return publish(
+        coords,
+        publishable.getProjectFilesystem().resolve(relativePathToOutput).toFile());
   }
 
   /**
@@ -92,17 +104,17 @@ public class Publisher {
    *
    * @see DefaultArtifact#DefaultArtifact(String)
    */
-  public void publish(String coords, File... toPublish) throws DeploymentException {
-    publish(new DefaultArtifact(coords), toPublish);
+  public DeployResult publish(String coords, File... toPublish) throws DeploymentException {
+    return publish(new DefaultArtifact(coords), toPublish);
   }
 
-  public void publish(
+  public DeployResult publish(
       String groupId,
       String artifactId,
       String version,
       File... toPublish)
       throws DeploymentException {
-    publish(new DefaultArtifact(groupId, artifactId, "", version), toPublish);
+    return publish(new DefaultArtifact(groupId, artifactId, "", version), toPublish);
   }
 
   /**
@@ -113,7 +125,7 @@ public class Publisher {
    * @param toPublish {@link File}(s) to be published using the given coordinates. The filename
    *                  extension of each given file will be used as a maven "extension" coordinate
    */
-  public void publish(Artifact descriptor, File... toPublish) throws DeploymentException {
+  public DeployResult publish(Artifact descriptor, File... toPublish) throws DeploymentException {
     String providedExtension = descriptor.getExtension();
     if (!providedExtension.isEmpty()) {
       LOG.warn(
@@ -131,7 +143,7 @@ public class Publisher {
           Files.getFileExtension(file.getAbsolutePath()),
           file);
     }
-    publish(artifacts);
+    return publish(artifacts);
   }
 
   /**
@@ -139,7 +151,7 @@ public class Publisher {
    *                  coordinates in the corresponding {@link Artifact}.
    * @see Artifact#setFile
    */
-  public void publish(Artifact... toPublish) throws DeploymentException {
+  public DeployResult publish(Artifact... toPublish) throws DeploymentException {
     RepositorySystem repoSys = Preconditions.checkNotNull(
         locator.getService(RepositorySystem.class));
 
@@ -147,6 +159,18 @@ public class Publisher {
     session.setLocalRepositoryManager(repoSys.newLocalRepositoryManager(session, localRepo));
     session.setReadOnly();
 
+    DeployRequest deployRequest = createDeployRequest(toPublish);
+
+    if (dryRun) {
+      return new DeployResult(deployRequest)
+          .setArtifacts(Arrays.asList(toPublish))
+          .setMetadata(deployRequest.getMetadata());
+    } else {
+      return repoSys.deploy(session, deployRequest);
+    }
+  }
+
+  private DeployRequest createDeployRequest(Artifact[] toPublish) {
     DeployRequest deployRequest = new DeployRequest().setRepository(remoteRepo);
     for (Artifact artifact : toPublish) {
       File file = artifact.getFile();
@@ -155,7 +179,6 @@ public class Publisher {
 
       deployRequest.addArtifact(artifact);
     }
-
-    repoSys.deploy(session, deployRequest);
+    return deployRequest;
   }
 }

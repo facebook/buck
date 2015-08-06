@@ -24,6 +24,7 @@ import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -31,6 +32,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.kohsuke.args4j.Option;
 
@@ -46,6 +49,7 @@ public class PublishCommand extends BuildCommand {
   public static final String INCLUDE_SOURCE_LONG_ARG = "--include-source";
   public static final String INCLUDE_SOURCE_SHORT_ARG = "-s";
   public static final String TO_MAVEN_CENTRAL_LONG_ARG = "--to-maven-central";
+  public static final String DRY_RUN_LONG_ARG = "--dry-run";
 
   @Option(
       name = REMOTE_REPO_LONG_ARG,
@@ -64,6 +68,11 @@ public class PublishCommand extends BuildCommand {
       aliases = INCLUDE_SOURCE_SHORT_ARG,
       usage = "Publish source code as well")
   private boolean includeSource = false;
+
+  @Option(
+      name = DRY_RUN_LONG_ARG,
+      usage = "Just print the artifacts to be published")
+  private boolean dryRun = false;
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
@@ -106,10 +115,12 @@ public class PublishCommand extends BuildCommand {
 
     Publisher publisher = new Publisher(
         params.getRepository().getFilesystem(),
-        Optional.fromNullable(remoteRepo));
+        Optional.fromNullable(remoteRepo),
+        dryRun);
 
     try {
-      publisher.publish((MavenPublishable) buildRule);
+      DeployResult deployResult = publisher.publish((MavenPublishable) buildRule);
+      printArtifactsInformation(params, deployResult);
     } catch (DeploymentException e) {
       params.getConsole().printBuildFailureWithoutStacktraceDontUnwrap(e);
       return false;
@@ -117,8 +128,30 @@ public class PublishCommand extends BuildCommand {
     return true;
   }
 
-  private void printError(CommandRunnerParams params, String errorMessage) {
+  private static void printArtifactsInformation(
+      CommandRunnerParams params,
+      DeployResult deployResult) {
+    params.getConsole().getStdOut().println(
+        "\nPublished artifacts:\n" +
+            Joiner.on('\n').join(
+                FluentIterable
+                    .from(deployResult.getArtifacts())
+                    .transform(
+                        new Function<Artifact, String>() {
+                          @Override
+                          public String apply(Artifact input) {
+                            return atrifactToString(input);
+                          }
+                        })));
+    params.getConsole().getStdOut().println("\nDeployRequest:\n" + deployResult.getRequest());
+  }
+
+  private static void printError(CommandRunnerParams params, String errorMessage) {
     params.getConsole().printErrorText(errorMessage);
+  }
+
+  private static String atrifactToString(Artifact artifact) {
+    return artifact.toString() + " < " + artifact.getFile();
   }
 
   @Override

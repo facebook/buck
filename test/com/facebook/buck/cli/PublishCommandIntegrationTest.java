@@ -21,10 +21,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.Javac;
+import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.maven.TestPublisher;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.FluentIterable;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,6 +41,7 @@ public class PublishCommandIntegrationTest {
   public static final String JAR = ".jar";
   public static final String SRC_JAR = Javac.SRC_JAR;
   public static final String SHA1 = ".sha1";
+  public static final String TARGET = "//:foo";
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -60,12 +63,9 @@ public class PublishCommandIntegrationTest {
         this, "publish", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "publish",
-        PublishCommand.INCLUDE_SOURCE_LONG_ARG,
-        PublishCommand.REMOTE_REPO_SHORT_ARG,
-        publisher.getHttpd().getRootUri().toString(),
-        "//:foo");
+    ProjectWorkspace.ProcessResult result = runBuckPublish(
+        workspace,
+        PublishCommand.INCLUDE_SOURCE_LONG_ARG);
     result.assertSuccess();
     List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR));
@@ -86,4 +86,46 @@ public class PublishCommandIntegrationTest {
     result.assertFailure();
     assertTrue(result.getStderr().contains(PublishCommand.REMOTE_REPO_LONG_ARG));
   }
+
+  @Test
+  public void testDryDun() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "publish", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = runBuckPublish(
+        workspace,
+        PublishCommand.INCLUDE_SOURCE_LONG_ARG,
+        PublishCommand.DRY_RUN_LONG_ARG);
+    result.assertSuccess();
+
+    assertTrue(publisher.getPutRequestsHandler().getPutRequestsPaths().isEmpty());
+
+    String stdOut = result.getStdout();
+    assertTrue(stdOut, stdOut.contains("com.example:foo:jar:1.0"));
+    assertTrue(stdOut,
+        stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
+    assertTrue(stdOut, stdOut.contains("/foo.jar"));
+    assertTrue(stdOut, stdOut.contains("/foo#src" + Javac.SRC_JAR));
+    assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
+  }
+
+  private ProjectWorkspace.ProcessResult runBuckPublish(
+      ProjectWorkspace workspace,
+      String... extraArgs) throws IOException {
+    return workspace.runBuckCommand(
+        FluentIterable
+            .of(new String[]{"publish"})
+            .append(extraArgs)
+            .append(
+                PublishCommand.REMOTE_REPO_SHORT_ARG,
+                getMockRepoUrl(),
+                TARGET)
+            .toArray(String.class));
+  }
+
+  private String getMockRepoUrl() {
+    return publisher.getHttpd().getRootUri().toString();
+  }
+
 }

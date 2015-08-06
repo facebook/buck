@@ -54,7 +54,7 @@ public class TestPublisher extends Publisher implements AutoCloseable {
       Path pseudoLocalRepo,
       HttpdForTests httpd,
       HttpdForTests.DummyPutRequestsHandler putRequestsHandler) throws Exception {
-    super(pseudoLocalRepo, Optional.of(httpd.getRootUri().toURL()));
+    super(pseudoLocalRepo, Optional.of(httpd.getRootUri().toURL()), /* dryRun */ false);
     this.httpd = httpd;
     this.putRequestsHandler = putRequestsHandler;
   }

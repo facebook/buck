@@ -1,5 +1,6 @@
 prebuilt_jar(
   name = 'aether-util',
+  maven_coords = 'org.eclipse.aether:aether-util:1.0.2.v20150114',
   binary_jar = 'aether-util-1.0.2.v20150114.jar',
   source_jar = 'aether-util-1.0.2.v20150114-sources.jar',
   deps = [
@@ -13,6 +14,7 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'aether-connector-basic',
+  maven_coords = 'org.eclipse.aether:aether-connector-basic:1.0.2.v20150114',
   binary_jar = 'aether-connector-basic-1.0.2.v20150114.jar',
   source_jar = 'aether-connector-basic-1.0.2.v20150114-sources.jar',
   deps = [
@@ -28,6 +30,7 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'aether-api',
+  maven_coords = 'org.eclipse.aether:aether-api:1.0.2.v20150114',
   binary_jar = 'aether-api-1.0.2.v20150114.jar',
   source_jar = 'aether-api-1.0.2.v20150114-sources.jar',
   visibility = [
@@ -37,6 +40,7 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'aether-transport-http',
+  maven_coords = 'org.eclipse.aether:aether-transport-http:1.0.2.v20150114',
   binary_jar = 'aether-transport-http-1.0.2.v20150114.jar',
   source_jar = 'aether-transport-http-1.0.2.v20150114-sources.jar',
   deps = [
@@ -54,6 +58,7 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'aether-spi',
+  maven_coords = 'org.eclipse.aether:aether-spi:1.0.2.v20150114',
   binary_jar = 'aether-spi-1.0.2.v20150114.jar',
   source_jar = 'aether-spi-1.0.2.v20150114-sources.jar',
   deps = [
@@ -67,6 +72,7 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'aether-impl',
+  maven_coords = 'org.eclipse.aether:aether-impl:1.0.0.v20140518',
   binary_jar = 'aether-impl-1.0.0.v20140518.jar',
   source_jar = 'aether-impl-1.0.0.v20140518-sources.jar',
   deps = [
