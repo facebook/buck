@@ -35,6 +35,7 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -338,7 +339,11 @@ public class TestCommand extends BuildCommand {
           new CachingBuildEngine(
               pool.getExecutor(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+              params.getBuckConfig().getBuildDepFiles(),
               new InputBasedRuleKeyBuilderFactory(
+                  params.getFileHashCache(),
+                  new SourcePathResolver(targetGraphToActionGraph.getRuleResolver())),
+              new DependencyFileRuleKeyBuilderFactory(
                   params.getFileHashCache(),
                   new SourcePathResolver(targetGraphToActionGraph.getRuleResolver())));
       try (Build build = createBuild(

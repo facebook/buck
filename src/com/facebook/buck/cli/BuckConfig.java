@@ -759,6 +759,15 @@ public class BuckConfig {
   }
 
   /**
+   * @return the mode with which to run the build engine.
+   */
+  public CachingBuildEngine.DepFiles getBuildDepFiles() {
+    return getBooleanValue("build", "depfiles", true) ?
+        CachingBuildEngine.DepFiles.ENABLED :
+        CachingBuildEngine.DepFiles.DISABLED;
+  }
+
+  /**
    * @return the path for the given section and property.
    */
   public Optional<Path> getPath(String sectionName, String name) {

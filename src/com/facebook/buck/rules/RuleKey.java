@@ -259,12 +259,28 @@ public class RuleKey {
       return setSingleValue(val);
     }
 
-    private HashCode getHash(Path path) {
-      try {
-        return hashCache.get(path);
-      } catch (IOException e) {
-        throw Throwables.propagate(e);
+    // Paths get added as a combination of the file name and file hash. If the path is absolute
+    // then we only include the file name (assuming that it represents a tool of some kind
+    // that's being used for compilation or some such). This does mean that if a user renames a
+    // file without changing the contents, we have a cache miss. We're going to assume that this
+    // doesn't happen that often in practice.
+    public Builder setPath(Path path) throws IOException {
+      HashCode sha1 = hashCache.get(path);
+      if (sha1 == null) {
+        throw new RuntimeException("No SHA for " + path);
       }
+      if (logElms != null) {
+        logElms.add(String.format("path(%s:%s):", path, sha1));
+      }
+      if (path.isAbsolute()) {
+        logger.warn(
+            "Attempting to add absolute path to rule key. Only using file name: %s", path);
+        feed(path.getFileName().toString().getBytes()).separate();
+      } else {
+        feed(path.toString().getBytes()).separate();
+      }
+      feed(sha1.toString().getBytes());
+      return this;
     }
 
     protected Builder setSingleValue(@Nullable Object val) {
@@ -297,28 +313,11 @@ public class RuleKey {
           throw new RuntimeException(("Unhandled number type: " + val.getClass()));
         }
       } else if (val instanceof Path) {
-        // Paths get added as a combination of the file name and file hash. If the path is absolute
-        // then we only include the file name (assuming that it represents a tool of some kind
-        // that's being used for compilation or some such). This does mean that if a user renames a
-        // file without changing the contents, we have a cache miss. We're going to assume that this
-        // doesn't happen that often in practice.
-        Path path = (Path) val;
-        HashCode sha1 = getHash(path);
-        if (sha1 == null) {
-          throw new RuntimeException("No SHA for " + val);
+        try {
+          setPath((Path) val);
+        } catch (IOException e) {
+          throw Throwables.propagate(e);
         }
-        if (logElms != null) {
-          logElms.add(String.format("path(%s:%s):", val, sha1));
-        }
-        if (path.isAbsolute()) {
-          logger.warn(
-              "Attempting to add absolute path to rule key. Only using file name: %s", path);
-          feed(path.getFileName().toString().getBytes()).separate();
-        } else {
-          feed(path.toString().getBytes()).separate();
-        }
-
-        feed(sha1.toString().getBytes());
       } else if (val instanceof String) {
         if (logElms != null) {
           logElms.add(String.format("string(\"%s\"):", val));

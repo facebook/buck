@@ -61,6 +61,14 @@ public enum BuildRuleSuccessType {
   MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS(
       Property.SHOULD_UPDATE_METADATA_ON_DISK
   ),
+
+  /**
+   * Computed dep-file {@link RuleKey} matches the one on disk
+   */
+  MATCHING_DEP_FILE_RULE_KEY(
+      Property.SHOULD_UPDATE_METADATA_ON_DISK
+  ),
+
   ;
 
   private final EnumSet<Property> properties;

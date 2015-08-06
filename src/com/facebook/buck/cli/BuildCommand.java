@@ -38,6 +38,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
@@ -344,7 +345,11 @@ public class BuildCommand extends AbstractCommand {
              new CachingBuildEngine(
                  pool.getExecutor(),
                  getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+                 params.getBuckConfig().getBuildDepFiles(),
                  new InputBasedRuleKeyBuilderFactory(
+                     params.getFileHashCache(),
+                     new SourcePathResolver(resolver)),
+                 new DependencyFileRuleKeyBuilderFactory(
                      params.getFileHashCache(),
                      new SourcePathResolver(resolver))),
              artifactCache,
