@@ -43,9 +43,9 @@ public class AppleResources {
    * @param targetNodes {@link TargetNode} at the tip of the traversal.
    * @return The recursive resource buildables.
    */
-  public static <T> ImmutableSet<AppleResourceDescription.Arg> collectRecursiveResources(
+  public static ImmutableSet<AppleResourceDescription.Arg> collectRecursiveResources(
       final TargetGraph targetGraph,
-      Iterable<TargetNode<T>> targetNodes) {
+      Iterable<? extends TargetNode<?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
@@ -105,4 +105,18 @@ public class AppleResources {
       }
     }
   }
+
+  public static ImmutableSet<AppleResourceDescription.Arg> collectDirectResources(
+      TargetGraph targetGraph,
+      TargetNode<?> targetNode) {
+    ImmutableSet.Builder<AppleResourceDescription.Arg> builder = ImmutableSet.builder();
+    Iterable<TargetNode<?>> deps = targetGraph.getAll(targetNode.getDeps());
+    for (TargetNode<?> node : deps) {
+      if (node.getType().equals(AppleResourceDescription.TYPE)) {
+        builder.add((AppleResourceDescription.Arg) node.getConstructorArg());
+      }
+    }
+    return builder.build();
+  }
+
 }

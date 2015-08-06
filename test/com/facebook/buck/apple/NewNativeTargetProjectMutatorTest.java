@@ -308,7 +308,7 @@ public class NewNativeTargetProjectMutatorTest {
     AppleResourceDescription.Arg arg = createDescriptionArgWithDefaults(appleResourceDescription);
     arg.files = ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png"));
 
-    mutator.setResources(ImmutableSet.of(arg));
+    mutator.setRecursiveResources(ImmutableSet.of(arg));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
 

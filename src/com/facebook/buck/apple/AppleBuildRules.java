@@ -284,7 +284,7 @@ public final class AppleBuildRules {
    * Given a list of nodes, return AppleTest nodes that can be grouped with other tests.
    */
   public static ImmutableSet<TargetNode<AppleTestDescription.Arg>> filterGroupableTests(
-      Iterable<TargetNode<?>> tests) {
+      Iterable<? extends TargetNode<?>> tests) {
     ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> builder = ImmutableSet.builder();
     for (TargetNode<?> node : tests) {
       Optional<TargetNode<AppleTestDescription.Arg>> testNode =
@@ -333,10 +333,9 @@ public final class AppleBuildRules {
         .toSet();
   }
 
-  public static <T> ImmutableSet<AppleAssetCatalogDescription.Arg> collectDirectAssetCatalogs(
+  public static ImmutableSet<AppleAssetCatalogDescription.Arg> collectDirectAssetCatalogs(
       TargetGraph targetGraph,
-      TargetNode<T> targetNode
-  ) {
+      TargetNode<?> targetNode) {
     ImmutableSet.Builder<AppleAssetCatalogDescription.Arg> builder = ImmutableSet.builder();
     Iterable<TargetNode<?>> deps = targetGraph.getAll(targetNode.getDeps());
     for (TargetNode<?> node : deps) {

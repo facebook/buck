@@ -80,7 +80,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
-import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -2869,9 +2868,7 @@ public class ProjectGeneratorTest {
   public void usingBuildTargetSourcePathInResourceDirsOrFilesDoesNotThrow() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:rule");
     SourcePath sourcePath = new BuildTargetSourcePath(buildTarget);
-    TargetNode<?> generatingTarget = GenruleBuilder.newGenruleBuilder(buildTarget)
-        .setCmd("echo HI")
-        .build();
+    TargetNode<?> generatingTarget = ExportFileBuilder.newExportFileBuilder(buildTarget).build();
 
     ImmutableSet<TargetNode<?>> nodes = FluentIterable.from(
         setupSimpleLibraryWithResources(
@@ -3337,6 +3334,38 @@ public class ProjectGeneratorTest {
       }
     }
     assertFalse(hasAssetCatalog);
+  }
+
+  @Test
+  public void testResourcesUnderLibrary() throws IOException {
+    BuildTarget fileTarget = BuildTarget.builder("//foo", "file").build();
+    BuildTarget resourceTarget = BuildTarget.builder("//foo", "res").build();
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+
+    TargetNode<?> fileNode = ExportFileBuilder.newExportFileBuilder(fileTarget).build();
+    TargetNode<?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setDirs(ImmutableSet.<SourcePath>of())
+        .setFiles(ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(fileTarget)))
+        .build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(fileNode, resourceNode, libraryNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup mainGroup = project.getMainGroup();
+
+    PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(
+        ImmutableList.of("//foo:lib", "Resources"));
+    PBXFileReference resource = (PBXFileReference) Iterables.get(
+        resourcesGroup.getChildren(), 0);
+    assertThat(resource.getName(), equalTo("file"));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
