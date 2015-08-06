@@ -42,12 +42,15 @@ import javax.annotation.Nonnull;
  */
 public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
 
+  private final InputHandling inputHandling;
   private final LoadingCache<RuleKeyAppendable, Pair<RuleKey, ImmutableSet<BuildRule>>> cache;
 
-  public InputBasedRuleKeyBuilderFactory(
+  protected InputBasedRuleKeyBuilderFactory(
       final FileHashCache hashCache,
-      final SourcePathResolver pathResolver) {
+      final SourcePathResolver pathResolver,
+      InputHandling inputHandling) {
     super(hashCache, pathResolver);
+    this.inputHandling = inputHandling;
 
     // Build the cache around the sub-rule-keys and their dep lists.
     cache = CacheBuilder.newBuilder().weakKeys().build(
@@ -60,6 +63,12 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
             return subKeyBuilder.buildWithDeps();
           }
         });
+  }
+
+  public InputBasedRuleKeyBuilderFactory(
+      FileHashCache hashCache,
+      SourcePathResolver pathResolver) {
+    this(hashCache, pathResolver, InputHandling.HASH);
   }
 
   @Override
@@ -109,8 +118,11 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
     // rather than the rule key from it's `BuildRule`.
     @Override
     protected RuleKey.Builder setSourcePath(SourcePath sourcePath) {
-      deps.addAll(pathResolver.getRule(sourcePath).asSet());
-      return setSingleValue(pathResolver.getPath(sourcePath));
+      if (inputHandling == InputHandling.HASH) {
+        deps.addAll(pathResolver.getRule(sourcePath).asSet());
+        setSingleValue(pathResolver.getPath(sourcePath));
+      }
+      return this;
     }
 
     // Rules supporting input-based rule keys should be described entirely by their `SourcePath`
@@ -125,6 +137,24 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
     protected Pair<RuleKey, ImmutableSet<BuildRule>> buildWithDeps() {
       return new Pair<>(super.build(), deps.build());
     }
+
+  }
+
+  /**
+   * How to handle adding {@link SourcePath}s to the {@link RuleKey}.
+   */
+  protected enum InputHandling {
+
+    /**
+     * Hash the contents of {@link SourcePath}s.
+     */
+    HASH,
+
+    /**
+     * Ignore {@link SourcePath}s.  This is useful for implementing handling for dependency files,
+     * where the list of inputs will be provided explicitly.
+     */
+    IGNORE,
 
   }
 
