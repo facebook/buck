@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.cache;
 
 import static com.facebook.buck.testutil.WatchEvents.createOverflowEvent;
 import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.util.HashCodeAndFileType;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;

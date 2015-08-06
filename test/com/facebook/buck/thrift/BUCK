@@ -24,6 +24,7 @@ java_test(
     '//src/com/facebook/buck/step/fs:fs',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/thrift:rules',
+    '//src/com/facebook/buck/util/cache:cache',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:util',

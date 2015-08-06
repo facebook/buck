@@ -18,6 +18,7 @@ java_library(
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/cache:cache',
     '//test/com/facebook/buck/timing:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',

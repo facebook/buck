@@ -25,7 +25,7 @@ import com.facebook.buck.rules.Repository;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;

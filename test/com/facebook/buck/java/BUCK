@@ -141,6 +141,7 @@ java_test(
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/cache:cache',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/zip:stream',
     '//test/com/facebook/buck/android:testutil',

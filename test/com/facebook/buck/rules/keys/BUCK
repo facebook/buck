@@ -8,6 +8,7 @@ java_library(
   deps = [
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/cache:cache',
   ],
   visibility = [
     '//test/...',
@@ -26,6 +27,7 @@ java_test(
     '//src/com/facebook/buck/rules/keys:keys',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/cache:cache',
     '//test/com/facebook/buck/io:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',

@@ -55,7 +55,7 @@ import com.facebook.buck.timing.NanosAdjustedClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultFileHashCache;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;

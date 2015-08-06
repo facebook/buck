@@ -33,8 +33,8 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.FileHashCache;
-import com.facebook.buck.util.NullFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 

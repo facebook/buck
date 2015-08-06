@@ -19,7 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 
 /**
  * An implementation of a non-caching {@link RuleKey.Builder} useful in tests.
