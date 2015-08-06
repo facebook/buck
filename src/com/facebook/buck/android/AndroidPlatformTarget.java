@@ -237,6 +237,24 @@ public class AndroidPlatformTarget {
 
     Path platformDirectory = androidSdkDir.resolve(platformDirectoryPath);
     Path androidJar = platformDirectory.resolve("android.jar");
+
+    // Add any libraries found in the optional directory under the Android SDK directory. These
+    // go at the head of the bootclasspath before any additional jars.
+    File optionalDirectory = platformDirectory.resolve("optional").toFile();
+    if (optionalDirectory.exists() &&
+        optionalDirectory.isDirectory()) {
+      String[] optionalDirList = optionalDirectory.list(new AddonFilter());
+      if (optionalDirList != null) {
+        Arrays.sort(optionalDirList);
+        ImmutableSet.Builder<Path> additionalJars = ImmutableSet.builder();
+        for (String file : optionalDirList) {
+          additionalJars.add(optionalDirectory.toPath().resolve(file));
+        }
+        additionalJars.addAll(additionalJarPaths);
+        additionalJarPaths = additionalJars.build();
+      }
+    }
+
     LinkedList<Path> bootclasspathEntries = Lists.newLinkedList(additionalJarPaths);
 
     // Make sure android.jar is at the front of the bootclasspath.
