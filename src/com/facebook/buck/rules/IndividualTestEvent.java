@@ -23,7 +23,7 @@ import com.facebook.buck.test.TestResults;
 public abstract class IndividualTestEvent extends AbstractBuckEvent {
 
   private IndividualTestEvent(int secret) {
-    super(EventKey.of("IndividualTestEvent", secret));
+    super(EventKey.slowValueKey("IndividualTestEvent", secret));
   }
 
   public static Started started(Iterable<String> targets) {

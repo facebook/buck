@@ -17,8 +17,6 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.EventKey;
-
 import com.google.common.base.Objects;
 
 import java.nio.file.Path;
@@ -31,7 +29,6 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
   private final Path buckFilePath;
 
   protected ParseBuckFileEvent(Path buckFilePath) {
-    super(EventKey.of("ParseBuckFileEvent", buckFilePath));
     this.buckFilePath = buckFilePath;
   }
 
@@ -53,8 +50,8 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
     return new Started(buckFilePath);
   }
 
-  public static Finished finished(Path buckFilePath, int numRules) {
-    return new Finished(buckFilePath, numRules);
+  public static Finished finished(Started started, int numRules) {
+    return new Finished(started, numRules);
   }
 
   public static class Started extends ParseBuckFileEvent {
@@ -71,9 +68,10 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
   public static class Finished extends ParseBuckFileEvent {
     private final int numRules;
 
-    protected Finished(Path buckFilePath, int numRules) {
-      super(buckFilePath);
+    protected Finished(Started started, int numRules) {
+      super(started.getBuckFilePath());
       this.numRules = numRules;
+      chain(started);
     }
 
     @Override
@@ -83,16 +81,6 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
 
     public int getNumRules() {
       return numRules;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(super.equals(obj))) {
-        return false;
-      }
-
-      Finished that = (Finished) obj;
-      return numRules == that.getNumRules();
     }
 
     @Override

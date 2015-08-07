@@ -29,7 +29,7 @@ public abstract class TestSummaryEvent extends AbstractBuckEvent implements Leaf
   private final String testName;
 
   private TestSummaryEvent(UUID uuid, String testCaseName, String testName) {
-    super(EventKey.of("TestSummaryEvent", uuid));
+    super(EventKey.slowValueKey("TestSummaryEvent", uuid));
     this.testCaseName = testCaseName;
     this.testName = testName;
   }

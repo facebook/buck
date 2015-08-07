@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildTarget;
 
 @SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
@@ -25,7 +24,6 @@ public abstract class GetTargetDependenciesEvent extends AbstractBuckEvent {
   private final BuildTarget buildTarget;
 
   protected GetTargetDependenciesEvent(BuildTarget buildTarget) {
-    super(EventKey.of("GetTargetDependenciesEvent", buildTarget));
     this.buildTarget = buildTarget;
   }
 
@@ -47,8 +45,8 @@ public abstract class GetTargetDependenciesEvent extends AbstractBuckEvent {
     return new Started(buildTarget);
   }
 
-  public static Finished finished(BuildTarget buildTarget) {
-    return new Finished(buildTarget);
+  public static Finished finished(Started started) {
+    return new Finished(started);
   }
 
   public static class Started extends GetTargetDependenciesEvent {
@@ -63,8 +61,9 @@ public abstract class GetTargetDependenciesEvent extends AbstractBuckEvent {
   }
 
   public static class Finished extends GetTargetDependenciesEvent {
-    protected Finished(BuildTarget buildTarget) {
-      super(buildTarget);
+    protected Finished(Started started) {
+      super(started.getBuildTarget());
+      chain(started);
     }
 
     @Override

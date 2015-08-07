@@ -82,14 +82,15 @@ public class SimpleConsoleEventBusListenerTest {
             0L,
             TimeUnit.MILLISECONDS,
             threadId));
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
     rawEventBus.post(configureTestEventAtTime(
-        ParseEvent.started(buildTargets), 0L, TimeUnit.MILLISECONDS, threadId));
+            parseStarted, 0L, TimeUnit.MILLISECONDS, threadId));
 
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
 
     rawEventBus.post(configureTestEventAtTime(
-        ParseEvent.finished(buildTargets,
+        ParseEvent.finished(parseStarted,
             Optional.<TargetGraph>absent()),
             400L,
             TimeUnit.MILLISECONDS,

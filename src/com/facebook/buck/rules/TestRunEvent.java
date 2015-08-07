@@ -28,7 +28,7 @@ import java.util.List;
 public abstract class TestRunEvent extends AbstractBuckEvent {
 
   private TestRunEvent(int secret) {
-    super(EventKey.of("TestRunEvent", secret));
+    super(EventKey.slowValueKey("TestRunEvent", secret));
   }
 
   public static Started started(

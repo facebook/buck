@@ -37,7 +37,7 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   private final UUID uuid;
 
   protected StepEvent(String shortName, String description, UUID uuid) {
-    super(EventKey.of("StepEvent", uuid));
+    super(EventKey.slowValueKey("StepEvent", uuid));
     this.shortName = shortName;
     this.description = description;
     this.uuid = uuid;

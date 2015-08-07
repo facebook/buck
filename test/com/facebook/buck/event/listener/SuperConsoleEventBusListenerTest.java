@@ -158,15 +158,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             buildEventStarted,
             200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
     rawEventBus.post(configureTestEventAtTime(
-        ParseEvent.started(buildTargets),
+            parseStarted,
         200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 300L, ImmutableList.of(
         formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
 
     rawEventBus.post(
-        configureTestEventAtTime(ParseEvent.finished(buildTargets,
+        configureTestEventAtTime(ParseEvent.finished(parseStarted,
                                                      Optional.<TargetGraph>absent()),
         300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(
@@ -339,15 +340,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             buildEventStarted,
             200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ParseEvent.Started parseStarted = ParseEvent.started(testTargets);
     rawEventBus.post(configureTestEventAtTime(
-            ParseEvent.started(testTargets),
+            parseStarted,
             200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 300L, ImmutableList.of(
         formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
 
     rawEventBus.post(
-        configureTestEventAtTime(ParseEvent.finished(testTargets,
+        configureTestEventAtTime(ParseEvent.finished(parseStarted,
                                                      Optional.<TargetGraph>absent()),
         300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(
@@ -605,15 +607,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             buildEventStarted,
             200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ParseEvent.Started parseStarted = ParseEvent.started(testTargets);
     rawEventBus.post(configureTestEventAtTime(
-        ParseEvent.started(testTargets),
+            parseStarted,
         200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 300L, ImmutableList.of(
         formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
 
     rawEventBus.post(
-        configureTestEventAtTime(ParseEvent.finished(testTargets,
+        configureTestEventAtTime(ParseEvent.finished(parseStarted,
                                                      Optional.<TargetGraph>absent()),
         300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(
@@ -873,15 +876,16 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             buildEventStarted,
             200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ParseEvent.Started parseStarted = ParseEvent.started(testTargets);
     rawEventBus.post(configureTestEventAtTime(
-        ParseEvent.started(testTargets),
+            parseStarted,
         200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 300L, ImmutableList.of(
         formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
 
     rawEventBus.post(
-        configureTestEventAtTime(ParseEvent.finished(testTargets,
+        configureTestEventAtTime(ParseEvent.finished(parseStarted,
                                                      Optional.<TargetGraph>absent()),
         300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     rawEventBus.post(
@@ -1138,15 +1142,16 @@ public class SuperConsoleEventBusListenerTest {
 
     // Start and stop parsing.
     String parsingLine = formatConsoleTimes("[-] PROCESSING BUCK FILES...FINISHED 0.0s");
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
     rawEventBus.post(
             configureTestEventAtTime(
-                    ParseEvent.started(buildTargets),
+                parseStarted,
                     0L,
                     TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     rawEventBus.post(
         configureTestEventAtTime(
-            ParseEvent.finished(buildTargets, Optional.<TargetGraph>absent()),
+            ParseEvent.finished(parseStarted, Optional.<TargetGraph>absent()),
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

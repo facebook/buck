@@ -30,7 +30,7 @@ public abstract class TestRuleEvent extends AbstractBuckEvent {
   private final BuildTarget buildTarget;
 
   protected TestRuleEvent(BuildTarget buildTarget) {
-    super(EventKey.of("TestRuleEvent", buildTarget.getFullyQualifiedName()));
+    super(EventKey.slowValueKey("TestRuleEvent", buildTarget.getFullyQualifiedName()));
     this.buildTarget = buildTarget;
   }
 

@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -33,7 +34,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
-import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -87,6 +87,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMockSupport;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -279,6 +280,7 @@ public class ParserTest extends EasyMockSupport {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void testParseBuildFilesForTargetsWithOverlappingTargets()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Execute buildTargetGraphForBuildTargets() with multiple targets that require parsing the same
@@ -304,14 +306,13 @@ public class ParserTest extends EasyMockSupport {
     BuildRule barRule = actionGraph.findBuildRuleByTarget(barTarget);
     assertNotNull(barRule);
 
-    ImmutableList<ParseEvent> expected = ImmutableList.of(
-        TestEventConfigerator.configureTestEvent(ParseEvent.started(buildTargets), eventBus),
-        TestEventConfigerator.configureTestEvent(ParseEvent.finished(buildTargets,
-            Optional.of(targetGraph)),
-            eventBus));
-
     Iterable<ParseEvent> events = Iterables.filter(listener.getEvents(), ParseEvent.class);
-    assertEquals(expected, ImmutableList.copyOf(events));
+    assertThat(events, Matchers.contains(
+            Matchers.hasProperty("buildTargets", Matchers.equalTo(buildTargets)),
+            Matchers.allOf(
+                Matchers.hasProperty("buildTargets", Matchers.equalTo(buildTargets)),
+                Matchers.hasProperty("graph", Matchers.equalTo(Optional.of(targetGraph)))
+            )));
   }
 
   @Test

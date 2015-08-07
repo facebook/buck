@@ -31,7 +31,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
   private final BuildRule rule;
 
   protected BuildRuleEvent(BuildRule rule) {
-    super(EventKey.of("BuildRuleEvent", rule.getFullyQualifiedName()));
+    super(EventKey.slowValueKey("BuildRuleEvent", rule.getFullyQualifiedName()));
     this.rule = rule;
   }
 

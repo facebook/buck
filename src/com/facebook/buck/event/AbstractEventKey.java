@@ -18,7 +18,7 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 
 import org.immutables.value.Value;
 
@@ -35,7 +35,7 @@ abstract class AbstractEventKey {
   private static final AtomicLong SEQUENCE_NUMBER = new AtomicLong(1);
 
   @Value.Parameter
-  abstract String getValue();
+  abstract long getValue();
 
   @VisibleForTesting
   public static void setSequenceValueForTest(long value) {
@@ -47,18 +47,21 @@ abstract class AbstractEventKey {
    * @return an EventKey unique to the current process.
    */
   public static EventKey of() {
-    return EventKey.of(Long.toString(SEQUENCE_NUMBER.incrementAndGet()));
+    return EventKey.of(SEQUENCE_NUMBER.incrementAndGet());
   }
 
   /**
+   * Prefer calling chain(started) in the @{link BuckEvent} over the use of this method.
+   *
    * This variant of the method creates a key based on the set of supplied inputs. This is useful
-   * in situations where a key with the same identity must be created multiple times.
+   * in situations where a key with the same identity must be created multiple times and the
+   * corresponding start event is not available.
    *
    * @param objects objects which supply the identity of the key. {@link Object#toString()} will be
    *                called on every instance and the result will be used to calculate the key.
    * @return EventKey with the identity of the supplied objects.
    */
-  public static EventKey of(Object... objects) {
-    return EventKey.of(Joiner.on(',').join(objects));
+  public static EventKey slowValueKey(Object... objects) {
+    return EventKey.of(Objects.hashCode(objects));
   }
 }

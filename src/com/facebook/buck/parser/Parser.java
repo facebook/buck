@@ -384,7 +384,7 @@ public class Parser {
           buildFileParser,
           environment);
 
-      postParseStartEvent(buildTargets, eventBus);
+      ParseEvent.Started parseStart = postParseStartEvent(buildTargets, eventBus);
 
       try {
         graph = buildTargetGraph(
@@ -395,7 +395,7 @@ public class Parser {
             eventBus);
         return new Pair<>(buildTargets, graph);
       } finally {
-        eventBus.post(ParseEvent.finished(buildTargets, Optional.fromNullable(graph)));
+        eventBus.post(ParseEvent.finished(parseStart, Optional.fromNullable(graph)));
       }
     }
   }
@@ -457,16 +457,20 @@ public class Parser {
           @Override
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget)
               throws IOException, InterruptedException {
-            eventBus.post(GetTargetDependenciesEvent.started(buildTarget));
+            GetTargetDependenciesEvent.Started getTargetDependenciesEvent =
+                GetTargetDependenciesEvent.started(buildTarget);
+            eventBus.post(getTargetDependenciesEvent);
             try {
               BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
                   BuildTargetPatternParser.forBaseName(buildTarget.getBaseName());
 
               // Verify that the BuildTarget actually exists in the map of known BuildTargets
               // before trying to recurse through its children.
-              eventBus.post(GetTargetNodeEvent.started(buildTarget));
+              GetTargetNodeEvent.Started getTargetNodeEvent =
+                  GetTargetNodeEvent.started(buildTarget);
+              eventBus.post(getTargetNodeEvent);
               TargetNode<?> targetNode = state.get(buildTarget, eventBusOptional);
-              eventBus.post(GetTargetNodeEvent.finished(buildTarget));
+              eventBus.post(GetTargetNodeEvent.finished(getTargetNodeEvent));
               if (targetNode == null) {
                 throw new HumanReadableException(
                     NoSuchBuildTargetException.createForMissingBuildRule(
@@ -479,18 +483,20 @@ public class Parser {
               Set<BuildTarget> deps = Sets.newHashSet();
               for (BuildTarget buildTargetForDep : targetNode.getDeps()) {
                 try {
-                  eventBus.post(GetTargetNodeEvent.started(buildTargetForDep));
+                  getTargetNodeEvent = GetTargetNodeEvent.started(buildTargetForDep);
+                  eventBus.post(getTargetNodeEvent);
                   TargetNode<?> depTargetNode = state.get(buildTargetForDep, eventBusOptional);
-                  eventBus.post(GetTargetNodeEvent.finished(buildTargetForDep));
+                  eventBus.post(GetTargetNodeEvent.finished(getTargetNodeEvent));
                   if (depTargetNode == null) {
                     parseBuildFileContainingTarget(
                         buildTargetForDep,
                         parserConfig,
                         buildFileParser,
                         environment);
-                    eventBus.post(GetTargetNodeEvent.started(buildTargetForDep));
+                    getTargetNodeEvent = GetTargetNodeEvent.started(buildTargetForDep);
+                    eventBus.post(getTargetNodeEvent);
                     depTargetNode = state.get(buildTargetForDep, eventBusOptional);
-                    eventBus.post(GetTargetNodeEvent.finished(buildTargetForDep));
+                    eventBus.post(GetTargetNodeEvent.finished(getTargetNodeEvent));
                     if (depTargetNode == null) {
                       throw new HumanReadableException(
                           NoSuchBuildTargetException.createForMissingBuildRule(
@@ -516,7 +522,7 @@ public class Parser {
 
               return deps.iterator();
             } finally {
-              eventBus.post(GetTargetDependenciesEvent.finished(buildTarget));
+              eventBus.post(GetTargetDependenciesEvent.finished(getTargetDependenciesEvent));
             }
           }
 
@@ -841,12 +847,16 @@ public class Parser {
    * Post a ParseStart event to eventBus, using the start of WatchEvent processing as the start
    * time if applicable.
    */
-  private void postParseStartEvent(Iterable<BuildTarget> buildTargets, BuckEventBus eventBus) {
+  private ParseEvent.Started postParseStartEvent(
+      Iterable<BuildTarget> buildTargets,
+      BuckEventBus eventBus) {
+    ParseEvent.Started started = ParseEvent.started(buildTargets);
     if (parseStartEvent.isPresent()) {
-      eventBus.post(ParseEvent.started(buildTargets), parseStartEvent.get());
+      eventBus.post(started, parseStartEvent.get());
     } else {
-      eventBus.post(ParseEvent.started(buildTargets));
+      eventBus.post(started);
     }
+    return started;
   }
 
   /**
@@ -1165,8 +1175,10 @@ public class Parser {
         try {
           ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
           ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
+          MarshalConstructorArgsEvent.Started marshalConstructorArgsEvent = null;
           if (eventBus.isPresent()) {
-            eventBus.get().post(MarshalConstructorArgsEvent.started(buildTarget));
+            marshalConstructorArgsEvent = MarshalConstructorArgsEvent.started(buildTarget);
+            eventBus.get().post(marshalConstructorArgsEvent);
           }
           marshaller.populate(
               targetRepo.getFilesystem(),
@@ -1176,10 +1188,13 @@ public class Parser {
               visibilityPatterns,
               map);
           if (eventBus.isPresent()) {
-            eventBus.get().post(MarshalConstructorArgsEvent.finished(buildTarget));
+            eventBus.get().post(MarshalConstructorArgsEvent.finished(
+                    Preconditions.checkNotNull(marshalConstructorArgsEvent)));
           }
+          CreateTargetNodeEvent.Started createTargetNodeEvent = null;
           if (eventBus.isPresent()) {
-            eventBus.get().post(CreateTargetNodeEvent.started(buildTarget));
+            createTargetNodeEvent = CreateTargetNodeEvent.started(buildTarget);
+            eventBus.get().post(createTargetNodeEvent);
           }
           targetNode = new TargetNode(
               description,
@@ -1188,7 +1203,8 @@ public class Parser {
               declaredDeps.build(),
               visibilityPatterns.build());
           if (eventBus.isPresent()) {
-            eventBus.get().post(CreateTargetNodeEvent.finished(buildTarget));
+            eventBus.get().post(CreateTargetNodeEvent.finished(
+                    Preconditions.checkNotNull(createTargetNodeEvent)));
           }
         } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
           throw new HumanReadableException(e);
