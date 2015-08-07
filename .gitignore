@@ -3,6 +3,8 @@
 
 # IntelliJ build
 /build-ij/
+/build-ij/plugin/out
+src/com/facebook/buck/intellij/plugin/Buck.zip
 
 # Buck
 /buck-out
@@ -33,6 +35,16 @@
 /.idea/misc.xml
 /.idea/runConfigurations
 /.idea/copyright/profiles_settings.xml
+src/com/facebook/buck/intellij/plugin/.idea/ant.xml
+src/com/facebook/buck/intellij/plugin/.idea/dictionaries
+src/com/facebook/buck/intellij/plugin/.idea/inspectionProfiles
+src/com/facebook/buck/intellij/plugin/.idea/tasks.xml
+src/com/facebook/buck/intellij/plugin/.idea/uiDesigner.xml
+src/com/facebook/buck/intellij/plugin/.idea/workspace.xml
+src/com/facebook/buck/intellij/plugin/.idea/misc.xml
+src/com/facebook/buck/intellij/plugin/.idea/runConfigurations
+src/com/facebook/buck/intellij/plugin/.idea/copyright/profiles_settings.xml
+
 
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/
@@ -55,3 +67,7 @@
 # Emacs backup files
 *~
 \#*
+
+# IntelliJ plugin generated syntax source files
+src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang/_BuckLexer.java
+src/com/facebook/buck/intellij/plugin/gen

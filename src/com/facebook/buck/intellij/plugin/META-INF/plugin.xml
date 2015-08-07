@@ -1,0 +1,80 @@
+<idea-plugin version="2">
+  <id>intellij.buck.plugin</id>
+  <name>Buck for IDEA</name>
+  <version>1.2</version>
+  <category>Build</category>
+
+  <description><![CDATA[
+      An IntelliJ plugin for Buck build system.<br>
+      <h3>Features:</h3>
+      <ul>
+        <li>Syntax highlighting for BUCK file</li>
+        <li>Keywords auto completion</li>
+        <li>Go to buck file with one click</li>
+        <li>Go to to paths of dependencies with one click</li>
+        <li>Buck file formatter</li>
+        <li>Buck line commenter</li>
+        <li>Buck dependencies sorter</li>
+      </ul>
+    ]]></description>
+
+  <change-notes><![CDATA[
+      1. Formatter for buck file
+      2. Buck dependencies sorter
+      3. Annotator for wrong buck dependency target
+      4. Line commenter
+    ]]>
+  </change-notes>
+
+  <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
+  <idea-version since-build="131"/>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.lang</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <fileTypeFactory implementation="com.facebook.buck.intellij.plugin.file.BuckFileTypeFactory"/>
+    <lang.parserDefinition
+        language="Buck"
+        implementationClass="com.facebook.buck.intellij.plugin.lang.BuckParserDefinition"/>
+    <lang.syntaxHighlighterFactory
+        key="Buck"
+        implementationClass="com.facebook.buck.intellij.plugin.highlight.BuckSyntaxHighlighterFactory"/>
+    <lang.formatter
+        language="Buck"
+        implementationClass="com.facebook.buck.intellij.plugin.format.BuckFormattingModelBuilder"/>
+    <lang.importOptimizer
+        language="Buck"
+        implementationClass="com.facebook.buck.intellij.plugin.format.BuckImportOptimizer"/>
+    <completion.contributor
+        language="Buck"
+        implementationClass="com.facebook.buck.intellij.plugin.completion.BuckCompletionContributor"/>
+    <codeStyleSettingsProvider
+        implementation="com.facebook.buck.intellij.plugin.config.BuckCodeStyleSettingsProvider"/>
+    <langCodeStyleSettingsProvider
+        implementation="com.facebook.buck.intellij.plugin.format.BuckLanguageCodeStyleSettingsProvider"/>
+    <gotoDeclarationHandler
+        implementation="com.facebook.buck.intellij.plugin.navigation.BuckGotoProvider"
+        order="FIRST"/>
+    <annotator language="Buck"
+               implementationClass="com.facebook.buck.intellij.plugin.annotator.BuckAnnotator"/>
+    <colorSettingsPage
+        implementation="com.facebook.buck.intellij.plugin.config.BuckColorSettingsPage"/>
+    <lang.commenter language="Buck"
+                    implementationClass="com.facebook.buck.intellij.plugin.commenter.BuckCommenter"/>
+  </extensions>
+
+  <actions>
+    <group id="buck.Menu" popup="true" text="Buck">
+      <action
+          id="buck.GoToBuckFile"
+          class="com.facebook.buck.intellij.plugin.actions.GoToBuckFile"
+          text="Go to Buck file"
+          description="Go to Buck file for this source file.">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Z"/>
+      </action>
+      <add-to-group anchor="first" group-id="BuildMenu"/>
+      <add-to-group anchor="first" group-id="EditorPopupMenu"/>
+    </group>
+  </actions>
+</idea-plugin>

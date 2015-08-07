@@ -1,0 +1,58 @@
+/*
+ * Copyright 2015-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+{
+  parserClass="com.facebook.buck.intellij.plugin.lang.BuckParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Buck"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.facebook.buck.intellij.plugin.lang.psi"
+  psiImplPackage="com.facebook.buck.intellij.plugin.lang.psi.impl"
+
+  elementTypeHolderClass="com.facebook.buck.intellij.plugin.lang.psi.BuckTypes"
+  elementTypeClass="com.facebook.buck.intellij.plugin.lang.psi.BuckElementType"
+  tokenTypeClass="com.facebook.buck.intellij.plugin.lang.psi.BuckTokenType"
+}
+
+buckFile ::= item_*
+
+private item_ ::= (rule_block | property | COMMENT | WHITE_SPACE)
+
+property_lvalue ::= IDENTIFIER | MACROS | KEYWORDS | RULE_NAMES
+property ::= (property_lvalue '=' value) | value
+value ::= VALUE_STRING | VALUE_NONE | VALUE_BOOLEAN | MACROS | IDENTIFIER | value_array | rule_block
+
+value_array ::= '[' (WHITE_SPACE)* array_elements ']'
+array_elements ::= (
+  value |
+  "," |
+  WHITE_SPACE
+)*
+
+rule_block ::= (RULE_NAMES | GENERIC_RULE_NAMES | IDENTIFIER) '(' (WHITE_SPACE)* rule_body ')'
+rule_body ::= (
+  property  |
+  "," |
+  WHITE_SPACE
+)*
+
+lbrace ::= '(' | '{' | '['
+rbrace ::= ')' | '}' | ']'
+comma ::= ','
+semicolon ::= ';'
+equal ::= '='
