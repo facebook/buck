@@ -166,12 +166,19 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar" />
+  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar, compile-pywatchman" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
     <available property="jdk7" classname="java.nio.file.Files"/>
     <fail message="Require JDK 7 or higher" unless="jdk7"/>
+  </target>
+
+  <target name="python-get-prefix">
+    <exec executable="python" failonerror="true" outputproperty="python.prefix" logError="true">
+      <arg value="-c" />
+      <arg value="import distutils.sysconfig; print distutils.sysconfig.PREFIX" />
+    </exec>
   </target>
 
   <target name="pywatchman-check-build">
@@ -180,15 +187,35 @@
     </uptodate>
   </target>
 
-  <target name="compile-pywatchman" depends="pywatchman-check-build" unless="pywatchman-build-not-required">
+  <target name="compile-pywatchman" depends="pywatchman-check-build,python-get-prefix" unless="pywatchman-build-not-required">
     <mkdir dir="${pywatchman.install.dir}" />
-    <exec executable="python" failonerror="true" dir="${pywatchman.dir}">
+    <exec executable="python" resultproperty="pywatchman-build-exit-code" dir="${pywatchman.dir}">
+      <!-- Work around broken python installs which can't find libpython.so. -->
+      <env key="LIBRARY_PATH" value="${python.prefix}/lib" />
       <env key="CFLAGS" value="-Wno-unused-const-variable" />
       <arg value="setup.py" />
-      <arg value="--quiet" />
       <arg value="install" />
       <arg value="--install-lib=${pywatchman.install.dir}" />
     </exec>
+    <fail message="Error ${pywatchman-build-exit-code} compiling pywatchman Python extension (try installing python-devel package)">
+      <condition>
+        <and>
+          <isfailure code="${pywatchman-build-exit-code}" />
+          <!--
+              Python extensions need to be built with the same compiler as
+              Python itself.  On Windows, this means installing a lot of
+              dependencies, including Microsoft Visual C++ Compiler for Python
+              2.7.
+
+              Since pywatchman isn't (yet) required to use Buck, let's make it
+              OK for the build to fail there.
+          -->
+          <not>
+            <os family="windows" />
+          </not>
+        </and>
+      </condition>
+    </fail>
   </target>
 
   <target name="compile-testrunner" depends="checkversion">
