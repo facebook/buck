@@ -481,12 +481,12 @@ public class AndroidPlatformTargetTest {
   public void testPlatformTargetPattern() {
     testPlatformTargetRegex("Google Inc.:Google APIs:8", true, "8");
     testPlatformTargetRegex("Google Inc.:Google APIs:17", true, "17");
+    testPlatformTargetRegex("Google Inc.:Google APIs:MNC", true, "MNC");
     testPlatformTargetRegex("android-8", true, "8");
     testPlatformTargetRegex("android-17", true, "17");
+    testPlatformTargetRegex("android-MNC", true, "MNC");
     testPlatformTargetRegex("Google Inc.:Google APIs:", false, "");
-    testPlatformTargetRegex("Google Inc.:Google APIs:blah", false, "");
     testPlatformTargetRegex("android-", false, "");
-    testPlatformTargetRegex("android-blah", false, "");
   }
 
   private void testPlatformTargetRegex(String input, boolean matches, String id) {

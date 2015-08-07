@@ -65,7 +65,7 @@ public class AndroidPlatformTarget {
 
   @VisibleForTesting
   static final Pattern PLATFORM_TARGET_PATTERN = Pattern.compile(
-      "(?:Google Inc\\.:Google APIs:|android-)(\\d+)");
+      "(?:Google Inc\\.:Google APIs:|android-)(.+)");
 
   private final String name;
   private final Path androidJar;
@@ -185,7 +185,7 @@ public class AndroidPlatformTarget {
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
       try {
-        int apiLevel = Integer.parseInt(platformMatcher.group(1));
+        String apiLevel = platformMatcher.group(1);
         Factory platformTargetFactory;
         if (platformId.contains("Google APIs")) {
           platformTargetFactory = new AndroidWithGoogleApisFactory();
@@ -212,7 +212,7 @@ public class AndroidPlatformTarget {
   private static interface Factory {
     public AndroidPlatformTarget newInstance(
         AndroidDirectoryResolver androidDirectoryResolver,
-        int apiLevel,
+        String apiLevel,
         Optional<Path> aaptOverride);
   }
 
@@ -391,12 +391,12 @@ public class AndroidPlatformTarget {
     @Override
     public AndroidPlatformTarget newInstance(
         final AndroidDirectoryResolver androidDirectoryResolver,
-        final int apiLevel,
+        final String apiLevel,
         Optional<Path> aaptOverride) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidDirectoryResolver.findAndroidSdkDir();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
-      String apiDirPrefix = String.format("addon-google_apis-google-%d", apiLevel);
+      String apiDirPrefix = String.format("addon-google_apis-google-%s", apiLevel);
       final Pattern apiDirPattern = Pattern.compile(apiDirPrefix + API_DIR_SUFFIX);
 
       if (addonsParentDir.isDirectory()) {
@@ -437,9 +437,9 @@ public class AndroidPlatformTarget {
             }
 
             return createFromDefaultDirectoryStructure(
-                String.format("Google Inc.:Google APIs:%d", apiLevel),
+                String.format("Google Inc.:Google APIs:%s", apiLevel),
                 androidDirectoryResolver,
-                String.format("platforms/android-%d", apiLevel),
+                String.format("platforms/android-%s", apiLevel),
                 additionalJarPaths.build(),
                 aaptOverride);
           }
@@ -449,7 +449,7 @@ public class AndroidPlatformTarget {
       throw new HumanReadableException(
           "Google APIs not found in %s.\n" +
           "Please run '%s/tools/android sdk' and select both 'SDK Platform' and " +
-          "'Google APIs' under Android (API %d)",
+          "'Google APIs' under Android (API %s)",
           new File(addonsParentDir, apiDirPrefix + "/libs").getAbsolutePath(),
           androidSdkDir,
           apiLevel);
@@ -460,12 +460,12 @@ public class AndroidPlatformTarget {
     @Override
     public AndroidPlatformTarget newInstance(
         final AndroidDirectoryResolver androidDirectoryResolver,
-        final int apiLevel,
+        final String apiLevel,
         Optional<Path> aaptOverride) {
       return createFromDefaultDirectoryStructure(
-          String.format("android-%d", apiLevel),
+          String.format("android-%s", apiLevel),
           androidDirectoryResolver,
-          String.format("platforms/android-%d", apiLevel),
+          String.format("platforms/android-%s", apiLevel),
           /* additionalJarPaths */ ImmutableSet.<Path>of(),
           aaptOverride);
     }
