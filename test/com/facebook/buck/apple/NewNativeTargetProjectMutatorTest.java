@@ -284,13 +284,15 @@ public class NewNativeTargetProjectMutatorTest {
         ImmutableSet.of(
             FrameworkPath.ofSourceTreePath(
                 new SourceTreePath(
-                    PBXReference.SourceTree.SDKROOT, Paths.get("Foo.framework")))));
+                    PBXReference.SourceTree.SDKROOT, Paths.get("Foo.framework"),
+                    Optional.<String>absent()))));
     mutator.setArchives(
         ImmutableSet.of(
             new PBXFileReference(
                 "libdep.a",
                 "libdep.a",
-                PBXReference.SourceTree.BUILT_PRODUCTS_DIR)));
+                PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                Optional.<String>absent())));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(

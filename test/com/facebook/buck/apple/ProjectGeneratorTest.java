@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.Matchers.hasKey;
@@ -1304,7 +1305,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"))))))
+                            Paths.get("Library.framework"),
+                            Optional.<String>absent())))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
@@ -1322,7 +1324,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Test.framework"))))))
+                            Paths.get("Test.framework"),
+                            Optional.<String>absent())))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -1374,7 +1377,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"))))))
+                            Paths.get("Library.framework"),
+                            Optional.<String>absent())))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
@@ -1392,7 +1396,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Test.framework"))))))
+                            Paths.get("Test.framework"),
+                            Optional.<String>absent())))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .build();
 
@@ -1439,7 +1444,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"))))))
+                            Paths.get("Library.framework"),
+                            Optional.<String>absent())))))
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
@@ -1454,7 +1460,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"))))))
+                            Paths.get("Library.framework"),
+                            Optional.<String>absent())))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryDepTarget)))
         .setUseBuckHeaderMaps(Optional.of(false))
         .build();
@@ -1473,7 +1480,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Test.framework"))))))
+                            Paths.get("Test.framework"),
+                            Optional.<String>absent())))))
         .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
         .setUseBuckHeaderMaps(Optional.of(false))
         .build();
@@ -1526,7 +1534,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"))))))
+                            Paths.get("Library.framework"),
+                            Optional.<String>absent())))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
@@ -1592,7 +1601,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"))))))
+                            Paths.get("Library.framework"),
+                            Optional.<String>absent())))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
@@ -1693,7 +1703,8 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Foo.framework"))))))
+                            Paths.get("Foo.framework"),
+                            Optional.<String>absent())))))
         .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
         .setGid(Optional.<String>absent())
         .setHeaderPathPrefix(Optional.<String>absent())
@@ -2611,15 +2622,18 @@ public class ProjectGeneratorTest {
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                            Paths.get("libfoo.a"))),
+                            Paths.get("libfoo.a"),
+                            Optional.<String>absent())),
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
-                            Paths.get("libfoo.a"))),
+                            Paths.get("libfoo.a"),
+                            Optional.<String>absent())),
                     FrameworkPath.ofSourceTreePath(
                         new SourceTreePath(
                             PBXReference.SourceTree.SOURCE_ROOT,
-                            Paths.get("libfoo.a"))))))
+                            Paths.get("libfoo.a"),
+                            Optional.<String>absent())))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2926,7 +2940,8 @@ public class ProjectGeneratorTest {
                         FrameworkPath.ofSourceTreePath(
                             new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
-                                Paths.get("DeclaredInTestLibDep.framework"))))))
+                                Paths.get("DeclaredInTestLibDep.framework"),
+                                Optional.<String>absent())))))
             .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepResource.getBuildTarget())))
             .setSrcs(
                 Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("e.m")))))
@@ -2942,7 +2957,8 @@ public class ProjectGeneratorTest {
                         FrameworkPath.ofSourceTreePath(
                             new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
-                                Paths.get("DeclaredInTestLib.framework"))))))
+                                Paths.get("DeclaredInTestLib.framework"),
+                                Optional.<String>absent())))))
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> dep2 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder("//foo", "dep2").build())
@@ -2959,7 +2975,8 @@ public class ProjectGeneratorTest {
                         FrameworkPath.ofSourceTreePath(
                             new SourceTreePath(
                                 PBXReference.SourceTree.SDKROOT,
-                                Paths.get("DeclaredInTest.framework"))))))
+                                Paths.get("DeclaredInTest.framework"),
+                                Optional.<String>absent())))))
             .build();
     TargetNode<AppleTestDescription.Arg> xctest2 =
         AppleTestBuilder.createBuilder(BuildTarget.builder("//foo", "xctest2").build())
@@ -3366,6 +3383,73 @@ public class ProjectGeneratorTest {
     PBXFileReference resource = (PBXFileReference) Iterables.get(
         resourcesGroup.getChildren(), 0);
     assertThat(resource.getName(), equalTo("file"));
+  }
+
+  @Test
+  public void resourceDirectoriesHaveFolderType() throws IOException {
+    BuildTarget directoryTarget = BuildTarget.builder("//foo", "dir").build();
+    BuildTarget resourceTarget = BuildTarget.builder("//foo", "res").build();
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+
+    TargetNode<?> directoryNode = ExportFileBuilder.newExportFileBuilder(directoryTarget).build();
+    TargetNode<?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setDirs(ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(directoryTarget)))
+        .setFiles(ImmutableSet.<SourcePath>of())
+        .build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(directoryNode, resourceNode, libraryNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup mainGroup = project.getMainGroup();
+
+    PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(
+        ImmutableList.of("//foo:lib", "Resources"));
+    PBXFileReference resource = (PBXFileReference) Iterables.get(
+        resourcesGroup.getChildren(), 0);
+    assertThat(resource.getName(), equalTo("dir"));
+    assertThat(resource.getExplicitFileType(), equalTo(Optional.of("folder")));
+  }
+
+  @Test
+  public void resourceDirectoriesDontHaveFolderTypeIfTheyCanHaveAMoreSpecificType()
+      throws IOException {
+    BuildTarget directoryTarget = BuildTarget.builder("//foo", "dir.iconset").build();
+    BuildTarget resourceTarget = BuildTarget.builder("//foo", "res").build();
+    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+
+    TargetNode<?> directoryNode = ExportFileBuilder.newExportFileBuilder(directoryTarget).build();
+    TargetNode<?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setDirs(ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(directoryTarget)))
+        .setFiles(ImmutableSet.<SourcePath>of())
+        .build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(directoryNode, resourceNode, libraryNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup mainGroup = project.getMainGroup();
+
+    PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(
+        ImmutableList.of("//foo:lib", "Resources"));
+    PBXFileReference resource = (PBXFileReference) Iterables.get(
+        resourcesGroup.getChildren(), 0);
+    assertThat(resource.getName(), equalTo("dir.iconset"));
+    assertThat(resource.getExplicitFileType(), not(equalTo(Optional.of("folder"))));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(

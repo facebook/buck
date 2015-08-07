@@ -834,7 +834,8 @@ public class ProjectGenerator {
 
     SourceTreePath buckFilePath = new SourceTreePath(
         PBXReference.SourceTree.SOURCE_ROOT,
-        pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName));
+        pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName),
+        Optional.<String>absent());
     PBXFileReference buckReference =
         targetGroup.getOrCreateFileReferenceBySourceTreePath(buckFilePath);
     buckReference.setExplicitFileType(Optional.of("text.script.python"));
@@ -1240,7 +1241,8 @@ public class ProjectGenerator {
         .getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(xcconfigPath)));
+                pathRelativizer.outputDirToRootRelative(xcconfigPath),
+                Optional.<String>absent()));
   }
 
   private void collectBuildScriptDependencies(
@@ -1351,7 +1353,8 @@ public class ProjectGenerator {
             resourcesGroup.getOrCreateChildVersionGroupsBySourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.SOURCE_ROOT,
-                    pathRelativizer.outputDirToRootRelative(dataModel.path)));
+                    pathRelativizer.outputDirToRootRelative(dataModel.path),
+                    Optional.<String>absent()));
 
         projectFilesystem.walkRelativeFileTree(
             dataModel.path,
@@ -1364,7 +1367,8 @@ public class ProjectGenerator {
                 versionGroup.getOrCreateFileReferenceBySourceTreePath(
                     new SourceTreePath(
                         PBXReference.SourceTree.SOURCE_ROOT,
-                        pathRelativizer.outputDirToRootRelative(dir)));
+                        pathRelativizer.outputDirToRootRelative(dir),
+                        Optional.<String>absent()));
                 return FileVisitResult.SKIP_SUBTREE;
               }
             });
@@ -1391,7 +1395,8 @@ public class ProjectGenerator {
               new SourceTreePath(
                   PBXReference.SourceTree.SOURCE_ROOT,
                   pathRelativizer.outputDirToRootRelative(
-                      dataModel.path.resolve(currentVersionName.toString()))));
+                      dataModel.path.resolve(currentVersionName.toString())),
+                  Optional.<String>absent()));
           versionGroup.setCurrentVersion(Optional.of(ref));
         } catch (NoSuchFileException e) {
           if (versionGroup.getChildren().size() == 1) {
@@ -1404,7 +1409,8 @@ public class ProjectGenerator {
         resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(dataModel.path)));
+                pathRelativizer.outputDirToRootRelative(dataModel.path),
+                Optional.<String>absent()));
       }
     }
   }
@@ -1942,7 +1948,8 @@ public class ProjectGenerator {
 
     return new SourceTreePath(
         PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-        Paths.get(productOutputName));
+        Paths.get(productOutputName),
+        Optional.<String>absent());
   }
 
   private PBXFileReference getLibraryFileReference(TargetNode<?> targetNode) {
@@ -1978,7 +1985,8 @@ public class ProjectGenerator {
         Paths.get(getBuiltProductsRelativeTargetOutputPath(test)).resolve(
             String.format(
                 AppleBuildRules.getOutputFileNameFormatForLibrary(false),
-                getProductName(test.getBuildTarget()))));
+                getProductName(test.getBuildTarget()))),
+        Optional.<String>absent());
     return project.getMainGroup()
         .getOrCreateChildGroupByName("Test Libraries")
         .getOrCreateFileReferenceBySourceTreePath(path);

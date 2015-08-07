@@ -7,6 +7,7 @@ java_immutables_library(
   ] + glob(['util/*.java', 'xcodeproj/*.java']),
   deps = [
     '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util:util',
     '//third-party/java/dd-plist:dd-plist',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

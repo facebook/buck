@@ -59,4 +59,16 @@ public class Optionals {
     };
   }
 
+  public static <T extends Comparable<T>> int compare(Optional<T> first, Optional<T> second) {
+    if (first.isPresent() && !second.isPresent()) {
+      return +1;
+    } else if (!first.isPresent() && second.isPresent()) {
+      return -1;
+    } else if (!first.isPresent() && !second.isPresent()) {
+      return 0;
+    } else {
+      return first.get().compareTo(second.get());
+    }
+  }
+
 }

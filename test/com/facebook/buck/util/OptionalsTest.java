@@ -16,7 +16,11 @@
 
 package com.facebook.buck.util;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -46,5 +50,17 @@ public class OptionalsTest {
     Optionals.addIfPresent(absent, builder);
 
     assertEquals(ImmutableSet.of("Hello"), builder.build());
+  }
+
+  @Test
+  public void testCompare() {
+    assertThat(
+        Optionals.compare(Optional.<Integer>absent(), Optional.<Integer>absent()),
+        equalTo(0));
+
+    assertThat(Optionals.compare(Optional.<Integer>absent(), Optional.of(1)), lessThan(0));
+    assertThat(Optionals.compare(Optional.of(1), Optional.<Integer>absent()), greaterThan(0));
+    assertThat(Optionals.compare(Optional.of(1), Optional.of(2)), lessThan(0));
+    assertThat(Optionals.compare(Optional.of(2), Optional.of(1)), greaterThan(0));
   }
 }

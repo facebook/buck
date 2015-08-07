@@ -74,25 +74,41 @@ public class SchemeGeneratorTest {
     PBXTarget rootTarget = new PBXNativeTarget("rootRule");
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
-        new PBXFileReference("root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+        new PBXFileReference(
+            "root.a",
+            "root.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget leftTarget = new PBXNativeTarget("leftRule");
     leftTarget.setGlobalID("leftGID");
     leftTarget.setProductReference(
-        new PBXFileReference("left.a", "left.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+        new PBXFileReference(
+            "left.a",
+            "left.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     leftTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget rightTarget = new PBXNativeTarget("rightRule");
     rightTarget.setGlobalID("rightGID");
     rightTarget.setProductReference(
-        new PBXFileReference("right.a", "right.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+        new PBXFileReference(
+            "right.a",
+            "right.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     rightTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget childTarget = new PBXNativeTarget("childRule");
     childTarget.setGlobalID("childGID");
     childTarget.setProductReference(
-        new PBXFileReference("child.a", "child.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+        new PBXFileReference(
+            "child.a",
+            "child.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     childTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -150,7 +166,10 @@ public class SchemeGeneratorTest {
     testDepTarget.setGlobalID("testDepGID");
     testDepTarget.setProductReference(
         new PBXFileReference(
-            "libDep.a", "libDep.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "libDep.a",
+            "libDep.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     testDepTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testLibraryTarget =
@@ -158,21 +177,30 @@ public class SchemeGeneratorTest {
     testLibraryTarget.setGlobalID("testLibraryGID");
     testLibraryTarget.setProductReference(
         new PBXFileReference(
-            "lib.a", "lib.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "lib.a",
+            "lib.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     testLibraryTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testTarget = new PBXNativeTarget("test");
     testTarget.setGlobalID("testGID");
     testTarget.setProductReference(
         new PBXFileReference(
-            "test.xctest", "test.xctest", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "test.xctest",
+            "test.xctest",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     testTarget.setProductType(ProductType.UNIT_TEST);
 
     PBXTarget rootTarget = new PBXNativeTarget("root");
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "root.a",
+            "root.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path projectPath = Paths.get("foo/test.xcodeproj/project.pbxproj");
@@ -240,14 +268,20 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "root.a",
+            "root.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testTarget = new PBXNativeTarget("testRule");
     testTarget.setGlobalID("testGID");
     testTarget.setProductReference(
         new PBXFileReference(
-            "test.a", "test.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "test.a",
+            "test.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     testTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testBundleTarget =
@@ -257,7 +291,8 @@ public class SchemeGeneratorTest {
         new PBXFileReference(
             "test.xctest",
             "test.xctest",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     testBundleTarget.setProductType(ProductType.UNIT_TEST);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -334,7 +369,10 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "root.a",
+            "root.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -389,7 +427,10 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "root.a",
+            "root.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -470,7 +511,10 @@ public class SchemeGeneratorTest {
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(
-              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+              "root.a",
+              "root.a",
+              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+              Optional.<String>absent()));
       rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
       Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -500,7 +544,10 @@ public class SchemeGeneratorTest {
       rootTarget.setGlobalID("root2GID");
       rootTarget.setProductReference(
           new PBXFileReference(
-              "root2.a", "root2.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+              "root2.a",
+              "root2.a",
+              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+              Optional.<String>absent()));
       rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
       Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -532,7 +579,10 @@ public class SchemeGeneratorTest {
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(
-              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+              "root.a",
+              "root.a",
+              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+              Optional.<String>absent()));
       rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
       Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -561,7 +611,10 @@ public class SchemeGeneratorTest {
       rootTarget.setGlobalID("rootGID");
       rootTarget.setProductReference(
           new PBXFileReference(
-              "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+              "root.a",
+              "root.a",
+              PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+              Optional.<String>absent()));
       rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
       Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -593,14 +646,20 @@ public class SchemeGeneratorTest {
     testLibraryTarget.setGlobalID("testLibraryGID");
     testLibraryTarget.setProductReference(
         new PBXFileReference(
-            "lib.a", "lib.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "lib.a",
+            "lib.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     testLibraryTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testTarget = new PBXNativeTarget("testRule");
     testTarget.setGlobalID("testGID");
     testTarget.setProductReference(
         new PBXFileReference(
-            "test.a", "test.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "test.a",
+            "test.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     testTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget testBundleTarget = new PBXNativeTarget("testBundleRule");
@@ -609,7 +668,8 @@ public class SchemeGeneratorTest {
         new PBXFileReference(
             "test.xctest",
             "test.xctest",
-            PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     testBundleTarget.setProductType(ProductType.UNIT_TEST);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -713,7 +773,10 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "root.a",
+            "root.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -758,7 +821,10 @@ public class SchemeGeneratorTest {
     rootTarget.setGlobalID("rootGID");
     rootTarget.setProductReference(
         new PBXFileReference(
-            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+            "root.a",
+            "root.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     rootTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
@@ -872,7 +938,11 @@ public class SchemeGeneratorTest {
     PBXTarget libraryTarget = new PBXNativeTarget("library");
     libraryTarget.setGlobalID("libraryGID");
     libraryTarget.setProductReference(
-        new PBXFileReference("lib.a", "lib.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR));
+        new PBXFileReference(
+            "lib.a",
+            "lib.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
     libraryTarget.setProductType(ProductType.STATIC_LIBRARY);
 
     PBXTarget rootTarget = new PBXNativeTarget("rootRule");
