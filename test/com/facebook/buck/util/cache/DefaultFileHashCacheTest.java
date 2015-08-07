@@ -194,4 +194,25 @@ public class DefaultFileHashCacheTest {
     cache.get(Paths.get("hello.java"));
   }
 
+  @Test
+  public void whenPathsArePutThenInvalidateAllRemovesThem() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache cache = new DefaultFileHashCache(filesystem);
+
+    Path path1 = Paths.get("path1");
+    filesystem.writeContentsToPath("contenst1", path1);
+    cache.get(path1);
+    assertTrue(cache.contains(path1));
+
+    Path path2 = Paths.get("path2");
+    filesystem.writeContentsToPath("contenst2", path2);
+    cache.get(path2);
+    assertTrue(cache.contains(path2));
+
+    // Verify that `invalidateAll` clears everything from the cache.
+    cache.invalidateAll();
+    assertFalse(cache.contains(path1));
+    assertFalse(cache.contains(path2));
+  }
+
 }

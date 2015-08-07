@@ -23,10 +23,9 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -37,17 +36,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import com.google.common.hash.Funnels;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
-import com.google.common.io.ByteStreams;
+import com.google.common.hash.Hashing;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -187,20 +184,21 @@ public class BuildInfoRecorder {
     addMetadata(key, toJson(value));
   }
 
-  public ImmutableSortedSet<Path> getRecordedPaths() throws IOException {
-    final ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+  private ImmutableSortedSet<Path> getRecordedMetadataFiles() {
+    return FluentIterable.from(metadataToWrite.keySet())
+        .transform(MorePaths.TO_PATH)
+        .transform(
+            new Function<Path, Path>() {
+              @Override
+              public Path apply(Path input) {
+                return pathToMetadataDirectory.resolve(input);
+              }
+            })
+        .toSortedSet(Ordering.natural());
+  }
 
-    // Add metadata files.
-    paths.addAll(
-        FluentIterable.from(metadataToWrite.keySet())
-            .transform(MorePaths.TO_PATH)
-            .transform(
-                new Function<Path, Path>() {
-                  @Override
-                  public Path apply(Path input) {
-                    return pathToMetadataDirectory.resolve(input);
-                  }
-                }));
+  private ImmutableSortedSet<Path> getRecordedOutputDirsAndFiles() throws IOException {
+    final ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
 
     // Add files from output directories.
     for (final Path output : pathsToOutputs) {
@@ -230,19 +228,36 @@ public class BuildInfoRecorder {
     return paths.build();
   }
 
-  public Pair<Long, HashCode> getOutputSizeAndHash(HashFunction hashFunction) throws IOException {
-    long size = 0;
-    Hasher hasher = hashFunction.newHasher();
+  private ImmutableSortedSet<Path> getRecordedDirsAndFiles() throws IOException {
+    return ImmutableSortedSet.<Path>naturalOrder()
+        .addAll(getRecordedMetadataFiles())
+        .addAll(getRecordedOutputDirsAndFiles())
+        .build();
+  }
+
+  public ImmutableSortedSet<Path> getRecordedPaths() throws IOException {
+    return ImmutableSortedSet.<Path>naturalOrder()
+        .addAll(getRecordedMetadataFiles())
+        .addAll(pathsToOutputs)
+        .build();
+  }
+
+  public HashCode getOutputHash(FileHashCache fileHashCache) throws IOException {
+    Hasher hasher = Hashing.md5().newHasher();
     for (Path path : getRecordedPaths()) {
+      hasher.putBytes(fileHashCache.get(path).asBytes());
+    }
+    return hasher.hash();
+  }
+
+  public long getOutputSize() throws IOException {
+    long size = 0;
+    for (Path path : getRecordedDirsAndFiles()) {
       if (projectFilesystem.isFile(path)) {
         size += projectFilesystem.getFileSize(path);
-        hasher.putString(path.toString(), Charsets.UTF_8);
-        try (InputStream input = projectFilesystem.newFileInputStream(path)) {
-          ByteStreams.copy(input, Funnels.asOutputStream(hasher));
-        }
       }
     }
-    return new Pair<>(size, hasher.hash());
+    return size;
   }
 
   /**
@@ -269,7 +284,7 @@ public class BuildInfoRecorder {
     ImmutableSet<Path> pathsToIncludeInZip = ImmutableSet.of();
     ImmutableMap<String, String> buildMetadata;
     try {
-      pathsToIncludeInZip = getRecordedPaths();
+      pathsToIncludeInZip = getRecordedDirsAndFiles();
       zip = Files.createTempFile(
           "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()),
           ".zip");

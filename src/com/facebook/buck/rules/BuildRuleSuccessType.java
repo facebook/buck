@@ -31,11 +31,13 @@ public enum BuildRuleSuccessType {
   BUILT_LOCALLY(
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED,
-      Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK
+      Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK,
+      Property.OUTPUTS_HAVE_CHANGED
   ),
 
   /** Fetched via the {@link ArtifactCache}. */
   FETCHED_FROM_CACHE(
+      Property.OUTPUTS_HAVE_CHANGED
   ),
 
   /** Computed {@link RuleKey} matches the one on disk. */
@@ -45,7 +47,8 @@ public enum BuildRuleSuccessType {
   /** Fetched via the {@link ArtifactCache} using an input-based rule key. */
   FETCHED_FROM_CACHE_INPUT_BASED(
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
-      Property.SHOULD_UPDATE_METADATA_ON_DISK
+      Property.SHOULD_UPDATE_METADATA_ON_DISK,
+      Property.OUTPUTS_HAVE_CHANGED
   ),
 
   /** Computed input-based {@link RuleKey} matches the one on disk. */
@@ -99,10 +102,19 @@ public enum BuildRuleSuccessType {
     return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED);
   }
 
+  /**
+   * @return whether a rule completing with this success type may have changed it's outputs.
+   */
+  public boolean outputsHaveChanged() {
+    return properties.contains(Property.OUTPUTS_HAVE_CHANGED);
+  }
+
   private enum Property {
     SHOULD_UPLOAD_RESULTING_ARTIFACT,
     SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED,
     SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK,
     SHOULD_UPDATE_METADATA_ON_DISK,
+    OUTPUTS_HAVE_CHANGED,
   }
+
 }

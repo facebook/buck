@@ -57,6 +57,11 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   @Override
+  public void invalidateAll() {
+    pathsToHashes.clear();
+  }
+
+  @Override
   public HashCode get(Path path) throws IOException {
     HashCode hashCode = pathsToHashes.get(path);
     if (hashCode == null) {

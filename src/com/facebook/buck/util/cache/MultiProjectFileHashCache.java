@@ -60,6 +60,13 @@ public class MultiProjectFileHashCache implements FileHashCache {
   }
 
   @Override
+  public void invalidateAll() {
+    for (ProjectFileHashCache cache : projectCaches) {
+      cache.invalidateAll();
+    }
+  }
+
+  @Override
   public HashCode get(Path path) throws IOException {
     Optional<Pair<FileHashCache, Path>> found = lookup(path);
     if (!found.isPresent()) {

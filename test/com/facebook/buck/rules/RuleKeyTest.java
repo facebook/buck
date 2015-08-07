@@ -574,6 +574,10 @@ public class RuleKeyTest {
           }
 
           @Override
+          public void invalidateAll() {
+          }
+
+          @Override
           public HashCode get(Path path) {
             return HashCode.fromString("deadbeef");
           }

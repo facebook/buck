@@ -35,6 +35,10 @@ public class NullFileHashCache implements FileHashCache {
   }
 
   @Override
+  public void invalidateAll() {
+  }
+
+  @Override
   public HashCode get(Path path) throws IOException {
     throw new NoSuchFileException(path.toString());
   }

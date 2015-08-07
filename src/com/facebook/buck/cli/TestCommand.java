@@ -338,6 +338,7 @@ public class TestCommand extends BuildCommand {
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),
+              params.getFileHashCache(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getBuildDepFiles(),
               new InputBasedRuleKeyBuilderFactory(

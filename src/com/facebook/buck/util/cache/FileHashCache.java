@@ -31,6 +31,8 @@ public interface FileHashCache {
 
   void invalidate(Path path);
 
+  void invalidateAll();
+
   HashCode get(Path path) throws IOException;
 
 }

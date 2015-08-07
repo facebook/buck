@@ -35,12 +35,13 @@ import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -227,12 +228,13 @@ public class BuildInfoRecorderTest {
 
     assertEquals(
         3 * contents.length,
-        (long) buildInfoRecorder.getOutputSizeAndHash(Hashing.md5()).getFirst());
+        buildInfoRecorder.getOutputSize());
   }
 
   @Test
   public void testGetOutputHash() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
 
     byte[] contents = "contents".getBytes();
@@ -247,20 +249,24 @@ public class BuildInfoRecorderTest {
     filesystem.writeBytesToPath(contents, dir.resolve("file2"));
     buildInfoRecorder.recordArtifact(dir);
 
-    HashCode current = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    fileHashCache.invalidateAll();
+    HashCode current = buildInfoRecorder.getOutputHash(fileHashCache);
 
     // Test that getting the hash again results in the same hashcode.
-    assertEquals(current, buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond());
+    fileHashCache.invalidateAll();
+    assertEquals(current, buildInfoRecorder.getOutputHash(fileHashCache));
 
     // Verify that changing a file changes the hash.
     filesystem.writeContentsToPath("something else", file);
-    HashCode updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    fileHashCache.invalidateAll();
+    HashCode updated = buildInfoRecorder.getOutputHash(fileHashCache);
     assertNotEquals(current, updated);
 
     // Verify that changing a file under a directory changes the hash.
     filesystem.writeContentsToPath("something else", dir.resolve("file1"));
     current = updated;
-    updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    fileHashCache.invalidateAll();
+    updated = buildInfoRecorder.getOutputHash(fileHashCache);
     assertNotEquals(current, updated);
 
     // Test that adding a file updates the hash.
@@ -268,14 +274,16 @@ public class BuildInfoRecorderTest {
     filesystem.writeBytesToPath(contents, added);
     buildInfoRecorder.recordArtifact(added);
     current = updated;
-    updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    fileHashCache.invalidateAll();
+    updated = buildInfoRecorder.getOutputHash(fileHashCache);
     assertNotEquals(current, updated);
 
     // Test that adding a file under a recorded directory updates the hash.
     Path addedUnderDir = dir.resolve("added");
     filesystem.writeBytesToPath(contents, addedUnderDir);
     current = updated;
-    updated = buildInfoRecorder.getOutputSizeAndHash(Hashing.sha512()).getSecond();
+    fileHashCache.invalidateAll();
+    updated = buildInfoRecorder.getOutputHash(fileHashCache);
     assertNotEquals(current, updated);
   }
 

@@ -23,12 +23,12 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,7 +45,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -94,6 +93,7 @@ public class CachingBuildEngine implements BuildEngine {
       Maps.newConcurrentMap();
 
   private final ListeningExecutorService service;
+  private final FileHashCache fileHashCache;
   private final BuildMode buildMode;
   private final DepFiles depFiles;
   private final RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
@@ -101,11 +101,13 @@ public class CachingBuildEngine implements BuildEngine {
 
   public CachingBuildEngine(
       ListeningExecutorService service,
+      FileHashCache fileHashCache,
       BuildMode buildMode,
       DepFiles depFiles,
       RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
       RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
     this.service = service;
+    this.fileHashCache = fileHashCache;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
     this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;
@@ -359,24 +361,30 @@ public class CachingBuildEngine implements BuildEngine {
             // We shouldn't see any build fail result at this point.
             BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
 
-            // The build has succeeded, whether we've fetched from cache, or built locally.
-            // So run the post-build steps.
-            if (rule instanceof HasPostBuildSteps &&
-                (success == BuildRuleSuccessType.BUILT_LOCALLY ||
-                 success == BuildRuleSuccessType.FETCHED_FROM_CACHE ||
-                 success == BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED)) {
-              executePostBuildSteps(
-                  rule,
-                  ((HasPostBuildSteps) rule).getPostBuildSteps(context, buildableContext),
-                  context);
-            }
-
             // If we didn't build the rule locally, reload the recorded paths from the build
             // metadata.
             if (success != BuildRuleSuccessType.BUILT_LOCALLY) {
               for (String str :
                    onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS).get()) {
                 buildInfoRecorder.recordArtifact(Paths.get(str));
+              }
+            }
+
+            // If the success type means the rule has potentially changed it's outputs...
+            if (success.outputsHaveChanged()) {
+
+              // The build has succeeded, whether we've fetched from cache, or built locally.
+              // So run the post-build steps.
+              if (rule instanceof HasPostBuildSteps) {
+                executePostBuildSteps(
+                    rule,
+                    ((HasPostBuildSteps) rule).getPostBuildSteps(context, buildableContext),
+                    context);
+              }
+
+              // Invalidate any cached hashes for the output paths, since we've updated them.
+              for (Path path : buildInfoRecorder.getRecordedPaths()) {
+                fileHashCache.invalidate(path);
               }
             }
 
@@ -499,9 +507,11 @@ public class CachingBuildEngine implements BuildEngine {
                 }
 
                 // Calculate the hash and size of the rule outputs.
-                Pair<Long, HashCode> outputHashAndSize;
+                long outputSize;
+                HashCode outputHash;
                 try {
-                  outputHashAndSize = buildInfoRecorder.getOutputSizeAndHash(Hashing.md5());
+                  outputSize = buildInfoRecorder.getOutputSize();
+                  outputHash = buildInfoRecorder.getOutputHash(fileHashCache);
                 } catch (IOException e) {
                   onFailure(e);
                   return;
@@ -514,8 +524,8 @@ public class CachingBuildEngine implements BuildEngine {
                         BuildRuleStatus.SUCCESS,
                         input.getCacheResult(),
                         Optional.of(input.getSuccess()),
-                        Optional.of(outputHashAndSize.getSecond()),
-                        Optional.of(outputHashAndSize.getFirst())));
+                        Optional.of(outputHash),
+                        Optional.of(outputSize)));
               }
 
               @Override

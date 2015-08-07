@@ -104,6 +104,11 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     loadingCache.invalidate(path);
   }
 
+  @Override
+  public void invalidateAll() {
+    loadingCache.invalidateAll();
+  }
+
   /**
    * @return The {@link com.google.common.hash.HashCode} of the contents of path.
    */
