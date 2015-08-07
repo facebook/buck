@@ -1,0 +1,39 @@
+python_binary(
+  name = 'bin',
+  main_module = 'main',
+  deps = [
+    ':lib',
+  ],
+)
+
+python_library(
+  name = 'lib',
+  srcs = [
+    'main.py',
+  ],
+)
+
+python_binary(
+  name = 'bin-with-native-libs',
+  main_module = 'main_with_native_libs',
+  deps = [
+    ':lib-with-native-libs',
+  ],
+)
+
+python_library(
+  name = 'lib-with-native-libs',
+  srcs = [
+    'main_with_native_libs.py',
+  ],
+  deps = [
+    ':foo',
+  ],
+)
+
+cxx_library(
+  name = 'foo',
+  srcs = [
+    'foo.c',
+  ],
+)

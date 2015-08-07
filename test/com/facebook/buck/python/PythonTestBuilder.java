@@ -20,39 +20,32 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription.Arg> {
 
   private PythonTestBuilder(
       BuildTarget target,
-      ProjectFilesystem filesystem,
-      Path pathToPex,
-      Path pathToPexExecutor,
-      String pexExtension,
-      Path pathToPythonTestMain,
+      PythonBuckConfig pythonBuckConfig,
       PythonEnvironment pythonEnvironment,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new PythonTestDescription(
-            filesystem,
-            pathToPex,
-            pathToPexExecutor,
-            pexExtension,
-            pathToPythonTestMain,
-            pythonEnvironment,
+            new PythonBinaryDescription(
+                pythonBuckConfig,
+                pythonEnvironment,
+                defaultCxxPlatform,
+                cxxPlatforms),
+            pythonBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms),
         target);
@@ -63,11 +56,7 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
         new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder());
     return new PythonTestBuilder(
         target,
-        new FakeProjectFilesystem(),
-        pythonBuckConfig.getPathToPex(),
-        pythonBuckConfig.getPathToPexExecuter(),
-        pythonBuckConfig.getPexExtension(),
-        pythonBuckConfig.getPathToTestMain(),
+        pythonBuckConfig,
         new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.7")),
         CxxPlatformUtils.DEFAULT_PLATFORM,
         new FlavorDomain<>(

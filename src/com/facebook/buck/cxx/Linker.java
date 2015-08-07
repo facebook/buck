@@ -49,6 +49,11 @@ public interface Linker extends Tool {
   String origin();
 
   /**
+   * @return the name of the environment variable for the shared library runtime search path.
+   */
+  String searchPathEnvVar();
+
+  /**
    * The various ways to link an output file.
    */
   enum LinkType {

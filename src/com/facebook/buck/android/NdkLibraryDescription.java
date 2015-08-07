@@ -319,7 +319,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     final String contents = Joiner.on(System.lineSeparator()).join(outputLinesBuilder.build());
 
     return new Pair<BuildRule, Iterable<BuildRule>>(
-        new WriteFile(makefileParams, pathResolver, contents, makefilePath),
+        new WriteFile(makefileParams, pathResolver, contents, makefilePath, /* executable */ false),
         deps.build());
   }
 

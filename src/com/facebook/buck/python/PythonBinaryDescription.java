@@ -17,10 +17,14 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.WindowsLinker;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -28,17 +32,24 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 public class PythonBinaryDescription implements Description<PythonBinaryDescription.Arg> {
 
@@ -46,23 +57,17 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
 
   public static final BuildRuleType TYPE = BuildRuleType.of("python_binary");
 
-  private final Path pathToPex;
-  private final Path pathToPexExecuter;
-  private final String pexExtension;
+  private final PythonBuckConfig pythonBuckConfig;
   private final PythonEnvironment pythonEnvironment;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonBinaryDescription(
-      Path pathToPex,
-      Path pathToPexExecuter,
-      String pexExtension,
+      PythonBuckConfig pythonBuckConfig,
       PythonEnvironment pythonEnv,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.pathToPex = pathToPex;
-    this.pathToPexExecuter = pathToPexExecuter;
-    this.pexExtension = pexExtension;
+    this.pythonBuckConfig = pythonBuckConfig;
     this.pythonEnvironment = pythonEnv;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
@@ -76,6 +81,145 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
+  }
+
+  private PythonInPlaceBinary createInPlaceBinaryRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      String mainModule,
+      PythonPackageComponents components) {
+
+    // We don't currently support targeting Windows.
+    if (cxxPlatform.getLd() instanceof WindowsLinker) {
+      throw new HumanReadableException(
+          "%s: cannot build in-place python binaries for Windows (%s)",
+          params.getBuildTarget(),
+          cxxPlatform.getFlavor());
+    }
+
+    BuildTarget linkTreeTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(ImmutableFlavor.of("link-tree"))
+            .build();
+    Path linkTreeRoot = BuildTargets.getGenPath(linkTreeTarget, "%s");
+    SymlinkTree linkTree;
+    try {
+      linkTree =
+        resolver.addToIndex(
+            new SymlinkTree(
+                params.copyWithChanges(
+                    linkTreeTarget,
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                pathResolver,
+                linkTreeRoot,
+                ImmutableMap.<Path, SourcePath>builder()
+                    .putAll(components.getModules())
+                    .putAll(components.getResources())
+                    .putAll(components.getNativeLibraries())
+                    .build()));
+    } catch (SymlinkTree.InvalidSymlinkTreeException e) {
+      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
+    }
+
+    Map<String, String> env = Maps.newLinkedHashMap();
+
+    // If we have native libraries, set the dynamic loader search path so it can find them.
+    if (!components.getNativeLibraries().isEmpty()) {
+      env.put(cxxPlatform.getLd().searchPathEnvVar(), linkTreeRoot.toString());
+    }
+
+    // Set the python path, so python can find all the modules.
+    env.put("PYTHONPATH", linkTreeRoot.toString());
+
+    // Setup the python command to run the program.
+    List<String> args = Lists.newArrayList();
+    args.add(pythonEnvironment.getPythonPath().toString());
+    args.add("-m");
+    args.add(mainModule);
+
+    // Format the command into a string.
+    List<String> escapedCmdArgs = Lists.newArrayList();
+    for (Map.Entry<String, String> entry : env.entrySet()) {
+      escapedCmdArgs.add(
+          String.format(
+              "%s=%s",
+              Escaper.escapeAsShellString(entry.getKey()),
+              Escaper.escapeAsShellString(entry.getValue())));
+    }
+    for (String arg : args) {
+      escapedCmdArgs.add(Escaper.escapeAsShellString(arg));
+    }
+    escapedCmdArgs.add("\"$@\"");
+    String cmd = Joiner.on(' ').join(escapedCmdArgs);
+
+    BuildTarget scriptTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(ImmutableFlavor.of("script"))
+            .build();
+     Path scriptPath =
+         BuildTargets.getGenPath(
+             params.getBuildTarget(),
+             "%s" + pythonBuckConfig.getPexExtension());
+     WriteFile script =
+        resolver.addToIndex(
+            new WriteFile(
+                params.copyWithChanges(
+                    scriptTarget,
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                pathResolver,
+                "#!/bin/sh\n" + cmd,
+                scriptPath,
+                /* executable */ true));
+
+    return new PythonInPlaceBinary(
+        params,
+        pathResolver,
+        script,
+        linkTree,
+        mainModule,
+        components);
+  }
+
+  protected PythonBinary createPackageRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      String mainModule,
+      PythonPackageComponents components,
+      ImmutableList<String> buildArgs) {
+
+    switch (pythonBuckConfig.getPackageStyle()) {
+      case INPLACE:
+        return createInPlaceBinaryRule(
+            params,
+            resolver,
+            pathResolver,
+            cxxPlatform,
+            mainModule,
+            components);
+      case STANDALONE:
+        return new PythonPackagedBinary(
+            params.copyWithDeps(
+                Suppliers.ofInstance(
+                    PythonUtil.getDepsFromComponents(pathResolver, components)),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            pythonBuckConfig.getPathToPex(),
+            buildArgs,
+            pythonBuckConfig.getPathToPexExecuter(),
+            pythonBuckConfig.getPexExtension(),
+            pythonEnvironment,
+            mainModule,
+            components);
+      default:
+        throw new IllegalStateException();
+    }
+
   }
 
   @Override
@@ -135,21 +279,14 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         binaryPackageComponents,
         cxxPlatform);
 
-    // Return a build rule which builds the PEX, depending on everything that builds any of
-    // the components.
-    BuildRuleParams binaryParams = params.copyWithDeps(
-        Suppliers.ofInstance(PythonUtil.getDepsFromComponents(pathResolver, allPackageComponents)),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    return new PythonBinary(
-        binaryParams,
+    return createPackageRule(
+        params,
+        resolver,
         pathResolver,
-        pathToPex,
-        args.buildArgs.or(ImmutableList.<String>of()),
-        pathToPexExecuter,
-        pexExtension,
-        pythonEnvironment,
+        cxxPlatform,
         mainModule,
-        allPackageComponents);
+        allPackageComponents,
+        args.buildArgs.or(ImmutableList.<String>of()));
   }
 
   @SuppressFieldNotInitialized

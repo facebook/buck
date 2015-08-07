@@ -81,7 +81,8 @@ public class OCamlDebugLauncherStep implements Step {
     String debugCmdStr = getDebugCmd();
     String debugLuancherScript = getDebugLauncherScript(debugCmdStr);
 
-    WriteFileStep writeFile = new WriteFileStep(debugLuancherScript, args.getOutput());
+    WriteFileStep writeFile =
+        new WriteFileStep(debugLuancherScript, args.getOutput(), /* executable */ false);
     int writeExitCode = writeFile.execute(context);
     if (writeExitCode != 0) {
       return writeExitCode;

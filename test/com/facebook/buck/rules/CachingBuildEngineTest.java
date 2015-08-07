@@ -1131,7 +1131,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
               BuildableContext buildableContext) {
-            return ImmutableList.<Step>of(new WriteFileStep("", output));
+            return ImmutableList.<Step>of(new WriteFileStep("", output, /* executable */ false));
           }
           @Override
           public Path getPathToOutput() {
@@ -1381,7 +1381,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
               BuildableContext buildableContext) {
-            return ImmutableList.<Step>of(new WriteFileStep("", output));
+            return ImmutableList.<Step>of(new WriteFileStep("", output, /* executable */ false));
           }
           @Override
           public ImmutableList<Path> getInputsAfterBuildingLocally() {
@@ -1548,7 +1548,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             buildableContext.addMetadata(
                 BuildInfo.METADATA_KEY_FOR_DEP_FILE,
                 ImmutableList.of(input.toString()));
-            return ImmutableList.<Step>of(new WriteFileStep("", output));
+            return ImmutableList.<Step>of(new WriteFileStep("", output, /* executable */ false));
           }
           @Override
           public ImmutableList<Path> getInputsAfterBuildingLocally() {
@@ -1634,7 +1634,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             buildableContext.addMetadata(
                 BuildInfo.METADATA_KEY_FOR_DEP_FILE,
                 ImmutableList.of(input.toString()));
-            return ImmutableList.<Step>of(new WriteFileStep("", output));
+            return ImmutableList.<Step>of(new WriteFileStep("", output, /* executable */ false));
           }
           @Override
           public ImmutableList<Path> getInputsAfterBuildingLocally() {
@@ -1716,7 +1716,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             .build();
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRule rule = new WriteFile(params, pathResolver, "something else", output);
+    BuildRule rule =
+        new WriteFile(params, pathResolver, "something else", output, /* executable */ false);
 
     // Create the build engine.
     CachingBuildEngine cachingBuildEngine =

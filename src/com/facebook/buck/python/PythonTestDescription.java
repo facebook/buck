@@ -18,7 +18,6 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -57,30 +56,18 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
-  private final ProjectFilesystem projectFilesystem;
-  private final Path pathToPex;
-  private final Path pathToPexExecuter;
-  private final String pexExtension;
-  private final Path pathToPythonTestMain;
-  private final PythonEnvironment pythonEnvironment;
+  private final PythonBinaryDescription binaryDescription;
+  private final PythonBuckConfig pythonBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
-      ProjectFilesystem projectFilesystem,
-      Path pathToPex,
-      Path pathToPexExecuter,
-      String pexExtension,
-      Path pathToPythonTestMain,
-      PythonEnvironment pythonEnvironment,
+      PythonBinaryDescription binaryDescription,
+      PythonBuckConfig pythonBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.projectFilesystem = projectFilesystem;
-    this.pathToPex = pathToPex;
-    this.pathToPexExecuter = pathToPexExecuter;
-    this.pexExtension = pexExtension;
-    this.pathToPythonTestMain = pathToPythonTestMain;
-    this.pythonEnvironment = pythonEnvironment;
+    this.binaryDescription = binaryDescription;
+    this.pythonBuckConfig = pythonBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -150,7 +137,12 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
     String contents = getTestModulesListContents(testModules);
 
-    return new WriteFile(newParams, new SourcePathResolver(resolver), contents, outputPath);
+    return new WriteFile(
+        newParams,
+        new SourcePathResolver(resolver),
+        contents,
+        outputPath,
+        /* executable */ false);
   }
 
   @Override
@@ -214,7 +206,9 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                 new BuildTargetSourcePath(testModulesBuildRule.getBuildTarget()))
             .put(
                 getTestMainName(),
-                new PathSourcePath(projectFilesystem, pathToPythonTestMain))
+                new PathSourcePath(
+                    params.getProjectFilesystem(),
+                    pythonBuckConfig.getPathToTestMain()))
             .putAll(srcs)
             .build(),
         resources,
@@ -229,16 +223,15 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         getBinaryBuildTarget(params.getBuildTarget()),
         Suppliers.ofInstance(PythonUtil.getDepsFromComponents(pathResolver, allComponents)),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    PythonBinary binary = new PythonBinary(
-        binaryParams,
-        pathResolver,
-        pathToPex,
-        args.buildArgs.or(ImmutableList.<String>of()),
-        pathToPexExecuter,
-        pexExtension,
-        pythonEnvironment,
-        PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
-        allComponents);
+    PythonBinary binary =
+        binaryDescription.createPackageRule(
+            binaryParams,
+            resolver,
+            pathResolver,
+            cxxPlatform,
+            PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
+            allComponents,
+            args.buildArgs.or(ImmutableList.<String>of()));
     resolver.addToIndex(binary);
 
     // Generate and return the python test rule, which depends on the python binary rule above.

@@ -23,7 +23,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.io.MorePathsForTests;
+import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -58,9 +58,14 @@ import java.nio.file.Paths;
 
 public class PythonBinaryDescriptionTest {
 
-  private static final Path PEX_PATH = Paths.get("pex");
-  private static final Path PEX_EXECUTER_PATH = MorePathsForTests.rootRelativePath("/not/python2");
-  private static final String PEX_EXTENSION = ".pex";
+  private static final PythonBuckConfig PYTHON_BUCK_CONFIG =
+      new PythonBuckConfig(
+          new FakeBuckConfig(),
+          new AlwaysFoundExecutableFinder());
+  private static final PythonEnvironment PYTHON_ENV =
+      new PythonEnvironment(
+          Paths.get("python"),
+          PythonVersion.of("2.6"));
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(new FakeBuckConfig()));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
@@ -89,13 +94,12 @@ public class PythonBinaryDescriptionTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bin"))
             .setDeps(ImmutableSortedSet.<BuildRule>of(lib))
             .build();
-    PythonBinaryDescription desc = new PythonBinaryDescription(
-        PEX_PATH,
-        PEX_EXECUTER_PATH,
-        PEX_EXTENSION,
-        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
-        CXX_PLATFORM,
-        CXX_PLATFORMS);
+    PythonBinaryDescription desc =
+        new PythonBinaryDescription(
+            PYTHON_BUCK_CONFIG,
+            PYTHON_ENV,
+            CXX_PLATFORM,
+            CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.mainModule = Optional.absent();
@@ -120,13 +124,12 @@ public class PythonBinaryDescriptionTest {
         .build(resolver);
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(
         BuildTargetFactory.newInstance("//:bin"));
-    PythonBinaryDescription desc = new PythonBinaryDescription(
-        PEX_PATH,
-        PEX_EXECUTER_PATH,
-        PEX_EXTENSION,
-        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
-        CXX_PLATFORM,
-        CXX_PLATFORMS);
+    PythonBinaryDescription desc =
+        new PythonBinaryDescription(
+            PYTHON_BUCK_CONFIG,
+            PYTHON_ENV,
+            CXX_PLATFORM,
+            CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.mainModule = Optional.absent();
@@ -149,13 +152,12 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     String mainName = "main.py";
-    PythonBinaryDescription desc = new PythonBinaryDescription(
-        PEX_PATH,
-        PEX_EXECUTER_PATH,
-        PEX_EXTENSION,
-        new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.5")),
-        CXX_PLATFORM,
-        CXX_PLATFORMS);
+    PythonBinaryDescription desc =
+        new PythonBinaryDescription(
+            PYTHON_BUCK_CONFIG,
+            PYTHON_ENV,
+            CXX_PLATFORM,
+            CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.mainModule = Optional.absent();
@@ -189,13 +191,12 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     String mainModule = "foo.main";
-    PythonBinaryDescription desc = new PythonBinaryDescription(
-        PEX_PATH,
-        PEX_EXECUTER_PATH,
-        PEX_EXTENSION,
-        new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.5")),
-        CXX_PLATFORM,
-        CXX_PLATFORMS);
+    PythonBinaryDescription desc =
+        new PythonBinaryDescription(
+            PYTHON_BUCK_CONFIG,
+            PYTHON_ENV,
+            CXX_PLATFORM,
+            CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.mainModule = Optional.of(mainModule);
@@ -213,12 +214,17 @@ public class PythonBinaryDescriptionTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    PythonBuckConfig config =
+        new PythonBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.of(
+                    "python",
+                    ImmutableMap.of("pex_extension", ".different_extension"))),
+            new AlwaysFoundExecutableFinder());
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
-            PEX_PATH,
-            PEX_EXECUTER_PATH,
-            ".different_extension",
-            new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.5")),
+            config,
+            PYTHON_ENV,
             CXX_PLATFORM,
             CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();

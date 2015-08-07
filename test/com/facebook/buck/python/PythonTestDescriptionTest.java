@@ -25,8 +25,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.io.MorePathsForTests;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -42,7 +41,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -52,16 +50,18 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PythonTestDescriptionTest {
 
-  private static final Path PEX_PATH = Paths.get("pex");
-  private static final Path PEX_EXECUTER_PATH = MorePathsForTests.rootRelativePath("/not/python2");
-  private static final String PEX_EXTENSION = ".pex";
-  private static final Path TEST_MAIN = Paths.get("main");
-  private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
+  private static final PythonBuckConfig PYTHON_BUCK_CONFIG =
+      new PythonBuckConfig(
+          new FakeBuckConfig(),
+          new AlwaysFoundExecutableFinder());
+  private static final PythonEnvironment PYTHON_ENV =
+      new PythonEnvironment(
+          Paths.get("python"),
+          PythonVersion.of("2.6"));
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(new FakeBuckConfig()));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
@@ -73,15 +73,16 @@ public class PythonTestDescriptionTest {
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bin"))
             .build();
-    PythonTestDescription desc = new PythonTestDescription(
-        PROJECT_FILESYSTEM,
-        PEX_PATH,
-        PEX_EXECUTER_PATH,
-        PEX_EXTENSION,
-        TEST_MAIN,
-        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
-        CXX_PLATFORM,
-        CXX_PLATFORMS);
+    PythonTestDescription desc =
+        new PythonTestDescription(
+            new PythonBinaryDescription(
+                PYTHON_BUCK_CONFIG,
+                PYTHON_ENV,
+                CXX_PLATFORM,
+                CXX_PLATFORMS),
+            PYTHON_BUCK_CONFIG,
+            CXX_PLATFORM,
+            CXX_PLATFORMS);
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.srcs = Optional.of(
@@ -118,14 +119,15 @@ public class PythonTestDescriptionTest {
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
     String sourceName = "main.py";
     SourcePath source = new TestSourcePath("foo/" + sourceName);
-    PythonTestDescription desc = new PythonTestDescription(
-        PROJECT_FILESYSTEM,
-        PEX_PATH,
-        PEX_EXECUTER_PATH,
-        PEX_EXTENSION,
-        TEST_MAIN,
-        new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.5")),
-        CXX_PLATFORM,
+    PythonTestDescription desc =
+        new PythonTestDescription(
+            new PythonBinaryDescription(
+                PYTHON_BUCK_CONFIG,
+                PYTHON_ENV,
+                CXX_PLATFORM,
+                CXX_PLATFORMS),
+            PYTHON_BUCK_CONFIG,
+            CXX_PLATFORM,
         CXX_PLATFORMS);
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.absent();

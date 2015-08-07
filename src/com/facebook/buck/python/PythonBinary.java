@@ -16,85 +16,25 @@
 
 package com.facebook.buck.python;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
-
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
+public abstract class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
-public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
-
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
-
-  @AddToRuleKey
-  private final Path pathToPex;
-  @AddToRuleKey
-  private final ImmutableList<String> buildArgs;
-  private final Path pathToPexExecuter;
-  @AddToRuleKey
-  private final String pexExtension;
-  @AddToRuleKey
   private final String mainModule;
-  @AddToRuleKey
   private final PythonPackageComponents components;
-  @AddToRuleKey
-  private final PythonEnvironment pythonEnvironment;
 
-  protected PythonBinary(
-      BuildRuleParams params,
+  public PythonBinary(
+      BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
-      Path pathToPex,
-      ImmutableList<String> buildArgs,
-      Path pathToPexExecuter,
-      String pexExtension,
-      PythonEnvironment pythonEnvironment,
       String mainModule,
       PythonPackageComponents components) {
-    super(params, resolver);
-    this.pathToPex = pathToPex;
-    this.buildArgs = buildArgs;
-    this.pathToPexExecuter = pathToPexExecuter;
-    this.pexExtension = pexExtension;
-    this.pythonEnvironment = pythonEnvironment;
+    super(buildRuleParams, resolver);
     this.mainModule = mainModule;
     this.components = components;
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
-  }
-
-  public Path getBinPath() {
-    return BuildTargets.getGenPath(getBuildTarget(), "%s" + pexExtension);
-  }
-
-  @Override
-  public Path getPathToOutput() {
-    return getBinPath();
-  }
-
-  @VisibleForTesting
-  protected PythonPackageComponents getComponents() {
-    return components;
   }
 
   @VisibleForTesting
@@ -102,48 +42,9 @@ public class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
     return mainModule;
   }
 
-  @Override
-  public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(new PathSourcePath(getProjectFilesystem(), pathToPexExecuter))
-        .addArg(new BuildTargetSourcePath(getBuildTarget(), getBinPath()))
-        .build();
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
-
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    Path binPath = getBinPath();
-
-    // Make sure the parent directory exists.
-    steps.add(new MkdirStep(binPath.getParent()));
-
-    Path workingDirectory = BuildTargets.getGenPath(
-        getBuildTarget(), "__%s__working_directory");
-    steps.add(new MakeCleanDirectoryStep(workingDirectory));
-
-    // Generate and return the PEX build step.
-    steps.add(
-        new PexStep(
-            pathToPex,
-            buildArgs,
-            pythonEnvironment.getPythonPath(),
-            workingDirectory,
-            binPath,
-            mainModule,
-            getResolver().getMappedPaths(components.getModules()),
-            getResolver().getMappedPaths(components.getResources()),
-            getResolver().getMappedPaths(components.getNativeLibraries()),
-            ImmutableSet.copyOf(getResolver().getAllPaths(components.getPrebuiltLibraries())),
-            components.isZipSafe().or(true)));
-
-    // Record the executable package for caching.
-    buildableContext.recordArtifact(getBinPath());
-
-    return steps.build();
+  @VisibleForTesting
+  protected PythonPackageComponents getComponents() {
+    return components;
   }
 
 }

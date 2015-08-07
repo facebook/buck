@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -36,17 +37,22 @@ public class WriteFileStep implements Step {
   private static final Logger LOG = Logger.get(WriteFileStep.class);
   private final ByteSource source;
   private final Path outputPath;
+  private final boolean executable;
 
-  public WriteFileStep(ByteSource content, Path outputPath) {
+  public WriteFileStep(ByteSource content, Path outputPath, boolean executable) {
     this.source = content;
     this.outputPath = outputPath;
+    this.executable = executable;
   }
 
-  public WriteFileStep(String content, Path outputPath) {
-    this(Suppliers.ofInstance(content), outputPath);
+  public WriteFileStep(String content, Path outputPath, boolean executable) {
+    this(Suppliers.ofInstance(content), outputPath, executable);
   }
 
-  public WriteFileStep(final Supplier<String> content, Path outputPath) {
+  public WriteFileStep(
+      final Supplier<String> content,
+      Path outputPath,
+      boolean executable) {
     this(
         new ByteSource() {
           @Override
@@ -55,7 +61,8 @@ public class WriteFileStep implements Step {
             return new ByteArrayInputStream((content.get() + "\n").getBytes(Charsets.UTF_8));
           }
         },
-        outputPath);
+        outputPath,
+        executable);
   }
 
   @Override
@@ -65,6 +72,10 @@ public class WriteFileStep implements Step {
           sourceStream,
           outputPath,
           StandardCopyOption.REPLACE_EXISTING);
+      if (executable) {
+        Path resolvedPath = context.getProjectFilesystem().resolve(outputPath);
+        MoreFiles.makeExecutable(resolvedPath);
+      }
       return 0;
     } catch (IOException e) {
       LOG.error(e, "Couldn't copy bytes to %s", outputPath);

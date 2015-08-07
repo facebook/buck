@@ -67,6 +67,11 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
+  public String searchPathEnvVar() {
+    return "PATH";
+  }
+
+  @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder
         .setReflectively("tool", tool)

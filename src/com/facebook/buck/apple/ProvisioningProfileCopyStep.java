@@ -244,7 +244,8 @@ public class ProvisioningProfileCopyStep implements Step {
       entitlements.put(KEYCHAIN_ACCESS_GROUPS, new String[]{appID});
       return (new WriteFileStep(
           entitlements.toXMLPropertyList(),
-          signingEntitlementsTempPath)).execute(context);
+          signingEntitlementsTempPath,
+          /* executable */ false)).execute(context);
     }
   }
 

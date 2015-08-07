@@ -28,24 +28,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescription.Arg> {
 
   private PythonBinaryBuilder(
       BuildTarget target,
-      Path pathToPex,
-      Path pathToPexExecutor,
-      String pexExtension,
+      PythonBuckConfig pythonBuckConfig,
       PythonEnvironment pythonEnvironment,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new PythonBinaryDescription(
-            pathToPex,
-            pathToPexExecutor,
-            pexExtension,
+            pythonBuckConfig,
             pythonEnvironment,
             defaultCxxPlatform,
             cxxPlatforms),
@@ -57,9 +52,7 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
         new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder());
     return new PythonBinaryBuilder(
         target,
-        pythonBuckConfig.getPathToPex(),
-        pythonBuckConfig.getPathToPexExecuter(),
-        pythonBuckConfig.getPexExtension(),
+        pythonBuckConfig,
         new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.7")),
         CxxPlatformUtils.DEFAULT_PLATFORM,
         new FlavorDomain<>(

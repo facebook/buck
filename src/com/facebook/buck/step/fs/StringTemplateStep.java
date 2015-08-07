@@ -56,8 +56,10 @@ public class StringTemplateStep implements Step {
 
     ST st = new ST(template);
 
-    return new WriteFileStep(Preconditions.checkNotNull(configure.apply(st).render()), outputPath)
-        .execute(context);
+    return new WriteFileStep(
+        Preconditions.checkNotNull(configure.apply(st).render()),
+        outputPath,
+        /* executable */ false).execute(context);
   }
 
   @Override

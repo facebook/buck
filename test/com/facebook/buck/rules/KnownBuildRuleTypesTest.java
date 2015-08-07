@@ -28,7 +28,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.ExternalJavac;
 import com.facebook.buck.java.JavaLibraryDescription;
@@ -156,12 +155,10 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJsr199Javac()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        projectFilesystem,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT).build();
@@ -174,7 +171,6 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJavacSet()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
@@ -186,7 +182,6 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        projectFilesystem,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT)
@@ -201,7 +196,6 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithDifferentRuleKey()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     final File javac = temporaryFolder.newFile();
     assertTrue(javac.setExecutable(true));
 
@@ -216,7 +210,6 @@ public class KnownBuildRuleTypesTest {
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
     KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        projectFilesystem,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT)
@@ -239,12 +232,10 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryRuleWithJsr199Javac()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FakeBuckConfig buckConfig = new FakeBuckConfig();
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        projectFilesystem,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
         new PythonEnvironment(
@@ -266,7 +257,6 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsSetInBuckConfigConfiguredRulesCreateAndroidLibraryBuildRuleWithJavacSet()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
 
@@ -278,7 +268,6 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        projectFilesystem,
         processExecutor,
     new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT)
@@ -341,10 +330,8 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void createInstanceShouldReturnDifferentInstancesIfCalledWithDifferentParameters()
       throws IOException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     KnownBuildRuleTypes knownBuildRuleTypes1 = KnownBuildRuleTypes.createInstance(
         new FakeBuckConfig(),
-        projectFilesystem,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT);
@@ -359,7 +346,6 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes knownBuildRuleTypes2 = KnownBuildRuleTypes.createInstance(
         buckConfig,
-        projectFilesystem,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT);
@@ -370,7 +356,6 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void canSetDefaultPlatformToDefault() throws IOException,
         InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "cxx", ImmutableMap.of("default_platform", "default"));
     FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
@@ -378,7 +363,6 @@ public class KnownBuildRuleTypesTest {
     // This would throw if "default" weren't available as a platform.
     KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        projectFilesystem,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
         DUMMY_PYTHON_ENVIRONMENT).build();

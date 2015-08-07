@@ -183,4 +183,15 @@ public class PythonBuckConfig {
       throw new HumanReadableException(versionResult.getStderr().get());
     }
   }
+
+  public PackageStyle getPackageStyle() {
+    return delegate.getEnum(SECTION, "package_style", PackageStyle.class)
+        .or(PackageStyle.STANDALONE);
+  }
+
+  public enum PackageStyle {
+    STANDALONE,
+    INPLACE,
+  }
+
 }

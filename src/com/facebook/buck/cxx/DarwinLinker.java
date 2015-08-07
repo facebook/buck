@@ -70,6 +70,11 @@ public class DarwinLinker implements Linker {
   }
 
   @Override
+  public String searchPathEnvVar() {
+    return "DYLD_LIBRARY_PATH";
+  }
+
+  @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder
         .setReflectively("tool", tool)

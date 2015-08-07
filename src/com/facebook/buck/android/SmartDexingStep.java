@@ -356,7 +356,7 @@ public class SmartDexingStep implements Step {
       List<Step> steps = Lists.newArrayList();
 
       steps.add(createDxStepForDxPseudoRule(srcs, outputPath, dxOptions, xzCompressionLevel));
-      steps.add(new WriteFileStep(newInputsHash, outputHashPath));
+      steps.add(new WriteFileStep(newInputsHash, outputHashPath, /* executable */ false));
 
       // Use a composite step to ensure that runDxSteps can still make use of
       // runStepsInParallelAndWait.  This is necessary to keep the DxStep and

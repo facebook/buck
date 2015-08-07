@@ -193,13 +193,11 @@ public class KnownBuildRuleTypes {
 
   public static KnownBuildRuleTypes createInstance(
       BuckConfig config,
-      ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
       PythonEnvironment pythonEnv) throws InterruptedException, IOException {
     return createBuilder(
         config,
-        projectFilesystem,
         processExecutor,
         androidDirectoryResolver,
         pythonEnv).build();
@@ -255,7 +253,6 @@ public class KnownBuildRuleTypes {
   @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
-      ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver,
       PythonEnvironment pythonEnv) throws InterruptedException, IOException {
@@ -371,9 +368,8 @@ public class KnownBuildRuleTypes {
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
-
-    // Look up the path to the main module we use for python tests.
-    Path pythonPathToPythonTestMain = pyConfig.getPathToTestMain();
+    PythonBinaryDescription pythonBinaryDescription =
+        new PythonBinaryDescription(pyConfig, pythonEnv, defaultCxxPlatform, cxxPlatforms);
 
     // Look up the timeout to apply to entire test rules.
     Optional<Long> testRuleTimeoutMs = config.getLong("test", "rule_timeout");
@@ -498,23 +494,12 @@ public class KnownBuildRuleTypes {
     builder.register(new PrebuiltOCamlLibraryDescription());
     builder.register(new PrebuiltPythonLibraryDescription());
     builder.register(new ProjectConfigDescription());
-    builder.register(
-        new PythonBinaryDescription(
-            pyConfig.getPathToPex(),
-            pyConfig.getPathToPexExecuter(),
-            pyConfig.getPexExtension(),
-            pythonEnv,
-            defaultCxxPlatform,
-            cxxPlatforms));
+    builder.register(pythonBinaryDescription);
     builder.register(new PythonLibraryDescription());
     builder.register(
         new PythonTestDescription(
-            projectFilesystem,
-            pyConfig.getPathToPex(),
-            pyConfig.getPathToPexExecuter(),
-            pyConfig.getPexExtension(),
-            pythonPathToPythonTestMain,
-            pythonEnv,
+            pythonBinaryDescription,
+            pyConfig,
             defaultCxxPlatform,
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloader));

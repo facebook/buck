@@ -94,9 +94,11 @@ public class DummyRDotJava extends AbstractBuildRule
       // associated TestAndroidManifest.xml file.
       Path emptyRDotJava = rDotJavaSrcFolder.resolve("com/facebook/R.java");
       steps.add(new MakeCleanDirectoryStep(emptyRDotJava.getParent()));
-      steps.add(new WriteFileStep(
-          "package com.facebook;\n public class R {}\n",
-          emptyRDotJava));
+      steps.add(
+          new WriteFileStep(
+              "package com.facebook;\n public class R {}\n",
+              emptyRDotJava,
+              /* executable */ false));
       javaSourceFilePaths = ImmutableSet.of(emptyRDotJava);
     } else {
       MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(

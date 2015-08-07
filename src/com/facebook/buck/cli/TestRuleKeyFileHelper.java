@@ -49,7 +49,10 @@ public class TestRuleKeyFileHelper {
   public Step createRuleKeyInDirStep(TestRule testRule) throws IOException {
     RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
     Path outputDir = testRule.getPathToTestOutputDirectory();
-    return new WriteFileStep(ruleKey.toString(), getRuleKeyFilePath(outputDir));
+    return new WriteFileStep(
+        ruleKey.toString(),
+        getRuleKeyFilePath(outputDir),
+        /* executable */ false);
   }
 
   /**

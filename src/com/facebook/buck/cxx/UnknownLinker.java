@@ -65,6 +65,11 @@ public class UnknownLinker implements Linker {
   }
 
   @Override
+  public String searchPathEnvVar() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public String origin() {
     throw new UnsupportedOperationException();
   }

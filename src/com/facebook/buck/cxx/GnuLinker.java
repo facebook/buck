@@ -68,6 +68,11 @@ public class GnuLinker implements Linker {
   }
 
   @Override
+  public String searchPathEnvVar() {
+    return "LD_LIBRARY_PATH";
+  }
+
+  @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
     return builder
         .setReflectively("tool", tool)

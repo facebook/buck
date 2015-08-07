@@ -48,7 +48,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class PythonBinaryTest {
+public class PythonPackagedBinaryTest {
 
   private static final Path PATH_TO_PEX = Paths.get("dummy_path_to_pex");
 
@@ -64,7 +64,7 @@ public class PythonBinaryTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     // The top-level python binary that lists the above libraries as deps.
-    PythonBinary binary = new PythonBinary(
+    PythonBinary binary = new PythonPackagedBinary(
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
             BuildTargetFactory.newInstance("//:bin")),
         resolver,

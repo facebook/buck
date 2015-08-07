@@ -20,6 +20,7 @@ PLATFORM_SRCS = [
   'HashedFileTool.java',
   'ObjectFileScrubbers.java',
   'VersionedTool.java',
+  'WindowsLinker.java',
 ]
 java_immutables_library(
   name = 'platform',

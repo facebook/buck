@@ -274,7 +274,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
         new MakeCleanDirectoryStep(bundleRoot),
         new MkdirStep(metadataPath),
         // TODO(user): This is only appropriate for .app bundles.
-        new WriteFileStep("APPLWRUN", metadataPath.resolve("PkgInfo")),
+        new WriteFileStep("APPLWRUN", metadataPath.resolve("PkgInfo"), /* executable */ false),
         new FindAndReplaceStep(
           infoPlistInputPath,
           infoPlistSubstitutionTempPath,

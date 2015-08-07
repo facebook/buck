@@ -547,7 +547,6 @@ public final class Main {
     KnownBuildRuleTypes buildRuleTypes =
         KnownBuildRuleTypes.createInstance(
             buckConfig,
-            filesystem,
             processExecutor,
             androidDirectoryResolver,
             new PythonBuckConfig(buckConfig, new ExecutableFinder()).getPythonEnvironment(

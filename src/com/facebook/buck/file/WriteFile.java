@@ -30,20 +30,25 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 public class WriteFile extends AbstractBuildRule {
+
   @AddToRuleKey
   private final String fileContents;
   @AddToRuleKey(stringify = true)
   private final Path output;
+  @AddToRuleKey
+  private final boolean executable;
 
   public WriteFile(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       String fileContents,
-      Path output) {
+      Path output,
+      boolean executable) {
     super(buildRuleParams, resolver);
 
     this.fileContents = fileContents;
     this.output = output;
+    this.executable = executable;
   }
 
   @Override
@@ -52,7 +57,7 @@ public class WriteFile extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
-        new WriteFileStep(fileContents, output));
+        new WriteFileStep(fileContents, output, executable));
   }
 
   @Override
