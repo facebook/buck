@@ -49,6 +49,7 @@ java_immutables_library(
     '//src/com/facebook/buck/apple/clang:headermap',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx/elf:elf',
+    '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java:nativelinkable',

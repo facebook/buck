@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -43,6 +44,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -314,12 +316,18 @@ public class CxxPreprocessAndCompileStep implements Step {
 
       String preprocessErr = new String(preprocessError.toByteArray());
       if (!preprocessErr.isEmpty()) {
-        context.getConsole().printErrorText(preprocessErr);
+        context.getBuckEventBus().post(
+            ConsoleEvent.create(
+                preprocessStatus == 0 ? Level.WARNING : Level.SEVERE,
+                preprocessErr));
       }
 
       String compileErr = new String(compileError.toByteArray());
       if (!compileErr.isEmpty()) {
-        context.getConsole().printErrorText(compileErr);
+        context.getBuckEventBus().post(
+            ConsoleEvent.create(
+                compileStatus == 0 ? Level.WARNING : Level.SEVERE,
+                compileErr));
       }
 
       if (preprocessStatus != 0) {
@@ -425,7 +433,10 @@ public class CxxPreprocessAndCompileStep implements Step {
     // If we generated any error output, print that to the console.
     String err = new String(error.toByteArray());
     if (!err.isEmpty()) {
-      context.getConsole().printErrorText(err);
+      context.getBuckEventBus().post(
+          ConsoleEvent.create(
+              exitCode == 0 ? Level.WARNING : Level.SEVERE,
+              err));
     }
 
     return exitCode;
@@ -483,7 +494,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
     } catch (Exception e) {
       MoreThrowables.propagateIfInterrupt(e);
-      context.getConsole().printBuildFailureWithStacktrace(e);
+      context.logError(e, "Build error caused by exception");
       return 1;
     }
   }
