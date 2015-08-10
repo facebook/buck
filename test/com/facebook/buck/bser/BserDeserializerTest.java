@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import java.nio.ByteOrder;
-import java.nio.BufferUnderflowException;
 import java.nio.charset.CharacterCodingException;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -244,14 +243,14 @@ public class BserDeserializerTest {
 
   @Test
   public void throwIfArrayLengthTooShort() throws IOException {
-    thrown.expect(BufferUnderflowException.class);
+    thrown.expect(IOException.class);
     BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
     deserializer.deserializeBserValue(getByteStream("000103050003020323"));
   }
 
   @Test
   public void throwIfMapLengthTooShort() throws IOException {
-    thrown.expect(BufferUnderflowException.class);
+    thrown.expect(IOException.class);
     BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
     deserializer.deserializeBserValue(getByteStream("0001030B010303020303666F6F0323"));
   }

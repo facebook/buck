@@ -22,6 +22,7 @@ import com.google.common.io.ByteStreams;
 import java.io.InputStream;
 import java.io.IOException;
 
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.CharsetDecoder;
@@ -91,6 +92,14 @@ public class BserDeserializer {
    */
   @Nullable
   public Object deserializeBserValue(InputStream inputStream) throws IOException {
+    try {
+      return deserializeRecursive(readBserBuffer(inputStream));
+    } catch (BufferUnderflowException e) {
+      throw new IOException(String.format("Prematurely reached end of BSER buffer"), e);
+    }
+  }
+
+  private ByteBuffer readBserBuffer(InputStream inputStream) throws IOException {
     ByteBuffer sniffBuffer = ByteBuffer.allocate(SNIFF_BUFFER_SIZE).order(ByteOrder.nativeOrder());
     Preconditions.checkState(sniffBuffer.hasArray());
 
@@ -158,7 +167,7 @@ public class BserDeserializer {
               remainingBytesRead));
     }
 
-    return deserializeRecursive(bserBuffer);
+    return bserBuffer;
   }
 
   private int deserializeIntLen(ByteBuffer buffer, byte type) throws IOException {
