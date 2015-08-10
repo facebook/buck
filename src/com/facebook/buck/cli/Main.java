@@ -994,17 +994,18 @@ public final class Main {
     }
 
 
-    JavacOptions javacOptions = new JavaBuckConfig(config)
-        .getDefaultJavacOptions();
-
-    eventListenersBuilder.add(MissingSymbolsHandler.createListener(
-            projectFilesystem,
-            knownBuildRuleTypes.getAllDescriptions(),
-            config,
-            buckEvents,
-            console,
-            javacOptions,
-            environment));
+    JavaBuckConfig javaBuckConfig = new JavaBuckConfig(config);
+    if (!javaBuckConfig.getSkipCheckingMissingDeps()) {
+      JavacOptions javacOptions = javaBuckConfig.getDefaultJavacOptions();
+      eventListenersBuilder.add(MissingSymbolsHandler.createListener(
+              projectFilesystem,
+              knownBuildRuleTypes.getAllDescriptions(),
+              config,
+              buckEvents,
+              console,
+              javacOptions,
+              environment));
+    }
 
     eventListenersBuilder.addAll(externalEventsListeners);
 

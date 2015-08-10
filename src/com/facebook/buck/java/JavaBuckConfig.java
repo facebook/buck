@@ -84,4 +84,8 @@ public class JavaBuckConfig {
   Optional<SourcePath> getJavacJarPath() {
     return delegate.getSourcePath("tools", "javac_jar");
   }
+
+  public boolean getSkipCheckingMissingDeps() {
+    return delegate.getBooleanValue("java", "skip_checking_missing_deps", false);
+  }
 }
