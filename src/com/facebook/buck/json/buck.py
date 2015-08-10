@@ -197,11 +197,8 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
     return results
 
 
-@memoized
-def glob_watchman(includes, excludes, include_dotfiles, base_path, project_root,
-                  sync_cookie_state, watchman_client):
-    assert includes, "The includes argument must be a non-empty list of strings."
-    match_exprs = ["allof", "exists"]
+def format_watchman_query_params(includes, excludes, include_dotfiles, base_path):
+    match_exprs = ["allof", "exists", ["type", "f"]]
     match_flags = {}
     if include_dotfiles:
         match_flags["includedotfiles"] = True
@@ -213,7 +210,7 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, project_root,
             ["not",
                 ["anyof"] + [["match", x, "wholename", match_flags] for x in excludes]])
 
-    query_params = {
+    return {
         "relative_root": base_path,
         # Explicitly pass an empty path so Watchman queries only the tree of files
         # starting at base_path.
@@ -221,6 +218,15 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, project_root,
         "fields": ["name"],
         "expression": match_exprs,
     }
+
+
+@memoized
+def glob_watchman(includes, excludes, include_dotfiles, base_path, project_root,
+                  sync_cookie_state, watchman_client):
+    assert includes, "The includes argument must be a non-empty list of strings."
+
+    query_params = format_watchman_query_params(includes, excludes, include_dotfiles, base_path)
+
     # Sync cookies cause a massive overhead when issuing thousands of
     # glob queries.  Only enable them (by not setting sync_timeout to 0)
     # for the very first request issued by this process.
