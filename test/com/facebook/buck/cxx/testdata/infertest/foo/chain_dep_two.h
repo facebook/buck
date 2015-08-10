@@ -1,0 +1,1 @@
+int* func_ret_null();

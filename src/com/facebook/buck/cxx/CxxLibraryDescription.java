@@ -89,14 +89,17 @@ public class CxxLibraryDescription implements
               .build());
 
   private final CxxBuckConfig cxxBuckConfig;
+  private final InferBuckConfig inferBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPreprocessMode preprocessMode;
 
   public CxxLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
+      InferBuckConfig inferBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPreprocessMode preprocessMode) {
     this.cxxBuckConfig = cxxBuckConfig;
+    this.inferBuckConfig = inferBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
     this.preprocessMode = preprocessMode;
   }
@@ -104,10 +107,13 @@ public class CxxLibraryDescription implements
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return cxxPlatforms.containsAnyOf(flavors) ||
-        flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE);
+        flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE) ||
+        flavors.contains(CxxInferEnhancer.INFER) ||
+        flavors.contains(CxxInferEnhancer.INFER_ANALYZE);
+
   }
 
-  private static ImmutableCollection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+  public static ImmutableCollection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -750,6 +756,31 @@ public class CxxLibraryDescription implements
               preprocessMode);
     }
 
+    if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER)) {
+      return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
+          targetGraph,
+          params,
+          resolver,
+          new SourcePathResolver(resolver),
+          platform.isPresent()
+              ? platform.get().getValue()
+              : DefaultCxxPlatforms.build(cxxBuckConfig),
+          args,
+          new CxxInferTools(inferBuckConfig));
+    }
+
+    if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER_ANALYZE)) {
+      return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
+          targetGraph,
+          params,
+          resolver,
+          new SourcePathResolver(resolver),
+          platform.isPresent()
+              ? platform.get().getValue()
+              : DefaultCxxPlatforms.build(cxxBuckConfig),
+          args,
+          new CxxInferTools(inferBuckConfig));
+    }
 
     Optional<Map.Entry<Flavor, Type>> type = typeAndPlatform.getType();
 

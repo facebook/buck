@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
@@ -71,6 +72,7 @@ public class ThriftCxxEnhancerTest {
   private static final CxxLibraryDescription CXX_LIBRARY_DESCRIPTION =
       new CxxLibraryDescription(
           CXX_BUCK_CONFIG,
+          new InferBuckConfig(BUCK_CONFIG),
           CXX_PLATFORMS,
           CxxPreprocessMode.SEPARATE);
   private static final ThriftCxxEnhancer ENHANCER_CPP =
@@ -593,6 +595,7 @@ public class ThriftCxxEnhancerTest {
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(
             CXX_BUCK_CONFIG,
+            new InferBuckConfig(BUCK_CONFIG),
             CXX_PLATFORMS,
             CxxPreprocessMode.SEPARATE) {
           @Override

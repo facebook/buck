@@ -18,10 +18,15 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
+
+import java.util.Set;
 
 /**
  * Standard set of parameters that is passed to all build rules.
@@ -105,6 +110,36 @@ public class BuildRuleParams {
         extraDeps,
         projectFilesystem,
         ruleKeyBuilderFactory);
+  }
+
+  public BuildRuleParams withoutFlavor(Flavor flavor) {
+    Set<Flavor> flavors = Sets.newHashSet(getBuildTarget().getFlavors());
+    Preconditions.checkArgument(flavors.contains(flavor));
+    flavors.remove(flavor);
+    BuildTarget target = BuildTarget
+        .builder(getBuildTarget().getUnflavoredBuildTarget())
+        .addAllFlavors(flavors)
+        .build();
+
+    return copyWithChanges(
+        target,
+        Suppliers.ofInstance(getDeclaredDeps()),
+        Suppliers.ofInstance(getExtraDeps()));
+  }
+
+  public BuildRuleParams withFlavor(Flavor flavor) {
+    Set<Flavor> flavors = Sets.newHashSet(getBuildTarget().getFlavors());
+    Preconditions.checkArgument(!flavors.contains(flavor));
+    flavors.add(flavor);
+    BuildTarget target = BuildTarget
+        .builder(getBuildTarget().getUnflavoredBuildTarget())
+        .addAllFlavors(flavors)
+        .build();
+
+    return copyWithChanges(
+        target,
+        Suppliers.ofInstance(getDeclaredDeps()),
+        Suppliers.ofInstance(getExtraDeps()));
   }
 
   public BuildTarget getBuildTarget() {

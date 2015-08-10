@@ -1,0 +1,70 @@
+cxx_binary(
+    name='simple',
+    srcs=[
+        'simple.cpp',
+    ],
+)
+
+cxx_binary(
+    name='binary_with_deps',
+    srcs=[
+        'src_with_deps.c',
+    ],
+    deps=[
+        ':dep_one',
+        ':dep_two',
+    ],
+)
+
+cxx_library(
+    name='dep_one',
+    srcs=[
+        'dep_one.c',
+    ],
+    exported_headers=[
+        'dep_one.h'
+    ],
+)
+
+cxx_library(
+    name='dep_two',
+    srcs=[
+        'dep_two.c',
+    ],
+    exported_headers=[
+        'dep_two.h'
+    ],
+)
+
+cxx_binary(
+    name='binary_with_chain_deps',
+    srcs=[
+        'top_chain.c',
+    ],
+    deps=[
+        ':chain_dep_one',
+    ],
+)
+
+cxx_library(
+    name='chain_dep_one',
+    srcs=[
+        'chain_dep_one.c',
+    ],
+    exported_headers=[
+        'chain_dep_one.h'
+    ],
+    deps=[
+        ':chain_dep_two',
+    ],
+)
+
+cxx_library(
+    name='chain_dep_two',
+    srcs=[
+        'chain_dep_two.c',
+    ],
+    exported_headers=[
+        'chain_dep_two.h'
+    ],
+)

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
@@ -31,6 +32,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class CxxLibraryIntegrationTest {
 
@@ -106,6 +108,13 @@ public class CxxLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "force_static_pic", tmp);
     workspace.setUp();
     workspace.runBuckBuild("//:foo#shared,default").assertSuccess();
+  }
+
+  @Test
+  public void runInferOnSimpleLibraryWithoutDeps() throws IOException {
+    Path inferTopLevel = InferHelper.assumeInferIsInstalled();
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
+    workspace.runBuckBuild("//foo:dep_one").assertSuccess();
   }
 
 }

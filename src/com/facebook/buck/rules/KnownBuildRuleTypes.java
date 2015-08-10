@@ -65,6 +65,7 @@ import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPythonExtensionDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
@@ -391,15 +392,19 @@ public class KnownBuildRuleTypes {
     JavacOptions androidBinaryOptions = JavacOptions.builder(defaultJavacOptions)
         .build();
 
+    InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
+
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
             cxxBuckConfig,
+            inferBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms,
             cxxBuckConfig.getPreprocessMode());
 
     CxxLibraryDescription cxxLibraryDescription = new CxxLibraryDescription(
         cxxBuckConfig,
+        inferBuckConfig,
         cxxPlatforms,
         cxxBuckConfig.getPreprocessMode());
 

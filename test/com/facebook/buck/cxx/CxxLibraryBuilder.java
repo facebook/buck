@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.SourcePath;
@@ -35,6 +36,7 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     super(
         new CxxLibraryDescription(
             cxxBuckConfig,
+            new InferBuckConfig(new FakeBuckConfig()),
             cxxPlatforms,
             CxxPreprocessMode.SEPARATE),
         target);

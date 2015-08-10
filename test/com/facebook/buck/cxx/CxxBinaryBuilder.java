@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 
@@ -29,6 +30,7 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<CxxBinaryDescript
     super(
         new CxxBinaryDescription(
             cxxBuckConfig,
+            new InferBuckConfig(new FakeBuckConfig()),
             defaultCxxPlatform,
             cxxPlatforms,
             CxxPreprocessMode.SEPARATE),

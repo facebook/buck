@@ -18,6 +18,7 @@ java_library(
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/util:testutil',
     '//third-party/java/dd-plist:dd-plist',
+    '//third-party/java/gson:gson',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jetty:jetty',
