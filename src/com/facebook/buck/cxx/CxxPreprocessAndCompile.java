@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
@@ -487,6 +488,20 @@ public class CxxPreprocessAndCompile
   public ImmutableList<Path> getInputsAfterBuildingLocally() throws IOException {
     SourcePathResolver resolver = getResolver();
     ImmutableList.Builder<Path> inputs = ImmutableList.builder();
+
+    // If present, include all inputs coming from the preprocessor tool.
+    if (preprocessor.isPresent()) {
+      inputs.addAll(
+          Ordering.natural().immutableSortedCopy(
+              resolver.getAllPaths(preprocessor.get().getInputs())));
+    }
+
+    // If present, include all inputs coming from the compiler tool.
+    if (compiler.isPresent()) {
+      inputs.addAll(
+          Ordering.natural().immutableSortedCopy(
+              resolver.getAllPaths(compiler.get().getInputs())));
+    }
 
     // Add the input.
     inputs.add(resolver.getPath(input));
