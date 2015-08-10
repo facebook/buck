@@ -164,13 +164,13 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
               ignorePath.toString()));
     }
 
-    // Exclude all files matching globs in project.ignoreGlobs.
+    // Exclude all filenames matching globs. We explicitly don't match
+    // against the full path ("wholename"), just the filename.
     for (String ignoreGlob : ignoreGlobs) {
       excludeAnyOf.add(
           Lists.newArrayList(
               "match",
-              ignoreGlob,
-              "wholename"));
+              ignoreGlob));
     }
 
     sinceParams.put(

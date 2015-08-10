@@ -508,13 +508,12 @@ public class WatchmanWatcherTest {
         Optional.<String>absent(),
         "uuid",
         Lists.<Path>newArrayList(),
-        Lists.newArrayList("*/project.pbxproj", "buck-out/*"));
+        Lists.newArrayList("*.pbxproj"));
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
         "[\"type\",\"d\"]," +
-        "[\"match\",\"*/project.pbxproj\",\"wholename\"]," +
-        "[\"match\",\"buck-out/*\",\"wholename\"]]]," +
+        "[\"match\",\"*.pbxproj\"]]]," +
         "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
         query);
   }
