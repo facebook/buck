@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -226,6 +227,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  @Ignore("Disabled due to test timing out in CI t7969844")
   public void testInferCxxBinaryWithDeps() throws IOException {
     Path inferTopLevel = InferHelper.assumeInferIsInstalled();
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
