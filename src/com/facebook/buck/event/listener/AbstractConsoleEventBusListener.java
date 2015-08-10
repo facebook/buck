@@ -171,7 +171,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     } else if (logEvent.getLevel().equals(Level.WARNING)) {
       formattedLine = ansi.asWarningText(logEvent.getMessage());
     } else if (logEvent.getLevel().equals(Level.SEVERE)) {
-      formattedLine = ansi.asErrorText(logEvent.getMessage());
+      formattedLine = ansi.asHighlightedFailureText(logEvent.getMessage());
     }
     if (!formattedLine.isEmpty()) {
       // Split log messages at newlines and add each line individually to keep the line count

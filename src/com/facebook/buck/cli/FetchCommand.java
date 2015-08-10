@@ -119,10 +119,11 @@ public class FetchCommand extends BuildCommand {
              params.getClock(),
              Optional.<AdbOptions>absent(),
              Optional.<TargetDeviceOptions>absent())) {
-      exitCode = build.executeAndPrintFailuresToConsole(
+      exitCode = build.executeAndPrintFailuresToEventBus(
           buildTargets,
           isKeepGoing(),
-          params.getConsole(),
+          params.getBuckEventBus(),
+          params.getConsole().getAnsi(),
           getPathToBuildReport(params.getBuckConfig()));
     }
 

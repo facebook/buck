@@ -365,10 +365,11 @@ public class TestCommand extends BuildCommand {
           Optional.of(getTargetDeviceOptions()))) {
 
         // Build all of the test rules.
-        int exitCode = build.executeAndPrintFailuresToConsole(
+        int exitCode = build.executeAndPrintFailuresToEventBus(
             testRules,
             isKeepGoing(),
-            params.getConsole(),
+            params.getBuckEventBus(),
+            params.getConsole().getAnsi(),
             getPathToBuildReport(params.getBuckConfig()));
         params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
         if (exitCode != 0) {

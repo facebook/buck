@@ -19,6 +19,7 @@ package com.facebook.buck.command;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -38,6 +39,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
@@ -257,10 +259,15 @@ public class Build implements Closeable {
     return resultBuilder;
   }
 
-  public int executeAndPrintFailuresToConsole(
+  private String getFailureMessage(Throwable thrown) {
+    return "BUILD FAILED: " + thrown.getMessage();
+  }
+
+  public int executeAndPrintFailuresToEventBus(
       Iterable<? extends HasBuildTarget> targetsish,
       boolean isKeepGoing,
-      Console console,
+      BuckEventBus eventBus,
+      Ansi ansi,
       Optional<Path> pathToBuildReport) throws InterruptedException {
     int exitCode;
 
@@ -272,14 +279,13 @@ public class Build implements Closeable {
       BuildReport buildReport = new BuildReport(ruleToResult);
 
       if (isKeepGoing) {
-        String buildReportText = buildReport.generateForConsole(console.getAnsi());
+        String buildReportText = buildReport.generateForConsole(ansi);
         // Remove trailing newline from build report.
         buildReportText = buildReportText.substring(0, buildReportText.length() - 1);
-        executionContext.getBuckEventBus().post(ConsoleEvent.info(buildReportText));
+        eventBus.post(ConsoleEvent.info(buildReportText));
         exitCode = Iterables.any(ruleToResult.values(), RULES_FAILED_PREDICATE) ? 1 : 0;
         if (exitCode != 0) {
-          executionContext.getBuckEventBus().post(ConsoleEvent.severe(
-              "Not all rules succeeded."));
+          eventBus.post(ConsoleEvent.severe("Not all rules succeeded."));
         }
       } else {
         exitCode = 0;
@@ -292,15 +298,15 @@ public class Build implements Closeable {
         try {
           Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
         } catch (IOException e) {
-          e.printStackTrace(console.getStdErr());
+          eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
           exitCode = 1;
         }
       }
     } catch (IOException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
       exitCode = 1;
     } catch (StepFailedException e) {
-      console.printBuildFailureWithoutStacktrace(e);
+      eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
       exitCode = e.getExitCode();
     } catch (ExecutionException e) {
       // This is likely a checked exception that was caught while building a build rule.
@@ -311,9 +317,9 @@ public class Build implements Closeable {
         throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
       } else {
         if (cause instanceof RuntimeException) {
-          console.printBuildFailureWithStacktrace(e);
+          eventBus.post(ThrowableConsoleEvent.create(cause, getFailureMessage(cause)));
         } else {
-          console.printBuildFailureWithoutStacktrace(e);
+          eventBus.post(ConsoleEvent.severe(getFailureMessage(cause)));
         }
         exitCode = 1;
       }

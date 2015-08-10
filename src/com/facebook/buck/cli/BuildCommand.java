@@ -364,10 +364,11 @@ public class BuildCommand extends AbstractCommand {
              Optional.<AdbOptions>absent(),
              Optional.<TargetDeviceOptions>absent())) {
       lastBuild = build;
-      int exitCode = build.executeAndPrintFailuresToConsole(
+      int exitCode = build.executeAndPrintFailuresToEventBus(
           buildTargets,
           isKeepGoing(),
-          params.getConsole(),
+          params.getBuckEventBus(),
+          params.getConsole().getAnsi(),
           getPathToBuildReport(params.getBuckConfig()));
       params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
       return exitCode;
