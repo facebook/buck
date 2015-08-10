@@ -493,6 +493,15 @@ fallback, preventing the need to litter your project with boilerplate
   default_android_manifest = //shared/AndroidManifest.xml
 </pre>{/literal}
 
+You can define which glob handler Buck will use in this section by setting the
+{sp}<code>glob_handler</code> property, which is defined as the text value of the
+{sp}<code>ParserConfig.GlobHandler</code> enum.
+
+{literal}<pre class="prettyprint lang-ini">
+[project]
+  glob_handler = python
+</pre>{/literal}
+
 This section may also define an <code>initial_targets</code> property,
 which is a space-delimited list of build targets to run when
 {sp}<code>buck project</code> is executed. Frequently, this is a list of

@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfigTestUtils;
@@ -24,6 +25,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Joiner;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -50,4 +52,22 @@ public class ParserConfigTest {
     assertFalse(config.getAllowEmptyGlobs());
   }
 
+  @Test
+  public void testGetGlobHandler() throws IOException {
+    assertThat(
+        new ParserConfig(new FakeBuckConfig()).getGlobHandler(),
+        Matchers.equalTo(ParserConfig.GlobHandler.PYTHON));
+
+    for (ParserConfig.GlobHandler handler : ParserConfig.GlobHandler.values()) {
+      Reader reader = new StringReader(
+          Joiner.on('\n').join(
+              "[project]",
+              "glob_handler = " + handler.toString()));
+      ParserConfig config = new ParserConfig(
+          BuckConfigTestUtils.createWithDefaultFilesystem(
+              temporaryFolder,
+              reader));
+      assertThat(config.getGlobHandler(), Matchers.equalTo(handler));
+    }
+  }
 }

@@ -190,7 +190,7 @@ public final class Main {
         Clock clock,
         ObjectMapper objectMapper,
         ProcessExecutor processExecutor)
-        throws IOException, InterruptedException  {
+        throws IOException, InterruptedException {
       this.repository = repository;
       this.clock = clock;
       this.objectMapper = objectMapper;
@@ -202,18 +202,20 @@ public final class Main {
           new ExecutableFinder());
       this.fileEventBus = new EventBus("file-change-events");
       this.watchmanWatcher = createWatcher(repository.getFilesystem());
-      Optional<String> watchmanVersion = watchmanWatcher.getWatchmanVersion();
-      boolean useWatchmanGlob;
-      if (watchmanVersion.isPresent()) {
-        useWatchmanGlob = new VersionStringComparator()
-            .compare(watchmanVersion.get(), WATCHMAN_GLOB_MIN_VERSION) >= 0;
-      } else {
-        useWatchmanGlob = false;
+      boolean useWatchmanGlob = parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN;
+      if (useWatchmanGlob) {
+        Optional<String> watchmanVersion = watchmanWatcher.getWatchmanVersion();
+        if (watchmanVersion.isPresent()) {
+          useWatchmanGlob = new VersionStringComparator()
+              .compare(watchmanVersion.get(), WATCHMAN_GLOB_MIN_VERSION) >= 0;
+        } else {
+          useWatchmanGlob = false;
+        }
+        LOG.debug(
+            "Got watchman version: %s, using watchman glob %s",
+            watchmanVersion,
+            useWatchmanGlob);
       }
-      LOG.debug(
-          "Got watchman version: %s, using watchman glob %s",
-          watchmanVersion,
-          useWatchmanGlob);
       this.parser = Parser.createParser(
           repository,
           pythonBuckConfig.getPythonInterpreter(),

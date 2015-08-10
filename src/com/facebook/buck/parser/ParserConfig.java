@@ -34,6 +34,12 @@ public class ParserConfig {
   public static final String BUILDFILE_SECTION_NAME = "buildfile";
   public static final String INCLUDES_PROPERTY_NAME = "includes";
 
+  public enum GlobHandler {
+    PYTHON,
+    WATCHMAN,
+    ;
+  }
+
   private final BuckConfig delegate;
 
   public ParserConfig(BuckConfig delegate) {
@@ -83,6 +89,10 @@ public class ParserConfig {
               }
             })
         .toSet();
+  }
+
+  public GlobHandler getGlobHandler() {
+    return delegate.getEnum("project", "glob_handler", GlobHandler.class).or(GlobHandler.PYTHON);
   }
 
 }
