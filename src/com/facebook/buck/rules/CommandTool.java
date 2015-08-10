@@ -47,13 +47,18 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
-    ImmutableSortedSet.Builder<BuildRule> inputs = ImmutableSortedSet.naturalOrder();
+  public ImmutableCollection<SourcePath> getInputs() {
+    ImmutableSortedSet.Builder<SourcePath> inputs = ImmutableSortedSet.naturalOrder();
     for (Arg arg : args) {
-      inputs.addAll(resolver.filterBuildRuleInputs(arg.getInputs()));
+      inputs.addAll(arg.getInputs());
     }
-    inputs.addAll(resolver.filterBuildRuleInputs(extraInputs));
+    inputs.addAll(extraInputs);
     return inputs.build();
+  }
+
+  @Override
+  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+    return resolver.filterBuildRuleInputs(getInputs());
   }
 
   @Override

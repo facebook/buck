@@ -411,7 +411,7 @@ public class CxxSourceRuleFactory {
     ImmutableSortedSet<BuildRule> dependencies =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             // Add dependencies on any build rules used to create the compiler.
-            .addAll(compiler.getInputs(pathResolver))
+            .addAll(compiler.getDeps(pathResolver))
             // If a build rule generates our input source, add that as a dependency.
             .addAll(pathResolver.filterBuildRuleInputs(source.getPath()))
             .build();
@@ -474,7 +474,7 @@ public class CxxSourceRuleFactory {
 
     ImmutableCollection<BuildRule> toolInputs =
         toolOptional.isPresent()
-            ? toolOptional.get().getInputs(pathResolver)
+            ? toolOptional.get().getDeps(pathResolver)
             : ImmutableSet.<BuildRule>of();
 
     return ImmutableSortedSet.<BuildRule>naturalOrder()

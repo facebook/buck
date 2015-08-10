@@ -28,7 +28,12 @@ public interface Tool extends RuleKeyAppendable {
    * @return all {@link BuildRule}s this tool requires to run.
    * @param resolver Used to resolve any build rules from {@link SourcePath}s.
    */
-  ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver);
+  ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver);
+
+  /**
+   * @return all {@link SourcePath}s this tool requires to run.
+   */
+  ImmutableCollection<SourcePath> getInputs();
 
   /**
    * @return the prefix command use to run this tool.

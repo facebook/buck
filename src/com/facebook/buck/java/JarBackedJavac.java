@@ -61,8 +61,13 @@ public class JarBackedJavac extends Jsr199Javac {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(classpath);
+  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+    return resolver.filterBuildRuleInputs(getInputs());
+  }
+
+  @Override
+  public ImmutableCollection<SourcePath> getInputs() {
+    return classpath;
   }
 
   @Override

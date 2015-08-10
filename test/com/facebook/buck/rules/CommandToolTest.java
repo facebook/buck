@@ -60,8 +60,11 @@ public class CommandToolTest {
         Matchers.contains(
             Preconditions.checkNotNull(rule.getPathToOutput()).toAbsolutePath().toString()));
     assertThat(
-        tool.getInputs(pathResolver),
+        tool.getDeps(pathResolver),
         Matchers.contains(rule));
+    assertThat(
+        tool.getInputs(),
+        Matchers.contains(path));
 
     // Test command and inputs when using the path in a format.
     tool =
@@ -74,8 +77,11 @@ public class CommandToolTest {
             "prefix:" +
             Preconditions.checkNotNull(rule.getPathToOutput()).toAbsolutePath().toString()));
     assertThat(
-        tool.getInputs(pathResolver),
+        tool.getDeps(pathResolver),
         Matchers.contains(rule));
+    assertThat(
+        tool.getInputs(),
+        Matchers.contains(path));
   }
 
   @Test
@@ -120,8 +126,11 @@ public class CommandToolTest {
             .build();
 
     assertThat(
-        tool.getInputs(pathResolver),
+        tool.getDeps(pathResolver),
         Matchers.contains(rule));
+    assertThat(
+        tool.getInputs(),
+        Matchers.contains(path));
   }
 
   @Test

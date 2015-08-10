@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.base.Function;
@@ -81,8 +82,13 @@ public class ClangPreprocessor implements Preprocessor {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
-    return tool.getInputs(resolver);
+  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+    return tool.getDeps(resolver);
+  }
+
+  @Override
+  public ImmutableCollection<SourcePath> getInputs() {
+    return tool.getInputs();
   }
 
   @Override

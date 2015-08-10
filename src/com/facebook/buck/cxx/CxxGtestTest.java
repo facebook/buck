@@ -164,7 +164,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(executable.getInputs(getResolver()))
+        .addAll(executable.getDeps(getResolver()))
         .addAll(additionalDeps)
         .build();
   }

@@ -85,7 +85,12 @@ public class RustLinkableTest {
           Paths.get("somewhere"),
           new Tool() {
             @Override
-            public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
+            public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+              return ImmutableSortedSet.of();
+            }
+
+            @Override
+            public ImmutableCollection<SourcePath> getInputs() {
               return ImmutableSortedSet.of();
             }
 

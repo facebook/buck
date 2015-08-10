@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -40,7 +41,12 @@ public class JdkProvidedInMemoryJavac extends Jsr199Javac {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
+  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public ImmutableCollection<SourcePath> getInputs() {
     return ImmutableSortedSet.of();
   }
 

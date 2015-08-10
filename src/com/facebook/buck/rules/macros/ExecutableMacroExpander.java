@@ -49,7 +49,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
     return ImmutableList.copyOf(
         getBinaryRule(rule)
             .getExecutableCommand()
-            .getInputs(new SourcePathResolver(resolver)));
+            .getDeps(new SourcePathResolver(resolver)));
   }
 
   @Override

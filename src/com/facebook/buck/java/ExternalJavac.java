@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
@@ -87,7 +88,12 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getInputs(SourcePathResolver resolver) {
+  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public ImmutableCollection<SourcePath> getInputs() {
     return ImmutableSortedSet.of();
   }
 
