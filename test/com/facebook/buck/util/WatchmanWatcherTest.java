@@ -475,8 +475,27 @@ public class WatchmanWatcherTest {
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
         "[\"type\",\"d\"]," +
-        "[\"match\",\"foo/*\",\"wholename\"]," +
-        "[\"match\",\"bar/baz/*\",\"wholename\"]]]," +
+        "[\"dirname\",\"foo\"]," +
+        "[\"dirname\",\"bar/baz\"]]]," +
+        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        query);
+  }
+
+  @Test
+  public void watchmanQueryRelativizesExcludePaths() {
+    String query = WatchmanWatcher.createQuery(
+        new ObjectMapper(),
+        "/path/to/repo",
+        Optional.<String>absent(),
+        "uuid",
+        Lists.newArrayList(Paths.get("/path/to/repo/foo"), Paths.get("/path/to/repo/bar/baz")),
+        Lists.<String>newArrayList());
+    assertEquals(
+        "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
+        "\"expression\":[\"not\",[\"anyof\"," +
+        "[\"type\",\"d\"]," +
+        "[\"dirname\",\"foo\"]," +
+        "[\"dirname\",\"bar/baz\"]]]," +
         "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
         query);
   }

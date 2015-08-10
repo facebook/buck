@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.fasterxml.jackson.core.JsonParser;
@@ -142,6 +143,11 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
     // Exclude all directories.
     excludeAnyOf.add(Lists.newArrayList("type", "d"));
 
+    Path projectRoot = Paths.get(watchRoot);
+    if (watchPrefix.isPresent()) {
+      projectRoot = projectRoot.resolve(watchPrefix.get());
+    }
+
     // Exclude all files under directories in project.ignorePaths.
     //
     // Note that it's OK to exclude .git in a query (event though it's
@@ -149,11 +155,13 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
     // because watchman's .git cookie magic is done before the query
     // is applied.
     for (Path ignorePath : ignorePaths) {
+      if (ignorePath.isAbsolute()) {
+        ignorePath = MorePaths.relativize(projectRoot, ignorePath);
+      }
       excludeAnyOf.add(
           Lists.newArrayList(
-              "match",
-              ignorePath.toString() + "/*",
-              "wholename"));
+              "dirname",
+              ignorePath.toString()));
     }
 
     // Exclude all files matching globs in project.ignoreGlobs.
