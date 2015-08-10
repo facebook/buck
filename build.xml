@@ -177,7 +177,7 @@
   <target name="python-get-prefix">
     <exec executable="python" failonerror="true" outputproperty="python.prefix" logError="true">
       <arg value="-c" />
-      <arg value="import distutils.sysconfig; print distutils.sysconfig.PREFIX" />
+      <arg value="import distutils.sysconfig; print(distutils.sysconfig.PREFIX)" />
     </exec>
   </target>
 
