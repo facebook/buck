@@ -198,7 +198,9 @@ public class Parser {
       ImmutableSet<Pattern> tempFilePatterns,
       final String buildFileName,
       Iterable<String> defaultIncludes,
-      boolean useWatchmanGlob)
+      boolean useWatchmanGlob,
+      Optional<String> watchmanWatchRoot,
+      Optional<String> watchmanProjectPrefix)
       throws IOException, InterruptedException {
     return new Parser(
         repository,
@@ -225,6 +227,8 @@ public class Parser {
                 .setDefaultIncludes(defaultIncludes)
                 .setDescriptions(repository.getAllDescriptions())
                 .setUseWatchmanGlob(useWatchmanGlob)
+                .setWatchmanWatchRoot(watchmanWatchRoot)
+                .setWatchmanProjectPrefix(watchmanProjectPrefix)
                 .build()));
   }
 

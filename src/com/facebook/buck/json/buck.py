@@ -61,14 +61,15 @@ class BuildFileContext(object):
     type = BuildContextType.BUILD_FILE
 
     def __init__(self, base_path, dirname, allow_empty_globs, watchman_client,
-                 project_root, sync_cookie_state):
+                 watchman_watch_root, watchman_project_prefix, sync_cookie_state):
         self.globals = {}
         self.includes = set()
         self.base_path = base_path
         self.dirname = dirname
         self.allow_empty_globs = allow_empty_globs
         self.watchman_client = watchman_client
-        self.project_root = project_root
+        self.watchman_watch_root = watchman_watch_root
+        self.watchman_project_prefix = watchman_project_prefix
         self.sync_cookie_state = sync_cookie_state
         self.rules = {}
 
@@ -176,7 +177,8 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
             excludes,
             include_dotfiles,
             build_env.base_path,
-            build_env.project_root,
+            build_env.watchman_watch_root,
+            build_env.watchman_project_prefix,
             build_env.sync_cookie_state,
             build_env.watchman_client)
     else:
@@ -197,7 +199,7 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
     return results
 
 
-def format_watchman_query_params(includes, excludes, include_dotfiles, base_path):
+def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root):
     match_exprs = ["allof", "exists", ["type", "f"]]
     match_flags = {}
     if include_dotfiles:
@@ -211,7 +213,7 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, base_path
                 ["anyof"] + [["match", x, "wholename", match_flags] for x in excludes]])
 
     return {
-        "relative_root": base_path,
+        "relative_root": relative_root,
         # Explicitly pass an empty path so Watchman queries only the tree of files
         # starting at base_path.
         "path": [''],
@@ -221,11 +223,16 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, base_path
 
 
 @memoized
-def glob_watchman(includes, excludes, include_dotfiles, base_path, project_root,
-                  sync_cookie_state, watchman_client):
+def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
+                  watchman_project_prefix, sync_cookie_state, watchman_client):
     assert includes, "The includes argument must be a non-empty list of strings."
 
-    query_params = format_watchman_query_params(includes, excludes, include_dotfiles, base_path)
+    if watchman_project_prefix:
+        relative_root = os.path.join(watchman_project_prefix, base_path)
+    else:
+        relative_root = base_path
+    query_params = format_watchman_query_params(
+        includes, excludes, include_dotfiles, relative_root)
 
     # Sync cookies cause a massive overhead when issuing thousands of
     # glob queries.  Only enable them (by not setting sync_timeout to 0)
@@ -235,7 +242,7 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, project_root,
     else:
         query_params["sync_timeout"] = 0
 
-    query = ["query", project_root, query_params]
+    query = ["query", watchman_watch_root, query_params]
     res = watchman_client.query(*query)
     if res.get('error'):
         raise RuntimeError('Error from Watchman query {}: {}'.format(
@@ -318,13 +325,15 @@ def add_deps(name, deps=[], build_env=None):
 
 class BuildFileProcessor(object):
 
-    def __init__(self, project_root, build_file_name, allow_empty_globs, watchman_client,
-                 implicit_includes=[]):
+    def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
+                 allow_empty_globs, watchman_client, implicit_includes=[]):
         self._cache = {}
         self._build_env_stack = []
         self._sync_cookie_state = SyncCookieState()
 
         self._project_root = project_root
+        self._watchman_watch_root = watchman_watch_root
+        self._watchman_project_prefix = watchman_project_prefix
         self._build_file_name = build_file_name
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
@@ -508,7 +517,8 @@ class BuildFileProcessor(object):
             dirname,
             self._allow_empty_globs,
             self._watchman_client,
-            self._project_root,
+            self._watchman_watch_root,
+            self._watchman_project_prefix,
             self._sync_cookie_state)
 
         return self._process(
@@ -583,6 +593,18 @@ def main():
         dest='use_watchman_glob',
         help='Invokes `watchman query` to get lists of files instead of globbing in-process.')
     parser.add_option(
+        '--watchman_watch_root',
+        action='store',
+        type='string',
+        dest='watchman_watch_root',
+        help='Path to root of watchman watch as returned by `watchman watch-project`.')
+    parser.add_option(
+        '--watchman_project_prefix',
+        action='store',
+        type='string',
+        dest='watchman_project_prefix',
+        help='Relative project prefix as returned by `watchman watch-project`.')
+    parser.add_option(
         '--include',
         action='append',
         dest='include')
@@ -619,6 +641,8 @@ def main():
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
+        options.watchman_watch_root,
+        options.watchman_project_prefix,
         options.build_file_name,
         options.allow_empty_globs,
         watchman_client,

@@ -38,6 +38,8 @@ class BuckTest(unittest.TestCase):
     def create_build_file_processor(self, *includes):
         return BuildFileProcessor(
             self.project_root,
+            None,
+            None,
             self.build_file_name,
             self.allow_empty_globs,
             None,

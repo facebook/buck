@@ -201,21 +201,30 @@ public final class Main {
           repository.getBuckConfig(),
           new ExecutableFinder());
       this.fileEventBus = new EventBus("file-change-events");
-      this.watchmanWatcher = createWatcher(repository.getFilesystem());
+      String projectRoot =
+          MorePaths.absolutify(repository.getFilesystem().getRootPath()).toString();
+      String watchRoot = System.getProperty("buck.watchman_root", projectRoot);
+      Optional<String> projectPrefix = Optional.fromNullable(
+          System.getProperty("buck.watchman_project_prefix"));
+      this.watchmanWatcher = createWatcher(watchRoot, projectPrefix);
       boolean useWatchmanGlob = parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN;
+      Optional<String> watchmanVersion = watchmanWatcher.getWatchmanVersion();
       if (useWatchmanGlob) {
-        Optional<String> watchmanVersion = watchmanWatcher.getWatchmanVersion();
         if (watchmanVersion.isPresent()) {
           useWatchmanGlob = new VersionStringComparator()
               .compare(watchmanVersion.get(), WATCHMAN_GLOB_MIN_VERSION) >= 0;
         } else {
           useWatchmanGlob = false;
         }
-        LOG.debug(
-            "Got watchman version: %s, using watchman glob %s",
-            watchmanVersion,
-            useWatchmanGlob);
       }
+      LOG.debug(
+          "Watchman version: %s Watch root: %s Project prefix: %s Glob handler config: %s " +
+          "Watchman glob enabled: %s",
+          watchmanVersion,
+          watchRoot,
+          projectPrefix,
+          parserConfig.getGlobHandler(),
+          useWatchmanGlob);
       this.parser = Parser.createParser(
           repository,
           pythonBuckConfig.getPythonInterpreter(),
@@ -224,7 +233,9 @@ public final class Main {
           parserConfig.getTempFilePatterns(),
           parserConfig.getBuildFileName(),
           parserConfig.getDefaultIncludes(),
-          useWatchmanGlob);
+          useWatchmanGlob,
+          Optional.of(watchRoot),
+          projectPrefix);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
 
@@ -232,18 +243,10 @@ public final class Main {
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(repository.getFilesystem());
     }
 
-    private WatchmanWatcher createWatcher(ProjectFilesystem projectFilesystem)
-        throws IOException {
-      LOG.debug("Using watchman to watch for file changes.");
-
-      String projectRoot = MorePaths.absolutify(projectFilesystem.getRootPath()).toString();
-      String watchRoot = System.getProperty("buck.watchman_root", projectRoot);
-      Optional<String> watchPrefix = Optional.fromNullable(
-          System.getProperty("buck.watchman_project_prefix"));
-
+    private WatchmanWatcher createWatcher(String watchRoot, Optional<String> projectPrefix) {
       return new WatchmanWatcher(
           watchRoot,
-          watchPrefix,
+          projectPrefix,
           fileEventBus,
           clock,
           objectMapper,
@@ -701,7 +704,9 @@ public final class Main {
             parserConfig.getTempFilePatterns(),
             parserConfig.getBuildFileName(),
             parserConfig.getDefaultIncludes(),
-            /* useWatchmanGlob */ false);
+            /* useWatchmanGlob */ false,
+            /* watchmanWatchRoot */ Optional.<String>absent(),
+            /* watchmanProjectPrefix */ Optional.<String>absent());
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());
 

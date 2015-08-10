@@ -82,7 +82,9 @@ public class CommandRunnerParamsForTesting {
             parserConfig.getTempFilePatterns(),
             parserConfig.getBuildFileName(),
             parserConfig.getDefaultIncludes(),
-            false), // useWatchmanGlob
+            /* useWatchmanGlob */ false,
+            /* watchamWatchRoot */ Optional.<String>absent(),
+            /* watchmanProjectPrefix */ Optional.<String>absent()),
         platform,
         environment,
         javaPackageFinder,
