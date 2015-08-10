@@ -79,7 +79,7 @@ public class NdkCxxPlatforms {
   public static final NdkCxxPlatforms.Compiler.Type DEFAULT_COMPILER_TYPE =
       NdkCxxPlatforms.Compiler.Type.GCC;
   public static final String DEFAULT_GCC_VERSION = "4.8";
-  public static final String DEFAULT_CLANG_VERSION = "3.4";
+  public static final String DEFAULT_CLANG_VERSION = "3.5";
   public static final String DEFAULT_TARGET_APP_PLATFORM = "android-9";
   public static final NdkCxxPlatforms.CxxRuntime DEFAULT_CXX_RUNTIME =
       NdkCxxPlatforms.CxxRuntime.GNUSTL;
@@ -191,7 +191,6 @@ public class NdkCxxPlatforms {
                     Compiler.Type.CLANG,
                     ImmutableList.of(
                         "-target", "armv7-none-linux-androideabi",
-                        "-finline-limit=64",
                         "-march=armv7-a",
                         "-mfpu=vfpv3-d16",
                         "-mfloat-abi=softfp",
@@ -230,8 +229,6 @@ public class NdkCxxPlatforms {
                     Compiler.Type.CLANG,
                     ImmutableList.of(
                         "-target", "i686-none-linux-android",
-                        "-funswitch-loops",
-                        "-finline-limit=300",
                         "-O2"))
                 .putLinkerFlags(
                     Compiler.Type.GCC,
