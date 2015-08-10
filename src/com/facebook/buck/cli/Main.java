@@ -453,6 +453,22 @@ public final class Main {
     this.externalEventsListeners = ImmutableList.copyOf(externalEventsListeners);
   }
 
+  private void flushEventListeners(
+      Console console,
+      BuildId buildId,
+      ImmutableList<BuckEventListener> eventListeners)
+      throws InterruptedException {
+    for (BuckEventListener eventListener : eventListeners) {
+      try {
+        eventListener.outputTrace(buildId);
+      } catch (RuntimeException e) {
+        PrintStream stdErr = console.getStdErr();
+        stdErr.println("Skipping over non-fatal error");
+        e.printStackTrace(stdErr);
+      }
+    }
+  }
+
   /**
    *
    * @param buildId an identifier for this command execution.
@@ -735,19 +751,11 @@ public final class Main {
     } catch (Throwable t) {
       LOG.debug(t, "Failing build on exception.");
       closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
+      flushEventListeners(console, buildId, eventListeners);
       throw t;
     } finally {
       if (commandSemaphoreAcquired) {
         commandSemaphore.release(); // Allow another command to execute while outputting traces.
-      }
-      for (BuckEventListener eventListener : eventListeners) {
-        try {
-          eventListener.outputTrace(buildId);
-        } catch (RuntimeException e) {
-          PrintStream stdErr = console.getStdErr();
-          stdErr.println("Skipping over non-fatal error");
-          e.printStackTrace(stdErr);
-        }
       }
     }
     if (isDaemon && !rootRepository.getBuckConfig().getFlushEventsBeforeExit()) {
@@ -755,6 +763,7 @@ public final class Main {
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
     closeCreatedArtifactCaches(artifactCacheFactory); // Wait for cache close after client exit.
+    flushEventListeners(console, buildId, eventListeners);
     return exitCode;
   }
 
