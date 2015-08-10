@@ -231,13 +231,14 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private ImmutableList<String> makeCompileCommand(
       String inputFileName,
-      String inputLanguage) {
+      String inputLanguage,
+      boolean preprocessable) {
     return ImmutableList.<String>builder()
         .addAll(compilerCommand.get())
         .add("-x", inputLanguage)
         .add("-c")
         .addAll(
-            inputType.isPreprocessable() ?
+            preprocessable ?
                 getDepFileArgs(getDepTemp()) :
                 ImmutableList.<String>of())
         .add(inputFileName)
@@ -269,7 +270,8 @@ public class CxxPreprocessAndCompileStep implements Step {
     compileBuilder.command(
         makeCompileCommand(
             "-",
-            inputType.getPreprocessedLanguage()));
+            inputType.getPreprocessedLanguage(),
+            /* preprocessable */ false));
     compileBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
 
     Process preprocess = null;
@@ -377,7 +379,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       builder.command(
           makeCompileCommand(
               input.toString(),
-              inputType.getLanguage()));
+              inputType.getLanguage(),
+              inputType.isPreprocessable()));
     }
 
     LOG.debug(
@@ -456,7 +459,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       }
 
       // Process the dependency file, fixing up the paths, and write it out to it's final location.
-      if (operation.isPreprocess()) {
+      if (operation.isPreprocess() && exitCode == 0) {
         try (InputStream input = context.getProjectFilesystem().newFileInputStream(getDepTemp());
              BufferedReader reader = new BufferedReader(new InputStreamReader(input));
              OutputStream output = context.getProjectFilesystem().newFileOutputStream(depFile);
@@ -505,7 +508,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       case COMPILE_MUNGE_DEBUGINFO:
         return makeCompileCommand(
             input.toString(),
-            inputType.getLanguage());
+            inputType.getLanguage(),
+            inputType.isPreprocessable());
       case PREPROCESS:
         return makePreprocessCommand();
       // $CASES-OMITTED$
@@ -525,7 +529,8 @@ public class CxxPreprocessAndCompileStep implements Step {
                 FluentIterable.from(
                     makeCompileCommand(
                         "-",
-                        inputType.getPreprocessedLanguage()))
+                        inputType.getPreprocessedLanguage(),
+                        /* preprocessable */ false))
                 .transform(Escaper.SHELL_ESCAPER));
 
       }

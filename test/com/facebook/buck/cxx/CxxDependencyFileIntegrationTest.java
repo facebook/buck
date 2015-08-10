@@ -65,7 +65,12 @@ public class CxxDependencyFileIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "depfiles", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
-        "[cxx]\n  preprocess_mode = " + mode.toString().toLowerCase() + "\n",
+        "[cxx]\n" +
+        "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
+        "  cppflags = -Wall -Werror\n" +
+        "  cxxppflags = -Wall -Werror\n" +
+        "  cflags = -Wall -Werror\n" +
+        "  cxxflags = -Wall -Werror\n",
         ".buckconfig");
 
     // Run a build and make sure it's successful.
