@@ -263,6 +263,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     langArgs.headerNamespace = args.cppHeaderNamespace;
     langArgs.srcs = Optional.of(SourceWithFlagsList.ofNamedSources(srcs));
     langArgs.exportedHeaders = Optional.of(SourceList.ofNamedSources(headers));
+    langArgs.canBeAsset = Optional.absent();
 
     return cxxLibraryDescription.createBuildRule(targetGraph, langParams, resolver, langArgs);
   }

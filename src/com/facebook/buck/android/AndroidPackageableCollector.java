@@ -153,6 +153,11 @@ public class AndroidPackageableCollector {
     return this;
   }
 
+  public AndroidPackageableCollector addNativeLinkableAsset(JavaNativeLinkable nativeLinkable) {
+    collectionBuilder.addNativeLinkablesAssets(nativeLinkable);
+    return this;
+  }
+
   public AndroidPackageableCollector addNativeLibAssetsDirectory(
       BuildTarget owner,
       SourcePath assetsDir) {

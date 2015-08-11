@@ -258,7 +258,8 @@ public class AndroidBinaryDescription
         args.dexReorderToolFile,
         args.dexReorderDataDumpFile,
         args.xzCompressionLevel,
-        dxExecutorService);
+        dxExecutorService,
+        args.packageAssetLibraries);
   }
 
   private DexSplitMode createDexSplitMode(Arg args, EnumSet<ExopackageMode> exopackageModes) {
@@ -356,6 +357,7 @@ public class AndroidBinaryDescription
     public Optional<SourcePath> dexReorderToolFile;
     public Optional<SourcePath> dexReorderDataDumpFile;
     public Optional<Integer> xzCompressionLevel;
+    public Optional<Boolean> packageAssetLibraries;
 
     /** This will never be absent after this Arg is populated. */
     public Optional<BuildConfigFields> buildConfigValues;

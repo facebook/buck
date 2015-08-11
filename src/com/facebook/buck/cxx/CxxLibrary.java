@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -50,6 +51,9 @@ import java.util.regex.Pattern;
  * various interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
 public class CxxLibrary extends AbstractCxxLibrary {
+
+  @AddToRuleKey
+  private final boolean canBeAsset;
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
@@ -80,7 +84,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
       Linkage linkage,
       boolean linkWhole,
       Optional<String> soname,
-      ImmutableSortedSet<BuildTarget> tests) {
+      ImmutableSortedSet<BuildTarget> tests,
+      boolean canBeAsset) {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
@@ -93,6 +98,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.linkWhole = linkWhole;
     this.soname = soname;
     this.tests = tests;
+    this.canBeAsset = canBeAsset;
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -263,7 +269,11 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addNativeLinkable(this);
+    if (canBeAsset) {
+      collector.addNativeLinkableAsset(this);
+    } else {
+      collector.addNativeLinkable(this);
+    }
   }
 
   @Override

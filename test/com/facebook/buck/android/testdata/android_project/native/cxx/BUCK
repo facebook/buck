@@ -12,6 +12,34 @@ cxx_library(
 )
 
 cxx_library(
+  name = 'libasset',
+  headers = [
+    'lib.h',
+  ],
+  srcs = [
+    'lib.cpp',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+  can_be_asset = True
+)
+
+cxx_library(
+  name = 'libasset2',
+  headers = [
+    'lib.h',
+  ],
+  srcs = [
+    'lib.cpp',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+  can_be_asset = True
+)
+
+cxx_library(
   name = 'foo1',
   srcs = [
     'foo.cpp',

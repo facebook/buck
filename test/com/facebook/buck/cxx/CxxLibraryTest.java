@@ -200,7 +200,8 @@ public class CxxLibraryTest {
         NativeLinkable.Linkage.STATIC,
         /* linkWhole */ false,
         Optional.<String>absent(),
-        ImmutableSortedSet.<BuildTarget>of());
+        ImmutableSortedSet.<BuildTarget>of(),
+        /* isAsset */ false);
 
     assertThat(
         cxxLibrary.getSharedLibraries(TargetGraph.EMPTY, cxxPlatform).entrySet(),

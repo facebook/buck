@@ -87,6 +87,11 @@ interface AbstractAndroidPackageableCollection {
   List<JavaNativeLinkable> getNativeLinkables();
 
   /**
+   * Native libraries to be packaged as assets.
+   */
+  List<JavaNativeLinkable> getNativeLinkablesAssets();
+
+  /**
    * Directories containing native libraries.
    */
   Set<SourcePath> getNativeLibsDirectories();

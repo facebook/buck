@@ -35,6 +35,7 @@ interface AbstractAndroidGraphEnhancementResult {
   Optional<PackageStringAssets> getPackageStringAssets();
   Optional<PreDexMerge> getPreDexMerge();
   Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi();
+  Optional<Boolean> getPackageAssetLibraries();
 
   /**
    * This includes everything from the corresponding

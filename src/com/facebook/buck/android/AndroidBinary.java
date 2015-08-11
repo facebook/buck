@@ -193,6 +193,8 @@ public class AndroidBinary
   private final ListeningExecutorService dxExecutorService;
   @AddToRuleKey
   private final Optional<Integer> xzCompressionLevel;
+  @AddToRuleKey
+  private final Optional<Boolean> packageAssetLibraries;
 
   AndroidBinary(
       BuildRuleParams params,
@@ -218,7 +220,8 @@ public class AndroidBinary
       Optional<SourcePath> dexReorderToolFile,
       Optional<SourcePath> dexReorderDataDumpFile,
       Optional<Integer> xzCompressionLevel,
-      ListeningExecutorService dxExecutorService) {
+      ListeningExecutorService dxExecutorService,
+      Optional<Boolean> packageAssetLibraries) {
     super(params, resolver);
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -243,6 +246,7 @@ public class AndroidBinary
     this.dexReorderDataDumpFile = dexReorderDataDumpFile;
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
+    this.packageAssetLibraries = packageAssetLibraries;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(enhancementResult.getPreDexMerge().isPresent(),
@@ -306,6 +310,8 @@ public class AndroidBinary
     return optimizationPasses;
   }
 
+  public Optional<Boolean> getPackageAssetLibraries() { return packageAssetLibraries; }
+
   @VisibleForTesting
   AndroidGraphEnhancementResult getEnhancementResult() {
     return enhancementResult;
@@ -359,10 +365,14 @@ public class AndroidBinary
 
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
     ImmutableSet<Path> nativeLibraryAsAssetDirectories;
-    if (!packageableCollection.getNativeLibAssetsDirectories().isEmpty()) {
+    if ((!packageableCollection.getNativeLibAssetsDirectories().isEmpty()) ||
+        (!packageableCollection.getNativeLinkablesAssets().isEmpty() &&
+            packageAssetLibraries.or(Boolean.FALSE))) {
       Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
-      Path libSubdirectory = pathForNativeLibsAsAssets.resolve("assets").resolve("lib");
+      final Path libSubdirectory = pathForNativeLibsAsAssets.resolve("assets").resolve("lib");
       steps.add(new MakeCleanDirectoryStep(libSubdirectory));
+
+      // Filter, rename and copy the ndk libraries marked as assets.
       for (SourcePath nativeLibDir : packageableCollection.getNativeLibAssetsDirectories()) {
         CopyNativeLibraries.copyNativeLibrary(
             getResolver().getPath(nativeLibDir),
@@ -370,10 +380,26 @@ public class AndroidBinary
             cpuFilters,
             steps);
       }
+
+      if (packageAssetLibraries.or(Boolean.FALSE)) {
+        // Copy in cxx libraries marked as assets. Filtering and renaming was already done
+        // in CopyNativeLibraries.getBuildSteps().
+        Path cxxNativeLibsSrc = enhancementResult
+            .getCopyNativeLibraries()
+            .get()
+            .getPathToNativeLibsAssetsDir();
+
+        steps.add(CopyStep.forDirectory(cxxNativeLibsSrc,
+                libSubdirectory,
+                CopyStep.DirectoryMode.CONTENTS_ONLY));
+      }
+
       nativeLibraryAsAssetDirectories = ImmutableSet.of(pathForNativeLibsAsAssets);
     } else {
       nativeLibraryAsAssetDirectories = ImmutableSet.of();
     }
+
+
 
     // If non-english strings are to be stored as assets, pass them to ApkBuilder.
     ImmutableSet.Builder<Path> zipFiles = ImmutableSet.builder();

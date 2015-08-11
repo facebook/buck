@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.List;
 import java.util.Map;
 
 public class AndroidNativeLibsPackageableGraphEnhancer {
@@ -68,6 +69,31 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.cpuFilters = cpuFilters;
   }
 
+  // Populates an immutable map builder with all given linkables set to the given cpu type.
+  // Returns true iff linkables is not empty.
+  private boolean populateMapWithLinkables(
+      List<JavaNativeLinkable> linkables,
+      ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> builder,
+      NdkCxxPlatforms.TargetCpuType targetCpuType,
+      TargetGraph targetGraph,
+      NdkCxxPlatform platform) {
+
+    boolean hasNativeLibs = false;
+
+    for (JavaNativeLinkable nativeLinkable : linkables) {
+      ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
+          targetGraph,
+          platform.getCxxPlatform());
+      for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
+        builder.put(
+            new Pair<>(targetCpuType, entry.getKey()),
+            entry.getValue());
+        hasNativeLibs = true;
+      }
+    }
+    return hasNativeLibs;
+  }
+
   public Optional<CopyNativeLibraries> getCopyNativeLibraries(
       TargetGraph targetGraph,
       AndroidPackageableCollection packageableCollection) {
@@ -78,6 +104,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath>
         nativeLinkableLibsBuilder = ImmutableMap.builder();
 
+    ImmutableMap.Builder<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath>
+        nativeLinkableLibsAssetsBuilder = ImmutableMap.builder();
+
     // TODO(agallagher): We currently treat an empty set of filters to mean to allow everything.
     // We should fix this by assigning a default list of CPU filters in the descriptions, but
     // until we do, if the set of filters is empty, just build for all available platforms.
@@ -85,23 +114,25 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         cpuFilters.isEmpty() ? nativePlatforms.keySet() : cpuFilters;
     for (NdkCxxPlatforms.TargetCpuType targetCpuType : filters) {
       NdkCxxPlatform platform = Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
-      boolean hasNativeLibs = false;
 
-      for (JavaNativeLinkable nativeLinkable : packageableCollection.getNativeLinkables()) {
-        ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(
-            targetGraph,
-            platform.getCxxPlatform());
-        for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
-          nativeLinkableLibsBuilder.put(
-              new Pair<>(targetCpuType, entry.getKey()),
-              entry.getValue());
-          hasNativeLibs = true;
-        }
-      }
+      // Populate nativeLinkableLibs and nativeLinkableLibsAssets with the appropriate entries.
+      boolean hasNativeLibs = populateMapWithLinkables(
+          packageableCollection.getNativeLinkables(),
+          nativeLinkableLibsBuilder,
+          targetCpuType,
+          targetGraph,
+          platform);
+      boolean hasNativeLibsAssets = populateMapWithLinkables(
+          packageableCollection.getNativeLinkablesAssets(),
+          nativeLinkableLibsAssetsBuilder,
+          targetCpuType,
+          targetGraph,
+          platform);
 
       // If we're using a C/C++ runtime other than the system one, add it to the APK.
       NdkCxxPlatforms.CxxRuntime cxxRuntime = platform.getCxxRuntime();
-      if (hasNativeLibs && !cxxRuntime.equals(NdkCxxPlatforms.CxxRuntime.SYSTEM)) {
+      if ((hasNativeLibs || hasNativeLibsAssets) &&
+          !cxxRuntime.equals(NdkCxxPlatforms.CxxRuntime.SYSTEM)) {
         nativeLinkableLibsBuilder.put(
             new Pair<>(
                 targetCpuType,
@@ -114,8 +145,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> nativeLinkableLibs =
         nativeLinkableLibsBuilder.build();
 
+    ImmutableMap<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> nativeLinkableLibsAssets =
+        nativeLinkableLibsAssetsBuilder.build();
+
     if (packageableCollection.getNativeLibsDirectories().isEmpty() &&
-        nativeLinkableLibs.isEmpty()) {
+        nativeLinkableLibs.isEmpty() &&
+        nativeLinkableLibsAssets.isEmpty()) {
       return Optional.absent();
     }
 
@@ -135,6 +170,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                     pathResolver.filterBuildRuleInputs(
                         packageableCollection.getNativeLibsDirectories()))
                 .addAll(pathResolver.filterBuildRuleInputs(nativeLinkableLibs.values()))
+                .addAll(pathResolver.filterBuildRuleInputs(nativeLinkableLibsAssets.values()))
                 .build()),
           /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     return Optional.of(
@@ -144,6 +180,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             packageableCollection.getNativeLibsDirectories(),
             cpuFilters,
             nativePlatforms,
-            nativeLinkableLibs));
+            nativeLinkableLibs,
+            nativeLinkableLibsAssets));
   }
 }

@@ -285,6 +285,7 @@ public class AppleDescriptions {
     output.forceStatic = Optional.of(false);
     output.linkWhole = Optional.of(linkWhole);
     output.supportedPlatformsRegex = Optional.absent();
+    output.canBeAsset = Optional.absent();
   }
 
   @VisibleForTesting

@@ -920,7 +920,8 @@ public class CxxLibraryDescription implements
         args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
         args.linkWhole.or(false),
         args.soname,
-        args.tests.get());
+        args.tests.get(),
+        args.canBeAsset.or(false));
   }
 
   @Override
@@ -956,6 +957,7 @@ public class CxxLibraryDescription implements
     public Optional<String> soname;
     public Optional<Boolean> forceStatic;
     public Optional<Boolean> linkWhole;
+    public Optional<Boolean> canBeAsset;
   }
 
 }

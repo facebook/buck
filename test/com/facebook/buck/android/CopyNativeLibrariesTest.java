@@ -113,6 +113,7 @@ public class CopyNativeLibrariesTest {
             ImmutableSet.<SourcePath>of(new TestSourcePath("lib1"), new TestSourcePath("lib2")),
             ImmutableSet.<TargetCpuType>of(),
             ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
+            ImmutableMap.<Pair<TargetCpuType, String>, SourcePath>of(),
             ImmutableMap.<Pair<TargetCpuType, String>, SourcePath>of());
 
     ImmutableList<Step> steps =
