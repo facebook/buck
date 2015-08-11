@@ -160,6 +160,35 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void extensionBundle() throws IOException{
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_extension",
+        tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace
+        .runBuckCommand("targets", "--show-output", "//:DemoExtension");
+    result.assertSuccess();
+    assertEquals(
+        "//:DemoExtension buck-out/gen/DemoExtension/DemoExtension.appex",
+        result.getStdout().trim());
+
+    result = workspace
+        .runBuckCommand("build", "//:DemoExtension");
+    result.assertSuccess();
+    Path outputBinary = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve("DemoExtension/DemoExtension.appex/DemoExtension");
+    assertTrue(
+        String.format(
+            "Extension binary could not be found inside the appex dir [%s].",
+            outputBinary),
+        Files.exists(outputBinary));
+  }
+
+  @Test
   public void bundleBinaryHasDsymBundle() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -51,12 +52,17 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 
 import java.util.Map;
 import java.util.Set;
 
 public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>, Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
+
+  private static final ImmutableSet<Flavor> SUPPORTED_LIBRARY_FLAVORS = ImmutableSet.of(
+      CxxDescriptionEnhancer.STATIC_FLAVOR,
+      CxxDescriptionEnhancer.SHARED_FLAVOR);
 
   private final AppleBinaryDescription appleBinaryDescription;
   private final AppleLibraryDescription appleLibraryDescription;
@@ -209,12 +215,36 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.provisioningProfileSearchPath);
   }
 
-  private static <A extends Arg> BuildRule getFlavoredBinaryRule(
+  private <A extends Arg> BuildRule getFlavoredBinaryRule(
       TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {
+    // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
+    ImmutableSet<Flavor> flavors = params.getBuildTarget()
+        .withoutFlavors(ImmutableSet.of(ReactNativeFlavors.DO_NOT_BUNDLE))
+        .getFlavors();
+
+    if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
+      flavors = new ImmutableSet.Builder<Flavor>()
+          .addAll(flavors)
+          .add(defaultCxxPlatform.getFlavor())
+          .build();
+    }
+
     final TargetNode<?> binaryTargetNode = Preconditions.checkNotNull(targetGraph.get(args.binary));
+    // If the binary target of the AppleBundle is an AppleLibrary then the build flavor
+    // must be specified.
+    if (binaryTargetNode.getDescription() instanceof AppleLibraryDescription &&
+        (Sets.intersection(
+            SUPPORTED_LIBRARY_FLAVORS,
+            binaryTargetNode.getBuildTarget().getFlavors()).size() != 1)) {
+      throw new HumanReadableException(
+          "AppleExtension bundle [%s] must have exactly one of these flavors: [%s].",
+          binaryTargetNode.getBuildTarget().toString(),
+          Joiner.on(", ").join(SUPPORTED_LIBRARY_FLAVORS));
+    }
+
     BuildRuleParams binaryRuleParams = new BuildRuleParams(
         args.binary,
         Suppliers.ofInstance(
@@ -233,11 +263,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         targetGraph,
         binaryRuleParams,
         resolver,
-        params
-            .getBuildTarget()
-            .withoutFlavors(ImmutableSet.of(ReactNativeFlavors.DO_NOT_BUNDLE))
-            .getFlavors()
-            .toArray(new Flavor[0]));
+        flavors.toArray(new Flavor[0]));
   }
 
   private static BuildRuleParams getBundleParamsWithUpdatedDeps(
