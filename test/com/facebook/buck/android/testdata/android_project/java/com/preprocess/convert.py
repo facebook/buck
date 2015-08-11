@@ -23,8 +23,8 @@ def main(argv):
                 for zinfo in inzip.infolist():
                     raw_content = inzip.read(zinfo.filename)
                     transformed = raw_content.replace(
-                        "__FIND_ME_HERE__content=1__GOODBYE__",
-                        "__FIND_ME_HERE__content=2__GOODBYE__")
+                        b"__FIND_ME_HERE__content=1__GOODBYE__",
+                        b"__FIND_ME_HERE__content=2__GOODBYE__")
                     outzip.writestr(zinfo, transformed)
                 outzip.close()
                 inzip.close()
