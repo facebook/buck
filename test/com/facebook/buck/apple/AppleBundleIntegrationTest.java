@@ -189,6 +189,32 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void appBundleWithExtensionBundleDependency() throws IOException{
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_app_with_extension",
+        tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace
+        .runBuckCommand("targets", "--show-output", "//:DemoAppWithExtension");
+    result.assertSuccess();
+    assertEquals(
+        "//:DemoAppWithExtension buck-out/gen/DemoAppWithExtension/DemoAppWithExtension.app",
+        result.getStdout().trim());
+
+    result = workspace
+        .runBuckCommand("build", "//:DemoAppWithExtension");
+    result.assertSuccess();
+    Path bundleDir = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve("DemoAppWithExtension/DemoAppWithExtension.app");
+    assertTrue(Files.exists(bundleDir.resolve("DemoAppWithExtension")));
+    assertTrue(Files.exists(bundleDir.resolve("DemoExtension.appex/DemoExtension")));
+  }
+
+  @Test
   public void bundleBinaryHasDsymBundle() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

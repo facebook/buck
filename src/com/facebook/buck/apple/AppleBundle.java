@@ -120,6 +120,8 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   @AddToRuleKey
   private final Optional<CodeSignIdentity> codeSignIdentity;
 
+  private final ImmutableSet<SourcePath> extensionBundlePaths;
+
   private final ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs;
 
   private final Optional<AppleAssetCatalog> mergedAssetCatalog;
@@ -139,6 +141,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Set<SourcePath> resourceDirs,
       Set<SourcePath> resourceFiles,
       Set<SourcePath> dirsContainingResourceDirs,
+      ImmutableSet<SourcePath> extensionBundlePaths,
       Optional<ImmutableSet<SourcePath>> resourceVariantFiles,
       Tool ibtool,
       Tool dsymutil,
@@ -160,6 +163,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.resourceDirs = resourceDirs;
     this.resourceFiles = resourceFiles;
     this.dirsContainingResourceDirs = dirsContainingResourceDirs;
+    this.extensionBundlePaths = extensionBundlePaths;
     this.resourceVariantFiles = resourceVariantFiles;
     this.ibtool = ibtool;
     this.dsymutil = dsymutil;
@@ -237,6 +241,10 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
         .resolve(getBinaryName(buildTarget) + "." + extension);
   }
 
+  public String getExtension() {
+    return extension;
+  }
+
   @Override
   @Nullable
   public Path getPathToOutput() {
@@ -293,10 +301,6 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
             getInfoPlistOverrideKeys(platformName),
             PlistProcessStep.OutputFormat.BINARY));
 
-    // TODO(jakubzika):
-    // Checking whether the output path is not null only serves as a workaround if the binary is
-    // an unflavored CxxLibrary and does not have any output. The correct fix would be using
-    // the correctly flavored version of the rule to make sure that it always has output.
     if (binary.isPresent() && binary.get().getPathToOutput() != null) {
       stepsBuilder.add(
           new MkdirStep(bundleRoot.resolve(this.destinations.getExecutablesPath())));
@@ -343,6 +347,8 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
     }
+
+    addStepsToCopyExtensionBundlesDependencies(stepsBuilder);
 
     if (resourceVariantFiles.isPresent()) {
       for (SourcePath variantSourcePath : resourceVariantFiles.get()) {
@@ -428,6 +434,19 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     buildableContext.recordArtifact(bundleRoot);
 
     return stepsBuilder.build();
+  }
+
+  public void addStepsToCopyExtensionBundlesDependencies(
+      ImmutableList.Builder<Step> stepsBuilder) {
+    for (SourcePath sourcePath : extensionBundlePaths) {
+      Path plugInsDestPath = bundleRoot.resolve(destinations.getPlugInsPath());
+      stepsBuilder.add(new MkdirStep(plugInsDestPath));
+      stepsBuilder.add(
+        CopyStep.forDirectory(
+            getResolver().getPath(sourcePath),
+            plugInsDestPath,
+            CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+    }
   }
 
   static ImmutableMap<String, String> withDefaults(

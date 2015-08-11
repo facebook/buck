@@ -304,6 +304,7 @@ public class AppleTestDescription implements
         resourceDirs,
         resourceFiles,
         dirsContainingResourceDirsBuilder.build(),
+        ImmutableSet.<SourcePath>of(),
         Optional.of(resourceVariantFiles),
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),

@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -54,6 +55,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -192,6 +194,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                             bundleVariantFiles))))
             .build());
 
+    ImmutableSet<SourcePath> extensionBundlePaths = collectFirstLevelAppleDependencyBundles(
+        params.getDeps());
+
     return new AppleBundle(
         bundleParamsWithFlavoredBinaryDep,
         sourcePathResolver,
@@ -203,6 +208,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         bundleDirs,
         bundleFiles,
         dirsContainingResourceDirs,
+        extensionBundlePaths,
         Optional.of(bundleVariantFiles),
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
@@ -224,7 +230,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     ImmutableSet<Flavor> flavors = params.getBuildTarget()
         .withoutFlavors(ImmutableSet.of(ReactNativeFlavors.DO_NOT_BUNDLE))
         .getFlavors();
-
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()
           .addAll(flavors)
@@ -259,6 +264,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                 binaryTargetNode.getExtraDeps())),
         params.getProjectFilesystem(),
         params.getRuleKeyBuilderFactory());
+
     return CxxDescriptionEnhancer.requireBuildRule(
         targetGraph,
         binaryRuleParams,
@@ -285,6 +291,30 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                 .from(params.getExtraDeps())
                 .filter(notOriginalBinaryRule)
                 .toSortedSet(Ordering.natural())));
+  }
+
+  private ImmutableSet<SourcePath> collectFirstLevelAppleDependencyBundles(
+      ImmutableSortedSet<BuildRule> deps) {
+    ImmutableSet.Builder<SourcePath> extensionBundlePaths = ImmutableSet.builder();
+    // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
+    // do not get pulled in to the top-level Bundle.
+    for (BuildRule rule : deps) {
+      if (rule instanceof AppleBundle) {
+        AppleBundle appleBundle = (AppleBundle) rule;
+        if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension())) {
+          Path outputPath = Preconditions.checkNotNull(
+              appleBundle.getPathToOutput(),
+              "Path cannot be null for AppleBundle [%s].",
+              appleBundle);
+          SourcePath sourcePath = new BuildTargetSourcePath(
+              appleBundle.getBuildTarget(),
+              outputPath);
+          extensionBundlePaths.add(sourcePath);
+        }
+      }
+    }
+
+    return extensionBundlePaths.build();
   }
 
   @SuppressFieldNotInitialized
