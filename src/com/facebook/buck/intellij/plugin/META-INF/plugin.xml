@@ -62,6 +62,11 @@
         implementation="com.facebook.buck.intellij.plugin.config.BuckColorSettingsPage"/>
     <lang.commenter language="Buck"
                     implementationClass="com.facebook.buck.intellij.plugin.commenter.BuckCommenter"/>
+    <applicationConfigurable
+        groupId="tools"
+        displayName="Buck"
+        id="buck.settings"
+        instance="com.facebook.buck.intellij.plugin.config.BuckSettingsConfigurable"/>
   </extensions>
 
   <actions>
@@ -77,4 +82,12 @@
       <add-to-group anchor="first" group-id="EditorPopupMenu"/>
     </group>
   </actions>
+
+  <application-components>
+    <component>
+      <implementation-class>com.facebook.buck.intellij.plugin.config.BuckSettingsProvider
+      </implementation-class>
+    </component>
+  </application-components>
+
 </idea-plugin>
