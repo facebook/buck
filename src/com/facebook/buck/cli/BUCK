@@ -14,12 +14,33 @@ java_library(
   ],
 )
 
+RAW_CONFIG_SRCS = [
+  'Config.java',
+  'Inis.java',
+]
+java_library(
+  name = 'low-level-config',
+  srcs = RAW_CONFIG_SRCS,
+  deps = [
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
+    '//third-party/java/ini4j:ini4j',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/io:io',
+  ],
+)
+
 CONFIG_SRCS = [
   'BuckConfig.java',
 ]
 java_library(
   name = 'config',
   srcs = CONFIG_SRCS,
+  exported_deps = [
+    ':low-level-config',
+  ],
   deps =  [
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',
@@ -64,7 +85,7 @@ java_library(
 
 java_immutables_library(
   name = 'cli',
-  srcs = glob(['*.java'], excludes = EVENTS_SRCS + CONFIG_SRCS),
+  srcs = glob(['*.java'], excludes = EVENTS_SRCS + CONFIG_SRCS + RAW_CONFIG_SRCS),
   deps = [
     ':config',
     ':events',

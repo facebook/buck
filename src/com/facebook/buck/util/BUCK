@@ -120,7 +120,6 @@ java_immutables_library(
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/zip:stream',
     '//third-party/java/aosp:aosp',
-    '//third-party/java/ini4j:ini4j',
     '//third-party/java/jsr:jsr305',
   ],
   visibility = [

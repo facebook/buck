@@ -3,6 +3,7 @@ java_test(name = 'model',
   srcs = glob(includes = ['*.java'], excludes = ['BuildTargetFactory.java']),
   deps = [
     ':BuildTargetFactory',
+    '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/model:model',

@@ -20,6 +20,7 @@ import static com.facebook.buck.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTI
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ExecutableFinder;
@@ -37,7 +38,6 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -60,12 +60,15 @@ public class JavaSymbolFinderIntegrationTest {
     workspace.setUp();
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
-
-    BuckConfig config = BuckConfig.createFromFiles(
+    Config rawConfig = Config.createDefaultConfig(
+        projectFilesystem.getRootPath(),
+        ImmutableMap.<String, ImmutableMap<String, String>>of());
+    BuckConfig config = new BuckConfig(
+        rawConfig,
         projectFilesystem,
-        ImmutableList.of(projectFilesystem.getFileForRelativePath(".buckconfig")),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
+
     ParserConfig parserConfig = new ParserConfig(config);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
         config,

@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.cli.MissingSymbolsHandler;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -60,9 +61,12 @@ public class MissingSymbolsHandlerIntegrationTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
     ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
 
-    BuckConfig config = BuckConfig.createFromFiles(
+    Config rawConfig = Config.createDefaultConfig(
+        projectFilesystem.getRootPath(),
+        ImmutableMap.<String, ImmutableMap<String, String>>of());
+    BuckConfig config = new BuckConfig(
+        rawConfig,
         projectFilesystem,
-        ImmutableList.of(projectFilesystem.getFileForRelativePath(".buckconfig")),
         Platform.detect(),
         environment);
     ImmutableSet<Description<?>> allDescriptions =

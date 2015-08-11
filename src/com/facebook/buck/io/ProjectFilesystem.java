@@ -16,6 +16,10 @@
 
 package com.facebook.buck.io;
 
+import static com.facebook.buck.io.MorePaths.TO_PATH;
+
+import com.facebook.buck.cli.Config;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
@@ -27,12 +31,14 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
@@ -61,6 +67,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -107,6 +114,10 @@ public class ProjectFilesystem {
       DIRECTORY_AND_CONTENTS,
   }
 
+  @VisibleForTesting
+  static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
+  private static final String DEFAULT_CACHE_DIR = "buck-cache";
+
   private final Path projectRoot;
 
   private final Function<Path, Path> pathAbsolutifier;
@@ -134,6 +145,10 @@ public class ProjectFilesystem {
     this(projectRoot.getFileSystem(), projectRoot, ignorePaths);
   }
 
+  public ProjectFilesystem(Path root, Config config) {
+    this(root.getFileSystem(), root, extractIgnorePaths(root, config));
+  }
+
   protected ProjectFilesystem(
       FileSystem vfs,
       final Path projectRoot,
@@ -155,6 +170,32 @@ public class ProjectFilesystem {
     };
     this.ignorePaths = MorePaths.filterForSubpaths(ignorePaths, this.projectRoot);
     this.ignoreValidityOfPaths = false;
+  }
+
+  private static ImmutableSet<Path> extractIgnorePaths(Path root, Config config) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+
+    builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));
+    builder.add(Paths.get(".idea"));
+
+    final String projectKey = "project";
+    final String ignoreKey = "ignore";
+
+    String buckdDirProperty = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
+    if (!Strings.isNullOrEmpty(buckdDirProperty)) {
+      builder.add(Paths.get(buckdDirProperty));
+    }
+
+    String cacheDir = config.getValue("cache", "dir")
+        .or(root.resolve(DEFAULT_CACHE_DIR).toString());
+    if (!Strings.isNullOrEmpty(cacheDir)) {
+      Path cacheDirPath = MorePaths.expandHomeDir(Paths.get(cacheDir)).normalize().toAbsolutePath();
+      builder.add(cacheDirPath);
+    }
+
+    builder.addAll(Lists.transform(config.getListWithoutComments(projectKey, ignoreKey), TO_PATH));
+
+    return builder.build();
   }
 
   public Path getRootPath() {

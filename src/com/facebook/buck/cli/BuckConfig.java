@@ -37,14 +37,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.Config;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Inis;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -52,17 +49,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Response;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.InetAddress;
@@ -72,7 +66,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -91,12 +84,7 @@ public class BuckConfig {
 
   private static final Logger LOG = Logger.get(BuckConfig.class);
 
-  private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
   public static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
-  private static final String DEFAULT_BUCK_CONFIG_DIRECTORY_NAME = ".buckconfig.d";
-
-  private static final Path GLOBAL_BUCK_CONFIG_FILE_PATH = Paths.get("/etc/buckconfig");
-  private static final Path GLOBAL_BUCK_CONFIG_DIRECTORY_PATH = Paths.get("/etc/buckconfig.d");
 
   private static final String ALIAS_SECTION_HEADER = "alias";
 
@@ -151,8 +139,7 @@ public class BuckConfig {
     }
   }
 
-  @VisibleForTesting
-  BuckConfig(
+  public BuckConfig(
       Config config,
       ProjectFilesystem projectFilesystem,
       Platform platform,
@@ -167,42 +154,6 @@ public class BuckConfig {
 
     this.platform = platform;
     this.environment = environment;
-  }
-
-  /**
-   * Takes a sequence of {@code .buckconfig} files and loads them, in order, to create a
-   * {@code BuckConfig} object. Each successive file that is loaded has the ability to override
-   * definitions from a previous file.
-   * @param projectFilesystem project for which the {@link BuckConfig} is being created.
-   * @param files The sequence of {@code .buckconfig} files to load.
-   */
-  @SafeVarargs
-  public static BuckConfig createFromFiles(
-      ProjectFilesystem projectFilesystem,
-      Iterable<File> files,
-      Platform platform,
-      ImmutableMap<String, String> environment,
-      ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
-      throws IOException {
-    if (Iterables.isEmpty(files)) {
-      return new BuckConfig(
-          new Config(configOverrides),
-          projectFilesystem,
-          platform,
-          environment);
-    }
-
-    // Convert the Files to Readers.
-    ImmutableMap.Builder<Path, Reader> readers = ImmutableMap.builder();
-    for (File file : files) {
-      readers.put(file.toPath(), Files.newReader(file, Charsets.UTF_8));
-    }
-    return createFromReaders(
-        readers.build(),
-        projectFilesystem,
-        platform,
-        environment,
-        configOverrides);
   }
 
   /**
@@ -791,64 +742,6 @@ public class BuckConfig {
       return Optional.of(projectFilesystem.getPathForRelativePath(path));
     }
     throw new HumanReadableException(errorMsg + path);
-  }
-
-  /**
-   * @param projectFilesystem The directory that is the root of the project being built.
-   */
-  @SafeVarargs
-  public static BuckConfig createDefaultBuckConfig(
-      ProjectFilesystem projectFilesystem,
-      Platform platform,
-      ImmutableMap<String, String> environment,
-      ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
-      throws IOException {
-    ImmutableList.Builder<File> configFileBuilder = ImmutableList.builder();
-
-    File globalConfigDir = GLOBAL_BUCK_CONFIG_DIRECTORY_PATH.toFile();
-    if (globalConfigDir.isDirectory()) {
-      File globalConfigFiles[] = globalConfigDir.listFiles();
-      Arrays.sort(globalConfigFiles);
-      for (File globalConfigFile : globalConfigFiles) {
-        configFileBuilder.add(globalConfigFile);
-      }
-    }
-    File globalConfigFile = GLOBAL_BUCK_CONFIG_FILE_PATH.toFile();
-    if (globalConfigFile.isFile()) {
-      configFileBuilder.add(globalConfigFile);
-    }
-
-    Path homeDirectory = Paths.get(System.getProperty("user.home"));
-    File userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME).toFile();
-    if (userConfigDir.isDirectory()) {
-      File userConfigFiles[] = userConfigDir.listFiles();
-      Arrays.sort(userConfigFiles);
-      for (File userConfigFile : userConfigFiles) {
-        configFileBuilder.add(userConfigFile);
-      }
-    }
-    File userConfigFile = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME).toFile();
-    if (userConfigFile.isFile()) {
-      configFileBuilder.add(userConfigFile);
-    }
-
-    File configFile = projectFilesystem.getFileForRelativePath(DEFAULT_BUCK_CONFIG_FILE_NAME);
-    if (configFile.isFile()) {
-      configFileBuilder.add(configFile);
-    }
-    File overrideConfigFile = projectFilesystem.getFileForRelativePath(
-        DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
-    if (overrideConfigFile.isFile()) {
-      configFileBuilder.add(overrideConfigFile);
-    }
-
-    ImmutableList<File> configFiles = configFileBuilder.build();
-    return BuckConfig.createFromFiles(
-        projectFilesystem,
-        configFiles,
-        platform,
-        environment,
-        configOverrides);
   }
 
   public ImmutableSet<String> getSections() {

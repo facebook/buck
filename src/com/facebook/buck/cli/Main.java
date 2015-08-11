@@ -522,18 +522,9 @@ public final class Main {
 
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(
-        canonicalRootPath,
-        BuckConfig.createDefaultBuckConfig(
-            new ProjectFilesystem(canonicalRootPath),
-            platform,
-            clientEnvironment,
-            configOverrides).getIgnorePaths());
-    BuckConfig buckConfig = BuckConfig.createDefaultBuckConfig(
-        filesystem,
-        platform,
-        clientEnvironment,
-        configOverrides);
+    Config rawConfig = Config.createDefaultConfig(canonicalRootPath, configOverrides);
+    ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, rawConfig);
+    BuckConfig buckConfig = new BuckConfig(rawConfig, filesystem, platform, clientEnvironment);
     // End ugly bootstrapping code.
 
     final Console console = new Console(

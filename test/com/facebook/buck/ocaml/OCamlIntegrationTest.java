@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -61,7 +62,13 @@ public class OCamlIntegrationTest {
     workspace.setUp();
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
-    BuckConfig buckConfig = BuckConfig.createDefaultBuckConfig(
+
+    Config rawConfig = Config.createDefaultConfig(
+        filesystem.getRootPath(),
+        ImmutableMap.<String, ImmutableMap<String, String>>of());
+
+    BuckConfig buckConfig = new BuckConfig(
+        rawConfig,
         filesystem,
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));

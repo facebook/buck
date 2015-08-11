@@ -14,18 +14,28 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.cli;
 
+import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -37,11 +47,16 @@ import java.util.regex.Pattern;
  */
 public class Config {
 
-  private final ImmutableMap<String, ImmutableMap<String, String>> sectionToEntries;
+  private static final Logger LOG = Logger.get(Config.class);
 
-  public Config() {
-    this(ImmutableMap.<String, ImmutableMap<String, String>>of());
-  }
+  private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
+  public static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
+  private static final String DEFAULT_BUCK_CONFIG_DIRECTORY_NAME = ".buckconfig.d";
+
+  private static final Path GLOBAL_BUCK_CONFIG_FILE_PATH = Paths.get("/etc/buckconfig");
+  private static final Path GLOBAL_BUCK_CONFIG_DIRECTORY_PATH = Paths.get("/etc/buckconfig.d");
+
+  private final ImmutableMap<String, ImmutableMap<String, String>> sectionToEntries;
 
   @SafeVarargs
   public Config(ImmutableMap<String, ImmutableMap<String, String>>... maps) {
@@ -55,6 +70,49 @@ public class Config {
 
   public Config(ImmutableMap<String, ImmutableMap<String, String>> sectionToEntries) {
     this.sectionToEntries = sectionToEntries;
+  }
+
+  public static Config createDefaultConfig(
+      Path root,
+      ImmutableMap<String, ImmutableMap<String, String>> configOverrides) throws IOException {
+    ImmutableList.Builder<Path> configFileBuilder = ImmutableList.builder();
+
+    configFileBuilder.addAll(listFiles(GLOBAL_BUCK_CONFIG_DIRECTORY_PATH));
+    if (Files.isRegularFile(GLOBAL_BUCK_CONFIG_FILE_PATH)) {
+      configFileBuilder.add(GLOBAL_BUCK_CONFIG_FILE_PATH);
+    }
+
+    Path homeDirectory = Paths.get(System.getProperty("user.home"));
+    Path userConfigDir = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_DIRECTORY_NAME);
+    configFileBuilder.addAll(listFiles(userConfigDir));
+    Path userConfigFile = homeDirectory.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
+    if (Files.isRegularFile(userConfigFile)) {
+      configFileBuilder.add(userConfigFile);
+    }
+
+    Path configFile = root.resolve(DEFAULT_BUCK_CONFIG_FILE_NAME);
+    if (Files.isRegularFile(configFile)) {
+      configFileBuilder.add(configFile);
+    }
+    Path overrideConfigFile = root.resolve(DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME);
+    if (Files.isRegularFile(overrideConfigFile)) {
+      configFileBuilder.add(overrideConfigFile);
+    }
+
+    ImmutableList<Path> configFiles = configFileBuilder.build();
+
+    ImmutableList.Builder<ImmutableMap<String, ImmutableMap<String, String>>> builder =
+        ImmutableList.builder();
+    for (Path file : configFiles) {
+      try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+        ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration = Inis.read(reader);
+        LOG.debug("Loaded a configuration file %s: %s", file, parsedConfiguration);
+        builder.add(parsedConfiguration);
+      }
+    }
+    LOG.debug("Adding configuration overrides: %s", configOverrides);
+    builder.add(configOverrides);
+    return new Config(builder.build());
   }
 
   public ImmutableMap<String, ImmutableMap<String, String>> getSectionToEntries() {
@@ -189,4 +247,17 @@ public class Config {
     return Objects.hashCode(sectionToEntries);
   }
 
+  private static ImmutableSortedSet<Path> listFiles(Path root) throws IOException {
+    if (!Files.isDirectory(root)) {
+      return ImmutableSortedSet.of();
+    }
+
+    ImmutableSortedSet.Builder<Path> toReturn = ImmutableSortedSet.naturalOrder();
+
+    try (DirectoryStream<Path> directory = Files.newDirectoryStream(root)) {
+      toReturn.addAll(directory.iterator());
+    }
+
+    return toReturn.build();
+  }
 }

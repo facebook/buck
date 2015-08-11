@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -75,13 +76,19 @@ public class PythonInPlaceBinaryIntegrationTest {
   }
 
   private void assertInPlacePackageStyleIsBeingUsed() throws IOException {
+    Config rawConfig = Config.createDefaultConfig(
+        tmp.getRootPath(),
+        ImmutableMap.<String, ImmutableMap<String, String>>of());
+
+    BuckConfig buckConfig = new BuckConfig(
+        rawConfig,
+        new ProjectFilesystem(tmp.getRootPath()),
+        Platform.detect(),
+        ImmutableMap.<String, String>of());
+
     PythonBuckConfig pythonBuckConfig =
         new PythonBuckConfig(
-            BuckConfig.createFromFiles(
-                new ProjectFilesystem(tmp.getRootPath()),
-                ImmutableList.of(workspace.getPath(".buckconfig").toFile()),
-                Platform.detect(),
-                ImmutableMap.<String, String>of()),
+            buckConfig,
             new FakeExecutableFinder(ImmutableList.<Path>of()));
     assertThat(
         pythonBuckConfig.getPackageStyle(),
