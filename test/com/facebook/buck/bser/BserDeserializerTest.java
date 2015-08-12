@@ -243,14 +243,16 @@ public class BserDeserializerTest {
 
   @Test
   public void throwIfArrayLengthTooShort() throws IOException {
-    thrown.expect(IOException.class);
+    thrown.expect(BserDeserializer.BserEofException.class);
+    thrown.expectMessage("Prematurely reached end of BSER buffer");
     BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
     deserializer.deserializeBserValue(getByteStream("000103050003020323"));
   }
 
   @Test
   public void throwIfMapLengthTooShort() throws IOException {
-    thrown.expect(IOException.class);
+    thrown.expect(BserDeserializer.BserEofException.class);
+    thrown.expectMessage("Prematurely reached end of BSER buffer");
     BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
     deserializer.deserializeBserValue(getByteStream("0001030B010303020303666F6F0323"));
   }

@@ -48,6 +48,21 @@ public class BserDeserializer {
       SORTED
   }
 
+  /**
+   * Exception thrown when BSER parser unexpectedly reaches the end of
+   * the input stream.
+   */
+  @SuppressWarnings("serial")
+  public static class BserEofException extends IOException {
+    public BserEofException(String message) {
+      super(message);
+    }
+
+    public BserEofException(String message, Throwable cause) {
+      super(message, cause);
+    }
+  }
+
   private final KeyOrdering keyOrdering;
   private final CharsetDecoder utf8Decoder;
 
@@ -95,7 +110,7 @@ public class BserDeserializer {
     try {
       return deserializeRecursive(readBserBuffer(inputStream));
     } catch (BufferUnderflowException e) {
-      throw new IOException(String.format("Prematurely reached end of BSER buffer"), e);
+      throw new BserEofException(String.format("Prematurely reached end of BSER buffer"), e);
     }
   }
 
@@ -105,7 +120,7 @@ public class BserDeserializer {
 
     int sniffBytesRead = ByteStreams.read(inputStream, sniffBuffer.array(), 0, INITIAL_SNIFF_LEN);
     if (sniffBytesRead < INITIAL_SNIFF_LEN) {
-      throw new IOException(
+      throw new BserEofException(
           String.format(
               "Invalid BSER header (expected %d bytes, got %d bytes)",
               INITIAL_SNIFF_LEN,
@@ -141,7 +156,7 @@ public class BserDeserializer {
         sniffBuffer.position(),
         lengthBytesRemaining);
     if (lengthBytesRead < lengthBytesRemaining) {
-      throw new IOException(
+      throw new BserEofException(
           String.format(
               "Invalid BSER header length (expected %d bytes, got %d bytes)",
               lengthBytesRemaining,

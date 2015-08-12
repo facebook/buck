@@ -305,10 +305,15 @@ public class ProjectBuildFileParser implements AutoCloseable {
     LOG.debug("Parsing output of process %s using format %s...", buckPyProcess, buckPyOutputFormat);
     List<Map<String, Object>> result;
     if (buckPyOutputFormat == BuckPyOutputFormat.BSER) {
-      Object deserializedValue = bserDeserializer.deserializeBserValue(
-          buckPyProcess.getInputStream());
-      Preconditions.checkState(deserializedValue instanceof List<?>);
-      result = (List<Map<String, Object>>) deserializedValue;
+      try {
+        Object deserializedValue = bserDeserializer.deserializeBserValue(
+            buckPyProcess.getInputStream());
+        Preconditions.checkState(deserializedValue instanceof List<?>);
+        result = (List<Map<String, Object>>) deserializedValue;
+      } catch (BserDeserializer.BserEofException e) {
+        LOG.error(e, "Parser exited while decoding BSER data");
+        throw new IOException("Parser exited unexpectedly", e);
+      }
     } else {
       Preconditions.checkNotNull(buckPyStdoutParser);
       result = buckPyStdoutParser.nextRules();
