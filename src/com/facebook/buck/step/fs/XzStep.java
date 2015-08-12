@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -28,10 +29,6 @@ import org.tukaani.xz.LZMA2Options;
 import org.tukaani.xz.XZ;
 import org.tukaani.xz.XZOutputStream;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -141,10 +138,10 @@ public class XzStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
+    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try (
-        InputStream in = new BufferedInputStream(new FileInputStream(sourceFile.toFile()));
-        OutputStream out =
-            new BufferedOutputStream(new FileOutputStream(getDestinationFile().toFile()));
+        InputStream in = filesystem.newFileInputStream(sourceFile);
+        OutputStream out = filesystem.newFileOutputStream(destinationFile);
         XZOutputStream xzOut = new XZOutputStream(out, new LZMA2Options(compressionLevel), check)
     ) {
       ByteStreams.copy(in, xzOut);

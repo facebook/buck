@@ -26,7 +26,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.io.ByteSource;
 
-import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -62,15 +61,11 @@ public class XzStepTest {
         sourceFile,
         destinationFile.toPath(),
         /* compressionLevel -- for faster testing */ 1,
-        /* keep */ false,
+        /* keep */ true,
         XZ.CHECK_CRC32);
 
-    ProjectFilesystem fs = EasyMock.createMock(ProjectFilesystem.class);
-    fs.deleteFileAtPath(sourceFile);
-    EasyMock.replay(fs);
-
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(fs)
+        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
         .build();
 
     assertEquals(0, step.execute(context));
@@ -86,7 +81,5 @@ public class XzStepTest {
     assertTrue(
         "Decompressed file must be identical to original.",
         original.contentEquals(decompressed));
-
-    EasyMock.verify(fs);
   }
 }
