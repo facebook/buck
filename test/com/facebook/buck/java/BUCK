@@ -84,6 +84,7 @@ java_test(
   run_test_separately = True,
   deps = [
     ':testutil',
+    '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/junit:junit',

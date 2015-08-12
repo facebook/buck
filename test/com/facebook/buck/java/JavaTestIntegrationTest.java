@@ -19,10 +19,12 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -183,5 +185,17 @@ public class JavaTestIntegrationTest {
     assertThat(
         result.getStderr(),
         Matchers.containsString("com.facebook.buck.example.StaticErrorTest"));
+  }
+
+  @Test
+  public void testWithJni() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "test_with_jni",
+        temp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:jtest");
+    result.assertSuccess();
   }
 }
