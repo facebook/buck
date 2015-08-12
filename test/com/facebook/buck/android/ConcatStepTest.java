@@ -23,9 +23,13 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import static org.junit.Assert.assertEquals;
+
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.junit.Test;
@@ -39,19 +43,22 @@ public class ConcatStepTest {
     // Create three files containing "foo", "bar", and "baz"
     // and see if they are correctly concatenated.
     File dest = temp.newFile();
-    List<Path> inputs = new ArrayList<Path>();
+    ImmutableList.Builder<Path> inputsBuilder = ImmutableList.builder();
     String[] fileContents = {"foo", "bar", "baz"};
     for (int i = 0; i < fileContents.length; i++) {
       File src = temp.newFile();
       PrintStream out = new PrintStream(src);
       out.print(fileContents[i]);
-      inputs.add(src.toPath());
+      inputsBuilder.add(src.toPath());
       out.close();
     }
 
-    ConcatStep step = new ConcatStep(inputs, dest.toPath());
-    // ConcatDexStep doesn't need an ExecutionContext, so we pass in null.
-    step.execute(null);
+    ExecutionContext context = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(new ProjectFilesystem(temp.getRoot().toPath()))
+        .build();
+
+    ConcatStep step = new ConcatStep(inputsBuilder.build(), dest.toPath());
+    step.execute(context);
     BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(dest)));
     assertEquals(reader.readLine(), "foobarbaz");
 

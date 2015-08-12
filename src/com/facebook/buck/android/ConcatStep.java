@@ -18,13 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import java.io.BufferedOutputStream;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Takes in a list of files and outputs a
@@ -33,31 +33,28 @@ import java.util.List;
  */
 public class ConcatStep implements Step {
 
-  public static final String SHORT_NAME = "concat";
-  private final List<Path> dexes;
+  public static final String SHORT_NAME = "cat";
+  private final ImmutableList<Path> inputs;
   private final Path output;
 
   /**
-   * @param inputs The .dex files to be concatenated
+   * @param inputs The files to be concatenated
    * @param outputPath The desired output path.
    */
-  public ConcatStep(List<Path> inputs, Path outputPath) {
-    dexes = new ArrayList<>();
-    for (Path p : inputs) {
-      dexes.add(p);
-    }
+  public ConcatStep(ImmutableList<Path> inputs, Path outputPath) {
+    this.inputs = inputs;
     output = outputPath;
   }
 
   @Override
   public int execute(ExecutionContext context) {
     try (
-        OutputStream out = new BufferedOutputStream(Files.newOutputStream(output));
+        OutputStream out = context.getProjectFilesystem().newFileOutputStream(output);
     ) {
-      for (Path p : dexes) {
+      for (Path p : inputs) {
         Files.copy(p, out);
-        out.flush();
       }
+      out.flush();
     } catch (IOException e) {
       context.logError(e, "There was an error in concat step");
       return 1;
@@ -72,15 +69,14 @@ public class ConcatStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    StringBuilder desc = new StringBuilder();
-    desc.append(getShortName());
-    desc.append(" inputs: ");
-    for (Path p : dexes) {
-      desc.append(p).append(' ');
+    ImmutableList.Builder<String> desc = ImmutableList.builder();
+    desc.add(getShortName());
+    for (Path p : inputs) {
+      desc.add(p.toString());
     }
-    desc.append("output: ");
-    desc.append(output);
-    return desc.toString();
+    desc.add(">");
+    desc.add(output.toString());
+    return Joiner.on(" ").join(desc.build());
 
   }
 }
