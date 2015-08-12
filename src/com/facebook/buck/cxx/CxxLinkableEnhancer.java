@@ -26,6 +26,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -59,7 +60,8 @@ public class CxxLinkableEnhancer {
       Linker.LinkableDepType depType,
       Iterable<? extends BuildRule> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
-      Optional<SourcePath> bundleLoader) {
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildRule> blacklist) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
@@ -77,6 +79,7 @@ public class CxxLinkableEnhancer {
             cxxPlatform,
             nativeLinkableDeps,
             depType,
+            blacklist,
             /* reverse */ true);
     ImmutableList<SourcePath> allInputs =
         ImmutableList.<SourcePath>builder()

@@ -789,7 +789,8 @@ AppleSdkPaths appleSdkPaths =
               Linker.LinkableDepType.SHARED,
               ImmutableList.<BuildRule>of(),
               Optional.<Linker.CxxRuntimeType>absent(),
-              Optional.<SourcePath>absent());
+              Optional.<SourcePath>absent(),
+              ImmutableSet.<BuildRule>of());
       RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(rule);
       ruleKeys.put(entry.getKey(), builder.build());
     }

@@ -99,7 +99,8 @@ public class AppleLibraryDescription implements
         resolver,
         args,
         Optional.<Linker.LinkableDepType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
   }
 
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
@@ -108,7 +109,8 @@ public class AppleLibraryDescription implements
       BuildRuleResolver resolver,
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
-      Optional<SourcePath> bundleLoader) {
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildRule> blacklist) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
@@ -130,7 +132,8 @@ public class AppleLibraryDescription implements
         delegateArg,
         typeAndPlatform,
         linkableDepType,
-        bundleLoader);
+        bundleLoader,
+        blacklist);
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {

@@ -194,7 +194,8 @@ public class CxxPythonExtensionDescription implements
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
         args.cxxRuntimeType,
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
   }
 
   @Override

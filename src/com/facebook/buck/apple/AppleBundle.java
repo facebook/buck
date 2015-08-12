@@ -265,6 +265,8 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
   public String getPlatformName() { return platformName; }
 
+  public Optional<BuildRule> getBinary() { return binary; }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,

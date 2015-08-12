@@ -348,7 +348,8 @@ public class CxxLibraryDescription implements
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
-      Optional<SourcePath> bundleLoader) {
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildRule> blacklist) {
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
@@ -405,7 +406,8 @@ public class CxxLibraryDescription implements
         linkableDepType,
         params.getDeps(),
         cxxRuntimeType,
-        bundleLoader);
+        bundleLoader,
+        blacklist);
   }
 
   /**
@@ -603,7 +605,8 @@ public class CxxLibraryDescription implements
       CxxPreprocessMode preprocessMode,
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
-      Optional<SourcePath> bundleLoader) {
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildRule> blacklist) {
     ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -651,7 +654,8 @@ public class CxxLibraryDescription implements
         args.cxxRuntimeType,
         linkType,
         linkableDepType,
-        bundleLoader);
+        bundleLoader,
+        blacklist);
   }
 
   /**
@@ -729,7 +733,8 @@ public class CxxLibraryDescription implements
         args,
         typeAndPlatform,
         Optional.<Linker.LinkableDepType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
   }
 
   public <A extends Arg> BuildRule createBuildRule(
@@ -739,7 +744,8 @@ public class CxxLibraryDescription implements
       final A args,
       TypeAndPlatform typeAndPlatform,
       Optional<Linker.LinkableDepType> linkableDepType,
-      Optional<SourcePath> bundleLoader) {
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildRule> blacklist) {
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
 
     if (params.getBuildTarget().getFlavors()
@@ -820,7 +826,8 @@ public class CxxLibraryDescription implements
             preprocessMode,
             Linker.LinkType.SHARED,
             linkableDepType.or(Linker.LinkableDepType.SHARED),
-            Optional.<SourcePath>absent());
+            Optional.<SourcePath>absent(),
+            blacklist);
       } else if (type.get().getValue().equals(Type.MACH_O_BUNDLE)) {
         return createSharedLibraryBuildRule(
             targetGraph,
@@ -831,7 +838,8 @@ public class CxxLibraryDescription implements
             preprocessMode,
             Linker.LinkType.MACH_O_BUNDLE,
             linkableDepType.or(Linker.LinkableDepType.SHARED),
-            bundleLoader);
+            bundleLoader,
+            blacklist);
       } else if (type.get().getValue().equals(Type.STATIC)) {
         return createStaticLibraryBuildRule(
             targetGraph,

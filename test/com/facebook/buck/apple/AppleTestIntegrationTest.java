@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -450,6 +451,30 @@ public class AppleTestIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+  }
+
+  @Test
+  public void testDepenciesLinking() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_test_dependencies_test", tmp);
+    workspace.setUp();
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("xctool"),
+        Paths.get("xctool"));
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:App");
+    result.assertSuccess();
+
+    ProcessExecutor.Result hasSymbol = workspace.runCommand(
+        "nm",
+        workspace
+            .getPath(
+                "buck-out/gen/AppTests#apple-test-library,iphonesimulator-x86_64,shared/" +
+                    "libAppTests#apple-test-library.dylib")
+            .toString());
+
+    assertThat(hasSymbol.getExitCode(), equalTo(0));
+    assertThat(hasSymbol.getStdout().get(), containsString("U _OBJC_CLASS_$_Library"));
   }
 
   private static void assertIsSymbolicLink(

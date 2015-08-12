@@ -182,6 +182,7 @@ public class NativeLinkables {
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
       Predicate<Object> traverse,
+      ImmutableSet<BuildRule> blacklist,
       boolean reverse) {
 
     // Build up the graph and bookkeeping tracking how we link each dep.
@@ -198,7 +199,7 @@ public class NativeLinkables {
     for (BuildRule buildRule : reverse ? sorted.reverse() : sorted) {
       if (buildRule instanceof NativeLinkable) {
         Linker.LinkableDepType type = result.getSecond().get(buildRule.getBuildTarget());
-        if (type != null) {
+        if (type != null && !blacklist.contains(buildRule)) {
           NativeLinkable linkable = (NativeLinkable) buildRule;
           nativeLinkableInputs.add(linkable.getNativeLinkableInput(targetGraph, cxxPlatform, type));
         }
@@ -213,6 +214,7 @@ public class NativeLinkables {
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
+      ImmutableSet<BuildRule> blacklist,
       boolean reverse) {
     return getTransitiveNativeLinkableInput(
         targetGraph,
@@ -220,6 +222,7 @@ public class NativeLinkables {
         inputs,
         depType,
         Predicates.instanceOf(NativeLinkable.class),
+        blacklist,
         reverse);
   }
 

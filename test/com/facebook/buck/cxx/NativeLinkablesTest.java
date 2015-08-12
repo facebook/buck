@@ -28,6 +28,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 
 import org.hamcrest.Matchers;
@@ -156,6 +157,7 @@ public class NativeLinkablesTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Linker.LinkableDepType.SHARED,
+            ImmutableSet.<BuildRule>of(),
             /* reverse */ false);
     assertThat(inputForTop.getArgs(), Matchers.containsInAnyOrder("a", "b", "d"));
     assertThat(inputForTop.getArgs(), Matchers.not(Matchers.contains("c")));
@@ -168,6 +170,7 @@ public class NativeLinkablesTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(c),
             Linker.LinkableDepType.SHARED,
+            ImmutableSet.<BuildRule>of(),
             /* reverse */ false);
     assertThat(inputForB.getArgs(), Matchers.containsInAnyOrder("c", "d"));
   }

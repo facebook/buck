@@ -1,0 +1,45 @@
+apple_library(
+  name = 'Library',
+  srcs = [
+    'Library.m',
+  ],
+  exported_headers = [
+    'Library.h',
+  ],
+)
+
+apple_binary(
+  name = 'AppBinary',
+  srcs = [
+    'App.m',
+  ],
+  deps = [
+    ':Library',
+  ],
+)
+
+apple_bundle(
+  name = 'App',
+  binary = ':AppBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+  tests = [
+    ':AppTests',
+  ]
+)
+
+apple_test(
+  name = 'AppTests',
+  extension = 'xctest',
+  info_plist = 'Test.plist',
+  test_host_app = ':App',
+  srcs = [
+    'AppTests.m',
+  ],
+  deps = [
+    ':Library',
+  ],
+  frameworks = [
+    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+  ],
+)

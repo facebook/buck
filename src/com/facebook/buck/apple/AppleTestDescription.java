@@ -20,12 +20,15 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -155,8 +158,18 @@ public class AppleTestDescription implements
       extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());
     }
 
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatformFlavorDomain
+          .getValue(params.getBuildTarget().getFlavors())
+          .or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+
     Optional<AppleBundle> testHostApp;
     Optional<SourcePath> testHostAppBinarySourcePath;
+    ImmutableSet<BuildRule> blacklist;
     if (args.testHostApp.isPresent()) {
       TargetNode<?> testHostAppNode = targetGraph.get(args.testHostApp.get());
       Preconditions.checkNotNull(testHostAppNode);
@@ -195,9 +208,19 @@ public class AppleTestDescription implements
                   testHostAppDescription));
       testHostAppBinarySourcePath = Optional.<SourcePath>of(
           new BuildTargetSourcePath(testHostAppDescription.binary));
+
+      Pair<MutableDirectedGraph<BuildRule>, Map<BuildTarget, Linker.LinkableDepType>>
+          transitiveDependencies = NativeLinkables.getTransitiveNativeLinkableInput(
+            cxxPlatform,
+            testHostApp.get().getBinary().get().getDeps(),
+            Linker.LinkableDepType.STATIC,
+            Predicates.alwaysTrue());
+
+      blacklist = ImmutableSet.copyOf(transitiveDependencies.getFirst().getNodes());
     } else {
       testHostApp = Optional.absent();
       testHostAppBinarySourcePath = Optional.absent();
+      blacklist = ImmutableSet.of();
     }
 
     BuildRule library = appleLibraryDescription.createBuildRule(
@@ -213,19 +236,12 @@ public class AppleTestDescription implements
         // For now, instead of building all deps as dylibs and fixing up their install_names,
         // we'll just link them statically.
         Optional.of(Linker.LinkableDepType.STATIC),
-        testHostAppBinarySourcePath);
+        testHostAppBinarySourcePath,
+        blacklist);
     if (!createBundle) {
       return library;
     }
 
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatformFlavorDomain
-          .getValue(params.getBuildTarget().getFlavors())
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
-    }
     AppleCxxPlatform appleCxxPlatform =
         platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
     if (appleCxxPlatform == null) {

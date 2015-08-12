@@ -286,7 +286,8 @@ public class PrebuiltCxxLibraryDescription
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
   }
 
   @Override

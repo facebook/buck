@@ -1,0 +1,8 @@
+[cxx]
+
+default_platform = iphonesimulator-x86_64
+ldflags = -framework Foundation -ObjC
+
+[apple]
+
+xctool_path = xctool/bin/xctool

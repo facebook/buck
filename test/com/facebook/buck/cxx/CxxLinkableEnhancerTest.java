@@ -150,7 +150,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
@@ -189,7 +190,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
 
     // Verify that the archive rules dependencies are empty.
     assertEquals(cxxLink.getDeps(), ImmutableSortedSet.<BuildRule>of());
@@ -236,7 +238,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
 
     // Verify that the fake build rule made it in as a dep.
     assertTrue(cxxLink.getDeps().contains(fakeBuildRule));
@@ -267,7 +270,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
     assertFalse(executable.getArgs().contains("-shared"));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
@@ -286,7 +290,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
     assertTrue(shared.getArgs().contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
@@ -305,7 +310,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
     assertTrue(sharedWithSoname.getArgs().contains("-shared"));
     assertNotEquals(Collections.indexOfSubList(sharedWithSoname.getArgs(), sonameArgs), -1);
   }
@@ -347,7 +353,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
     assertTrue(staticLink.getArgs().contains(staticArg) ||
         staticLink.getArgs().contains("-Wl," + staticArg));
     assertFalse(staticLink.getArgs().contains(sharedArg));
@@ -368,7 +375,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.SHARED,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
     assertFalse(sharedLink.getArgs().contains(staticArg));
     assertFalse(sharedLink.getArgs().contains("-Wl," + staticArg));
     assertTrue(sharedLink.getArgs().contains(sharedArg) ||
@@ -413,7 +421,8 @@ public class CxxLinkableEnhancerTest {
           Linker.LinkableDepType.SHARED,
           ImmutableSortedSet.<BuildRule>of(),
           runtimeTypes.get(i),
-          Optional.<SourcePath>absent());
+          Optional.<SourcePath>absent(),
+          ImmutableSet.<BuildRule>of());
 
       assertTrue(
           "\"" + lib.getArgs().toString() + "\" contains " + expectedLibc[i],
@@ -453,6 +462,7 @@ public class CxxLinkableEnhancerTest {
             cxxPlatform,
             ImmutableList.of(top),
             Linker.LinkableDepType.STATIC,
+            ImmutableSet.<BuildRule>of(),
             /* reverse */ true);
     assertTrue(bottomInput.getArgs().contains(sentinel));
     assertFalse(totalInput.getArgs().contains(sentinel));
@@ -477,7 +487,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>of(new TestSourcePath("path/to/MyBundleLoader")));
+        Optional.<SourcePath>of(new TestSourcePath("path/to/MyBundleLoader")),
+        ImmutableSet.<BuildRule>of());
     assertThat(
         cxxLink.getArgs(),
         hasItem("-bundle"));
@@ -507,7 +518,8 @@ public class CxxLinkableEnhancerTest {
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent());
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
     resolver.addToIndex(bundleLoaderRule);
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
@@ -528,7 +540,8 @@ public class CxxLinkableEnhancerTest {
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>of(
-            new BuildTargetSourcePath(bundleLoaderRule.getBuildTarget())));
+            new BuildTargetSourcePath(bundleLoaderRule.getBuildTarget())),
+            ImmutableSet.<BuildRule>of());
 
     // Ensure the bundle depends on the bundle loader rule.
     assertThat(

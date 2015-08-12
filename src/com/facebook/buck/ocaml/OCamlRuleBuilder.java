@@ -189,6 +189,7 @@ public class OCamlRuleBuilder {
         ocamlBuckConfig.getCxxPlatform(),
         params.getDeps(),
         Linker.LinkableDepType.STATIC,
+        ImmutableSet.<BuildRule>of(),
         /* reverse */ false);
 
     ImmutableList<OCamlLibrary> ocamlInput = OCamlUtil.getTransitiveOCamlInput(params.getDeps());
@@ -321,6 +322,7 @@ public class OCamlRuleBuilder {
         ocamlBuckConfig.getCxxPlatform(),
         params.getDeps(),
         Linker.LinkableDepType.STATIC,
+        ImmutableSet.<BuildRule>of(),
         /* reverse */ false);
 
     ImmutableList<OCamlLibrary> ocamlInput = OCamlUtil.getTransitiveOCamlInput(params.getDeps());
