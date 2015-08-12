@@ -17,6 +17,9 @@ prebuilt_jar(
     '//third-party/java/plexus:plexus-interpolation',
     '//third-party/java/plexus:plexus-utils',
   ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+  ],
 )
 
 prebuilt_jar(
@@ -25,6 +28,10 @@ prebuilt_jar(
   source_jar = 'maven-model-3.2.5-sources.jar',
   deps = [
     '//third-party/java/plexus:plexus-utils',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+    '//test/...',
   ],
 )
 
@@ -47,6 +54,7 @@ prebuilt_jar(
   ],
   visibility = [
     '//src/com/facebook/buck/maven:maven',
+    '//src/com/facebook/buck/maven:util',
   ],
 )
 

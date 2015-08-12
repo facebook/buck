@@ -144,6 +144,7 @@ java_test(
     '//src/com/facebook/buck/json:json',
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/maven:maven',
+    '//src/com/facebook/buck/maven:util',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:config',
     '//src/com/facebook/buck/parser:parser',

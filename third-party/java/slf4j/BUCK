@@ -4,6 +4,7 @@ prebuilt_jar(
   source_jar = 'slf4j-api-1.7.5-sources.jar',
   visibility = [
     '//src/com/facebook/buck/maven:maven',
+    '//src/com/facebook/buck/maven:util',
     '//third-party/java/aether:aether-impl',
     '//third-party/java/sisu:sisu-guice',
   ],

@@ -1,16 +1,25 @@
+UTIL_SRCS = [
+  'AetherUtil.java',
+]
+
 java_library(
   name = 'maven',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = UTIL_SRCS),
   resources = [
     'build-file.st',
   ],
   deps = [
+    ':util',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/java:classhash',
+    '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/util:util',
     '//third-party/java/aether:aether-api',
     '//third-party/java/aether:aether-connector-basic',
     '//third-party/java/aether:aether-impl',
@@ -20,6 +29,8 @@ java_library(
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/maven:maven-aether-provider',
+    '//third-party/java/maven:maven-model',
+    '//third-party/java/maven:maven-model-builder',
     '//third-party/java/slf4j:slf4j-api',
     '//third-party/java/stringtemplate:stringtemplate',
   ],
@@ -30,6 +41,21 @@ java_library(
     '//test/com/facebook/buck/maven:maven',
     '//test/com/facebook/buck/maven:testutil',
   ],
+)
+
+java_library(
+  name = 'util',
+  srcs = UTIL_SRCS,
+  deps = [
+    '//third-party/java/aether:aether-api',
+    '//third-party/java/aether:aether-connector-basic',
+    '//third-party/java/aether:aether-impl',
+    '//third-party/java/aether:aether-spi',
+    '//third-party/java/aether:aether-transport-http',
+    '//third-party/java/maven:maven-aether-provider',
+    '//third-party/java/slf4j:slf4j-api',
+  ],
+  visibility = ['PUBLIC'],
 )
 
 java_binary(

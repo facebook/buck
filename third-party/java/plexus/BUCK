@@ -3,6 +3,7 @@ prebuilt_jar(
   binary_jar = 'plexus-utils-3.0.20.jar',
   source_jar = 'plexus-utils-3.0.20-sources.jar',
   visibility = [
+    '//test/...',
     '//third-party/java/maven:maven-aether-provider',
     '//third-party/java/maven:maven-model',
     '//third-party/java/maven:maven-model-builder',
