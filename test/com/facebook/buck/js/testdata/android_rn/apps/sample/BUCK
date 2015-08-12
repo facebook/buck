@@ -8,3 +8,15 @@ android_binary(
     '//res/com/sample/base:base',
   ],
 )
+
+android_binary(
+  name = 'app-without-rn-res',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//js:app-no-res#dev',
+    '//res/com/sample/base:base',
+    #REPLACE_ME_WITH_ANOTHER_RES,
+  ],
+)

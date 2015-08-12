@@ -9,3 +9,14 @@ android_react_native_library(
     'PUBLIC'
   ],
 )
+
+android_react_native_library(
+  name = 'app-no-res', # missing 'package' argument means only JS bundle is packaged.
+  srcs = glob(['**/*.js', '**/*.png']),
+  entry_path = 'app/sample.android.js',
+  bundle_name = 'SampleBundle.js',
+  deps = [],
+  visibility = [
+    'PUBLIC'
+  ],
+)

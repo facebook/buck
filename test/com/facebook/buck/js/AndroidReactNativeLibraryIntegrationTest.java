@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -58,6 +59,27 @@ public class AndroidReactNativeLibraryIntegrationTest {
     zipInspector.assertFileExists("res/drawable-mdpi-v4/image.png");
     zipInspector.assertFileExists("res/drawable-hdpi-v4/image.png");
     zipInspector.assertFileExists("res/drawable-xhdpi-v4/image.png");
+  }
+
+  @Test
+  @Ignore("Fix first order dependencies of AaptPackageResource.")
+  public void testAaptPackageDependsOnReactNativeBundle() throws IOException {
+    workspace.enableDirCache();
+    workspace.runBuckBuild("//apps/sample:app-without-rn-res").assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath("buck-out/gen/apps/sample/app-without-rn-res.apk"));
+    zipInspector.assertFileExists("assets/SampleBundle.js");
+
+    workspace.runBuckCommand("clean");
+    workspace.replaceFileContents(
+        "apps/sample/BUCK",
+        "#REPLACE_ME_WITH_ANOTHER_RES",
+        "'//res/com/sample/unused:unused'");
+
+    workspace.runBuckBuild("//apps/sample:app-without-rn-res").assertSuccess();
+    zipInspector = new ZipInspector(
+        workspace.getPath("buck-out/gen/apps/sample/app-without-rn-res.apk"));
+    zipInspector.assertFileExists("assets/SampleBundle.js");
   }
 
   @Test
