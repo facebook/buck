@@ -141,6 +141,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         additionalClasspathEntries,
         javacOptions,
         vmArgs,
+        cxxLibraryEnhancement.nativeLibsEnvironment,
         JavaTestDescription.validateAndGetSourcesUnderTest(
             args.sourceUnderTest.get(),
             params.getBuildTarget(),

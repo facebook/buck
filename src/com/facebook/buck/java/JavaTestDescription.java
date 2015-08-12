@@ -38,6 +38,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -124,6 +125,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         args.testType.or(TestType.JUNIT),
         javacOptions,
         vmArgs,
+        cxxLibraryEnhancement.nativeLibsEnvironment,
         validateAndGetSourcesUnderTest(
             args.sourceUnderTest.get(),
             params.getBuildTarget(),
@@ -184,6 +186,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;
     public final ImmutableList<String> updatedVmArgs;
+    public final ImmutableMap<String, String> nativeLibsEnvironment;
 
     public CxxLibraryEnhancement(
         TargetGraph targetGraph,
@@ -204,13 +207,13 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             // the test results cache.
             .addAll(pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
             .build());
-        updatedVmArgs = ImmutableList.<String>builder()
-            .addAll(vmArgs)
-            .add("-Djava.library.path=" + nativeLibsSymlinkTree.getRoot())
-            .build();
+        updatedVmArgs = vmArgs;
+        nativeLibsEnvironment = ImmutableMap.of(
+            cxxPlatform.getLd().searchPathEnvVar(), nativeLibsSymlinkTree.getRoot().toString());
       } else {
         updatedParams = params;
         updatedVmArgs = vmArgs;
+        nativeLibsEnvironment = ImmutableMap.of();
       }
     }
 

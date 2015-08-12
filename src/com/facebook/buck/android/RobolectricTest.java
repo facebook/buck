@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -88,6 +89,7 @@ public class RobolectricTest extends JavaTest {
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       List<String> vmArgs,
+      Map<String, String> nativeLibsEnvironment,
       ImmutableSet<BuildRule> sourceTargetsUnderTest,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
@@ -108,6 +110,7 @@ public class RobolectricTest extends JavaTest {
         TestType.JUNIT,
         javacOptions,
         vmArgs,
+        nativeLibsEnvironment,
         sourceTargetsUnderTest,
         resourcesRoot,
         mavenCoords,

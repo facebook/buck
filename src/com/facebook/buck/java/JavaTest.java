@@ -48,6 +48,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -60,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -74,6 +76,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
 
   @AddToRuleKey
   private final ImmutableList<String> vmArgs;
+
+  private final ImmutableMap<String, String> nativeLibsEnvironment;
 
   @Nullable
   private CompiledClassFileFinder compiledClassFileFinder;
@@ -117,6 +121,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
       TestType testType,
       JavacOptions javacOptions,
       List<String> vmArgs,
+      Map<String, String> nativeLibsEnvironment,
       ImmutableSet<BuildRule> sourceUnderTest,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
@@ -138,6 +143,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         resourcesRoot,
         mavenCoords);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
+    this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.sourceUnderTest = sourceUnderTest;
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
@@ -218,6 +224,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         classpathEntries,
         reorderedTestClasses,
         properVmArgs,
+        nativeLibsEnvironment,
         pathToTestOutput,
         getBuildTarget().getBasePath(),
         tmpDirectory,
