@@ -1,7 +1,7 @@
-java_immutables_library(
+java_library(
   name = 'types',
   srcs = [
-    'AbstractRepository.java',
+    'Repository.java',
     'KnownBuildRuleTypes.java',
   ],
   deps = [

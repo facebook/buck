@@ -62,11 +62,11 @@ public class TestRepositoryBuilder {
   }
 
   public Repository build() {
-    return Repository.of(
+    return new Repository(
         name,
         filesystem,
-        buildRuleTypes,
         buckConfig,
+        buildRuleTypes,
         androidDirectoryResolver);
   }
 }

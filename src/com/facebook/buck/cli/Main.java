@@ -55,7 +55,6 @@ import com.facebook.buck.timing.NanosAdjustedClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
@@ -67,6 +66,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.MultiProjectFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -564,13 +564,12 @@ public final class Main {
             new PythonBuckConfig(buckConfig, new ExecutableFinder()).getPythonEnvironment(
                 processExecutor));
 
-    Repository rootRepository = Repository.builder()
-        .setName(Optional.<String>absent())
-        .setFilesystem(filesystem)
-        .setBuckConfig(buckConfig)
-        .setKnownBuildRuleTypes(buildRuleTypes)
-        .setAndroidDirectoryResolver(androidDirectoryResolver)
-        .build();
+    Repository rootRepository = new Repository(
+        Optional.<String>absent(),
+        filesystem,
+        buckConfig,
+        buildRuleTypes,
+        androidDirectoryResolver);
 
     int exitCode;
     ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();

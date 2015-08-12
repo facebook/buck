@@ -22,12 +22,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
-import org.immutables.value.Value;
 
 import java.nio.file.Path;
 
@@ -35,27 +32,48 @@ import java.nio.file.Path;
  * Represents a single checkout of a code base. Two repositories model the same code base if their
  * underlying {@link ProjectFilesystem}s are equal.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractRepository {
+public class Repository {
 
-  @Value.Auxiliary
-  @Value.Parameter
-  public abstract Optional<String> getName();
+  private final Optional<String> name;
+  private final ProjectFilesystem filesystem;
+  private final BuckConfig config;
+  private final KnownBuildRuleTypes knownBuildRuleTypes;
+  private final AndroidDirectoryResolver directoryResolver;
 
-  @Value.Parameter
-  public abstract ProjectFilesystem getFilesystem();
+  public Repository(
+      Optional<String> name,
+      ProjectFilesystem filesystem,
+      BuckConfig config,
+      KnownBuildRuleTypes knownBuildRuleTypes,
+      AndroidDirectoryResolver directoryResolver) {
 
-  @Value.Auxiliary
-  @Value.Parameter
-  public abstract KnownBuildRuleTypes getKnownBuildRuleTypes();
+    this.name = name;
+    this.filesystem = filesystem;
+    this.config = config;
+    this.knownBuildRuleTypes = knownBuildRuleTypes;
+    this.directoryResolver = directoryResolver;
+  }
 
-  @Value.Parameter
-  public abstract BuckConfig getBuckConfig();
+  public Optional<String> getName() {
+    return name;
+  }
+
+  public ProjectFilesystem getFilesystem() {
+    return filesystem;
+  }
+
+  public KnownBuildRuleTypes getKnownBuildRuleTypes() {
+    return knownBuildRuleTypes;
+  }
+
+  public BuckConfig getBuckConfig() {
+    return config;
+  }
 
   // TODO(jacko): This is a hack to avoid breaking the build. Get rid of it.
-  @Value.Parameter
-  public abstract AndroidDirectoryResolver getAndroidDirectoryResolver();
+  public AndroidDirectoryResolver getAndroidDirectoryResolver() {
+    return directoryResolver;
+  }
 
   public Description<?> getDescription(BuildRuleType type) {
     return getKnownBuildRuleTypes().getDescription(type);
