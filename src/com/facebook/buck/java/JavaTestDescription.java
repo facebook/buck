@@ -98,11 +98,9 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         targetGraph,
         params,
         args.useCxxLibraries,
-        args.vmArgs.or(ImmutableList.<String>of()),
         pathResolver,
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
-    ImmutableList<String> vmArgs = cxxLibraryEnhancement.updatedVmArgs;
 
     return new JavaTest(
         params.appendExtraDeps(
@@ -124,7 +122,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         args.testType.or(TestType.JUNIT),
         javacOptions,
-        vmArgs,
+        args.vmArgs.get(),
         cxxLibraryEnhancement.nativeLibsEnvironment,
         validateAndGetSourcesUnderTest(
             args.sourceUnderTest.get(),
@@ -185,14 +183,12 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
 
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;
-    public final ImmutableList<String> updatedVmArgs;
     public final ImmutableMap<String, String> nativeLibsEnvironment;
 
     public CxxLibraryEnhancement(
         TargetGraph targetGraph,
         BuildRuleParams params,
         Optional<Boolean> useCxxLibraries,
-        ImmutableList<String> vmArgs,
         SourcePathResolver pathResolver,
         CxxPlatform cxxPlatform) {
       if (useCxxLibraries.or(false)) {
@@ -207,12 +203,10 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             // the test results cache.
             .addAll(pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
             .build());
-        updatedVmArgs = vmArgs;
         nativeLibsEnvironment = ImmutableMap.of(
             cxxPlatform.getLd().searchPathEnvVar(), nativeLibsSymlinkTree.getRoot().toString());
       } else {
         updatedParams = params;
-        updatedVmArgs = vmArgs;
         nativeLibsEnvironment = ImmutableMap.of();
       }
     }

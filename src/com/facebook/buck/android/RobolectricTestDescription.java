@@ -115,11 +115,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             targetGraph,
             params,
             args.useCxxLibraries,
-            vmArgs,
             pathResolver,
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
-    vmArgs = cxxLibraryEnhancement.updatedVmArgs;
 
     return new RobolectricTest(
         params.appendExtraDeps(
