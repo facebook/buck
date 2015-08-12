@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -98,7 +99,8 @@ public class CxxSourceRuleFactoryTest {
             pathResolver,
             CXX_PLATFORM,
             ImmutableList.of(cxxPreprocessorInput),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     String name = "foo/bar.cpp";
     SourcePath input = new PathSourcePath(PROJECT_FILESYSTEM, target.getBasePath().resolve(name));
@@ -147,7 +149,8 @@ public class CxxSourceRuleFactoryTest {
             pathResolver,
             platform,
             ImmutableList.of(cxxPreprocessorInput),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     String name = "source.cpp";
     CxxSource cxxSource = CxxSource.of(
@@ -225,7 +228,8 @@ public class CxxSourceRuleFactoryTest {
             sourcePathResolver,
             platform,
             ImmutableList.of(cxxPreprocessorInput),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     String cSourceName = "test.c";
     List<String> perFileFlagsForTestC =
@@ -322,7 +326,8 @@ public class CxxSourceRuleFactoryTest {
             new SourcePathResolver(resolver),
             CXX_PLATFORM,
             ImmutableList.<CxxPreprocessorInput>of(),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     String nameCompile = "foo/bar.ii";
     CxxSource cxxSourceCompile = CxxSource.of(
@@ -366,7 +371,8 @@ public class CxxSourceRuleFactoryTest {
             new SourcePathResolver(resolver),
             CXX_PLATFORM,
             ImmutableList.<CxxPreprocessorInput>of(),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     String name = "foo/bar.ii";
     CxxSource cxxSource = CxxSource.of(
@@ -463,7 +469,8 @@ public class CxxSourceRuleFactoryTest {
             new SourcePathResolver(resolver),
             platform,
             ImmutableList.<CxxPreprocessorInput>of(),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     String name = "source.ii";
     CxxSource cxxSource = CxxSource.of(
@@ -543,7 +550,8 @@ public class CxxSourceRuleFactoryTest {
             sourcePathResolver,
             platform,
             ImmutableList.<CxxPreprocessorInput>of(),
-            explicitCompilerFlags);
+            explicitCompilerFlags,
+            Optional.<SourcePath>absent());
 
     String cSourceName = "test.i";
     List<String> cSourcePerFileFlags = ImmutableList.of("-c-source-par-file-flag");
@@ -708,7 +716,8 @@ public class CxxSourceRuleFactoryTest {
             sourcePathResolver,
             CXX_PLATFORM,
             ImmutableList.<CxxPreprocessorInput>of(),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     CxxPreprocessAndCompile cxxCompile = cxxSourceRuleFactory.createCompileBuildRule(
         buildRuleResolver,
@@ -760,7 +769,7 @@ public class CxxSourceRuleFactoryTest {
   }
 
   @Test
-  public void checkCorrectFlagsAreUsedForObjcAndObjcxx() {
+     public void checkCorrectFlagsAreUsedForObjcAndObjcxx() {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
@@ -778,7 +787,8 @@ public class CxxSourceRuleFactoryTest {
             new SourcePathResolver(buildRuleResolver),
             platform,
             ImmutableList.<CxxPreprocessorInput>of(),
-            explicitCompilerFlags);
+            explicitCompilerFlags,
+            Optional.<SourcePath>absent());
 
     String objcSourceName = "test.mi";
     CxxSource objcSource = CxxSource.of(
@@ -836,6 +846,49 @@ public class CxxSourceRuleFactoryTest {
   }
 
   @Test
+  public void checkPrefixHeaderIsIncluded() {
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+
+    FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
+    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+
+    String prefixHeaderName = "test.pch";
+    SourcePath prefixHeaderSourcePath = new TestSourcePath(prefixHeaderName);
+
+    CxxSourceRuleFactory cxxSourceRuleFactory =
+        new CxxSourceRuleFactory(
+            params,
+            buildRuleResolver,
+            new SourcePathResolver(buildRuleResolver),
+            platform,
+            ImmutableList.<CxxPreprocessorInput>of(),
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>of(prefixHeaderSourcePath));
+
+    String objcSourceName = "test.m";
+    CxxSource objcSource = CxxSource.of(
+        CxxSource.Type.OBJC,
+        new TestSourcePath(objcSourceName),
+        ImmutableList.<String>of());
+    CxxPreprocessAndCompile objcPreprocessAndCompile =
+        cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
+            buildRuleResolver,
+            objcSourceName,
+            objcSource,
+            CxxSourceRuleFactory.PicType.PDC,
+            CxxPreprocessMode.SEPARATE);
+
+    ImmutableList<String> explicitPrefixHeaderRelatedFlags = ImmutableList.of(
+        "-include", prefixHeaderName);
+
+    CxxPreprocessAndCompileStep step = objcPreprocessAndCompile.makeMainStep();
+    assertContains(step.getCommand(), explicitPrefixHeaderRelatedFlags);
+  }
+
+  @Test
   public void duplicateRuleFetchedFromResolver() {
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -852,7 +905,8 @@ public class CxxSourceRuleFactoryTest {
             new SourcePathResolver(buildRuleResolver),
             platform,
             ImmutableList.<CxxPreprocessorInput>of(),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     String objcSourceName = "test.m";
     CxxSource objcSource = CxxSource.of(

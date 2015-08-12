@@ -19,7 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 public class CxxSourceRuleFactoryHelper {
@@ -34,7 +36,8 @@ public class CxxSourceRuleFactoryHelper {
         new SourcePathResolver(resolver),
         cxxPlatform,
         ImmutableList.<CxxPreprocessorInput>of(),
-        ImmutableList.<String>of());
+        ImmutableList.<String>of(),
+        Optional.<SourcePath>absent());
   }
 
 }

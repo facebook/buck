@@ -39,7 +39,7 @@ public class CxxConstructorArg implements HasTests {
   public Optional<PatternMatchedCollection<SourceWithFlagsList>> platformSrcs;
   public Optional<SourceList> headers;
   public Optional<PatternMatchedCollection<SourceList>> platformHeaders;
-  public Optional<ImmutableList<SourcePath>> prefixHeaders;
+  public Optional<SourcePath> prefixHeader;
   public Optional<ImmutableList<String>> compilerFlags;
   public Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags;
   public Optional<ImmutableList<String>> preprocessorFlags;

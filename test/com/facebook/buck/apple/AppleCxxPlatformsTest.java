@@ -711,7 +711,8 @@ AppleSdkPaths appleSdkPaths =
               pathResolver,
               entry.getValue().getCxxPlatform(),
               ImmutableList.<CxxPreprocessorInput>of(),
-              ImmutableList.<String>of());
+              ImmutableList.<String>of(),
+              Optional.<SourcePath>absent());
       CxxPreprocessAndCompile rule;
       switch (operation) {
         case PREPROCESS_AND_COMPILE:

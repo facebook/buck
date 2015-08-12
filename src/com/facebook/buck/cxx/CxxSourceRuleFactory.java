@@ -69,6 +69,7 @@ public class CxxSourceRuleFactory {
   private final CxxPlatform cxxPlatform;
   private final ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput;
   private final ImmutableList<String> compilerFlags;
+  private final Optional<SourcePath> prefixHeader;
 
   private final Supplier<ImmutableList<BuildRule>> preprocessDeps = Suppliers.memoize(
       new Supplier<ImmutableList<BuildRule>>() {
@@ -82,7 +83,6 @@ public class CxxSourceRuleFactory {
             builder.addAll(
                 pathResolver.filterBuildRuleInputs(
                     ImmutableList.<SourcePath>builder()
-                        .addAll(input.getIncludes().getPrefixHeaders())
                         .addAll(input.getIncludes().getNameToPathMap().values())
                         .build()));
 
@@ -175,13 +175,15 @@ public class CxxSourceRuleFactory {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
-      ImmutableList<String> compilerFlags) {
+      ImmutableList<String> compilerFlags,
+      Optional<SourcePath> prefixHeader) {
     this.params = params;
     this.resolver = resolver;
     this.pathResolver = pathResolver;
     this.cxxPlatform = cxxPlatform;
     this.cxxPreprocessorInput = cxxPreprocessorInput;
     this.compilerFlags = compilerFlags;
+    this.prefixHeader = prefixHeader;
   }
 
   private String getOutputName(String name) {
@@ -279,6 +281,7 @@ public class CxxSourceRuleFactory {
         systemIncludeRoots.get(),
         headerMaps.get(),
         frameworkRoots.get(),
+        prefixHeader,
         includes.get(),
         cxxPlatform.getDebugPathSanitizer());
     resolver.addToIndex(result);
@@ -589,7 +592,7 @@ public class CxxSourceRuleFactory {
         systemIncludeRoots.get(),
         headerMaps.get(),
         frameworkRoots.get(),
-        includes.get(),
+        prefixHeader,
         inferTools,
         cxxPlatform.getDebugPathSanitizer());
     resolver.addToIndex(result);
@@ -637,6 +640,7 @@ public class CxxSourceRuleFactory {
         systemIncludeRoots.get(),
         headerMaps.get(),
         frameworkRoots.get(),
+        prefixHeader,
         includes.get(),
         cxxPlatform.getDebugPathSanitizer(),
         strategy);
@@ -765,6 +769,7 @@ public class CxxSourceRuleFactory {
       CxxPlatform cxxPlatform,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
       ImmutableList<String> compilerFlags,
+      Optional<SourcePath> prefixHeader,
       CxxPreprocessMode strategy,
       ImmutableMap<String, CxxSource> sources,
       PicType pic) {
@@ -775,7 +780,8 @@ public class CxxSourceRuleFactory {
             pathResolver,
             cxxPlatform,
             cxxPreprocessorInput,
-            compilerFlags);
+            compilerFlags,
+            prefixHeader);
     return factory.requirePreprocessAndCompileRules(resolver, strategy, sources, pic);
   }
 

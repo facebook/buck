@@ -199,7 +199,8 @@ public class CxxBinaryDescriptionTest {
             pathResolver,
             cxxPlatform,
             ImmutableList.<CxxPreprocessorInput>of(),
-            ImmutableList.<String>of());
+            ImmutableList.<String>of(),
+            Optional.<SourcePath>absent());
 
     // Check that link rule has the expected deps: the object files for our sources and the
     // archive from the dependency.

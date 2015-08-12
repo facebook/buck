@@ -190,7 +190,6 @@ public class CxxPreprocessables {
         .putAllPreprocessorFlags(exportedPreprocessorFlags)
         .setIncludes(
             CxxHeaders.builder()
-                .setPrefixHeaders(ImmutableSortedSet.<SourcePath>of())
                 .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
                 .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))
                 .build())

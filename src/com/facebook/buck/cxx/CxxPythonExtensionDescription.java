@@ -144,7 +144,6 @@ public class CxxPythonExtensionDescription implements
                 args.platformPreprocessorFlags,
                 args.langPreprocessorFlags,
                 cxxPlatform),
-            args.prefixHeaders.get(),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -170,6 +169,7 @@ public class CxxPythonExtensionDescription implements
                 args.compilerFlags,
                 args.platformCompilerFlags,
                 cxxPlatform),
+            args.prefixHeader,
             cxxBuckConfig.getPreprocessMode(),
             allSources,
             CxxSourceRuleFactory.PicType.PIC);

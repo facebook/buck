@@ -196,7 +196,7 @@ public class AppleDescriptions {
     output.platformSrcs = Optional.of(PatternMatchedCollection.<SourceWithFlagsList>of());
     output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
     output.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
-    output.prefixHeaders = Optional.of(ImmutableList.copyOf(arg.prefixHeader.asSet()));
+    output.prefixHeader = arg.prefixHeader;
     output.compilerFlags = arg.compilerFlags;
     output.platformCompilerFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());

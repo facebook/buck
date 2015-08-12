@@ -210,7 +210,8 @@ public final class CxxInferEnhancer {
               CxxFlags.getFlags(
                   args.compilerFlags,
                   args.platformCompilerFlags,
-                  cxxPlatform)),
+                  cxxPlatform),
+              args.prefixHeader),
             transitiveDepsLibraryRules);
 
     return createInferAnalyzeRule(
@@ -264,7 +265,6 @@ public final class CxxInferEnhancer {
             args.platformPreprocessorFlags,
             args.langPreprocessorFlags,
             cxxPlatform),
-        args.prefixHeaders.get(),
         ImmutableList.of(headerSymlinkTree),
         CxxDescriptionEnhancer.getFrameworkSearchPaths(
             args.frameworkSearchPaths,
@@ -294,7 +294,6 @@ public final class CxxInferEnhancer {
             args.platformPreprocessorFlags,
             args.langPreprocessorFlags,
             cxxPlatform),
-        args.prefixHeaders.get(),
         ImmutableList.of(headerSymlinkTree),
         ImmutableSet.<Path>of(),
         CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
@@ -322,7 +321,8 @@ public final class CxxInferEnhancer {
       CxxSourceRuleFactory.PicType picType,
       CxxInferTools inferTools,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputs,
-      ImmutableList<String> compilerFlags) {
+      ImmutableList<String> compilerFlags,
+      Optional<SourcePath> prefixHeader) {
 
     CxxSourceRuleFactory factory =
         new CxxSourceRuleFactory(
@@ -331,7 +331,8 @@ public final class CxxInferEnhancer {
             new SourcePathResolver(resolver),
             cxxPlatform,
             cxxPreprocessorInputs,
-            compilerFlags);
+            compilerFlags,
+            prefixHeader);
     return factory.createInferCaptureBuildRules(
         sources,
         picType,

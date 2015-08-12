@@ -60,7 +60,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
   private final ImmutableSet<Path> headerMaps;
   private final ImmutableSet<Path> frameworkRoots;
   @AddToRuleKey
-  private final ImmutableList<CxxHeaders> includes;
+  private final Optional<SourcePath> prefixHeader;
 
   private final Path resultsDir;
   private final DebugPathSanitizer sanitizer;
@@ -79,7 +79,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
       ImmutableSet<Path> systemIncludeRoots,
       ImmutableSet<Path> headerMaps,
       ImmutableSet<Path> frameworkRoots,
-      ImmutableList<CxxHeaders> includes,
+      Optional<SourcePath> prefixHeader,
       CxxInferTools inferTools,
       DebugPathSanitizer sanitizer) {
     super(buildRuleParams, pathResolver);
@@ -94,7 +94,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     this.systemIncludeRoots = systemIncludeRoots;
     this.headerMaps = headerMaps;
     this.frameworkRoots = frameworkRoots;
-    this.includes = includes;
+    this.prefixHeader = prefixHeader;
     this.inferTools = inferTools;
     this.resultsDir = BuildTargets.getGenPath(this.getBuildTarget(), "infer-out-%s");
     this.sanitizer = sanitizer;
@@ -119,16 +119,12 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
   }
 
   private ImmutableList<String> getPreprocessorSuffix() {
-    ImmutableSet.Builder<SourcePath> prefixHeaders = ImmutableSet.builder();
-    for (CxxHeaders cxxHeaders : includes) {
-      prefixHeaders.addAll(cxxHeaders.getPrefixHeaders());
-    }
     return ImmutableList.<String>builder()
         .addAll(rulePreprocessorFlags.get())
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
-                FluentIterable.from(prefixHeaders.build())
+                FluentIterable.from(prefixHeader.asSet())
                     .transform(getResolver().getPathFunction())
                     .transform(Functions.toStringFunction())))
         .addAll(

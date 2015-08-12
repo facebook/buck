@@ -593,7 +593,6 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
-      ImmutableList<SourcePath> prefixHeaders,
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       ImmutableSet<Path> frameworkSearchPaths,
       Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps) {
@@ -644,7 +643,6 @@ public class CxxDescriptionEnhancer {
             .putAllPreprocessorFlags(preprocessorFlags)
             .setIncludes(
                 CxxHeaders.builder()
-                    .addAllPrefixHeaders(prefixHeaders)
                     .putAllNameToPathMap(allLinks.build())
                     .putAllFullNameToPathMap(allFullLinks.build())
                     .build())
@@ -799,7 +797,6 @@ public class CxxDescriptionEnhancer {
                 args.platformPreprocessorFlags,
                 args.langPreprocessorFlags,
                 cxxPlatform),
-            args.prefixHeaders.get(),
             ImmutableList.of(headerSymlinkTree),
             getFrameworkSearchPaths(
                 args.frameworkSearchPaths,
@@ -830,6 +827,7 @@ public class CxxDescriptionEnhancer {
                 args.compilerFlags,
                 args.platformCompilerFlags,
                 cxxPlatform),
+            args.prefixHeader,
             preprocessMode,
             sources,
             linkStyle == Linker.LinkableDepType.STATIC ?

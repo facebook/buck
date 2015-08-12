@@ -132,6 +132,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
 
@@ -155,6 +156,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, compilerChange);
@@ -179,6 +181,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, operationChange);
@@ -203,6 +206,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, platformFlagsChange);
@@ -227,6 +231,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, ruleFlagsChange);
@@ -251,6 +256,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, inputChange);
@@ -276,6 +282,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertEquals(defaultRuleKey, includesChange);
@@ -301,6 +308,7 @@ public class CxxPreprocessAndCompileTest {
             ImmutableSet.of(Paths.get("different")),
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertEquals(defaultRuleKey, systemIncludesChange);
@@ -326,6 +334,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             ImmutableSet.of(Paths.get("different")),
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertEquals(defaultRuleKey, headerMapsIncludesChange);
@@ -350,6 +359,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             ImmutableSet.of(Paths.get("different")),
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, frameworkRootsChange);
@@ -410,6 +420,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             sanitizer1));
 
@@ -435,6 +446,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             sanitizer2));
 
@@ -471,6 +483,7 @@ public class CxxPreprocessAndCompileTest {
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
+        Optional.<SourcePath>absent(),
         ImmutableList.of(CxxHeaders.builder().build()),
         DEFAULT_SANITIZER);
 
@@ -502,6 +515,7 @@ public class CxxPreprocessAndCompileTest {
     Path output = Paths.get("test.ii");
     Path depFile = Paths.get("test.ii.dep");
     Path input = Paths.get("test.cpp");
+    Path prefixHeader = Paths.get("prefix.pch");
 
     CxxPreprocessAndCompile buildRule = new CxxPreprocessAndCompile(
         params,
@@ -520,6 +534,7 @@ public class CxxPreprocessAndCompileTest {
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         DEFAULT_FRAMEWORK_ROOTS,
+        Optional.<SourcePath>of(new TestSourcePath(prefixHeader.toString())),
         ImmutableList.of(CxxHeaders.builder().build()),
         DEFAULT_SANITIZER);
 
@@ -528,6 +543,8 @@ public class CxxPreprocessAndCompileTest {
         .add("preprocessor")
         .add("-Dtest=blah")
         .add("-Dfoo=bar")
+        .add("-include")
+        .add(prefixHeader.toString())
         .add("-x", "c++")
         .add("-E")
         .add("-MD")
@@ -578,6 +595,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER);
     assertThat(
@@ -602,6 +620,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_SYSTEM_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
             DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER);
     assertThat(

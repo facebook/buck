@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
@@ -101,6 +102,7 @@ public class CxxCompilationDatabaseTest {
             ImmutableSet.<Path>of(),
             ImmutableSet.<Path>of(),
             ImmutableSet.<Path>of(),
+            Optional.<SourcePath>absent(),
             ImmutableList.<CxxHeaders>of(),
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
@@ -140,6 +142,7 @@ public class CxxCompilationDatabaseTest {
             ImmutableSet.<Path>of(),
             ImmutableSet.<Path>of(),
             ImmutableSet.<Path>of(),
+            Optional.<SourcePath>absent(),
             ImmutableList.<CxxHeaders>of(),
             CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
 
@@ -263,6 +266,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
+        Optional.<SourcePath>absent(),
         ImmutableList.<CxxHeaders>of(),
         CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
 
@@ -291,6 +295,7 @@ public class CxxCompilationDatabaseTest {
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
+        Optional.<SourcePath>absent(),
         ImmutableList.<CxxHeaders>of(),
         CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
 

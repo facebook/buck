@@ -44,12 +44,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * A build rule which preprocesses and/or compiles a C/C++ source in a single step.
@@ -78,6 +76,8 @@ public class CxxPreprocessAndCompile
   private final ImmutableSet<Path> headerMaps;
   private final ImmutableSet<Path> frameworkRoots;
   @AddToRuleKey
+  private final Optional<SourcePath> prefixHeader;
+  @AddToRuleKey
   private final ImmutableList<CxxHeaders> includes;
   private final DebugPathSanitizer sanitizer;
 
@@ -99,6 +99,7 @@ public class CxxPreprocessAndCompile
       ImmutableSet<Path> systemIncludeRoots,
       ImmutableSet<Path> headerMaps,
       ImmutableSet<Path> frameworkRoots,
+      Optional<SourcePath> prefixHeader,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer) {
     super(params, resolver);
@@ -122,6 +123,7 @@ public class CxxPreprocessAndCompile
     this.systemIncludeRoots = systemIncludeRoots;
     this.headerMaps = headerMaps;
     this.frameworkRoots = frameworkRoots;
+    this.prefixHeader = prefixHeader;
     this.includes = includes;
     this.sanitizer = sanitizer;
   }
@@ -156,6 +158,7 @@ public class CxxPreprocessAndCompile
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
         ImmutableSet.<Path>of(),
+        Optional.<SourcePath>absent(),
         ImmutableList.<CxxHeaders>of(),
         sanitizer);
   }
@@ -176,6 +179,7 @@ public class CxxPreprocessAndCompile
       ImmutableSet<Path> systemIncludeRoots,
       ImmutableSet<Path> headerMaps,
       ImmutableSet<Path> frameworkRoots,
+      Optional<SourcePath> prefixHeader,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer) {
     return new CxxPreprocessAndCompile(
@@ -195,6 +199,7 @@ public class CxxPreprocessAndCompile
         systemIncludeRoots,
         headerMaps,
         frameworkRoots,
+        prefixHeader,
         includes,
         sanitizer);
   }
@@ -218,6 +223,7 @@ public class CxxPreprocessAndCompile
       ImmutableSet<Path> systemIncludeRoots,
       ImmutableSet<Path> headerMaps,
       ImmutableSet<Path> frameworkRoots,
+      Optional<SourcePath> prefixHeader,
       ImmutableList<CxxHeaders> includes,
       DebugPathSanitizer sanitizer,
       CxxPreprocessMode strategy) {
@@ -240,6 +246,7 @@ public class CxxPreprocessAndCompile
         systemIncludeRoots,
         headerMaps,
         frameworkRoots,
+        prefixHeader,
         includes,
         sanitizer);
   }
@@ -368,16 +375,12 @@ public class CxxPreprocessAndCompile
 
   private ImmutableList<String> getPreprocessorSuffix() {
     Preconditions.checkState(operation.isPreprocess());
-    ImmutableSet.Builder<SourcePath> prefixHeaders = ImmutableSet.builder();
-    for (CxxHeaders cxxHeaders : includes) {
-      prefixHeaders.addAll(cxxHeaders.getPrefixHeaders());
-    }
     return ImmutableList.<String>builder()
         .addAll(rulePreprocessorFlags.get())
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
-                FluentIterable.from(prefixHeaders.build())
+                FluentIterable.from(prefixHeader.asSet())
                     .transform(getResolver().getPathFunction())
                     .transform(Functions.toStringFunction())))
         .addAll(
@@ -506,14 +509,10 @@ public class CxxPreprocessAndCompile
     // Add the input.
     inputs.add(resolver.getPath(input));
 
-    // All all prefix headers.
-    Set<Path> prefixHeaders = Sets.newTreeSet();
-    for (CxxHeaders headers : includes) {
-      for (SourcePath prefixHeader : headers.getPrefixHeaders()) {
-        prefixHeaders.add(resolver.getPath(prefixHeader));
-      }
+    // Add prefix header.
+    if (prefixHeader.isPresent()) {
+      inputs.add(resolver.getPath(prefixHeader.get()));
     }
-    inputs.addAll(prefixHeaders);
 
     // Add all dynamically detected header dependencies.
     inputs.addAll(

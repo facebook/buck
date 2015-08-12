@@ -186,7 +186,6 @@ public class CxxDescriptionEnhancerTest {
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
-            ImmutableList.<SourcePath>of(),
             ImmutableList.<HeaderSymlinkTree>of(),
             ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -239,7 +238,6 @@ public class CxxDescriptionEnhancerTest {
             otherLibDepParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
-            ImmutableList.<SourcePath>of(),
             ImmutableList.<HeaderSymlinkTree>of(),
             ImmutableSet.<Path>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(

@@ -189,7 +189,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      ImmutableList<SourcePath> prefixHeaders,
+      Optional<SourcePath> prefixHeader,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
@@ -225,7 +225,6 @@ public class CxxLibraryDescription implements
             params,
             cxxPlatform,
             preprocessorFlags,
-            prefixHeaders,
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.<Path>of(),
             getTransitiveCxxPreprocessorInput(
@@ -252,6 +251,7 @@ public class CxxLibraryDescription implements
         cxxPlatform,
         cxxPreprocessorInputFromDependencies,
         compilerFlags,
+        prefixHeader,
         preprocessMode,
         allSources,
         pic);
@@ -272,7 +272,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      ImmutableList<SourcePath> prefixHeaders,
+      Optional<SourcePath> prefixHeader,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
@@ -292,7 +292,7 @@ public class CxxLibraryDescription implements
         yaccSources,
         preprocessorFlags,
         exportedPreprocessorFlags,
-        prefixHeaders,
+        prefixHeader,
         headers,
         exportedHeaders,
         compilerFlags,
@@ -336,7 +336,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      ImmutableList<SourcePath> prefixHeaders,
+      Optional<SourcePath> prefixHeader,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
@@ -361,7 +361,7 @@ public class CxxLibraryDescription implements
         yaccSources,
         preprocessorFlags,
         exportedPreprocessorFlags,
-        prefixHeaders,
+        prefixHeader,
         headers,
         exportedHeaders,
         compilerFlags,
@@ -423,7 +423,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      ImmutableList<SourcePath> prefixHeaders,
+      Optional<SourcePath> prefixHeader,
       ImmutableMap<Path, SourcePath> headers,
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
@@ -445,7 +445,7 @@ public class CxxLibraryDescription implements
         yaccSources,
         preprocessorFlags,
         exportedPreprocessorFlags,
-        prefixHeaders,
+        prefixHeader,
         headers,
         exportedHeaders,
         compilerFlags,
@@ -472,7 +472,7 @@ public class CxxLibraryDescription implements
     arg.srcs = Optional.of(
         SourceWithFlagsList.ofUnnamedSources(ImmutableSortedSet.<SourceWithFlags>of()));
     arg.platformSrcs = Optional.of(PatternMatchedCollection.<SourceWithFlagsList>of());
-    arg.prefixHeaders = Optional.of(ImmutableList.<SourcePath>of());
+    arg.prefixHeader = Optional.<SourcePath>absent();
     arg.headers = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
     arg.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     arg.exportedHeaders = Optional.of(
@@ -578,7 +578,7 @@ public class CxxLibraryDescription implements
             args.exportedPlatformPreprocessorFlags,
             args.exportedLangPreprocessorFlags,
             cxxPlatform),
-        args.prefixHeaders.get(),
+        args.prefixHeader,
         CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(
@@ -636,7 +636,7 @@ public class CxxLibraryDescription implements
             args.exportedPlatformPreprocessorFlags,
             args.exportedLangPreprocessorFlags,
             cxxPlatform),
-        args.prefixHeaders.get(),
+        args.prefixHeader,
         CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(
@@ -683,7 +683,7 @@ public class CxxLibraryDescription implements
             args.exportedPlatformPreprocessorFlags,
             args.exportedLangPreprocessorFlags,
             cxxPlatform),
-        args.prefixHeaders.get(),
+        args.prefixHeader,
         CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         CxxFlags.getFlags(

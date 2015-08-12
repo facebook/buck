@@ -22,24 +22,17 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxHeaders implements RuleKeyAppendable {
-
-  /**
-   * List of headers that are implicitly included at the beginning of each preprocessed source file.
-   */
-  abstract List<SourcePath> getPrefixHeaders();
 
   /**
    * Maps the name of the header (e.g. the path used to include it in a C/C++ source) to the
@@ -55,8 +48,6 @@ abstract class AbstractCxxHeaders implements RuleKeyAppendable {
 
   @Override
   public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-    builder.setReflectively("prefixHeaders", getPrefixHeaders());
-
     for (Path path : ImmutableSortedSet.copyOf(getNameToPathMap().keySet())) {
       SourcePath source = getNameToPathMap().get(path);
       builder.setReflectively("include(" + path + ")", source);
@@ -80,18 +71,15 @@ abstract class AbstractCxxHeaders implements RuleKeyAppendable {
   public static CxxHeaders concat(Iterable<CxxHeaders> headerGroup)
       throws ConflictingHeadersException {
 
-    ImmutableList.Builder<SourcePath> prefixHeaders = ImmutableList.builder();
     Map<Path, SourcePath> nameToPathMap = Maps.newLinkedHashMap();
     Map<Path, SourcePath> fullNameToPathMap = Maps.newLinkedHashMap();
 
     for (CxxHeaders headers : headerGroup) {
-      prefixHeaders.addAll(headers.getPrefixHeaders());
       addAllEntriesToIncludeMap(nameToPathMap, headers.getNameToPathMap());
       addAllEntriesToIncludeMap(fullNameToPathMap, headers.getFullNameToPathMap());
     }
 
     return CxxHeaders.builder()
-        .setPrefixHeaders(prefixHeaders.build())
         .setNameToPathMap(nameToPathMap)
         .setFullNameToPathMap(fullNameToPathMap)
         .build();

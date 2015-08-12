@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -115,7 +114,6 @@ abstract class AbstractCxxPreprocessorInput {
     ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
     ImmutableMultimap.Builder<CxxSource.Type, String> preprocessorFlags =
       ImmutableMultimap.builder();
-    ImmutableList.Builder<SourcePath> prefixHeaders = ImmutableList.builder();
     Map<Path, SourcePath> includeNameToPathMap = new HashMap<>();
     Map<Path, SourcePath> includeFullNameToPathMap = new HashMap<>();
     ImmutableSet.Builder<Path> includeRoots = ImmutableSet.builder();
@@ -126,7 +124,6 @@ abstract class AbstractCxxPreprocessorInput {
     for (CxxPreprocessorInput input : inputs) {
       rules.addAll(input.getRules());
       preprocessorFlags.putAll(input.getPreprocessorFlags());
-      prefixHeaders.addAll(input.getIncludes().getPrefixHeaders());
       CxxHeaders.addAllEntriesToIncludeMap(
           includeNameToPathMap,
           input.getIncludes().getNameToPathMap());
@@ -143,7 +140,6 @@ abstract class AbstractCxxPreprocessorInput {
         rules.build(),
         preprocessorFlags.build(),
         CxxHeaders.builder()
-            .addAllPrefixHeaders(prefixHeaders.build())
             .putAllNameToPathMap(includeNameToPathMap)
             .putAllFullNameToPathMap(includeFullNameToPathMap)
             .build(),
