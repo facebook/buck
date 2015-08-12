@@ -25,7 +25,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -62,7 +61,6 @@ public class AndroidReactNativeLibraryIntegrationTest {
   }
 
   @Test
-  @Ignore("Fix first order dependencies of AaptPackageResource.")
   public void testAaptPackageDependsOnReactNativeBundle() throws IOException {
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app-without-rn-res").assertSuccess();
