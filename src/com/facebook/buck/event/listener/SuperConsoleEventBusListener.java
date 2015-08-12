@@ -167,6 +167,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     String nextFrame = clearLastRender() + Joiner.on("\n").join(lines);
     lastNumLinesPrinted = lines.size();
 
+    String logFrame;
+    ImmutableList<String> logLines = createLogRenderLines();
+    if (!logLines.isEmpty()) {
+      lastNumLinesPrinted += logLines.size();
+      logFrame = "\n" + Joiner.on("\n").join(logLines);
+    } else {
+      logFrame = "";
+    }
+
     // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
     synchronized (console.getStdOut()) {
       synchronized (console.getStdErr()) {
@@ -179,9 +188,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               "Stopping console output (stdout dirty %s, stderr dirty %s).",
               stdoutDirty, stderrDirty);
           stopRenderScheduler();
-        } else if (!nextFrame.isEmpty()) {
+        } else if (!nextFrame.isEmpty() || !logFrame.isEmpty()) {
           nextFrame = ansi.asNoWrap(nextFrame);
-          console.getStdErr().getRawStream().println(nextFrame);
+          String fullFrame = nextFrame + logFrame;
+          console.getStdErr().getRawStream().println(fullFrame);
         }
       }
     }
@@ -191,8 +201,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    * Creates a list of lines to be rendered at a given time.
    * @param currentTimeMillis The time in ms to use when computing elapsed times.
    */
-  @VisibleForTesting
-  ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
+  private ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
     if (parseStarted == null && parseFinished == null) {
@@ -299,28 +308,34 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           installFinished,
           lines);
     }
-    renderLogMessages(lines);
     return lines.build();
   }
 
   /**
    * Adds log messages for rendering.
-   * @param lines Builder of lines to render this frame.
    */
-  private void renderLogMessages(ImmutableList.Builder<String> lines) {
-    if (logEvents.isEmpty()) {
-      return;
+  private ImmutableList<String> createLogRenderLines() {
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
+    if (!logEvents.isEmpty()) {
+      ImmutableList.Builder<String> logEventLinesBuilder = ImmutableList.builder();
+      for (ConsoleEvent logEvent : logEvents) {
+        formatConsoleEvent(logEvent, logEventLinesBuilder);
+      }
+      ImmutableList<String> logEventLines = logEventLinesBuilder.build();
+      if (!logEventLines.isEmpty()) {
+        lines.add("Log:");
+        lines.addAll(logEventLines);
+      }
     }
+    return lines.build();
+  }
 
-    ImmutableList.Builder<String> logEventLinesBuilder = ImmutableList.builder();
-    for (ConsoleEvent logEvent : logEvents) {
-      formatConsoleEvent(logEvent, logEventLinesBuilder);
-    }
-    ImmutableList<String> logEventLines = logEventLinesBuilder.build();
-    if (!logEventLines.isEmpty()) {
-      lines.add("Log:");
-      lines.addAll(logEventLines);
-    }
+  @VisibleForTesting
+  protected ImmutableList<String> createAllRenderLines(long currentTimeMillis) {
+    return ImmutableList.<String>builder()
+        .addAll(createRenderLinesAtTime(currentTimeMillis))
+        .addAll(createLogRenderLines())
+        .build();
   }
 
   /**

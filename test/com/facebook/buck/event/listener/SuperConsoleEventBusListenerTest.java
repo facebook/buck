@@ -1365,6 +1365,6 @@ public class SuperConsoleEventBusListenerTest {
     if (stderr.isPresent()) {
       assertEquals(stderr.get(), console.getTextWrittenToStdErr());
     }
-    assertEquals(lines, listener.createRenderLinesAtTime(timeMs));
+    assertEquals(lines, listener.createAllRenderLines(timeMs));
   }
 }
