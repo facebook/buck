@@ -558,65 +558,72 @@ public class ProjectGenerator {
                   targetGraph.get(bundleTargetNode.getConstructorArg().binary)),
               Optional.<TargetNode<AppleBundleDescription.Arg>>absent()));
     } else if (targetNode.getType().equals(AppleTestDescription.TYPE)) {
-      TargetNode<AppleTestDescription.Arg> testTargetNode =
-          (TargetNode<AppleTestDescription.Arg>) targetNode;
-      Optional<TargetNode<AppleBundleDescription.Arg>> testHostBundle;
-      if (testTargetNode.getConstructorArg().testHostApp.isPresent()) {
-        BuildTarget testHostBundleTarget =
-            testTargetNode.getConstructorArg().testHostApp.get();
-        TargetNode<?> testHostBundleNode = targetGraph.get(testHostBundleTarget);
-        Preconditions.checkNotNull(testHostBundleNode);
-        if (testHostBundleNode.getType() != AppleBundleDescription.TYPE) {
-          throw new HumanReadableException(
-              "The test host target '%s' has the wrong type (%s), must be apple_bundle",
-              testHostBundleTarget,
-              testHostBundleNode.getType());
-        }
-        testHostBundle = Optional.of((TargetNode<AppleBundleDescription.Arg>) testHostBundleNode);
-      } else {
-        testHostBundle = Optional.absent();
-      }
-      if (testsToGenerateAsStaticLibraries.contains(testTargetNode)) {
-        result = Optional.<PBXTarget>of(
-            generateAppleLibraryTarget(
-                project,
-                testTargetNode,
-                testHostBundle));
-      } else {
-        result = Optional.<PBXTarget>of(
-            generateAppleBundleTarget(
-                project,
-                testTargetNode,
-                testTargetNode,
-                testHostBundle));
-      }
+      result = generateAppleTestTarget((TargetNode<AppleTestDescription.Arg>) targetNode);
     } else if (targetNode.getType().equals(AppleResourceDescription.TYPE)) {
-      // Check that the resource target node is referencing valid files or directories.
-      // If a SourcePath is a BuildTargetSourcePath (or some hypothetical future implementation of
-      // AbstractSourcePath), just assume it's the right type; we have no way of checking now as it
-      // may not exist yet.
-      TargetNode<AppleResourceDescription.Arg> resource =
-          (TargetNode<AppleResourceDescription.Arg>) targetNode;
-      AppleResourceDescription.Arg arg = resource.getConstructorArg();
-      for (SourcePath dir : arg.dirs) {
-        if (dir instanceof PathSourcePath &&
-            !projectFilesystem.isDirectory(sourcePathResolver.apply(dir))) {
-          throw new HumanReadableException(
-              "%s specified in the dirs parameter of %s is not a directory",
-              dir.toString(), resource.toString());
-        }
+      checkAppleResourceTargetNodeReferencingValidContents(
+          (TargetNode<AppleResourceDescription.Arg>) targetNode);
+    }
+    return result;
+  }
+
+  @SuppressWarnings("unchecked")
+  private Optional<PBXTarget> generateAppleTestTarget(
+      TargetNode<AppleTestDescription.Arg> testTargetNode) throws IOException {
+    Optional<TargetNode<AppleBundleDescription.Arg>> testHostBundle;
+    if (testTargetNode.getConstructorArg().testHostApp.isPresent()) {
+      BuildTarget testHostBundleTarget =
+          testTargetNode.getConstructorArg().testHostApp.get();
+      TargetNode<?> testHostBundleNode = targetGraph.get(testHostBundleTarget);
+      Preconditions.checkNotNull(testHostBundleNode);
+      if (testHostBundleNode.getType() != AppleBundleDescription.TYPE) {
+        throw new HumanReadableException(
+            "The test host target '%s' has the wrong type (%s), must be apple_bundle",
+            testHostBundleTarget,
+            testHostBundleNode.getType());
       }
-      for (SourcePath file : arg.files) {
-        if (file instanceof PathSourcePath &&
-            !projectFilesystem.isFile(sourcePathResolver.apply(file))) {
-          throw new HumanReadableException(
-              "%s specified in the files parameter of %s is not a regular file",
-              file.toString(), resource.toString());
-        }
+      testHostBundle = Optional.of((TargetNode<AppleBundleDescription.Arg>) testHostBundleNode);
+    } else {
+      testHostBundle = Optional.absent();
+    }
+    if (testsToGenerateAsStaticLibraries.contains(testTargetNode)) {
+      return Optional.<PBXTarget>of(
+          generateAppleLibraryTarget(
+              project,
+              testTargetNode,
+              testHostBundle));
+    } else {
+      return Optional.<PBXTarget>of(
+          generateAppleBundleTarget(
+              project,
+              testTargetNode,
+              testTargetNode,
+              testHostBundle));
+    }
+  }
+
+  private void checkAppleResourceTargetNodeReferencingValidContents(
+      TargetNode<AppleResourceDescription.Arg> resource) {
+    // Check that the resource target node is referencing valid files or directories.
+    // If a SourcePath is a BuildTargetSourcePath (or some hypothetical future implementation of
+    // AbstractSourcePath), just assume it's the right type; we have no way of checking now as it
+    // may not exist yet.
+    AppleResourceDescription.Arg arg = resource.getConstructorArg();
+    for (SourcePath dir : arg.dirs) {
+      if (dir instanceof PathSourcePath &&
+          !projectFilesystem.isDirectory(sourcePathResolver.apply(dir))) {
+        throw new HumanReadableException(
+            "%s specified in the dirs parameter of %s is not a directory",
+            dir.toString(), resource.toString());
       }
     }
-
-    return result;
+    for (SourcePath file : arg.files) {
+      if (file instanceof PathSourcePath &&
+          !projectFilesystem.isFile(sourcePathResolver.apply(file))) {
+        throw new HumanReadableException(
+            "%s specified in the files parameter of %s is not a regular file",
+            file.toString(), resource.toString());
+      }
+    }
   }
 
   PBXNativeTarget generateAppleBundleTarget(
