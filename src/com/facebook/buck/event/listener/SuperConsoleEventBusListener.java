@@ -23,6 +23,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
@@ -516,13 +517,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     threadsToRunningBuildRuleEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
     accumulatedRuleTime.remove(finished.getBuildRule().getBuildTarget());
-    CacheResult cacheResult = finished.getCacheResult();
-    if (cacheResult.getType() != CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT) {
-      updated.incrementAndGet();
-      if (cacheResult.getType() == CacheResult.Type.HIT) {
-        cacheHits.incrementAndGet();
-      } else if (cacheResult.getType() == CacheResult.Type.ERROR) {
-        cacheErrors.incrementAndGet();
+    if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
+      CacheResult cacheResult = finished.getCacheResult();
+      if (cacheResult.getType() != CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT) {
+        updated.incrementAndGet();
+        if (cacheResult.getType() == CacheResult.Type.HIT) {
+          cacheHits.incrementAndGet();
+        } else if (cacheResult.getType() == CacheResult.Type.ERROR) {
+          cacheErrors.incrementAndGet();
+        }
       }
     }
   }

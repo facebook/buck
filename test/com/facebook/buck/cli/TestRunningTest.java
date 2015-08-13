@@ -378,7 +378,7 @@ public class TestRunningTest {
         ImmutableSortedSet.<BuildRule>of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = new BuildResult(testRule, FETCHED_FROM_CACHE, CacheResult.hit("dir"));
+    BuildResult result = BuildResult.success(testRule, FETCHED_FROM_CACHE, CacheResult.hit("dir"));
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine);
@@ -410,7 +410,7 @@ public class TestRunningTest {
         ImmutableSortedSet.<BuildRule>of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = new BuildResult(testRule, BUILT_LOCALLY, CacheResult.skip());
+    BuildResult result = BuildResult.success(testRule, BUILT_LOCALLY, CacheResult.skip());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine);
@@ -450,7 +450,7 @@ public class TestRunningTest {
     expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = new BuildResult(testRule, MATCHING_RULE_KEY, CacheResult.skip());
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.skip());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
@@ -560,9 +560,12 @@ public class TestRunningTest {
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
     FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
         ImmutableMap.of(
-            separateTest1Target, new BuildResult(separateTest1, BUILT_LOCALLY, CacheResult.skip()),
-            separateTest2Target, new BuildResult(separateTest2, BUILT_LOCALLY, CacheResult.skip()),
-            separateTest3Target, new BuildResult(separateTest3, BUILT_LOCALLY, CacheResult.skip())
+            separateTest1Target,
+            BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.skip()),
+            separateTest2Target,
+            BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.skip()),
+            separateTest3Target,
+            BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.skip())
         ),
         ImmutableMap.of(
             separateTest1Target, new RuleKey("00"),
@@ -761,22 +764,22 @@ public class TestRunningTest {
         ImmutableMap.<BuildTarget, BuildResult>builder()
             .put(
                 separateTest1Target,
-                new BuildResult(separateTest1, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.skip()))
             .put(
                 separateTest2Target,
-                new BuildResult(separateTest2, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.skip()))
             .put(
                 separateTest3Target,
-                new BuildResult(separateTest3, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.skip()))
             .put(
                 parallelTest1Target,
-                new BuildResult(parallelTest1, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest1, BUILT_LOCALLY, CacheResult.skip()))
             .put(
                 parallelTest2Target,
-                new BuildResult(parallelTest2, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest2, BUILT_LOCALLY, CacheResult.skip()))
             .put(
                 parallelTest3Target,
-                new BuildResult(parallelTest3, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.skip()))
             .build(),
         ImmutableMap.<BuildTarget, RuleKey>builder()
             .put(separateTest1Target, new RuleKey("00"))
@@ -909,7 +912,7 @@ public class TestRunningTest {
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
     FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
         ImmutableMap.of(
-            failingTestTarget, new BuildResult(failingTest, BUILT_LOCALLY, CacheResult.skip())
+            failingTestTarget, BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.skip())
         ),
         ImmutableMap.of(
             failingTestTarget, new RuleKey("00")

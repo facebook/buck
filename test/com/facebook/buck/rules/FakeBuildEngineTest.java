@@ -33,7 +33,8 @@ public class FakeBuildEngineTest {
     BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
-    BuildResult fakeBuildResult = new BuildResult(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
+    BuildResult fakeBuildResult =
+        BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
     FakeBuildEngine fakeEngine = new FakeBuildEngine(
         ImmutableMap.of(fakeBuildTarget, fakeBuildResult),
         ImmutableMap.of(fakeBuildTarget, new RuleKey("00")));
@@ -47,7 +48,8 @@ public class FakeBuildEngineTest {
     BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
-    BuildResult fakeBuildResult = new BuildResult(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
+    BuildResult fakeBuildResult =
+        BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
     FakeBuildEngine fakeEngine = new FakeBuildEngine(
         ImmutableMap.of(fakeBuildTarget, fakeBuildResult),
         ImmutableMap.of(fakeBuildTarget, new RuleKey("00")));
@@ -61,7 +63,8 @@ public class FakeBuildEngineTest {
     BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
-    BuildResult fakeBuildResult = new BuildResult(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
+    BuildResult fakeBuildResult =
+        BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
     FakeBuildEngine fakeEngine = new FakeBuildEngine(
         ImmutableMap.of(fakeBuildTarget, fakeBuildResult),
         ImmutableMap.of(fakeBuildTarget, new RuleKey("00")));
@@ -75,7 +78,8 @@ public class FakeBuildEngineTest {
     BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
-    BuildResult fakeBuildResult = new BuildResult(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
+    BuildResult fakeBuildResult =
+        BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
     FakeBuildEngine fakeEngine = new FakeBuildEngine(
         ImmutableMap.of(fakeBuildTarget, fakeBuildResult),
         ImmutableMap.of(fakeBuildTarget, new RuleKey("00")));
@@ -90,7 +94,8 @@ public class FakeBuildEngineTest {
     BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
-    BuildResult fakeBuildResult = new BuildResult(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
+    BuildResult fakeBuildResult =
+        BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.skip());
     FakeBuildEngine fakeEngine = new FakeBuildEngine(
         ImmutableMap.of(fakeBuildTarget, fakeBuildResult),
         ImmutableMap.of(fakeBuildTarget, new RuleKey("00")));

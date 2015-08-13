@@ -65,19 +65,19 @@ public class BuildCommandTest {
     };
     ruleToResult.put(
         rule1,
-        Optional.of(new BuildResult(rule1, BUILT_LOCALLY, CacheResult.skip())));
+        Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.skip())));
 
     BuildRule rule2 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule2"),
         resolver);
-    ruleToResult.put(rule2, Optional.of(new BuildResult(rule2, new RuntimeException("some"))));
+    ruleToResult.put(rule2, Optional.of(BuildResult.failure(rule2, new RuntimeException("some"))));
 
     BuildRule rule3 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule3"),
         resolver);
     ruleToResult.put(
         rule3,
-        Optional.of(new BuildResult(rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir"))));
+        Optional.of(BuildResult.success(rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir"))));
 
     BuildRule rule4 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule4"),

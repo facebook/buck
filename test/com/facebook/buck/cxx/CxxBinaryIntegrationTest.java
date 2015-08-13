@@ -28,6 +28,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -593,9 +594,12 @@ public class CxxBinaryIntegrationTest {
     if (expectPreprocessorOutput) {
       buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     }
-    buildLog.assertTargetFailed(compileTarget.toString());
-    buildLog.assertTargetFailed(binaryTarget.toString());
-    buildLog.assertTargetFailed(target.toString());
+    assertThat(
+        buildLog.getLogEntry(binaryTarget).getStatus(),
+        Matchers.equalTo(BuildRuleStatus.CANCELED));
+    assertThat(
+        buildLog.getLogEntry(target).getStatus(),
+        Matchers.equalTo(BuildRuleStatus.CANCELED));
   }
 
   @Test

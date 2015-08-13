@@ -32,23 +32,34 @@ public class BuildResult {
   @Nullable private final BuildRuleSuccessType success;
   @Nullable private final Throwable failure;
 
-  public BuildResult(BuildRule rule, BuildRuleSuccessType success, CacheResult cacheResult) {
+  private BuildResult(
+      BuildRule rule,
+      BuildRuleStatus status,
+      CacheResult cacheResult,
+      @Nullable BuildRuleSuccessType success,
+      @Nullable Throwable failure) {
     this.rule = rule;
-    this.status = BuildRuleStatus.SUCCESS;
+    this.status = status;
     this.cacheResult = cacheResult;
     this.success = success;
-    this.failure = null;
+    this.failure = failure;
   }
 
-  /**
-   * Note: This should only be used inside {@link CachingBuildEngine} and unit tests.
-   */
-  public BuildResult(BuildRule rule, Throwable failure) {
-    this.rule = rule;
-    this.status = BuildRuleStatus.FAIL;
-    this.cacheResult = CacheResult.miss();
-    this.success = null;
-    this.failure = failure;
+  public static BuildResult success(
+      BuildRule rule,
+      BuildRuleSuccessType success,
+      CacheResult cacheResult) {
+    return new BuildResult(rule, BuildRuleStatus.SUCCESS, cacheResult, success, null);
+  }
+
+  public static BuildResult failure(
+      BuildRule rule,
+      Throwable failure) {
+    return new BuildResult(rule, BuildRuleStatus.FAIL, CacheResult.miss(), null, failure);
+  }
+
+  public static BuildResult canceled(BuildRule rule, Throwable failure) {
+    return new BuildResult(rule, BuildRuleStatus.CANCELED, CacheResult.miss(), null, failure);
   }
 
   public BuildRule getRule() {
@@ -69,7 +80,7 @@ public class BuildResult {
   }
 
   @Nullable
-  Throwable getFailure() {
+  public Throwable getFailure() {
     return failure;
   }
 }

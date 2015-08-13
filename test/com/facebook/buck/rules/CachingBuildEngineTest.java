@@ -65,6 +65,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -438,6 +439,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   public void testAsyncJobsAreNotLeftInExecutor()
       throws IOException, ExecutionException, InterruptedException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
     TestAbstractCachingBuildRule buildRule =
         new LocallyBuiltTestAbstractCachingBuildRule(
@@ -476,7 +478,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             service,
-            new NullFileHashCache(),
+            fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
             NOOP_RULE_KEY_FACTORY,
@@ -551,6 +553,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
@@ -573,7 +576,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
-            new NullFileHashCache(),
+            fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
             NOOP_RULE_KEY_FACTORY,
@@ -631,6 +634,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(buildRule))
         .setStepRunner(stepRunner)
@@ -652,7 +656,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
-            new NullFileHashCache(),
+            fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
             NOOP_RULE_KEY_FACTORY,
@@ -1008,6 +1012,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void matchingRuleKeyDoesNotRunPostBuildSteps() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     ArtifactCache cache = new NoopArtifactCache();
 
     // The EventBus should be updated with events indicating how the rule was built.
@@ -1051,7 +1056,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
-            new NullFileHashCache(),
+            fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
             NOOP_RULE_KEY_FACTORY,
@@ -1066,6 +1071,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   public void testBuildRuleLocallyWithCacheError() throws Exception {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
 
     // Create an artifact cache that always errors out.
     ArtifactCache cache =
@@ -1092,7 +1098,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
-            new NullFileHashCache(),
+            fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
             NOOP_RULE_KEY_FACTORY,
@@ -1437,6 +1443,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   @Test
   public void depFileRuleKeyMatchAvoidsBuilding() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
         FakeBuildContext.newBuilder(filesystem)
@@ -1447,8 +1454,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepare an input file that should appear in the dep file.
     final Path input = Paths.get("input_file");
-    FileHashCache fileHashCache =
-        new FakeFileHashCache(ImmutableMap.of(input, HashCode.fromString("aa")));
+    filesystem.touch(input);
 
     // Create a simple rule which just writes a file.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -1460,6 +1466,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     RuleKey depFileRuleKey = new RuleKey("aaaa");
     final Path output = Paths.get("output");
+    filesystem.touch(output);
     BuildRule rule =
         new DepFileBuildRule(params, pathResolver) {
           @Override
@@ -1488,7 +1495,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
-            new NullFileHashCache(),
+            fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
             NOOP_RULE_KEY_FACTORY,
@@ -1592,7 +1599,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
-            new NullFileHashCache(),
+            fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
             NOOP_RULE_KEY_FACTORY,
@@ -1678,7 +1685,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(
             MoreExecutors.newDirectExecutorService(),
-            new NullFileHashCache(),
+            fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
             NOOP_RULE_KEY_FACTORY,
@@ -1736,6 +1743,210 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Verify that we have a new hash.
     HashCode newHashCode = fileHashCache.get(output);
     assertThat(newHashCode, Matchers.not(Matchers.equalTo(originalHashCode)));
+  }
+
+  @Test
+  public void dependencyFailuresDoesNotOrphanOtherDependencies() throws Exception {
+    ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder(filesystem)
+            .setArtifactCache(cache)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+
+    // Create a dep chain comprising one side of the dep tree of the main rule, where the first-
+    // running rule fails immediately, canceling the second rule, and ophaning at least one rule
+    // in the other side of the dep tree.
+    BuildRule dep1 =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep1"))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new FailingStep()),
+            /* output */ null);
+    BuildRule dep2 =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep2"))
+                .setDeps(ImmutableSortedSet.of(dep1))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new SleepStep(0)),
+            /* output */ null);
+
+    // Create another dep chain, which is two deep with rules that just sleep.
+    BuildRule dep3 =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep3"))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new SleepStep(300)),
+            /* output */ null);
+    BuildRule dep4 =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep4"))
+                .setDeps(ImmutableSortedSet.of(dep3))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new SleepStep(300)),
+            /* output */ null);
+
+    // Create the top-level rule which pulls in the two sides of the dep tree.
+    BuildRule rule =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
+                .setDeps(ImmutableSortedSet.of(dep2, dep4))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new SleepStep(1000)),
+            /* output */ null);
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            service,
+            fileHashCache,
+            CachingBuildEngine.BuildMode.DEEP,
+            CachingBuildEngine.DepFiles.ENABLED,
+            NOOP_RULE_KEY_FACTORY,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertTrue(service.shutdownNow().isEmpty());
+    assertThat(result.getStatus(), Matchers.equalTo(BuildRuleStatus.CANCELED));
+    assertThat(
+        Preconditions.checkNotNull(
+            cachingBuildEngine.getBuildRuleResult(
+                dep1.getBuildTarget())).getStatus(),
+        Matchers.equalTo(BuildRuleStatus.FAIL));
+    assertThat(
+        Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(
+                dep2.getBuildTarget())).getStatus(),
+        Matchers.equalTo(BuildRuleStatus.CANCELED));
+    assertThat(
+        Preconditions.checkNotNull(
+            cachingBuildEngine.getBuildRuleResult(
+                dep3.getBuildTarget())).getStatus(),
+        Matchers.oneOf(BuildRuleStatus.SUCCESS, BuildRuleStatus.CANCELED));
+    assertThat(
+        Preconditions.checkNotNull(
+            cachingBuildEngine.getBuildRuleResult(
+                dep4.getBuildTarget())).getStatus(),
+        Matchers.oneOf(BuildRuleStatus.SUCCESS, BuildRuleStatus.CANCELED));
+  }
+
+
+  @Test
+  public void runningWithKeepGoingBuildsAsMuchAsPossible() throws Exception {
+    ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
+    InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    BuildContext buildContext =
+        FakeBuildContext.newBuilder(filesystem)
+            .setArtifactCache(cache)
+            .setKeepGoing(true)
+            .setJavaPackageFinder(new FakeJavaPackageFinder())
+            .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+            .build();
+
+    // Create a dep chain comprising one side of the dep tree of the main rule, where the first-
+    // running rule fails immediately, canceling the second rule, and ophaning at least one rule
+    // in the other side of the dep tree.
+    BuildRule dep1 =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep1"))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new FailingStep()),
+            /* output */ null);
+    BuildRule dep2 =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep2"))
+                .setDeps(ImmutableSortedSet.of(dep1))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new SleepStep(0)),
+            /* output */ null);
+
+    // Create another dep chain, which is two deep with rules that just sleep.
+    BuildRule dep3 =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep3"))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new SleepStep(300)),
+            /* output */ null);
+    BuildRule dep4 =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep4"))
+                .setDeps(ImmutableSortedSet.of(dep3))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new SleepStep(300)),
+            /* output */ null);
+
+    // Create the top-level rule which pulls in the two sides of the dep tree.
+    BuildRule rule =
+        new RuleWithSteps(
+            new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
+                .setDeps(ImmutableSortedSet.of(dep2, dep4))
+                .setProjectFilesystem(filesystem)
+                .build(),
+            pathResolver,
+            ImmutableList.<Step>of(new SleepStep(1000)),
+            /* output */ null);
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            service,
+            fileHashCache,
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DepFiles.ENABLED,
+            NOOP_RULE_KEY_FACTORY,
+            NOOP_RULE_KEY_FACTORY);
+
+    // Run the build.
+    BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
+    assertTrue(service.shutdownNow().isEmpty());
+    assertThat(result.getStatus(), Matchers.equalTo(BuildRuleStatus.CANCELED));
+    assertThat(
+        Preconditions.checkNotNull(
+            cachingBuildEngine.getBuildRuleResult(
+                dep1.getBuildTarget())).getStatus(),
+        Matchers.equalTo(BuildRuleStatus.FAIL));
+    assertThat(
+        Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(
+                dep2.getBuildTarget())).getStatus(),
+        Matchers.equalTo(BuildRuleStatus.CANCELED));
+    assertThat(
+        Preconditions.checkNotNull(
+            cachingBuildEngine.getBuildRuleResult(
+                dep3.getBuildTarget())).getStatus(),
+        Matchers.equalTo(BuildRuleStatus.SUCCESS));
+    assertThat(
+        Preconditions.checkNotNull(
+            cachingBuildEngine.getBuildRuleResult(
+                dep4.getBuildTarget())).getStatus(),
+        Matchers.equalTo(BuildRuleStatus.SUCCESS));
   }
 
 
@@ -2048,6 +2259,69 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     public boolean useDependencyFileRuleKeys() {
       return true;
     }
+  }
+
+  private static class RuleWithSteps extends AbstractBuildRule {
+
+    private final ImmutableList<Step> steps;
+    @Nullable private final Path output;
+
+    public RuleWithSteps(
+        BuildRuleParams buildRuleParams,
+        SourcePathResolver resolver,
+        ImmutableList<Step> steps,
+        @Nullable Path output) {
+      super(buildRuleParams, resolver);
+      this.steps = steps;
+      this.output = output;
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
+        BuildableContext buildableContext) {
+      return steps;
+    }
+
+    @Nullable
+    @Override
+    public Path getPathToOutput() {
+      return output;
+    }
+
+  }
+
+  private static class SleepStep extends AbstractExecutionStep {
+
+    private final long millis;
+
+    public SleepStep(long millis) {
+      super(String.format("sleep %sms", millis));
+      this.millis = millis;
+    }
+
+    @Override
+    public int execute(ExecutionContext context) throws IOException {
+      try {
+        Thread.sleep(millis);
+      } catch (InterruptedException e) {
+        throw Throwables.propagate(e);
+      }
+      return 0;
+    }
+  }
+
+  private static class FailingStep extends AbstractExecutionStep {
+
+    public FailingStep() {
+      super("failing step");
+    }
+
+    @Override
+    public int execute(ExecutionContext context) throws IOException {
+      return 1;
+    }
+
   }
 
   private static void writeEntriesToZip(Path file, ImmutableMap<String, String> entries)

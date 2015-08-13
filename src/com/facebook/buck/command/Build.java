@@ -188,6 +188,7 @@ public class Build implements Closeable {
                 executionContext.getAndroidPlatformTargetSupplier()))
         .setBuildId(executionContext.getBuildId())
         .putAllEnvironment(executionContext.getEnvironment())
+        .setKeepGoing(isKeepGoing)
         .build();
 
     ImmutableSet<BuildTarget> targetsToBuild = FluentIterable.from(targetish)
@@ -227,16 +228,18 @@ public class Build implements Closeable {
         }).toList();
 
     // Get the Future representing the build and then block until everything is built.
-    ListenableFuture<List<BuildResult>> buildFuture;
-    if (isKeepGoing) {
-      buildFuture = Futures.successfulAsList(futures);
-    } else {
-      buildFuture = Futures.allAsList(futures);
-    }
-
+    ListenableFuture<List<BuildResult>> buildFuture = Futures.allAsList(futures);
     List<BuildResult> results;
     try {
       results = buildFuture.get();
+      if (!isKeepGoing) {
+        for (BuildResult result : results) {
+          Throwable thrown = result.getFailure();
+          if (thrown != null) {
+            throw new ExecutionException(thrown);
+          }
+        }
+      }
     } catch (InterruptedException e) {
       try {
         buildFuture.cancel(true);

@@ -19,4 +19,5 @@ package com.facebook.buck.rules;
 public enum BuildRuleStatus {
   FAIL,
   SUCCESS,
+  CANCELED,
 }

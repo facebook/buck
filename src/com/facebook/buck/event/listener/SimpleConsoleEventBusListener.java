@@ -20,6 +20,7 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -131,14 +132,16 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
-    String line = String.format("BUILT %s", finished.getBuildRule().getFullyQualifiedName());
-    if (ruleCount.isPresent()) {
-      line += String.format(
-          " (%d/%d JOBS)",
-          numRulesCompleted.get(),
-          ruleCount.get());
+    if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
+      String line = String.format("BUILT %s", finished.getBuildRule().getFullyQualifiedName());
+      if (ruleCount.isPresent()) {
+        line += String.format(
+            " (%d/%d JOBS)",
+            numRulesCompleted.get(),
+            ruleCount.get());
+      }
+      console.getStdErr().println(line);
     }
-    console.getStdErr().println(line);
   }
 
   private void printLines(ImmutableList.Builder<String> lines) {

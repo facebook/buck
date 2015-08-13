@@ -92,6 +92,9 @@ public class CachingBuildEngine implements BuildEngine {
   private final ConcurrentMap<BuildTarget, ListenableFuture<RuleKey>> ruleKeys =
       Maps.newConcurrentMap();
 
+  @Nullable
+  private volatile Throwable firstFailure = null;
+
   private final ListeningExecutorService service;
   private final FileHashCache fileHashCache;
   private final BuildMode buildMode;
@@ -121,7 +124,7 @@ public class CachingBuildEngine implements BuildEngine {
       CacheResult cacheResult) {
     results.put(
         buildRule.getBuildTarget(),
-        Futures.immediateFuture(new BuildResult(buildRule, success, cacheResult)));
+        Futures.immediateFuture(BuildResult.success(buildRule, success, cacheResult)));
   }
 
   @Override
@@ -158,12 +161,17 @@ public class CachingBuildEngine implements BuildEngine {
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks)
       throws InterruptedException {
 
+    // If we've already seen a failure, exit early.
+    if (!context.isKeepGoing() && firstFailure != null) {
+      return Futures.immediateFuture(BuildResult.canceled(rule, firstFailure));
+    }
+
     // 1. Check if it's already built.
     Optional<RuleKey> cachedRuleKey =
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
     if (cachedRuleKey.isPresent() && rule.getRuleKey().equals(cachedRuleKey.get())) {
       return Futures.immediateFuture(
-          new BuildResult(
+          BuildResult.success(
               rule,
               BuildRuleSuccessType.MATCHING_RULE_KEY,
               CacheResult.localKeyUnchangedHit()));
@@ -180,7 +188,7 @@ public class CachingBuildEngine implements BuildEngine {
             context);
     if (cacheResult.getType().isSuccess()) {
       return Futures.immediateFuture(
-          new BuildResult(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
+          BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
     }
 
     // Log to the event bus.
@@ -196,6 +204,19 @@ public class CachingBuildEngine implements BuildEngine {
 
             // Log to the event bus.
             context.getEventBus().logVerboseAndPost(LOG, BuildRuleEvent.resumed(rule));
+
+            // If any dependency wasn't successful, cancel ourselves.
+            for (BuildResult depResult : depResults) {
+              if (depResult.getStatus() != BuildRuleStatus.SUCCESS) {
+                return Futures.immediateFuture(
+                    BuildResult.canceled(rule, Preconditions.checkNotNull(depResult.getFailure())));
+              }
+            }
+
+            // If we've already seen a failure, exit early.
+            if (!context.isKeepGoing() && firstFailure != null) {
+              return Futures.immediateFuture(BuildResult.canceled(rule, firstFailure));
+            }
 
             // Dep-file rule keys.
             if (useDependencyFileRuleKey(rule)) {
@@ -214,7 +235,7 @@ public class CachingBuildEngine implements BuildEngine {
                 if (lastDepFileRuleKey.isPresent() &&
                     lastDepFileRuleKey.get().equals(depFileRuleKey.get())) {
                   return Futures.immediateFuture(
-                      new BuildResult(
+                      BuildResult.success(
                           rule,
                           BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
                           CacheResult.localKeyUnchangedHit()));
@@ -236,7 +257,7 @@ public class CachingBuildEngine implements BuildEngine {
                   onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
               if (lastInputRuleKey.isPresent() && lastInputRuleKey.get().equals(inputRuleKey)) {
                 return Futures.immediateFuture(
-                    new BuildResult(
+                    BuildResult.success(
                         rule,
                         BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
                         CacheResult.localKeyUnchangedHit()));
@@ -253,7 +274,7 @@ public class CachingBuildEngine implements BuildEngine {
                       context);
               if (cacheResult.getType().isSuccess()) {
                 return Futures.immediateFuture(
-                    new BuildResult(
+                    BuildResult.success(
                         rule,
                         BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
                         cacheResult));
@@ -295,7 +316,7 @@ public class CachingBuildEngine implements BuildEngine {
                     ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
                 if (abiKeyForDeps.equals(cachedAbiKeyForDeps.orNull())) {
                   return Futures.immediateFuture(
-                      new BuildResult(
+                      BuildResult.success(
                           rule,
                           BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
                           AbstractCacheResult.localKeyUnchangedHit()));
@@ -307,7 +328,7 @@ public class CachingBuildEngine implements BuildEngine {
             executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext, buildInfoRecorder);
 
             return Futures.immediateFuture(
-                new BuildResult(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
+                BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
           }
         },
         service);
@@ -357,6 +378,11 @@ public class CachingBuildEngine implements BuildEngine {
         new AsyncFunction<BuildResult, BuildResult>() {
           @Override
           public ListenableFuture<BuildResult> apply(@Nonnull BuildResult input) throws Exception {
+
+            // If we weren't successful, exit now.
+            if (input.getStatus() != BuildRuleStatus.SUCCESS) {
+              return Futures.immediateFuture(input);
+            }
 
             // We shouldn't see any build fail result at this point.
             BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
@@ -466,14 +492,22 @@ public class CachingBuildEngine implements BuildEngine {
         MoreFutures.addListenableCallback(
             buildResult,
             new FutureCallback<BuildResult>() {
-              @Override
-              public void onSuccess(BuildResult input) {
 
-                // We should only see build successes at this point.
-                BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
+              // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed
+              // to be valid at this point?
+              private void cleanupAfterError() {
+                try {
+                  onDiskBuildInfo.deleteExistingMetadata();
+                } catch (Throwable t) {
+                  context.getEventBus().post(
+                      ThrowableConsoleEvent.create(
+                          t,
+                          "Error when deleting metadata for %s.",
+                          rule));
+                }
+              }
 
-                // Only now that the rule should be in a completely valid state, resolve the future.
-                result.set(input);
+              private void uploadToCache(BuildRuleSuccessType success) {
 
                 // Collect up all the rule keys we have index the artifact in the cache with.
                 Set<RuleKey> ruleKeys = Sets.newHashSet();
@@ -501,67 +535,78 @@ public class CachingBuildEngine implements BuildEngine {
                         context.getArtifactCache(),
                         context.getEventBus());
                   } catch (Throwable t) {
-                    onFailure(t);
-                    return;
+                    context.getEventBus().post(
+                        ThrowableConsoleEvent.create(
+                            t,
+                            "Error uploading to cache for %s.",
+                            rule));
                   }
                 }
 
-                // Calculate the hash and size of the rule outputs.
-                long outputSize;
-                HashCode outputHash;
-                try {
-                  outputSize = buildInfoRecorder.getOutputSize();
-                  outputHash = buildInfoRecorder.getOutputHash(fileHashCache);
-                } catch (IOException e) {
-                  onFailure(e);
-                  return;
+              }
+
+              private void handleResult(BuildResult input) {
+                Optional<Long> outputSize = Optional.absent();
+                Optional<HashCode> outputHash = Optional.absent();
+                Optional<BuildRuleSuccessType> successType = Optional.absent();
+
+                if (input.getStatus() == BuildRuleStatus.FAIL) {
+
+                  // Make this failure visible for other rules, so that they can stop early.
+                  firstFailure = input.getFailure();
+
+                  // If we failed, cleanup the state of this rule.
+                  cleanupAfterError();
                 }
 
+                // Unblock dependents.
+                result.set(input);
+
+                if (input.getStatus() == BuildRuleStatus.SUCCESS) {
+                  BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
+                  successType = Optional.of(success);
+                  uploadToCache(success);
+
+                  // Calculate the hash and size of the rule outputs.
+                  try {
+                    outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+                    outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
+                  } catch (IOException e) {
+                    context.getEventBus().post(
+                        ThrowableConsoleEvent.create(
+                            e,
+                            "Error getting output hash and size for %s.",
+                            rule));
+                  }
+                }
+
+                // Log the result to the event bus.
                 context.getEventBus().logVerboseAndPost(
                     LOG,
                     BuildRuleEvent.finished(
                         rule,
-                        BuildRuleStatus.SUCCESS,
+                        input.getStatus(),
                         input.getCacheResult(),
-                        Optional.of(input.getSuccess()),
-                        Optional.of(outputHash),
-                        Optional.of(outputSize)));
+                        successType,
+                        outputHash,
+                        outputSize));
+              }
+
+              @Override
+              public void onSuccess(BuildResult input) {
+                handleResult(input);
               }
 
               @Override
               public void onFailure(@Nonnull Throwable thrown) {
-
-                // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed
-                // to be valid at this point?
-                try {
-                  onDiskBuildInfo.deleteExistingMetadata();
-                } catch (Throwable t) {
-                  context.getEventBus().post(
-                      ThrowableConsoleEvent.create(
-                          t,
-                          "Error when deleting metadata for %s.",
-                          rule));
-                }
-
-                // record failure
-                result.setException(thrown);
-
-                // Log the error to the event bus.
-                context.getEventBus().logVerboseAndPost(
-                    LOG,
-                    BuildRuleEvent.finished(
-                        rule,
-                        BuildRuleStatus.FAIL,
-                        CacheResult.miss(),
-                        Optional.<BuildRuleSuccessType>absent(),
-                        Optional.<HashCode>absent(),
-                        Optional.<Long>absent()));
+                handleResult(BuildResult.failure(rule, thrown));
 
                 // Reset interrupted flag once failure has been recorded.
                 if (thrown instanceof InterruptedException) {
                   Thread.currentThread().interrupt();
                 }
               }
+
             }));
     return result;
   }

@@ -96,6 +96,11 @@ public abstract class BuildContext {
   protected abstract BuildId getBuildId();
   protected abstract Map<String, String> getEnvironment();
 
+  @Value.Default
+  public boolean isKeepGoing() {
+    return false;
+  }
+
   public Path getProjectRoot() {
     return getProjectFilesystem().getRootPath();
   }
