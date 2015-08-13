@@ -110,7 +110,7 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:foo#shared,default").assertSuccess();
   }
 
-  @Test
+  @Test(timeout = 300000)
   public void runInferOnSimpleLibraryWithoutDeps() throws IOException {
     Path inferTopLevel = InferHelper.assumeInferIsInstalled();
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);

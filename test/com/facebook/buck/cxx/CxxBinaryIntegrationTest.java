@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -53,7 +52,7 @@ public class CxxBinaryIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
-  @Test
+  @Test(timeout = 300000)
   public void testInferCxxBinaryDepsCaching() throws IOException {
     Path inferTopLevel = InferHelper.assumeInferIsInstalled();
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
@@ -115,7 +114,7 @@ public class CxxBinaryIntegrationTest {
     }
   }
 
-  @Test
+  @Test(timeout = 300000)
   public void testInferCxxBinaryWithoutDeps() throws IOException {
     Path inferTopLevel = InferHelper.assumeInferIsInstalled();
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
@@ -226,8 +225,7 @@ public class CxxBinaryIntegrationTest {
         Matchers.equalTo(0));
   }
 
-  @Test
-  @Ignore("Disabled due to test timing out in CI t7969844")
+  @Test(timeout = 300000)
   public void testInferCxxBinaryWithDeps() throws IOException {
     Path inferTopLevel = InferHelper.assumeInferIsInstalled();
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
@@ -408,7 +406,7 @@ public class CxxBinaryIntegrationTest {
         Matchers.equalTo("NULL_DEREFERENCE"));
   }
 
-  @Test
+  @Test(timeout = 300000)
   public void testInferCxxBinaryWithCachedDepsGetsAllItsTransitiveDeps() throws IOException {
     Path inferTopLevel = InferHelper.assumeInferIsInstalled();
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
@@ -452,7 +450,7 @@ public class CxxBinaryIntegrationTest {
                 "func_ret_null{AF55}.specs").toFile().exists());
   }
 
-  @Test
+  @Test(timeout = 300000)
   public void testInferCxxBinaryMergesAllReportsOfDependencies() throws IOException {
     Path inferTopLevel = InferHelper.assumeInferIsInstalled();
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
