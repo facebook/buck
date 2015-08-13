@@ -6,16 +6,16 @@
     {param title: 'genrule()' /}
     {param prettify: true /}
     {param description}
-      A rule that is used to generate a file from a shell command. It must
-      produce a single output file.
+      A rule that is used to generate files from a shell command. It must
+      produce a single output file or folder.
     {/param}
     {param content}
 
 {call buck.rule}
 {param status: 'FROZEN' /}
 {param overview}
-  A <code>genrule()</code> is used to generate a file from a shell
-  command. It must produce a single output file.
+  A <code>genrule()</code> is used to generate files from a shell
+  command. It must produce a single output file or folder.
 {/param}
 
 {param args}
