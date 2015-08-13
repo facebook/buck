@@ -189,7 +189,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               stdoutDirty, stderrDirty);
           stopRenderScheduler();
         } else if (!nextFrame.isEmpty() || !logFrame.isEmpty()) {
-          nextFrame = ansi.asNoWrap(nextFrame);
+          if (!nextFrame.isEmpty()) {
+            nextFrame = ansi.asNoWrap(nextFrame);
+          }
           String fullFrame = nextFrame + logFrame;
           console.getStdErr().getRawStream().println(fullFrame);
         }

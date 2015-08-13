@@ -254,6 +254,10 @@ public class BuckConfig {
     return builder.build();
   }
 
+  public ImmutableList<String> getMessageOfTheDay() {
+    return getListWithoutComments("project", "motd");
+  }
+
   public ImmutableList<String> getListWithoutComments(String section, String field) {
     return config.getListWithoutComments(section, field);
   }

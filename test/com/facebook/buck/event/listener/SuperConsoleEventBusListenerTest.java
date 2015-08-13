@@ -1336,7 +1336,50 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 0L, ImmutableList.of(
         formatConsoleTimes("[-] GENERATING PROJECT...FINISHED %s", 0.0)));
-}
+  }
+
+  @Test
+  public void testPostingEventBeforeAnyLines() {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            silentSummaryVerbosity,
+            new DefaultExecutionEnvironment(
+                new FakeProcessExecutor(),
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+            Optional.<WebServer>absent());
+    eventBus.register(listener);
+
+    rawEventBus.post(ConsoleEvent.info("Hello world!"));
+
+    validateConsole(console, listener, 0L, ImmutableList.of("Log:", "Hello world!"));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ProjectGenerationEvent.started(),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 0L, ImmutableList.of(
+        formatConsoleTimes("[+] GENERATING PROJECT...%s", 0.0),
+        "Log:",
+        "Hello world!"));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectGenerationEvent.Finished(),
+            0L, TimeUnit.MILLISECONDS, 0L));
+
+    validateConsole(console, listener, 0L, ImmutableList.of(
+        formatConsoleTimes("[-] GENERATING PROJECT...FINISHED %s", 0.0),
+        "Log:",
+        "Hello world!"));
+  }
 
   private void validateConsole(TestConsole console,
       SuperConsoleEventBusListener listener,

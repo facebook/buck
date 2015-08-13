@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
@@ -154,6 +155,14 @@ public abstract class AbstractCommand implements Command {
     if (showHelp()) {
       new AdditionalOptionsCmdLineParser(this).printUsage(params.getConsole().getStdErr());
       return 1;
+    }
+    if (params.getConsole().getAnsi().isAnsiTerminal()) {
+      ImmutableList<String> motd = params.getBuckConfig().getMessageOfTheDay();
+      if (!motd.isEmpty()) {
+        for (String line : motd) {
+          params.getBuckEventBus().post(ConsoleEvent.info(line));
+        }
+      }
     }
     return runWithoutHelp(params);
   }
