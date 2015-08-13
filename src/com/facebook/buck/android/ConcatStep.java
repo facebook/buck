@@ -46,6 +46,15 @@ public class ConcatStep implements Step {
     output = outputPath;
   }
 
+  /**
+   * @param inputs The files to be concatenated, in builder form
+   * @param outputPath The desired output path.
+   */
+  public ConcatStep(ImmutableList.Builder<Path> inputs, Path outputPath) {
+    this.inputs = inputs.build();
+    output = outputPath;
+  }
+
   @Override
   public int execute(ExecutionContext context) {
     try (
