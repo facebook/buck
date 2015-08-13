@@ -62,11 +62,20 @@
         implementation="com.facebook.buck.intellij.plugin.config.BuckColorSettingsPage"/>
     <lang.commenter language="Buck"
                     implementationClass="com.facebook.buck.intellij.plugin.commenter.BuckCommenter"/>
+    <toolWindow
+        id="Buck"
+        anchor="bottom"
+        icon="BuckIcons.BUCK_TOOL_WINDOW_ICON"
+        factoryClass="com.facebook.buck.intellij.plugin.ui.BuckToolWindowFactory"/>
     <applicationConfigurable
         groupId="tools"
         displayName="Buck"
         id="buck.settings"
         instance="com.facebook.buck.intellij.plugin.config.BuckSettingsConfigurable"/>
+    <projectService
+        serviceImplementation="com.facebook.buck.intellij.plugin.build.BuckBuildManager"/>
+    <projectService
+        serviceImplementation="com.facebook.buck.intellij.plugin.ui.BuckUIManager"/>
   </extensions>
 
   <actions>

@@ -22,6 +22,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 
 public final class BuckBuildTargetUtil {
 
+  public static final String BUCK_CONFIG_FILE = ".buckconfig";
+
   private BuckBuildTargetUtil() {
   }
 
