@@ -914,7 +914,8 @@ public class CxxDescriptionEnhancer {
             target,
             Suppliers.ofInstance(params.getDeclaredDeps()),
             Suppliers.ofInstance(params.getExtraDeps())),
-        ruleResolver, args);
+        ruleResolver,
+        args);
   }
 
   /**

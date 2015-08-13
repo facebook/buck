@@ -98,7 +98,7 @@ public class AppleLibraryDescription implements
         params,
         resolver,
         args,
-        Optional.<Linker.LinkableDepType>absent(),
+        args.linkStyle,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildRule>of());
   }
