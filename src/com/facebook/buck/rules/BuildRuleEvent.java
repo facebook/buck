@@ -19,14 +19,12 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 
 /**
  * Base class for events about build rules.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class BuildRuleEvent extends AbstractBuckEvent {
   private final BuildRule rule;
 
@@ -42,11 +40,6 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
   @Override
   public String getValueString() {
     return rule.getFullyQualifiedName();
-  }
-
-  @Override
-  public int hashCode() {
-    return rule.hashCode();
   }
 
   /**
@@ -147,26 +140,6 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent {
           getCacheResult(),
           success,
           ruleKey);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (!super.equals(o)) {
-        return false;
-      }
-
-      Finished that = (Finished) o;
-      return Objects.equal(getStatus(), that.getStatus()) &&
-          Objects.equal(getCacheResult(), that.getCacheResult()) &&
-          Objects.equal(getSuccessType(), that.getSuccessType());
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(getBuildRule(),
-          getStatus(),
-          getCacheResult(),
-          getSuccessType());
     }
 
     @Override

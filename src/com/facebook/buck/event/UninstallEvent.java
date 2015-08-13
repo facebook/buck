@@ -18,7 +18,6 @@ package com.facebook.buck.event;
 
 import com.google.common.base.Objects;
 
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEvent {
   private final String packageName;
 
@@ -38,11 +37,6 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
   @Override
   protected String getValueString() {
     return packageName;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(getPackageName());
   }
 
   public static Started started(String packageName) {
@@ -87,14 +81,14 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
       if (!super.equals(o)) {
         return false;
       }
-
-      Finished that = (Finished) o;
-      return isSuccess() == that.isSuccess();
+      // Because super.equals compares the EventKey, getting here means that we've somehow managed
+      // to create 2 Finished events for the same Started event.
+      throw new UnsupportedOperationException("Multiple conflicting Finished events detected.");
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getPackageName(), isSuccess());
+      return Objects.hashCode(super.hashCode(), success);
     }
   }
 }

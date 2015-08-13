@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
  * Base class for all build events. Using this makes it easy to add a wildcard listener
  * to the event bus.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class AbstractBuckEvent implements BuckEvent {
 
   private boolean isConfigured;
@@ -127,6 +126,9 @@ public abstract class AbstractBuckEvent implements BuckEvent {
    */
   @Override
   public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
     if (!(o instanceof AbstractBuckEvent)) {
       return false;
     }
@@ -134,12 +136,11 @@ public abstract class AbstractBuckEvent implements BuckEvent {
     AbstractBuckEvent that = (AbstractBuckEvent) o;
 
     return isRelatedTo(that) &&
-        getThreadId() == that.getThreadId() &&
         Objects.equals(getClass(), that.getClass());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(threadId);
+    return Objects.hash(getClass(), getEventKey());
   }
 }

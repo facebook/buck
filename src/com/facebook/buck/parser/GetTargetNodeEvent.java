@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.model.BuildTarget;
 
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class GetTargetNodeEvent extends AbstractBuckEvent {
   private final BuildTarget buildTarget;
 
@@ -34,11 +33,6 @@ public abstract class GetTargetNodeEvent extends AbstractBuckEvent {
   @Override
   public String getValueString() {
     return buildTarget.toString();
-  }
-
-  @Override
-  public int hashCode() {
-    return buildTarget.hashCode();
   }
 
   public static Started started(BuildTarget buildTarget) {

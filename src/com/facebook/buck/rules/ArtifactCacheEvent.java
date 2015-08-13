@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Base class for events about build rules.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements LeafEvent {
   public enum Operation {
     FETCH,
@@ -62,11 +61,6 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   public ImmutableSet<RuleKey> getRuleKeys() {
     return ruleKeys;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(getOperation(), getRuleKeys(), getThreadId());
   }
 
   public Operation getOperation() {
@@ -133,14 +127,14 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
       if (!super.equals(o)) {
         return false;
       }
-
-      Finished that = (Finished) o;
-      return Objects.equal(this.cacheResult, that.cacheResult);
+      // Because super.equals compares the EventKey, getting here means that we've somehow managed
+      // to create 2 Finished events for the same Started event.
+      throw new UnsupportedOperationException("Multiple conflicting Finished events detected.");
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getOperation(), getRuleKeys(), getThreadId(), cacheResult);
+      return Objects.hashCode(super.hashCode(), cacheResult);
     }
   }
 

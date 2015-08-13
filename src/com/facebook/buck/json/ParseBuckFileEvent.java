@@ -24,7 +24,6 @@ import java.nio.file.Path;
 /**
  * Base class for events about parsing build files..
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
   private final Path buckFilePath;
 
@@ -39,11 +38,6 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
   @Override
   public String getValueString() {
     return buckFilePath.toString();
-  }
-
-  @Override
-  public int hashCode() {
-    return buckFilePath.hashCode();
   }
 
   public static Started started(Path buckFilePath) {
@@ -84,8 +78,18 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
     }
 
     @Override
+    public boolean equals(Object o) {
+      if (!super.equals(o)) {
+        return false;
+      }
+      // Because super.equals compares the EventKey, getting here means that we've somehow managed
+      // to create 2 Finished events for the same Started event.
+      throw new UnsupportedOperationException("Multiple conflicting Finished events detected.");
+    }
+
+    @Override
     public int hashCode() {
-      return Objects.hashCode(getBuckFilePath(), numRules);
+      return Objects.hashCode(super.hashCode(), numRules);
     }
   }
 }

@@ -20,12 +20,9 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildTarget;
 
-import java.util.Objects;
-
 /**
  * Base class for events about test rules.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class TestRuleEvent extends AbstractBuckEvent {
   private final BuildTarget buildTarget;
 
@@ -41,11 +38,6 @@ public abstract class TestRuleEvent extends AbstractBuckEvent {
   @Override
   public String getValueString() {
     return buildTarget.toString();
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(buildTarget);
   }
 
   public static Started started(BuildTarget buildTarget) {

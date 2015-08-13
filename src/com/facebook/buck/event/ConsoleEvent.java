@@ -15,15 +15,12 @@
  */
 package com.facebook.buck.event;
 
-import com.google.common.base.Objects;
-
 import java.util.logging.Level;
 
 /**
  * Event for messages.  Post ConsoleEvents to the event bus where you would normally use
  * {@code java.util.logging}.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public class ConsoleEvent extends AbstractBuckEvent {
 
   private final Level level;
@@ -98,11 +95,6 @@ public class ConsoleEvent extends AbstractBuckEvent {
   @Override
   protected String getValueString() {
     return String.format("%s: %s", getLevel(), getMessage());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(getLevel(), getMessage());
   }
 
   @Override

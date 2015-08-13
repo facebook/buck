@@ -17,13 +17,11 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 /**
  * Events tracking the start and stop of a buck command.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class CommandEvent extends AbstractBuckEvent {
   private final String commandName;
   private final ImmutableList<String> args;
@@ -56,11 +54,6 @@ public abstract class CommandEvent extends AbstractBuckEvent {
   @Override
   protected String getValueString() {
     return String.format("%s, isDaemon: %b", commandName, isDaemon);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(getCommandName(), getArgs(), isDaemon());
   }
 
   public static Started started(String commandName, ImmutableList<String> args, boolean isDaemon) {
@@ -99,21 +92,6 @@ public abstract class CommandEvent extends AbstractBuckEvent {
     @Override
     public String getEventName() {
       return "CommandFinished";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (!super.equals(o)) {
-        return false;
-      }
-
-      Finished that = (Finished) o;
-      return getExitCode() == that.getExitCode();
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(getCommandName(), getArgs(), isDaemon(), getExitCode());
     }
   }
 }

@@ -20,6 +20,7 @@ import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTargetFactory;
 
@@ -45,8 +46,12 @@ public class StartActivityEventTest {
     assertEquals(started, started);
     assertNotEquals(started, finished);
     assertNotEquals(started, startedTwo);
-    assertEquals(finished, finishedTwo);
-    assertNotEquals(finished, finishedSucceed);
+    try {
+      finished.equals(finishedSucceed);
+      fail("Expected an UnsupportedOperationException.");
+    } catch (UnsupportedOperationException e) {
+      assertThat(e.toString(), Matchers.stringContainsInOrder("conflicting", "events"));
+    }
 
     assertThat(started.isRelatedTo(finished), Matchers.is(true));
     assertThat(started.isRelatedTo(finishedTwo), Matchers.is(true));

@@ -22,7 +22,6 @@ import com.google.common.base.Objects;
 /**
  * Events for timing the starting of android events.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class StartActivityEvent extends AbstractBuckEvent implements LeafEvent {
   private final BuildTarget buildTarget;
   private final String activityName;
@@ -48,11 +47,6 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
   @Override
   protected String getValueString() {
     return String.format("%s %s", getBuildTarget().getFullyQualifiedName(), getActivityName());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(getActivityName(), getBuildTarget());
   }
 
   public static Started started(BuildTarget buildTarget, String activityName) {
@@ -97,14 +91,14 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
       if (!super.equals(o)) {
         return false;
       }
-
-      Finished that = (Finished) o;
-      return isSuccess() == that.isSuccess();
+      // Because super.equals compares the EventKey, getting here means that we've somehow managed
+      // to create 2 Finished events for the same Started event.
+      throw new UnsupportedOperationException("Multiple conflicting Finished events detected.");
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getActivityName(), getBuildTarget(), isSuccess());
+      return Objects.hashCode(super.hashCode(), isSuccess());
     }
   }
 }

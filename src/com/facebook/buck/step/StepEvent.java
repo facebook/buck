@@ -27,7 +27,6 @@ import java.util.UUID;
 /**
  * Base class for events about steps.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
 
   private final String shortName;
@@ -64,12 +63,6 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
   protected String getValueString() {
     return getShortStepName();
   }
-
-  @Override
-  public int hashCode() {
-    return uuid.hashCode();
-  }
-
 
   public static Started started(String shortName, String description, UUID uuid) {
     return new Started(shortName, description, uuid);
@@ -112,14 +105,14 @@ public abstract class StepEvent extends AbstractBuckEvent implements LeafEvent {
       if (!super.equals(o)) {
         return false;
       }
-
-      Finished that = (Finished) o;
-      return that.exitCode == getExitCode();
+      // Because super.equals compares the EventKey, getting here means that we've somehow managed
+      // to create 2 Finished events for the same Started event.
+      throw new UnsupportedOperationException("Multiple conflicting Finished events detected.");
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getUuid(), getExitCode());
+      return Objects.hashCode(super.hashCode(), exitCode);
     }
   }
 }

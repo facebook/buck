@@ -22,14 +22,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 /**
  * Base class for events about parsing build files..
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent {
   private final ImmutableList<BuildTarget> buildTargets;
 
@@ -50,11 +48,6 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
   @Override
   public String getValueString() {
     return Joiner.on(", ").join(buildTargets);
-  }
-
-  @Override
-  public int hashCode() {
-    return buildTargets.hashCode();
   }
 
   public static Started started(Iterable<BuildTarget> buildTargets) {
@@ -95,11 +88,6 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
     @JsonIgnore
     public Optional<TargetGraph> getGraph() {
       return graph;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(getBuildTargets(), getGraph());
     }
   }
 }

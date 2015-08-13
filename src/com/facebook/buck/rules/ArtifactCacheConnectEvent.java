@@ -22,7 +22,6 @@ import com.facebook.buck.event.LeafEvent;
 /**
  * Base class for events about build rules.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class ArtifactCacheConnectEvent extends AbstractBuckEvent implements LeafEvent {
 
   @Override
@@ -33,11 +32,6 @@ public abstract class ArtifactCacheConnectEvent extends AbstractBuckEvent implem
   @Override
   public String getValueString() {
     return "";
-  }
-
-  @Override
-  public int hashCode() {
-    return super.hashCode();
   }
 
   public static Started started() {

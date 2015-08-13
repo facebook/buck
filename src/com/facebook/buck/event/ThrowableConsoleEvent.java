@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 
 import java.util.logging.Level;
@@ -24,7 +23,6 @@ import java.util.logging.Level;
 /**
  * Event for tracking {@link Throwable}
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public class ThrowableConsoleEvent extends ConsoleEvent {
 
   private final Throwable throwable;
@@ -53,10 +51,5 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
 
   public static ThrowableConsoleEvent create(Throwable throwable, String message, Object... args) {
     return new ThrowableConsoleEvent(throwable, String.format(message, args));
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(getMessage(), getLevel(), getThrowable());
   }
 }

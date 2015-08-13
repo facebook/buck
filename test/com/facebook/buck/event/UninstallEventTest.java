@@ -20,6 +20,7 @@ import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -35,7 +36,12 @@ public class UninstallEventTest {
     assertEquals(started, started);
     assertNotEquals(started, startedTwo);
     assertNotEquals(started, finished);
-    assertNotEquals(finished, finishedFail);
+    try {
+      finished.equals(finishedFail);
+      fail("Expected an UnsupportedOperationException.");
+    } catch (UnsupportedOperationException e) {
+      assertThat(e.toString(), Matchers.stringContainsInOrder("conflicting", "events"));
+    }
 
     assertThat(started.isRelatedTo(finished), Matchers.is(true));
     assertThat(finished.isRelatedTo(started), Matchers.is(true));

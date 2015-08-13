@@ -23,7 +23,6 @@ import com.facebook.buck.event.LeafEvent;
 /**
  * Base class for events about building up the action graph from the target graph.
  */
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class ActionGraphEvent extends AbstractBuckEvent implements LeafEvent {
 
   @Override

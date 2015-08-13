@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashcode")
 public abstract class InstallEvent extends AbstractBuckEvent implements LeafEvent {
   private final BuildTarget buildTarget;
 
@@ -40,11 +39,6 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
   @Override
   protected String getValueString() {
     return buildTarget.getFullyQualifiedName();
-  }
-
-  @Override
-  public int hashCode() {
-    return getBuildTarget().hashCode();
   }
 
   public static Started started(BuildTarget buildTarget) {
@@ -98,14 +92,14 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
       if (!super.equals(o)) {
         return false;
       }
-
-      Finished that = (Finished) o;
-      return isSuccess() == that.isSuccess() && getPid() == that.getPid();
+      // Because super.equals compares the EventKey, getting here means that we've somehow managed
+      // to create 2 Finished events for the same Started event.
+      throw new UnsupportedOperationException("Multiple conflicting Finished events detected.");
     }
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(getBuildTarget(), isSuccess());
+      return Objects.hashCode(super.hashCode(), isSuccess());
     }
   }
 }
