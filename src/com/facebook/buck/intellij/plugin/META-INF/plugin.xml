@@ -90,6 +90,21 @@
       <add-to-group anchor="first" group-id="BuildMenu"/>
       <add-to-group anchor="first" group-id="EditorPopupMenu"/>
     </group>
+
+    <group id="buck.BuildGroup">
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckInstallAction" id="buck.Install">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
+      </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckBuildAction" id="buck.Build">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift S"/>
+      </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckKillAction" id="buck.Kill">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
+      </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
+        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
+      </action>
+    </group>
   </actions>
 
   <application-components>

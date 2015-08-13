@@ -23,6 +23,7 @@ import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.execution.ui.layout.PlaceInGrid;
 import com.intellij.openapi.actionSystem.ActionGroup;
+import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
@@ -33,7 +34,6 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentManager;
-import org.jetbrains.annotations.NotNull;
 
 public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
@@ -79,7 +79,7 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
   @Override
   public void createToolWindowContent(
-      @NotNull final Project project, @NotNull ToolWindow toolWindow) {
+      final Project project, ToolWindow toolWindow) {
     toolWindow.setAvailable(true, null);
     toolWindow.setToHideOnEmptyContent(true);
 
@@ -108,10 +108,16 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
     return consoleWindowContent;
   }
 
-  @NotNull
   public ActionGroup getLeftToolbarActions(final Project project) {
+    ActionManager actionManager = ActionManager.getInstance();
+
     DefaultActionGroup group = new DefaultActionGroup();
-    // TODO(user): Add toolbar action here in other diff.
+    // TODO(user): Add "Chose target" action here.
+    group.addSeparator();
+    group.add(actionManager.getAction("buck.Install"));
+    group.add(actionManager.getAction("buck.Build"));
+    group.add(actionManager.getAction("buck.Kill"));
+    group.add(actionManager.getAction("buck.Uninstall"));
     return group;
   }
 }
