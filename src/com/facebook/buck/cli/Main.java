@@ -63,7 +63,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -147,8 +146,6 @@ public final class Main {
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
       "buck.path_to_static_content", "webserver/static");
 
-  private static final String WATCHMAN_GLOB_MIN_VERSION = "3.6.0";
-
   private final PrintStream stdOut;
   private final PrintStream stdErr;
   private final ImmutableList<BuckEventListener> externalEventsListeners;
@@ -206,21 +203,16 @@ public final class Main {
       String watchRoot = System.getProperty("buck.watchman_root", projectRoot);
       Optional<String> projectPrefix = Optional.fromNullable(
           System.getProperty("buck.watchman_project_prefix"));
-      this.watchmanWatcher = createWatcher(watchRoot, projectPrefix);
-      boolean useWatchmanGlob = parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN;
-      Optional<String> watchmanVersion = watchmanWatcher.getWatchmanVersion();
-      if (useWatchmanGlob) {
-        if (watchmanVersion.isPresent()) {
-          useWatchmanGlob = new VersionStringComparator()
-              .compare(watchmanVersion.get(), WATCHMAN_GLOB_MIN_VERSION) >= 0;
-        } else {
-          useWatchmanGlob = false;
-        }
-      }
+      ImmutableSet<WatchmanWatcher.Capability> watchmanCapabilities =
+          WatchmanWatcher.getWatchmanCapabilities(processExecutor, objectMapper);
+      this.watchmanWatcher = createWatcher(watchRoot, projectPrefix, watchmanCapabilities);
+      boolean useWatchmanGlob =
+          parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
+          watchmanCapabilities.contains(WatchmanWatcher.Capability.WILDMATCH_GLOB);
       LOG.debug(
-          "Watchman version: %s Watch root: %s Project prefix: %s Glob handler config: %s " +
+          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s " +
           "Watchman glob enabled: %s",
-          watchmanVersion,
+          watchmanCapabilities,
           watchRoot,
           projectPrefix,
           parserConfig.getGlobHandler(),
@@ -243,7 +235,10 @@ public final class Main {
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(repository.getFilesystem());
     }
 
-    private WatchmanWatcher createWatcher(String watchRoot, Optional<String> projectPrefix) {
+    private WatchmanWatcher createWatcher(
+        String watchRoot,
+        Optional<String> projectPrefix,
+        ImmutableSet<WatchmanWatcher.Capability> watchmanCapabilities) {
       return new WatchmanWatcher(
           watchRoot,
           projectPrefix,
@@ -252,7 +247,8 @@ public final class Main {
           objectMapper,
           processExecutor,
           repository.getBuckConfig().getIgnorePaths(),
-          DEFAULT_IGNORE_GLOBS);
+          DEFAULT_IGNORE_GLOBS,
+          watchmanCapabilities);
     }
 
     private Optional<WebServer> createWebServer(BuckConfig config, ProjectFilesystem filesystem) {

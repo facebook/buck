@@ -38,6 +38,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -438,7 +439,8 @@ public class WatchmanWatcherTest {
         Optional.of("project"),
         "uuid",
         Lists.<Path>newArrayList(),
-        Lists.<String>newArrayList());
+        Lists.<String>newArrayList(),
+        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
 
     assertThat(
         query,
@@ -453,7 +455,8 @@ public class WatchmanWatcherTest {
         Optional.<String>absent(),
         "uuid",
         Lists.<Path>newArrayList(),
-        Lists.<String>newArrayList());
+        Lists.<String>newArrayList(),
+        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
     assertEquals(
         "[\"query\",\"/path/to/\\\"repo\\\"\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
@@ -470,13 +473,34 @@ public class WatchmanWatcherTest {
         Optional.<String>absent(),
         "uuid",
         Lists.newArrayList(Paths.get("foo"), Paths.get("bar/baz")),
-        Lists.<String>newArrayList());
+        Lists.<String>newArrayList(),
+        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
         "[\"type\",\"d\"]," +
         "[\"dirname\",\"foo\"]," +
         "[\"dirname\",\"bar/baz\"]]]," +
+        "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
+        query);
+  }
+
+  @Test
+  public void watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable() {
+    String query = WatchmanWatcher.createQuery(
+        new ObjectMapper(),
+        "/path/to/repo",
+        Optional.<String>absent(),
+        "uuid",
+        Lists.newArrayList(Paths.get("foo"), Paths.get("bar/baz")),
+        Lists.<String>newArrayList(),
+        ImmutableSet.<WatchmanWatcher.Capability>of());
+    assertEquals(
+        "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
+        "\"expression\":[\"not\",[\"anyof\"," +
+        "[\"type\",\"d\"]," +
+        "[\"match\",\"foo/*\",\"wholename\"]," +
+        "[\"match\",\"bar/baz/*\",\"wholename\"]]]," +
         "\"empty_on_fresh_instance\":true,\"fields\":[\"name\",\"exists\",\"new\"]}]",
         query);
   }
@@ -489,7 +513,8 @@ public class WatchmanWatcherTest {
         Optional.<String>absent(),
         "uuid",
         Lists.newArrayList(Paths.get("/path/to/repo/foo"), Paths.get("/path/to/repo/bar/baz")),
-        Lists.<String>newArrayList());
+        Lists.<String>newArrayList(),
+        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
@@ -508,7 +533,8 @@ public class WatchmanWatcherTest {
         Optional.<String>absent(),
         "uuid",
         Lists.<Path>newArrayList(),
-        Lists.newArrayList("*.pbxproj"));
+        Lists.newArrayList("*.pbxproj"),
+        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +

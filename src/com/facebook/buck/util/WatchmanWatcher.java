@@ -32,6 +32,8 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
 
@@ -44,9 +46,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -60,6 +64,13 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
   private static final int DEFAULT_OVERFLOW_THRESHOLD = 10000;
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
+  private static final String WATCHMAN_DIRNAME_MIN_VERSION = "3.1";
+  private static final String WATCHMAN_WILDMATCH_GLOB_MIN_VERSION = "3.6.0";
+
+  public enum Capability {
+      DIRNAME,
+      WILDMATCH_GLOB
+  };
 
   private final EventBus fileChangeEventBus;
   private final Clock clock;
@@ -86,7 +97,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                          ObjectMapper objectMapper,
                          ProcessExecutor processExecutor,
                          Iterable<Path> ignorePaths,
-                         Iterable<String> ignoreGlobs) {
+                         Iterable<String> ignoreGlobs,
+                         Set<Capability> watchmanCapabilities) {
     this(fileChangeEventBus,
         clock,
         objectMapper,
@@ -99,7 +111,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
             watchPrefix,
             UUID.randomUUID().toString(),
             ignorePaths,
-            ignoreGlobs));
+            ignoreGlobs,
+            watchmanCapabilities));
   }
 
   @VisibleForTesting
@@ -126,7 +139,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       Optional<String> watchPrefix,
       String uuid,
       Iterable<Path> ignorePaths,
-      Iterable<String> ignoreGlobs) {
+      Iterable<String> ignoreGlobs,
+      Set<Capability> watchmanCapabilities) {
     List<Object> queryParams = new ArrayList<>();
     queryParams.add("query");
     queryParams.add(watchRoot);
@@ -158,10 +172,18 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       if (ignorePath.isAbsolute()) {
         ignorePath = MorePaths.relativize(projectRoot, ignorePath);
       }
-      excludeAnyOf.add(
-          Lists.newArrayList(
-              "dirname",
-              ignorePath.toString()));
+      if (watchmanCapabilities.contains(Capability.DIRNAME)) {
+        excludeAnyOf.add(
+            Lists.newArrayList(
+                "dirname",
+                ignorePath.toString()));
+      } else {
+        excludeAnyOf.add(
+            Lists.newArrayList(
+                "match",
+                ignorePath.toString() + "/*",
+                "wholename"));
+      }
     }
 
     // Exclude all filenames matching globs. We explicitly don't match
@@ -442,11 +464,13 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   }
 
   /**
-   * @return The version of the Watchman server if available, an absent value otherwise.
+   * @return The capabilities of the Watchman server if available.
    */
-  public Optional<String> getWatchmanVersion() throws InterruptedException {
+  public static ImmutableSet<Capability> getWatchmanCapabilities(
+      ProcessExecutor processExecutor,
+      ObjectMapper objectMapper) throws InterruptedException {
+    EnumSet<Capability> watchmanCapabilities = EnumSet.noneOf(Capability.class);
     try {
-      Optional<String> result;
       ProcessExecutor.LaunchedProcess watchmanVersionProcess = processExecutor.launchProcess(
           ProcessExecutorParams.builder()
               .addCommand("watchman", "version")
@@ -457,15 +481,23 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       int exitCode = processExecutor.waitForLaunchedProcess(watchmanVersionProcess);
       if (exitCode != 0) {
         LOG.error("Error %d executing watchman version", exitCode);
-        return Optional.absent();
       } else {
-        result = Optional.fromNullable(watchmanVersionOutput.get("version"));
-        LOG.debug("Watchman version: %s", result);
-        return result;
+        Optional<String> version = Optional.fromNullable(watchmanVersionOutput.get("version"));
+        if (version.isPresent()) {
+          VersionStringComparator comparator = new VersionStringComparator();
+          if (comparator.compare(version.get(), WATCHMAN_DIRNAME_MIN_VERSION) >= 0) {
+            watchmanCapabilities.add(Capability.DIRNAME);
+          }
+          if (comparator.compare(version.get(), WATCHMAN_WILDMATCH_GLOB_MIN_VERSION) >= 0) {
+            watchmanCapabilities.add(Capability.WILDMATCH_GLOB);
+          }
+        } else {
+          LOG.warn("No version present in watchman version output: %s", watchmanVersionOutput);
+        }
       }
     } catch (IOException e) {
       LOG.error(e, "Could not check if Watchman is available");
-      return Optional.absent();
     }
+    return Sets.immutableEnumSet(watchmanCapabilities);
   }
 }
