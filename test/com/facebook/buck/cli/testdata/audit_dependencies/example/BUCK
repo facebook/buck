@@ -54,6 +54,7 @@ apple_library(
 apple_test(
   name = 'one-tests',
   extension = 'xctest',
+  info_plist = 'Test.plist',
   srcs = [ '1-test.txt' ],
   deps = [ ':one' ],
 )
@@ -61,6 +62,7 @@ apple_test(
 apple_test(
   name = 'four-tests',
   extension = 'xctest',
+  info_plist = 'Test.plist',
   srcs = [ '4-test.txt' ],
   deps = [ ':four' ],
 )
@@ -68,6 +70,7 @@ apple_test(
 apple_test(
   name = 'four-application-tests',
   extension = 'xctest',
+  info_plist = 'Test.plist',
   srcs = [ '4-application-test.txt' ],
   deps = [
     ':four',
@@ -78,6 +81,7 @@ apple_test(
 apple_test(
   name = 'six-tests',
   extension = 'xctest',
+  info_plist = 'Test.plist',
   srcs = [ '6-test.txt' ],
   deps = [ ':six' ],
 )

@@ -20,12 +20,14 @@ apple_bundle(
   binary = ':TestAppBinary',
   extension = 'app',
   tests = [':TestAppTests'],
+  info_plist = 'Info.plist',
 )
 
 apple_test(
   name = 'TestAppTests',
   extension = 'octest',
   configs = EMPTY_CONFIGS,
+  info_plist = 'Test.plist',
   srcs = [],
   frameworks = [],
   deps = [

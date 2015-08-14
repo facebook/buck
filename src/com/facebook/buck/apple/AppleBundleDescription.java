@@ -321,7 +321,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   public static class Arg implements HasAppleBundleFields, HasTests {
     public Either<AppleBundleExtension, String> extension;
     public BuildTarget binary;
-    public Optional<SourcePath> infoPlist;
+    public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<ImmutableMap<String, SourcePath>> headers;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
@@ -335,7 +335,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     }
 
     @Override
-    public Optional<SourcePath> getInfoPlist() {
+    public SourcePath getInfoPlist() {
       return infoPlist;
     }
 

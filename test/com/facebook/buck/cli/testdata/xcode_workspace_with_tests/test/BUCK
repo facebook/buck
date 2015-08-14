@@ -1,6 +1,7 @@
 apple_test(
   name='test',
   srcs=glob(['*.m']),
+  info_plist = 'Test.plist',
   extension='xctest',
   visibility=['PUBLIC'],
 )

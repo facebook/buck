@@ -632,14 +632,9 @@ public class ProjectGenerator {
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
-    Optional<Path> infoPlistPath;
-    if (targetNode.getConstructorArg().getInfoPlist().isPresent()) {
-      infoPlistPath = Optional.of(
-          Preconditions.checkNotNull(
-              sourcePathResolver.apply(targetNode.getConstructorArg().getInfoPlist().get())));
-    } else {
-      infoPlistPath = Optional.absent();
-    }
+    Path infoPlistPath =
+        Preconditions.checkNotNull(
+            sourcePathResolver.apply(targetNode.getConstructorArg().getInfoPlist()));
 
     // -- copy any binary and bundle targets into this bundle
     Iterable<TargetNode<?>> copiedRules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -655,7 +650,7 @@ public class ProjectGenerator {
         binaryNode,
         bundleToTargetProductType(targetNode, binaryNode),
         "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
-        infoPlistPath,
+        Optional.of(infoPlistPath),
         /* includeFrameworks */ true,
         AppleResources.collectRecursiveResources(targetGraph, ImmutableList.of(targetNode)),
         AppleResources.collectDirectResources(targetGraph, targetNode),

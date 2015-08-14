@@ -1,5 +1,6 @@
 apple_test(
   name = 'Test',
   extension = 'octest',
+  info_plist = 'Test.plist',
   headers = ['Header.h'],
 )

@@ -17,6 +17,7 @@ apple_binary(
 apple_bundle(
   name = 'TestApp',
   deps = [':TestAppBinary'],
+  info_plist = 'Info.plist',
   binary = ':TestAppBinary',
   extension = 'app',
   tests = [':TestAppTests'],
@@ -26,6 +27,7 @@ apple_test(
   name = 'TestAppTests',
   extension = 'octest',
   configs = EMPTY_CONFIGS,
+  info_plist = 'Test.plist',
   srcs = [],
   frameworks = [],
   deps = [

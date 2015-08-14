@@ -384,7 +384,7 @@ public class AppleTestDescription implements
 
     // Bundle related fields.
     public Either<AppleBundleExtension, String> extension;
-    public Optional<SourcePath> infoPlist;
+    public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
     public Optional<String> resourcePrefixDir;
@@ -396,7 +396,7 @@ public class AppleTestDescription implements
     }
 
     @Override
-    public Optional<SourcePath> getInfoPlist() {
+    public SourcePath getInfoPlist() {
       return infoPlist;
     }
 

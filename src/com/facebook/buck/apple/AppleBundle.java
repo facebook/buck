@@ -73,7 +73,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final String extension;
 
   @AddToRuleKey
-  private final Optional<SourcePath> infoPlist;
+  private final SourcePath infoPlist;
 
   @AddToRuleKey
   private final ImmutableMap<String, String> infoPlistSubstitutions;
@@ -134,7 +134,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       BuildRuleParams params,
       SourcePathResolver resolver,
       Either<AppleBundleExtension, String> extension,
-      Optional<SourcePath> infoPlist,
+      SourcePath infoPlist,
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
       AppleBundleDestinations destinations,
@@ -275,7 +275,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
     Path metadataPath = getMetadataPath();
 
-    Path infoPlistInputPath = getResolver().getPath(infoPlist.get());
+    Path infoPlistInputPath = getResolver().getPath(infoPlist);
     Path infoPlistSubstitutionTempPath =
         BuildTargets.getScratchPath(getBuildTarget(), "%s.plist");
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");

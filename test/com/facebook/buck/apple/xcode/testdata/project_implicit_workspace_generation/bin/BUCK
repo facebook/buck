@@ -9,5 +9,6 @@ apple_bundle(
   name='app',
   binary=':bin',
   extension='app',
+  info_plist='Info.plist',
   visibility=['PUBLIC'],
 )

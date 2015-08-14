@@ -27,4 +27,5 @@ apple_bundle(
   deps = [':TestAppBinary'],
   binary = ':TestAppBinary',
   extension = 'app',
+  info_plist = 'Info.plist',
 )

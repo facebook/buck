@@ -52,7 +52,7 @@ public class AppleBundleBuilder
     return this;
   }
 
-  public AppleBundleBuilder setInfoPlist(Optional<SourcePath> infoPlist) {
+  public AppleBundleBuilder setInfoPlist(SourcePath infoPlist) {
     arg.infoPlist = infoPlist;
     return this;
   }

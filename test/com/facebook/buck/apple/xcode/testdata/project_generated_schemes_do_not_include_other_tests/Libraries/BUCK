@@ -18,6 +18,7 @@ apple_binary(
 apple_bundle(
   name = 'TestDep',
   deps = [':TestDepBinary'],
+  info_plist = 'Info.plist',
   binary = ':TestDepBinary',
   extension = 'app',
 )
@@ -56,6 +57,7 @@ apple_test(
   name = 'Dep1Tests',
   extension = 'octest',
   configs = EMPTY_CONFIGS,
+  info_plist = 'Test.plist',
   srcs = [],
   frameworks = [],
   deps = [
@@ -67,6 +69,7 @@ apple_test(
   name = 'Dep2Tests',
   extension = 'octest',
   configs = EMPTY_CONFIGS,
+  info_plist = 'Test.plist',
   srcs = [],
   frameworks = [],
   deps = [
@@ -78,6 +81,7 @@ apple_test(
   name = 'Dep3Tests',
   extension = 'octest',
   configs = EMPTY_CONFIGS,
+  info_plist = 'Test.plist',
   srcs = [],
   frameworks = [],
   deps = [

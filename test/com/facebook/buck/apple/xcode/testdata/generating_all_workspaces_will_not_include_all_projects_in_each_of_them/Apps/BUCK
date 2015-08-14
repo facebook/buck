@@ -19,6 +19,7 @@ apple_bundle(
   deps = [':TestAppBinary1'],
   binary = ':TestAppBinary1',
   extension = 'app',
+  info_plist = 'Info.plist',
 )
 
 xcode_workspace_config(
@@ -42,6 +43,7 @@ apple_bundle(
   deps = [':TestAppBinary2'],
   binary = ':TestAppBinary2',
   extension = 'app',
+  info_plist = 'Info.plist',
 )
 
 xcode_workspace_config(

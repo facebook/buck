@@ -59,7 +59,7 @@ public final class AppleTestBuilder
     return this;
   }
 
-  public AppleTestBuilder infoPlist(Optional<SourcePath> infoPlist) {
+  public AppleTestBuilder setInfoPlist(SourcePath infoPlist) {
     arg.infoPlist = infoPlist;
     return this;
   }
