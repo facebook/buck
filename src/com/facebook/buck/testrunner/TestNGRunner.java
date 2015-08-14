@@ -25,9 +25,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.testng.IAnnotationTransformer;
+import org.testng.IReporter;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
@@ -36,6 +39,11 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.ITestAnnotation;
 import org.testng.annotations.Test;
+import org.testng.reporters.EmailableReporter;
+import org.testng.reporters.FailedReporter;
+import org.testng.reporters.JUnitReportReporter;
+import org.testng.reporters.SuiteHTMLReporter;
+import org.testng.reporters.XMLReporter;
 
 /** Class that runs a set of TestNG tests and writes the results to a directory. */
 public final class TestNGRunner extends BaseRunner {
@@ -55,9 +63,18 @@ public final class TestNGRunner extends BaseRunner {
       } else {
         results = new ArrayList<>();
         TestNG testng = new TestNG();
+        testng.setUseDefaultListeners(false);
         testng.setAnnotationTransformer(new FilteringAnnotationTransformer(results));
         testng.setTestClasses(new Class<?>[]{testClass});
         testng.addListener(new TestListener(results));
+        // use default TestNG reporters ...
+        testng.addListener(new SuiteHTMLReporter());
+        testng.addListener((IReporter) new FailedReporter());
+        testng.addListener(new XMLReporter());
+        testng.addListener(new EmailableReporter());
+        // ... except this replaces JUnitReportReporter ...
+        testng.addListener(new JUnitReportReporterImproved());
+        // ... and we can't access TestNG verbosity, so we remove VerboseReporter
         testng.run();
       }
 
@@ -112,6 +129,26 @@ public final class TestNGRunner extends BaseRunner {
   private boolean shouldIncludeTest(String className) {
     TestDescription testDescription = new TestDescription(className, null);
     return testSelectorList.isIncluded(testDescription);
+  }
+
+  private static String calculateTestMethodName(ITestResult iTestResult) {
+    Object[] parameters = iTestResult.getParameters();
+    String name = iTestResult.getName();
+
+    if (parameters == null || parameters.length == 0) {
+      return name;
+    }
+
+    StringBuilder builder = new StringBuilder(name).append(" (");
+    builder.append(Arrays.stream(parameters).map(parameter -> {
+      try {
+        return parameter == null ? "null" : parameter.toString();
+      } catch (Exception e) {
+        return "Unstringable object";
+      }
+    }).collect(Collectors.joining(", ")));
+    builder.append(")");
+    return builder.toString();
   }
 
   public class FilteringAnnotationTransformer implements IAnnotationTransformer {
@@ -221,7 +258,8 @@ public final class TestNGRunner extends BaseRunner {
       String stdErr = streamToString(rawStdErrBytes);
 
       String className = result.getTestClass().getName();
-      String methodName = result.getMethod().getMethodName();
+      String methodName = calculateTestMethodName(result);
+
       long runTimeMillis = result.getEndMillis() - result.getStartMillis();
       results.add(
           new TestResult(className, methodName, runTimeMillis, type, failure, stdOut, stdErr));
@@ -241,6 +279,13 @@ public final class TestNGRunner extends BaseRunner {
       } catch (UnsupportedEncodingException e) {
         return fallback;
       }
+    }
+  }
+
+  private static class JUnitReportReporterImproved extends JUnitReportReporter {
+    @Override
+    public String getTestName(ITestResult result) {
+      return calculateTestMethodName(result);
     }
   }
 }
