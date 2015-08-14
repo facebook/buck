@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
@@ -38,6 +39,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -82,7 +84,8 @@ public class PythonPackagedBinaryTest {
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableMap.<Path, SourcePath>of(),
             ImmutableSet.<SourcePath>of(),
-            Optional.<Boolean>absent()));
+            Optional.<Boolean>absent()),
+        ImmutableSortedSet.<BuildRule>of());
 
     // Calculate and return the rule key.
     RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary);

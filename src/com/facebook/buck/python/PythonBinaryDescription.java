@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -194,6 +195,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       ImmutableList<String> buildArgs) {
 
     switch (pythonBuckConfig.getPackageStyle()) {
+
       case INPLACE:
         return createInPlaceBinaryRule(
             params,
@@ -202,11 +204,13 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
             cxxPlatform,
             mainModule,
             components);
+
       case STANDALONE:
+        ImmutableSortedSet<BuildRule> componentDeps =
+            PythonUtil.getDepsFromComponents(pathResolver, components);
         return new PythonPackagedBinary(
             params.copyWithDeps(
-                Suppliers.ofInstance(
-                    PythonUtil.getDepsFromComponents(pathResolver, components)),
+                Suppliers.ofInstance(componentDeps),
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
             pythonBuckConfig.getPathToPex(),
@@ -215,9 +219,15 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
             pythonBuckConfig.getPexExtension(),
             pythonEnvironment,
             mainModule,
-            components);
+            components,
+            // Attach any additional declared deps that don't qualify as build time deps,
+            // as runtime deps, so that we make to include other things we depend on in
+            // the build.
+            ImmutableSortedSet.copyOf(Sets.difference(params.getDeclaredDeps(), componentDeps)));
+
       default:
         throw new IllegalStateException();
+
     }
 
   }

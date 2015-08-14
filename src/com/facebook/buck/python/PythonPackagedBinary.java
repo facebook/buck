@@ -21,11 +21,13 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -34,10 +36,11 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class PythonPackagedBinary extends PythonBinary {
+public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
@@ -54,6 +57,7 @@ public class PythonPackagedBinary extends PythonBinary {
   private final PythonPackageComponents components;
   @AddToRuleKey
   private final PythonEnvironment pythonEnvironment;
+  private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   protected PythonPackagedBinary(
       BuildRuleParams params,
@@ -64,7 +68,8 @@ public class PythonPackagedBinary extends PythonBinary {
       String pexExtension,
       PythonEnvironment pythonEnvironment,
       String mainModule,
-      PythonPackageComponents components) {
+      PythonPackageComponents components,
+      ImmutableSortedSet<BuildRule> runtimeDeps) {
     super(params, resolver, mainModule, components);
     this.pathToPex = pathToPex;
     this.buildArgs = buildArgs;
@@ -73,6 +78,7 @@ public class PythonPackagedBinary extends PythonBinary {
     this.pythonEnvironment = pythonEnvironment;
     this.mainModule = mainModule;
     this.components = components;
+    this.runtimeDeps = runtimeDeps;
   }
 
   @Override
@@ -131,6 +137,11 @@ public class PythonPackagedBinary extends PythonBinary {
     buildableContext.recordArtifact(getBinPath());
 
     return steps.build();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return runtimeDeps;
   }
 
 }

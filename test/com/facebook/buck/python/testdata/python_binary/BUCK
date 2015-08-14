@@ -1,0 +1,21 @@
+python_library(
+  name = 'foo',
+  srcs = [
+    'foo.py',
+  ],
+)
+
+python_binary(
+  name = 'bar',
+  main_module = 'foo',
+  deps = [
+    ':foo',
+    ':extra',
+  ],
+)
+
+genrule(
+  name = 'extra',
+  out = 'out',
+  cmd = 'touch $OUT',
+)
