@@ -32,7 +32,6 @@ import org.kohsuke.args4j.Option;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.MissingFormatArgumentException;
 import java.util.Set;
 
 public class QueryCommand extends AbstractCommand {
@@ -104,7 +103,7 @@ public class QueryCommand extends AbstractCommand {
         BuildTarget target = BuildTargetParser.INSTANCE.parse(
             input,
             BuildTargetPatternParser.fullyQualified());
-        String query = String.format(queryFormat, input);
+        String query = queryFormat.replace("%s", input);
         Set<BuildTarget> queryResult = env.evaluateQuery(query);
         queryResultMap.putAll(target, queryResult);
       }
@@ -118,9 +117,6 @@ public class QueryCommand extends AbstractCommand {
     } catch (QueryException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
-    } catch (MissingFormatArgumentException e) {
-      params.getConsole().printBuildFailure(
-          "The query expression should contain only one format specifier");
     }
     return 0;
   }

@@ -35,7 +35,7 @@ public class QueryCommandIntegrationTest {
   @Test
   public void testTransitiveDependencies() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "query_dependencies", tmp);
+        this, "query_command", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
@@ -49,7 +49,7 @@ public class QueryCommandIntegrationTest {
   @Test
   public void testGetTests() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "query_dependencies", tmp);
+        this, "query_command", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
@@ -63,7 +63,7 @@ public class QueryCommandIntegrationTest {
   @Test
   public void testGetTestsFromSelfAndDirectDependenciesJSON() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "query_dependencies", tmp);
+        this, "query_command", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
@@ -78,7 +78,7 @@ public class QueryCommandIntegrationTest {
   @Test
   public void testGetTestsFromSelfAnd2LevelDependenciesJSON() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "query_dependencies", tmp);
+        this, "query_command", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
@@ -93,7 +93,7 @@ public class QueryCommandIntegrationTest {
   @Test
   public void testMultipleQueryGetTestsFromSelfAndDirectDependencies() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "query_dependencies", tmp);
+        this, "query_command", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
@@ -108,7 +108,7 @@ public class QueryCommandIntegrationTest {
   @Test
   public void testMultipleQueryGetTestsFromSelfAndDirectDependenciesJSON() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "query_dependencies", tmp);
+        this, "query_command", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
@@ -124,7 +124,7 @@ public class QueryCommandIntegrationTest {
   @Test
   public void testMultipleGetAllTestsFromSelfAndDirectDependenciesJSON() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "query_dependencies", tmp);
+        this, "query_command", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
@@ -140,5 +140,20 @@ public class QueryCommandIntegrationTest {
         "//example:six");
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-all-deps-tests-map.json"), result.getStdout());
+  }
+
+  @Test
+  public void testMultipleQueryFormatGetDirectDependenciesAndTests() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "deps(%s, 1) union testsof(%s)",
+        "//example:one");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-one-direct-deps-tests"), result.getStdout());
   }
 }
