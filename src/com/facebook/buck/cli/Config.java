@@ -168,6 +168,23 @@ public class Config {
         Optional.<Long>absent();
   }
 
+  public Optional<Float> getFloat(String sectionName, String propertyName) {
+    Optional<String> value = getValue(sectionName, propertyName);
+    if (value.isPresent()) {
+      try {
+        return Optional.of(Float.valueOf(value.get()));
+      } catch (NumberFormatException e) {
+        throw new HumanReadableException(
+            "Malformed value for %s in [%s]: %s; expecting a floating point number.",
+            propertyName,
+            sectionName,
+            value.get());
+      }
+    } else {
+      return Optional.absent();
+    }
+  }
+
   public boolean getBooleanValue(String sectionName, String propertyName, boolean defaultValue) {
     Map<String, String> entries = get(sectionName);
     if (!entries.containsKey(propertyName)) {
@@ -188,7 +205,8 @@ public class Config {
         throw new HumanReadableException(
             "Unknown value for %s in [%s]: %s; should be yes/no true/false!",
             propertyName,
-            sectionName);
+            sectionName,
+            answer);
     }
   }
 

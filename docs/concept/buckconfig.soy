@@ -430,6 +430,14 @@ JSON array composing of the long entries.</p>
 <p>The format of the individual log entries is not yet finalized and may
 change without warning between Buck versions.</p>
 
+{literal}<pre class="prettyprint lang-ini">
+[log]
+  remote_log_sample_rate = 0.1
+
+</pre>{/literal}
+
+<p>Will casue only 10% of Buck invocations to stream logs to <code>remote_log_url</code>.</p>
+
 {call .section}{param title: 'ndk' /}{/call}
 
 This section defines properties to configure building native code against

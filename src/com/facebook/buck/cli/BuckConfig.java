@@ -655,12 +655,27 @@ public class BuckConfig {
     return getValue("log", "remote_log_url").transform(TO_URI);
   }
 
+  public Optional<Float> getRemoteLogSampleRate() {
+    Optional<Float> sampleRate = config.getFloat("log", "remote_log_sample_rate");
+    if (sampleRate.isPresent()) {
+      if (sampleRate.get() > 1.0f) {
+        throw new HumanReadableException(
+            ".buckconfig: remote_log_sample_rate should be less than or equal to 1.0.");
+      }
+      if (sampleRate.get() < 0.0f) {
+        throw new HumanReadableException(
+            ".buckconfig: remote_log_sample_rate should be greater than or equal to 0.");
+      }
+    }
+    return sampleRate;
+ }
+
   public Optional<String> getValue(String sectionName, String propertyName) {
     return config.getValue(sectionName, propertyName);
   }
 
   public Optional<Long> getLong(String sectionName, String propertyName) {
-    return  config.getLong(sectionName, propertyName);
+    return config.getLong(sectionName, propertyName);
   }
 
   public boolean getBooleanValue(String sectionName, String propertyName, boolean defaultValue) {

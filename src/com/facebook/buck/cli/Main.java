@@ -67,6 +67,7 @@ import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.cache.MultiProjectFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.concurrent.TimeSpan;
@@ -972,7 +973,11 @@ public final class Main {
 
     Optional<URI> remoteLogUrl = config.getRemoteLogUrl();
     ImmutableMap<String, String> environmentExtraData = ImmutableMap.of();
-    if (remoteLogUrl.isPresent()) {
+    boolean shouldSample = config.getRemoteLogSampleRate()
+        .transform(BuildIdSampler.CREATE_FUNCTION)
+        .transform(MoreFunctions.<BuildId, Boolean>applyFunction(buildId))
+        .or(true);
+    if (remoteLogUrl.isPresent() && shouldSample) {
       eventListenersBuilder.add(
           new RemoteLogUploaderEventListener(
               objectMapper,

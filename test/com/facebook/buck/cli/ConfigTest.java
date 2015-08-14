@@ -87,6 +87,19 @@ public class ConfigTest {
   }
 
   @Test
+  public void testGetFloat() throws IOException {
+    assertEquals(
+        Optional.of(0.333f),
+        createFromText("[a]", "  f = 0.333").getFloat("a", "f")
+    );
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testGetMalformedFloat() throws IOException {
+      createFromText("[a]", "  f = potato").getFloat("a", "f");
+  }
+
+  @Test
   public void testOverride() throws IOException {
     Reader readerA = new StringReader(Joiner.on('\n').join(
         "[cache]",
