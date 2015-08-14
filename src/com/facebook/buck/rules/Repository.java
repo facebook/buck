@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * Represents a single checkout of a code base. Two repositories model the same code base if their
@@ -100,6 +101,22 @@ public class Repository {
       throw new MissingBuildFileException(target, getBuckConfig());
     }
     return getFilesystem().resolve(relativePath);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Repository that = (Repository) o;
+    return Objects.equals(filesystem, that.filesystem) &&
+        Objects.equals(config, that.config) &&
+        Objects.equals(directoryResolver, that.directoryResolver);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(filesystem, config, directoryResolver);
   }
 
   @SuppressWarnings("serial")
