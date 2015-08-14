@@ -90,15 +90,16 @@ public class ProvisioningProfileCopyStep implements Step {
     this.signingEntitlementsTempPath = signingEntitlementsTempPath;
   }
 
-  public static ImmutableSet<ProvisioningProfileMetadata> findProfilesInPath(Path searchPath) {
+  public static ImmutableSet<ProvisioningProfileMetadata> findProfilesInPath(Path searchPath)
+   throws InterruptedException {
     final ImmutableSet.Builder<ProvisioningProfileMetadata> profilesBuilder =
         ImmutableSet.builder();
-
     try {
       Files.walkFileTree(
           searchPath.toAbsolutePath(), new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
               if (file.toString().endsWith(".mobileprovision")) {
                 try {
                   ProvisioningProfileMetadata profile =
@@ -106,6 +107,8 @@ public class ProvisioningProfileCopyStep implements Step {
                   profilesBuilder.add(profile);
                 } catch (IOException | IllegalArgumentException e) {
                   LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
+                } catch (InterruptedException e) {
+                  throw new IOException(e);
                 }
               }
 
@@ -113,6 +116,9 @@ public class ProvisioningProfileCopyStep implements Step {
             }
           });
     } catch (IOException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        throw ((InterruptedException) e.getCause());
+      }
       LOG.error(e, "Error while searching for mobileprovision files");
     }
 

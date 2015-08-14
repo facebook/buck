@@ -185,8 +185,16 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
                 "/Library/MobileDevice/Provisioning Profiles");
       }
 
-      this.provisioningProfiles = Optional.of(
-          ProvisioningProfileCopyStep.findProfilesInPath(searchPath));
+      Optional<ImmutableSet<ProvisioningProfileMetadata>> provisioningProfiles;
+      try {
+        provisioningProfiles = Optional.of(
+            ProvisioningProfileCopyStep.findProfilesInPath(searchPath));
+      } catch (InterruptedException e) {
+        // We get here if the user pressed Ctrl-C during the profile discovery step.
+        // In this case, we'll fail anyway since the set of profiles will be empty.
+        provisioningProfiles = Optional.of(ImmutableSet.<ProvisioningProfileMetadata>of());
+      }
+      this.provisioningProfiles = provisioningProfiles;
 
       Optional<CodeSignIdentity> foundIdentity = Optional.absent();
       Optional<String> customIdentity = InfoPlistSubstitution.getVariableExpansionForPlatform(

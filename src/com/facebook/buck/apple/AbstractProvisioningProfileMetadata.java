@@ -25,17 +25,26 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 
 import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Date;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,7 +56,6 @@ import java.util.regex.Pattern;
 @BuckStyleImmutable
 abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable {
   private static final Pattern BUNDLE_ID_PATTERN = Pattern.compile("^([A-Z0-9]{10,10})\\.(.+)$");
-  private static final Pattern PLIST_XML_PATTERN = Pattern.compile("((?s)<\\?xml.*</plist>)");
 
   /** Returns a (prefix, identifier) pair which the profile is valid for;
    *  e.g. (ABCDE12345, com.example.TestApp) or (ABCDE12345, *)
@@ -82,18 +90,35 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
   }
 
   public static ProvisioningProfileMetadata fromProvisioningProfilePath(Path profilePath)
-      throws IOException {
-    String fileAsString = Files.toString(profilePath.toFile(), Charsets.UTF_8);
-    Matcher matcher = PLIST_XML_PATTERN.matcher(fileAsString);
-    if (matcher.find()) {
-      fileAsString = matcher.group();
-    } else {
-      throw new IllegalArgumentException(
-          "Malformed .mobileprovision file (could not find embedded plist)");
+      throws IOException, InterruptedException {
+    CapturingPrintStream stdout = new CapturingPrintStream();
+    CapturingPrintStream stderr = new CapturingPrintStream();
+
+    Console console = new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
+    ProcessExecutor processExecutor = new ProcessExecutor(console);
+    Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+
+    // Extract the XML from its signed message wrapper.
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of("/usr/bin/security", "cms", "-D", "-i",
+                    profilePath.toString()))
+            .build();
+    ProcessExecutor.Result result;
+    result = processExecutor.launchAndExecute(
+        processExecutorParams,
+        options,
+            /* stdin */ Optional.<String>absent(),
+            /* timeOutMs */ Optional.<Long>absent(),
+            /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+    if (result.getExitCode() != 0) {
+      throw new HumanReadableException("Invalid provisioning profile: " + profilePath +
+          ": " + result.getStderr());
     }
 
     try {
-      NSDictionary plist = (NSDictionary) PropertyListParser.parse(fileAsString.getBytes());
+      NSDictionary plist = (NSDictionary) PropertyListParser.parse(
+          result.getStdout().get().getBytes());
       Date expirationDate = ((NSDate) plist.get("ExpirationDate")).getDate();
       String uuid = ((NSString) plist.get("UUID")).getContent();
       ImmutableMap.Builder<String, NSObject> builder =
