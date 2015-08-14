@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.cli.BuckConfig;
@@ -53,10 +54,10 @@ public class CxxBinaryIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
-  @Test(timeout = 300000)
+  @Test
   public void testInferCxxBinaryDepsCaching() throws IOException {
-    Path inferTopLevel = InferHelper.assumeInferIsInstalled();
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
     workspace.enableDirCache(); // enable the cache
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
@@ -115,10 +116,10 @@ public class CxxBinaryIntegrationTest {
     }
   }
 
-  @Test(timeout = 300000)
+  @Test
   public void testInferCxxBinaryWithoutDeps() throws IOException {
-    Path inferTopLevel = InferHelper.assumeInferIsInstalled();
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:simple");
@@ -171,29 +172,6 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(inferReportTarget.toString());
 
     /*
-     * Check that there's one bug reported by Infer.
-     */
-    String reportPath = "buck-out/gen/foo/infer-simple#infer/report.json";
-
-    List<InferHelper.InferBug> bugs = InferHelper.loadInferReport(workspace, reportPath);
-
-    Assert.assertThat(
-        "1 bug expected in " + sourceFull + " not found",
-        bugs.size(),
-        Matchers.equalTo(1));
-
-    InferHelper.InferBug bug = bugs.iterator().next();
-
-    Assert.assertThat(
-        "Expected bug in " + sourceFull,
-        bug.getFile(),
-        Matchers.equalTo(sourceFull));
-    Assert.assertThat(
-        "Expected NULL_DEREFERENCE",
-        bug.getType(),
-        Matchers.equalTo("NULL_DEREFERENCE"));
-
-    /*
      * Check that running a build again results in no builds since nothing has changed.
      */
     workspace.resetBuildLogFile(); // clear for new build
@@ -215,21 +193,12 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(captureBuildTarget.toString());
     buildLog.assertTargetBuiltLocally(inferAnalysisTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
-
-    /*
-     * Check that Infer didn't report bugs on the previous build.
-     */
-    bugs = InferHelper.loadInferReport(workspace, reportPath);
-    Assert.assertThat(
-        "No bugs expected in " + sourceName,
-        bugs.size(),
-        Matchers.equalTo(0));
   }
 
-  @Test(timeout = 300000)
+  @Test
   public void testInferCxxBinaryWithDeps() throws IOException {
-    Path inferTopLevel = InferHelper.assumeInferIsInstalled();
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
@@ -245,7 +214,6 @@ public class CxxBinaryIntegrationTest {
      * Check that all the required build targets have been generated.
      */
     String sourceName = "src_with_deps.c";
-    String sourceFull = "foo/" + sourceName;
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
         inputBuildTarget,
         cxxPlatform);
@@ -338,17 +306,6 @@ public class CxxBinaryIntegrationTest {
         workspace.getBuildLog().getAllTargets());
 
     /*
-     * Check that there's no bug reported by Infer.
-     */
-    String reportPath = "buck-out/gen/foo/infer-binary_with_deps#infer/report.json";
-    List<InferHelper.InferBug> bugs = InferHelper.loadInferReport(workspace, reportPath);
-
-    Assert.assertThat(
-        "No bugs expected in " + sourceFull,
-        bugs.size(),
-        Matchers.equalTo(0));
-
-    /*
      * Check that running a build again results in no builds since nothing has changed.
      */
     workspace.resetBuildLogFile(); // clear for new build
@@ -384,33 +341,12 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetHadMatchingRuleKey(depOneExportedHeaderSymlinkTreeTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depOneHeaderSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(depOneInferAnalysisTarget.toString());
-
-    /*
-     * Check that Infer finds one bug on the main target that depends on the changed library
-     */
-    bugs = InferHelper.loadInferReport(workspace, reportPath);
-
-    Assert.assertThat(
-        "1 bug expected in " + sourceFull + " not found",
-        bugs.size(),
-        Matchers.equalTo(1));
-
-    InferHelper.InferBug bug = bugs.iterator().next();
-
-    Assert.assertThat(
-        "Expected bug in " + sourceFull,
-        bug.getFile(),
-        Matchers.equalTo(sourceFull));
-    Assert.assertThat(
-        "Expected NULL_DEREFERENCE",
-        bug.getType(),
-        Matchers.equalTo("NULL_DEREFERENCE"));
   }
 
-  @Test(timeout = 300000)
+  @Test
   public void testInferCxxBinaryWithCachedDepsGetsAllItsTransitiveDeps() throws IOException {
-    Path inferTopLevel = InferHelper.assumeInferIsInstalled();
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
     workspace.enableDirCache(); // enable the cache
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
@@ -448,13 +384,13 @@ public class CxxBinaryIntegrationTest {
         "Expected specs file for func_ret_null() in chain_dep_two.c not found",
         workspace.getPath(
             "buck-out/gen/foo/infer-analysis-chain_dep_two#default,infer-analyze/specs/" +
-                "func_ret_null{AF55}.specs").toFile().exists());
+                "mockedSpec.specs").toFile().exists());
   }
 
-  @Test(timeout = 300000)
+  @Test
   public void testInferCxxBinaryMergesAllReportsOfDependencies() throws IOException {
-    Path inferTopLevel = InferHelper.assumeInferIsInstalled();
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =
@@ -465,28 +401,15 @@ public class CxxBinaryIntegrationTest {
      */
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
 
-    /*
-     * Check that the bug in func_bad reported in a dependency at the bottom of the graph, gets
-     * merged into the final report of the main target.
-     */
-    InferHelper.InferBug expectedBug = new InferHelper.InferBug(
-        "NULL_DEREFERENCE",
-        "foo/chain_dep_two.c",
-        "func_bad");
-
     String reportPath = "buck-out/gen/foo/infer-binary_with_chain_deps#infer/report.json";
-    List<InferHelper.InferBug> bugs = InferHelper.loadInferReport(workspace, reportPath);
+    List<Object> bugs = InferHelper.loadInferReport(workspace, reportPath);
 
-    // there are 2 bugs in total, one in top_chain.c, and another in chain_dep_two.c
+    // check that the merge step has merged a total of 3 bugs, one for each target
+    // (chain_dep_two, chain_dep_one, binary_with_chain_deps)
     Assert.assertThat(
-        "2 bugs expected in " + reportPath + " not found",
+        "3 bugs expected in " + reportPath + " not found",
         bugs.size(),
-        Matchers.equalTo(2));
-
-    Assert.assertThat(
-        "Expected NULL_DEREFERENCE in func_bad",
-        bugs,
-        Matchers.hasItem(expectedBug));
+        Matchers.equalTo(3));
   }
 
   public void doTestSimpleCxxBinaryBuilds(

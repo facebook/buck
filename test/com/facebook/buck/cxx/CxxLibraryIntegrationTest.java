@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.InferHelper;
@@ -26,13 +27,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class CxxLibraryIntegrationTest {
 
@@ -89,7 +88,7 @@ public class CxxLibraryIntegrationTest {
 
   @Test
   public void libraryBuildPathIsSoName() throws IOException {
-    Assume.assumeTrue(Platform.detect() == Platform.LINUX);
+    assumeTrue(Platform.detect() == Platform.LINUX);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "shared_library", tmp);
     workspace.setUp();
@@ -110,10 +109,10 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:foo#shared,default").assertSuccess();
   }
 
-  @Test(timeout = 300000)
+  @Test
   public void runInferOnSimpleLibraryWithoutDeps() throws IOException {
-    Path inferTopLevel = InferHelper.assumeInferIsInstalled();
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, inferTopLevel, tmp);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
     workspace.runBuckBuild("//foo:dep_one").assertSuccess();
   }
 
