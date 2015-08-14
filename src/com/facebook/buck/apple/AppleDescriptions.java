@@ -357,7 +357,7 @@ public class AppleDescriptions {
     };
   }
 
-  public static CollectedAssetCatalogs createBuildRulesForTransitiveAssetCatalogDependencies(
+  public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(
       TargetGraph targetGraph,
       BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
@@ -368,84 +368,35 @@ public class AppleDescriptions {
     ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogArgs =
         AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode));
 
-    ImmutableSortedSet.Builder<Path> mergeableAssetCatalogDirsBuilder =
-        ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<Path> unmergeableAssetCatalogDirsBuilder =
+    ImmutableSortedSet.Builder<Path> assetCatalogDirsBuilder =
         ImmutableSortedSet.naturalOrder();
 
     for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
-      if (arg.getCopyToBundles()) {
-        unmergeableAssetCatalogDirsBuilder.addAll(arg.dirs);
-      } else {
-        mergeableAssetCatalogDirsBuilder.addAll(arg.dirs);
-      }
+      assetCatalogDirsBuilder.addAll(arg.dirs);
     }
 
-    ImmutableSortedSet<Path> mergeableAssetCatalogDirs =
-        mergeableAssetCatalogDirsBuilder.build();
-    ImmutableSortedSet<Path> unmergeableAssetCatalogDirs =
-        unmergeableAssetCatalogDirsBuilder.build();
+    ImmutableSortedSet<Path> assetCatalogDirs =
+        assetCatalogDirsBuilder.build();
 
-    Optional<AppleAssetCatalog> mergedAssetCatalog = Optional.absent();
-    if (!mergeableAssetCatalogDirs.isEmpty()) {
-      BuildRuleParams assetCatalogParams = params.copyWithChanges(
-          BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(
-                  AppleAssetCatalog.getFlavor(
-                      ActoolStep.BundlingMode.MERGE_BUNDLES,
-                      MERGED_ASSET_CATALOG_NAME))
-              .build(),
-          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-      mergedAssetCatalog = Optional.of(
-          new AppleAssetCatalog(
-              assetCatalogParams,
-              sourcePathResolver,
-              applePlatform.getName(),
-              actool,
-              mergeableAssetCatalogDirs,
-              ActoolStep.BundlingMode.MERGE_BUNDLES,
-              MERGED_ASSET_CATALOG_NAME));
+    if (assetCatalogDirs.isEmpty()) {
+      return Optional.absent();
     }
 
-    ImmutableSet.Builder<AppleAssetCatalog> bundledAssetCatalogsBuilder =
-        ImmutableSet.builder();
-    for (Path assetDir : unmergeableAssetCatalogDirs) {
-      String bundleName = getCatalogNameFromPath(assetDir);
-      BuildRuleParams assetCatalogParams = params.copyWithChanges(
-          BuildTarget.builder(params.getBuildTarget())
-              .addFlavors(AppleAssetCatalog.getFlavor(
-                      ActoolStep.BundlingMode.SEPARATE_BUNDLES,
-                      bundleName))
-              .build(),
-          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-      bundledAssetCatalogsBuilder.add(
-          new AppleAssetCatalog(
-              assetCatalogParams,
-              sourcePathResolver,
-              applePlatform.getName(),
-              actool,
-              ImmutableSortedSet.of(assetDir),
-              ActoolStep.BundlingMode.SEPARATE_BUNDLES,
-              bundleName));
-    }
-    ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs =
-        bundledAssetCatalogsBuilder.build();
+    BuildRuleParams assetCatalogParams = params.copyWithChanges(
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(AppleAssetCatalog.FLAVOR)
+            .build(),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
-    return CollectedAssetCatalogs.of(
-        mergedAssetCatalog,
-        bundledAssetCatalogs);
-  }
-
-  private static String getCatalogNameFromPath(Path assetCatalogDir) {
-    String name = assetCatalogDir.getFileName().toString();
-    if (name.endsWith(AppleDescriptions.XCASSETS_DIRECTORY_EXTENSION)) {
-      name = name.substring(
-          0,
-          name.length() - AppleDescriptions.XCASSETS_DIRECTORY_EXTENSION.length());
-    }
-    return name;
+    return Optional.of(
+        new AppleAssetCatalog(
+            assetCatalogParams,
+            sourcePathResolver,
+            applePlatform.getName(),
+            actool,
+            assetCatalogDirs,
+            MERGED_ASSET_CATALOG_NAME));
   }
 
 }

@@ -45,17 +45,14 @@ apple_library(
 apple_asset_catalog(
   name = 'Assets1',
   dirs = [ 'Assets1.xcassets' ],
-  copy_to_bundles = True,
 )
 
 apple_asset_catalog(
   name = 'Assets2',
   dirs = [ 'Assets2.xcassets' ],
-  copy_to_bundles = False,
 )
 
 apple_asset_catalog(
   name = 'Assets3',
   dirs = [ 'Assets3.xcassets' ],
-  copy_to_bundles = False,
 )

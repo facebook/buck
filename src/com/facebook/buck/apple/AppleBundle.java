@@ -122,9 +122,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
   private final ImmutableSet<SourcePath> extensionBundlePaths;
 
-  private final ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs;
-
-  private final Optional<AppleAssetCatalog> mergedAssetCatalog;
+  private final Optional<AppleAssetCatalog> assetCatalog;
 
   private final String binaryName;
   private final Path bundleRoot;
@@ -146,8 +144,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       Tool ibtool,
       Tool dsymutil,
       Tool strip,
-      Set<AppleAssetCatalog> bundledAssetCatalogs,
-      Optional<AppleAssetCatalog> mergedAssetCatalog,
+      Optional<AppleAssetCatalog> assetCatalog,
       Set<BuildTarget> tests,
       AppleSdk sdk,
       ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities,
@@ -168,8 +165,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.ibtool = ibtool;
     this.dsymutil = dsymutil;
     this.strip = strip;
-    this.bundledAssetCatalogs = ImmutableSet.copyOf(bundledAssetCatalogs);
-    this.mergedAssetCatalog = mergedAssetCatalog;
+    this.assetCatalog = assetCatalog;
     this.binaryName = getBinaryName(getBuildTarget());
     this.bundleRoot = getBundleRoot(getBuildTarget(), this.extension);
     this.binaryPath = this.destinations.getExecutablesPath()
@@ -373,17 +369,8 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       }
     }
 
-    for (AppleAssetCatalog bundledAssetCatalog : bundledAssetCatalogs) {
-      Path bundleDir = bundledAssetCatalog.getOutputDir();
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              bundleDir,
-              bundleRoot,
-              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-    }
-
-    if (mergedAssetCatalog.isPresent()) {
-      Path bundleDir = mergedAssetCatalog.get().getOutputDir();
+    if (assetCatalog.isPresent()) {
+      Path bundleDir = assetCatalog.get().getOutputDir();
       stepsBuilder.add(
           CopyStep.forDirectory(
               bundleDir,

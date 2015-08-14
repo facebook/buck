@@ -606,13 +606,7 @@ public class NewNativeTargetProjectMutator {
       return;
     }
 
-    // Some asset catalogs should be copied to their sibling bundles, while others use the default
-    // output format (which may be to copy individual files to the root resource output path or to
-    // be archived in Assets.car if it is supported by the target platform version).
-
-    ImmutableList.Builder<String> commonAssetCatalogsBuilder = ImmutableList.builder();
-    ImmutableList.Builder<String> assetCatalogsToSplitIntoBundlesBuilder =
-        ImmutableList.builder();
+    ImmutableList.Builder<String> assetCatalogsBuilder = ImmutableList.builder();
     for (AppleAssetCatalogDescription.Arg assetCatalog : recursiveAssetCatalogs) {
       for (Path dir : assetCatalog.dirs) {
         Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
@@ -620,17 +614,11 @@ public class NewNativeTargetProjectMutator {
         LOG.debug("Resolved asset catalog path %s, result %s", dir, pathRelativeToProjectRoot);
 
         String bundlePath = "$PROJECT_DIR/" + pathRelativeToProjectRoot.toString();
-        if (assetCatalog.getCopyToBundles()) {
-          assetCatalogsToSplitIntoBundlesBuilder.add(bundlePath);
-        } else {
-          commonAssetCatalogsBuilder.add(bundlePath);
-        }
+        assetCatalogsBuilder.add(bundlePath);
       }
     }
 
-    ImmutableList<String> commonAssetCatalogs = commonAssetCatalogsBuilder.build();
-    ImmutableList<String> assetCatalogsToSplitIntoBundles =
-        assetCatalogsToSplitIntoBundlesBuilder.build();
+    ImmutableList<String> assetCatalogs = assetCatalogsBuilder.build();
 
     // Map asset catalog paths to their shell script arguments relative to the project's root
     Path buildScript = pathRelativizer.outputDirToRootRelative(assetCatalogBuildScript);
@@ -638,12 +626,12 @@ public class NewNativeTargetProjectMutator {
     scriptBuilder
         .append("TMPDIR=`mktemp -d -t buckAssetCatalogs.XXXXXX`\n")
         .append("trap \"rm -rf '${TMPDIR}'\" exit\n");
-    if (commonAssetCatalogs.size() != 0) {
+    if (assetCatalogs.size() != 0) {
       scriptBuilder
           .append("COMMON_ARGS_FILE=\"${TMPDIR}\"/common_args\n")
           .append("cat <<EOT >\"${COMMON_ARGS_FILE}\"\n");
 
-      Joiner.on('\n').appendTo(scriptBuilder, commonAssetCatalogs);
+      Joiner.on('\n').appendTo(scriptBuilder, assetCatalogs);
 
       scriptBuilder
           .append("\n")
@@ -651,21 +639,6 @@ public class NewNativeTargetProjectMutator {
           .append("\"${PROJECT_DIR}/\"")
           .append(buildScript.toString())
           .append(" @\"${COMMON_ARGS_FILE}\"\n");
-    }
-    if (assetCatalogsToSplitIntoBundles.size() != 0) {
-      scriptBuilder
-        .append("BUNDLE_ARGS_FILE=\"${TMPDIR}\"/bundle_args\n")
-        .append("cat <<EOT >\"${BUNDLE_ARGS_FILE}\"\n");
-
-      Joiner.on('\n').appendTo(scriptBuilder, assetCatalogsToSplitIntoBundles);
-
-      scriptBuilder
-        .append("\n")
-        .append("EOT\n")
-        .append("\"${PROJECT_DIR}/\"")
-        .append(buildScript.toString())
-        .append(" -b ")
-        .append("@\"${BUNDLE_ARGS_FILE}\"\n");
     }
 
     PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();

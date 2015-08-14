@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -36,11 +35,6 @@ public class AppleAssetCatalogBuilder
 
   public AppleAssetCatalogBuilder setDirs(SortedSet<Path> dirs) {
     arg.dirs = dirs;
-    return this;
-  }
-
-  public AppleAssetCatalogBuilder setCopyToBundles(Optional<Boolean> copyToBundles) {
-    arg.copyToBundles = copyToBundles;
     return this;
   }
 

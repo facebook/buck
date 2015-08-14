@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -26,6 +25,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
@@ -41,8 +41,8 @@ import javax.annotation.Nullable;
 
 public class AppleAssetCatalog extends AbstractBuildRule {
 
-  private static final String MERGED_FLAVOR_PREFIX = "merged-apple-asset-catalog-";
-  private static final String SEPARATE_FLAVOR_PREFIX = "separate-apple-asset-catalog-";
+  public static final Flavor FLAVOR = ImmutableFlavor.of("apple-asset-catalog");
+
   private static final String BUNDLE_DIRECTORY_EXTENSION = ".bundle";
 
   @AddToRuleKey
@@ -54,9 +54,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableSortedSet<Path> assetCatalogDirs;
 
-  @AddToRuleKey
-  private final ActoolStep.BundlingMode bundlingMode;
-
   @AddToRuleKey(stringify = true)
   private final Path outputDir;
 
@@ -66,7 +63,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       String applePlatformName,
       Tool actool,
       SortedSet<Path> assetCatalogDirs,
-      ActoolStep.BundlingMode bundlingMode,
       String bundleName) {
     super(params, resolver);
     Preconditions.checkArgument(
@@ -81,7 +77,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     this.applePlatformName = applePlatformName;
     this.actool = actool;
     this.assetCatalogDirs = ImmutableSortedSet.copyOf(assetCatalogDirs);
-    this.bundlingMode = bundlingMode;
     this.outputDir = BuildTargets.getGenPath(params.getBuildTarget(), "%s")
         .resolve(bundleName + BUNDLE_DIRECTORY_EXTENSION);
   }
@@ -103,8 +98,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             applePlatformName,
             actool.getCommandPrefix(getResolver()),
             absoluteAssetCatalogDirs,
-            getProjectFilesystem().resolve(outputDir),
-            bundlingMode));
+            getProjectFilesystem().resolve(outputDir)));
 
     buildableContext.recordArtifact(getOutputDir());
 
@@ -119,16 +113,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   public Path getOutputDir() {
     return outputDir;
-  }
-
-  public static Flavor getFlavor(ActoolStep.BundlingMode bundlingMode, String bundleName) {
-    switch (bundlingMode) {
-      case MERGE_BUNDLES:
-        return ImmutableFlavor.of(MERGED_FLAVOR_PREFIX + bundleName);
-      case SEPARATE_BUNDLES:
-        return ImmutableFlavor.of(SEPARATE_FLAVOR_PREFIX + bundleName);
-    }
-    throw new IllegalArgumentException("Invalid bundling mode: " + bundlingMode);
   }
 
 }

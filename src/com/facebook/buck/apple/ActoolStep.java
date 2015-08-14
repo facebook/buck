@@ -28,28 +28,20 @@ import java.util.SortedSet;
 
 public class ActoolStep extends ShellStep {
 
-  public enum BundlingMode {
-    MERGE_BUNDLES,
-    SEPARATE_BUNDLES,
-  }
-
   private final String applePlatformName;
   private final ImmutableList<String> actoolCommand;
   private final SortedSet<Path> assetCatalogDirs;
   private final Path output;
-  private final BundlingMode bundlingMode;
 
   public ActoolStep(
       String applePlatformName,
       List<String> actoolCommand,
       SortedSet<Path> assetCatalogDirs,
-      Path output,
-      BundlingMode bundlingMode) {
+      Path output) {
     this.applePlatformName = applePlatformName;
     this.actoolCommand = ImmutableList.copyOf(actoolCommand);
     this.assetCatalogDirs = assetCatalogDirs;
     this.output = output;
-    this.bundlingMode = bundlingMode;
   }
 
   @Override
@@ -58,12 +50,6 @@ public class ActoolStep extends ShellStep {
 
     //TODO(jakubzika): Let apps select their minimum target.
     String target = "7.0";
-    if (bundlingMode == BundlingMode.SEPARATE_BUNDLES) {
-      // When splitting into bundles, Assets.car cannot be used, so force the deployment target to
-      // a version that does not support it.
-      //TODO(jakubzika): Don't do this if the apps selected target is lower than 6.0.
-      target = "6.0";
-    }
 
     commandBuilder.addAll(actoolCommand);
     commandBuilder.add(

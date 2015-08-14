@@ -380,38 +380,28 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void assetCatalogsBuildPhaseBuildsBothCommonAndBundledAssetCatalogs()
+  public void assetCatalogsBuildPhaseBuildsAssetCatalogs()
       throws NoSuchBuildTargetException {
-    AppleAssetCatalogDescription.Arg arg1 = new AppleAssetCatalogDescription.Arg();
-    arg1.dirs = ImmutableSortedSet.of(Paths.get("AssetCatalog1.xcassets"));
-    arg1.copyToBundles = Optional.of(false);
-
-    AppleAssetCatalogDescription.Arg arg2 = new AppleAssetCatalogDescription.Arg();
-    arg2.dirs = ImmutableSortedSet.of(Paths.get("AssetCatalog2.xcassets"));
-    arg2.copyToBundles = Optional.of(true);
+    AppleAssetCatalogDescription.Arg arg = new AppleAssetCatalogDescription.Arg();
+    arg.dirs = ImmutableSortedSet.of(Paths.get("AssetCatalog1.xcassets"));
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setRecursiveAssetCatalogs(
         Paths.get("compile_asset_catalogs"),
-        ImmutableSet.of(arg1, arg2));
+        ImmutableSet.of(arg));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
-    assertTrue(hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(result.target));
+    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(result.target));
   }
 
   @Test
   public void assetCatalogsBuildPhaseDoesNotExceedCommandLineLengthWithLotsOfXcassets()
       throws NoSuchBuildTargetException {
     ImmutableSet.Builder<AppleAssetCatalogDescription.Arg> assetsBuilder = ImmutableSet.builder();
-    for (int i = 0; i < 10000; i += 2) {
-      AppleAssetCatalogDescription.Arg arg1 = new AppleAssetCatalogDescription.Arg();
-      arg1.dirs = ImmutableSortedSet.of(Paths.get(String.format("AssetCatalog%d.xcassets", i)));
-      arg1.copyToBundles = Optional.of(false);
-      assetsBuilder.add(arg1);
-      AppleAssetCatalogDescription.Arg arg2 = new AppleAssetCatalogDescription.Arg();
-      arg2.dirs = ImmutableSortedSet.of(Paths.get(String.format("AssetCatalog%d.xcassets", i + 1)));
-      arg2.copyToBundles = Optional.of(true);
-      assetsBuilder.add(arg2);
+    for (int i = 0; i < 10000; i += 1) {
+      AppleAssetCatalogDescription.Arg arg = new AppleAssetCatalogDescription.Arg();
+      arg.dirs = ImmutableSortedSet.of(Paths.get(String.format("AssetCatalog%d.xcassets", i)));
+      assetsBuilder.add(arg);
     }
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
@@ -584,24 +574,20 @@ public class NewNativeTargetProjectMutatorTest {
     return assetCatalogBuildPhase;
   }
 
-  private boolean hasShellScriptPhaseToCompileCommonAndSplitAssetCatalogs(PBXTarget target) {
+  private boolean hasShellScriptPhaseToCompileAssetCatalogs(PBXTarget target) {
     PBXShellScriptBuildPhase assetCatalogBuildPhase = getAssetCatalogBuildPhase(
         target.getBuildPhases());
 
-    boolean foundCommonAssetCatalogCompileCommand = false;
-    boolean foundSplitAssetCatalogCompileCommand = false;
+    boolean foundAssetCatalogCompileCommand = false;
     String[] lines = assetCatalogBuildPhase.getShellScript().split("\\n");
     for (String line : lines) {
       if (line.contains("compile_asset_catalogs")) {
-        if (line.contains(" -b ")) {
-          foundSplitAssetCatalogCompileCommand = true;
-        } else {
-          assertFalse("should have only one invocation", foundCommonAssetCatalogCompileCommand);
-          foundCommonAssetCatalogCompileCommand = true;
-        }
+        assertFalse(line.contains(" -b "));
+        assertFalse("should have only one invocation", foundAssetCatalogCompileCommand);
+        foundAssetCatalogCompileCommand = true;
       }
     }
 
-    return foundCommonAssetCatalogCompileCommand && foundSplitAssetCatalogCompileCommand;
+    return foundAssetCatalogCompileCommand;
   }
 }

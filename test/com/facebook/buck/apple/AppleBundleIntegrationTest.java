@@ -333,21 +333,6 @@ public class AppleBundleIntegrationTest {
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp/DemoApp.app/Assets.car")));
-    assertTrue(
-        Files.exists(
-            tmp.getRootPath()
-                .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp/DemoApp.app/Assets1.bundle/Image1.png")));
-    assertFalse(
-        Files.exists(
-            tmp.getRootPath()
-                .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp/DemoApp.app/Assets2.bundle/Image2.png")));
-    assertFalse(
-        Files.exists(
-            tmp.getRootPath()
-                .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp/DemoApp.app/Assets3.bundle/Image3.png")));
 
     workspace.verify();
   }

@@ -274,17 +274,13 @@ public class AppleTestDescription implements
     ImmutableSet<SourcePath> resourceFiles = resourceFilesBuilder.build();
     ImmutableSet<SourcePath> resourceVariantFiles = resourceVariantFilesBuilder.build();
 
-    CollectedAssetCatalogs collectedAssetCatalogs =
-        AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
+    Optional<AppleAssetCatalog> assetCatalog =
+        AppleDescriptions.createBuildRuleForTransitiveAssetCatalogDependencies(
             targetGraph,
             params,
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
-
-    Optional<AppleAssetCatalog> mergedAssetCatalog = collectedAssetCatalogs.getMergedAssetCatalog();
-    ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs =
-        collectedAssetCatalogs.getBundledAssetCatalogs();
 
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
@@ -296,8 +292,7 @@ public class AppleTestDescription implements
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .add(library)
-                    .addAll(mergedAssetCatalog.asSet())
-                    .addAll(bundledAssetCatalogs)
+                    .addAll(assetCatalog.asSet())
                     .addAll(params.getDeclaredDeps())
                     .addAll(
                         BuildRules.toBuildRulesFor(
@@ -325,8 +320,7 @@ public class AppleTestDescription implements
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getCxxPlatform().getStrip(),
-        bundledAssetCatalogs,
-        mergedAssetCatalog,
+        assetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),
         allValidCodeSignIdentities,

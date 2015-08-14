@@ -160,17 +160,13 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
-    CollectedAssetCatalogs collectedAssetCatalogs =
-        AppleDescriptions.createBuildRulesForTransitiveAssetCatalogDependencies(
+    Optional<AppleAssetCatalog> assetCatalog =
+        AppleDescriptions.createBuildRuleForTransitiveAssetCatalogDependencies(
             targetGraph,
             params,
             sourcePathResolver,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getActool());
-
-    Optional<AppleAssetCatalog> mergedAssetCatalog = collectedAssetCatalogs.getMergedAssetCatalog();
-    ImmutableSet<AppleAssetCatalog> bundledAssetCatalogs =
-        collectedAssetCatalogs.getBundledAssetCatalogs();
 
     // TODO(user): Sort through the changes needed to make project generation work with
     // binary being optional.
@@ -180,8 +176,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.binary,
         ImmutableSet.<BuildRule>builder()
             .add(flavoredBinaryRule)
-            .addAll(mergedAssetCatalog.asSet())
-            .addAll(bundledAssetCatalogs)
+            .addAll(assetCatalog.asSet())
             .addAll(
                 BuildRules.toBuildRulesFor(
                     params.getBuildTarget(),
@@ -213,8 +208,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getCxxPlatform().getStrip(),
-        bundledAssetCatalogs,
-        mergedAssetCatalog,
+        assetCatalog,
         args.getTests(),
         appleCxxPlatform.getAppleSdk(),
         allValidCodeSignIdentities,
