@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
@@ -653,7 +654,7 @@ public class ProjectCommand extends BuildCommand {
         workspaceArgs = createImplicitWorkspaceArgs(inputNode);
       } else {
         throw new HumanReadableException(
-            "%s must be a xcode_workspace_config, apple_bundle, or apple_library",
+            "%s must be a xcode_workspace_config, apple_binary, apple_bundle, or apple_library",
             inputNode);
       }
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
@@ -856,7 +857,8 @@ public class ProjectCommand extends BuildCommand {
     // We weren't given a workspace target, but we may have been given something that could
     // still turn into a workspace (for example, a library or an actual app rule). If that's the
     // case we still want to generate a workspace.
-    return type == AppleBundleDescription.TYPE ||
+    return type == AppleBinaryDescription.TYPE ||
+        type == AppleBundleDescription.TYPE ||
         type == AppleLibraryDescription.TYPE;
   }
 

@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
 public class ProjectIntegrationTest {
 
@@ -203,6 +204,8 @@ public class ProjectIntegrationTest {
         "project",
         "//bin:app");
     result.assertSuccess();
+    Files.exists(workspace.resolve("bin/app.xcworkspace/contents.xcworkspacedata"));
+    Files.exists(workspace.resolve("bin/bin.xcodeproj/project.pbxproj"));
   }
 
   @Test
@@ -215,21 +218,22 @@ public class ProjectIntegrationTest {
         "project",
         "//lib:lib");
     result.assertSuccess();
+    Files.exists(workspace.resolve("lib/lib.xcworkspace/contents.xcworkspacedata"));
+    Files.exists(workspace.resolve("lib/lib.xcodeproj/project.pbxproj"));
   }
 
   @Test
-  public void testAttemptingToGenerateWorkspaceFromBinaryTargetIsABuildError() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "//bin:bin must be a xcode_workspace_config, apple_bundle, or apple_library");
-
+  public void testGeneratesWorkspaceFromBinary() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project_implicit_workspace_generation", temporaryFolder);
     workspace.setUp();
 
-    workspace.runBuckCommand(
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "project",
         "//bin:bin");
+    result.assertSuccess();
+    Files.exists(workspace.resolve("bin/bin.xcworkspace/contents.xcworkspacedata"));
+    Files.exists(workspace.resolve("bin/bin.xcodeproj/project.pbxproj"));
   }
 
   @Test
@@ -237,7 +241,7 @@ public class ProjectIntegrationTest {
       throws IOException {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "//res:res must be a xcode_workspace_config, apple_bundle, or apple_library");
+        "//res:res must be a xcode_workspace_config, apple_binary, apple_bundle, or apple_library");
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "project_implicit_workspace_generation", temporaryFolder);
