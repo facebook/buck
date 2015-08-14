@@ -200,7 +200,7 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
 
 
 def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root):
-    match_exprs = ["allof", "exists", ["type", "f"]]
+    match_exprs = ["allof", "exists", ["anyof", ["type", "f"], ["type", "l"]]]
     match_flags = {}
     if include_dotfiles:
         match_flags["includedotfiles"] = True

@@ -253,7 +253,7 @@ class TestBuck(unittest.TestCase):
                 'expression': [
                     'allof',
                     'exists',
-                    ['type', 'f'],
+                    ['anyof', ['type', 'f'], ['type', 'l']],
                     ['anyof', ['match', '**/*.java', 'wholename', {}]],
                 ]
             },
@@ -273,7 +273,7 @@ class TestBuck(unittest.TestCase):
                 'expression': [
                     'allof',
                     'exists',
-                    ['type', 'f'],
+                    ['anyof', ['type', 'f'], ['type', 'l']],
                     ['anyof', ['match', '**/*.java', 'wholename', {}]],
                     ['not', ['anyof', ['match', '**/*Test.java', 'wholename', {}]]],
                 ]
