@@ -19,15 +19,17 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestDescription;
 
 import org.testng.IAnnotationTransformer;
+import org.testng.IReporter;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
 import org.testng.annotations.ITestAnnotation;
-import org.testng.internal.annotations.JDK15AnnotationFinder;
-import org.testng.xml.XmlClass;
-import org.testng.xml.XmlSuite;
-import org.testng.xml.XmlTest;
+import org.testng.reporters.EmailableReporter;
+import org.testng.reporters.FailedReporter;
+import org.testng.reporters.JUnitReportReporter;
+import org.testng.reporters.SuiteHTMLReporter;
+import org.testng.reporters.XMLReporter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -57,10 +59,18 @@ public final class TestNGRunner extends BaseRunner {
       } else {
         results = new ArrayList<>();
         TestNG testng = new TestNG();
+        testng.setUseDefaultListeners(false);
         testng.setAnnotationTransformer(new TestFilter());
         testng.setTestClasses(new Class<?>[]{testClass});
-        TestListener listener = new TestListener(results);
         testng.addListener(new TestListener(results));
+        // use default TestNG reporters ...
+        testng.addListener(new SuiteHTMLReporter());
+        testng.addListener((IReporter) new FailedReporter());
+        testng.addListener(new XMLReporter());
+        testng.addListener(new EmailableReporter());
+        // ... except this replaces JUnitReportReporter ...
+        testng.addListener(new JUnitReportReporterImproved());
+        // ... and we can't access TestNG verbosity, so we remove VerboseReporter
         testng.run();
       }
 
@@ -75,6 +85,34 @@ public final class TestNGRunner extends BaseRunner {
   private boolean shouldIncludeTest(String className) {
     TestDescription testDescription = new TestDescription(className, null);
     return testSelectorList.isIncluded(testDescription);
+  }
+
+  private static String calculateTestMethodName(ITestResult iTestResult) {
+    Object[] parameters = iTestResult.getParameters();
+    String name = iTestResult.getName();
+
+    if (parameters == null || parameters.length == 0) {
+      return name;
+    }
+
+    StringBuilder builder = new StringBuilder(name).append(" (");
+    for (int i = 0; i < parameters.length; i++) {
+      Object parameter = parameters[i];
+      if (parameter == null) {
+        builder.append("null");
+      } else {
+        try {
+          builder.append(parameter.toString());
+        } catch (Exception e) {
+          builder.append("Unstringable object");
+        }
+      }
+      if (i < parameters.length - 1) {
+        builder.append(", ");
+      }
+    }
+    builder.append(")");
+    return builder.toString();
   }
 
   public class TestFilter implements IAnnotationTransformer {
@@ -156,7 +194,8 @@ public final class TestNGRunner extends BaseRunner {
       String stdErr = streamToString(rawStdErrBytes);
 
       String className = result.getTestClass().getName();
-      String methodName = result.getTestName();
+      String methodName = calculateTestMethodName(result);
+
       long runTimeMillis = result.getEndMillis() - result.getStartMillis();
       results.add(new TestResult(className,
             methodName,
@@ -181,6 +220,13 @@ public final class TestNGRunner extends BaseRunner {
       } catch (UnsupportedEncodingException e) {
         return fallback;
       }
+    }
+  }
+
+  private static class JUnitReportReporterImproved extends JUnitReportReporter {
+    @Override
+    public String getTestName(ITestResult result) {
+      return calculateTestMethodName(result);
     }
   }
 }
