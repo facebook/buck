@@ -17,7 +17,6 @@
 package com.facebook.buck.python;
 
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.Config;
@@ -45,11 +44,6 @@ public class PythonInPlaceBinaryIntegrationTest {
   public ProjectWorkspace workspace;
 
   @Before
-  public void platformCheck() {
-    assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX, Platform.MACOS));
-  }
-
-  @Before
   public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "python_inplace_binary", tmp);
@@ -73,6 +67,11 @@ public class PythonInPlaceBinaryIntegrationTest {
     assertThat(
         result.getStdout(),
         Matchers.containsString("HELLO WORLD"));
+  }
+
+  @Test
+  public void runFromGenrule() throws IOException {
+    workspace.runBuckBuild(":gen").assertSuccess();
   }
 
   private void assertInPlacePackageStyleIsBeingUsed() throws IOException {

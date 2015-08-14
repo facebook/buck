@@ -33,13 +33,12 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-import javax.annotation.Nullable;
-
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
   private final WriteFile script;
   private final SymlinkTree linkTree;
   private final PythonPackageComponents components;
+  private final Path python;
 
   public PythonInPlaceBinary(
       BuildRuleParams params,
@@ -47,11 +46,13 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       WriteFile script,
       SymlinkTree linkTree,
       String mainModule,
-      PythonPackageComponents components) {
+      PythonPackageComponents components,
+      Path python) {
     super(params, resolver, mainModule, components);
     this.script = script;
     this.linkTree = linkTree;
     this.components = components;
+    this.python = python;
   }
 
   @Override
@@ -61,15 +62,15 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     return ImmutableList.of();
   }
 
-  @Nullable
   @Override
   public Path getPathToOutput() {
-    return null;
+    return script.getPathToOutput();
   }
 
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
+        .addArg(python.toString())
         .addArg(new BuildTargetSourcePath(script.getBuildTarget()))
         .addInput(new BuildTargetSourcePath(linkTree.getBuildTarget()))
         .addInputs(components.getModules().values())

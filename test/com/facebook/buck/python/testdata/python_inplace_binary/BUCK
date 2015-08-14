@@ -1,3 +1,9 @@
+genrule(
+  name = 'gen',
+  out = 'out',
+  cmd = '$(exe :bin) > $OUT',
+)
+
 python_binary(
   name = 'bin',
   main_module = 'main',
@@ -10,6 +16,7 @@ python_library(
   name = 'lib',
   srcs = [
     'main.py',
+    'foo/bar/mod.py',
   ],
 )
 

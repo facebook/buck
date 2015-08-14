@@ -33,6 +33,9 @@ java_immutables_library(
 java_immutables_library(
   name = 'rules',
   srcs = glob(['*.java'], excludes=CONFIG_SRCS + SUPPORT_SRCS),
+  resources = [
+    'run_inplace.py.in',
+  ],
   deps = [
     ':config',
     ':support',
@@ -60,6 +63,7 @@ java_immutables_library(
     '//third-party/java/infer-annotations:infer-annotations',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/jackson:jackson',
+    '//third-party/java/stringtemplate:stringtemplate',
   ],
   visibility = [
     '//src/com/facebook/buck/rules:types',

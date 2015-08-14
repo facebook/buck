@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -37,24 +38,30 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Joiner;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 
+import org.stringtemplate.v4.ST;
+
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PythonBinaryDescription implements Description<PythonBinaryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
+
+  private static final String RUN_INPLACE_RESOURCE = "com/facebook/buck/python/run_inplace.py.in";
 
   public static final BuildRuleType TYPE = BuildRuleType.of("python_binary");
 
@@ -84,6 +91,40 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     return new Arg();
   }
 
+  private String getRunInplaceResource() {
+    try {
+      return Resources.toString(Resources.getResource(RUN_INPLACE_RESOURCE), Charsets.UTF_8);
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
+  private PythonPackageComponents addMissingInitModules(
+      PythonPackageComponents components,
+      SourcePath emptyInit) {
+
+    Map<Path, SourcePath> initModules = Maps.newLinkedHashMap();
+
+    // Insert missing `__init__.py` modules.
+    Set<Path> packages = Sets.newHashSet();
+    for (Path module : components.getModules().keySet()) {
+      Path pkg = module;
+      while ((pkg = pkg.getParent()) != null && !packages.contains(pkg)) {
+        Path init = pkg.resolve("__init__.py");
+        if (!components.getModules().containsKey(init)) {
+          initModules.put(init, emptyInit);
+        }
+        packages.add(pkg);
+      }
+    }
+
+    return components.withModules(
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(components.getModules())
+            .putAll(initModules)
+            .build());
+  }
+
   private PythonInPlaceBinary createInPlaceBinaryRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -99,6 +140,29 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
           params.getBuildTarget(),
           cxxPlatform.getFlavor());
     }
+
+    // Generate an empty __init__.py module to fill in for any missing ones in the link tree.
+    BuildTarget emptyInitTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(ImmutableFlavor.of("__init__"))
+            .build();
+    Path emptyInitPath =
+        BuildTargets.getGenPath(
+            params.getBuildTarget(),
+            "%s/__init__.py");
+    resolver.addToIndex(
+        new WriteFile(
+            params.copyWithChanges(
+                emptyInitTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            pathResolver,
+            "",
+            emptyInitPath,
+            /* executable */ false));
+
+    // Add in any missing init modules into the python components.
+    components = addMissingInitModules(components, new BuildTargetSourcePath(emptyInitTarget));
 
     BuildTarget linkTreeTarget =
         BuildTarget.builder(params.getBuildTarget())
@@ -125,46 +189,22 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
     }
 
-    Map<String, String> env = Maps.newLinkedHashMap();
-
-    // If we have native libraries, set the dynamic loader search path so it can find them.
-    if (!components.getNativeLibraries().isEmpty()) {
-      env.put(cxxPlatform.getLd().searchPathEnvVar(), linkTreeRoot.toString());
-    }
-
-    // Set the python path, so python can find all the modules.
-    env.put("PYTHONPATH", linkTreeRoot.toString());
-
-    // Setup the python command to run the program.
-    List<String> args = Lists.newArrayList();
-    args.add(pythonEnvironment.getPythonPath().toString());
-    args.add("-m");
-    args.add(mainModule);
-
-    // Format the command into a string.
-    List<String> escapedCmdArgs = Lists.newArrayList();
-    for (Map.Entry<String, String> entry : env.entrySet()) {
-      escapedCmdArgs.add(
-          String.format(
-              "%s=%s",
-              Escaper.escapeAsShellString(entry.getKey()),
-              Escaper.escapeAsShellString(entry.getValue())));
-    }
-    for (String arg : args) {
-      escapedCmdArgs.add(Escaper.escapeAsShellString(arg));
-    }
-    escapedCmdArgs.add("\"$@\"");
-    String cmd = Joiner.on(' ').join(escapedCmdArgs);
-
     BuildTarget scriptTarget =
         BuildTarget.builder(params.getBuildTarget())
             .addFlavors(ImmutableFlavor.of("script"))
             .build();
-     Path scriptPath =
-         BuildTargets.getGenPath(
-             params.getBuildTarget(),
-             "%s" + pythonBuckConfig.getPexExtension());
-     WriteFile script =
+    Path scriptPath =
+        BuildTargets.getGenPath(
+            params.getBuildTarget(),
+            "%s" + pythonBuckConfig.getPexExtension());
+
+    // Find the link-tree using a relative path from the script, so that the binary is executable
+    // from any working dir (e.g. so this works in `genrule`s).
+    String relativeLinkTreeRootStr =
+        Escaper.escapeAsPythonString(scriptPath.getParent().relativize(linkTreeRoot).toString());
+
+    // Generate the wrapper script.
+    WriteFile script =
         resolver.addToIndex(
             new WriteFile(
                 params.copyWithChanges(
@@ -172,7 +212,16 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
                     Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
                     Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
                 pathResolver,
-                "#!/bin/sh\n" + cmd,
+                new ST(getRunInplaceResource())
+                    .add("PYTHON", pythonEnvironment.getPythonPath())
+                    .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
+                    .add("MODULES_DIR", relativeLinkTreeRootStr)
+                    .add(
+                        "NATIVE_LIBS_DIR",
+                        components.getNativeLibraries().isEmpty() ?
+                            "None" :
+                            relativeLinkTreeRootStr)
+                    .render(),
                 scriptPath,
                 /* executable */ true));
 
@@ -182,7 +231,8 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         script,
         linkTree,
         mainModule,
-        components);
+        components,
+        pythonEnvironment.getPythonPath());
   }
 
   protected PythonBinary createPackageRule(
