@@ -30,6 +30,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -165,7 +166,8 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
                     headerVisibility,
                     CxxPreprocessables.IncludeType.SYSTEM,
                     exportedPreprocessorFlags.apply(cxxPlatform),
-                    /* frameworkSearchPaths */ ImmutableList.<Path>of()))
+                    cxxPlatform,
+                    /* frameworks */ ImmutableList.<FrameworkPath>of()))
             // Just pass the include dirs as system includes.
             .addAllSystemIncludeRoots(ImmutableSortedSet.copyOf(includeDirs))
             .build();
@@ -242,7 +244,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     final ImmutableList<SourcePath> libraries = librariesBuilder.build();
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
-    return NativeLinkableInput.of(libraries, linkerArgs, ImmutableSet.<Path>of());
+    return NativeLinkableInput.of(libraries, linkerArgs, ImmutableSet.<FrameworkPath>of());
   }
 
   @Override

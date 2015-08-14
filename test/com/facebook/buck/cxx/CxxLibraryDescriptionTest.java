@@ -40,6 +40,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -191,7 +192,7 @@ public class CxxLibraryDescriptionTest {
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()),
-            ImmutableSet.<Path>of());
+            ImmutableSet.<FrameworkPath>of());
       }
 
       @Override
@@ -251,10 +252,10 @@ public class CxxLibraryDescriptionTest {
             ImmutableSortedSet.of(
                 SourceWithFlags.of(new TestSourcePath("test/bar.cpp")),
                 SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
-        .setFrameworkSearchPaths(
-            ImmutableSet.of(
-                Paths.get("/some/framework/path"),
-                Paths.get("/another/framework/path")))
+        .setFrameworks(
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourcePath(new TestSourcePath("/some/framework/path/s.dylib")),
+                FrameworkPath.ofSourcePath(new TestSourcePath("/another/framework/path/a.dylib"))))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(
@@ -622,13 +623,13 @@ public class CxxLibraryDescriptionTest {
                     new BuildTargetSourcePath(
                         staticLibraryDep.getBuildTarget())),
                 ImmutableList.of(staticLibraryOutput.toString()),
-                ImmutableSet.<Path>of()) :
+                ImmutableSet.<FrameworkPath>of()) :
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         sharedLibraryDep.getBuildTarget())),
                 ImmutableList.of(sharedLibraryOutput.toString()),
-                ImmutableSet.<Path>of());
+                ImmutableSet.<FrameworkPath>of());
       }
 
       @Override
@@ -691,10 +692,10 @@ public class CxxLibraryDescriptionTest {
                 SourceWithFlags.of(new TestSourcePath(sourceName)),
                 genSourceName,
                 SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
-        .setFrameworkSearchPaths(
-            ImmutableSet.of(
-                Paths.get("/some/framework/path"),
-                Paths.get("/another/framework/path")))
+        .setFrameworks(
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourcePath(new TestSourcePath("/some/framework/path/s.dylib")),
+                FrameworkPath.ofSourcePath(new TestSourcePath("/another/framework/path/a.dylib"))))
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()));
 
     // Construct C/C++ library build rules.

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -176,7 +177,8 @@ public class CxxPreprocessables {
       HeaderVisibility headerVisibility,
       IncludeType includeType,
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Iterable<Path> frameworkSearchPaths) {
+      CxxPlatform cxxPlatform,
+      Iterable<FrameworkPath> frameworks) {
     BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
         targetGraph,
         params,
@@ -193,7 +195,11 @@ public class CxxPreprocessables {
                 .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
                 .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))
                 .build())
-        .addAllFrameworkRoots(frameworkSearchPaths);
+        .addAllFrameworkRoots(CxxDescriptionEnhancer.getFrameworkSearchPaths(
+                Optional.of(ImmutableSortedSet.copyOf(frameworks)),
+                cxxPlatform,
+                new SourcePathResolver(ruleResolver)
+            ));
     switch(includeType) {
       case LOCAL:
         builder.addIncludeRoots(symlinkTree.getIncludePath());

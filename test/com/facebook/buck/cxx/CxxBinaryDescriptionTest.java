@@ -38,6 +38,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -133,7 +134,7 @@ public class CxxBinaryDescriptionTest {
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()),
-            ImmutableSet.<Path>of());
+            ImmutableSet.<FrameworkPath>of());
       }
 
       @Override

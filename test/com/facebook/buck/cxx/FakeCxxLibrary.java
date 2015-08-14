@@ -27,6 +27,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -134,11 +135,11 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()),
-            ImmutableSet.<Path>of()) :
+            ImmutableSet.<FrameworkPath>of()) :
         NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
             ImmutableList.of(sharedLibraryOutput.toString()),
-            ImmutableSet.<Path>of());
+            ImmutableSet.<FrameworkPath>of());
   }
 
   @Override

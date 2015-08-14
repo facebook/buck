@@ -38,6 +38,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -176,14 +177,14 @@ public class CxxPythonExtensionDescriptionTest {
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(),
                 ImmutableList.<String>of(),
-                ImmutableSet.<Path>of()) :
+                ImmutableSet.<FrameworkPath>of()) :
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         sharedLibraryDep.getBuildTarget(),
                         sharedLibraryOutput)),
                 ImmutableList.of(sharedLibraryOutput.toString()),
-                ImmutableSet.<Path>of());
+                ImmutableSet.<FrameworkPath>of());
       }
 
       @Override

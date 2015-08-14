@@ -152,6 +152,7 @@ public final class CxxInferEnhancer {
       preprocessorInputs = computePreprocessorInputForCxxBinaryDescriptionArg(
           targetGraph,
           paramsWithoutInferFlavor,
+          pathResolver,
           cxxPlatform,
           (CxxBinaryDescription.Arg) args,
           headerSymlinkTree);
@@ -253,6 +254,7 @@ public final class CxxInferEnhancer {
   computePreprocessorInputForCxxBinaryDescriptionArg(
       TargetGraph targetGraph,
       BuildRuleParams params,
+      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
       HeaderSymlinkTree headerSymlinkTree) {
@@ -267,8 +269,9 @@ public final class CxxInferEnhancer {
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
         CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            args.frameworkSearchPaths,
-            cxxPlatform),
+            args.frameworks,
+            cxxPlatform,
+            pathResolver),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             targetGraph,
             cxxPlatform,
@@ -309,8 +312,9 @@ public final class CxxInferEnhancer {
                 cxxPlatform),
             CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
             CxxDescriptionEnhancer.getFrameworkSearchPaths(
-                args.frameworkSearchPaths,
-                cxxPlatform)));
+                args.frameworks,
+                cxxPlatform,
+                pathResolver)));
   }
 
   private static ImmutableSet<CxxInferCapture> createInferCaptureBuildRules(

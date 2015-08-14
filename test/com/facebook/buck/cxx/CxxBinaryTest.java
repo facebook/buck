@@ -26,8 +26,10 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
@@ -68,7 +70,7 @@ public class CxxBinaryTest {
                 new CommandTool.Builder()
                     .addArg(new BuildTargetSourcePath(cxxLink.getBuildTarget()))
                     .build(),
-                ImmutableList.<Path>of(),
+                ImmutableSortedSet.<FrameworkPath>of(),
                 ImmutableList.<BuildTarget>of()));
     ImmutableList<String> command = binary.getExecutableCommand().getCommandPrefix(pathResolver);
     assertTrue(Paths.get(command.get(0)).isAbsolute());

@@ -38,6 +38,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.base.Optional;
@@ -216,7 +217,7 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(fakeBuildRule.getBuildTarget())),
         ImmutableList.<String>of(),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",
         pathResolver,
@@ -328,12 +329,12 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput staticInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(staticArg),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     String sharedArg = "shared";
     NativeLinkableInput sharedInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(sharedArg),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep",
         pathResolver,
         staticInput, sharedInput);
@@ -440,7 +441,7 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput bottomInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(sentinel),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);
 
     // Create a non-native linkable that sits in the middle of the dep chain, preventing
@@ -451,7 +452,7 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput topInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of(),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     BuildRule top = createNativeLinkable("//:top", pathResolver, topInput, topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling

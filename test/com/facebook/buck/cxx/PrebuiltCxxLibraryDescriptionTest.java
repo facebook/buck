@@ -32,6 +32,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -147,7 +148,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
@@ -156,7 +157,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -200,7 +201,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of(),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
@@ -209,7 +210,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of(),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -251,7 +252,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -291,7 +292,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
@@ -300,7 +301,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -445,7 +446,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
@@ -454,7 +455,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -500,7 +501,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
@@ -509,7 +510,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -553,7 +554,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.STATIC));
@@ -562,7 +563,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(targetGraph, CXX_PLATFORM, Linker.LinkableDepType.SHARED));

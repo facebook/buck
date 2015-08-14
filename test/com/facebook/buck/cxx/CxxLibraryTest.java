@@ -35,6 +35,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
@@ -128,7 +129,7 @@ public class CxxLibraryTest {
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(archive.getBuildTarget())),
         ImmutableList.of(archiveOutput.toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
@@ -142,7 +143,7 @@ public class CxxLibraryTest {
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
         ImmutableList.of(sharedLibraryOutput.toString()),
-        ImmutableSet.<Path>of());
+        ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
@@ -196,7 +197,7 @@ public class CxxLibraryTest {
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         Functions.constant(ImmutableList.<String>of()),
         /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
-        Functions.constant(ImmutableSet.<Path>of()),
+        ImmutableSortedSet.<FrameworkPath>of(),
         NativeLinkable.Linkage.STATIC,
         /* linkWhole */ false,
         Optional.<String>absent(),
@@ -223,7 +224,7 @@ public class CxxLibraryTest {
                     target,
                     cxxPlatform.getFlavor(),
                     CxxSourceRuleFactory.PicType.PIC).toString()),
-            ImmutableSet.<Path>of());
+            ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(

@@ -157,8 +157,9 @@ public class CxxLinkableEnhancer {
         allInputs,
         args,
         CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            Optional.of(linkableInput.getFrameworkRoots()),
-            cxxPlatform),
+            Optional.of(ImmutableSortedSet.copyOf(linkableInput.getFrameworks())),
+            cxxPlatform,
+            resolver),
         cxxPlatform.getDebugPathSanitizer());
   }
 

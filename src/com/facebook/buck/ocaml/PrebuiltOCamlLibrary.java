@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -121,7 +122,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
             .transform(Functions.toStringFunction()));
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
-    return NativeLinkableInput.of(libraries, linkerArgs, ImmutableSet.<Path>of());
+    return NativeLinkableInput.of(libraries, linkerArgs, ImmutableSet.<FrameworkPath>of());
   }
 
   @Override

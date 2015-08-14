@@ -36,7 +36,6 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -210,16 +209,7 @@ public class AppleDescriptions {
     output.platformPreprocessorFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());
     output.langPreprocessorFlags = arg.langPreprocessorFlags;
-    output.frameworkSearchPaths =
-        arg.frameworks.isPresent() ?
-            Optional.of(
-                FluentIterable.from(arg.frameworks.get())
-                    .transform(
-                        FrameworkPath.getUnexpandedSearchPathFunction(
-                            resolver.getPathFunction(),
-                            Functions.<Path>identity()))
-                    .toSet()) :
-            Optional.<ImmutableSet<Path>>absent();
+    output.frameworks = arg.frameworks;
     output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;

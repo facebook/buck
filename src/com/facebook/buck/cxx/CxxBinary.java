@@ -28,6 +28,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -45,7 +46,7 @@ public class CxxBinary
   private final CxxLink rule;
   private final Tool executable;
   private final ImmutableSortedSet<BuildTarget> tests;
-  private final ImmutableList<Path> frameworkSearchPaths;
+  private final ImmutableSortedSet<FrameworkPath> frameworks;
 
   public CxxBinary(
       BuildRuleParams params,
@@ -54,7 +55,7 @@ public class CxxBinary
       Path output,
       CxxLink rule,
       Tool executable,
-      Iterable<Path> frameworkSearchPaths,
+      Iterable<FrameworkPath> frameworks,
       Iterable<BuildTarget> tests) {
     super(params, resolver);
     this.params = params;
@@ -63,7 +64,7 @@ public class CxxBinary
     this.rule = rule;
     this.executable = executable;
     this.tests = ImmutableSortedSet.copyOf(tests);
-    this.frameworkSearchPaths = ImmutableList.copyOf(frameworkSearchPaths);
+    this.frameworks = ImmutableSortedSet.copyOf(frameworks);
   }
 
   @Override
@@ -104,7 +105,8 @@ public class CxxBinary
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
         ImmutableMultimap.<CxxSource.Type, String>of(),
-        frameworkSearchPaths);
+        cxxPlatform,
+        frameworks);
   }
 
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at

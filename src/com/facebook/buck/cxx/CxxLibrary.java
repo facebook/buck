@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -62,7 +63,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<Pattern> supportedPlatformsRegex;
-  private final Function<? super CxxPlatform, ImmutableSet<Path>> frameworkSearchPaths;
+  private final ImmutableSet<FrameworkPath> frameworks;
   private final Linkage linkage;
   private final boolean linkWhole;
   private final Optional<String> soname;
@@ -80,7 +81,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<Pattern> supportedPlatformsRegex,
-      Function<? super CxxPlatform, ImmutableSet<Path>> frameworkSearchPaths,
+      ImmutableSet<FrameworkPath> frameworks,
       Linkage linkage,
       boolean linkWhole,
       Optional<String> soname,
@@ -93,7 +94,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
-    this.frameworkSearchPaths = frameworkSearchPaths;
+    this.frameworks = frameworks;
     this.linkage = linkage;
     this.linkWhole = linkWhole;
     this.soname = soname;
@@ -121,7 +122,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
         exportedPreprocessorFlags.apply(cxxPlatform),
-        frameworkSearchPaths.apply(cxxPlatform));
+        cxxPlatform,
+        frameworks);
   }
 
   @Override
@@ -165,7 +167,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       return NativeLinkableInput.of(
           ImmutableList.<SourcePath>of(),
           ImmutableList.<String>of(),
-          Preconditions.checkNotNull(frameworkSearchPaths.apply(cxxPlatform)));
+          Preconditions.checkNotNull(frameworks));
     }
 
     // Build up the arguments used to link this library.  If we're linking the
@@ -214,7 +216,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     return NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new BuildTargetSourcePath(libraryRule.getBuildTarget())),
         linkerArgs,
-        Preconditions.checkNotNull(frameworkSearchPaths.apply(cxxPlatform)));
+        Preconditions.checkNotNull(frameworks));
   }
 
   public BuildRule requireBuildRule(

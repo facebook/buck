@@ -30,6 +30,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
@@ -505,7 +506,7 @@ public class CxxLibraryDescription implements
     arg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     arg.headerNamespace = Optional.absent();
     arg.soname = Optional.absent();
-    arg.frameworkSearchPaths = Optional.of(ImmutableSet.<Path>of());
+    arg.frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
     arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.supportedPlatformsRegex = Optional.absent();
     return arg;
@@ -588,7 +589,10 @@ public class CxxLibraryDescription implements
             args.platformCompilerFlags,
             cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, cxxPlatform),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(
+            args.frameworks,
+            cxxPlatform,
+            new SourcePathResolver(resolver)),
         preprocessMode,
         pic);
   }
@@ -648,7 +652,10 @@ public class CxxLibraryDescription implements
             cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
         linkerFlags.build(),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, cxxPlatform),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(
+            args.frameworks,
+            cxxPlatform,
+            new SourcePathResolver(resolver)),
         args.soname,
         preprocessMode,
         args.cxxRuntimeType,
@@ -695,7 +702,10 @@ public class CxxLibraryDescription implements
             args.platformCompilerFlags,
             cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, cxxPlatform),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(
+            args.frameworks,
+            cxxPlatform,
+            new SourcePathResolver(resolver)),
         preprocessMode);
   }
 
@@ -889,11 +899,9 @@ public class CxxLibraryDescription implements
       };
     }
 
-
-
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     return new CxxLibrary(
         params,
         resolver,
@@ -919,12 +927,7 @@ public class CxxLibraryDescription implements
           }
         },
         args.supportedPlatformsRegex,
-        new Function<CxxPlatform, ImmutableSet<Path>>() {
-          @Override
-          public ImmutableSet<Path> apply(CxxPlatform input) {
-            return CxxDescriptionEnhancer.getFrameworkSearchPaths(args.frameworkSearchPaths, input);
-          }
-        },
+        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
         args.linkWhole.or(false),
         args.soname,

@@ -199,7 +199,7 @@ public class CxxBinaryDescription implements
         cxxLinkAndCompileRules.cxxLink.getOutput(),
         cxxLinkAndCompileRules.cxxLink,
         cxxLinkAndCompileRules.executable,
-        args.frameworkSearchPaths.get(),
+        args.frameworks.get(),
         args.tests.get());
   }
 

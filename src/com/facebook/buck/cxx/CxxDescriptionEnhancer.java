@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
@@ -723,13 +724,22 @@ public class CxxDescriptionEnhancer {
    * @return the framework search paths with any embedded macros expanded.
    */
   static ImmutableSet<Path> getFrameworkSearchPaths(
-      Optional<ImmutableSet<Path>> frameworkSearchPaths,
-      CxxPlatform cxxPlatform) {
-    return FluentIterable.from(frameworkSearchPaths.or(ImmutableSet.<Path>of()))
+      Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
+      CxxPlatform cxxPlatform,
+      SourcePathResolver resolver) {
+
+    ImmutableSet<Path> searchPaths = FluentIterable.from(frameworks.get())
+        .transform(
+            FrameworkPath.getUnexpandedSearchPathFunction(
+                resolver.getPathFunction(),
+                Functions.<Path>identity()))
+        .toSet();
+
+   return FluentIterable.from(Optional.of(searchPaths).or(ImmutableSet.<Path>of()))
         .transform(Functions.toStringFunction())
         .transform(CxxFlags.getTranslateMacrosFn(cxxPlatform))
-        .transform(MorePaths.TO_PATH)
-        .toSet();
+       .transform(MorePaths.TO_PATH)
+       .toSet();
   }
 
   static class CxxLinkAndCompileRules {
@@ -799,8 +809,9 @@ public class CxxDescriptionEnhancer {
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
             getFrameworkSearchPaths(
-                args.frameworkSearchPaths,
-                cxxPlatform),
+                args.frameworks,
+                cxxPlatform,
+                new SourcePathResolver(resolver)),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 targetGraph,
                 cxxPlatform,
