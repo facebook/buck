@@ -99,7 +99,7 @@ public class BuckBuildManager {
       return false;
     }
     VirtualFile base = project.getBaseDir();
-    return base.findChild(BuckBuildTargetUtil.BUCK_CONFIG_FILE) != null;
+    return base.findChild(BuckBuildUtil.BUCK_CONFIG_FILE) != null;
   }
 
   /**

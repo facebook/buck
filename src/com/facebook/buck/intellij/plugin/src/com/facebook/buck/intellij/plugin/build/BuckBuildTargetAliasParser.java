@@ -44,7 +44,7 @@ public final class BuckBuildTargetAliasParser {
    */
   public static void parseAlias(String baseDir) {
     sTargetAlias.clear();
-    String file = baseDir + File.separatorChar + BuckBuildTargetUtil.BUCK_CONFIG_FILE;
+    String file = baseDir + File.separatorChar + BuckBuildUtil.BUCK_CONFIG_FILE;
     try {
       BufferedReader br = new BufferedReader(new FileReader(file));
       String line;

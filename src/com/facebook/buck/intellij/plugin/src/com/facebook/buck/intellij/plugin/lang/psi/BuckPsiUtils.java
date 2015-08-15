@@ -57,4 +57,11 @@ public final class BuckPsiUtils {
   public static boolean hasElementType(PsiElement element, IElementType... types) {
     return element.getNode() != null && hasElementType(element.getNode(), types);
   }
+
+  /**
+   * Test the text value of a PSI element.
+   */
+  public static boolean testType(PsiElement element, IElementType type) {
+    return element.getNode() != null && element.getNode().getElementType() == type;
+  }
 }

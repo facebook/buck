@@ -32,10 +32,10 @@ import java.util.Map;
 public class BuckColorSettingsPage implements ColorSettingsPage {
 
   private static final AttributesDescriptor[] DESCRIPTORS = new AttributesDescriptor[]{
-      new AttributesDescriptor("Key", BuckSyntaxHighlighter.KEY),
-      new AttributesDescriptor("Value", BuckSyntaxHighlighter.VALUE),
-      new AttributesDescriptor("Comment", BuckSyntaxHighlighter.COMMENT),
-      new AttributesDescriptor("Name", BuckSyntaxHighlighter.RULE_NAME),
+      new AttributesDescriptor("Key", BuckSyntaxHighlighter.BUCK_KEYWORD),
+      new AttributesDescriptor("String", BuckSyntaxHighlighter.BUCK_STRING),
+      new AttributesDescriptor("Comment", BuckSyntaxHighlighter.BUCK_COMMENT),
+      new AttributesDescriptor("Name", BuckSyntaxHighlighter.BUCK_RULE_NAME),
   };
 
   @Override

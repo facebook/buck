@@ -20,11 +20,11 @@ import com.facebook.buck.intellij.plugin.file.BuckFileUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 
-public final class BuckBuildTargetUtil {
+public final class BuckBuildUtil {
 
   public static final String BUCK_CONFIG_FILE = ".buckconfig";
 
-  private BuckBuildTargetUtil() {
+  private BuckBuildUtil() {
   }
 
   public static boolean isValidAbsoluteTarget(String target) {

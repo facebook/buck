@@ -16,10 +16,10 @@
 
 package com.facebook.buck.intellij.plugin.format;
 
-import com.facebook.buck.intellij.plugin.lang.psi.BuckProperty;
+import com.facebook.buck.intellij.plugin.lang.psi.BuckArrayElements;
+import com.facebook.buck.intellij.plugin.lang.psi.BuckListElements;
 import com.facebook.buck.intellij.plugin.lang.psi.BuckRuleBody;
 import com.facebook.buck.intellij.plugin.lang.psi.BuckTypes;
-import com.facebook.buck.intellij.plugin.lang.psi.BuckValueArray;
 import com.intellij.formatting.ASTBlock;
 import com.intellij.formatting.Alignment;
 import com.intellij.formatting.Block;
@@ -52,9 +52,14 @@ import static com.facebook.buck.intellij.plugin.lang.psi.BuckPsiUtils.hasElement
 public class BuckBlock implements ASTBlock {
 
   private static final TokenSet BUCK_CONTAINERS =
-      TokenSet.create(BuckTypes.VALUE_ARRAY, BuckTypes.RULE_BODY);
+      TokenSet.create(BuckTypes.ARRAY_ELEMENTS, BuckTypes.RULE_BODY, BuckTypes.LIST_ELEMENTS);
+  private static final TokenSet BUCK_OPEN_BRACES =
+      TokenSet.create(BuckTypes.L_BRACKET, BuckTypes.L_PARENTHESES);
+  private static final TokenSet BUCK_CLOSE_BRACES =
+      TokenSet.create(BuckTypes.R_BRACKET, BuckTypes.R_PARENTHESES);
+  private static final TokenSet BUCK_ALL_BRACES =
+      TokenSet.orSet(BUCK_OPEN_BRACES, BUCK_CLOSE_BRACES);
 
-  private final BuckBlock myParent;
   private final Alignment myAlignment;
   private final Indent myIndent;
   private final PsiElement myPsiElement;
@@ -65,29 +70,25 @@ public class BuckBlock implements ASTBlock {
   private final SpacingBuilder mySpacingBuilder;
 
   private List<BuckBlock> mySubBlocks = null;
-  private final Alignment myPropertyValueAlignment;
 
   public BuckBlock(
-      @Nullable final BuckBlock parent,
       final ASTNode node,
       CodeStyleSettings settings,
       @Nullable final Alignment alignment,
       final Indent indent,
       @Nullable final Wrap wrap) {
-    myParent = parent;
     myAlignment = alignment;
     myIndent = indent;
     myNode = node;
     myPsiElement = node.getPsi();
     myWrap = wrap;
-    myPropertyValueAlignment = Alignment.createAlignment(true);
     mySettings = settings;
 
     mySpacingBuilder = BuckFormattingModelBuilder.createSpacingBuilder(settings);
 
-    if (myPsiElement instanceof BuckValueArray) {
-      myChildWrap = Wrap.createWrap(CommonCodeStyleSettings.WRAP_ALWAYS, true);
-    } else if (myPsiElement instanceof BuckRuleBody) {
+    if (myPsiElement instanceof BuckArrayElements ||
+        myPsiElement instanceof BuckRuleBody ||
+        myPsiElement instanceof BuckListElements) {
       myChildWrap = Wrap.createWrap(CommonCodeStyleSettings.WRAP_ALWAYS, true);
     } else {
       myChildWrap = null;
@@ -126,12 +127,9 @@ public class BuckBlock implements ASTBlock {
       if (childType == TokenType.WHITE_SPACE) {
         continue;
       }
-      if (childType == BuckTypes.RULE_BLOCK) {
-        ASTNode nameNode = child.findChildByType(BuckTypes.RULE_NAMES);
-        // We don't do reformat glob for now.
-        if (nameNode != null && nameNode.getText().equals("glob")) {
-          continue;
-        }
+      // In most cases, glob block doesn't need reformatting. So just ignore it for now.
+      if (childType == BuckTypes.GLOB_BLOCK) {
+        continue;
       }
       blocks.add(buildSubBlock(child));
     }
@@ -143,29 +141,16 @@ public class BuckBlock implements ASTBlock {
     Alignment alignment = null;
     Wrap wrap = null;
 
-    final TokenSet allBraces =
-        TokenSet.orSet(TokenSet.create(BuckTypes.LBRACE), TokenSet.create(BuckTypes.RBRACE));
-
     if (hasElementType(myNode, BUCK_CONTAINERS)) {
       if (hasElementType(childNode, BuckTypes.COMMA)) {
         wrap = Wrap.createWrap(WrapType.NONE, true);
-      } else if (!hasElementType(childNode, allBraces)) {
+      } else if (!hasElementType(childNode, BUCK_ALL_BRACES)) {
         assert myChildWrap != null;
         wrap = myChildWrap;
         indent = Indent.getNormalIndent();
-      } else if (hasElementType(childNode, TokenSet.create(BuckTypes.LBRACE)) &&
-        myPsiElement instanceof BuckProperty) {
-        assert myParent != null &&
-            myParent.myParent != null &&
-            myParent.myParent.myPropertyValueAlignment != null;
-        alignment = myParent.myParent.myPropertyValueAlignment;
       }
-    } else if (hasElementType(myNode, BuckTypes.PROPERTY) &&
-        myPsiElement instanceof BuckProperty &&
-        !hasElementType(childNode, BUCK_CONTAINERS)) {
-      alignment = myParent.myPropertyValueAlignment;
     }
-    return new BuckBlock(this, childNode, mySettings, alignment, indent, wrap);
+    return new BuckBlock(childNode, mySettings, alignment, indent, wrap);
   }
 
   @Nullable
@@ -208,12 +193,15 @@ public class BuckBlock implements ASTBlock {
   public boolean isIncomplete() {
     final ASTNode lastChildNode = myNode.getLastChildNode();
 
-    if (hasElementType(myNode, TokenSet.create(BuckTypes.VALUE_ARRAY))) {
-      return lastChildNode != null && lastChildNode.getElementType() != BuckTypes.RBRACE;
+    boolean ret = false;
+    if (hasElementType(myNode, TokenSet.create(BuckTypes.ARRAY_ELEMENTS))) {
+      ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_BRACKET;
     } else if (hasElementType(myNode, TokenSet.create(BuckTypes.RULE_BODY))) {
-      return lastChildNode != null && lastChildNode.getElementType() != BuckTypes.RBRACE;
+      ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_PARENTHESES;
+    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.LIST_ELEMENTS))) {
+      ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_PARENTHESES;
     }
-    return false;
+    return ret;
   }
 
   @Override

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.plugin.navigation;
 
-import com.facebook.buck.intellij.plugin.build.BuckBuildTargetUtil;
+import com.facebook.buck.intellij.plugin.build.BuckBuildUtil;
 import com.facebook.buck.intellij.plugin.lang.BuckLanguage;
 import com.facebook.buck.intellij.plugin.lang.psi.BuckValue;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandlerBase;
@@ -48,7 +48,7 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
         target = target.substring(1, target.length() - 1);
       }
       VirtualFile targetBuckFile =
-          BuckBuildTargetUtil.getBuckFileFromAbsoluteTarget(project, target);
+          BuckBuildUtil.getBuckFileFromAbsoluteTarget(project, target);
       if (targetBuckFile == null) {
         return null;
       }

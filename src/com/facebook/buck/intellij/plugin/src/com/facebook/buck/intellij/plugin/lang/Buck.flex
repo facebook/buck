@@ -15,161 +15,61 @@
  */
 
 package com.facebook.buck.intellij.plugin.lang;
-
-import com.intellij.lexer.FlexLexer;
+import com.intellij.lexer.*;
 import com.intellij.psi.tree.IElementType;
-import com.intellij.psi.TokenType;
-import com.facebook.buck.intellij.plugin.lang.psi.BuckTypes;
-import java.util.LinkedList;
-import java.util.HashSet;
-import java.util.Set;
-import java.lang.String;
+import static com.facebook.buck.intellij.plugin.lang.psi.BuckTypes.*;
 
 %%
 
-%class _BuckLexer
-%implements FlexLexer, BuckTypes
-%unicode
+%{
+  public _BuckLexer() {
+    this((java.io.Reader)null);
+  }
+%}
+
 %public
+%class _BuckLexer
+%implements FlexLexer
 %function advance
 %type IElementType
-%eof{  return;
-%eof}
+%unicode
 
-WHITE_SPACE = [\ \t\f]|\n|\r|\r\n
-FIRST_VALUE_CHARACTER = [^ \n\r\f\\] | "\\"{WHITE_SPACE} | "\\".
-VALUE_CHARACTER = [^\n\r\f\\] | "\\"{WHITE_SPACE} | "\\".
-END_OF_LINE_COMMENT = ("#")[^\r\n]*
-KEY_CHARACTER = [^=\ \n\r\t\f\\] | "\\"{WHITE_SPACE} | "\\".
+EOL="\r"|"\n"|"\r\n"
+LINE_WS=[\ \t\f]
+WHITE_SPACE=({LINE_WS}|{EOL})+
 
-// TODO(#7945258): Refactor this file and don't write rule and property names here.
-RULE_NAMES = "genrule" |
-             "remote_file" |
-             "android_aar" |
-             "android_binary" |
-             "android_build_config" |
-             "android_library" |
-             "android_manifest" |
-             "android_prebuilt_aar" |
-             "android_resource" |
-             "apk_genrule" |
-             "cxx_library" |
-             "gen_aidl" |
-             "ndk_library" |
-             "prebuilt_jar" |
-             "prebuilt_native_library" |
-             "project_config" |
-             "cxx_binary" |
-             "cxx_library" |
-             "cxx_test" |
-             "prebuilt_native_library" |
-             "d_binary" |
-             "d_library" |
-             "d_test" |
-             "cxx_library" |
-             "java_binary" |
-             "java_library" |
-             "java_test" |
-             "prebuilt_jar" |
-             "prebuilt_native_library" |
-             "prebuilt_python_library" |
-             "python_binary" |
-             "python_library" |
-             "python_test" |
-             "glob" |
-             "include_defs" |
-             "robolectric_test" |
-             "keystore"
-
-// TODO(#7945258): Refactor this file and don't write rule and property names here.
-GENERIC_RULE_NAMES = [a-zA-Z0-9]+("_android_library") | [a-zA-Z0-9]+("_android_library")
-
-// TODO(#7945258): Refactor this file and don't write rule and property names here.
-KEYWORDS =  "name" |
-            "res" |
-            "binary_jar" |
-            "srcs" |
-            "deps" |
-            "manifest" |
-            "package_type" |
-            "glob" |
-            "visibility" |
-            "aar" |
-            "src_target" |
-            "src_roots" |
-            "java7_support" |
-            "source_under_test" |
-            "test_library_project_dir" |
-            "contacts" |
-            "exported_deps" |
-            "excludes" |
-            "main" |
-            "resources" |
-            "javadoc_url" |
-            "store" |
-            "properties" |
-            "assets" |
-            "package" |
-            "proguard_config" |
-            "source_jar" |
-            "aidl" |
-            "import_path" |
-            "annotation_processors" |
-            "annotation_processor_deps" |
-            "keystore"
-
-MACROS = ([A-Z0-9] | ("_"))+
-
-DIGIT = [0-9]
-LETTER = [:letter:]|"_"
-IDENTIFIER = ({LETTER})({LETTER}|{DIGIT})*
-VALUE_BOOLEAN = "True" | "False" | "true" | "false" | "TRUE" | "FALSE"
-VALUE_NONE = "None"
-
-STRING_SINGLE_QUOTED = \'([^\\\'\r\n]|{WHITE_SPACE})*(\'|\\)? | \'\'\' ( (\'(\')?)? [^\'] )* \'\'\'
-STRING_DOUBLE_QUOTED = \"([^\\\"\r\n]|{WHITE_SPACE})*(\"|\\)? | \"\"\" ( (\"(\")?)? [^\"] )* \"\"\"
-STRING = {STRING_SINGLE_QUOTED} | {STRING_DOUBLE_QUOTED}
-
-LBRACE = "(" | "{" | "["
-RBRACE = ")" | "}" | "]"
-COMMA = ","
-SEMICOLON = ";"
-EQUAL = "="
-
-%state WAITING_VALUE, DOUBLE_QUOTE_STRING, SINGLE_QUOTE_STRING
+BOOLEAN=(True|False)
+LINE_COMMENT=#.*
+GLOB_KEYWORD=(glob|subdir_glob)
+MACROS=[A-Z_]([A-Z0-9_])+
+DOUBLE_QUOTED_STRING=\"([^\\\"\r\n]|\\[^\r\n])*\"?
+SINGLE_QUOTED_STRING='([^\\'\r\n]|\\[^\r\n])*'?
+NUMBER=-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]*)?
+IDENTIFIER=[:jletter:] [:jletterdigit:]*
 
 %%
+<YYINITIAL> {
+  {WHITE_SPACE}               { return com.intellij.psi.TokenType.WHITE_SPACE; }
 
-{END_OF_LINE_COMMENT}   { return COMMENT; }
+  "None"                      { return NONE; }
+  ","                         { return COMMA; }
+  "="                         { return EQUAL; }
+  "\\"                        { return SLASH; }
+  "+"                         { return PLUS; }
+  "excludes"                  { return GLOB_EXCLUDES_KEYWORD; }
+  "("                         { return L_PARENTHESES; }
+  "["                         { return L_BRACKET; }
+  ")"                         { return R_PARENTHESES; }
+  "]"                         { return R_BRACKET; }
 
-{WHITE_SPACE}+          { return TokenType.WHITE_SPACE; }
+  {BOOLEAN}                   { return BOOLEAN; }
+  {LINE_COMMENT}              { return LINE_COMMENT; }
+  {GLOB_KEYWORD}              { return GLOB_KEYWORD; }
+  {MACROS}                    { return MACROS; }
+  {DOUBLE_QUOTED_STRING}      { return DOUBLE_QUOTED_STRING; }
+  {SINGLE_QUOTED_STRING}      { return SINGLE_QUOTED_STRING; }
+  {NUMBER}                    { return NUMBER; }
+  {IDENTIFIER}                { return IDENTIFIER; }
 
-{RULE_NAMES}            { return RULE_NAMES; }
-
-{GENERIC_RULE_NAMES}    { return RULE_NAMES; }
-
-{STRING_SINGLE_QUOTED}  { return VALUE_STRING; }
-
-{STRING_DOUBLE_QUOTED}  { return VALUE_STRING; }
-
-{LBRACE}                { return LBRACE; }
-
-{RBRACE}                { return RBRACE; }
-
-{COMMA}                 { return COMMA; }
-
-{SEMICOLON}             { return SEMICOLON; }
-
-{EQUAL}                 { return EQUAL; }
-
-{VALUE_BOOLEAN}         { return VALUE_BOOLEAN; }
-
-{VALUE_NONE}            { return VALUE_NONE; }
-
-{KEYWORDS}              { return KEYWORDS; }
-
-{MACROS}                { return MACROS; }
-
-{IDENTIFIER}            { return IDENTIFIER; }
-
-.                       { return IDENTIFIER; }
+  [^] { return com.intellij.psi.TokenType.BAD_CHARACTER; }
+}

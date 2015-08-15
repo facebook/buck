@@ -16,9 +16,12 @@
 
 package com.facebook.buck.intellij.plugin.annotator;
 
-import com.facebook.buck.intellij.plugin.build.BuckBuildTargetUtil;
-import com.facebook.buck.intellij.plugin.file.BuckFileUtil;
+import com.facebook.buck.intellij.plugin.build.BuckBuildUtil;
+import com.facebook.buck.intellij.plugin.highlight.BuckSyntaxHighlighter;
+import com.facebook.buck.intellij.plugin.lang.psi.BuckPsiUtils;
+import com.facebook.buck.intellij.plugin.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.plugin.lang.psi.BuckValue;
+import com.intellij.lang.annotation.Annotation;
 import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.Annotator;
 import com.intellij.openapi.project.Project;
@@ -37,6 +40,13 @@ public class BuckAnnotator implements Annotator {
 
   @Override
   public void annotate(PsiElement psiElement, AnnotationHolder annotationHolder) {
+    if (annotateIdentifier(psiElement, annotationHolder)) {
+      return;
+    }
+    annotateErrors(psiElement, annotationHolder);
+  }
+
+  private void annotateErrors(PsiElement psiElement, AnnotationHolder annotationHolder) {
     BuckValue value = PsiTreeUtil.getParentOfType(psiElement, BuckValue.class);
     if (value == null) {
       return;
@@ -52,18 +62,36 @@ public class BuckAnnotator implements Annotator {
     } else {
       return;
     }
-    if (!BuckBuildTargetUtil.isValidAbsoluteTarget(target)) {
+    if (!BuckBuildUtil.isValidAbsoluteTarget(target)) {
       return;
     }
     VirtualFile buckDir = project.getBaseDir().findFileByRelativePath(
-        BuckBuildTargetUtil.extractAbsoluteTarget(target));
-    VirtualFile targetBuckFile = buckDir != null ?
-        buckDir.findChild(BuckFileUtil.getBuildFileName()) : null;
+        BuckBuildUtil.extractAbsoluteTarget(target));
+    VirtualFile targetBuckFile = buckDir != null ? buckDir.findChild("BUCK") : null;
 
     if (targetBuckFile == null) {
       TextRange range = new TextRange(psiElement.getTextRange().getStartOffset(),
           psiElement.getTextRange().getEndOffset());
       annotationHolder.createErrorAnnotation(range, ANNOTATOR_ERROR_CANNOT_LOCATE_TARGET);
     }
+  }
+
+  private boolean annotateIdentifier(PsiElement psiElement, AnnotationHolder annotationHolder) {
+    if (psiElement.getNode().getElementType() != BuckTypes.IDENTIFIER) {
+      return false;
+    }
+
+    PsiElement parent = psiElement.getParent();
+    assert parent != null;
+
+    final Annotation annotation = annotationHolder.createInfoAnnotation(psiElement, null);
+    if (BuckPsiUtils.testType(parent, BuckTypes.RULE_NAME)) {
+      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_RULE_NAME);
+      return true;
+    } else if (BuckPsiUtils.testType(parent, BuckTypes.PROPERTY_LVALUE)) {
+      annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_KEYWORD);
+      return true;
+    }
+    return false;
   }
 }
