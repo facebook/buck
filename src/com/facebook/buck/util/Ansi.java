@@ -16,7 +16,10 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.collect.FluentIterable;
+
 import java.io.PrintStream;
+import java.util.Collections;
 
 /**
  * Encapsulates the specifics of writing to a particular kind of terminal.
@@ -125,11 +128,13 @@ public final class Ansi {
     return wrapWithColor(HIGHLIGHTED_SUCCESS_SEQUENCE, text);
   }
 
-  public String asNoWrap(String text) {
+  public Iterable<String> asNoWrap(Iterable<String> textParts) {
     if (isAnsiTerminal) {
-      return STOP_WRAPPING + text + RESUME_WRAPPING;
+      return FluentIterable.from(Collections.singleton(STOP_WRAPPING))
+          .append(textParts)
+          .append(RESUME_WRAPPING);
     } else {
-      return text;
+      return textParts;
     }
   }
 

@@ -28,12 +28,13 @@ import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
-import com.facebook.buck.test.TestResultSummaryVerbosity;
-import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -42,6 +43,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -50,7 +52,6 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -59,6 +60,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Console that provides rich, updating ansi output about the current build.
@@ -164,18 +166,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @VisibleForTesting
   synchronized void render() {
+    String lastRenderClear = clearLastRender();
     ImmutableList<String> lines = createRenderLinesAtTime(clock.currentTimeMillis());
-    String nextFrame = clearLastRender() + Joiner.on("\n").join(lines);
-    lastNumLinesPrinted = lines.size();
-
-    String logFrame;
     ImmutableList<String> logLines = createLogRenderLines();
-    if (!logLines.isEmpty()) {
-      lastNumLinesPrinted += logLines.size();
-      logFrame = "\n" + Joiner.on("\n").join(logLines);
-    } else {
-      logFrame = "";
-    }
+    lastNumLinesPrinted = lines.size() + logLines.size();
 
     // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
     synchronized (console.getStdOut()) {
@@ -189,12 +183,20 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               "Stopping console output (stdout dirty %s, stderr dirty %s).",
               stdoutDirty, stderrDirty);
           stopRenderScheduler();
-        } else if (!nextFrame.isEmpty() || !logFrame.isEmpty()) {
-          if (!nextFrame.isEmpty()) {
-            nextFrame = ansi.asNoWrap(nextFrame);
+        } else if (!lastRenderClear.isEmpty() || !lines.isEmpty() || !logLines.isEmpty()) {
+          Iterable<String> renderedLines = Iterables.concat(
+              ansi.asNoWrap(
+                  MoreIterables.zipAndConcat(
+                      lines,
+                      Iterables.cycle("\n"))),
+              MoreIterables.zipAndConcat(
+                  logLines,
+                  Iterables.cycle("\n")));
+          StringBuilder fullFrame = new StringBuilder(lastRenderClear);
+          for (String part : renderedLines) {
+            fullFrame.append(part);
           }
-          String fullFrame = nextFrame + logFrame;
-          console.getStdErr().getRawStream().println(fullFrame);
+          console.getStdErr().getRawStream().print(fullFrame);
         }
       }
     }
