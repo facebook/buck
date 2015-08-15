@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
@@ -219,6 +220,8 @@ public class ProjectGenerator {
   private final ImmutableSet<Option> options;
   private final Optional<BuildTarget> targetToBuildWithBuck;
   private final ImmutableList<String> buildWithBuckFlags;
+  private final ExecutableFinder executableFinder;
+  private final ImmutableMap<String, String> environment;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
@@ -260,6 +263,8 @@ public class ProjectGenerator {
       Set<Option> options,
       Optional<BuildTarget> targetToBuildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
+      ExecutableFinder executableFinder,
+      ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       Function<? super TargetNode<?>, Path> outputPathOfNode) {
@@ -280,6 +285,8 @@ public class ProjectGenerator {
     this.options = ImmutableSet.copyOf(options);
     this.targetToBuildWithBuck = targetToBuildWithBuck;
     this.buildWithBuckFlags = buildWithBuckFlags;
+    this.executableFinder = executableFinder;
+    this.environment = environment;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.outputPathOfNode = outputPathOfNode;
@@ -460,6 +467,7 @@ public class ProjectGenerator {
         Resources.getResource(ProjectGenerator.class, BUILD_WITH_BUCK_TEMPLATE),
         Charsets.UTF_8));
 
+    Path pathToBuck = executableFinder.getExecutable(Paths.get("buck"), environment);
     String compDir = cxxPlatform.getDebugPathSanitizer().getCompilationDirectory();
     // Use the hostname for padding instead of the directory, this way the directory matches without
     // having to resolve it.
@@ -475,6 +483,7 @@ public class ProjectGenerator {
         AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app"));
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
 
+    template.add("path_to_buck", pathToBuck);
     template.add("comp_dir", compDir);
     template.add("source_dir", sourceDir);
     template.add("build_flags", buildFlags);

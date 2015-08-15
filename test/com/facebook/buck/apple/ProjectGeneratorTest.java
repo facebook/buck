@@ -36,6 +36,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
@@ -62,6 +63,8 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryBuilder;
 import com.facebook.buck.js.ReactNativeBuckConfig;
@@ -3035,6 +3038,8 @@ public class ProjectGeneratorTest {
         ProjectGenerator.SEPARATED_PROJECT_OPTIONS,
         Optional.<BuildTarget>absent(),
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         new Function<TargetNode<?>, Path>() {
@@ -3203,6 +3208,10 @@ public class ProjectGeneratorTest {
 
   @Test
   public void aggregateTargetForBuildWithBuck() throws IOException {
+    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("buck"),
+        ImmutableMap.<String, String>of());
+    assumeThat(buck.isPresent(), is(true));
     BuildTarget binaryTarget = BuildTarget.builder("//foo", "binary").build();
     TargetNode<?> binaryNode = AppleBinaryBuilder
         .createBuilder(binaryTarget)
@@ -3230,6 +3239,8 @@ public class ProjectGeneratorTest {
         ImmutableSet.<ProjectGenerator.Option>of(),
         Optional.of(binaryTarget),
         ImmutableList.of("--flag", "value with spaces"),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         Functions.<Path>constant(null));
@@ -3525,6 +3536,8 @@ public class ProjectGeneratorTest {
         projectGeneratorOptions,
         Optional.<BuildTarget>absent(),
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         Functions.<Path>constant(null));

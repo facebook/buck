@@ -1,4 +1,5 @@
-buck build <build_flags> <escaped_build_target>
+set -e
+<path_to_buck> build <build_flags> <escaped_build_target>
 rm -r <resolved_bundle_destination> 2> /dev/null || true
 mkdir -p <resolved_bundle_destination_parent>
 cp -r <resolved_bundle_source> <resolved_bundle_destination>

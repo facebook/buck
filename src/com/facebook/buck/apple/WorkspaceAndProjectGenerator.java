@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -69,6 +70,8 @@ public class WorkspaceAndProjectGenerator {
   private final boolean combinedProject;
   private final boolean buildWithBuck;
   private final ImmutableList<String> buildWithBuckFlags;
+  private final ExecutableFinder executableFinder;
+  private final ImmutableMap<String, String> environment;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = ImmutableSet.of();
@@ -92,6 +95,8 @@ public class WorkspaceAndProjectGenerator {
       boolean combinedProject,
       boolean buildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
+      ExecutableFinder executableFinder,
+      ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       String buildFileName,
@@ -105,6 +110,8 @@ public class WorkspaceAndProjectGenerator {
     this.combinedProject = combinedProject;
     this.buildWithBuck = buildWithBuck;
     this.buildWithBuckFlags = buildWithBuckFlags;
+    this.executableFinder = executableFinder;
+    this.environment = environment;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildFileName = buildFileName;
@@ -229,6 +236,8 @@ public class WorkspaceAndProjectGenerator {
           projectGeneratorOptions,
           targetToBuildWithBuck,
           buildWithBuckFlags,
+          executableFinder,
+          environment,
           cxxPlatforms,
           defaultCxxPlatform,
           outputPathOfNode)
@@ -296,6 +305,8 @@ public class WorkspaceAndProjectGenerator {
                     }
                   }),
               buildWithBuckFlags,
+              executableFinder,
+              environment,
               cxxPlatforms,
               defaultCxxPlatform,
               outputPathOfNode)
@@ -328,6 +339,8 @@ public class WorkspaceAndProjectGenerator {
             projectGeneratorOptions,
             Optional.<BuildTarget>absent(),
             buildWithBuckFlags,
+            executableFinder,
+            environment,
             cxxPlatforms,
             defaultCxxPlatform,
             outputPathOfNode);

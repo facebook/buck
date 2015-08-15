@@ -667,6 +667,8 @@ public class ProjectCommand extends BuildCommand {
           combinedProject,
           buildWithBuck,
           super.getOptions(),
+          new ExecutableFinder(),
+          params.getEnvironment(),
           params.getRepository().getKnownBuildRuleTypes().getCxxPlatforms(),
           params.getRepository().getKnownBuildRuleTypes().getDefaultCxxPlatforms(),
           new ParserConfig(params.getBuckConfig()).getBuildFileName(),

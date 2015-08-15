@@ -30,6 +30,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
@@ -40,6 +41,8 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
@@ -247,6 +250,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -311,6 +316,8 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -360,6 +367,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -438,6 +447,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -485,6 +496,8 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -499,6 +512,10 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void buildWithBuck() throws IOException {
+    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("buck"),
+        ImmutableMap.<String, String>of());
+    assumeThat(buck.isPresent(), is(true));
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         projectFilesystem,
         reactNativeBuckConfig,
@@ -509,6 +526,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         true /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -611,6 +630,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -1031,6 +1052,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -1178,6 +1201,8 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
