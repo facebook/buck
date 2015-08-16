@@ -63,19 +63,6 @@ public class MainIntegrationTest {
   }
 
   @Test
-  public void testIncludesOverride() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "includes_override", tmp);
-    workspace.setUp();
-
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--buildfile:includes //includes.py");
-
-    result.assertSuccess();
-  }
-
-  @Test
   public void testConfigOverride() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "includes_override", tmp);

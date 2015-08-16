@@ -18,16 +18,13 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +45,6 @@ import javax.annotation.Nullable;
 public abstract class AbstractCommand implements Command {
 
   private static final String HELP_LONG_ARG = "--help";
-  private static final String BUILDFILE_INCLUDES_LONG_ARG = "--buildfile:includes";
   private static final String NO_CACHE_LONG_ARG = "--no-cache";
   private static final String OUTPUT_TEST_EVENTS_TO_FILE_LONG_ARG = "--output-test-events-to-file";
   private static final String PROFILE_LONG_ARG = "--profile";
@@ -64,12 +60,6 @@ public abstract class AbstractCommand implements Command {
       usage = "Specify a number between 1 and 10.")
   @SuppressWarnings("PMD.UnusedPrivateField")
   private int verbosityLevel = -1;
-
-  @Option(
-      name = BUILDFILE_INCLUDES_LONG_ARG,
-      usage = "Specify the default includes file.")
-  @Nullable
-  private String buildFileIncludes = null;
 
   @Option(
       name = "--config",
@@ -91,20 +81,6 @@ public abstract class AbstractCommand implements Command {
             entry.getValue());
       }
       builder.put(key.get(0), key.get(1), entry.getValue());
-    }
-
-    // Handle the special-case build file command-line override.
-    if (buildFileIncludes != null) {
-      String includes = MoreStrings
-          .stripPrefix(buildFileIncludes, BUILDFILE_INCLUDES_LONG_ARG + " ")
-          .or(buildFileIncludes);
-      includes = MoreStrings
-          .stripPrefix(includes, UnflavoredBuildTarget.BUILD_TARGET_PREFIX)
-          .or(includes);
-      builder.put(
-          ParserConfig.BUILDFILE_SECTION_NAME,
-          ParserConfig.INCLUDES_PROPERTY_NAME,
-          UnflavoredBuildTarget.BUILD_TARGET_PREFIX + includes);
     }
 
     return builder.build();
@@ -233,10 +209,6 @@ public abstract class AbstractCommand implements Command {
     if (verbosityLevel != -1) {
       builder.add(VerbosityParser.VERBOSE_LONG_ARG);
       builder.add(String.valueOf(verbosityLevel));
-    }
-    if (buildFileIncludes != null) {
-      builder.add(BUILDFILE_INCLUDES_LONG_ARG);
-      builder.add(buildFileIncludes);
     }
     if (noCache) {
       builder.add(NO_CACHE_LONG_ARG);
