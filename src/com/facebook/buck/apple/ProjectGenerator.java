@@ -483,6 +483,7 @@ public class ProjectGenerator {
         AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app"));
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
 
+    template.add("repo_root", projectFilesystem.getRootPath());
     template.add("path_to_buck", pathToBuck);
     template.add("comp_dir", compDir);
     template.add("source_dir", sourceDir);
