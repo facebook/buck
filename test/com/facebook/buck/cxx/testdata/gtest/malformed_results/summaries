@@ -1,0 +1,12 @@
+[
+  {
+    "message": "test program aborted before finishing",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "THIS TEST FAILED!\nHERE'S SOME OUTPUT.\n",
+    "testCase": "main",
+    "testCaseName": "//:test",
+    "time": 0,
+    "type": "FAILURE"
+  }
+]

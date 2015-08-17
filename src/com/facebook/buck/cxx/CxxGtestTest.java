@@ -40,8 +40,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.CharsetDecoder;
@@ -90,13 +92,40 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
         .build();
   }
 
+  private TestResultSummary getProgramFailureSummary(
+      String message,
+      String output) {
+    return new TestResultSummary(
+        getBuildTarget().toString(),
+        "main",
+        ResultType.FAILURE,
+        0L,
+        message,
+        "",
+        output,
+        "");
+  }
+
   @Override
   protected ImmutableList<TestResultSummary> parseResults(
       ExecutionContext context,
       Path exitCode,
       Path output,
       Path results)
-      throws Exception {
+      throws IOException, SAXException {
+
+    // Try to parse the results file first, which should be written if the test suite exited
+    // normally (even in the event of a failing test).  If this fails, just construct a test
+    // summary with the output we have.
+    Document doc;
+    try {
+      doc = XmlDomParser.parse(results);
+    } catch (SAXException e) {
+      return ImmutableList.of(
+          getProgramFailureSummary(
+              "test program aborted before finishing",
+              context.getProjectFilesystem().readFileIfItExists(output).or("")));
+    }
 
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();
 
@@ -123,7 +152,6 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
       }
     }
 
-    Document doc = XmlDomParser.parse(results);
     NodeList testcases = doc.getElementsByTagName("testcase");
     for (int index = 0; index < testcases.getLength(); index++) {
       Node testcase = testcases.item(index);
