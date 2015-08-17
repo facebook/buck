@@ -38,10 +38,9 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBundle;
-import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
-import com.facebook.buck.js.ReactNativePlatform;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
@@ -49,6 +48,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -58,7 +58,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.io.Resources;
 
+import org.stringtemplate.v4.ST;
+
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -72,6 +76,7 @@ import java.util.Set;
  */
 public class NewNativeTargetProjectMutator {
   private static final Logger LOG = Logger.get(NewNativeTargetProjectMutator.class);
+  private static final String REACT_NATIVE_PACKAGE_TEMPLATE = "rn-package.st";
 
   public static class Result {
     public final PBXNativeTarget target;
@@ -698,34 +703,34 @@ public class NewNativeTargetProjectMutator {
   private String generateXcodeShellScript(TargetNode<?> targetNode) {
     Preconditions.checkArgument(targetNode.getConstructorArg() instanceof ReactNativeLibraryArgs);
 
-    ProjectFilesystem filesystem = targetNode.getRuleFactoryParams().getProjectFilesystem();
-    ReactNativeLibraryArgs args = (ReactNativeLibraryArgs) targetNode.getConstructorArg();
-    IosReactNativeLibraryDescription description =
-        (IosReactNativeLibraryDescription) targetNode.getDescription();
-    ImmutableList.Builder<String> script = ImmutableList.builder();
-    script.add("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}");
-    script.add("JS_OUT=${BASE_DIR}/" + args.bundleName);
-    script.add("SOURCE_MAP=${TEMP_DIR}/rn_source_map/" + args.bundleName + ".map");
-
-    if (skipRNBundle) {
-      // Working in server mode: make sure that we clear the bundle from a previous build.
-      script.add("rm -rf ${JS_OUT}");
-    } else {
-      script.add("mkdir -p `dirname ${JS_OUT}`");
-      script.add("mkdir -p `dirname ${SOURCE_MAP}`");
-
-      script.add(Joiner.on(" ").join(
-              ReactNativeBundle.getBundleScript(
-                  filesystem.resolve(
-                      sourcePathResolver.apply(description.getReactNativePackager())),
-                  filesystem.resolve(sourcePathResolver.apply(args.entryPath)),
-                  ReactNativePlatform.IOS,
-                  ReactNativeFlavors.isDevMode(targetNode.getBuildTarget()),
-                  "${JS_OUT}",
-                  "${BASE_DIR}",
-                  "${SOURCE_MAP}")));
+    ST template;
+    try {
+      template = new ST(
+          Resources.toString(
+              Resources.getResource(
+                  NewNativeTargetProjectMutator.class,
+                  REACT_NATIVE_PACKAGE_TEMPLATE),
+              Charsets.UTF_8));
+    } catch (IOException e) {
+      throw new RuntimeException("There was an error loading 'rn_package.st' template", e);
     }
 
-    return Joiner.on(" && ").join(script.build());
+    ReactNativeLibraryArgs args = (ReactNativeLibraryArgs) targetNode.getConstructorArg();
+
+    template.add("bundle_name", args.bundleName);
+    template.add("skip_rn_bundle", skipRNBundle);
+
+    ProjectFilesystem filesystem = targetNode.getRuleFactoryParams().getProjectFilesystem();
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    Path jsOutput = ReactNativeBundle.getPathToJSBundleDir(buildTarget).resolve(args.bundleName);
+    template.add("built_bundle_path", filesystem.resolve(jsOutput));
+
+    Path resourceOutput = ReactNativeBundle.getPathToResources(buildTarget);
+    template.add("built_resources_path", filesystem.resolve(resourceOutput));
+
+    Path sourceMap = ReactNativeBundle.getPathToSourceMap(buildTarget);
+    template.add("built_source_map_path", filesystem.resolve(sourceMap));
+
+    return template.render();
   }
 }

@@ -21,6 +21,7 @@ import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertHasSinglet
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.getSingletonPhaseByType;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.startsWith;
@@ -510,10 +511,10 @@ public class NewNativeTargetProjectMutatorTest {
     String shellScript = phase.getShellScript();
     assertThat(
         shellScript,
-        startsWith("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}" +
-        " && JS_OUT=${BASE_DIR}/Apps/Foo/FooBundle.js && SOURCE_MAP=${TEMP_DIR}/rn_source_map/" +
-            "Apps/Foo/FooBundle.js.map && mkdir -p `dirname ${JS_OUT}` " +
-            "&& mkdir -p `dirname ${SOURCE_MAP}`"));
+        startsWith("BASE_DIR=${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\n" +
+            "JS_OUT=${BASE_DIR}/Apps/Foo/FooBundle.js\n" +
+            "SOURCE_MAP=${TEMP_DIR}/rn_source_map/Apps/Foo/FooBundle.js.map\n"));
+    assertThat(shellScript, containsString("if false"));
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {
