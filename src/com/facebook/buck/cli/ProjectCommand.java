@@ -32,6 +32,7 @@ import com.facebook.buck.java.JavaFileParser;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.java.intellij.IjModuleGraph;
 import com.facebook.buck.java.intellij.IjProject;
 import com.facebook.buck.java.intellij.IntellijConfig;
 import com.facebook.buck.java.intellij.Project;
@@ -140,6 +141,7 @@ public class ProjectCommand extends BuildCommand {
 
   }
 
+
   private static final Ide DEFAULT_IDE_VALUE = Ide.INTELLIJ;
   private static final boolean DEFAULT_READ_ONLY_VALUE = false;
   private static final boolean DEFAULT_DISABLE_R_JAVA_IDEA_GENERATOR = false;
@@ -199,6 +201,14 @@ public class ProjectCommand extends BuildCommand {
       name = "--experimental-ij-generation",
       usage = "Enables the experimental IntelliJ project generator.")
   private boolean experimentalIntelliJProjectGenerationEnabled = false;
+
+  @Option(
+      name = "--intellij-aggregation-mode",
+      usage = "Changes how modules are aggregated. Valid options are 'none' (no aggregation), " +
+          "'shallow' (no more than 3 levels deep) and 'auto' (based on project size). Defaults " +
+          "to 'auto' if not specified in .buckconfig.")
+  @Nullable
+  private IjModuleGraph.AggregationMode intellijAggregationMode = null;
 
   public boolean getCombinedProject() {
     return combinedProject;
@@ -306,6 +316,16 @@ public class ProjectCommand extends BuildCommand {
 
   public boolean isExperimentalIntelliJProjectGenerationEnabled() {
     return experimentalIntelliJProjectGenerationEnabled;
+  }
+
+  public IjModuleGraph.AggregationMode getIntellijAggregationMode(BuckConfig buckConfig) {
+    if (intellijAggregationMode != null) {
+      return intellijAggregationMode;
+    }
+    Optional<IjModuleGraph.AggregationMode> aggregationMode =
+        buckConfig.getValue("project", "intellij_aggregation_mode")
+        .transform(IjModuleGraph.AggregationMode.fromStringFunction());
+    return aggregationMode.or(IjModuleGraph.AggregationMode.AUTO);
   }
 
   public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
@@ -451,7 +471,8 @@ public class ProjectCommand extends BuildCommand {
         JavaFileParser.createJavaFileParser(javacOptions),
         buildRuleResolver,
         sourcePathResolver,
-        params.getRepository().getFilesystem());
+        params.getRepository().getFilesystem(),
+        getIntellijAggregationMode(params.getBuckConfig()));
 
     ImmutableSet<BuildTarget> requiredBuildTargets = project.write();
 

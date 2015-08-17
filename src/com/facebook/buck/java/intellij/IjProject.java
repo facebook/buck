@@ -47,6 +47,7 @@ public class IjProject {
   private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
+  private final IjModuleGraph.AggregationMode aggregationMode;
 
   public IjProject(
       TargetGraphAndTargets targetGraphAndTargets,
@@ -54,13 +55,15 @@ public class IjProject {
       JavaFileParser javaFileParser,
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      IjModuleGraph.AggregationMode aggregationMode) {
     this.targetGraphAndTargets = targetGraphAndTargets;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
     this.buildRuleResolver = buildRuleResolver;
     this.sourcePathResolver = sourcePathResolver;
     this.projectFilesystem = projectFilesystem;
+    this.aggregationMode = aggregationMode;
   }
 
   /**
@@ -111,7 +114,8 @@ public class IjProject {
     IjModuleGraph moduleGraph = IjModuleGraph.from(
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
-        moduleFactory);
+        moduleFactory,
+        aggregationMode);
     ParsingJavaPackageFinder parsingJavaPackageFinder = new ParsingJavaPackageFinder(
         javaFileParser,
         projectFilesystem,

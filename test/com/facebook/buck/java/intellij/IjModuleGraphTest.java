@@ -18,6 +18,7 @@ package com.facebook.buck.java.intellij;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
@@ -37,9 +38,11 @@ import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -455,6 +458,106 @@ public class IjModuleGraphTest {
         ImmutableMap.of(rDotJavaLibrary, IjModuleGraph.DependencyType.PROD));
   }
 
+
+  public void doSingleAggregationModePathFunctionTest(
+      IjModuleGraph.AggregationMode aggregationMode,
+      int graphSize,
+      boolean expectTrimmed) {
+
+    ImmutableList<Path> originalPaths = ImmutableList.of(
+        Paths.get("a", "b", "c", "d", "e"),
+        Paths.get("a", "b", "c", "d"),
+        Paths.get("a", "b", "c"),
+        Paths.get("a", "b"),
+        Paths.get("a"),
+        Paths.get(""));
+    ImmutableList<Path> trimmedPaths = ImmutableList.of(
+        Paths.get("a", "b", "c"),
+        Paths.get("a", "b", "c"),
+        Paths.get("a", "b", "c"),
+        Paths.get("a", "b"),
+        Paths.get("a"),
+        Paths.get(""));
+
+    Function<Path, Path> transform = aggregationMode.getBasePathTransform(graphSize);
+    assertThat(
+        FluentIterable.from(originalPaths).transform(transform).toList(),
+        Matchers.equalTo(expectTrimmed ? trimmedPaths : originalPaths));
+  }
+
+  @Test
+  public void testAggregationModePathFunction() {
+
+    doSingleAggregationModePathFunctionTest(
+        IjModuleGraph.AggregationMode.NONE,
+        10,
+        /* expectTrimmed */ false);
+    doSingleAggregationModePathFunctionTest(
+        IjModuleGraph.AggregationMode.NONE,
+        10000,
+        /* expectTrimmed */ false);
+
+    doSingleAggregationModePathFunctionTest(
+        IjModuleGraph.AggregationMode.SHALLOW,
+        10,
+        /* expectTrimmed */ true);
+    doSingleAggregationModePathFunctionTest(
+        IjModuleGraph.AggregationMode.SHALLOW,
+        10000,
+        /* expectTrimmed */ true);
+
+    doSingleAggregationModePathFunctionTest(
+        IjModuleGraph.AggregationMode.AUTO,
+        10,
+        /* expectTrimmed */ false);
+    doSingleAggregationModePathFunctionTest(
+        IjModuleGraph.AggregationMode.AUTO,
+        10000,
+        /* expectTrimmed */ true);
+  }
+
+  @Test
+  public void testModuleAggregation() {
+    TargetNode<?> guava = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//third_party/java/guava:guava"))
+        .build();
+
+    TargetNode<?> papaya = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//:papaya"))
+        .build();
+
+    TargetNode<?> base = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
+        .addDep(guava.getBuildTarget())
+        .build();
+
+    TargetNode<?> core = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/example/core:core"))
+        .addDep(papaya.getBuildTarget())
+        .build();
+
+    IjModuleGraph moduleGraph = createModuleGraph(
+        ImmutableSet.of(guava, papaya, base, core),
+        ImmutableMap.<TargetNode<?>, Path>of(),
+        Functions.constant(Optional.<Path>absent()),
+        IjModuleGraph.AggregationMode.SHALLOW);
+
+    IjModule guavaModule = getModuleForTarget(moduleGraph, guava);
+    IjModule papayaModule = getModuleForTarget(moduleGraph, papaya);
+    IjModule baseModule = getModuleForTarget(moduleGraph, base);
+    IjModule coreModule = getModuleForTarget(moduleGraph, core);
+
+    assertThat(baseModule, Matchers.sameInstance(coreModule));
+    assertThat(
+        baseModule.getModuleBasePath(),
+        Matchers.equalTo(Paths.get("java", "com", "example")));
+    assertThat(
+        moduleGraph.getDepsFor(baseModule),
+        Matchers.equalTo(ImmutableMap.<IjProjectElement, IjModuleGraph.DependencyType>of(
+                papayaModule, IjModuleGraph.DependencyType.PROD,
+                guavaModule, IjModuleGraph.DependencyType.PROD)));
+  }
+
   public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
     return createModuleGraph(targets, ImmutableMap.<TargetNode<?>, Path>of(),
         Functions.constant(Optional.<Path>absent()));
@@ -464,6 +567,17 @@ public class IjModuleGraphTest {
       ImmutableSet<TargetNode<?>> targets,
       final ImmutableMap<TargetNode<?>, Path> javaLibraryPaths,
       Function<? super TargetNode<?>, Optional<Path>> rDotJavaClassPathResolver) {
+    return createModuleGraph(targets,
+        javaLibraryPaths,
+        rDotJavaClassPathResolver,
+        IjModuleGraph.AggregationMode.AUTO);
+  }
+
+  public static IjModuleGraph createModuleGraph(
+      ImmutableSet<TargetNode<?>> targets,
+      final ImmutableMap<TargetNode<?>, Path> javaLibraryPaths,
+      Function<? super TargetNode<?>, Optional<Path>> rDotJavaClassPathResolver,
+      IjModuleGraph.AggregationMode aggregationMode) {
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     DefaultIjLibraryFactory.IjLibraryFactoryResolver sourceOnlyResolver =
         new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
@@ -482,7 +596,8 @@ public class IjModuleGraphTest {
     return IjModuleGraph.from(
         TargetGraphFactory.newInstance(targets),
         libraryFactory,
-        moduleFactory);
+        moduleFactory,
+        aggregationMode);
   }
 
   public static IjProjectElement getProjectElementForTarget(

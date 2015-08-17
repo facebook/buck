@@ -19,7 +19,10 @@ package com.facebook.buck.java.intellij;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Ascii;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -82,6 +85,55 @@ public class IjModuleGraph {
   }
 
   /**
+   * Indicates how to aggregate {@link TargetNode}s into {@link IjModule}s.
+   */
+  public enum AggregationMode {
+    AUTO,
+    NONE,
+    SHALLOW,
+    ;
+
+    public static final int MIN_SHALLOW_GRAPH_SIZE = 500;
+    public static final int SHALLOW_MAX_PATH_LENGTH = 3;
+
+    public Function<Path, Path> getBasePathTransform(int graphSize) {
+
+      if (this == AUTO && graphSize < MIN_SHALLOW_GRAPH_SIZE || this == NONE) {
+        return Functions.identity();
+      }
+
+      return new Function<Path, Path>() {
+        @Nullable
+        @Override
+        public Path apply(@Nullable Path input) {
+          if (input == null || input.getNameCount() <= SHALLOW_MAX_PATH_LENGTH) {
+            return input;
+          }
+          return input.subpath(0, SHALLOW_MAX_PATH_LENGTH);
+        }
+      };
+    }
+
+    public static Function<String, AggregationMode> fromStringFunction() {
+      return new Function<String, AggregationMode>() {
+        @Override
+        public AggregationMode apply(String input) {
+          switch (Ascii.toLowerCase(input)) {
+            case "shallow":
+              return SHALLOW;
+            case "none":
+              return NONE;
+            case "auto":
+              return AUTO;
+            default:
+              throw new HumanReadableException("Invalid aggregation mode value %s.", input);
+          }
+        }
+      };
+    }
+  }
+
+  /**
    * Create all the modules we are capable of representing in IntelliJ from the supplied graph.
    *
    * @param targetGraph graph whose nodes will be converted to {@link IjModule}s.
@@ -89,9 +141,10 @@ public class IjModuleGraph {
    * BuildTarget can point to one IjModule (many:one mapping), the BuildTargets which
    * can't be prepresented in IntelliJ are missing from this mapping.
    */
-  public static ImmutableMap<BuildTarget, IjModule> createModules(
+  private static ImmutableMap<BuildTarget, IjModule> createModules(
       TargetGraph targetGraph,
-      IjModuleFactory moduleFactory) {
+      IjModuleFactory moduleFactory,
+      final Function<Path, Path> basePathTransform) {
     ImmutableSet<TargetNode<?>> supportedTargets = FluentIterable.from(targetGraph.getNodes())
         .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
         .toSet();
@@ -100,7 +153,7 @@ public class IjModuleGraph {
             new Function<TargetNode<?>, Path>() {
               @Override
               public Path apply(TargetNode<?> input) {
-                return input.getBuildTarget().getBasePath();
+                return basePathTransform.apply(input.getBuildTarget().getBasePath());
               }
             });
 
@@ -122,6 +175,9 @@ public class IjModuleGraph {
 
   /**
    * @param targetGraph input graph.
+   * @param libraryFactory library factory.
+   * @param moduleFactory module factory.
+   * @param aggregationMode module aggregation mode.
    * @return module graph corresponding to the supplied {@link TargetGraph}. Multiple targets from
    * the same base path are mapped to a single module, therefore an IjModuleGraph edge
    * exists between two modules (Ma, Mb) if a TargetGraph edge existed between a pair of
@@ -130,9 +186,13 @@ public class IjModuleGraph {
   public static IjModuleGraph from(
       final TargetGraph targetGraph,
       final IjLibraryFactory libraryFactory,
-      final IjModuleFactory moduleFactory) {
+      final IjModuleFactory moduleFactory,
+      AggregationMode aggregationMode) {
     final ImmutableMap<BuildTarget, IjModule> rulesToModules =
-        createModules(targetGraph, moduleFactory);
+        createModules(
+            targetGraph,
+            moduleFactory,
+            aggregationMode.getBasePathTransform(targetGraph.getNodes().size()));
     final ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph);
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
