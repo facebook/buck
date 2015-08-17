@@ -325,7 +325,7 @@ public class ProjectCommand extends BuildCommand {
     Optional<IjModuleGraph.AggregationMode> aggregationMode =
         buckConfig.getValue("project", "intellij_aggregation_mode")
         .transform(IjModuleGraph.AggregationMode.fromStringFunction());
-    return aggregationMode.or(IjModuleGraph.AggregationMode.AUTO);
+    return aggregationMode.or(IjModuleGraph.AggregationMode.NONE);
   }
 
   public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
