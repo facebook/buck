@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
@@ -23,14 +24,22 @@ import javax.annotation.Nullable;
 
 public class LineFetcher implements AutoCloseable {
 
-  static final int BUFFER_LENGTH = 8192;
+  static final int BUFFER_LENGTH = 1024;
   private char[] readBuffer = new char[BUFFER_LENGTH];
   private char[] dosLineEndingCheckBuffer = new char[1];
 
   private final PushbackReader inputReader;
 
   LineFetcher(Reader baseReader) {
-    inputReader = new PushbackReader(baseReader, BUFFER_LENGTH + dosLineEndingCheckBuffer.length);
+    inputReader = new PushbackReader(
+        new BufferedReader(baseReader),
+        BUFFER_LENGTH + dosLineEndingCheckBuffer.length);
+  }
+
+  LineFetcher(BufferedReader baseReader) {
+    inputReader = new PushbackReader(
+        baseReader,
+        BUFFER_LENGTH + dosLineEndingCheckBuffer.length);
   }
 
   @Nullable
