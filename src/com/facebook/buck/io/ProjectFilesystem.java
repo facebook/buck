@@ -661,6 +661,16 @@ public class ProjectFilesystem {
         options);
   }
 
+  /**
+   * Copies a file to an output stream.
+   */
+  public void copyToOutputStream(
+      Path pathRelativeToProjectRoot,
+      OutputStream out)
+      throws IOException {
+    Files.copy(getPathForRelativePath(pathRelativeToProjectRoot), out);
+  }
+
   public Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot) {
     Path fileToRead = getPathForRelativePath(pathRelativeToProjectRoot);
     return readFileIfItExists(fileToRead, pathRelativeToProjectRoot.toString());

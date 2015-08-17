@@ -19,11 +19,12 @@ package com.facebook.buck.android;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -34,34 +35,42 @@ import java.nio.file.Path;
 public class ConcatStep implements Step {
 
   public static final String SHORT_NAME = "cat";
-  private final ImmutableList<Path> inputs;
+  private final Supplier<ImmutableList<Path>> inputs;
   private final Path output;
 
   /**
+   * Use this constructor if the files to concatenate are known at the time of step creation.
    * @param inputs The files to be concatenated
    * @param outputPath The desired output path.
    */
   public ConcatStep(ImmutableList<Path> inputs, Path outputPath) {
-    this.inputs = inputs;
+    this.inputs = Suppliers.ofInstance(inputs);
     output = outputPath;
   }
 
   /**
-   * @param inputs The files to be concatenated, in builder form
+   * Use this constructor if the files to concatenate are not known at the time of step creation.
+   * @param inputsBuilder The files to be concatenated, in builder form
    * @param outputPath The desired output path.
    */
-  public ConcatStep(ImmutableList.Builder<Path> inputs, Path outputPath) {
-    this.inputs = inputs.build();
+  public ConcatStep(final ImmutableList.Builder<Path> inputsBuilder, Path outputPath) {
+    this.inputs = Suppliers.memoize(new Supplier<ImmutableList<Path>>() {
+                                      @Override
+                                      public ImmutableList<Path> get() {
+                                        return inputsBuilder.build();
+                                      }
+                                    });
     output = outputPath;
   }
 
   @Override
   public int execute(ExecutionContext context) {
+    ImmutableList<Path> list = inputs.get();
     try (
         OutputStream out = context.getProjectFilesystem().newFileOutputStream(output);
     ) {
-      for (Path p : inputs) {
-        Files.copy(p, out);
+      for (Path p : list) {
+        context.getProjectFilesystem().copyToOutputStream(p, out);
       }
       out.flush();
     } catch (IOException e) {
@@ -78,9 +87,10 @@ public class ConcatStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
+    ImmutableList<Path> list = inputs.get();
     ImmutableList.Builder<String> desc = ImmutableList.builder();
     desc.add(getShortName());
-    for (Path p : inputs) {
+    for (Path p : list) {
       desc.add(p.toString());
     }
     desc.add(">");
