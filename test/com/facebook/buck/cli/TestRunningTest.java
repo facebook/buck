@@ -158,8 +158,9 @@ public class TestRunningTest {
     ImmutableSet<String> result = TestRunning.getPathToSourceFolders(
         javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
 
+    String expected = javaLibrary.getProjectFilesystem().getRootPath().resolve("package/src") + "/";
     assertEquals("All non-generated source files are under one source tmp.",
-        ImmutableSet.of("package/src/"), result);
+        ImmutableSet.of(expected), result);
 
     verify(defaultJavaPackageFinder);
   }
@@ -222,8 +223,13 @@ public class TestRunningTest {
     ImmutableSet<String> result = TestRunning.getPathToSourceFolders(
         javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
 
+    Path rootPath = javaLibrary.getProjectFilesystem().getRootPath();
+    ImmutableSet<String> expected = ImmutableSet.of(
+        rootPath.resolve("package/src-gen").toString() + "/",
+        rootPath.resolve("package/src").toString() + "/");
+
     assertEquals("The non-generated source files are under two different source folders.",
-        ImmutableSet.of("package/src-gen/", "package/src/"), result);
+        expected, result);
 
     verify(defaultJavaPackageFinder);
   }

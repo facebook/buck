@@ -26,7 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Functions;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -46,6 +46,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nullable;
 
 @SuppressWarnings("unused") // Many unused fields in sample DTO objects.
 public class ConstructorArgMarshallerTest {
@@ -619,7 +621,14 @@ public class ConstructorArgMarshallerTest {
             ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
 
     ImmutableSet<String> observedValues = FluentIterable.from(dto.srcs)
-        .transform(Functions.toStringFunction())
+        .transform(
+            new Function<SourcePath, String>() {
+              @Nullable
+              @Override
+              public String apply(SourcePath input) {
+                return ((PathSourcePath) input).getRelativePath().toString();
+              }
+            })
         .toSet();
     assertEquals(
         ImmutableSet.of(

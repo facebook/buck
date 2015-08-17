@@ -304,12 +304,14 @@ public class CxxPreprocessablesTest {
         .build();
     BuildRule top = createFakeCxxPreprocessorDep("//:top", pathResolver, topInput, bottom);
 
+
+    Path rootPath = bottom.getProjectFilesystem().getRootPath();
     exception.expect(CxxHeaders.ConflictingHeadersException.class);
     exception.expectMessage(String.format(
             "'%s' maps to both [%s, %s].",
             Paths.get("prefix/file.h"),
-            Paths.get("bottom/file.h"),
-            Paths.get("top/file.h")));
+            rootPath.resolve("bottom/file.h"),
+            rootPath.resolve("top/file.h")));
 
     CxxPreprocessorInput.concat(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(

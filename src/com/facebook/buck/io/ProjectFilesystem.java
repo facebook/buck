@@ -155,7 +155,7 @@ public class ProjectFilesystem {
       ImmutableSet<Path> ignorePaths) {
     Preconditions.checkArgument(Files.isDirectory(projectRoot));
     Preconditions.checkState(vfs.equals(projectRoot.getFileSystem()));
-    this.projectRoot = projectRoot;
+    this.projectRoot = projectRoot.toAbsolutePath();
     this.pathAbsolutifier = new Function<Path, Path>() {
       @Override
       public Path apply(Path path) {

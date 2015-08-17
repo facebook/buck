@@ -110,7 +110,10 @@ public class RobolectricTestRuleTest {
 
     String result = robolectricTest.getRobolectricResourceDirectories(resDeps);
     for (HasAndroidResourceDeps dep : resDeps) {
-      assertTrue(result.contains(dep.getRes().toString()));
+      // Every value should be a PathSourcePath
+      assertTrue(
+          result + " does not contain " + dep.getRes(),
+          result.contains(((PathSourcePath) dep.getRes()).getRelativePath().toString()));
     }
   }
 

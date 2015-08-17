@@ -67,6 +67,7 @@ public class NdkLibraryTest {
         resolver,
         Optional.<Path>absent());
     executionContext = TestExecutionContext.newBuilder()
+        .setProjectFilesystem(projectFilesystem)
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
         .build();
     ndkBuildCommand = new ExecutableFinder().getOptionalExecutable(
@@ -112,10 +113,11 @@ public class NdkLibraryTest {
                 ndkBuildCommand,
                 Runtime.getRuntime().availableProcessors(),
                 Paths.get(basePath).toString(),
-                /* APP_PROJECT_PATH */ libbase + File.separator,
-                /* APP_BUILD_SCRIPT */ NdkLibraryDescription.getGeneratedMakefilePath(target),
-                /* NDK_OUT */ libbase + File.separator,
-                /* NDK_LIBS_OUT */ Paths.get(libbase, "libs"),
+                /* APP_PROJECT_PATH */ projectFilesystem.resolve(libbase) + File.separator,
+                /* APP_BUILD_SCRIPT */ projectFilesystem.resolve(
+                    NdkLibraryDescription.getGeneratedMakefilePath(target)),
+                /* NDK_OUT */ projectFilesystem.resolve(libbase) + File.separator,
+                /* NDK_LIBS_OUT */ projectFilesystem.resolve(Paths.get(libbase, "libs")),
                 /* host-echo-build-step */ Platform.detect() == Platform.WINDOWS ? "@REM" : "@#")
         ),
         steps.subList(0, 1),
