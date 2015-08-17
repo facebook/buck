@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -39,26 +38,28 @@ class ProguardTranslatorFactory {
 
   private final Optional<Map<String, String>> rawMap;
 
-  private ProguardTranslatorFactory(Optional<Map<String, String>> rawMap) {
+  private ProguardTranslatorFactory(
+      Optional<Map<String, String>> rawMap) {
     this.rawMap = rawMap;
   }
 
   static ProguardTranslatorFactory create(
-      ExecutionContext context,
+      ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile)
       throws IOException {
     return new ProguardTranslatorFactory(
-        loadOptionalRawMap(context, proguardFullConfigFile, proguardMappingFile));
+        loadOptionalRawMap(filesystem, proguardFullConfigFile, proguardMappingFile));
   }
 
   @VisibleForTesting
-  static ProguardTranslatorFactory createForTest(Optional<Map<String, String>> rawMap) {
+  static ProguardTranslatorFactory createForTest(
+      Optional<Map<String, String>> rawMap) {
     return new ProguardTranslatorFactory(rawMap);
   }
 
   private static Optional<Map<String, String>> loadOptionalRawMap(
-      ExecutionContext context,
+      ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile)
       throws IOException {
@@ -66,18 +67,18 @@ class ProguardTranslatorFactory {
       return Optional.absent();
     }
 
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     Path pathToProguardConfig = proguardFullConfigFile.get();
 
     // Proguard doesn't print a mapping when obfuscation is disabled.
     boolean obfuscationSkipped = Iterables.any(
-        projectFilesystem.readLines(pathToProguardConfig),
+        filesystem.readLines(pathToProguardConfig),
         Predicates.equalTo("-dontobfuscate"));
     if (obfuscationSkipped) {
       return Optional.absent();
     }
 
-    List<String> lines = projectFilesystem.readLines(proguardMappingFile.get());
+    Path mappingFile = proguardMappingFile.get();
+    List<String> lines = filesystem.readLines(mappingFile);
     return Optional.of(ProguardMapping.readClassMapping(lines));
   }
 

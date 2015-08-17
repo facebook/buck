@@ -179,7 +179,12 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
     steps.add(new MakeCleanDirectoryStep(pathToNativeLibsAssets));
 
     for (SourcePath nativeLibDir : nativeLibDirectories.asList().reverse()) {
-      copyNativeLibrary(getResolver().getPath(nativeLibDir), pathToNativeLibs, cpuFilters, steps);
+      copyNativeLibrary(
+          getProjectFilesystem(),
+          getResolver().getPath(nativeLibDir),
+          pathToNativeLibs,
+          cpuFilters,
+          steps);
     }
 
     addStepsForCopyingNativeLibrariesOrAssets(filteredNativeLibraries, pathToNativeLibs, steps);
@@ -229,7 +234,9 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
     return null;
   }
 
-  public static void copyNativeLibrary(Path sourceDir,
+  public static void copyNativeLibrary(
+      final ProjectFilesystem filesystem,
+      Path sourceDir,
       final Path destinationDir,
       ImmutableSet<TargetCpuType> cpuFilters,
       ImmutableList.Builder<Step> steps) {
@@ -257,7 +264,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
             new Step() {
               @Override
               public int execute(ExecutionContext context) {
-                if (!context.getProjectFilesystem().exists(libSourceDir)) {
+                // TODO(simons): Using a projectfilesystem here is almost definitely wrong.
+                // This is because each library may come from different build rules, which may be in
+                // different repos --- this check works by coincidence.
+                if (!filesystem.exists(libSourceDir)) {
                   return 0;
                 }
                 if (mkDirStep.execute(context) == 0 && copyStep.execute(context) == 0) {

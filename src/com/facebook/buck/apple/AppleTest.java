@@ -182,7 +182,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext executionContext) {
-    return executionContext.getProjectFilesystem().exists(testOutputPath);
+    return getProjectFilesystem().exists(testOutputPath);
   }
 
   @Override
@@ -194,19 +194,19 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       TestSelectorList testSelectorList,
       TestRule.TestReportingCallback testReportingCallback) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    Path resolvedTestBundleDirectory = executionContext.getProjectFilesystem().resolve(
+    Path resolvedTestBundleDirectory = getProjectFilesystem().resolve(
         Preconditions.checkNotNull(testBundle.getPathToOutput()));
 
-    Path pathToTestOutput = executionContext.getProjectFilesystem().resolve(
+    Path pathToTestOutput = getProjectFilesystem().resolve(
         getPathToTestOutputDirectory());
     steps.add(new MakeCleanDirectoryStep(pathToTestOutput));
 
-    Path resolvedTestOutputPath = executionContext.getProjectFilesystem().resolve(
+    Path resolvedTestOutputPath = getProjectFilesystem().resolve(
         testOutputPath);
 
     Optional<Path> testHostAppPath = Optional.absent();
     if (testHostApp.isPresent()) {
-      Path resolvedTestHostAppDirectory = executionContext.getProjectFilesystem().resolve(
+      Path resolvedTestHostAppDirectory = getProjectFilesystem().resolve(
           Preconditions.checkNotNull(testHostApp.get().getPathToOutput()));
       testHostAppPath = Optional.of(
           resolvedTestHostAppDirectory.resolve(
@@ -234,7 +234,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       Path xctoolBinaryPath;
 
       if (xctoolZipRule.isPresent()) {
-        Path resolvedXctoolUnzipDirectory = executionContext.getProjectFilesystem().resolve(
+        Path resolvedXctoolUnzipDirectory = getProjectFilesystem().resolve(
             xctoolUnzipDirectory);
         steps.add(new MakeCleanDirectoryStep(resolvedXctoolUnzipDirectory));
         steps.add(
@@ -259,7 +259,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
               xctoolStdoutReader));
     } else {
       Tool testRunningTool;
-      if (testBundleExtension == "xctest") {
+      if (testBundleExtension.equals("xctest")) {
         testRunningTool = xctest;
       } else if (otest.isPresent()) {
         testRunningTool = otest.get();
@@ -271,7 +271,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       steps.add(
           new XctestRunTestsStep(
               testRunningTool.getCommandPrefix(getResolver()),
-              (testBundleExtension == "xctest" ? "-XCTest" : "-SenTest"),
+              (testBundleExtension.equals("xctest") ? "-XCTest" : "-SenTest"),
               resolvedTestBundleDirectory,
               resolvedTestOutputPath));
     }
@@ -293,7 +293,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
           // their output; no need to parse the same output again.
           testCaseSummaries = xctoolStdoutReader.get().getTestCaseSummaries();
         } else {
-          Path resolvedOutputPath = executionContext.getProjectFilesystem().resolve(testOutputPath);
+          Path resolvedOutputPath = getProjectFilesystem().resolve(testOutputPath);
           try (BufferedReader reader =
               Files.newBufferedReader(resolvedOutputPath, StandardCharsets.UTF_8)) {
             if (useXctest) {

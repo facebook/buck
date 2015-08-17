@@ -102,6 +102,7 @@ public class DummyRDotJava extends AbstractBuildRule
       javaSourceFilePaths = ImmutableSet.of(emptyRDotJava);
     } else {
       MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
+          getProjectFilesystem(),
           androidResourceDeps,
           rDotJavaSrcFolder);
       steps.add(mergeStep);

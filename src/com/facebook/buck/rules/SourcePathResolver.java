@@ -43,6 +43,7 @@ public class SourcePathResolver {
     this.ruleResolver = ruleResolver;
   }
 
+  // TODO(simons): This must always return an absolute path
   public Path getPath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
       return ((PathSourcePath) sourcePath).getRelativePath();

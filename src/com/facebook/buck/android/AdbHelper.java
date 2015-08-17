@@ -484,8 +484,7 @@ public class AdbHelper {
       IOException {
     CollectingOutputReceiver receiver = new CollectingOutputReceiver();
     device.executeShellCommand(command + ECHO_COMMAND_SUFFIX, receiver);
-    String realOutput = checkReceiverOutput(command, receiver);
-    return realOutput;
+    return checkReceiverOutput(command, receiver);
   }
 
   /**
@@ -727,7 +726,7 @@ public class AdbHelper {
     // Might need the package name and activities from the AndroidManifest.
     Path pathToManifest = installableApk.getManifestPath();
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(
-        pathToManifest, context.getProjectFilesystem());
+        pathToManifest, installableApk.getProjectFilesystem());
 
     if (activity == null) {
       // Get list of activities that show up in the launcher.
@@ -908,20 +907,16 @@ public class AdbHelper {
           AdbHelper.INSTALL_TIMEOUT,
           TimeUnit.MILLISECONDS);
       return receiver.getErrorMessage();
-    } catch (TimeoutException e) {
-      throw new InstallException(e);
-    } catch (AdbCommandRejectedException e) {
-      throw new InstallException(e);
-    } catch (ShellCommandUnresponsiveException e) {
-      throw new InstallException(e);
-    } catch (IOException e) {
+    } catch (
+        AdbCommandRejectedException |
+        IOException |
+        ShellCommandUnresponsiveException |
+        TimeoutException e) {
       throw new InstallException(e);
     }
   }
 
-  public static String tryToExtractPackageNameFromManifest(
-      InstallableApk androidBinaryRule,
-      ExecutionContext context) {
+  public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
     Path pathToManifest = androidBinaryRule.getManifestPath();
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file
@@ -933,7 +928,8 @@ public class AdbHelper {
     }
 
     try {
-      return DefaultAndroidManifestReader.forPath(pathToManifest, context.getProjectFilesystem())
+      return DefaultAndroidManifestReader
+          .forPath(pathToManifest, androidBinaryRule.getProjectFilesystem())
           .getPackage();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
@@ -941,8 +937,7 @@ public class AdbHelper {
   }
 
   public static String tryToExtractInstrumentationTestRunnerFromManifest(
-      InstallableApk androidBinaryRule,
-      ExecutionContext context) {
+      InstallableApk androidBinaryRule) {
     Path pathToManifest = androidBinaryRule.getManifestPath();
 
     if (!Files.isRegularFile(pathToManifest)) {
@@ -952,7 +947,8 @@ public class AdbHelper {
     }
 
     try {
-      return DefaultAndroidManifestReader.forPath(pathToManifest, context.getProjectFilesystem())
+      return DefaultAndroidManifestReader
+          .forPath(pathToManifest, androidBinaryRule.getProjectFilesystem())
           .getInstrumentationTestRunner();
     } catch (IOException e) {
       throw new HumanReadableException("Could not extract package name from %s", pathToManifest);

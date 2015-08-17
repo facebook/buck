@@ -16,7 +16,6 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbiRule;
@@ -104,15 +103,14 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
 
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-            ProjectFilesystem filesystem = context.getProjectFilesystem();
             return getBundleScript(
                 getResolver().getPath(jsPackager),
-                filesystem.resolve(getResolver().getPath(entryPath)),
+                getProjectFilesystem().resolve(getResolver().getPath(entryPath)),
                 platform,
                 isDevMode,
-                filesystem.resolve(jsOutput).toString(),
-                filesystem.resolve(resource).toString(),
-                filesystem.resolve(sourceMapOutput).toString());
+                getProjectFilesystem().resolve(jsOutput).toString(),
+                getProjectFilesystem().resolve(resource).toString(),
+                getProjectFilesystem().resolve(sourceMapOutput).toString());
           }
         });
     buildableContext.recordArtifact(jsOutputDir);

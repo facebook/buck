@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -101,8 +100,7 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext executionContext) {
-    ProjectFilesystem filesystem = executionContext.getProjectFilesystem();
-    return filesystem.isFile(getPathToTestResults());
+    return getProjectFilesystem().isFile(getPathToTestResults());
   }
 
   @Override

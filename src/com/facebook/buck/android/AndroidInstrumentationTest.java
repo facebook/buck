@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.android.ddmlib.IDevice;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -25,15 +25,15 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
-import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
@@ -43,8 +43,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
-import com.android.ddmlib.IDevice;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -129,7 +127,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext context) {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     List<IDevice> devices;
     AdbHelper adbHelper = AdbHelper.get(context, true);
     try {
@@ -140,11 +137,11 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     // It might happen that a new device is attached when re-running the tests,
     // in which case we want to re-run the tests with the new device included.
     for (IDevice device : devices) {
-      Path testResultPath = filesystem.getPathForRelativePath(
+      Path testResultPath = getProjectFilesystem().getPathForRelativePath(
           getPathToTestOutputDirectory().resolve(
               BuckXmlTestRunListener.TEST_RESULT_FILE_PREFIX +
-              device.getSerialNumber() +
-              BuckXmlTestRunListener.TEST_RESULT_FILE_SUFFIX));
+                  device.getSerialNumber() +
+                  BuckXmlTestRunListener.TEST_RESULT_FILE_SUFFIX));
       if (!testResultPath.toFile().exists()) {
         return false;
       }
@@ -183,7 +180,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       @Override
       public TestResults call() throws Exception {
         final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-        ProjectFilesystem filesystem = context.getProjectFilesystem();
         List<IDevice> devices;
         AdbHelper adbHelper = AdbHelper.get(context, true);
         try {
@@ -196,11 +192,11 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         }
 
         for (IDevice device : devices) {
-          Path testResultPath = filesystem.getPathForRelativePath(
+          Path testResultPath = getProjectFilesystem().getPathForRelativePath(
               getPathToTestOutputDirectory().resolve(
                   BuckXmlTestRunListener.TEST_RESULT_FILE_PREFIX +
-                  device.getSerialNumber() +
-                  BuckXmlTestRunListener.TEST_RESULT_FILE_SUFFIX));
+                      device.getSerialNumber() +
+                      BuckXmlTestRunListener.TEST_RESULT_FILE_SUFFIX));
           summaries.add(
               XmlTestResultParser.parseAndroid(testResultPath, device.getSerialNumber()));
         }

@@ -89,7 +89,7 @@ public class AndroidBuildConfigTest {
         ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""));
     EasyMock.replay(projectFilesystem);
 
-    ReadValuesStep step = new ReadValuesStep(pathToValues);
+    ReadValuesStep step = new ReadValuesStep(projectFilesystem, pathToValues);
     ExecutionContext context = TestExecutionContext
         .newBuilder()
         .setProjectFilesystem(projectFilesystem)
@@ -97,7 +97,7 @@ public class AndroidBuildConfigTest {
     int exitCode = step.execute(context);
     assertEquals(0, exitCode);
     assertEquals(
-        BuildConfigFields.fromFields(ImmutableList.<BuildConfigFields.Field>of(
+        BuildConfigFields.fromFields(ImmutableList.of(
             BuildConfigFields.Field.of("boolean", "DEBUG", "false"),
             BuildConfigFields.Field.of("String", "FOO", "\"BAR\""))),
         step.get());

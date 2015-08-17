@@ -140,12 +140,12 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
 
     @Override
     public int execute(ExecutionContext context) {
-      Iterable<CxxCompilationDatabaseEntry> entries = createEntries(context);
+      Iterable<CxxCompilationDatabaseEntry> entries = createEntries();
       return writeOutput(entries, context);
     }
 
     @VisibleForTesting
-    Iterable<CxxCompilationDatabaseEntry> createEntries(ExecutionContext context) {
+    Iterable<CxxCompilationDatabaseEntry> createEntries() {
       List<CxxCompilationDatabaseEntry> entries = Lists.newArrayList();
       for (CxxPreprocessAndCompile compileRule : compileRules) {
         Optional<CxxPreprocessAndCompile> preprocessRule = Optional.absent();
@@ -160,26 +160,26 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
             throw new HumanReadableException("Can't find preprocess rule for " + compileRule);
           }
         }
-        entries.add(createEntry(context, preprocessRule, compileRule));
+        entries.add(createEntry(preprocessRule, compileRule));
       }
       return entries;
     }
 
     private CxxCompilationDatabaseEntry createEntry(
-        ExecutionContext context,
         Optional<CxxPreprocessAndCompile> preprocessRule,
         CxxPreprocessAndCompile compileRule) {
-      ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-      SourcePath inputSourcePath = preprocessRule.isPresent() ? preprocessRule.get().getInput() :
-          compileRule.getInput();
-      String fileToCompile = projectFilesystem
+
+      SourcePath inputSourcePath = preprocessRule.or(compileRule).getInput();
+      ProjectFilesystem inputFilesystem = preprocessRule.or(compileRule).getProjectFilesystem();
+
+      String fileToCompile = inputFilesystem
           .resolve(getResolver().getPath(inputSourcePath))
           .toString();
       ImmutableList<String> args = preprocessRule.isPresent() ?
           compileRule.getCompileCommandCombinedWithPreprocessBuildRule(preprocessRule.get()) :
           compileRule.getCommand();
       return new CxxCompilationDatabaseEntry(
-          /* directory */ projectFilesystem.resolve(getBuildTarget().getBasePath()).toString(),
+          /* directory */ getProjectFilesystem().resolve(getBuildTarget().getBasePath()).toString(),
           fileToCompile,
           args);
     }
@@ -189,7 +189,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
         ExecutionContext context) {
       Gson gson = new Gson();
       try {
-        OutputStream outputStream = context.getProjectFilesystem().newFileOutputStream(
+        OutputStream outputStream = getProjectFilesystem().newFileOutputStream(
             getPathToOutput());
         outputStream.write(gson.toJson(entries).getBytes());
         outputStream.close();

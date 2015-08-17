@@ -180,9 +180,7 @@ public class TestRunning {
       grouper = null;
     }
 
-    TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(
-        executionContext.getProjectFilesystem(),
-        buildEngine);
+    TestRuleKeyFileHelper testRuleKeyFileHelper = new TestRuleKeyFileHelper(buildEngine);
     final AtomicInteger lastReportedTestSequenceNumber = new AtomicInteger();
     final List<TestRun> separateTestRuns = Lists.newArrayList();
     List<TestRun> parallelTestRuns = Lists.newArrayList();

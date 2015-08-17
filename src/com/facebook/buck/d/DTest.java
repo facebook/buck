@@ -16,7 +16,6 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
@@ -27,6 +26,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -115,9 +115,8 @@ public class DTest extends DLinkable implements TestRule {
     return new BuildableProperties(BuildableProperties.Kind.TEST);
   }
 
-  private ImmutableList<String> getShellCommand(
-      ExecutionContext context) {
-    return getExecutableCommand(context.getProjectFilesystem());
+  private ImmutableList<String> getShellCommand() {
+    return getExecutableCommand(getProjectFilesystem());
   }
 
   @Override
@@ -127,8 +126,7 @@ public class DTest extends DLinkable implements TestRule {
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext executionContext) {
-    ProjectFilesystem filesystem = executionContext.getProjectFilesystem();
-    return filesystem.isFile(getPathToTestOutput());
+    return getProjectFilesystem().isFile(getPathToTestOutput());
   }
 
   @Override
@@ -145,7 +143,7 @@ public class DTest extends DLinkable implements TestRule {
         try {
           int exitCode = Integer.parseInt(
               new String(Files.readAllBytes(
-                  executionContext.getProjectFilesystem().resolve(
+                  getProjectFilesystem().resolve(
                       getPathToTestExitCode()))));
           if (exitCode == 0) {
             resultType = ResultType.SUCCESS;
@@ -155,7 +153,7 @@ public class DTest extends DLinkable implements TestRule {
           resultType = ResultType.FAILURE;
         }
 
-        String testOutput = executionContext.getProjectFilesystem().readFileIfItExists(
+        String testOutput = getProjectFilesystem().readFileIfItExists(
             getPathToTestOutput()).or("");
         String message = "";
         String stackTrace = "";
@@ -191,7 +189,7 @@ public class DTest extends DLinkable implements TestRule {
 
         return new TestResults(
             getBuildTarget(),
-            ImmutableList.<TestCaseSummary>of(
+            ImmutableList.of(
                 new TestCaseSummary(
                     "main",
                     ImmutableList.of(summary))
@@ -216,7 +214,7 @@ public class DTest extends DLinkable implements TestRule {
       return ImmutableList.of(
           new MakeCleanDirectoryStep(getPathToTestOutputDirectory()),
           new DTestStep(
-              getShellCommand(executionContext),
+              getShellCommand(),
               getPathToTestExitCode(),
               getPathToTestOutput()));
     }

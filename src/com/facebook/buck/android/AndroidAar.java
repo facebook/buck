@@ -133,6 +133,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     // move native assets into tmp folder under assets/lib/
     for (SourcePath dir : nativeLibAssetsDirectories) {
       CopyNativeLibraries.copyNativeLibrary(
+          getProjectFilesystem(),
           getResolver().getPath(dir),
           temp.resolve("assets").resolve("lib"),
           ImmutableSet.<TargetCpuType>of(), commands);

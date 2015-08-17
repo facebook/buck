@@ -98,7 +98,16 @@ public class SplitZipStepTest {
   @Test
   public void testRequiredInPrimaryZipPredicate() throws IOException {
     Path primaryDexClassesFile = Paths.get("the/manifest.txt");
+    List<String> linesInManifestFile = ImmutableList.of(
+        "com/google/common/collect/ImmutableSortedSet",
+        "  com/google/common/collect/ImmutableSet",
+        "# com/google/common/collect/ImmutableMap");
+    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
+        .andReturn(linesInManifestFile);
+
     SplitZipStep splitZipStep = new SplitZipStep(
+        projectFilesystem,
         /* inputPathsToSplit */ ImmutableSet.<Path>of(),
         /* secondaryJarMetaPath */ Paths.get(""),
         /* primaryJarPath */ Paths.get(""),
@@ -123,14 +132,7 @@ public class SplitZipStepTest {
         Optional.<Path>absent(),
         Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
-    List<String> linesInManifestFile = ImmutableList.of(
-        "com/google/common/collect/ImmutableSortedSet",
-        "  com/google/common/collect/ImmutableSet",
-        "# com/google/common/collect/ImmutableMap");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
-        .andReturn(linesInManifestFile);
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem);
     EasyMock.replay(projectFilesystem, context);
@@ -170,10 +172,36 @@ public class SplitZipStepTest {
 
   @Test
   public void testRequiredInPrimaryZipPredicateWithProguard() throws IOException {
+    List<String> linesInMappingFile = ImmutableList.of(
+        "foo.bar.MappedPrimary -> foo.bar.a:",
+        "foo.bar.MappedSecondary -> foo.bar.b:",
+        "foo.bar.UnmappedPrimary -> foo.bar.UnmappedPrimary:",
+        "foo.bar.UnmappedSecondary -> foo.bar.UnmappedSecondary:",
+        "foo.primary.MappedPackage -> x.a:",
+        "foo.secondary.MappedPackage -> x.b:",
+        "foo.primary.UnmappedPackage -> foo.primary.UnmappedPackage:");
+    List<String> linesInManifestFile = ImmutableList.of(
+        // Actual primary dex classes.
+        "foo/bar/MappedPrimary",
+        "foo/bar/UnmappedPrimary",
+        // Red herrings!
+        "foo/bar/b",
+        "x/b");
+
     Path proguardConfigFile = Paths.get("the/configuration.txt");
     Path proguardMappingFile = Paths.get("the/mapping.txt");
     Path primaryDexClassesFile = Paths.get("the/manifest.txt");
+
+    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
+        .andReturn(linesInManifestFile);
+    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
+        .andReturn(ImmutableList.<String>of());
+    EasyMock.expect(projectFilesystem.readLines(proguardMappingFile))
+        .andReturn(linesInMappingFile);
+
     SplitZipStep splitZipStep = new SplitZipStep(
+        projectFilesystem,
         /* inputPathsToSplit */ ImmutableSet.<Path>of(),
         /* secondaryJarMetaPath */ Paths.get(""),
         /* primaryJarPath */ Paths.get(""),
@@ -198,35 +226,14 @@ public class SplitZipStepTest {
         Optional.<Path>absent(),
         Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
-    List<String> linesInMappingFile = ImmutableList.of(
-        "foo.bar.MappedPrimary -> foo.bar.a:",
-        "foo.bar.MappedSecondary -> foo.bar.b:",
-        "foo.bar.UnmappedPrimary -> foo.bar.UnmappedPrimary:",
-        "foo.bar.UnmappedSecondary -> foo.bar.UnmappedSecondary:",
-        "foo.primary.MappedPackage -> x.a:",
-        "foo.secondary.MappedPackage -> x.b:",
-        "foo.primary.UnmappedPackage -> foo.primary.UnmappedPackage:");
-    List<String> linesInManifestFile = ImmutableList.of(
-        // Actual primary dex classes.
-        "foo/bar/MappedPrimary",
-        "foo/bar/UnmappedPrimary",
-        // Red herrings!
-        "foo/bar/b",
-        "x/b");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
-        .andReturn(linesInManifestFile);
-    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
-        .andReturn(ImmutableList.<String>of());
-    EasyMock.expect(projectFilesystem.readLines(proguardMappingFile))
-        .andReturn(linesInMappingFile);
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
     EasyMock.replay(projectFilesystem, context);
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
-        context, Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+        projectFilesystem,
+        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
@@ -262,7 +269,13 @@ public class SplitZipStepTest {
   public void testNonObfuscatedBuild() throws IOException {
     Path proguardConfigFile = Paths.get("the/configuration.txt");
     Path proguardMappingFile = Paths.get("the/mapping.txt");
+
+    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
+        .andReturn(ImmutableList.of("-dontobfuscate"));
+
     SplitZipStep splitZipStep = new SplitZipStep(
+        projectFilesystem,
         /* inputPathsToSplit */ ImmutableSet.<Path>of(),
         /* secondaryJarMetaPath */ Paths.get(""),
         /* primaryJarPath */ Paths.get(""),
@@ -288,15 +301,13 @@ public class SplitZipStepTest {
         Optional.<Path>absent(),
         /* pathToReportDir */ Paths.get(""));
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
-        .andReturn(ImmutableList.of("-dontobfuscate"));
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
     EasyMock.replay(projectFilesystem, context);
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
-        context, Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+        projectFilesystem,
+        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(

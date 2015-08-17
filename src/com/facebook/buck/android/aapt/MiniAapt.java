@@ -92,15 +92,18 @@ public class MiniAapt implements Step {
     }
   };
 
+  private final ProjectFilesystem filesystem;
   private final Path resDirectory;
   private final Path pathToTextSymbolsFile;
   private final ImmutableSet<Path> pathsToSymblolsOfDeps;
   private final AaptResourceCollector resourceCollector;
 
   public MiniAapt(
+      ProjectFilesystem filesystem,
       Path resDirectory,
       Path pathToTextSymbolsFile,
       ImmutableSet<Path> pathsToSymblolsOfDeps) {
+    this.filesystem = filesystem;
     this.resDirectory = resDirectory;
     this.pathToTextSymbolsFile = pathToTextSymbolsFile;
     this.pathsToSymblolsOfDeps = pathsToSymblolsOfDeps;
@@ -133,7 +136,6 @@ public class MiniAapt implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
 
     try {

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.gwt;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -150,21 +149,21 @@ public class GwtBinary extends AbstractBuildRule {
 
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-
         ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
         javaArgsBuilder.add("java");
         javaArgsBuilder.add("-Dgwt.normalizeTimestamps=true");
         javaArgsBuilder.addAll(vmArgs);
         javaArgsBuilder.add(
             "-classpath", Joiner.on(File.pathSeparator).join(
-                Iterables.transform(getClasspathEntries(), projectFilesystem.getAbsolutifier())),
+                Iterables.transform(
+                    getClasspathEntries(),
+                    getProjectFilesystem().getAbsolutifier())),
             GWT_COMPILER_CLASS,
-            "-war", projectFilesystem.resolve(getPathToOutput()).toString(),
+            "-war", getProjectFilesystem().resolve(getPathToOutput()).toString(),
             "-style", style.name(),
             "-optimize", String.valueOf(optimize),
             "-localWorkers", String.valueOf(localWorkers),
-            "-deploy", projectFilesystem.resolve(deployDirectory).toString());
+            "-deploy", getProjectFilesystem().resolve(deployDirectory).toString());
         if (draftCompile) {
           javaArgsBuilder.add("-draftCompile");
         }

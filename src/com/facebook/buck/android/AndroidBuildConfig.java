@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -164,7 +165,7 @@ public class AndroidBuildConfig extends AbstractBuildRule {
     Supplier<BuildConfigFields> totalFields;
     if (valuesFile.isPresent()) {
       final ReadValuesStep readValuesStep =
-          new ReadValuesStep(getResolver().getPath(valuesFile.get()));
+          new ReadValuesStep(getProjectFilesystem(), getResolver().getPath(valuesFile.get()));
       steps.add(readValuesStep);
       totalFields = Suppliers.memoize(new Supplier<BuildConfigFields>() {
         @Override
@@ -209,13 +210,15 @@ public class AndroidBuildConfig extends AbstractBuildRule {
   static class ReadValuesStep extends AbstractExecutionStep
       implements Supplier<BuildConfigFields> {
 
+    private final ProjectFilesystem filesystem;
     private final Path valuesFile;
 
     @Nullable
     private BuildConfigFields values;
 
-    public ReadValuesStep(Path valuesFile) {
+    public ReadValuesStep(ProjectFilesystem filesystem, Path valuesFile) {
       super("read values from " + valuesFile.toString());
+      this.filesystem = filesystem;
       this.valuesFile = valuesFile;
     }
 
@@ -223,7 +226,7 @@ public class AndroidBuildConfig extends AbstractBuildRule {
     public int execute(ExecutionContext context) {
       List<String> lines;
       try {
-        lines = context.getProjectFilesystem().readLines(valuesFile);
+        lines = filesystem.readLines(valuesFile);
       } catch (IOException e) {
         context.logError(e, "Error reading %s.", valuesFile);
         return 1;

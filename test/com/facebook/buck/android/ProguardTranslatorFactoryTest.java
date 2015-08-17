@@ -55,7 +55,8 @@ public class ProguardTranslatorFactoryTest {
     EasyMock.replay(projectFilesystem, context);
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
-        context, Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+        projectFilesystem,
+        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
     checkMapping(translatorFactory, "foo/bar/MappedPrimary", "foo/bar/a");
     checkMapping(translatorFactory, "foo/bar/UnmappedPrimary", "foo/bar/UnmappedPrimary");
     checkMapping(translatorFactory, "foo/primary/MappedPackage", "x/a");
@@ -79,7 +80,8 @@ public class ProguardTranslatorFactoryTest {
     EasyMock.replay(projectFilesystem, context);
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
-        context, Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+        projectFilesystem,
+        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
     checkMapping(translatorFactory, "anything", "anything");
 
     EasyMock.verify(projectFilesystem, context);

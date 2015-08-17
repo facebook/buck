@@ -215,7 +215,7 @@ public class AaptPackageResources extends AbstractBuildRule
           createAllAssetsDirectory(
               ImmutableSet.copyOf(getResolver().getAllPaths(assetsDirectories)),
               commands,
-              context.getProjectFilesystem());
+              getProjectFilesystem());
         } catch (IOException e) {
           context.logError(e, "Error creating all assets directory in %s.", getBuildTarget());
           return 1;
@@ -343,6 +343,7 @@ public class AaptPackageResources extends AbstractBuildRule
 
     Path rDotTxtDir = getPathToRDotTxtDir();
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
+        getProjectFilesystem(),
         resourceDeps,
         rDotTxtDir.resolve("R.txt"),
         shouldWarnIfMissingResource,

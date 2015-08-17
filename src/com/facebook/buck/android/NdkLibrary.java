@@ -162,7 +162,7 @@ public class NdkLibrary extends AbstractBuildRule
       @Override
       public int execute(ExecutionContext context) {
         try {
-          Set<Path> unstrippedSharedObjs = context.getProjectFilesystem()
+          Set<Path> unstrippedSharedObjs = getProjectFilesystem()
               .getFilesUnderPath(
                   buildArtifactsDirectory,
                   new Predicate<Path>() {

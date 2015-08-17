@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.aapt;
 
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
@@ -148,9 +148,11 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     return Optional.of(new RDotTxtEntry(idType, type, name, idValue));
   }
 
-  public static Iterable<RDotTxtEntry> readResources(ExecutionContext context, Path rDotTxt)
+  public static Iterable<RDotTxtEntry> readResources(
+      ProjectFilesystem owningFilesystem,
+      Path rDotTxt)
       throws IOException {
-    return FluentIterable.from(context.getProjectFilesystem().readLines(rDotTxt))
+    return FluentIterable.from(owningFilesystem.readLines(rDotTxt))
         .filter(MoreStrings.NON_EMPTY)
         .transform(RDotTxtEntry.TO_ENTRY);
   }

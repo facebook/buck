@@ -296,7 +296,7 @@ public class AndroidResource extends AbstractBuildRule
           try {
             androidManifestReader = DefaultAndroidManifestReader.forPath(
                 getResolver().getPath(manifestFile),
-                context.getProjectFilesystem());
+                getProjectFilesystem());
           } catch (IOException e) {
             context.logError(e, "Failed to create AndroidManifestReader for %s.", manifestFile);
             return 1;
@@ -319,6 +319,7 @@ public class AndroidResource extends AbstractBuildRule
 
     steps.add(
         new MiniAapt(
+            getProjectFilesystem(),
             getResolver().getPath(Preconditions.checkNotNull(res)),
             Preconditions.checkNotNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps));

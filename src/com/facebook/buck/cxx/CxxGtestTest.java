@@ -88,7 +88,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
     return ImmutableList.<String>builder()
         .addAll(executable.getCommandPrefix(getResolver()))
         .add("--gtest_color=no")
-        .add("--gtest_output=xml:" + context.getProjectFilesystem().resolve(output).toString())
+        .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output).toString())
         .build();
   }
 
@@ -135,7 +135,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
     Map<String, List<String>> stdout = Maps.newHashMap();
     CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
     decoder.onMalformedInput(CodingErrorAction.IGNORE);
-    try (InputStream input = context.getProjectFilesystem().newFileInputStream(output);
+    try (InputStream input = getProjectFilesystem().newFileInputStream(output);
          BufferedReader reader = new BufferedReader(new InputStreamReader(input, decoder))) {
       String line;
       while ((line = reader.readLine()) != null) {

@@ -51,12 +51,8 @@ public class InstrumentationStep implements Step {
       throws
       IOException,
       InterruptedException {
-    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(
-        apk,
-        context);
-    String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(
-        apk,
-        context);
+    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
+    String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
 
     try {
       AdbHelper adbHelper = AdbHelper.get(context, true);
@@ -90,12 +86,8 @@ public class InstrumentationStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(
-        apk,
-        context);
-    String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(
-        apk,
-        context);
+    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
+    String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
 
     StringBuilder builder = new StringBuilder();
 

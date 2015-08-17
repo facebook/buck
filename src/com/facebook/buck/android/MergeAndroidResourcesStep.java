@@ -47,6 +47,7 @@ import java.util.Set;
 
 public class MergeAndroidResourcesStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Optional<Path> uberRDotTxt;
   private final boolean warnMissingResource;
@@ -60,10 +61,12 @@ public class MergeAndroidResourcesStep implements Step {
    */
   @VisibleForTesting
   MergeAndroidResourcesStep(
+      ProjectFilesystem filesystem,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Optional<Path> uberRDotTxt,
       boolean warnMissingResource,
       Path outputDir) {
+    this.filesystem = filesystem;
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
     this.uberRDotTxt = uberRDotTxt;
     this.warnMissingResource = warnMissingResource;
@@ -71,9 +74,11 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   public static MergeAndroidResourcesStep createStepForDummyRDotJava(
+      ProjectFilesystem filesystem,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path outputDir) {
     return new MergeAndroidResourcesStep(
+        filesystem,
         androidResourceDeps,
         Optional.<Path>absent(),
         false,
@@ -81,11 +86,13 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   public static MergeAndroidResourcesStep createStepForUberRDotJava(
+      ProjectFilesystem filesystem,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path uberRDotTxt,
       boolean warnMissingResource,
       Path outputDir) {
     return new MergeAndroidResourcesStep(
+        filesystem,
         androidResourceDeps,
         Optional.of(uberRDotTxt),
         warnMissingResource,
@@ -130,9 +137,11 @@ public class MergeAndroidResourcesStep implements Step {
     // written without using final so that javac will not inline the values.  Unfortunately,
     // though Robolectric doesn't read resources.arsc, it does assert that all the R.java resource
     // ids are unique.  This forces us to re-enumerate new unique ids.
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     ImmutableMap.Builder<Path, String> rDotTxtToPackage = ImmutableMap.builder();
     for (HasAndroidResourceDeps res : androidResourceDeps) {
+      // TODO(simons): These have to be absolute for this all to work with multi-repo.
+      // This is because each `androidResourceDeps` might be from a different repo, so we can't
+      // assume that they exist in the calling rule's projectfilesystem.
       rDotTxtToPackage.put(
           res.getPathToTextSymbolsFile(),
           res.getRDotJavaPackage());
@@ -141,7 +150,7 @@ public class MergeAndroidResourcesStep implements Step {
     if (uberRDotTxt.isPresent()) {
       // re-assign Ids
       uberRDotTxtIds = Optional.of(FluentIterable.from(
-          RDotTxtEntry.readResources(context, uberRDotTxt.get()))
+          RDotTxtEntry.readResources(filesystem, uberRDotTxt.get()))
           .toMap(
               new Function<RDotTxtEntry, String>() {
                 @Override

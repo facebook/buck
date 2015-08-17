@@ -133,10 +133,10 @@ public class ExopackageInstaller {
       AdbHelper adbHelper,
       InstallableApk apkRule) {
     this.adbHelper = adbHelper;
-    this.projectFilesystem = context.getProjectFilesystem();
+    this.projectFilesystem = apkRule.getProjectFilesystem();
     this.eventBus = context.getBuckEventBus();
     this.apkRule = apkRule;
-    this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(apkRule, context);
+    this.packageName = AdbHelper.tryToExtractPackageNameFromManifest(apkRule);
     this.dataRoot = Paths.get("/data/local/tmp/exopackage/").resolve(packageName);
 
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());

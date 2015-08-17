@@ -118,7 +118,7 @@ public class MergeAndroidResourcesStepTest {
 
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
-    Path uberRDotTxt = Paths.get("R.txt");
+    Path uberRDotTxt = filesystem.resolve("R.txt").toAbsolutePath();
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
     HasAndroidResourceDeps resource = AndroidResourceRuleBuilder.newBuilder()
@@ -129,6 +129,7 @@ public class MergeAndroidResourcesStepTest {
         .build();
 
     MergeAndroidResourcesStep mergeStep = new MergeAndroidResourcesStep(
+        filesystem,
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
         /* warnMissingResource */ false,

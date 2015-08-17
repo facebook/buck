@@ -16,7 +16,6 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -78,10 +77,9 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
 
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        ProjectFilesystem fs = context.getProjectFilesystem();
         ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
         builder.addAll(binary.getExecutableCommand().getCommandPrefix(getResolver()));
-        builder.add("-o", fs.resolve(getPathToTestOutputResult()).toString());
+        builder.add("-o", getProjectFilesystem().resolve(getPathToTestOutputResult()).toString());
         return builder.build();
       }
 
@@ -124,8 +122,7 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
 
   @Override
   public boolean hasTestResultFiles(ExecutionContext executionContext) {
-    ProjectFilesystem filesystem = executionContext.getProjectFilesystem();
-    return filesystem.isFile(getPathToTestOutputResult());
+    return getProjectFilesystem().isFile(getPathToTestOutputResult());
   }
 
   @Override
@@ -149,7 +146,7 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
         ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
         if (!isDryRun) {
           Optional<String> resultsFileContents =
-              executionContext.getProjectFilesystem().readFileIfItExists(
+              getProjectFilesystem().readFileIfItExists(
                   getPathToTestOutputResult());
           ObjectMapper mapper = executionContext.getObjectMapper();
           TestResultSummary[] testResultSummaries = mapper.readValue(

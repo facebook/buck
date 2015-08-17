@@ -203,7 +203,7 @@ public class InstallCommand extends BuildCommand {
       InstallResult installResult = installAppleBundle(
           params,
           appleBundle,
-          build.getExecutionContext().getProjectFilesystem(),
+          appleBundle.getProjectFilesystem(),
           build.getExecutionContext().getProcessExecutor());
       params.getBuckEventBus().post(InstallEvent.finished(
           started,
@@ -231,9 +231,7 @@ public class InstallCommand extends BuildCommand {
 
     // Uninstall the app first, if requested.
     if (shouldUninstallFirst()) {
-      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(
-          installableApk,
-          executionContext);
+      String packageName = AdbHelper.tryToExtractPackageNameFromManifest(installableApk);
       adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
       // Perhaps the app wasn't installed to begin with, shouldn't stop us.
     }

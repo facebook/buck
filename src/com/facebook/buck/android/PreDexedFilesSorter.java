@@ -89,6 +89,7 @@ public class PreDexedFilesSorter {
 
   public Result sortIntoPrimaryAndSecondaryDexes(
       BuildContext context,
+      ProjectFilesystem filesystem,
       ImmutableList.Builder<Step> steps) {
     List<DexWithClasses> primaryDexContents = Lists.newArrayList();
     List<List<DexWithClasses>> secondaryDexesContents = Lists.newArrayList();
@@ -142,7 +143,10 @@ public class PreDexedFilesSorter {
         // canary.
         if (currentSecondaryDexContents == null ||
             dexWithClasses.getSizeEstimate() + currentSecondaryDexSize > linearAllocHardLimit) {
-          DexWithClasses canary = createCanary(secondaryDexesContents.size() + 1, steps);
+          DexWithClasses canary = createCanary(
+              filesystem,
+              secondaryDexesContents.size() + 1,
+              steps);
 
           currentSecondaryDexContents = Lists.newArrayList(canary);
           currentSecondaryDexSize = canary.getSizeEstimate();
@@ -204,7 +208,10 @@ public class PreDexedFilesSorter {
   /**
    * @see com.facebook.buck.dalvik.CanaryFactory#create(int)
    */
-  private DexWithClasses createCanary(final int index, ImmutableList.Builder<Step> steps) {
+  private DexWithClasses createCanary(
+      final ProjectFilesystem filesystem,
+      final int index,
+      ImmutableList.Builder<Step> steps) {
     final FileLike fileLike = CanaryFactory.create(index);
     final String canaryDirName = "canary_" + String.valueOf(index);
     final Path scratchDirectoryForCanaryClass = scratchDirectory.resolve(canaryDirName);
@@ -219,10 +226,9 @@ public class PreDexedFilesSorter {
       @Override
       public int execute(ExecutionContext context) {
         Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
-        ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
         try (InputStream inputStream = fileLike.getInput()) {
-          projectFilesystem.createParentDirs(classFile);
-          projectFilesystem.copyToPath(inputStream, classFile);
+          filesystem.createParentDirs(classFile);
+          filesystem.copyToPath(inputStream, classFile);
         } catch (IOException e) {
           context.logError(e,  "Error writing canary class file: %s.",  classFile.toString());
           return 1;

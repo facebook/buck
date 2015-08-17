@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -98,7 +97,6 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
           @Override
           public int execute(ExecutionContext context) {
             try {
-              ProjectFilesystem filesystem = context.getProjectFilesystem();
 
               // For exopackages, the only significant thing android_binary does is apkbuilder,
               // so we need to include all of the apkbuilder inputs in the ABI key.
@@ -166,7 +164,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               // Same deal for native libs as assets.
               for (SourcePath libDir : packageableCollection.getNativeLibAssetsDirectories()) {
                 for (Path nativeFile :
-                     filesystem.getFilesUnderPath(getResolver().getPath(libDir))) {
+                     getProjectFilesystem().getFilesUnderPath(getResolver().getPath(libDir))) {
                   filesToHash.put(nativeFile, "native_lib_as_asset");
                 }
               }
@@ -184,7 +182,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
                 Path path = entry.getKey();
                 hasher.putUnencodedChars(path.toString());
                 hasher.putByte((byte) 0);
-                String fileSha1 = filesystem.computeSha1(path);
+                String fileSha1 = getProjectFilesystem().computeSha1(path);
                 hasher.putUnencodedChars(fileSha1);
                 hasher.putByte((byte) 0);
                 hasher.putUnencodedChars(entry.getValue());

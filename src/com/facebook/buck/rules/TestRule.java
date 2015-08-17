@@ -39,7 +39,7 @@ public interface TestRule extends HasBuildTarget {
    * Callbacks to invoke during the test run to report information
    * about test cases and/or tests.
    */
-  public interface TestReportingCallback {
+  interface TestReportingCallback {
     void testsDidBegin();
     void testDidBegin(String testCaseName, String testName);
     void testDidEnd(TestResultSummary testResultSummary);
@@ -49,7 +49,7 @@ public interface TestRule extends HasBuildTarget {
   /**
    * Implementation of {@link TestReportingCallback} which does nothing.
    */
-  public static final TestReportingCallback NOOP_REPORTING_CALLBACK = new TestReportingCallback() {
+  TestReportingCallback NOOP_REPORTING_CALLBACK = new TestReportingCallback() {
     @Override
     public void testsDidBegin() { }
 
@@ -71,7 +71,7 @@ public interface TestRule extends HasBuildTarget {
    * {@link #interpretTestResults(ExecutionContext, boolean, boolean)}
    * should be able to be called directly.
    */
-  public boolean hasTestResultFiles(ExecutionContext executionContext);
+  boolean hasTestResultFiles(ExecutionContext executionContext);
 
   /**
    * Returns the commands required to run the tests.
@@ -83,14 +83,13 @@ public interface TestRule extends HasBuildTarget {
    * @param buildContext Because this method may be run without
    *     {@link BuildEngine#build(BuildContext, BuildRule)} having been run, this is supplied in
    *     case any non-cacheable build work needs to be done.
-   * @param isDryRun
    * @param isShufflingTests Whether the test runner should randomly reorder tests at runtime.
    * @param executionContext Provides context for creating {@link Step}s.
    * @param testSelectorList Provides a way of selecting which tests to include or exclude
    *     from a run.
    * @return the commands required to run the tests
    */
-  public ImmutableList<Step> runTests(
+  ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
       boolean isDryRun,
@@ -98,7 +97,7 @@ public interface TestRule extends HasBuildTarget {
       TestSelectorList testSelectorList,
       TestReportingCallback testReportingCallback);
 
-  public Callable<TestResults> interpretTestResults(
+  Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
       boolean isUsingTestSelectors,
       boolean isDryRun);
@@ -106,33 +105,33 @@ public interface TestRule extends HasBuildTarget {
   /**
    * @return The set of labels for this build rule.
    */
-  public ImmutableSet<Label> getLabels();
+  ImmutableSet<Label> getLabels();
 
   /**
    * @return The set of email addresses to act as contact points for this test.
    */
-  public ImmutableSet<String> getContacts();
+  ImmutableSet<String> getContacts();
 
   /**
    * @return The set of {@link BuildRule} instances that this test is testing.
    */
-  public ImmutableSet<BuildRule> getSourceUnderTest();
+  ImmutableSet<BuildRule> getSourceUnderTest();
 
   /**
    * @return The relative path to the output directory of the test rule.
    */
-  public Path getPathToTestOutputDirectory();
+  Path getPathToTestOutputDirectory();
 
   /**
    * @return true if the test should run by itself when no other tests are run,
    * false otherwise.
    */
-  public boolean runTestSeparately();
+  boolean runTestSeparately();
 
   /**
    * @return true if calling {@code runTests()} on this rule invokes
    * the callbacks in {@code testReportingCallback} as the tests run,
    * false otherwise.
    */
-  public boolean supportsStreamingTests();
+  boolean supportsStreamingTests();
 }

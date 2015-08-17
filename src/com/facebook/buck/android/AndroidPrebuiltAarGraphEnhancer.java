@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.java.JarDirectoryStepHelper;
 import com.facebook.buck.model.BuildTargets;
@@ -101,7 +100,8 @@ class AndroidPrebuiltAarGraphEnhancer {
     }
 
     @Override
-    public ImmutableList<Step> getBuildSteps(BuildContext context,
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext context,
         BuildableContext buildableContext) {
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
       steps.add(new MakeCleanDirectoryStep(unpackDirectory));
@@ -120,15 +120,14 @@ class AndroidPrebuiltAarGraphEnhancer {
       steps.add(new AbstractExecutionStep("create_uber_classes_jar") {
         @Override
         public int execute(ExecutionContext context) {
-          ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
           Path libsDirectory = unpackDirectory.resolve("libs");
           boolean dirDoesNotExistOrIsEmpty;
-          if (!projectFilesystem.exists(libsDirectory)) {
+          if (!getProjectFilesystem().exists(libsDirectory)) {
             dirDoesNotExistOrIsEmpty = true;
           } else {
             try {
               dirDoesNotExistOrIsEmpty =
-                  projectFilesystem.getDirectoryContents(libsDirectory).isEmpty();
+                  getProjectFilesystem().getDirectoryContents(libsDirectory).isEmpty();
             } catch (IOException e) {
               context.logError(e, "Failed to get directory contents of %s", libsDirectory);
               return 1;
@@ -138,7 +137,7 @@ class AndroidPrebuiltAarGraphEnhancer {
           Path classesJar = unpackDirectory.resolve("classes.jar");
           if (dirDoesNotExistOrIsEmpty) {
             try {
-              projectFilesystem.copy(classesJar, uberClassesJar, CopySourceMode.FILE);
+              getProjectFilesystem().copy(classesJar, uberClassesJar, CopySourceMode.FILE);
             } catch (IOException e) {
               context.logError(e, "Failed to copy from %s to %s", classesJar, uberClassesJar);
               return 1;
@@ -148,7 +147,8 @@ class AndroidPrebuiltAarGraphEnhancer {
             ImmutableSet.Builder<Path> entriesToJarBuilder = ImmutableSet.builder();
             entriesToJarBuilder.add(classesJar);
             try {
-              entriesToJarBuilder.addAll(projectFilesystem.getDirectoryContents(libsDirectory));
+              entriesToJarBuilder.addAll(
+                  getProjectFilesystem().getDirectoryContents(libsDirectory));
             } catch (IOException e) {
               context.logError(e, "Failed to get directory contents of %s", libsDirectory);
               return 1;

@@ -22,9 +22,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -75,8 +75,9 @@ public class CxxGtestTestTest {
             "simple_disabled");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     CxxGtestTest test = new CxxGtestTest(
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+        new FakeBuildRuleParamsBuilder(target).setProjectFilesystem(filesystem).build(),
         new SourcePathResolver(new BuildRuleResolver()),
         new CommandTool.Builder()
             .addArg(new TestSourcePath(""))
@@ -91,7 +92,7 @@ public class CxxGtestTestTest {
     ExecutionContext context =
         TestExecutionContext.newBuilder()
             .setProjectFilesystem(
-                new ProjectFilesystem(tmp.getRoot().toPath()))
+                filesystem)
             .build();
 
     for (String sample : samples) {

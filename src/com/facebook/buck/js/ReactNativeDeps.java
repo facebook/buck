@@ -17,7 +17,6 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -98,15 +97,13 @@ public class ReactNativeDeps extends AbstractBuildRule
     steps.add(new ShellStep() {
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        ProjectFilesystem filesystem = context.getProjectFilesystem();
-
         return ImmutableList.of(
             getResolver().getPath(jsPackager).toString(),
             "list-dependencies",
             platform.toString(),
-            filesystem.resolve(getResolver().getPath(entryPath)).toString(),
+            getProjectFilesystem().resolve(getResolver().getPath(entryPath)).toString(),
             "--output",
-            filesystem.resolve(output).toString());
+            getProjectFilesystem().resolve(output).toString());
       }
 
       @Override
@@ -118,12 +115,11 @@ public class ReactNativeDeps extends AbstractBuildRule
     steps.add(new AbstractExecutionStep("hash_js_inputs") {
       @Override
       public int execute(ExecutionContext context) {
-        ProjectFilesystem filesystem = context.getProjectFilesystem();
         ImmutableList<Path> paths;
         try {
-          paths = FluentIterable.from(filesystem.readLines(output))
+          paths = FluentIterable.from(getProjectFilesystem().readLines(output))
               .transform(MorePaths.TO_PATH)
-              .transform(filesystem.getRelativizer())
+              .transform(getProjectFilesystem().getRelativizer())
               .toSortedList(Ordering.natural());
         } catch (IOException e) {
           context.logError(e, "Error reading output of the 'react-native-deps' step.");
@@ -131,7 +127,7 @@ public class ReactNativeDeps extends AbstractBuildRule
         }
 
         FluentIterable<SourcePath> unlistedSrcs =
-            FluentIterable.from(paths).transform(SourcePaths.toSourcePath(filesystem))
+            FluentIterable.from(paths).transform(SourcePaths.toSourcePath(getProjectFilesystem()))
                 .filter(Predicates.not(Predicates.in(srcs)));
         if (!unlistedSrcs.isEmpty()) {
           context.logError(
@@ -146,7 +142,7 @@ public class ReactNativeDeps extends AbstractBuildRule
         Hasher hasher = Hashing.sha1().newHasher();
         for (Path path : paths) {
           try {
-            hasher.putUnencodedChars(filesystem.computeSha1(path));
+            hasher.putUnencodedChars(getProjectFilesystem().computeSha1(path));
           } catch (IOException e) {
             context.logError(e, "Error hashing input file: %s", path);
             return 1;

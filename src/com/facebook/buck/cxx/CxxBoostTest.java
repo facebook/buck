@@ -92,7 +92,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
         .add("--report_format=xml")
         .add("--report_level=detailed")
         .add("--result_code=no")
-        .add("--report_sink=" + context.getProjectFilesystem().resolve(output))
+        .add("--report_sink=" + getProjectFilesystem().resolve(output))
         .build();
   }
 

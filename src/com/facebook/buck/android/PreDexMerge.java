@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -205,7 +204,10 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         dexSplitMode.getDexStore(),
         paths.jarfilesSubdir);
     final PreDexedFilesSorter.Result sortResult =
-        preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(context, steps);
+        preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(
+            context,
+            getProjectFilesystem(),
+            steps);
 
     steps.add(new SmartDexingStep(
         primaryDexPath,
@@ -228,7 +230,6 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     steps.add(new AbstractExecutionStep("write_metadata_txt") {
       @Override
       public int execute(ExecutionContext executionContext) {
-        ProjectFilesystem filesystem = executionContext.getProjectFilesystem();
         Map<Path, DexWithClasses> metadataTxtEntries = sortResult.metadataTxtDexEntries;
         List<String> lines = Lists.newArrayListWithCapacity(metadataTxtEntries.size());
         if (dexSplitMode.getDexStore() == DexStore.RAW) {
@@ -240,11 +241,11 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
             Path pathToSecondaryDex = entry.getKey();
             String containedClass = Iterables.get(entry.getValue().getClassNames(), 0);
             containedClass = containedClass.replace('/', '.');
-            String hash = filesystem.computeSha1(pathToSecondaryDex);
+            String hash = getProjectFilesystem().computeSha1(pathToSecondaryDex);
             lines.add(String.format("%s %s %s",
                 pathToSecondaryDex.getFileName(), hash, containedClass));
           }
-          filesystem.writeLinesToPath(lines, paths.metadataFile);
+          getProjectFilesystem().writeLinesToPath(lines, paths.metadataFile);
         } catch (IOException e) {
           executionContext.logError(e, "Failed when writing metadata.txt multi-dex.");
           return 1;

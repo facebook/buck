@@ -50,19 +50,19 @@ public class ShTestTest extends EasyMockSupport {
 
   @Test
   public void testHasTestResultFiles() {
+    ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);
+
     ShTest shTest = new ShTest(
-        new FakeBuildRuleParamsBuilder(
-            BuildTarget.builder("//test/com/example", "my_sh_test").build())
+        new FakeBuildRuleParamsBuilder("//test/com/example:my_sh_test")
+            .setProjectFilesystem(filesystem)
             .build(),
         new SourcePathResolver(new BuildRuleResolver()),
         new TestSourcePath("run_test.sh"),
         /* args */ ImmutableList.<String>of(),
         /* labels */ ImmutableSet.<Label>of());
 
-    ProjectFilesystem filesystem = createMock(ProjectFilesystem.class);
     EasyMock.expect(filesystem.isFile(shTest.getPathToTestOutputResult())).andReturn(true);
     ExecutionContext executionContext = createMock(ExecutionContext.class);
-    EasyMock.expect(executionContext.getProjectFilesystem()).andReturn(filesystem);
 
     replayAll();
 

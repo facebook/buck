@@ -77,11 +77,11 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -393,6 +393,7 @@ public class AndroidBinary
       // Filter, rename and copy the ndk libraries marked as assets.
       for (SourcePath nativeLibDir : packageableCollection.getNativeLibAssetsDirectories()) {
         CopyNativeLibraries.copyNativeLibrary(
+            getProjectFilesystem(),
             getResolver().getPath(nativeLibDir),
             libSubdirectory,
             cpuFilters,
@@ -420,10 +421,11 @@ public class AndroidBinary
             new AbstractExecutionStep("write_metadata_for_asset_libraries") {
               @Override
               public int execute(ExecutionContext context) {
-                ProjectFilesystem filesystem = context.getProjectFilesystem();
+                ProjectFilesystem filesystem = getProjectFilesystem();
                 try {
                   // HACK: Rename libraries as temp files so ApkBuilder doesn't add them to the apk
-                  filesystem.walkRelativeFileTree(libSubdirectory, new SimpleFileVisitor<Path>() {
+                  filesystem.walkRelativeFileTree(
+                      libSubdirectory, new SimpleFileVisitor<Path>() {
                         @Override
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                             throws IOException {
@@ -608,7 +610,7 @@ public class AndroidBinary
         protected void addEnvironmentVariables(
             ExecutionContext context,
             ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-          Function<Path, Path> absolutifier = context.getProjectFilesystem().getAbsolutifier();
+          Function<Path, Path> absolutifier = getProjectFilesystem().getAbsolutifier();
           environmentVariablesBuilder.put(
               "IN_JARS_DIR", absolutifier.apply(preprocessJavaClassesInDir).toString());
           environmentVariablesBuilder.put(
@@ -890,6 +892,7 @@ public class AndroidBinary
       Path zipSplitReportDir = getBinPath("__%s_split_zip_report__");
       steps.add(new MakeCleanDirectoryStep(zipSplitReportDir));
       SplitZipStep splitZipCommand = new SplitZipStep(
+          getProjectFilesystem(),
           classpathEntriesToDex,
           secondaryJarMeta,
           primaryJarPath,
