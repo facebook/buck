@@ -22,22 +22,19 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.io.PathListing;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.java.AnnotationProcessingEvent;
 import com.facebook.buck.java.tracing.JavacPhaseEvent;
+import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.parser.CreateTargetNodeEvent;
-import com.facebook.buck.parser.MarshalConstructorArgsEvent;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.parser.GetTargetDependenciesEvent;
-import com.facebook.buck.parser.GetTargetNodeEvent;
 import com.facebook.buck.rules.ActionGraphEvent;
 import com.facebook.buck.rules.ArtifactCacheConnectEvent;
 import com.facebook.buck.rules.ArtifactCacheEvent;
@@ -55,10 +52,12 @@ import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
@@ -357,99 +356,32 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void getTargetDependenciesStarted(GetTargetDependenciesEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck",
-        "get_target_deps",
-        ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of(
-            "target",
-            started.getBuildTarget().toString()),
-        started);
-  }
+  public void simplePerfEvent(SimplePerfEvent perfEvent) {
+    ChromeTraceEvent.Phase phase = null;
+    switch (perfEvent.getEventType()) {
+      case STARTED:
+        phase = ChromeTraceEvent.Phase.BEGIN;
+        break;
+      case FINISHED:
+        phase = ChromeTraceEvent.Phase.END;
+        break;
+      case UPDATED:
+        phase = ChromeTraceEvent.Phase.IMMEDIATE;
+        break;
+    }
+    if (phase == null) {
+      throw new IllegalStateException(
+          "Unsupported perf event type: " + perfEvent.getEventType());
+    }
 
-  @Subscribe
-  public void getTargetDependenciesFinished(GetTargetDependenciesEvent.Finished finished) {
     writeChromeTraceEvent(
         "buck",
-        "get_target_deps",
-        ChromeTraceEvent.Phase.END,
-        ImmutableMap.of(
-            "target",
-            finished.getBuildTarget().toString()),
-        finished);
-  }
-
-  @Subscribe
-  public void getTargetNodeStarted(GetTargetNodeEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck",
-        "get_target_node",
-        ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of(
-            "target",
-            started.getBuildTarget().toString()),
-        started);
-  }
-
-  @Subscribe
-  public void getTargetNodeFinished(GetTargetNodeEvent.Finished finished) {
-    writeChromeTraceEvent(
-        "buck",
-        "get_target_node",
-        ChromeTraceEvent.Phase.END,
-        ImmutableMap.of(
-            "target",
-            finished.getBuildTarget().toString()),
-        finished);
-  }
-
-  @Subscribe
-  public void marshalConstructorArgsStarted(MarshalConstructorArgsEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck",
-        "marshal_constructor_args",
-        ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of(
-            "target",
-            started.getBuildTarget().toString()),
-        started);
-  }
-
-  @Subscribe
-  public void marshalConstructorArgsFinished(MarshalConstructorArgsEvent.Finished finished) {
-    writeChromeTraceEvent(
-        "buck",
-        "marshal_constructor_args",
-        ChromeTraceEvent.Phase.END,
-        ImmutableMap.of(
-            "target",
-            finished.getBuildTarget().toString()),
-        finished);
-  }
-
-  @Subscribe
-  public void createTargetNodeStarted(CreateTargetNodeEvent.Started started) {
-    writeChromeTraceEvent(
-        "buck",
-        "create_target_node",
-        ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of(
-            "target",
-            started.getBuildTarget().toString()),
-        started);
-  }
-
-  @Subscribe
-  public void createTargetNodeFinished(CreateTargetNodeEvent.Finished finished) {
-    writeChromeTraceEvent(
-        "buck",
-        "create_target_node",
-        ChromeTraceEvent.Phase.END,
-        ImmutableMap.of(
-            "target",
-            finished.getBuildTarget().toString()),
-        finished);
+        CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE).convert(
+            perfEvent.getEventId().getValue()),
+        phase,
+        ImmutableMap.copyOf(
+            Maps.transformValues(perfEvent.getEventInfo(), Functions.toStringFunction())),
+        perfEvent);
   }
 
   @Subscribe

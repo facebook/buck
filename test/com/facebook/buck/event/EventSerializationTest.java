@@ -223,6 +223,20 @@ public class EventSerializationTest {
         "\"success\":false},\"type\":\"ResultsAvailable\"}", message);
   }
 
+
+  @Test
+  public void testSimplePerfEvent() throws IOException {
+    SimplePerfEvent.Started event = SimplePerfEvent.started(
+        PerfEventId.of("PerfId"),
+        "value", Optional.of(BuildTargetFactory.newInstance("//:fake")));
+    event.configure(timestamp, nanoTime, threadId, buildId);
+    String message = new ObjectMapper().writeValueAsString(event);
+    assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
+            "\"eventKey\":{\"value\":4242},\"eventId\":\"PerfId\",\"eventType\":\"STARTED\"," +
+            "\"eventInfo\":{\"value\":{\"present\":true}},\"type\":\"PerfEventPerfIdStarted\"}",
+        message);
+  }
+
   private BuildRule generateFakeBuildRule() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:rule");
     FakeBuildRule result = new FakeBuildRule(

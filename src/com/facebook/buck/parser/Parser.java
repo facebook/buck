@@ -21,6 +21,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
@@ -434,6 +436,15 @@ public class Parser {
     return state.get(buildTarget);
   }
 
+  private SimplePerfEvent.Scope getTargetNodeEventScope(
+      BuckEventBus eventBus,
+      BuildTarget buildTarget) {
+    return SimplePerfEvent.scope(
+        eventBus,
+        PerfEventId.of("GetTargetNode"),
+        "target", buildTarget);
+  }
+
   /**
    * Build a {@link TargetGraph} from the {@code toExplore} targets. Note that this graph isn't
    * pruned in any way and needs to be transformed into an {@link ActionGraph} before being useful
@@ -461,20 +472,20 @@ public class Parser {
           @Override
           protected Iterator<BuildTarget> findChildren(BuildTarget buildTarget)
               throws IOException, InterruptedException {
-            GetTargetDependenciesEvent.Started getTargetDependenciesEvent =
-                GetTargetDependenciesEvent.started(buildTarget);
-            eventBus.post(getTargetDependenciesEvent);
-            try {
+            try (SimplePerfEvent.Scope getTargetDepsEventScope = SimplePerfEvent.scope(
+                eventBus,
+                PerfEventId.of("GetTargetDeps"),
+                "target", buildTarget)) {
               BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
                   BuildTargetPatternParser.forBaseName(buildTarget.getBaseName());
 
               // Verify that the BuildTarget actually exists in the map of known BuildTargets
               // before trying to recurse through its children.
-              GetTargetNodeEvent.Started getTargetNodeEvent =
-                  GetTargetNodeEvent.started(buildTarget);
-              eventBus.post(getTargetNodeEvent);
-              TargetNode<?> targetNode = state.get(buildTarget, eventBusOptional);
-              eventBus.post(GetTargetNodeEvent.finished(getTargetNodeEvent));
+              TargetNode<?> targetNode;
+              try (SimplePerfEvent.Scope scope = getTargetNodeEventScope(eventBus, buildTarget)) {
+                targetNode = state.get(buildTarget, eventBusOptional);
+              }
+
               if (targetNode == null) {
                 throw new HumanReadableException(
                     NoSuchBuildTargetException.createForMissingBuildRule(
@@ -487,20 +498,21 @@ public class Parser {
               Set<BuildTarget> deps = Sets.newHashSet();
               for (BuildTarget buildTargetForDep : targetNode.getDeps()) {
                 try {
-                  getTargetNodeEvent = GetTargetNodeEvent.started(buildTargetForDep);
-                  eventBus.post(getTargetNodeEvent);
-                  TargetNode<?> depTargetNode = state.get(buildTargetForDep, eventBusOptional);
-                  eventBus.post(GetTargetNodeEvent.finished(getTargetNodeEvent));
+                  TargetNode<?> depTargetNode;
+                  try (SimplePerfEvent.Scope scope =
+                           getTargetNodeEventScope(eventBus, buildTargetForDep)) {
+                    depTargetNode = state.get(buildTargetForDep, eventBusOptional);
+                  }
                   if (depTargetNode == null) {
                     parseBuildFileContainingTarget(
                         buildTargetForDep,
                         parserConfig,
                         buildFileParser,
                         environment);
-                    getTargetNodeEvent = GetTargetNodeEvent.started(buildTargetForDep);
-                    eventBus.post(getTargetNodeEvent);
-                    depTargetNode = state.get(buildTargetForDep, eventBusOptional);
-                    eventBus.post(GetTargetNodeEvent.finished(getTargetNodeEvent));
+                    try (SimplePerfEvent.Scope scope =
+                             getTargetNodeEventScope(eventBus, buildTargetForDep)) {
+                      depTargetNode = state.get(buildTargetForDep, eventBusOptional);
+                    }
                     if (depTargetNode == null) {
                       throw new HumanReadableException(
                           NoSuchBuildTargetException.createForMissingBuildRule(
@@ -525,8 +537,6 @@ public class Parser {
               }
 
               return deps.iterator();
-            } finally {
-              eventBus.post(GetTargetDependenciesEvent.finished(getTargetDependenciesEvent));
             }
           }
 
@@ -1179,36 +1189,26 @@ public class Parser {
         try {
           ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
           ImmutableSet.Builder<BuildTargetPattern> visibilityPatterns = ImmutableSet.builder();
-          MarshalConstructorArgsEvent.Started marshalConstructorArgsEvent = null;
-          if (eventBus.isPresent()) {
-            marshalConstructorArgsEvent = MarshalConstructorArgsEvent.started(buildTarget);
-            eventBus.get().post(marshalConstructorArgsEvent);
+          try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
+              eventBus, PerfEventId.of("MarshalledConstructorArg"),
+              "target", buildTarget)) {
+            marshaller.populate(
+                targetRepo.getFilesystem(),
+                factoryParams,
+                constructorArg,
+                declaredDeps,
+                visibilityPatterns,
+                map);
           }
-          marshaller.populate(
-              targetRepo.getFilesystem(),
-              factoryParams,
-              constructorArg,
-              declaredDeps,
-              visibilityPatterns,
-              map);
-          if (eventBus.isPresent()) {
-            eventBus.get().post(MarshalConstructorArgsEvent.finished(
-                    Preconditions.checkNotNull(marshalConstructorArgsEvent)));
-          }
-          CreateTargetNodeEvent.Started createTargetNodeEvent = null;
-          if (eventBus.isPresent()) {
-            createTargetNodeEvent = CreateTargetNodeEvent.started(buildTarget);
-            eventBus.get().post(createTargetNodeEvent);
-          }
-          targetNode = new TargetNode(
-              description,
-              constructorArg,
-              factoryParams,
-              declaredDeps.build(),
-              visibilityPatterns.build());
-          if (eventBus.isPresent()) {
-            eventBus.get().post(CreateTargetNodeEvent.finished(
-                    Preconditions.checkNotNull(createTargetNodeEvent)));
+          try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
+              eventBus, PerfEventId.of("CreatedTargetNode"),
+              "target", buildTarget)) {
+            targetNode = new TargetNode(
+                description,
+                constructorArg,
+                factoryParams,
+                declaredDeps.build(),
+                visibilityPatterns.build());
           }
         } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
           throw new HumanReadableException(e);
@@ -1312,5 +1312,4 @@ public class Parser {
     }
     return result;
   }
-
 }
