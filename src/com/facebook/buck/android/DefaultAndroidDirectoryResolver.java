@@ -21,6 +21,7 @@ import com.facebook.buck.util.PropertyFinder;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
@@ -101,7 +102,10 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     Optional<String> contents = projectFilesystem.readFirstLineFromFile(releaseVersion);
 
     if (contents.isPresent()) {
-      return Optional.of(new StringTokenizer(contents.get()).nextToken());
+      StringTokenizer stringTokenizer = new StringTokenizer(contents.get());
+      if (stringTokenizer.hasMoreTokens()) {
+        return Optional.of(stringTokenizer.nextToken());
+      }
     }
     return Optional.absent();
   }
@@ -133,7 +137,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
             "Failed to read NDK version from %s", ndkPath);
       } else {
         String ndkVersion = ndkVersionOptional.get();
-        if (targetNdkVersion.isPresent() && !targetNdkVersion.get().equals(ndkVersion)) {
+        if (targetNdkVersion.isPresent() &&
+            !isEquivalentToExpected(targetNdkVersion.get(), ndkVersion)) {
           throw new HumanReadableException(
               "Supported NDK version is %s but Buck is configured to use %s with " +
                   "ndk.dir or ANDROID_NDK",
@@ -180,7 +185,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
           // significantly harder to grok.
           if (ndkVersion.isPresent()) {
             if (targetNdkVersion.isPresent()) {
-              if (targetNdkVersion.get().equals(ndkVersion.get())) {
+              if (isEquivalentToExpected(targetNdkVersion.get(), ndkVersion.get())) {
                 return Optional.of(potentialNdkPath);
               }
             } else {
@@ -200,6 +205,14 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       }
     }
     return path;
+  }
+
+  private boolean isEquivalentToExpected(String expected, String candidate) {
+    if (Strings.isNullOrEmpty(expected) || Strings.isNullOrEmpty(candidate)) {
+      return false;
+    }
+
+    return candidate.startsWith(expected);
   }
 
   @Override
