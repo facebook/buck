@@ -120,6 +120,8 @@ public class Project {
   public static final Path ANDROID_GEN_PATH = BuckConstant.BUCK_OUTPUT_PATH.resolve("android");
   public static final String ANDROID_APK_DIR = BuckConstant.BUCK_OUTPUT_DIRECTORY + "/gen";
 
+  private static final Logger LOG = Logger.get(Project.class);
+
   /**
    * Path to the intellij.py script that is used to transform the JSON written by this file.
    */
@@ -423,7 +425,7 @@ public class Project {
       } else if (projectRule instanceof AndroidResource) {
         AndroidResource androidResource = (AndroidResource) projectRule;
         module.resFolder =
-            createRelativePath(
+            createRelativeResourcesPath(
                 Optional.fromNullable(androidResource.getRes())
                     .transform(resolver.getPathFunction())
                     .orNull(),
@@ -956,15 +958,21 @@ public class Project {
    * @param pathRelativeToProjectRoot if {@code null}, then this method returns {@code null}
    */
   @Nullable
-  private static Path createRelativePath(
+  private static Path createRelativeResourcesPath(
       @Nullable Path pathRelativeToProjectRoot,
       BuildTarget target) {
     if (pathRelativeToProjectRoot == null) {
       return null;
     }
     Path directoryPath = target.getBasePath();
-    Preconditions.checkArgument(pathRelativeToProjectRoot.startsWith(directoryPath));
-    return directoryPath.relativize(pathRelativeToProjectRoot);
+    if (pathRelativeToProjectRoot.startsWith(directoryPath)) {
+      return directoryPath.relativize(pathRelativeToProjectRoot);
+    } else {
+      LOG.warn("Target %s is using generated resources, which are not supported",
+          target.getFullyQualifiedName());
+      // What could possibly go wrong...
+      return Paths.get("res");
+    }
   }
 
   private void writeJsonConfig(
