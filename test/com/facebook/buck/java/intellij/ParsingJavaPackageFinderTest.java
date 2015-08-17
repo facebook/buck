@@ -35,7 +35,6 @@ import java.nio.file.Paths;
 
 public class ParsingJavaPackageFinderTest {
 
-  private Path rootPath;
   private Path matchPath;
   private Path mismatchPath;
   private Path placeholderPath;
@@ -45,8 +44,7 @@ public class ParsingJavaPackageFinderTest {
 
   @Before
   public void setUp() throws IOException {
-    rootPath = Paths.get("case1/");
-    matchPath = rootPath.resolve("org/test/package1/Match.java");
+    matchPath = Paths.get("case1/org/test/package1/Match.java");
     mismatchPath = Paths.get("case2/org/test/package2/Mismatch.java");
     placeholderPath = Paths.get("case3/com/test/placeholder");
 
@@ -117,13 +115,12 @@ public class ParsingJavaPackageFinderTest {
         new ParsingJavaPackageFinder(javaFileParser, fakeProjectFilesystem, dummyPackageFinder);
 
     assertEquals("org.test.package1", parsingJavaPackageFinder.findJavaPackage(matchPath));
-    assertEquals("", parsingJavaPackageFinder.findJavaPackage(rootPath.resolve("notfound")));
     assertEquals(
         "org.test.package2",
         parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/org/test/package2/notfound")));
     assertEquals(
         "dummy",
-        parsingJavaPackageFinder.findJavaPackage(Paths.get("case2/com/notfound")));
+        parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/com/test")));
   }
 }
 

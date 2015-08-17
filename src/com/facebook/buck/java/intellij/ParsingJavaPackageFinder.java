@@ -41,7 +41,7 @@ public class ParsingJavaPackageFinder implements JavaPackageFinder {
   private JavaFileParser javaFileParser;
   private ProjectFilesystem projectFilesystem;
   private JavaPackageFinder fallbackPackageFinder;
-  private PackagePathCache packagePathCache;
+  private Map<Path, Path> pathToPackagePathCache;
 
   public ParsingJavaPackageFinder(
       JavaFileParser javaFileParser,
@@ -50,12 +50,12 @@ public class ParsingJavaPackageFinder implements JavaPackageFinder {
     this.javaFileParser = javaFileParser;
     this.projectFilesystem = projectFilesystem;
     this.fallbackPackageFinder = fallbackPackageFinder;
-    this.packagePathCache = new PackagePathCache();
+    this.pathToPackagePathCache = new HashMap<>();
   }
 
   @Override
   public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
-    Optional<Path> packageFolder = packagePathCache.lookup(pathRelativeToProjectRoot);
+    Optional<Path> packageFolder = cacheLookup(pathRelativeToProjectRoot);
     if (!packageFolder.isPresent()) {
       packageFolder = getPackageFromFile(pathRelativeToProjectRoot).transform(
           new Function<String, Path>() {
@@ -69,8 +69,34 @@ public class ParsingJavaPackageFinder implements JavaPackageFinder {
       packageFolder = Optional.of(
           fallbackPackageFinder.findJavaPackageFolder(pathRelativeToProjectRoot));
     }
-    packagePathCache.insert(pathRelativeToProjectRoot, packageFolder.get());
+    cacheInsert(pathRelativeToProjectRoot, packageFolder.get());
     return packageFolder.get();
+  }
+
+  private void cacheInsert(Path pathRelativeToProjectRoot, Path packageFolder) {
+    Path parentPath = pathRelativeToProjectRoot.getParent();
+    if (parentPath.endsWith(Preconditions.checkNotNull(packageFolder))) {
+      Path packagePath = packageFolder;
+      for (int i = 0; i < packageFolder.getNameCount(); ++i) {
+        pathToPackagePathCache.put(parentPath, packagePath);
+        parentPath = MorePaths.getParentOrEmpty(parentPath);
+        packagePath = MorePaths.getParentOrEmpty(packagePath);
+      }
+    }
+  }
+
+  private Optional<Path> cacheLookup(Path pathRelativeToProjectRoot) {
+    Path path = pathRelativeToProjectRoot.getParent();
+    while (path != null) {
+      Path prefix = pathToPackagePathCache.get(path);
+      if (prefix != null) {
+        Path suffix = path.relativize(pathRelativeToProjectRoot.getParent());
+        return Optional.of(prefix.resolve(suffix));
+      }
+      path = path.getParent();
+    }
+
+    return Optional.absent();
   }
 
   private Optional<String> getPackageFromFile(Path pathRelativeToProjectRoot) {
@@ -97,39 +123,5 @@ public class ParsingJavaPackageFinder implements JavaPackageFinder {
 
   private static Path findPackageFolderWithJavaPackage(String javaPackage) {
     return Paths.get(javaPackage.replace('.', File.separatorChar));
-  }
-
-  public static class PackagePathCache {
-    private Map<Path, Path> cache;
-
-    public PackagePathCache() {
-      this.cache = new HashMap<>();
-    }
-
-    public void insert(Path pathRelativeToProjectRoot, Path packageFolder) {
-      Path parentPath = pathRelativeToProjectRoot.getParent();
-      if (parentPath.endsWith(Preconditions.checkNotNull(packageFolder))) {
-        Path packagePath = packageFolder;
-        for (int i = 0; i <= packageFolder.getNameCount(); ++i) {
-          cache.put(parentPath, packagePath);
-          parentPath = MorePaths.getParentOrEmpty(parentPath);
-          packagePath = MorePaths.getParentOrEmpty(packagePath);
-        }
-      }
-    }
-
-    public Optional<Path> lookup(Path pathRelativeToProjectRoot) {
-      Path path = pathRelativeToProjectRoot.getParent();
-      while (path != null) {
-        Path prefix = cache.get(path);
-        if (prefix != null) {
-          Path suffix = path.relativize(pathRelativeToProjectRoot.getParent());
-          return Optional.of(prefix.resolve(suffix));
-        }
-        path = path.getParent();
-      }
-
-      return Optional.absent();
-    }
   }
 }

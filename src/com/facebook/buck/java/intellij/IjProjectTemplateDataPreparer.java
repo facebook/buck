@@ -53,7 +53,6 @@ public class IjProjectTemplateDataPreparer {
   private JavaPackageFinder javaPackageFinder;
   private IjModuleGraph moduleGraph;
   private ProjectFilesystem projectFilesystem;
-  private IjSourceRootSimplifier sourceRootSimplifier;
   private ImmutableSet<Path> referencedFolderPaths;
   private ImmutableSet<Path> filesystemTraversalBoundaryPaths;
   private ImmutableSet<IjModule> modulesToBeWritten;
@@ -66,7 +65,6 @@ public class IjProjectTemplateDataPreparer {
     this.javaPackageFinder = javaPackageFinder;
     this.moduleGraph = moduleGraph;
     this.projectFilesystem = projectFilesystem;
-    this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
     this.librariesToBeWritten =
         FluentIterable.from(moduleGraph.getNodes()).filter(IjLibrary.class).toSet();
@@ -184,32 +182,18 @@ public class IjProjectTemplateDataPreparer {
   }
 
   private IjSourceFolder createSourceFolder(IjFolder folder, Path moduleLocationBasePath) {
+    String packagePrefix = null;
+    if (folder.getWantsPackagePrefix()) {
+      Path fileToLookupPackageIn = FluentIterable.from(folder.getInputs()).first()
+          .or(folder.getPath().resolve("notfound"));
+      packagePrefix = javaPackageFinder.findJavaPackage(fileToLookupPackageIn);
+    }
     return IjSourceFolder.builder()
         .setType(folder.getType().getIjName())
         .setUrl(toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
         .setIsTestSource(folder.isTest())
-        .setPackagePrefix(getPackagPrefix(folder))
+        .setPackagePrefix(packagePrefix)
         .build();
-  }
-
-  @Nullable
-  private String getPackagPrefix(IjFolder folder) {
-    if (!folder.getWantsPackagePrefix()) {
-      return null;
-    }
-    Path fileToLookupPackageIn;
-    if (!folder.getInputs().isEmpty() &&
-        folder.getInputs().first().getParent().equals(folder.getPath())) {
-      fileToLookupPackageIn = folder.getInputs().first();
-    } else {
-      fileToLookupPackageIn = folder.getPath().resolve("notfound");
-    }
-    String packagePrefix = javaPackageFinder.findJavaPackage(fileToLookupPackageIn);
-    if (packagePrefix.isEmpty()) {
-      // It doesn't matter either way, but an empty prefix looks confusing.
-      return null;
-    }
-    return packagePrefix;
   }
 
   private ContentRoot createContentRoot(
@@ -217,10 +201,7 @@ public class IjProjectTemplateDataPreparer {
       ImmutableSet<IjFolder> folders,
       final Path moduleLocationBasePath) {
     String url = toModuleDirRelativeString(contentRootPath, moduleLocationBasePath);
-    ImmutableSet<IjFolder> simplifiedFolders = sourceRootSimplifier.simplify(
-        SimplificationLimit.of(contentRootPath.getNameCount()),
-        folders);
-    ImmutableSortedSet<IjSourceFolder> sourceFolders = FluentIterable.from(simplifiedFolders)
+    ImmutableSortedSet<IjSourceFolder> sourceFolders = FluentIterable.from(folders)
         .transform(
             new Function<IjFolder, IjSourceFolder>() {
               @Override

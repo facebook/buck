@@ -1,7 +1,0 @@
-android_library(
-  name = 'tip',
-  srcs = glob(['src/**/*.java']),
-  deps = [
-    '//java/code/modules/dep1:dep1',
-  ],
-)
