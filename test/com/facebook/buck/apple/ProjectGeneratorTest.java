@@ -2649,7 +2649,7 @@ public class ProjectGeneratorTest {
                 ImmutableSortedMap.of(
                     "Debug",
                     ImmutableMap.<String, String>of())))
-        .setFrameworks(
+        .setLibraries(
             Optional.of(
                 ImmutableSortedSet.of(
                     FrameworkPath.ofSourceTreePath(

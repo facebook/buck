@@ -159,13 +159,6 @@ public class AppleDescriptionsTest {
         ImmutableSortedSet.of(
             FrameworkPath.ofSourceTreePath(
                 new SourceTreePath(
-                    PBXReference.SourceTree.SDKROOT,
-                    Paths.get("usr/lib/libz.dylib"),
-                    Optional.<String>absent())),
-            FrameworkPath.ofSourcePath(
-                new PathSourcePath(projectFilesystem, Paths.get("Vendor/Foo/libFoo.a"))),
-            FrameworkPath.ofSourceTreePath(
-                new SourceTreePath(
                     PBXReference.SourceTree.DEVELOPER_DIR,
                     Paths.get("Library/Frameworks/XCTest.framework"),
                     Optional.<String>absent())),
@@ -174,10 +167,8 @@ public class AppleDescriptionsTest {
 
     assertEquals(
         ImmutableList.of(
-            "-lz",
             "-framework", "XCTest",
-            "-framework", "Bar",
-            "-lFoo"),
+            "-framework", "Bar"),
         linkerFlags);
   }
 

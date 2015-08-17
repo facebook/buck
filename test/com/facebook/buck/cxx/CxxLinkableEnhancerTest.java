@@ -217,6 +217,7 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(fakeBuildRule.getBuildTarget())),
         ImmutableList.<String>of(),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",
@@ -329,11 +330,13 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput staticInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(staticArg),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     String sharedArg = "shared";
     NativeLinkableInput sharedInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(sharedArg),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep",
         pathResolver,
@@ -441,6 +444,7 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput bottomInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.of(sentinel),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);
 
@@ -452,6 +456,7 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput topInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of(),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     BuildRule top = createNativeLinkable("//:top", pathResolver, topInput, topInput, middle);
 

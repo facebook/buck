@@ -148,6 +148,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
@@ -157,6 +158,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
@@ -201,6 +203,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of(),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
@@ -210,6 +213,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(),
         ImmutableList.<String>of(),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
@@ -252,6 +256,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
@@ -292,6 +297,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
@@ -301,6 +307,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
@@ -446,6 +453,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
@@ -455,6 +463,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
@@ -501,6 +510,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
@@ -510,6 +520,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,
@@ -554,6 +565,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getStaticLibraryPath(arg))),
         ImmutableList.of(getStaticLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticLinkableInput,
@@ -563,6 +575,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableList.of(getSharedLibraryPath(arg).toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedLinkableInput,

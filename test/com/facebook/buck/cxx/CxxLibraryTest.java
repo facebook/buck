@@ -129,6 +129,7 @@ public class CxxLibraryTest {
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(archive.getBuildTarget())),
         ImmutableList.of(archiveOutput.toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedStaticNativeLinkableInput,
@@ -143,6 +144,7 @@ public class CxxLibraryTest {
         ImmutableList.<SourcePath>of(
             new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
         ImmutableList.of(sharedLibraryOutput.toString()),
+        ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedNativeLinkableInput,
@@ -197,7 +199,8 @@ public class CxxLibraryTest {
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         Functions.constant(ImmutableList.<String>of()),
         /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
-        ImmutableSortedSet.<FrameworkPath>of(),
+        ImmutableSet.<FrameworkPath>of(),
+        ImmutableSet.<FrameworkPath>of(),
         NativeLinkable.Linkage.STATIC,
         /* linkWhole */ false,
         Optional.<String>absent(),
@@ -224,6 +227,7 @@ public class CxxLibraryTest {
                     target,
                     cxxPlatform.getFlavor(),
                     CxxSourceRuleFactory.PicType.PIC).toString()),
+            ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
     assertEquals(
         expectedSharedNativeLinkableInput,

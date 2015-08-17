@@ -507,6 +507,7 @@ public class CxxLibraryDescription implements
     arg.headerNamespace = Optional.absent();
     arg.soname = Optional.absent();
     arg.frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
+    arg.libraries = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
     arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.supportedPlatformsRegex = Optional.absent();
     return arg;
@@ -928,6 +929,7 @@ public class CxxLibraryDescription implements
         },
         args.supportedPlatformsRegex,
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
         args.linkWhole.or(false),
         args.soname,

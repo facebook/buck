@@ -244,7 +244,11 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     final ImmutableList<SourcePath> libraries = librariesBuilder.build();
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
-    return NativeLinkableInput.of(libraries, linkerArgs, ImmutableSet.<FrameworkPath>of());
+    return NativeLinkableInput.of(
+        libraries,
+        linkerArgs,
+        ImmutableSet.<FrameworkPath>of(),
+        ImmutableSet.<FrameworkPath>of());
   }
 
   @Override

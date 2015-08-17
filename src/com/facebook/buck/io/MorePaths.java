@@ -17,6 +17,7 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -321,5 +322,22 @@ public class MorePaths {
       writer.append(text);
       writer.flush();
     }
+  }
+
+  public static String stripPathPrefixAndExtension (Path fileName, String prefix) {
+    String nameWithoutExtension = getNameWithoutExtension(fileName);
+
+    if (!nameWithoutExtension.startsWith(prefix) ||
+        nameWithoutExtension.length() < prefix.length()) {
+      throw new HumanReadableException(
+          "Invalid prefix on filename in path %s (file %s) - expecting %s",
+          fileName,
+          nameWithoutExtension,
+          prefix);
+    }
+
+    return nameWithoutExtension.substring(
+        prefix.length(),
+        nameWithoutExtension.length());
   }
 }

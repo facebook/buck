@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -202,6 +203,7 @@ public class AppleDescriptions {
     output.linkerFlags = Optional.of(
         FluentIterable
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
+            .append(arg.libraries.transform(librariesToLinkerFlagsFunction(resolver)).get())
             .append(arg.linkerFlags.get())
             .toList());
     output.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
@@ -210,6 +212,7 @@ public class AppleDescriptions {
         PatternMatchedCollection.<ImmutableList<String>>of());
     output.langPreprocessorFlags = arg.langPreprocessorFlags;
     output.frameworks = arg.frameworks;
+    output.libraries = arg.libraries;
     output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;
@@ -267,6 +270,7 @@ public class AppleDescriptions {
     output.exportedLinkerFlags = Optional.of(
         FluentIterable
             .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
+            .append(arg.libraries.transform(librariesToLinkerFlagsFunction(resolver)).get())
             .append(arg.exportedLinkerFlags.get())
             .toList());
     output.exportedPlatformLinkerFlags = Optional.of(
@@ -288,6 +292,21 @@ public class AppleDescriptions {
         return FluentIterable
             .from(input)
             .transformAndConcat(linkerFlagsForFrameworkPathFunction(resolver.getPathFunction()))
+            .toList();
+      }
+    };
+  }
+
+  @VisibleForTesting
+  static Function<
+      ImmutableSortedSet<FrameworkPath>,
+      ImmutableList<String>> librariesToLinkerFlagsFunction(final SourcePathResolver resolver) {
+    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<String>>() {
+      @Override
+      public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
+        return FluentIterable
+            .from(input)
+            .transformAndConcat(linkerFlagsForLibraryFunction(resolver.getPathFunction()))
             .toList();
       }
     };
@@ -334,15 +353,19 @@ public class AppleDescriptions {
     return new Function<FrameworkPath, Iterable<String>>() {
       @Override
       public Iterable<String> apply(FrameworkPath input) {
-        FrameworkPath.FrameworkType frameworkType = input.getFrameworkType(resolver);
-        switch (frameworkType) {
-          case FRAMEWORK:
-            return ImmutableList.of("-framework", input.getName(resolver));
-          case LIBRARY:
-            return ImmutableList.of("-l" + input.getName(resolver));
-        }
+        return ImmutableList.of("-framework", input.getName(resolver));
+      }
+    };
+  }
 
-        throw new RuntimeException("Unsupported framework type: " + frameworkType);
+  private static Function<FrameworkPath, Iterable<String>> linkerFlagsForLibraryFunction(
+      final Function<SourcePath, Path> resolver) {
+    return new Function<FrameworkPath, Iterable<String>>() {
+      @Override
+      public Iterable<String> apply(FrameworkPath input) {
+        return ImmutableList.of(
+            "-l",
+            MorePaths.stripPathPrefixAndExtension(input.getFileName(resolver), "lib"));
       }
     };
   }

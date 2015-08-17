@@ -64,6 +64,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
+  private final ImmutableSet<FrameworkPath> libraries;
   private final Linkage linkage;
   private final boolean linkWhole;
   private final Optional<String> soname;
@@ -82,6 +83,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
+      ImmutableSet<FrameworkPath> libraries,
       Linkage linkage,
       boolean linkWhole,
       Optional<String> soname,
@@ -95,6 +97,7 @@ public class CxxLibrary extends AbstractCxxLibrary {
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.frameworks = frameworks;
+    this.libraries = libraries;
     this.linkage = linkage;
     this.linkWhole = linkWhole;
     this.soname = soname;
@@ -167,7 +170,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
       return NativeLinkableInput.of(
           ImmutableList.<SourcePath>of(),
           ImmutableList.<String>of(),
-          Preconditions.checkNotNull(frameworks));
+          Preconditions.checkNotNull(frameworks),
+          ImmutableSet.<FrameworkPath>of());
     }
 
     // Build up the arguments used to link this library.  If we're linking the
@@ -216,7 +220,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
     return NativeLinkableInput.of(
         ImmutableList.<SourcePath>of(new BuildTargetSourcePath(libraryRule.getBuildTarget())),
         linkerArgs,
-        Preconditions.checkNotNull(frameworks));
+        Preconditions.checkNotNull(frameworks),
+        Preconditions.checkNotNull(libraries));
   }
 
   public BuildRule requireBuildRule(

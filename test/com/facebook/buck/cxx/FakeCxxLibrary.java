@@ -135,10 +135,12 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()),
+            ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of()) :
         NativeLinkableInput.of(
             ImmutableList.<SourcePath>of(new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
             ImmutableList.of(sharedLibraryOutput.toString()),
+            ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
   }
 

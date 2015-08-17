@@ -192,6 +192,7 @@ public class CxxLibraryDescriptionTest {
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()),
+            ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
       }
 
@@ -623,12 +624,14 @@ public class CxxLibraryDescriptionTest {
                     new BuildTargetSourcePath(
                         staticLibraryDep.getBuildTarget())),
                 ImmutableList.of(staticLibraryOutput.toString()),
+                ImmutableSet.<FrameworkPath>of(),
                 ImmutableSet.<FrameworkPath>of()) :
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
                     new BuildTargetSourcePath(
                         sharedLibraryDep.getBuildTarget())),
                 ImmutableList.of(sharedLibraryOutput.toString()),
+                ImmutableSet.<FrameworkPath>of(),
                 ImmutableSet.<FrameworkPath>of());
       }
 

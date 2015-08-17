@@ -134,6 +134,7 @@ public class CxxBinaryDescriptionTest {
             ImmutableList.<SourcePath>of(
                 new BuildTargetSourcePath(archive.getBuildTarget())),
             ImmutableList.of(archiveOutput.toString()),
+            ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
       }
 

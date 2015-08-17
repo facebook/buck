@@ -82,7 +82,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -803,8 +802,10 @@ public class ProjectGenerator {
     if (includeFrameworks) {
       ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
       frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks.get());
+      frameworksBuilder.addAll(targetNode.getConstructorArg().libraries.get());
       frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
+
       mutator.setArchives(
           collectRecursiveLibraryDependencies(ImmutableList.of(targetNode)));
     }
@@ -1101,6 +1102,7 @@ public class ProjectGenerator {
     frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(tests));
     for (TargetNode<AppleTestDescription.Arg> test : tests) {
       frameworksBuilder.addAll(test.getConstructorArg().frameworks.get());
+      frameworksBuilder.addAll(test.getConstructorArg().libraries.get());
     }
     mutator.setFrameworks(frameworksBuilder.build());
 
@@ -1785,8 +1787,15 @@ public class ProjectGenerator {
         .addAll(
             collectRecursiveSearchPathsForFrameworkPaths(
                 targetNodes,
-                FrameworkPath.FrameworkType.LIBRARY))
-        .build();
+                new Function<
+                    AppleNativeTargetDescriptionArg,
+                    ImmutableSortedSet<FrameworkPath>>() {
+                  @Override
+                  public ImmutableSortedSet<FrameworkPath> apply(
+                      AppleNativeTargetDescriptionArg input) {
+                    return input.libraries.or(ImmutableSortedSet.<FrameworkPath>of());
+                  }
+                })).build();
   }
 
   private <T> ImmutableSet<String> collectRecursiveFrameworkSearchPaths(
@@ -1796,8 +1805,15 @@ public class ProjectGenerator {
         .addAll(
             collectRecursiveSearchPathsForFrameworkPaths(
                 targetNodes,
-                FrameworkPath.FrameworkType.FRAMEWORK))
-        .build();
+                new Function<
+                    AppleNativeTargetDescriptionArg,
+                    ImmutableSortedSet<FrameworkPath>>() {
+                  @Override
+                  public ImmutableSortedSet<FrameworkPath> apply(
+                      AppleNativeTargetDescriptionArg input) {
+                    return input.frameworks.or(ImmutableSortedSet.<FrameworkPath>of());
+                  }
+                })).build();
   }
 
   private <T> Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(
@@ -1818,7 +1834,9 @@ public class ProjectGenerator {
                 if (library.isPresent() &&
                     !AppleLibraryDescription.isSharedLibraryTarget(
                         library.get().getBuildTarget())) {
-                  return library.get().getConstructorArg().frameworks.get();
+                  return Iterables.concat(
+                      library.get().getConstructorArg().frameworks.get(),
+                      library.get().getConstructorArg().libraries.get());
                 } else {
                   return ImmutableList.of();
                 }
@@ -1828,7 +1846,9 @@ public class ProjectGenerator {
 
   private <T> Iterable<String> collectRecursiveSearchPathsForFrameworkPaths(
       Iterable<TargetNode<T>> targetNodes,
-      final FrameworkPath.FrameworkType type) {
+      final Function<
+          AppleNativeTargetDescriptionArg,
+          ImmutableSortedSet<FrameworkPath>> pathSetExtractor) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
@@ -1843,7 +1863,7 @@ public class ProjectGenerator {
               public Iterable<String> apply(TargetNode<?> input) {
                 return input
                     .castArg(AppleNativeTargetDescriptionArg.class)
-                    .transform(getTargetFrameworkSearchPaths(type))
+                    .transform(getTargetFrameworkSearchPaths(pathSetExtractor))
                     .or(ImmutableSet.<String>of());
               }
             });
@@ -1914,11 +1934,10 @@ public class ProjectGenerator {
 
   private Function<
       TargetNode<AppleNativeTargetDescriptionArg>,
-      Iterable<String>> getTargetFrameworkSearchPaths(final FrameworkPath.FrameworkType type) {
-
-    final Predicate<FrameworkPath> byType = Predicates.compose(
-        Predicates.equalTo(type),
-        FrameworkPath.getFrameworkTypeFunction(sourcePathResolver));
+      Iterable<String>> getTargetFrameworkSearchPaths(
+        final Function<
+            AppleNativeTargetDescriptionArg,
+            ImmutableSortedSet<FrameworkPath>> pathSetExtractor) {
 
     final Function<FrameworkPath, Path> toSearchPath = FrameworkPath
         .getUnexpandedSearchPathFunction(
@@ -1929,8 +1948,7 @@ public class ProjectGenerator {
       @Override
       public Iterable<String> apply(TargetNode<AppleNativeTargetDescriptionArg> input) {
         return FluentIterable
-            .from(input.getConstructorArg().frameworks.get())
-            .filter(byType)
+            .from(pathSetExtractor.apply(input.getConstructorArg()))
             .transform(toSearchPath)
             .transform(Functions.toStringFunction());
       }

@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+
 @SuppressFieldNotInitialized
 public class CxxConstructorArg implements HasTests {
 
@@ -46,6 +47,7 @@ public class CxxConstructorArg implements HasTests {
   public Optional<ImmutableList<String>> linkerFlags;
   public Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags;
   public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
+  public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
   public Optional<ImmutableList<SourcePath>> lexSrcs;
   public Optional<ImmutableList<SourcePath>> yaccSrcs;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;

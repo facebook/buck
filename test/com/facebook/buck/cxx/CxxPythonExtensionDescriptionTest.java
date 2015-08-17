@@ -177,6 +177,7 @@ public class CxxPythonExtensionDescriptionTest {
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(),
                 ImmutableList.<String>of(),
+                ImmutableSet.<FrameworkPath>of(),
                 ImmutableSet.<FrameworkPath>of()) :
             NativeLinkableInput.of(
                 ImmutableList.<SourcePath>of(
@@ -184,6 +185,7 @@ public class CxxPythonExtensionDescriptionTest {
                         sharedLibraryDep.getBuildTarget(),
                         sharedLibraryOutput)),
                 ImmutableList.of(sharedLibraryOutput.toString()),
+                ImmutableSet.<FrameworkPath>of(),
                 ImmutableSet.<FrameworkPath>of());
       }
 

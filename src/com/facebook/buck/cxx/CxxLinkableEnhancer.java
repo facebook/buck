@@ -160,6 +160,10 @@ public class CxxLinkableEnhancer {
             Optional.of(ImmutableSortedSet.copyOf(linkableInput.getFrameworks())),
             cxxPlatform,
             resolver),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(
+            Optional.of(ImmutableSortedSet.copyOf(linkableInput.getLibraries())),
+            cxxPlatform,
+            resolver),
         cxxPlatform.getDebugPathSanitizer());
   }
 

@@ -48,15 +48,25 @@ public class CxxLinkStepTest {
         "a.o",
         "libb.a");
     Path frameworkRoot = Paths.get("/System/Frameworks");
+    final Path librarySearchPath = Paths.get("/System/libraries");
+    final String library = "z";
 
     // Create our CxxLinkStep to test.
-    CxxLinkStep cxxLinkStep = new CxxLinkStep(linker, output, args, ImmutableSet.of(frameworkRoot));
+    CxxLinkStep cxxLinkStep = new CxxLinkStep(
+        linker,
+        output,
+        args,
+        ImmutableSet.of(frameworkRoot),
+        ImmutableSet.of(librarySearchPath),
+        ImmutableSet.of(library));
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .addAll(linker)
         .add("-o", output.toString())
         .add("-F", frameworkRoot.toString())
+        .add("-L", librarySearchPath.toString())
+        .add("-l" + library)
         .addAll(args)
         .build();
     ImmutableList<String> actual = cxxLinkStep.getShellCommand(context);

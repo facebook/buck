@@ -40,6 +40,7 @@ abstract class AbstractNativeLinkableInput {
       NativeLinkableInput.of(
           ImmutableList.<SourcePath>of(),
           ImmutableList.<String>of(),
+          ImmutableSet.<FrameworkPath>of(),
           ImmutableSet.<FrameworkPath>of());
 
   // Inputs used by linker.
@@ -55,6 +56,10 @@ abstract class AbstractNativeLinkableInput {
   @Value.Parameter
   public abstract Set<FrameworkPath> getFrameworks();
 
+  // Libraries to link.
+  @Value.Parameter
+  public abstract Set<FrameworkPath> getLibraries();
+
   /**
    * Combine, in order, several {@link NativeLinkableInput} objects into a single one.
    */
@@ -62,17 +67,20 @@ abstract class AbstractNativeLinkableInput {
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
     ImmutableList.Builder<String> args = ImmutableList.builder();
     ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
+    ImmutableSet.Builder<FrameworkPath> libraries = ImmutableSet.builder();
 
     for (NativeLinkableInput item : items) {
       inputs.addAll(item.getInputs());
       args.addAll(item.getArgs());
       frameworks.addAll(item.getFrameworks());
+      libraries.addAll(item.getLibraries());
     }
 
     return NativeLinkableInput.of(
         inputs.build(),
         args.build(),
-        frameworks.build());
+        frameworks.build(),
+        libraries.build());
   }
 
   public static NativeLinkableInput of() {

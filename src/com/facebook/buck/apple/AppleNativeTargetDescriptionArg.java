@@ -43,6 +43,7 @@ public class AppleNativeTargetDescriptionArg implements HasTests {
   public Optional<SourceList> headers;
   public Optional<SourceList> exportedHeaders;
   public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
+  public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
   public Optional<String> gid;
