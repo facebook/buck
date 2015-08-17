@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <content url="file://$MODULE_DIR$/../../java/code/modules">
+      <sourceFolder url="file://$MODULE_DIR$/../../java/code/modules/dep1/src" isTestSource="false"  />
+      <sourceFolder url="file://$MODULE_DIR$/../../java/code/modules/tip/src" isTestSource="false"  />
+
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+
+    <orderEntry type="inheritedJdk" />
+  </component>
+</module>
