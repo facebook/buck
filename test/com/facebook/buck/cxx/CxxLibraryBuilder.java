@@ -20,8 +20,10 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -61,6 +63,16 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     return this;
   }
 
+  public CxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> exportedLinkerFlags) {
+    arg.exportedLinkerFlags = Optional.of(exportedLinkerFlags);
+    return this;
+  }
+
+  public CxxLibraryBuilder setExportedPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags) {
+    arg.exportedPlatformLinkerFlags = Optional.of(exportedPlatformLinkerFlags);
+    return this;
+  }
 
   public CxxLibraryBuilder setSoname(String soname) {
     arg.soname = Optional.of(soname);

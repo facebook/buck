@@ -34,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreStrings;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -137,6 +138,11 @@ public class CxxLink
 
   public ImmutableList<String> getArgs() {
     return args;
+  }
+
+  @VisibleForTesting
+  ImmutableList<SourcePath> getInputs() {
+    return inputs;
   }
 
   private ImmutableSet<Path> getLibrarySearchDirectories() {

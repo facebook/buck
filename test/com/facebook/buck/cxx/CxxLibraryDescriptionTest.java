@@ -41,7 +41,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.shell.ExportFile;
+import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -1038,6 +1041,271 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         pathResolver.getPath(input).toString(),
         Matchers.containsString("static-pic"));
+  }
+
+  @Test
+  public void locationMacroExpandedLinkerFlag() throws IOException {
+    BuildTarget location = BuildTargetFactory.newInstance("//:loc");
+    BuildTarget target = BuildTargetFactory
+        .newInstance("//foo:bar")
+        .withFlavors(
+            CxxDescriptionEnhancer.SHARED_FLAVOR,
+            CxxLibraryBuilder.createDefaultPlatform().getFlavor());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    locBuilder.setOut("somewhere.over.the.rainbow");
+    CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
+    libBuilder.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
+    libBuilder.setLinkerFlags(ImmutableList.of("-Wl,--version-script=$(location //:loc)"));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        libBuilder.build(),
+        locBuilder.build());
+    ExportFile loc = (ExportFile) locBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+    CxxLink lib = (CxxLink) libBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+
+    assertThat(lib.getDeps(), Matchers.hasItem(loc));
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    assertThat(pathResolver.filterBuildRuleInputs(lib.getInputs()), Matchers.hasItem(loc));
+    assertThat(
+        lib.getArgs(),
+        Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString())));
+  }
+
+  @Test
+  public void locationMacroExpandedPlatformLinkerFlagPlatformMatch() throws IOException {
+    BuildTarget location = BuildTargetFactory.newInstance("//:loc");
+    BuildTarget target = BuildTargetFactory
+        .newInstance("//foo:bar")
+        .withFlavors(
+            CxxDescriptionEnhancer.SHARED_FLAVOR,
+            CxxLibraryBuilder.createDefaultPlatform().getFlavor());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    locBuilder.setOut("somewhere.over.the.rainbow");
+    CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
+    libBuilder.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
+    libBuilder.setPlatformLinkerFlags(
+        PatternMatchedCollection.<ImmutableList<String>>builder()
+            .add(
+                Pattern.compile("default"),
+                ImmutableList.of("-Wl,--version-script=$(location //:loc)"))
+            .build());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        libBuilder.build(),
+        locBuilder.build());
+    ExportFile loc = (ExportFile) locBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+    CxxLink lib = (CxxLink) libBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+
+    assertThat(lib.getDeps(), Matchers.hasItem(loc));
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    assertThat(pathResolver.filterBuildRuleInputs(lib.getInputs()), Matchers.hasItem(loc));
+    assertThat(
+        lib.getArgs(),
+        Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString())));
+  }
+
+  @Test
+  public void locationMacroExpandedPlatformLinkerFlagNoPlatformMatch() throws IOException {
+    BuildTarget location = BuildTargetFactory.newInstance("//:loc");
+    BuildTarget target = BuildTargetFactory
+        .newInstance("//foo:bar")
+        .withFlavors(
+            CxxDescriptionEnhancer.SHARED_FLAVOR,
+            CxxLibraryBuilder.createDefaultPlatform().getFlavor());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    locBuilder.setOut("somewhere.over.the.rainbow");
+    CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
+    libBuilder.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
+    libBuilder.setPlatformLinkerFlags(
+        PatternMatchedCollection.<ImmutableList<String>>builder()
+            .add(
+                Pattern.compile("notarealplatform"),
+                ImmutableList.of("-Wl,--version-script=$(location //:loc)"))
+            .build());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        libBuilder.build(),
+        locBuilder.build());
+    ExportFile loc = (ExportFile) locBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+    CxxLink lib = (CxxLink) libBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+
+    assertThat(lib.getDeps(), Matchers.not(Matchers.hasItem(loc)));
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    assertThat(
+        pathResolver.filterBuildRuleInputs(lib.getInputs()),
+        Matchers.not(Matchers.hasItem(loc)));
+    assertThat(
+        lib.getArgs(),
+        Matchers.not(Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString()))));
+  }
+
+  @Test
+  public void locationMacroExpandedExportedLinkerFlag() throws IOException {
+    BuildTarget location = BuildTargetFactory.newInstance("//:loc");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    locBuilder.setOut("somewhere.over.the.rainbow");
+    CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
+    libBuilder.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
+    libBuilder.setExportedLinkerFlags(ImmutableList.of("-Wl,--version-script=$(location //:loc)"));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        libBuilder.build(),
+        locBuilder.build());
+    ExportFile loc = (ExportFile) locBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+    CxxLibrary lib = (CxxLibrary) libBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+
+    NativeLinkableInput nativeLinkableInput =
+        lib.getNativeLinkableInput(
+            targetGraph,
+            CxxLibraryBuilder.createDefaultPlatform(),
+            Linker.LinkableDepType.SHARED);
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    assertThat(
+        pathResolver.filterBuildRuleInputs(nativeLinkableInput.getInputs()),
+        Matchers.hasItem(loc));
+    assertThat(
+        nativeLinkableInput.getArgs(),
+        Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString())));
+  }
+
+  @Test
+  public void locationMacroExpandedExportedPlatformLinkerFlagPlatformMatch() throws IOException {
+    BuildTarget location = BuildTargetFactory.newInstance("//:loc");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    locBuilder.setOut("somewhere.over.the.rainbow");
+    CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
+    libBuilder.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
+    libBuilder.setExportedPlatformLinkerFlags(
+        PatternMatchedCollection.<ImmutableList<String>>builder()
+            .add(
+                Pattern.compile("default"),
+                ImmutableList.of("-Wl,--version-script=$(location //:loc)"))
+            .build());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        libBuilder.build(),
+        locBuilder.build());
+    ExportFile loc = (ExportFile) locBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+    CxxLibrary lib = (CxxLibrary) libBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+
+    NativeLinkableInput nativeLinkableInput =
+        lib.getNativeLinkableInput(
+            targetGraph,
+            CxxLibraryBuilder.createDefaultPlatform(),
+            Linker.LinkableDepType.SHARED);
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    assertThat(
+        pathResolver.filterBuildRuleInputs(nativeLinkableInput.getInputs()),
+        Matchers.hasItem(loc));
+    assertThat(
+        nativeLinkableInput.getArgs(),
+        Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString())));
+  }
+
+  @Test
+  public void locationMacroExpandedExportedPlatformLinkerFlagNoPlatformMatch() throws IOException {
+    BuildTarget location = BuildTargetFactory.newInstance("//:loc");
+    BuildTarget target = BuildTargetFactory
+        .newInstance("//foo:bar")
+        .withFlavors(
+            CxxLibraryBuilder.createDefaultPlatform().getFlavor());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExportFileBuilder locBuilder = ExportFileBuilder.newExportFileBuilder(location);
+    locBuilder.setOut("somewhere.over.the.rainbow");
+    CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
+    libBuilder.setSrcs(
+        ImmutableSortedSet.of(
+            SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
+    libBuilder.setExportedPlatformLinkerFlags(
+        PatternMatchedCollection.<ImmutableList<String>>builder()
+            .add(
+                Pattern.compile("notarealplatform"),
+                ImmutableList.of("-Wl,--version-script=$(location //:loc)"))
+            .build());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        libBuilder.build(),
+        locBuilder.build());
+    ExportFile loc = (ExportFile) locBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+    CxxLibrary lib = (CxxLibrary) libBuilder
+        .build(
+            resolver,
+            filesystem,
+            targetGraph);
+
+    NativeLinkableInput nativeLinkableInput =
+        lib.getNativeLinkableInput(
+            targetGraph,
+            CxxLibraryBuilder.createDefaultPlatform(),
+            Linker.LinkableDepType.SHARED);
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    assertThat(
+        pathResolver.filterBuildRuleInputs(nativeLinkableInput.getInputs()),
+        Matchers.not(Matchers.hasItem(loc)));
+    assertThat(
+        nativeLinkableInput.getArgs(),
+        Matchers.not(Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString()))));
   }
 
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -197,7 +198,9 @@ public class CxxLibraryTest {
         pathResolver,
         /* headerOnly */ Predicates.<CxxPlatform>alwaysFalse(),
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
-        Functions.constant(ImmutableList.<String>of()),
+        /* exportedLinkerFlags */ Functions.constant(new Pair<>(
+            ImmutableList.<String>of(),
+            ImmutableSet.<SourcePath>of())),
         /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of(),

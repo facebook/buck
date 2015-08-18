@@ -61,7 +61,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
-  private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
+  private final Function<? super CxxPlatform,
+      Pair<ImmutableList<String>, ImmutableSet<SourcePath>>> exportedLinkerFlags;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
@@ -80,7 +81,8 @@ public class CxxLibrary extends AbstractCxxLibrary {
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
-      Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
+      Function<? super CxxPlatform,
+          Pair<ImmutableList<String>, ImmutableSet<SourcePath>>> exportedLinkerFlags,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -176,10 +178,12 @@ public class CxxLibrary extends AbstractCxxLibrary {
 
     // Build up the arguments used to link this library.  If we're linking the
     // whole archive, wrap the library argument in the necessary "ld" flags.
-    final BuildRule libraryRule;
+    final Pair<ImmutableList<String>, ImmutableSet<SourcePath>> flagsAndBuildInputs =
+        exportedLinkerFlags.apply(cxxPlatform);
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(exportedLinkerFlags.apply(cxxPlatform));
+    linkerArgsBuilder.addAll(flagsAndBuildInputs.getFirst());
 
+    final BuildRule libraryRule;
     if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
       libraryRule = requireBuildRule(
           targetGraph,
@@ -218,7 +222,10 @@ public class CxxLibrary extends AbstractCxxLibrary {
     final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(new BuildTargetSourcePath(libraryRule.getBuildTarget())),
+        ImmutableList.<SourcePath>builder()
+            .add(new BuildTargetSourcePath(libraryRule.getBuildTarget()))
+            .addAll(flagsAndBuildInputs.getSecond())
+            .build(),
         linkerArgs,
         Preconditions.checkNotNull(frameworks),
         Preconditions.checkNotNull(libraries));

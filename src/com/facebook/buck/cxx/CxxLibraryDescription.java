@@ -21,6 +21,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -29,12 +30,17 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroException;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -44,6 +50,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,6 +70,11 @@ public class CxxLibraryDescription implements
     Description<CxxLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
     Flavored {
+
+  private static final MacroHandler MACRO_HANDLER =
+      new MacroHandler(
+          ImmutableMap.<String, MacroExpander>of(
+              "location", new LocationMacroExpander()));
 
   public enum Type {
     HEADERS,
@@ -398,12 +410,25 @@ public class CxxLibraryDescription implements
         cxxPlatform,
         params,
         pathResolver,
-        extraLdFlags,
+        FluentIterable.from(extraLdFlags)
+            .transform(
+                MACRO_HANDLER.getExpander(
+                    params.getBuildTarget(),
+                    ruleResolver,
+                    params.getProjectFilesystem()))
+            .toList(),
         sharedTarget,
         linkType,
         Optional.of(sharedLibrarySoname),
         sharedLibraryPath,
-        objects.values(),
+        FluentIterable.from(objects.values())
+            .append(
+                FluentIterable.from(getExtraMacroBuildInputs(
+                        params.getBuildTarget(),
+                        ruleResolver,
+                        extraLdFlags))
+                    .transform(SourcePaths.getToBuildTargetSourcePath()))
+            .toList(),
         linkableDepType,
         params.getDeps(),
         cxxRuntimeType,
@@ -556,7 +581,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link Archive} rule which builds a static library version of this C/C++ library.
    */
-  public static <A extends Arg> BuildRule createStaticLibraryBuildRule(
+  private static <A extends Arg> BuildRule createStaticLibraryBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -601,7 +626,7 @@ public class CxxLibraryDescription implements
   /**
    * @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library.
    */
-  public static <A extends Arg> BuildRule createSharedLibraryBuildRule(
+  private static <A extends Arg> BuildRule createSharedLibraryBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -670,7 +695,7 @@ public class CxxLibraryDescription implements
    * @return a {@link CxxCompilationDatabase} rule which builds a compilation database for this
    * C/C++ library.
    */
-  public static <A extends Arg> CxxCompilationDatabase createCompilationDatabaseBuildRule(
+  private static <A extends Arg> CxxCompilationDatabase createCompilationDatabaseBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -748,10 +773,25 @@ public class CxxLibraryDescription implements
         ImmutableSet.<BuildRule>of());
   }
 
+  private static ImmutableList<BuildRule> getExtraMacroBuildInputs(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      Iterable<String> flags) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    try {
+      for (String flag : flags) {
+        deps.addAll(MACRO_HANDLER.extractAdditionalBuildTimeDeps(target, resolver, flag));
+      }
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+    return deps.build();
+  }
+
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
       final A args,
       TypeAndPlatform typeAndPlatform,
       Optional<Linker.LinkableDepType> linkableDepType,
@@ -918,13 +958,29 @@ public class CxxLibraryDescription implements
                 input);
           }
         },
-        new Function<CxxPlatform, ImmutableList<String>>() {
+        new Function<CxxPlatform, Pair<ImmutableList<String>, ImmutableSet<SourcePath>>>() {
           @Override
-          public ImmutableList<String> apply(CxxPlatform input) {
-            return CxxFlags.getFlags(
+          public Pair<ImmutableList<String>, ImmutableSet<SourcePath>> apply(
+              CxxPlatform input) {
+            ImmutableList<String> flags = CxxFlags.getFlags(
                 args.exportedLinkerFlags,
                 args.exportedPlatformLinkerFlags,
                 input);
+            return new Pair<>(
+                FluentIterable.from(flags)
+                    .transform(
+                        MACRO_HANDLER.getExpander(
+                            params.getBuildTarget(),
+                            resolver,
+                            params.getProjectFilesystem()))
+                    .toList(),
+                FluentIterable.from(
+                    getExtraMacroBuildInputs(
+                        params.getBuildTarget(),
+                        resolver,
+                        flags))
+                    .transform(SourcePaths.getToBuildTargetSourcePath())
+                    .toSet());
           }
         },
         args.supportedPlatformsRegex,
@@ -950,6 +1006,30 @@ public class CxxLibraryDescription implements
 
     if (constructorArg.lexSrcs.isPresent() && !constructorArg.lexSrcs.get().isEmpty()) {
       deps.add(cxxBuckConfig.getLexDep());
+    }
+
+    try {
+      for (ImmutableList<String> values :
+          Optional.presentInstances(ImmutableList.of(
+                  constructorArg.linkerFlags,
+                  constructorArg.exportedLinkerFlags))) {
+        for (String val : values) {
+          deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, val));
+        }
+      }
+      for (PatternMatchedCollection<ImmutableList<String>> values :
+          Optional.presentInstances(ImmutableList.of(
+                  constructorArg.platformLinkerFlags,
+                  constructorArg.exportedPlatformLinkerFlags))) {
+        for (Pair<Pattern, ImmutableList<String>> pav : values.getPatternsAndValues()) {
+          for (String val : pav.getSecond()) {
+            deps.addAll(
+                MACRO_HANDLER.extractParseTimeDeps(buildTarget, val));
+          }
+        }
+      }
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
     }
 
     return deps.build();

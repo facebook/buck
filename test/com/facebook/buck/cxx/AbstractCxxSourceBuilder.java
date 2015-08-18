@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
@@ -78,6 +79,12 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
 
   public AbstractCxxSourceBuilder<T> setLinkerFlags(ImmutableList<String> linkerFlags) {
     arg.linkerFlags = Optional.of(linkerFlags);
+    return this;
+  }
+
+  public AbstractCxxSourceBuilder<T> setPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags) {
+    arg.platformLinkerFlags = Optional.of(platformLinkerFlags);
     return this;
   }
 
