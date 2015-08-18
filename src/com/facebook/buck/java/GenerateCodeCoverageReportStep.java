@@ -16,15 +16,23 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Path;
+import java.util.Properties;
 import java.util.Set;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
@@ -34,6 +42,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   private final Path outputDirectory;
   private CoverageReportFormat format;
   private final String title;
+  private final Path propertyFile;
 
   public GenerateCodeCoverageReportStep(
       Set<String> sourceDirectories,
@@ -46,6 +55,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     this.outputDirectory = outputDirectory;
     this.format = format;
     this.title = title;
+    this.propertyFile = outputDirectory.resolve("parameters.properties");
   }
 
   @Override
@@ -54,28 +64,52 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   }
 
   @Override
+  public int execute(ExecutionContext context) throws InterruptedException {
+    try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())){
+      saveParametersToPropertyStream(context.getProjectFilesystem(), propertyFileStream);
+    } catch (IOException e) {
+      context.logError(e, "Cannot write coverage report generator params to file.");
+      return 1;
+    }
+
+    return super.execute(context);
+  }
+
+  @VisibleForTesting
+  void saveParametersToPropertyStream(
+      ProjectFilesystem filesystem,
+      OutputStream outputStream) throws IOException {
+    final Properties properties = new Properties();
+
+    properties.setProperty(
+        "jacoco.output.dir",
+        filesystem.getAbsolutifier().apply(outputDirectory).toString());
+    properties.setProperty("jacoco.exec.data.file", JUnitStep.JACOCO_EXEC_COVERAGE_FILE);
+    properties.setProperty("jacoco.format", format.toString().toLowerCase());
+    properties.setProperty("jacoco.title", title);
+    properties.setProperty(
+        "classes.dir", Joiner.on(":").join(
+            Iterables.transform(
+                classesDirectories,
+                filesystem.getAbsolutifier())));
+    properties.setProperty("src.dir", Joiner.on(":").join(sourceDirectories));
+
+    try (Writer writer = new OutputStreamWriter(outputStream, "utf8")) {
+      properties.store(writer, "Parameters for Jacoco report generator.");
+    }
+  }
+
+  @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java");
 
-    args.add(String.format("-Djacoco.output.dir=%s", outputDirectory));
-
-    args.add(String.format("-Djacoco.exec.data.file=%s", JUnitStep.JACOCO_EXEC_COVERAGE_FILE));
-
-    args.add(String.format("-Djacoco.format=%s", format.toString().toLowerCase()));
-
-    args.add(String.format("-Djacoco.title=%s", title));
-
-    args.add(String.format("-Dclasses.dir=%s",
-        Joiner.on(":").join(Iterables.transform(classesDirectories,
-            context.getProjectFilesystem().getAbsolutifier()))));
-
-    args.add(String.format("-Dsrc.dir=%s", Joiner.on(":").join(sourceDirectories)));
-
     // Generate report from JaCoCo exec file using 'ReportGenerator.java'
 
     args.add("-jar", System.getProperty("buck.report_generator_jar"));
+    args.add(context.getProjectFilesystem().getAbsolutifier().apply(propertyFile).toString());
 
     return args.build();
   }
+
 }

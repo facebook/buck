@@ -27,8 +27,13 @@ import org.jacoco.report.html.HTMLFormatter;
 import org.jacoco.report.xml.XMLFormatter;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Properties;
 
 /**
  * This example creates a HTML report for eclipse like projects based on a
@@ -54,16 +59,16 @@ public class ReportGenerator {
         /**
          * Create a new generator based for the given project.
          */
-        public ReportGenerator() {
-                String jacocoOutputDir = System.getProperty("jacoco.output.dir");
-                this.title = System.getProperty("jacoco.title");
+        public ReportGenerator(final Properties properties) {
+                String jacocoOutputDir = properties.getProperty("jacoco.output.dir");
+                this.title = properties.getProperty("jacoco.title");
                 this.executionDataFile = new File(
-                    jacocoOutputDir, System.getProperty("jacoco.exec.data.file"));
+                        jacocoOutputDir, properties.getProperty("jacoco.exec.data.file"));
                 this.execFileLoader = new ExecFileLoader();
-                this.classesPath = System.getProperty("classes.dir");
-                this.sourcesPath = System.getProperty("src.dir");
+                this.classesPath = properties.getProperty("classes.dir");
+                this.sourcesPath = properties.getProperty("src.dir");
                 this.reportDirectory = new File(jacocoOutputDir, "code-coverage");
-                this.reportFormat = System.getProperty("jacoco.format", "html");
+                this.reportFormat = properties.getProperty("jacoco.format", "html");
         }
 
         /**
@@ -175,8 +180,19 @@ public class ReportGenerator {
          * @throws IOException
          */
         public static void main(final String[] args) throws IOException {
-                final ReportGenerator generator = new ReportGenerator();
+                final Properties properties = loadProperties(args[0]);
+                final ReportGenerator generator = new ReportGenerator(properties);
                 generator.create();
+        }
+
+        private static Properties loadProperties(final String filename) throws IOException {
+                try (InputStream inputStream = new FileInputStream(filename)) {
+                        try (Reader reader = new InputStreamReader(inputStream, "utf8")) {
+                                final Properties result = new Properties();
+                                result.load(reader);
+                                return result;
+                        }
+                }
         }
 
 }
