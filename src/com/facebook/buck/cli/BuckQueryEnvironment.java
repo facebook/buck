@@ -19,8 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -47,6 +46,7 @@ import javax.annotation.Nullable;
 public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
   private final Map<String, Set<BuildTarget>> letBindings = new HashMap<>();
   private final CommandRunnerParams params;
+  private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
   private TargetGraph graph = TargetGraph.EMPTY;
 
   private final Set<Setting> settings;
@@ -59,6 +59,10 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
     this.params = params;
     this.settings = settings;
     this.enableProfiling = enableProfiling;
+    this.targetNodeSpecParser = new CommandLineTargetNodeSpecParser(
+        params.getBuckConfig(),
+        new BuildTargetPatternTargetNodeParser(
+            params.getRepository().getFilesystem().getIgnorePaths()));
   }
 
   public CommandRunnerParams getParams() { return params; }
@@ -98,14 +102,22 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
   @Override
   public Set<BuildTarget> getTargetsMatchingPattern(QueryExpression owner, String pattern)
       throws QueryException {
-    // TODO(user): only supporting single build targets like buck audit commands.
-    // In the future, this should also support build target patterns as well.
-    Set<BuildTarget> targets = new LinkedHashSet<>();
-    targets.add(
-        BuildTargetParser.INSTANCE.parse(
-            pattern,
-            BuildTargetPatternParser.fullyQualified()));
-    return targets;
+    try {
+      // Sorting to have predictable results across different java libraries implementations.
+      return ImmutableSortedSet.copyOf(
+          params.getParser()
+              .resolveTargetSpec(
+                  targetNodeSpecParser.parse(pattern),
+                  new ParserConfig(params.getBuckConfig()),
+                  params.getBuckEventBus(),
+                  params.getConsole(),
+                  params.getEnvironment(),
+                  enableProfiling));
+    } catch (BuildTargetException | BuildFileParseException | IOException e) {
+      throw new QueryException("Error in resolving targets matching " + pattern);
+    } catch (InterruptedException e) {
+      throw (QueryException) new QueryException("Interrupted").initCause(e);
+    }
   }
 
   @Override

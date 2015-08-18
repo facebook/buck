@@ -115,6 +115,9 @@ public class QueryCommand extends AbstractCommand {
         CommandHelper.printToConsole(params, queryResultMap);
       }
     } catch (QueryException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        throw (InterruptedException) e.getCause();
+      }
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }
@@ -134,6 +137,9 @@ public class QueryCommand extends AbstractCommand {
         CommandHelper.printToConsole(params, queryResult);
       }
     } catch (QueryException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        throw (InterruptedException) e.getCause();
+      }
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }

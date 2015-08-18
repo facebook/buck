@@ -156,4 +156,32 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-one-direct-deps-tests"), result.getStdout());
   }
+
+  @Test
+  public void testGetTestsFromPackageTargetPattern() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "testsof(//example:)");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-pkg-pattern-testsof"), result.getStdout());
+  }
+
+  @Test
+  public void testGetTestsFromRecursiveTargetPattern() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "testsof(//...)");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-recursive-pattern-testsof"), result.getStdout());
+  }
 }

@@ -1,0 +1,14 @@
+apple_library(
+  name = 'seven',
+  srcs = [ '7.txt' ],
+  deps = [ ],
+  tests = [ ':seven-tests' ],
+)
+
+apple_test(
+  name = 'seven-tests',
+  extension = 'xctest',
+  info_plist = 'Test.plist',
+  srcs = [ '7-test.txt' ],
+  deps = [ ':seven' ],
+)

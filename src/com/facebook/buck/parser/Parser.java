@@ -338,6 +338,26 @@ public class Parser {
     return targets.build();
   }
 
+  /**
+   * @return a set of {@link BuildTarget} objects that this {@link TargetNodeSpec} refers to.
+   */
+  public ImmutableSet<BuildTarget> resolveTargetSpec(
+      TargetNodeSpec spec,
+      ParserConfig parserConfig,
+      BuckEventBus eventBus,
+      Console console,
+      ImmutableMap<String, String> environment,
+      boolean enableProfiling)
+      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+    ProjectBuildFileParser buildFileParser = buildFileParserFactory.createParser(
+        console,
+        environment,
+        eventBus);
+    buildFileParser.setEnableProfiling(enableProfiling);
+
+    return resolveTargetSpec(spec, parserConfig, buildFileParser, environment);
+  }
+
   private ImmutableSet<BuildTarget> resolveTargetSpecs(
       Iterable<? extends TargetNodeSpec> specs,
       ParserConfig parserConfig,
