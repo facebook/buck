@@ -26,6 +26,8 @@ import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -43,8 +45,10 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,8 +63,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
@@ -68,6 +70,11 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private static final String CODE_SIGN_IDENTITY = "CODE_SIGN_IDENTITY";
+
+  /**
+   * It's possible to ask a {@link AppleBundle} to zip itself into a .ipa file.
+   */
+  public static final Flavor IPA_FLAVOR = ImmutableFlavor.of("ipa");
 
   @AddToRuleKey
   private final String extension;
@@ -127,6 +134,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final String binaryName;
   private final Path bundleRoot;
   private final Path binaryPath;
+  private final Optional<Path> ipaPath;
 
   AppleBundle(
       BuildRuleParams params,
@@ -173,6 +181,12 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     this.tests = ImmutableSortedSet.copyOf(tests);
     this.platformName = sdk.getApplePlatform().getName();
     this.sdkName = sdk.getName();
+
+    if (getBuildTarget().getFlavors().contains(IPA_FLAVOR)) {
+      this.ipaPath = Optional.of(BuildTargets.getGenPath(getBuildTarget(), "%s.ipa"));
+    } else {
+      this.ipaPath = Optional.absent();
+    }
 
     // We need to resolve the possible set of profiles and code sign identity at construction time
     // because they form part of the rule key.
@@ -250,9 +264,12 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   }
 
   @Override
-  @Nullable
   public Path getPathToOutput() {
-    return bundleRoot;
+    if (ipaPath.isPresent()) {
+      return ipaPath.get();
+    } else {
+      return bundleRoot;
+    }
   }
 
   public Path getInfoPlistPath() {
@@ -427,8 +444,36 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       );
     }
 
+    if (ipaPath.isPresent()) {
+      Path temp = BuildTargets.getScratchPath(getBuildTarget(), "__temp__%s");
+
+      // Create temp folder to store the files going to be zipped
+      stepsBuilder.add(new MakeCleanDirectoryStep(temp));
+
+      Path payloadDir = temp.resolve("Payload");
+      stepsBuilder.add(new MkdirStep(payloadDir));
+
+      // Remove the output .ipa file if it exists already
+      stepsBuilder.add(new RmStep(ipaPath.get(), /* shouldForceDeletion */ true));
+
+      // Recursively copy the .app directory into the Payload folder
+      stepsBuilder.add(CopyStep.forDirectory(
+              bundleRoot,
+              payloadDir,
+              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+
+      // do the zipping
+      stepsBuilder.add(
+          new ZipStep(
+              ipaPath.get(),
+              ImmutableSet.<Path>of(),
+              false,
+              ZipStep.DEFAULT_COMPRESSION_LEVEL,
+              temp));
+    }
+
     // Ensure the bundle directory is archived so we can fetch it later.
-    buildableContext.recordArtifact(bundleRoot);
+    buildableContext.recordArtifact(getPathToOutput());
 
     return stepsBuilder.build();
   }
