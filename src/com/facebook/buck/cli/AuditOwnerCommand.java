@@ -149,9 +149,9 @@ public class AuditOwnerCommand extends AbstractCommand {
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
         params.getRepository().getFilesystem(),
         parserConfig.getBuildFileName());
+    final Path rootPath = params.getRepository().getFilesystem().getRootPath();
 
-    for (Path filePath : getArgumentsAsPaths(
-        params.getRepository().getFilesystem().getRootPath())) {
+    for (Path filePath : getArgumentsAsPaths(rootPath)) {
       Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
       if (!basePath.isPresent()) {
         report = report.updatedWith(
@@ -167,9 +167,8 @@ public class AuditOwnerCommand extends AbstractCommand {
       Preconditions.checkState(params.getRepository().getFilesystem().exists(buckFile));
 
       // Get the target base name.
-      Path targetBasePath = MorePaths.relativize(
-          params.getRepository().getFilesystem().getRootPath().toAbsolutePath(),
-          buckFile.toAbsolutePath().getParent());
+      Preconditions.checkState(rootPath.isAbsolute());
+      Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
       String targetBaseName = "//" + targetBasePath.toString();
 
       // Parse buck files and load target nodes.
