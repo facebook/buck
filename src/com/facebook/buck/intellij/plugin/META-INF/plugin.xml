@@ -62,6 +62,12 @@
         implementation="com.facebook.buck.intellij.plugin.config.BuckColorSettingsPage"/>
     <lang.commenter language="Buck"
                     implementationClass="com.facebook.buck.intellij.plugin.commenter.BuckCommenter"/>
+    <lang.braceMatcher
+        language="Buck"
+        implementationClass="com.facebook.buck.intellij.plugin.format.BuckBraceMatcher"/>
+    <quoteHandler
+        fileType="Buck"
+        className="com.facebook.buck.intellij.plugin.format.BuckQuoteHandler"/>
     <toolWindow
         id="Buck"
         anchor="bottom"

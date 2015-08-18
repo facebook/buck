@@ -23,6 +23,9 @@ import com.intellij.psi.tree.TokenSet;
 
 public final class BuckPsiUtils {
 
+  public static final TokenSet STRING_LITERALS =
+      TokenSet.create(BuckTypes.SINGLE_QUOTED_STRING, BuckTypes.DOUBLE_QUOTED_STRING);
+
   private BuckPsiUtils() {
   }
 
