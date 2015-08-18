@@ -215,9 +215,15 @@ public final class Ansi {
   public static enum SeverityLevel { OK, WARNING, ERROR }
 
   private String wrapWithColor(String color, String text) {
-    if (!isAnsiTerminal) {
+    if (!isAnsiTerminal || text.length() == 0) {
       return text;
     }
+
+    // If there are not tabs at the start return a simple concatenation
+    if (text.charAt(0) != '\t') {
+      return color + text + RESET;
+    }
+
     // Skip tabs, because they don't like being prefixed with color.
     int firstNonTab = indexOfFirstNonTab(text);
     if (firstNonTab == -1) {
@@ -231,7 +237,7 @@ public final class Ansi {
    */
   private static int indexOfFirstNonTab(String s) {
     final int length = s.length();
-    for (int i = 0; i < length; i++) {
+    for (int i = 1; i < length; i++) {
       if (s.charAt(i) != '\t') {
         return i;
       }

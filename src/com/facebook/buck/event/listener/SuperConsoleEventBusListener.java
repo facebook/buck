@@ -76,6 +76,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    */
   private static final long ERROR_THRESHOLD_MS = 30000;
 
+  /**
+   * Maximum expected rendered line length so we can start with a decent
+   * size of line rendering buffer.
+   */
+  private static final int EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH = 128;
+
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
 
   private final Optional<WebServer> webServer;
@@ -361,13 +367,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           });
 
     // For each thread that has ever run a rule, render information about that thread.
+    StringBuilder lineBuilder = new StringBuilder(EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH);
+    lineBuilder.append(" |=> ");
     for (Map.Entry<Long, Optional<? extends BuildRuleEvent>> entry : eventsByThread) {
-      String threadLine = " |=> ";
       Optional<? extends BuildRuleEvent> startedEvent = entry.getValue();
 
       if (!startedEvent.isPresent()) {
-        threadLine += "IDLE";
-        threadLine = ansi.asSubtleText(threadLine);
+        lineBuilder.append("IDLE");
+        lines.add(ansi.asSubtleText(lineBuilder.toString()));
       } else {
         AtomicLong accumulatedTime = accumulatedRuleTime.get(
             startedEvent.get().getBuildRule().getBuildTarget());
@@ -376,31 +383,36 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             (accumulatedTime != null ? accumulatedTime.get() : 0);
         Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
 
-        threadLine += String.format("%s...  %s",
-            startedEvent.get().getBuildRule().getFullyQualifiedName(),
-            formatElapsedTime(elapsedTimeMs));
+        lineBuilder.append(startedEvent.get().getBuildRule().getFullyQualifiedName());
+        lineBuilder.append("...  ");
+        lineBuilder.append(formatElapsedTime(elapsedTimeMs));
 
         if (leafEvent != null && leafEvent.isPresent()) {
-          threadLine += String.format(" (running %s[%s])",
-              leafEvent.get().getCategory(),
-              formatElapsedTime(currentMillis - leafEvent.get().getTimestamp()));
+          lineBuilder.append(" (running ");
+          lineBuilder.append(leafEvent.get().getCategory());
+          lineBuilder.append('[');
+          lineBuilder.append(formatElapsedTime(currentMillis - leafEvent.get().getTimestamp()));
+          lineBuilder.append("])");
 
           if (elapsedTimeMs > WARNING_THRESHOLD_MS) {
             if (elapsedTimeMs > ERROR_THRESHOLD_MS) {
-              threadLine = ansi.asErrorText(threadLine);
+              lines.add(ansi.asErrorText(lineBuilder.toString()));
             } else {
-              threadLine = ansi.asWarningText(threadLine);
+              lines.add(ansi.asWarningText(lineBuilder.toString()));
             }
+          } else {
+            lines.add(lineBuilder.toString());
           }
         } else {
           // If a rule is scheduled on a thread but no steps have been scheduled yet, we are still
           // in the code checking to see if the rule has been cached locally.
           // Show "CHECKING LOCAL CACHE" to prevent thrashing the UI with super fast rules.
-          threadLine += " (checking local cache)";
-          threadLine = ansi.asSubtleText(threadLine);
+          lineBuilder.append(" (checking local cache)");
+          lines.add(ansi.asSubtleText(lineBuilder.toString()));
         }
       }
-      lines.add(threadLine);
+
+      lineBuilder.delete(5, lineBuilder.length());
     }
   }
 
