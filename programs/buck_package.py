@@ -24,10 +24,10 @@ class BuckPackage(BuckTool):
 
     def _get_resource_dir(self):
         if self._use_buckd():
-            tmp_dir = self._buck_project.create_buckd_tmp_dir()
+            base_dir = self._buck_project.buckd_dir
         else:
-            tmp_dir = self._tmp_dir
-        return os.path.join(tmp_dir, 'resources')
+            base_dir = self._tmp_dir
+        return os.path.join(base_dir, 'resources')
 
     def _has_resource(self, resource):
         return pkg_resources.resource_exists(__name__, resource.name)
