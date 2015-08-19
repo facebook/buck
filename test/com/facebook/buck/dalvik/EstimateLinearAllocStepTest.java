@@ -53,9 +53,9 @@ public class EstimateLinearAllocStepTest {
     String name = "dir";
     tmp.newFolder(name);
 
-    tmp.newFolder("dir/com");
-    tmp.newFolder("dir/com/example");
-    tmp.newFolder("dir/com/example/subpackage");
+    tmp.newFolder("dir", "com");
+    tmp.newFolder("dir", "com", "example");
+    tmp.newFolder("dir", "com", "example", "subpackage");
 
     tmp.newFile("dir/com/example/Foo.class");
     tmp.newFile("dir/com/example/Bar.class");

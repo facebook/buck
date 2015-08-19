@@ -74,7 +74,7 @@ public class ExecutableFinderTest {
   public void testSearchPathsDirAndFileFoundReturnsFileNotDir() throws IOException {
     Path dir1 = tmp.newFolder("foo").toPath();
     // We don't want to find this folder.
-    tmp.newFolder("foo/foo");
+    tmp.newFolder("foo", "foo");
     Path dir2 = tmp.newFolder("bar").toPath();
     Path file = createExecutable("bar/foo");
 

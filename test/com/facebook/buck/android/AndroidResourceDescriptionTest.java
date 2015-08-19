@@ -54,30 +54,29 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFile("res/picasa.ini");
     tmpFolder.newFile("res/file.bak~");
 
-    tmpFolder.newFolder("res/dirs");
-    tmpFolder.newFolder("res/dirs/values");
+    tmpFolder.newFolder("res", "dirs", "values");
     tmpFolder.newFile("res/dirs/values/strings.xml");
     tmpFolder.newFile("res/dirs/values/strings.xml.orig");
 
-    tmpFolder.newFolder("res/dirs/.gitkeep");
+    tmpFolder.newFolder("res", "dirs", ".gitkeep");
     tmpFolder.newFile("res/dirs/.gitkeep/ignore");
-    tmpFolder.newFolder("res/dirs/.svn");
+    tmpFolder.newFolder("res", "dirs", ".svn");
     tmpFolder.newFile("res/dirs/.svn/ignore");
-    tmpFolder.newFolder("res/dirs/.git");
+    tmpFolder.newFolder("res", "dirs", ".git");
     tmpFolder.newFile("res/dirs/.git/ignore");
-    tmpFolder.newFolder("res/dirs/.ds_store");
+    tmpFolder.newFolder("res", "dirs", ".ds_store");
     tmpFolder.newFile("res/dirs/.ds_store/ignore");
-    tmpFolder.newFolder("res/dirs/.scc");
+    tmpFolder.newFolder("res", "dirs", ".scc");
     tmpFolder.newFile("res/dirs/.scc/ignore");
-    tmpFolder.newFolder("res/dirs/CVS");
+    tmpFolder.newFolder("res", "dirs", "CVS");
     tmpFolder.newFile("res/dirs/CVS/ignore");
-    tmpFolder.newFolder("res/dirs/thumbs.db");
+    tmpFolder.newFolder("res", "dirs", "thumbs.db");
     tmpFolder.newFile("res/dirs/thumbs.db/ignore");
-    tmpFolder.newFolder("res/dirs/picasa.ini");
+    tmpFolder.newFolder("res", "dirs", "picasa.ini");
     tmpFolder.newFile("res/dirs/picasa.ini/ignore");
-    tmpFolder.newFolder("res/dirs/file.bak~");
+    tmpFolder.newFolder("res", "dirs", "file.bak~");
     tmpFolder.newFile("res/dirs/file.bak~/ignore");
-    tmpFolder.newFolder("res/dirs/_dir");
+    tmpFolder.newFolder("res", "dirs", "_dir");
     tmpFolder.newFile("res/dirs/_dir/ignore");
 
     AndroidResourceDescription description = new AndroidResourceDescription();

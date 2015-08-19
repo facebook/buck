@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="junit">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.11.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.12.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/java-hamcrest-2.0.0.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/hamcrest-junit-2.0.0.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.11-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.12-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

@@ -3,7 +3,7 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/hamcrest-junit-2.0.0.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/java-hamcrest-2.0.0.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.11.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.12.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/cglib/cglib-nodep-2.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.0.5.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
@@ -14,7 +14,7 @@
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.11-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/junit/junit-4.12-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-18.0-sources.jar!/" />

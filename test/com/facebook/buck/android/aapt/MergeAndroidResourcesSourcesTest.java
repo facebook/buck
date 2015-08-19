@@ -75,13 +75,13 @@ public class MergeAndroidResourcesSourcesTest {
         .build();
 
     tmp.newFolder("res_in_1");
-    tmp.newFolder("res_in_1/values");
-    tmp.newFolder("res_in_1/drawable");
+    tmp.newFolder("res_in_1", "values");
+    tmp.newFolder("res_in_1", "drawable");
     tmp.newFile("res_in_1/drawable/one.png");
 
     tmp.newFolder("res_in_2");
-    tmp.newFolder("res_in_2/values");
-    tmp.newFolder("res_in_2/drawable");
+    tmp.newFolder("res_in_2", "values");
+    tmp.newFolder("res_in_2", "drawable");
     tmp.newFile("res_in_2/drawable/two.png");
 
     filesystem.writeContentsToPath(

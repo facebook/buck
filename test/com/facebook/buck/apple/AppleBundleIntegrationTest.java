@@ -264,12 +264,13 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appBundleVariantDirectoryMustEndInLproj() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "Variant files have to be in a directory with name ending in '.lproj', " +
             "but 'cc/Localizable.strings' is not.");
 
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "app_bundle_with_invalid_variant",

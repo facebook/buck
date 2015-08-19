@@ -154,7 +154,7 @@
   </path>
 
   <path id="junit">
-    <pathelement location="${third-party.dir}/java/junit/junit-4.11.jar" />
+    <pathelement location="${third-party.dir}/java/junit/junit-4.12.jar" />
     <pathelement location="${third-party.dir}/java/hamcrest/hamcrest-junit-2.0.0.0.jar" />
     <pathelement location="${third-party.dir}/java/hamcrest/java-hamcrest-2.0.0.0.jar" />
     <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
@@ -516,7 +516,7 @@
 
     <jar destfile="${build.dir}/dx.jar">
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-18.0.jar"/>
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.11.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/junit/junit-4.12.jar" />
       <fileset dir="${dx.classes.dir}" />
       <manifest>
         <attribute name="Main-Class" value="com.android.dx.command.Main" />
@@ -591,7 +591,7 @@
       <include name="easymock/easymock-3.3.1.jar" />
       <include name="hamcrest/hamcrest-junit-2.0.0.0.jar" />
       <include name="hamcrest/java-hamcrest-2.0.0.0.jar" />
-      <include name="junit/junit-4.11.jar" />
+      <include name="junit/junit-4.12.jar" />
       <include name="objenesis/objenesis-1.2.jar" />
     </fileset>
 
@@ -958,7 +958,7 @@
   <path id="javadoc.classpath">
     <path refid="classpath" />
     <!-- Buck test runner has references to JUnit and TestNG. -->
-    <pathelement location="${third-party.dir}/java/junit/junit-4.11.jar" />
+    <pathelement location="${third-party.dir}/java/junit/junit-4.12.jar" />
     <pathelement location="${third-party.dir}/java/testng/testng-6.8.jar" />
 
     <!-- Include the Compiler Tree API stub because its types are used in some places. -->

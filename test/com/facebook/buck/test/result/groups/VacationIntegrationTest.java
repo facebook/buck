@@ -44,6 +44,11 @@ public class VacationIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
+  public VacationIntegrationTest() throws IOException {
+    super();
+    temporaryFolder.create();
+  }
+
   @Rule
   public VacationFixture vacationFixture = new VacationFixture(temporaryFolder);
 
