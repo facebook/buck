@@ -1,0 +1,466 @@
+{namespace buck.query}
+
+/**
+ * @param anchor
+ * @param title
+ */
+{template .section}
+  <h4 id="{$anchor}">{$title}</h4>
+  <p>
+{/template}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck query' /}
+    {param prettify: true /}
+    {param description}
+      Provide facilities to query information about the target nodes graph.
+    {/param}
+    {param content}
+
+{call buck.command}
+{param overview}
+<p>Provide facilities to query information about the target nodes graph and
+lists the build targets that satisfy the query expression.</p>
+
+<p>
+<code>buck query</code> allows us to combine different operators, using a
+query language. For example, to retrieve the list of all tests for a build target,
+a single <code>buck query</code> call suffices by combining
+the <code>deps</code> and <code>testsof</code> operators.
+</p>
+
+<p><pre>
+buck query "testsof(deps(/&#x2F;java/com/example/app:amazing))"
+</pre></p>
+
+<h2>Query Language</h2>
+
+<p>The Query Language was inspired by <a href="http://bazel.io/docs/query.html">
+Bazel's Query Language</a>. <code>buck query</code> uses the same parser, so
+the lexical syntax is similar, supporting part of Bazel's query functions and
+a few extensions.
+
+<h3>Lexical Syntax</h3>
+
+<p>Expressions in the query language are composed of the following tokens:</p>
+
+<ul>
+  <li>
+    <b>Keywords</b>, such as <code>deps</code> or <code>testsof</code>.
+    Keywords are the reserved words of the language. The complete set of
+    keywords is:
+    <ul style="line-height:0.5em">
+        <li><a href="#deps"><code>deps</code></a></li>
+        <li><a href="#set-operations"><code>except</code></a></li>
+        <li><a href="#set-operations"><code>intersect</code></a></li>
+        <li><a href="#set"><code>set</code></a></li>
+        <li><a href="#testsof"><code>testsof</code></a></li>
+        <li><a href="#set-operations"><code>union</code></a></li>
+    </ul>
+  </li>
+  <li>
+    <p>
+      <b>Words</b>, such as <code>//foo:bar</code> or <code>//foo:bar+lib"
+      </code>. If a character sequence is "quoted" (begins and ends with a
+      single-quote <code>'</code>, or begins and ends with a
+      double-quote <code>"</code>), it is a word. If a character sequence is
+      not quoted, it may still be parsed as a word. Unquoted words are
+      sequences of characters drawn from the set of alphabet characters,
+      numerals, slash <code>/</code>, colon <code>:</code>,
+      period <code>.</code>, hyphen <code>-</code>, underscore <code>_</code>,
+      and star <code>*</code>.
+      Unquoted words may not start with a hyphen or period.
+    </p>
+    <p>
+      This syntax makes it so that quote marks aren't needed in most cases.
+      Quoting <code>"java_test"</code> is unnecessary but harmless.
+      Quoting is necessary when writing scripts that
+      construct <code>buck query</code> expressions from user-supplied values.
+
+<pre>
+{literal}
+//foo:bar+wiz    # WRONG: scanned as //foo:bar + wiz.
+//foo:bar=wiz    # WRONG: scanned as //foo:bar = wiz.
+"//foo:bar+wiz"  # ok.
+"//foo:bar=wiz"  # ok.
+{/literal}
+</pre>
+
+    </p>
+    <p>
+      Note that this quoting is in addition to any quoting that may be required
+      by your shell.
+
+<pre>
+{literal}
+buck query ' "//foo:bar=wiz" '
+{/literal}
+</pre>
+
+      In this example, single-quotes are used for the shell and double-quotes
+      for <code>buck query</code>.
+    </p>
+  </li>
+  <li>
+    <b>Punctuation</b>, such as parens (<code>()</code>), period
+    (<code>.</code>) and comma (<code>,</code>), etc. Words containing
+    punctuation (other than the exceptions listed above) must be quoted.
+  </li>
+</ul>
+
+<p>
+Whitespace characters outside of a quoted word are ignored.
+</p>
+
+<h3>Expressions: syntax and semantics of the grammar</h3>
+
+<p>
+This is the grammar of the query language, expressed in
+{sp}<a href="https://en.wikipedia.org/wiki/Extended_Backus-Naur_Form">EBNF</a>
+{sp}notation:
+</p>
+
+<pre>
+{literal}
+expr ::= word
+       | (expr)
+       | expr intersect expr
+       | expr ^ expr
+       | expr union expr
+       | expr + expr
+       | expr except expr
+       | expr - expr
+       | deps(expr)
+       | deps(expr, depth)
+       | set(word *)
+       | testsof(expr)
+{/literal}
+</pre>
+
+<h4>Target Patterns</h4>
+
+<p><pre>
+expr ::= word
+</pre></p>
+
+<p>
+Syntactically, a build target pattern is just a word. It is interpreted as an
+unordered set of targets. A <a href="{ROOT}concept/build_target_pattern.html">
+build target pattern</a> can be evaluated to a set containing one or more
+elements.
+</p>
+
+<p>
+For example, the word <code>//foo:bar</code> evaluates to a set containing one
+element, while <code>//foo/...</code> matches all targets in every directory
+beneath the </code>foo</code> directory.
+</p>
+
+<h4>Parenthesized expressions</h4>
+
+<p><pre>
+expr ::= (expr)
+</pre></p>
+
+<p>
+Parentheses associate subexpressions to force an order of evaluation.
+A parenthesized expression evaluates to the value of its argument.
+</p>
+
+
+{call .section}
+{param anchor: 'set-operations' /}
+{param title: 'Algebraic set operations: intersection, union, set difference'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= expr intersect expr
+       | expr ^ expr
+       | expr union expr
+       | expr + expr
+       | expr except expr
+       | expr - expr
+{/literal}
+</pre></p>
+
+<p>
+These three operators compute the usual set operations over their arguments.
+Each operator has two forms, a nominal form such as <code>intersect</code> and
+a symbolic form such as <code>^</code>. Both forms are equivalent; the symbolic
+forms are quicker to type. For example,
+</p>
+
+<p><pre>
+deps(//foo:bar) intersect deps(//baz:lib)
+</pre></p>
+
+<p>
+evaluates to the targets that appear both in the transitive closure
+of <code>//foo:bar</code> and <code>//baz:lib</code>. Equivalently:
+</p>
+
+<p><pre>
+deps(//foo:bar) ^ deps(//baz:lib)
+</pre></p>
+
+<p>
+The <code>intersect</code> (<code>^</code>)
+and <code>union</code> (<code>+</code>) operations are commutative
+(symmetric); <code>except</code> (<code>-</code>) is asymmetric.
+The parser treats all three operators as left-associative and of equal
+precedence, so you might want parentheses. For example, the first two of
+these expressions are equivalent, but the third is not:
+</p>
+
+<p><pre>
+{literal}
+x intersect y union z
+(x intersect y) union z
+x intersect (y union z)
+{/literal}
+</pre></p>
+
+<p>
+It is strongly recommended to use parentheses where there is any danger of
+ambiguity in reading a query expression.
+</p>
+
+
+{call .section}
+{param anchor: 'set' /}
+{param title: 'Read targets from an external source: set'/}
+{/call}
+
+<p><pre>
+expr ::= set(word *)
+</pre></p>
+
+<p>
+The <code>set(a b c ...)</code> operator computes the union of a set of zero
+or more targets, separated by whitespace (no commas).
+</p>
+
+<p>
+If you are invoking <code>buck query</code> programmatically, e.g. run a
+query on a list of targets, <code>set()</code> is a way of grouping this
+list in the query. Remember to quote the targets to make sure they are
+parsed correctly.
+</p>
+
+
+{call .section}
+{param anchor: 'deps' /}
+{param title: 'Transitive closure of dependencies: deps'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= deps(expr)
+       | deps(expr, depth)
+{/literal}
+</pre></p>
+
+<p>
+The <code>deps(x)</code> operator evaluates to the graph formed by the
+transitive closure of dependencies of its argument set <i>x</i>. For example,
+the value of <code>deps(//foo:bar)</code> is the dependency graph rooted at
+the single target node <code>//foo:bar</code>, including all its dependencies.
+</p>
+
+<p>
+The <code>deps</code> operator accepts an optional second argument, which is
+an integer literal specifying an upper bound on the depth of the search.
+So <code>deps(//foo:bar, 1)</code> evaluates to the direct dependencies of
+the target <code>//foo:bar</code>, and <code>deps(//foo:bar, 2)</code> further
+includes the nodes directly reachable from the nodes
+in <code>deps(//foo:bar, 1)</code>, and so on. If the depth parameter is
+omitted, the search is unbounded, i.e. it computes the transitive closure of
+dependencies.
+</p>
+
+
+{call .section}
+{param anchor: 'testsof' /}
+{param title: 'List the tests of given targets: testsof'/}
+{/call}
+
+<p><pre>
+expr ::= testsof(expr)
+</pre></p>
+
+<p>
+The <code>testsof(x)</code> operator evaluates to the tests associated with
+the targets of its argument set <i>x</i>. For example, the value
+of <code>testsof(set('//foo:bar' '//baz:app+lib')</code> is the set of tests
+associated with either <code>//foo:bar</code> or <code>//baz:app+lib</code>.
+</p>
+
+<p>
+In order to obtain all the tests
+associated with the target and its dependencies, this operator can be
+combined with the <code>deps</code> operator,
+e.g. <code>testsof(deps(//foo:bar))</code> first finds the transitive closure
+of <code>//foo:bar</code>, and then lists all the tests of this transitive
+closure.
+</p>
+
+<p>
+Note: only tests defined with the <code>tests</code> argument in rules are
+supported. <code>source_under_test</code> is not.
+</p>
+
+<h2>Executing multiple queries at once</h2>
+
+<p>
+Suppose you want to know the tests
+associated with a set of targets. This can be done combining
+the <code>testsof</code>, <code>deps</code> and <code>set</code> operators,
+e.g.
+</p>
+
+<p><pre>
+buck query testsof(deps(set(target1 target2 target3)))
+</pre></p>
+
+<p>
+Suppose now that you want to now the tests for each of these targets.
+The above command only had the union of the tests.
+Instead of executing one query per target, <code>buck query</code> provides
+an interface to perform repeated queries with different inputs at the same
+time. To do this, first define the query expression format and then pass
+the list of input targets. Example:
+</p>
+
+<p><pre>
+buck query testsof(deps(%s)) target1 target2 target3
+</pre></p>
+
+<p>
+The <code>%s</code> in the query expression format will be replaced by each
+the targets and the resulting query is evaluated for each input. Combined with
+the <code>--json</code> parameter, the result of
+this <code>buck query</code> call is aggregated by input target, otherwise it
+returns the union of each query.
+</p>
+
+{/param}
+
+{param params}
+
+{call buck.param}
+  {param name: 'json' /}
+  {param desc}
+  Outputs the results as JSON.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+
+<pre class="prettyprint lang-py">
+{literal}
+# For all of the following examples, assume this BUCK file exists in
+# the `examples` directory.
+cxx_library(
+  name = 'one',
+  srcs = [ '1.cpp' ],
+  deps = [
+    ':two',
+    ':three',
+  ],
+)
+
+cxx_library(
+  name = 'two',
+  srcs = [ '2.cpp' ],
+  deps = [
+    ':four',
+  ],
+  tests = [ ':two-tests' ]
+)
+
+cxx_library(
+  name = 'three',
+  srcs = [ '3.cpp' ],
+  deps = [
+    ':four',
+    ':five',
+  ],
+  tests = [ ':three-tests' ],
+)
+
+cxx_library(
+  name = 'four',
+  srcs = [ '4.cpp' ],
+  deps = [
+    ':five',
+  ]
+)
+
+cxx_library(
+  name = 'five',
+  srcs = [ '5.cpp' ],
+)
+
+cxx_test(
+  name = 'two-tests',
+  srcs = [ '2-test.cpp' ],
+  deps = [ ':two' ],
+)
+
+cxx_test(
+  name = 'three-tests',
+  srcs = [ '3-test.cpp' ],
+  deps = [ ':three' ],
+)
+{/literal}
+</pre>
+
+Lists all of the rules that the <code>one</code> library directly depends on
+<pre>buck query "deps(/&#x2F;examples:one, 1)"</pre>
+<pre>
+{literal}
+//examples:one
+//examples:three
+//examples:two
+{/literal}
+</pre>
+
+Lists the JSON representation of the transitive closure of the rules that
+the <code>one</code> library depends on
+<pre>buck query "deps(/&#x2F;examples:one)"</pre>
+<pre>
+{literal}
+[
+  "//examples:five",
+  "//examples:four",
+  "//examples:one",
+  "//examples:three",
+  "//examples:two",
+]
+{/literal}
+</pre>
+
+Outputs a JSON representation of the tests associated with the{sp}
+<code>one</code> and <code>three</code> libraries.
+<pre>buck query --json "testsof(deps('%s'))" /&#x2F;examples:one /&#x2F;examples:three</pre>
+<pre class="prettyprint lang-js">
+{literal}
+{
+  "//examples:one": ["//examples:two-tests"],
+  "//examples:three": ["//examples:three-tests"],
+}
+{/literal}
+</pre>
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

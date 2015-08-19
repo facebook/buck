@@ -42,6 +42,8 @@ import javax.annotation.Nullable;
 
 /**
  * The environment of a Buck query that can evaluate queries to produce a result.
+ *
+ * The query language is documented at docs/command/query.soy
  */
 public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
   private final Map<String, Set<BuildTarget>> letBindings = new HashMap<>();

@@ -35,6 +35,8 @@ import java.util.Set;
 /**
  * A "testsof" query expression, which computes the tests of the given targets.
  *
+ * This operator behavior is documented at docs/command/query.soy
+ *
  * <pre>expr ::= TESTSOF '(' expr ')'</pre>
  */
 public class QueryTestsOfFunction implements QueryFunction {
