@@ -21,6 +21,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeMultimap;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
@@ -58,16 +60,14 @@ public class QueryCommand extends AbstractCommand {
     this.arguments = arguments;
   }
 
-  public List<String> getMultipleQueryInputsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    // Don't consider the first argument as input because it is the query expression format.
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(
-        arguments.subList(1, arguments.size()));
+  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (getArguments().isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least a the query expression");
+    if (arguments.isEmpty()) {
+      params.getConsole().printBuildFailure("Must specify at least the query expression");
       return 1;
     }
 
@@ -75,11 +75,16 @@ public class QueryCommand extends AbstractCommand {
     Set<QueryEnvironment.Setting> settings = new HashSet<>();
     BuckQueryEnvironment env = new BuckQueryEnvironment(params, settings, getEnableProfiling());
 
-    String query = getArguments().get(0);
-    if (query.contains("%s")) {
-      return runMultipleQuery(params, env);
+    String queryFormat = arguments.remove(0);
+    if (queryFormat.contains("%s")) {
+      return runMultipleQuery(
+          params,
+          env,
+          queryFormat,
+          getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
+          shouldGenerateJsonOutput());
     } else {
-      return runSingleQuery(params, env);
+      return runSingleQuery(params, env, queryFormat);
     }
   }
 
@@ -87,19 +92,23 @@ public class QueryCommand extends AbstractCommand {
    * Evaluate multiple queries in a single `buck query` run. Usage:
    *   buck query <query format> <input1> <input2> <...> <inputN>
    */
-  private int runMultipleQuery(CommandRunnerParams params, BuckQueryEnvironment env)
+  static int runMultipleQuery(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      String queryFormat,
+      List<String> inputsFormattedAsBuildTargets,
+      boolean generateJsonOutput)
       throws IOException, InterruptedException {
-    if (getArguments().size() < 2) {
+    if (inputsFormattedAsBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure(
           "Specify one or more input targets after the query expression format");
       return 1;
     }
 
     try {
-      String queryFormat = getArguments().get(0);
       TreeMultimap<BuildTarget, BuildTarget> queryResultMap = TreeMultimap.create();
 
-      for (String input : getMultipleQueryInputsFormattedAsBuildTargets(params.getBuckConfig())) {
+      for (String input : inputsFormattedAsBuildTargets) {
         BuildTarget target = BuildTargetParser.INSTANCE.parse(
             input,
             BuildTargetPatternParser.fullyQualified());
@@ -109,7 +118,7 @@ public class QueryCommand extends AbstractCommand {
       }
 
       LOG.debug("Printing out the following targets: " + queryResultMap);
-      if (shouldGenerateJsonOutput()) {
+      if (generateJsonOutput) {
         CommandHelper.printJSON(params, queryResultMap);
       } else {
         CommandHelper.printToConsole(params, queryResultMap);
@@ -124,10 +133,9 @@ public class QueryCommand extends AbstractCommand {
     return 0;
   }
 
-  private int runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env)
+  int runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException {
     try {
-      String query = getArguments().get(0);
       Set<BuildTarget> queryResult = env.evaluateQuery(query);
 
       LOG.debug("Printing out the following targets: " + queryResult);
@@ -156,4 +164,50 @@ public class QueryCommand extends AbstractCommand {
     return "provides facilities to query information about the target nodes graph";
   }
 
+  public static String getEscapedArgumentsListAsString(List<String> arguments) {
+    return Joiner.on(" ").join(
+        Lists.transform(
+            arguments,
+            new Function<String, String>() {
+              @Override
+              public String apply(String arg) {
+                return "'" + arg + "'";
+              }
+            }));
+  }
+
+  static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {
+    StringBuilder queryBuilder = new StringBuilder();
+    queryBuilder.append(isTransitive ? "deps('%s') " : "deps('%s', 1) ");
+    if (includeTests) {
+      queryBuilder.append(isTransitive ? "union deps(testsof(deps('%s')))" : "union testsof('%s')");
+    }
+    queryBuilder.append(" except set('%s')");
+    return queryBuilder.toString();
+  }
+
+  /** @return the equivalent 'buck query' call to 'buck audit dependencies'. */
+  static String buildAuditDependenciesQueryExpression(
+      List<String> arguments,
+      boolean isTransitive,
+      boolean includeTests,
+      boolean jsonOutput) {
+    StringBuilder queryBuilder = new StringBuilder("buck query ");
+    queryBuilder.append("\"" + getAuditDependenciesQueryFormat(isTransitive, includeTests) + "\" ");
+    queryBuilder.append(getEscapedArgumentsListAsString(arguments));
+    if (jsonOutput) {
+      queryBuilder.append(" --json");
+    }
+    return queryBuilder.toString();
+  }
+
+  /** @return the equivalent 'buck query' call to 'buck audit tests'. */
+  static String buildAuditTestsQueryExpression(List<String> arguments, boolean jsonOutput) {
+    StringBuilder queryBuilder = new StringBuilder("buck query \"testsof('%s')\" ");
+    queryBuilder.append(getEscapedArgumentsListAsString(arguments));
+    if (jsonOutput) {
+      queryBuilder.append(" --json");
+    }
+    return queryBuilder.toString();
+  }
 }

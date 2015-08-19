@@ -207,4 +207,52 @@ public class AuditDependenciesCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-two-three"), result.getStdout());
   }
+
+  @Test
+  public void testTransitiveDependenciesMultipleInputs() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "dependencies",
+        "--transitive",
+        "//example:two",
+        "//example:three");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-two-three-transitive"), result.getStdout());
+  }
+
+  @Test
+  public void testDirectDependenciesIncludesExtraDependencies() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "dependencies",
+        "//example:app-target");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-app-target-extra-deps"), result.getStdout());
+  }
+
+  @Test
+  public void testTransitiveDependenciesIncludesExtraDependencies() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "audit_dependencies", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "dependencies",
+        "--transitive",
+        "//example:app-library");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-app-library-transitive"), result.getStdout());
+  }
 }

@@ -16,28 +16,20 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNodes;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.event.ConsoleEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.TreeMultimap;
+import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AuditTestsCommand extends AbstractCommand {
-
-  private static final Logger LOG = Logger.get(AuditTestsCommand.class);
 
   @Option(name = "--json",
       usage = "Output in JSON format")
@@ -54,11 +46,6 @@ public class AuditTestsCommand extends AbstractCommand {
     return arguments;
   }
 
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
   public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
     return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
@@ -73,52 +60,26 @@ public class AuditTestsCommand extends AbstractCommand {
       return 1;
     }
 
-    ImmutableSet<BuildTarget> targets = getBuildTargets(
-        ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig())));
-
-    try {
-      TreeMultimap<BuildTarget, BuildTarget> targetsToPrint =
-          getTestsForTargets(params, targets, getEnableProfiling());
-      LOG.debug("Printing out the following targets: " + targetsToPrint);
-
-      if (shouldGenerateJsonOutput()) {
-        CommandHelper.printJSON(params, targetsToPrint);
-      } else {
-        CommandHelper.printToConsole(params, targetsToPrint);
-      }
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
-      return 1;
+    if (params.getConsole().getAnsi().isAnsiTerminal()) {
+      params.getBuckEventBus().post(ConsoleEvent.info(
+          "'buck audit tests' is deprecated. Please use 'buck query' instead. e.g.\n\t%s",
+          QueryCommand.buildAuditTestsQueryExpression(getArguments(), shouldGenerateJsonOutput())));
     }
+    // We're not using any of Bazel's settings.
+    Set<QueryEnvironment.Setting> settings = new HashSet<>();
+    BuckQueryEnvironment env = new BuckQueryEnvironment(params, settings, getEnableProfiling());
 
-    return 0;
+    return QueryCommand.runMultipleQuery(
+        params,
+        env,
+        "testsof('%s')",
+        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
+        shouldGenerateJsonOutput());
   }
 
   @Override
   public boolean isReadOnly() {
     return true;
-  }
-
-  public static TreeMultimap<BuildTarget, BuildTarget> getTestsForTargets(
-      final CommandRunnerParams params,
-      final ImmutableSet<BuildTarget> targets,
-      boolean enableProfiling)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    TargetGraph graph = params.getParser().buildTargetGraphForBuildTargets(
-        targets,
-        new ParserConfig(params.getBuckConfig()),
-        params.getBuckEventBus(),
-        params.getConsole(),
-        params.getEnvironment(),
-        enableProfiling);
-
-    TreeMultimap<BuildTarget, BuildTarget> multimap = TreeMultimap.create();
-    for (BuildTarget target : targets) {
-      multimap.putAll(
-          target,
-          TargetNodes.getTestTargetsForNode(Preconditions.checkNotNull(graph.get(target))));
-    }
-    return multimap;
   }
 
   @Override

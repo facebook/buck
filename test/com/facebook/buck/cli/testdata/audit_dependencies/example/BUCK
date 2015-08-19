@@ -89,3 +89,30 @@ apple_test(
 apple_library(
   name = 'application-test-lib',
 )
+
+apple_library(
+  name = 'app-library',
+  srcs = [ 'app-library.txt' ],
+  deps = [ ':app-library-two' ],
+)
+
+apple_library(
+  name = 'app-library-two',
+  srcs = [ 'app-library-two.txt' ],
+  exported_deps = [ ':app-target' ],
+)
+
+apple_library(
+  name = 'app-target',
+  srcs = [ 'app-target.txt' ],
+  deps = [ ':app-target-two' ],
+  exported_deps = [ ':app-target-three' ],
+)
+
+apple_library(
+  name = 'app-target-two',
+)
+
+apple_library(
+  name = 'app-target-three',
+)
