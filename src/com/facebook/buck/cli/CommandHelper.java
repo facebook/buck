@@ -32,9 +32,9 @@ public abstract class CommandHelper {
 
   public static void printJSON(
       CommandRunnerParams params,
-      Multimap<BuildTarget, BuildTarget> targetsAndResults)
+      Multimap<String, BuildTarget> targetsAndResults)
       throws IOException {
-    Multimap<BuildTarget, String> targetsAndResultsNames =
+    Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
             targetsAndResults,
             new Function<BuildTarget, String>() {
@@ -67,7 +67,7 @@ public abstract class CommandHelper {
 
   public static void printToConsole(
       CommandRunnerParams params,
-      Multimap<BuildTarget, BuildTarget> targetsAndDependencies) {
+      Multimap<String, BuildTarget> targetsAndDependencies) {
     for (BuildTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
       params.getConsole().getStdOut().println(target.getFullyQualifiedName());
     }

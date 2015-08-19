@@ -184,4 +184,23 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-recursive-pattern-testsof"), result.getStdout());
   }
+
+  @Test
+  public void testMultipleQueryGetTestsFromRecursiveTargetPatternJSON() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "testsof(%s)",
+        "//...",
+        "//example:");
+    result.assertSuccess();
+    assertEquals(
+        workspace.getFileContents("stdout-recursive-pkg-pattern-tests.json"),
+        result.getStdout());
+  }
 }

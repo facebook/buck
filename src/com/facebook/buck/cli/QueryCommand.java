@@ -18,8 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -60,10 +58,6 @@ public class QueryCommand extends AbstractCommand {
     this.arguments = arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
-  }
-
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     if (arguments.isEmpty()) {
@@ -77,12 +71,7 @@ public class QueryCommand extends AbstractCommand {
 
     String queryFormat = arguments.remove(0);
     if (queryFormat.contains("%s")) {
-      return runMultipleQuery(
-          params,
-          env,
-          queryFormat,
-          getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
-          shouldGenerateJsonOutput());
+      return runMultipleQuery(params, env, queryFormat, arguments, shouldGenerateJsonOutput());
     } else {
       return runSingleQuery(params, env, queryFormat);
     }
@@ -106,15 +95,12 @@ public class QueryCommand extends AbstractCommand {
     }
 
     try {
-      TreeMultimap<BuildTarget, BuildTarget> queryResultMap = TreeMultimap.create();
+      TreeMultimap<String, BuildTarget> queryResultMap = TreeMultimap.create();
 
       for (String input : inputsFormattedAsBuildTargets) {
-        BuildTarget target = BuildTargetParser.INSTANCE.parse(
-            input,
-            BuildTargetPatternParser.fullyQualified());
         String query = queryFormat.replace("%s", input);
         Set<BuildTarget> queryResult = env.evaluateQuery(query);
-        queryResultMap.putAll(target, queryResult);
+        queryResultMap.putAll(input, queryResult);
       }
 
       LOG.debug("Printing out the following targets: " + queryResultMap);
