@@ -612,8 +612,8 @@ public class ThriftCxxEnhancerTest {
             }
             for (Map.Entry<String, SourceWithFlags> source : cppSrcs.entrySet()) {
               assertThat(
-                  args.srcs.get().getNamedSources().get().get(source.getKey()),
-                  Matchers.equalTo(source.getValue()));
+                  args.srcs.get(),
+                  Matchers.hasItem(source.getValue()));
             }
             return super.createBuildRule(targetGraph, params, resolver, args);
           }

@@ -693,10 +693,8 @@ public class CxxLibraryDescriptionTest {
             ImmutableSortedMap.<String, SourcePath>of(
                 genHeaderName, new BuildTargetSourcePath(genHeaderTarget)))
         .setSrcs(
-            ImmutableSortedMap.of(
-                sourceName,
+            ImmutableSortedSet.<SourceWithFlags>of(
                 SourceWithFlags.of(new TestSourcePath(sourceName)),
-                genSourceName,
                 SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
         .setFrameworks(
             ImmutableSortedSet.of(

@@ -23,7 +23,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
-import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -38,16 +37,6 @@ public class AbstractCxxSourceBuilder<T extends CxxConstructorArg> extends Abstr
   }
 
   public AbstractCxxSourceBuilder<T> setSrcs(ImmutableSortedSet<SourceWithFlags> srcs)  {
-    arg.srcs = Optional.of(SourceWithFlagsList.ofUnnamedSources(srcs));
-    return this;
-  }
-
-  public AbstractCxxSourceBuilder<T> setSrcs(ImmutableSortedMap<String, SourceWithFlags> srcs)  {
-    arg.srcs = Optional.of(SourceWithFlagsList.ofNamedSources(srcs));
-    return this;
-  }
-
-  public AbstractCxxSourceBuilder<T> setSrcs(SourceWithFlagsList srcs)  {
     arg.srcs = Optional.of(srcs);
     return this;
   }

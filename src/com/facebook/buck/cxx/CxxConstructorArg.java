@@ -23,7 +23,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.coercer.SourceWithFlagsList;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -34,8 +34,8 @@ import com.google.common.collect.ImmutableSortedSet;
 @SuppressFieldNotInitialized
 public class CxxConstructorArg implements HasTests {
 
-  public Optional<SourceWithFlagsList> srcs;
-  public Optional<PatternMatchedCollection<SourceWithFlagsList>> platformSrcs;
+  public Optional<ImmutableSortedSet<SourceWithFlags>> srcs;
+  public Optional<PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>>> platformSrcs;
   public Optional<SourceList> headers;
   public Optional<PatternMatchedCollection<SourceList>> platformHeaders;
   public Optional<SourcePath> prefixHeader;

@@ -38,7 +38,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
-import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -366,31 +365,25 @@ public class CxxDescriptionEnhancer {
     ImmutableMap.Builder<String, SourceWithFlags> sources = ImmutableMap.builder();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     putAllSources(args.srcs.get(), sources, pathResolver, params.getBuildTarget());
-    for (SourceWithFlagsList sourceWithFlagsList :
+    for (ImmutableSortedSet<SourceWithFlags> sourcesWithFlags :
         args.platformSrcs.get().getMatchingValues(cxxPlatform.getFlavor().toString())) {
-      putAllSources(sourceWithFlagsList, sources, pathResolver, params.getBuildTarget());
+      putAllSources(sourcesWithFlags, sources, pathResolver, params.getBuildTarget());
     }
     return CxxCompilableEnhancer.resolveCxxSources(sources.build());
   }
 
   private static void putAllSources(
-      SourceWithFlagsList sourceWithFlagsList,
+      ImmutableSortedSet<SourceWithFlags> sourcesWithFlags,
       ImmutableMap.Builder<String, SourceWithFlags> sources,
       SourcePathResolver pathResolver,
       BuildTarget buildTarget) {
-    switch (sourceWithFlagsList.getType()) {
-      case NAMED:
-        sources.putAll(sourceWithFlagsList.getNamedSources().get());
-        break;
-      case UNNAMED:
-        sources.putAll(
-            pathResolver.getSourcePathNames(
-                buildTarget,
-                "srcs",
-                sourceWithFlagsList.getUnnamedSources().get(),
-                SourceWithFlags.TO_SOURCE_PATH));
-        break;
-    }
+
+    sources.putAll(
+        pathResolver.getSourcePathNames(
+            buildTarget,
+            "srcs",
+            sourcesWithFlags,
+            SourceWithFlags.TO_SOURCE_PATH));
   }
 
   public static ImmutableMap<String, SourcePath> parseLexSources(

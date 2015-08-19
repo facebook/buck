@@ -36,7 +36,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
-import com.facebook.buck.rules.coercer.SourceWithFlagsList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -497,9 +496,9 @@ public class CxxLibraryDescription implements
   public static Arg createEmptyConstructorArg() {
     Arg arg = new Arg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.srcs = Optional.of(
-        SourceWithFlagsList.ofUnnamedSources(ImmutableSortedSet.<SourceWithFlags>of()));
-    arg.platformSrcs = Optional.of(PatternMatchedCollection.<SourceWithFlagsList>of());
+    arg.srcs = Optional.of(ImmutableSortedSet.<SourceWithFlags>of());
+    arg.platformSrcs = Optional.of(
+        PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
     arg.prefixHeader = Optional.<SourcePath>absent();
     arg.headers = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
     arg.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
@@ -912,22 +911,9 @@ public class CxxLibraryDescription implements
       }
     }
 
-    boolean hasObjectsForAnyPlatform;
-    SourceWithFlagsList sourceWithFlagsList = args.srcs.get();
-    switch (sourceWithFlagsList.getType()) {
-      case UNNAMED:
-        hasObjectsForAnyPlatform = !sourceWithFlagsList.getUnnamedSources().get().isEmpty();
-        break;
-      case NAMED:
-        hasObjectsForAnyPlatform = !sourceWithFlagsList.getNamedSources().get().isEmpty();
-        break;
-      default:
-        throw new RuntimeException(
-            String.format("Unsupported type: %s", sourceWithFlagsList.getType()));
-    }
-    hasObjectsForAnyPlatform |=
-          !args.lexSrcs.get().isEmpty() ||
-          !args.yaccSrcs.get().isEmpty();
+    boolean hasObjectsForAnyPlatform = !args.srcs.get().isEmpty() ||
+        !args.lexSrcs.get().isEmpty() ||
+        !args.yaccSrcs.get().isEmpty();
     Predicate<CxxPlatform> hasObjects;
     if (hasObjectsForAnyPlatform) {
       hasObjects = Predicates.alwaysTrue();
