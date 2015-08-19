@@ -68,6 +68,8 @@
     <quoteHandler
         fileType="Buck"
         className="com.facebook.buck.intellij.plugin.format.BuckQuoteHandler"/>
+    <copyPastePreProcessor
+        implementation="com.facebook.buck.intellij.plugin.format.BuckCopyPasteProcessor"/>
     <toolWindow
         id="Buck"
         anchor="bottom"

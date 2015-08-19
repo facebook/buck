@@ -21,6 +21,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 
+import java.util.List;
+
 public final class BuckPsiUtils {
 
   public static final TokenSet STRING_LITERALS =
@@ -66,5 +68,51 @@ public final class BuckPsiUtils {
    */
   public static boolean testType(PsiElement element, IElementType type) {
     return element.getNode() != null && element.getNode().getElementType() == type;
+  }
+
+  /**
+   * Find the ancestor element with a specific type
+   */
+  public static PsiElement findAncestorWithType(PsiElement element, IElementType type) {
+    PsiElement parent = element.getParent();
+    while (parent != null) {
+      if (parent.getNode() != null && parent.getNode().getElementType() == type) {
+        return parent;
+      }
+      parent = parent.getParent();
+    }
+    return null;
+  }
+
+  /**
+   * Find the first child with a specific type
+   */
+  public static PsiElement findChildWithType(PsiElement element, IElementType type) {
+    PsiElement[] children = element.getChildren();
+    for (PsiElement child : children) {
+      if (child.getNode().getElementType() == type) {
+        return child;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Return the text content if the given BuckExpression has only one string value.
+   * Return null if this expression has multiple values, for example: "a" + "b"
+   */
+  public static String getStringValueFromExpression(BuckExpression expression) {
+    List<BuckValue> values = expression.getValueList();
+    if (values.size() != 1) {
+      return null;
+    }
+    PsiElement value = values.get(0); // This should be a "Value" type.
+    if (value.getFirstChild() != null &&
+        BuckPsiUtils.hasElementType(value.getFirstChild(), BuckPsiUtils.STRING_LITERALS)) {
+      String text = value.getFirstChild().getText();
+      return text.length() > 2 ? text.substring(1, text.length() - 1) : null;
+    } else {
+      return null;
+    }
   }
 }
