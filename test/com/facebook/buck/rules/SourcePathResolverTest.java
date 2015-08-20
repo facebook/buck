@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -28,10 +29,12 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -285,6 +288,39 @@ public class SourcePathResolverTest {
     } catch (HumanReadableException e) {
       assertTrue(e.getMessage().contains("duplicate entries"));
     }
+  }
+
+  @Test
+  public void getSourcePathNameExplicitPath() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRule rule = resolver.addToIndex(new FakeBuildRule("//foo:bar", pathResolver));
+    assertThat(
+        pathResolver.getSourcePathName(
+            rule.getBuildTarget(),
+            new BuildTargetSourcePath(
+                rule.getBuildTarget(),
+                BuckConstant.GEN_PATH.resolve("foo").resolve("something.cpp"))),
+        Matchers.equalTo("something.cpp"));
+  }
+
+  @Test
+  public void getSourcePathNamesWithExplicitPathsAvoidesDuplicates() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRule rule = resolver.addToIndex(new FakeBuildRule("//foo:bar", pathResolver));
+    SourcePath sourcePath1 =
+        new BuildTargetSourcePath(
+            rule.getBuildTarget(),
+            BuckConstant.GEN_PATH.resolve("foo").resolve("name1"));
+    SourcePath sourcePath2 =
+        new BuildTargetSourcePath(
+            rule.getBuildTarget(),
+            BuckConstant.GEN_PATH.resolve("foo").resolve("name2"));
+    pathResolver.getSourcePathNames(
+        rule.getBuildTarget(),
+        "srcs",
+        ImmutableList.of(sourcePath1, sourcePath2));
   }
 
   private static class PathReferenceRule extends AbstractBuildRule {

@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -177,20 +178,34 @@ public class SourcePathResolver {
 
   public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return getNameForRule(ruleResolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget()));
+      return getNameForBuildTargetSourcePath((BuildTargetSourcePath) sourcePath);
     }
     Preconditions.checkArgument(sourcePath instanceof PathSourcePath);
     Path path = ((PathSourcePath) sourcePath).getRelativePath();
     return MorePaths.relativize(target.getBasePath(), path).toString();
   }
 
-  private String getNameForRule(BuildRule rule) {
+  private String getNameForBuildTargetSourcePath(BuildTargetSourcePath sourcePath) {
+    BuildRule rule = ruleResolver.getRule(sourcePath.getTarget());
 
     // If this build rule implements `HasOutputName`, then return the output name
     // it provides.
     if (rule instanceof HasOutputName) {
       HasOutputName hasOutputName = (HasOutputName) rule;
       return hasOutputName.getOutputName();
+    }
+
+    // If an explicit path is set, use it's relative path to the build rule's output location to
+    // infer a unique name.
+    Optional<Path> explicitPath = sourcePath.getResolvedPath();
+    if (explicitPath.isPresent()) {
+      Path path = explicitPath.get();
+      if (path.startsWith(BuckConstant.GEN_PATH)) {
+        path = BuckConstant.GEN_PATH.relativize(path);
+      }
+      if (path.startsWith(rule.getBuildTarget().getBasePath())) {
+        return rule.getBuildTarget().getBasePath().relativize(path).toString();
+      }
     }
 
     // Otherwise, fall back to using the short name of rule's build target.
