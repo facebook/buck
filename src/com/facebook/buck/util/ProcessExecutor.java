@@ -44,7 +44,7 @@ public class ProcessExecutor {
   /**
    * Options for {@link ProcessExecutor#execute(Process, Set, Optional, Optional, Optional)}.
    */
-  public static enum Option {
+  public enum Option {
     PRINT_STD_OUT,
     PRINT_STD_ERR,
 
