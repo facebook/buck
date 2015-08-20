@@ -154,3 +154,15 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .link_style}
+{call buck.arg}
+  {param name : 'link_style' /}
+  {param default: 'static' /}
+  {param desc}
+  Determines whether to build and link this binary's dependencies statically or dynamically. Can be
+  either <code>static</code> or <code>dynamic</code>.
+  {/param}
+{/call}
+{/template}

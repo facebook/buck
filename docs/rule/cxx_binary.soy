@@ -50,14 +50,7 @@ and link against their static archives (which are *not* built using {sp}
 
 {call cxx_common.platform_linker_flags_arg /}
 
-{call buck.arg}
-  {param name : 'link_style' /}
-  {param default: 'static' /}
-  {param desc}
-  Determines whether to build and link this binary's dependencies statically or dynamically. Can be
-  either <code>static</code> or <code>dynamic</code>.
-  {/param}
-{/call}
+{call cxx_common.link_style /}
 
 {call buck.tests_arg /}
 

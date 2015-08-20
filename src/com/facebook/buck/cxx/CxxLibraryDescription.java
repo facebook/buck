@@ -767,7 +767,7 @@ public class CxxLibraryDescription implements
         resolver,
         args,
         typeAndPlatform,
-        Optional.<Linker.LinkableDepType>absent(),
+        args.linkStyle,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildRule>of());
   }
@@ -1037,6 +1037,7 @@ public class CxxLibraryDescription implements
     public Optional<Boolean> forceStatic;
     public Optional<Boolean> linkWhole;
     public Optional<Boolean> canBeAsset;
+    public Optional<Linker.LinkableDepType> linkStyle;
   }
 
 }

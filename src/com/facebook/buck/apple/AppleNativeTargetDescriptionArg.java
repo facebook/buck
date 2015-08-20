@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.SourcePath;
@@ -40,8 +39,6 @@ public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg i
   public Optional<String> gid;
   public Optional<String> headerPathPrefix;
   public Optional<Boolean> useBuckHeaderMaps;
-
-  public Optional<Linker.LinkableDepType> linkStyle;
 
   public boolean getUseBuckHeaderMaps() {
     return useBuckHeaderMaps.or(true);
