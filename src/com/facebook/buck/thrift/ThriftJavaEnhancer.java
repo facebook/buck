@@ -67,6 +67,15 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
     return JAVA_FLAVOR;
   }
 
+  @Override
+  public ImmutableSortedSet<String> getGeneratedSources(
+      BuildTarget target,
+      ThriftConstructorArg args,
+      String thriftName,
+      ImmutableList<String> services) {
+    return ImmutableSortedSet.of("");
+  }
+
   @VisibleForTesting
   protected BuildTarget getSourceZipBuildTarget(BuildTarget target, String name) {
     return BuildTargets.createFlavoredBuildTarget(

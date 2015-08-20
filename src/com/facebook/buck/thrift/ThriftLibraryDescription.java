@@ -158,7 +158,8 @@ public class ThriftLibraryDescription
       String language,
       ImmutableSet<String> options,
       ImmutableMap<String, SourcePath> srcs,
-      ImmutableSortedSet<ThriftLibrary> deps) {
+      ImmutableSortedSet<ThriftLibrary> deps,
+      ImmutableMap<String, ImmutableSortedSet<String>> generatedSources) {
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Tool compiler = thriftBuckConfig.getCompiler(compilerType, resolver);
@@ -186,6 +187,7 @@ public class ThriftLibraryDescription
     for (ImmutableMap.Entry<String, SourcePath> ent : srcs.entrySet()) {
       String name = ent.getKey();
       SourcePath source = ent.getValue();
+      ImmutableSortedSet<String> genSrcs = Preconditions.checkNotNull(generatedSources.get(name));
 
       BuildTarget target = createThriftCompilerBuildTarget(params.getBuildTarget(), name);
       Path outputDir = getThriftCompilerOutputDir(params.getBuildTarget(), name);
@@ -216,7 +218,8 @@ public class ThriftLibraryDescription
               options,
               includeRoots,
               headerMaps,
-              includes));
+              includes,
+              genSrcs));
     }
 
     return compileRules.build();
@@ -340,21 +343,36 @@ public class ThriftLibraryDescription
                     .transform(HasBuildTarget.TO_TARGET)),
             implicitDeps));
 
+    // Form the set of generated sources, so that compiler rules know what output paths to record.
+    ImmutableMap.Builder<String, ImmutableSortedSet<String>> generatedSourcesBuilder =
+        ImmutableMap.builder();
+    for (ImmutableMap.Entry<String, SourcePath> ent : namedSources.entrySet()) {
+      String thriftName = ent.getKey();
+      ImmutableList<String> services = Preconditions.checkNotNull(args.srcs.get(ent.getValue()));
+      generatedSourcesBuilder.put(
+          thriftName,
+          enhancer.getGeneratedSources(target, args, thriftName, services));
+    }
+    ImmutableMap<String, ImmutableSortedSet<String>> generatedSources =
+        generatedSourcesBuilder.build();
+
     // Create a a build rule for thrift source file, to compile the language specific sources.
     // They keys in this map are the logical names of the thrift files (e.g as specific in a BUCK
     // file, such as "test.thrift").
-    ImmutableMap<String, ThriftCompiler> compilerRules = createThriftCompilerBuildRules(
-        params,
-        resolver,
-        enhancer.getCompilerType(),
-        args.flags.or(ImmutableList.<String>of()),
-        language,
-        options,
-        namedSources,
-        ImmutableSortedSet.<ThriftLibrary>naturalOrder()
-            .add(thriftLibrary)
-            .addAll(getTransitiveThriftLibraryDeps(thriftDeps))
-            .build());
+    ImmutableMap<String, ThriftCompiler> compilerRules =
+        createThriftCompilerBuildRules(
+            params,
+            resolver,
+            enhancer.getCompilerType(),
+            args.flags.or(ImmutableList.<String>of()),
+            language,
+            options,
+            namedSources,
+            ImmutableSortedSet.<ThriftLibrary>naturalOrder()
+                .add(thriftLibrary)
+                .addAll(getTransitiveThriftLibraryDeps(thriftDeps))
+                .build(),
+            generatedSources);
     resolver.addAllToIndex(compilerRules.values());
 
     // Build up the map of {@link ThriftSource} objects to pass the language specific enhancer.
@@ -362,11 +380,13 @@ public class ThriftLibraryDescription
     // file, such as "test.thrift").
     ImmutableMap.Builder<String, ThriftSource> thriftSourceBuilder = ImmutableMap.builder();
     for (ImmutableMap.Entry<String, SourcePath> ent : namedSources.entrySet()) {
+      ImmutableList<String> services = Preconditions.checkNotNull(args.srcs.get(ent.getValue()));
+      ThriftCompiler compilerRule = Preconditions.checkNotNull(compilerRules.get(ent.getKey()));
       thriftSourceBuilder.put(
           ent.getKey(),
           new ThriftSource(
-              Preconditions.checkNotNull(compilerRules.get(ent.getKey())),
-              Preconditions.checkNotNull(args.srcs.get(ent.getValue())),
+              compilerRule,
+              services,
               getThriftCompilerOutputDir(target, ent.getKey())));
     }
     ImmutableMap<String, ThriftSource> thriftSources = thriftSourceBuilder.build();

@@ -86,7 +86,8 @@ public class ThriftPythonEnhancerTest {
         ImmutableSet.<String>of(),
         ImmutableList.<Path>of(),
         ImmutableSet.<Path>of(),
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableSortedSet.<String>of());
   }
 
   @Test

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,6 +42,15 @@ public interface ThriftLanguageSpecificEnhancer {
    * @return the flavor used to reference this language via the target graph.
    */
   Flavor getFlavor();
+
+  /**
+   * @return the generated source paths relative to the `gen-lang` output dir.
+   */
+  ImmutableSortedSet<String> getGeneratedSources(
+      BuildTarget target,
+      ThriftConstructorArg args,
+      String thriftName,
+      ImmutableList<String> services);
 
   /**
    * @param sources objects representing the thrift sources that are being compiled for

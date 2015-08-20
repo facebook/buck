@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
 
@@ -67,14 +68,24 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
     return type == Type.TWISTED ? PYTHON_TWISTED_FLAVOR : PYTHON_FLAVOR;
   }
 
-  private ImmutableList<String> getGeneratedThriftSources(ImmutableList<String> services) {
-    ImmutableList.Builder<String> sources = ImmutableList.builder();
+  @Override
+  public ImmutableSortedSet<String> getGeneratedSources(
+      BuildTarget target,
+      ThriftConstructorArg args,
+      String thriftName,
+      ImmutableList<String> services) {
 
-    sources.add("constants.py");
-    sources.add("ttypes.py");
+    Path prefix =
+        PythonUtil.getBasePath(target, getBaseModule(args))
+            .resolve(Files.getNameWithoutExtension(thriftName));
+
+    ImmutableSortedSet.Builder<String> sources = ImmutableSortedSet.naturalOrder();
+
+    sources.add(prefix.resolve("constants.py").toString());
+    sources.add(prefix.resolve("ttypes.py").toString());
 
     for (String service : services) {
-      sources.add(service + ".py");
+      sources.add(prefix.resolve(service + ".py").toString());
     }
 
     return sources.build();
@@ -100,24 +111,21 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps) {
 
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), getBaseModule(args));
-
     ImmutableMap.Builder<Path, SourcePath> modulesBuilder = ImmutableMap.builder();
 
     // Iterate over all the thrift source, finding the python modules they generate and
     // building up a map of them.
     for (ImmutableMap.Entry<String, ThriftSource> ent : sources.entrySet()) {
-      String thriftBaseName = Files.getNameWithoutExtension(ent.getKey());
       ThriftSource source = ent.getValue();
       Path outputDir = source.getOutputDir();
 
-      for (String partialName : getGeneratedThriftSources(source.getServices())) {
-        Path module = baseModule.resolve(thriftBaseName).resolve(partialName);
+      for (String module :
+           getGeneratedSources(params.getBuildTarget(), args, ent.getKey(), source.getServices())) {
         Path path = outputDir
             .resolve("gen-" + getLanguage())
             .resolve(module);
         modulesBuilder.put(
-            module,
+            Paths.get(module),
             new BuildTargetSourcePath(source.getCompileRule().getBuildTarget(), path));
       }
 
