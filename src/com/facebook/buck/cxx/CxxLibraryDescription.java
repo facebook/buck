@@ -499,7 +499,7 @@ public class CxxLibraryDescription implements
     arg.srcs = Optional.of(ImmutableSortedSet.<SourceWithFlags>of());
     arg.platformSrcs = Optional.of(
         PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
-    arg.prefixHeader = Optional.<SourcePath>absent();
+    arg.prefixHeader = Optional.absent();
     arg.headers = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
     arg.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     arg.exportedHeaders = Optional.of(
@@ -534,6 +534,7 @@ public class CxxLibraryDescription implements
     arg.libraries = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
     arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.supportedPlatformsRegex = Optional.absent();
+    arg.linkStyle = Optional.absent();
     return arg;
   }
 
