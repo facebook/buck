@@ -19,6 +19,7 @@ gwt_binary(
   deps = [
     ':gwt-dev',
   ],
+  vm_args = [ '-Xmx256M' ],
 )
 
 prebuilt_jar(
