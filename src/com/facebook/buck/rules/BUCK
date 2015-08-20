@@ -94,6 +94,7 @@ java_immutables_library(
     'Description.java',
     'FlavorableDescription.java',
     'ExportDependencies.java',
+    'HashedFileTool.java',
     'HasPostBuildSteps.java',
     'HasRuntimeDeps.java',
     'Hint.java',

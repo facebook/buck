@@ -44,8 +44,7 @@ public class ThriftCompilerStepTest {
         .build();
 
     // Setup some dummy values for inputs to the ThriftCompilerStep
-    Path compiler = Paths.get("compiler");
-    ImmutableList<String> flags = ImmutableList.of("--allow-64-bit");
+    ImmutableList<String> compilerPrefix = ImmutableList.of("compiler", "--allow-64-bit");
     Path outputDir = Paths.get("output-dir");
     Path input = Paths.get("test.thrift");
     String language = "cpp";
@@ -54,8 +53,7 @@ public class ThriftCompilerStepTest {
 
     // Create our ThriftCompilerStep to test.
     ThriftCompilerStep thriftCompilerStep = new ThriftCompilerStep(
-        compiler,
-        flags,
+        compilerPrefix,
         outputDir,
         input,
         language,
@@ -64,8 +62,7 @@ public class ThriftCompilerStepTest {
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
-        .add(compiler.toString())
-        .addAll(flags)
+        .addAll(compilerPrefix)
         .add("--gen", String.format("%s:%s", language, Joiner.on(',').join(options)))
         .addAll(
             MoreIterables.zipAndConcat(

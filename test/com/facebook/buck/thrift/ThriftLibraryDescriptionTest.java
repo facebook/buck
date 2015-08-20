@@ -42,6 +42,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.shell.ShBinary;
+import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -289,8 +291,10 @@ public class ThriftLibraryDescriptionTest {
         rule.getDeps());
 
     // Create a build rule that represents the thrift rule.
-    FakeBuildRule thriftRule = createFakeBuildRule("//thrift:target", pathResolver);
-    resolver.addToIndex(thriftRule);
+    ShBinary thriftRule =
+        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
+            .setMain(new TestSourcePath("thrift.sh"))
+            .build(resolver);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
     filesystem.touch(thriftRule.getBuildTarget().getBasePath().resolve("BUCK"));
 
@@ -423,7 +427,10 @@ public class ThriftLibraryDescriptionTest {
     final ImmutableList<String> thriftServices2 = ImmutableList.of();
 
     // Create a build rule that represents the thrift rule.
-    final FakeBuildRule thriftRule = createFakeBuildRule("//thrift:target", pathResolver);
+    final ShBinary thriftRule =
+        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//thrift:target"))
+            .setMain(new TestSourcePath("thrift.sh"))
+            .build(resolver);
     resolver.addToIndex(thriftRule);
     filesystem.mkdirs(thriftRule.getBuildTarget().getBasePath());
     filesystem.touch(thriftRule.getBuildTarget().getBasePath().resolve("BUCK"));

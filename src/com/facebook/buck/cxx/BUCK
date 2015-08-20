@@ -17,7 +17,6 @@ PLATFORM_SRCS = [
   'Linker.java',
   'Linkers.java',
   'Preprocessor.java',
-  'HashedFileTool.java',
   'ObjectFileScrubbers.java',
   'VersionedTool.java',
   'WindowsLinker.java',

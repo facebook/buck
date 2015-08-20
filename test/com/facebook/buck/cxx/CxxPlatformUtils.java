@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.HashedFileTool;
 
 import java.nio.file.Paths;
 

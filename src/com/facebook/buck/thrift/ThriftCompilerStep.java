@@ -30,8 +30,7 @@ import java.nio.file.Path;
 
 public class ThriftCompilerStep extends ShellStep {
 
-  private final Path compiler;
-  private final ImmutableList<String> flags;
+  private final ImmutableList<String> compilerPrefix;
   private final Path outputDir;
   private final Path input;
   private final String language;
@@ -39,16 +38,14 @@ public class ThriftCompilerStep extends ShellStep {
   private final ImmutableList<Path> includes;
 
   public ThriftCompilerStep(
-      Path compiler,
-      ImmutableList<String> flags,
+      ImmutableList<String> compilerPrefix,
       Path outputDir,
       Path input,
       String language,
       ImmutableSet<String> options,
       ImmutableList<Path> includes) {
 
-    this.compiler = compiler;
-    this.flags = flags;
+    this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;
     this.input = input;
     this.language = language;
@@ -59,8 +56,7 @@ public class ThriftCompilerStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     return ImmutableList.<String>builder()
-        .add(compiler.toString())
-        .addAll(flags)
+        .addAll(compilerPrefix)
         .add("--gen", String.format("%s:%s", language, Joiner.on(',').join(options)))
         .addAll(
             MoreIterables.zipAndConcat(
@@ -89,11 +85,7 @@ public class ThriftCompilerStep extends ShellStep {
 
     ThriftCompilerStep that = (ThriftCompilerStep) o;
 
-    if (!compiler.equals(that.compiler)) {
-      return false;
-    }
-
-    if (!flags.equals(that.flags)) {
+    if (!compilerPrefix.equals(that.compilerPrefix)) {
       return false;
     }
 
@@ -122,7 +114,7 @@ public class ThriftCompilerStep extends ShellStep {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(compiler, flags, outputDir, input, language, options, includes);
+    return Objects.hashCode(compilerPrefix, outputDir, input, language, options, includes);
   }
 
 }

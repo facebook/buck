@@ -17,7 +17,7 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.HashedFileTool;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.base.Supplier;

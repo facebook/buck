@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -26,6 +27,9 @@ import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DirArtifactCache;
@@ -34,6 +38,7 @@ import com.facebook.buck.rules.MultiArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BuckConstant;
@@ -338,6 +343,42 @@ public class BuckConfig {
    */
   public SourcePath getRequiredSourcePath(String section, String field) {
     Optional<SourcePath> path = getSourcePath(section, field);
+    return required(section, field, path);
+  }
+
+  /**
+   * @return a {@link Tool} identified by a @{link BuildTarget} or {@link Path} reference
+   *     by the given section:field, if set.
+   */
+  public Optional<Tool> getTool(String section, String field, BuildRuleResolver resolver) {
+    Optional<String> value = getValue(section, field);
+    if (!value.isPresent()) {
+      return Optional.absent();
+    }
+    try {
+      BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
+      Optional<BuildRule> rule = resolver.getRuleOptional(target);
+      if (!rule.isPresent()) {
+        throw new HumanReadableException("[%s] %s: no rule found for %s", section, field, target);
+      }
+      if (!(rule.get() instanceof BinaryBuildRule)) {
+        throw new HumanReadableException(
+            "[%s] %s: %s must be an executable rule",
+            section,
+            field,
+            target);
+      }
+      return Optional.of(((BinaryBuildRule) rule.get()).getExecutableCommand());
+    } catch (BuildTargetParseException e) {
+      checkPathExists(
+          value.get(),
+          String.format("Overridden %s:%s path not found: ", section, field));
+      return Optional.<Tool>of(new HashedFileTool(Paths.get(value.get())));
+    }
+  }
+
+  public Tool getRequiredTool(String section, String field, BuildRuleResolver resolver) {
+    Optional<Tool> path = getTool(section, field, resolver);
     return required(section, field, path);
   }
 

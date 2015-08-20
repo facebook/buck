@@ -31,13 +31,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -160,7 +160,8 @@ public class ThriftLibraryDescription
       ImmutableMap<String, SourcePath> srcs,
       ImmutableSortedSet<ThriftLibrary> deps) {
 
-    SourcePath compiler = thriftBuckConfig.getCompiler(compilerType);
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    Tool compiler = thriftBuckConfig.getCompiler(compilerType, resolver);
 
     // Build up the include roots to find thrift file deps and also the build rules that
     // generate them.
@@ -196,17 +197,17 @@ public class ThriftLibraryDescription
                   target,
                   Suppliers.ofInstance(
                       ImmutableSortedSet.<BuildRule>naturalOrder()
+                          .addAll(compiler.getDeps(pathResolver))
                           .addAll(
                               new SourcePathResolver(resolver).filterBuildRuleInputs(
                                   ImmutableList.<SourcePath>builder()
-                                      .add(compiler)
                                       .add(source)
                                       .addAll(includes.values())
                                       .build()))
                           .addAll(includeTreeRules)
                           .build()),
                   Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-              new SourcePathResolver(resolver),
+              pathResolver,
               compiler,
               flags,
               outputDir,
@@ -430,11 +431,9 @@ public class ThriftLibraryDescription
             arg.deps.get()));
 
     // Add the compiler target, if there is one.
-    SourcePath compiler =
-        thriftBuckConfig.getCompiler(enhancerFlavor.get().getValue().getCompilerType());
-    if (compiler instanceof BuildTargetSourcePath) {
-      deps.add(((BuildTargetSourcePath) compiler).getTarget());
-    }
+    deps.addAll(
+        thriftBuckConfig.getCompilerTarget(
+            enhancerFlavor.get().getValue().getCompilerType()).asSet());
 
     // Grab the language specific implicit dependencies and add their raw target representations
     // to our list.

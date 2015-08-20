@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;

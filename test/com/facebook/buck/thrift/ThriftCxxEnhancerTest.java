@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
@@ -104,7 +105,9 @@ public class ThriftCxxEnhancerTest {
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
             BuildTargetFactory.newInstance(target)),
         resolver,
-        new TestSourcePath("compiler"),
+        new CommandTool.Builder()
+            .addArg(new TestSourcePath("compiler"))
+            .build(),
         ImmutableList.<String>of(),
         Paths.get("output"),
         new TestSourcePath("source"),

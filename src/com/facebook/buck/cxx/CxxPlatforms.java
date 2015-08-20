@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;

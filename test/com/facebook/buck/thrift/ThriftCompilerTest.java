@@ -25,6 +25,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.RuleKey;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -48,7 +50,8 @@ import java.nio.file.Paths;
 
 public class ThriftCompilerTest {
 
-  private static final SourcePath DEFAULT_COMPILER = new TestSourcePath("thrift");
+  private static final Tool DEFAULT_COMPILER =
+      new CommandTool.Builder().addArg(new TestSourcePath("thrift")).build();
   private static final ImmutableList<String> DEFAULT_FLAGS = ImmutableList.of("--allow-64-bits");
   private static final Path DEFAULT_OUTPUT_DIR = Paths.get("output-dir");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.thrift");
@@ -109,7 +112,7 @@ public class ThriftCompilerTest {
         new ThriftCompiler(
             params,
             resolver,
-            new TestSourcePath("different"),
+            new CommandTool.Builder().addArg(new TestSourcePath("different")).build(),
             DEFAULT_FLAGS,
             DEFAULT_OUTPUT_DIR,
             DEFAULT_INPUT,
@@ -302,8 +305,10 @@ public class ThriftCompilerTest {
     ImmutableList<Step> expected = ImmutableList.of(
         new MakeCleanDirectoryStep(DEFAULT_OUTPUT_DIR),
         new ThriftCompilerStep(
-            pathResolver.getPath(DEFAULT_COMPILER),
-            DEFAULT_FLAGS,
+            ImmutableList.<String>builder()
+                .addAll(DEFAULT_COMPILER.getCommandPrefix(pathResolver))
+                .addAll(DEFAULT_FLAGS)
+                .build(),
             DEFAULT_OUTPUT_DIR,
             pathResolver.getPath(DEFAULT_INPUT),
             DEFAULT_LANGUAGE,
