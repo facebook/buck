@@ -37,7 +37,17 @@ public class MakefilesTest {
                   ImmutableList.of(
                       new Makefiles.Rule("output", ImmutableList.of("input1", "input2"))))),
           new Pair<>(
+              "output: input1 input2\r\n",
+              new Makefiles.Makefile(
+                  ImmutableList.of(
+                      new Makefiles.Rule("output", ImmutableList.of("input1", "input2"))))),
+          new Pair<>(
               "output: input1 \\\n input2\n",
+              new Makefiles.Makefile(
+                  ImmutableList.of(
+                      new Makefiles.Rule("output", ImmutableList.of("input1", "input2"))))),
+          new Pair<>(
+              "output: input1 \\\r\n input2\r\n",
               new Makefiles.Makefile(
                   ImmutableList.of(
                       new Makefiles.Rule("output", ImmutableList.of("input1", "input2"))))),
@@ -47,12 +57,27 @@ public class MakefilesTest {
                   ImmutableList.of(
                       new Makefiles.Rule("output", ImmutableList.of("input\\\\with\\\\slashes"))))),
           new Pair<>(
+              "output: input\\\\with\\\\slashes\r\n",
+              new Makefiles.Makefile(
+                  ImmutableList.of(
+                      new Makefiles.Rule("output", ImmutableList.of("input\\\\with\\\\slashes"))))),
+          new Pair<>(
               "output: input\\\\\\:\\\\\\ escape_chain\n",
               new Makefiles.Makefile(
                   ImmutableList.of(
                       new Makefiles.Rule("output", ImmutableList.of("input\\:\\ escape_chain"))))),
           new Pair<>(
+              "output: input\\\\\\:\\\\\\ escape_chain\r\n",
+              new Makefiles.Makefile(
+                  ImmutableList.of(
+                      new Makefiles.Rule("output", ImmutableList.of("input\\:\\ escape_chain"))))),
+          new Pair<>(
               "output: input\\ with\\ spaces\n",
+              new Makefiles.Makefile(
+                  ImmutableList.of(
+                      new Makefiles.Rule("output", ImmutableList.of("input with spaces"))))),
+          new Pair<>(
+              "output: input\\ with\\ spaces\r\n",
               new Makefiles.Makefile(
                   ImmutableList.of(
                       new Makefiles.Rule("output", ImmutableList.of("input with spaces"))))));

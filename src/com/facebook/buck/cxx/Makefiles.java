@@ -34,7 +34,18 @@ public class Makefiles {
   private Makefiles() {}
 
   private static final Parser<Void> WHITESPACE =
-      Parsers.or(Scanners.among("\\\n"), Scanners.among(" "), Scanners.among("\t"));
+      Parsers.or(
+          // Line Continuations
+          Scanners.string("\\\n"),
+          Scanners.string("\\\r\n"),
+          // Other Common Whitespace
+          Scanners.among(" "),
+          Scanners.among("\t"));
+
+  private static final Parser<Void> NEWLINE =
+      Parsers.or(
+          Scanners.among("\n"),
+          Scanners.string("\r\n"));
 
   // Parse the a makefile target. GNU make has an unusual escaping strategy.  Escaped chars need
   // to be escaped with backslashes, and backslashes are only considered escaped if they come
@@ -47,7 +58,7 @@ public class Makefiles {
       ESCAPE_CHAR
           .followedBy(ESCAPE_CHAR.many().next(ESCAPED_CHARS).peek())
           .next(ESCAPE_CHAR.or(ESCAPED_CHARS));
-  private static final Parser<String> NORMAL_CHAR = Scanners.notAmong(": #\n").source();
+  private static final Parser<String> NORMAL_CHAR = Scanners.notAmong(": #\n\r").source();
   private static final Parser<String> TARGET_CHAR = ESCAPED_CHAR.or(NORMAL_CHAR);
   private static final Parser<String> TARGET =
       TARGET_CHAR.many1().map(
@@ -68,7 +79,7 @@ public class Makefiles {
               .followedBy(WHITESPACE.many()),
           TARGET
               .sepBy(WHITESPACE.many1())
-              .followedBy(Scanners.among("\n")),
+              .followedBy(NEWLINE),
           new Map2<String, List<String>, Rule>() {
             @Override
             public Rule map(String target, List<String> prereqs) {
@@ -78,7 +89,7 @@ public class Makefiles {
 
   // Parser for an entire makefile.
   private static final Parser<Makefile> MAKEFILE =
-      RULE.endBy(Scanners.among("\n").many()).map(
+      RULE.endBy(NEWLINE.many()).map(
           new Map<List<Rule>, Makefile>() {
             @Override
             public Makefile map(List<Rule> rules) {
