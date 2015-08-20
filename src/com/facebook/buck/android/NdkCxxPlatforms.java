@@ -406,7 +406,9 @@ public class NdkCxxPlatforms {
   private static String readVersion(ProjectFilesystem ndkRoot) {
     try (InputStream input = ndkRoot.newFileInputStream(Paths.get("RELEASE.TXT"));
          BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
-        return reader.readLine().trim();
+      // TODO(#8085133): Added to work around an issue where the linux release of r10e is mislabeled
+      // as r10e-rc4.  Remove this once there is a fixed release.
+      return reader.readLine().trim().replace("r10e-rc4", "r10e");
     } catch (IOException e) {
       throw new HumanReadableException(
           e,
