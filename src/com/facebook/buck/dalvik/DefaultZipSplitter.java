@@ -21,6 +21,7 @@ import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.ClasspathTraverser;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +35,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 public class DefaultZipSplitter implements ZipSplitter {
+  private static final Logger LOG = Logger.get(DefaultZipSplitter.class);
 
   private final Set<Path> inFiles;
   private final Path outPrimary;
@@ -115,6 +117,8 @@ public class DefaultZipSplitter implements ZipSplitter {
     // this first-pass step then assigning it as the "currentSecondaryOut" to complete the second
     // pass.  We're already tracking unique entries so we would not end up adding those primary
     // entries twice.
+    LOG.debug("Traversing (first pass)");
+
     classpathTraverser.traverse(new ClasspathTraversal(inFiles, filesystem) {
       @Override
       public void visit(FileLike entry) {
@@ -135,10 +139,14 @@ public class DefaultZipSplitter implements ZipSplitter {
 
     try {
       for (Path inFile : inFiles) {
+        LOG.debug("Traversing for: " + inFile);
+
         classpathTraverser.traverse(
             new ClasspathTraversal(Collections.singleton(inFile), filesystem) {
               @Override
               public void visit(FileLike entry) throws IOException {
+                LOG.debug("Visiting " + entry.getRelativePath());
+
                 processEntry(entry);
               }
             });
