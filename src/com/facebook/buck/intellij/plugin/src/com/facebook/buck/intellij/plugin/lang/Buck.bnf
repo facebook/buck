@@ -70,8 +70,9 @@ property ::= property_lvalue '=' expression
 private operator ::= PLUS
 expression ::= (value operator)* [value]
 
-value ::= DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING |
-          NONE | BOOLEAN | NUMBER | MACROS | value_array | list | object | glob_block
+private string ::= DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING
+
+value ::= NONE | BOOLEAN | NUMBER | MACROS | string | value_array | list | object | glob_block
 
 list ::= '(' list_elements ')'
 list_elements ::= (value ',')* [value [',']]
