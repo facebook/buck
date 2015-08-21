@@ -945,20 +945,26 @@ public class ProjectGenerator {
             Joiner
                 .on(' ')
                 .join(
-                    Iterables.concat(
-                        targetNode.getConstructorArg().compilerFlags.get(),
-                        targetNode.getConstructorArg().preprocessorFlags.get(),
-                        collectRecursiveExportedPreprocessorFlags(ImmutableList.of(targetNode)))))
+                    Iterables.transform(
+                        Iterables.concat(
+                            targetNode.getConstructorArg().compilerFlags.get(),
+                            targetNode.getConstructorArg().preprocessorFlags.get(),
+                            collectRecursiveExportedPreprocessorFlags(
+                                ImmutableList.of(targetNode))),
+                        Escaper.BASH_ESCAPER)))
         .put(
             "OTHER_LDFLAGS",
             Joiner
                 .on(' ')
                 .join(
-                    MoreIterables.zipAndConcat(
-                        Iterables.cycle("-Xlinker"),
-                        Iterables.concat(
-                            targetNode.getConstructorArg().linkerFlags.get(),
-                            collectRecursiveExportedLinkerFlags(ImmutableList.of(targetNode))))));
+                    Iterables.transform(
+                        MoreIterables.zipAndConcat(
+                            Iterables.cycle("-Xlinker"),
+                            Iterables.concat(
+                                targetNode.getConstructorArg().linkerFlags.get(),
+                                collectRecursiveExportedLinkerFlags(
+                                    ImmutableList.of(targetNode)))),
+                        Escaper.BASH_ESCAPER)));
 
     ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
         targetNode.getConstructorArg().langPreprocessorFlags.get();
@@ -1146,12 +1152,13 @@ public class ProjectGenerator {
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(tests)),
             "OTHER_LDFLAGS",
-            Joiner.on(' ').join(
-                MoreIterables.zipAndConcat(
-                    Iterables.cycle("-Xlinker"),
-                    Iterables.concat(
-                        key.getLinkerFlags(),
-                        collectRecursiveExportedLinkerFlags(tests))))));
+            Escaper.escapeAsBashString(
+                Joiner.on(' ').join(
+                    MoreIterables.zipAndConcat(
+                        Iterables.cycle("-Xlinker"),
+                        Iterables.concat(
+                            key.getLinkerFlags(),
+                            collectRecursiveExportedLinkerFlags(tests)))))));
     buildableCombinedTestTargets.add(result.target);
   }
 
