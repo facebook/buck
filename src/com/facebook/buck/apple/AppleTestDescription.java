@@ -342,7 +342,7 @@ public class AppleTestDescription implements
         appleCxxPlatform.getOtest(),
         appleConfig.getXctestPlatformNames().contains(platformName),
         platformName,
-        Optional.<String>absent(),
+        args.destinationSpecifier,
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
@@ -383,6 +383,8 @@ public class AppleTestDescription implements
     public Optional<String> xcodeProductType;
     public Optional<String> resourcePrefixDir;
     public Optional<SourcePath> provisioningProfileSearchPath;
+
+    public Optional<ImmutableMap<String, String>> destinationSpecifier;
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {

@@ -78,8 +78,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   @AddToRuleKey
   private final String platformName;
 
-  @AddToRuleKey
-  private final Optional<String> simulatorName;
+  private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
   @AddToRuleKey
   private final BuildRule testBundle;
@@ -128,7 +127,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       Optional<Tool> otest,
       Boolean useXctest,
       String platformName,
-      Optional<String> simulatorName,
+      Optional<ImmutableMap<String, String>> destinationSpecifier,
       BuildRuleParams params,
       SourcePathResolver resolver,
       BuildRule testBundle,
@@ -143,7 +142,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     this.xctest = xctest;
     this.otest = otest;
     this.platformName = platformName;
-    this.simulatorName = simulatorName;
+    this.destinationSpecifier = destinationSpecifier;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
     this.contacts = contacts;
@@ -252,7 +251,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
           new XctoolRunTestsStep(
               xctoolBinaryPath,
               platformName,
-              simulatorName,
+              destinationSpecifier,
               logicTestPathsBuilder.build(),
               appTestPathsToHostAppsBuilder.build(),
               resolvedTestOutputPath,
