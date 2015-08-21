@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,9 +36,21 @@ import java.nio.file.Path;
 
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
+  // TODO(agallagher): Task #8098647: This rule has no steps, so it
+  // really doesn't need a rule key.
+  //
+  // However, Python tests will never be re-run if the rule key
+  // doesn't change, so we use the rule key to force the test runner
+  // to re-run the tests if the input changes.
+  //
+  // We should upate the Python test rule to account for this.
+  @AddToRuleKey
   private final WriteFile script;
+  @AddToRuleKey
   private final SymlinkTree linkTree;
+  @AddToRuleKey
   private final PythonPackageComponents components;
+  @AddToRuleKey
   private final Path python;
 
   public PythonInPlaceBinary(
