@@ -32,12 +32,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class AppleIpaIntegrationTest {
+public class ApplePackageIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder().doNotDeleteOnExit();
 
   @Test
-  public void ipaHasProperStructure() throws IOException, InterruptedException {
+  public void packageHasProperStructure() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -45,11 +45,12 @@ public class AppleIpaIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#ipa").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoAppPackage").assertSuccess();
 
     Path templateDir = TestDataHelper.getTestDataScenario(this, "simple_application_bundle");
 
-    ZipInspector zipInspector = new ZipInspector(workspace.getPath("buck-out/gen/DemoApp#ipa.ipa"));
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath("buck-out/gen/DemoAppPackage.ipa"));
     zipInspector.assertFileExists(("Payload/DemoApp.app/DemoApp"));
     zipInspector.assertFileContents("Payload/DemoApp.app/PkgInfo", new String(Files.readAllBytes(
             templateDir.resolve(

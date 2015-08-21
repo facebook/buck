@@ -43,6 +43,7 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.AppleCxxPlatforms;
+import com.facebook.buck.apple.ApplePackageDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleSdk;
@@ -449,6 +450,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidResourceDescription());
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
+    builder.register(new ApplePackageDescription());
     AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
             appleBinaryDescription,

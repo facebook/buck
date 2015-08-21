@@ -22,3 +22,8 @@ apple_binary(
     '$SDKROOT/usr/lib/libobjc.dylib',
   ],
 )
+
+apple_package(
+  name = 'DemoAppPackage',
+  bundle = ':DemoApp',
+)

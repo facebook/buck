@@ -101,21 +101,11 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
   @Override
   public boolean hasFlavors(final ImmutableSet<Flavor> flavors) {
-    ImmutableSet<Flavor> flavorsWithoutIpa = FluentIterable.from(flavors)
-        .filter(
-            new Predicate<Flavor>() {
-              @Override
-              public boolean apply(Flavor input) {
-                return !input.equals(AppleBundle.IPA_FLAVOR);
-              }
-            })
-        .toSet();
-
-    if (appleLibraryDescription.hasFlavors(flavorsWithoutIpa)) {
+    if (appleLibraryDescription.hasFlavors(flavors)) {
       return true;
     }
     ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
-    for (Flavor flavor : flavorsWithoutIpa) {
+    for (Flavor flavor : flavors) {
       if (flavor.equals(ReactNativeFlavors.DO_NOT_BUNDLE)) {
         continue;
       }
