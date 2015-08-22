@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -27,6 +26,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -36,7 +36,9 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.UnzipStep;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -44,17 +46,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
@@ -78,6 +82,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   @AddToRuleKey
   private final String platformName;
 
+  private final Optional<String> defaultDestinationSpecifier;
   private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
   @AddToRuleKey
@@ -127,6 +132,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       Optional<Tool> otest,
       Boolean useXctest,
       String platformName,
+      Optional<String> defaultDestinationSpecifier,
       Optional<ImmutableMap<String, String>> destinationSpecifier,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -142,6 +148,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     this.xctest = xctest;
     this.otest = otest;
     this.platformName = platformName;
+    this.defaultDestinationSpecifier = defaultDestinationSpecifier;
     this.destinationSpecifier = destinationSpecifier;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
@@ -247,11 +254,26 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       }
 
       xctoolStdoutReader = Optional.of(new AppleTestXctoolStdoutReader(testReportingCallback));
+      Optional<String> destinationSpecifierArg;
+      if (!destinationSpecifier.get().isEmpty()) {
+        destinationSpecifierArg = Optional.of(
+            Joiner.on(',').join(
+                Iterables.transform(
+                    destinationSpecifier.get().entrySet(),
+                    new Function<Map.Entry<String, String>, String>() {
+                      @Override
+                      public String apply(Map.Entry<String, String> input) {
+                        return input.getKey() + "=" + input.getValue();
+                      }
+                    })));
+      } else {
+        destinationSpecifierArg = defaultDestinationSpecifier;
+      }
       steps.add(
           new XctoolRunTestsStep(
               xctoolBinaryPath,
               platformName,
-              destinationSpecifier,
+              destinationSpecifierArg,
               logicTestPathsBuilder.build(),
               appTestPathsToHostAppsBuilder.build(),
               resolvedTestOutputPath,

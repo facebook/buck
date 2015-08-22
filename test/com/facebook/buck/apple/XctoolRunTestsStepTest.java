@@ -44,7 +44,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
-        Optional.<ImmutableMap<String, String>>absent(),
+        Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"),
@@ -83,7 +83,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
-        Optional.of(ImmutableMap.of("name", "iPhone 5s")),
+        Optional.of("name=iPhone 5s"),
         ImmutableSet.<Path>of(),
         ImmutableMap.of(
             Paths.get("/path/to/FooAppTest.xctest"),
@@ -126,7 +126,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
-        Optional.of(ImmutableMap.of("name", "iPhone 5s", "OS", "8.2")),
+        Optional.of("name=iPhone 5s,OS=8.2"),
         ImmutableSet.of(
             Paths.get("/path/to/FooLogicTest.xctest")),
         ImmutableMap.of(
@@ -172,7 +172,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
-        Optional.<ImmutableMap<String, String>>absent(),
+        Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"),
@@ -211,7 +211,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
-        Optional.<ImmutableMap<String, String>>absent(),
+        Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"),

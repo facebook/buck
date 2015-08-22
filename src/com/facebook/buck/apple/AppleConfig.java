@@ -34,9 +34,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Set;
 
 public class AppleConfig {
   private static final Pattern CODE_SIGN_IDENTITY_PATTERN =
@@ -227,4 +227,9 @@ public class AppleConfig {
   public Optional<BuildTarget> getXctoolZipTarget() {
     return delegate.getBuildTarget("apple", "xctool_zip_target");
   }
+
+  public Optional<String> getXctoolDefaultDestinationSpecifier() {
+    return delegate.getValue("apple", "xctool_default_destination_specifier");
+  }
+
 }

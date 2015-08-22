@@ -342,6 +342,7 @@ public class AppleTestDescription implements
         appleCxxPlatform.getOtest(),
         appleConfig.getXctestPlatformNames().contains(platformName),
         platformName,
+        appleConfig.getXctoolDefaultDestinationSpecifier(),
         args.destinationSpecifier,
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),

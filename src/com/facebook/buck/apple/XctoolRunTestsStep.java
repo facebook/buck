@@ -24,12 +24,10 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 
@@ -62,7 +60,7 @@ public class XctoolRunTestsStep implements Step {
   public XctoolRunTestsStep(
       Path xctoolPath,
       String sdkName,
-      Optional<ImmutableMap<String, String>> destinationSpecifier,
+      Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
       Path outputPath,
@@ -161,7 +159,7 @@ public class XctoolRunTestsStep implements Step {
   private static ImmutableList<String> createCommandArgs(
       Path xctoolPath,
       String sdkName,
-      Optional<ImmutableMap<String, String>> destinationSpecifier,
+      Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
@@ -169,18 +167,9 @@ public class XctoolRunTestsStep implements Step {
     args.add("-reporter");
     args.add("json-stream");
     args.add("-sdk", sdkName);
-    if (destinationSpecifier.isPresent() && !destinationSpecifier.get().isEmpty()) {
+    if (destinationSpecifier.isPresent()) {
       args.add("-destination");
-      args.add(
-          Joiner.on(',').join(
-              Iterables.transform(
-                  destinationSpecifier.get().entrySet(),
-                  new Function<Map.Entry<String, String>, String>() {
-                    @Override
-                    public String apply(Map.Entry<String, String> input) {
-                      return input.getKey() + "=" + input.getValue();
-                    }
-                  })));
+      args.add(destinationSpecifier.get());
     }
     args.add("run-tests");
     for (Path logicTestBundlePath : logicTestBundlePaths) {
