@@ -450,7 +450,11 @@ public class AndroidBinary
                     // Should return something like x86/libfoo.so
                     Path relativeLibPath = libSubdirectory.relativize(libPath);
                     long filesize = filesystem.getFileSize(libPath);
-                    metadataLines.add(relativeLibPath.toString() + ' ' + filesize);
+                    String output = relativeLibPath.toString();
+                    // Remove the ~ from the desired filename as the client shouldn't have to deal
+                    // with the hassle of renaming.
+                    String desiredOutput = output.substring(0, output.length() - 1);
+                    metadataLines.add(desiredOutput + ' ' + filesize);
                   }
                   ImmutableList<String> metadata = metadataLines.build();
                   if (!metadata.isEmpty()) {
