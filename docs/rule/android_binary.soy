@@ -136,6 +136,21 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
 
 {call android_common.deps_apk_arg /}
 
+{call buck.arg}
+  {param name : 'linear_alloc_hard_limit' /}
+  {param default : '4194304' /}
+  {param desc}
+  The size at which secondary dex files should be split when building an
+  {sp}<a href="{ROOT}article/exopackage.html">exopackage</a> in bytes.
+
+  <p>
+  It is set 4MB by default, because Android 2.3 has a LinearAlloc limit of 5MB and 1MB is taken up
+  by the framework.  More recent versions of Android have a LinearAlloc limit of 8MB or 16MB, so
+  if the APK is only targeted for versions newer than 2.3, a 7MB limit is safe to use.
+  </p>
+  {/param}
+{/call}
+
 {call buck.visibility_arg /}
 
 {/param} // close args
