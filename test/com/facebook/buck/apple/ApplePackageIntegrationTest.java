@@ -34,7 +34,7 @@ import java.nio.file.Path;
 
 public class ApplePackageIntegrationTest {
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder().doNotDeleteOnExit();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
   public void packageHasProperStructure() throws IOException, InterruptedException {
@@ -45,7 +45,16 @@ public class ApplePackageIntegrationTest {
         tmp);
     workspace.setUp();
 
+    workspace.runBuckCommand("build", "//:DemoApp").assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoApp");
+
+    workspace.runBuckCommand("clean").assertSuccess();
+
     workspace.runBuckCommand("build", "//:DemoAppPackage").assertSuccess();
+
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:DemoApp");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoAppPackage");
 
     Path templateDir = TestDataHelper.getTestDataScenario(this, "simple_application_bundle");
 
@@ -56,5 +65,6 @@ public class ApplePackageIntegrationTest {
             templateDir.resolve(
                 "buck-out/gen/DemoApp#iphonesimulator-x86_64/DemoApp.app/PkgInfo.expected")),
             UTF_8));
+
   }
 }

@@ -82,6 +82,8 @@ public class ApplePackage extends AbstractBuildRule {
             ZipStep.DEFAULT_COMPRESSION_LEVEL,
             temp));
 
+    buildableContext.recordArtifact(getPathToOutput());
+
     return commands.build();
   }
 
