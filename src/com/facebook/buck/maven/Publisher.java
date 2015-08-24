@@ -38,6 +38,7 @@ import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -86,17 +87,31 @@ public class Publisher {
   }
 
   public DeployResult publish(MavenPublishable publishable) throws DeploymentException {
-    String coords = Preconditions.checkNotNull(
-        publishable.getMavenCoords().get(),
-        "No maven coordinates specified for published rule ",
-        publishable);
+    DefaultArtifact coords = new DefaultArtifact(
+        Preconditions.checkNotNull(
+            publishable.getMavenCoords().get(),
+            "No maven coordinates specified for published rule ",
+            publishable));
     Path relativePathToOutput = Preconditions.checkNotNull(
         publishable.getPathToOutput(),
         "No path to output present in ",
         publishable);
-    return publish(
-        coords,
-        publishable.getProjectFilesystem().resolve(relativePathToOutput).toFile());
+    File mainItem = publishable
+        .getProjectFilesystem()
+        .resolve(relativePathToOutput)
+        .toFile();
+    if (coords.getClassifier().isEmpty()) {
+      try {
+        // If this is the "main" artifact (denoted by lack of classifier) generate and publish
+        // pom alongside
+        File pom = Pom.generatePomFile(publishable).toFile();
+        return publish(coords, mainItem, pom);
+      } catch (IOException e) {
+        throw Throwables.propagate(e);
+      }
+    } else {
+      return publish(coords, mainItem);
+    }
   }
 
   /**

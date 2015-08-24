@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.java.HasMavenCoordinates;
 import com.facebook.buck.java.MavenPublishable;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
@@ -60,13 +60,13 @@ public class PomIntegrationTest extends EasyMockSupport {
   public void testMultipleInvocation() throws Exception{
 
     // Setup: deps: com.example:with-deps:jar:1.0 -> com.othercorp:no-deps:jar:1.0
-    MavenPublishable dep = mockMavenPublishable(
+    HasMavenCoordinates dep = mockMavenPublishable(
         "com.othercorp:no-deps:1.0",
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.<HasMavenCoordinates>of());
 
     MavenPublishable item = mockMavenPublishable(
         "com.example:with-deps:1.0",
-        ImmutableSortedSet.<BuildRule>of(dep));
+        ImmutableSortedSet.of(dep));
 
     Path pomPath = tmp.getRootPath().resolve("pom.xml");
     File pomFile = pomPath.toFile();
@@ -96,12 +96,12 @@ public class PomIntegrationTest extends EasyMockSupport {
 
   private MavenPublishable mockMavenPublishable(
       String mavenCoords,
-      ImmutableSortedSet<BuildRule> deps) {
+      ImmutableSortedSet<HasMavenCoordinates> deps) {
     MavenPublishable mavenPublishable = createNiceMock(MavenPublishable.class);
     expect(mavenPublishable.getMavenCoords())
         .andReturn(Optional.fromNullable(mavenCoords))
         .anyTimes();
-    expect(mavenPublishable.getDeps()).andReturn(deps).anyTimes();
+    expect(mavenPublishable.getMavenDeps()).andReturn(deps).anyTimes();
     replay(mavenPublishable);
     return mavenPublishable;
   }

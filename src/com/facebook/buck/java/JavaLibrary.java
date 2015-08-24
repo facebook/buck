@@ -20,6 +20,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -29,7 +30,7 @@ import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 
 public interface JavaLibrary extends BuildRule, HasClasspathEntries,
-    HasJavaAbi, HasJavaClassHashes, MavenPublishable {
+    HasJavaAbi, HasJavaClassHashes, HasMavenCoordinates, HasSources {
 
   /**
    * This Buildable is expected to support the GWT flavor, which is a {@link BuildRule} whose output
@@ -54,6 +55,13 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
    * It's possible to ask a {@link JavaLibrary} to collect its own sources and build a source jar.
    */
   public static final Flavor SRC_JAR = ImmutableFlavor.of("src");
+
+  /**
+   * For maven publishing only dependencies containing maven coordinates will be listed as
+   * dependencies. Others will be packaged-in, and their first-order dependencies considered
+   * in the same manner
+   */
+  public static final Flavor MAVEN_JAR = ImmutableFlavor.of("maven");
 
   // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
   // AndroidPackageable.
@@ -81,6 +89,9 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
   public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries();
 
   public ImmutableSortedSet<Path> getJavaSrcs();
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getSources();
 
   public AnnotationProcessingParams getAnnotationProcessingParams();
 

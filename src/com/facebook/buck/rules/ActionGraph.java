@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 import java.util.Map;
 
@@ -50,4 +51,8 @@ public class ActionGraph {
     return index.get(buildTarget);
   }
 
+  @Override
+  public String toString() {
+    return Iterables.toString(nodes);
+  }
 }

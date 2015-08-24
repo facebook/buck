@@ -109,7 +109,7 @@ public class PublishCommand extends BuildCommand {
     if (!(buildRule instanceof MavenPublishable)) {
       printError(
           params,
-          "Cannot retrieve maven coordinates for rule of type " + buildRule.getClass().getName());
+          "Cannot publish rule of type " + buildRule.getClass().getName());
       return false;
     }
 
@@ -195,6 +195,32 @@ public class PublishCommand extends BuildCommand {
                   }))
           .build();
     }
+
+    // Append "maven" flavor
+    specs = FluentIterable
+        .from(specs)
+        .transform(
+            new Function<TargetNodeSpec, TargetNodeSpec>() {
+              @Nullable
+              @Override
+              public TargetNodeSpec apply(@Nullable TargetNodeSpec input) {
+                if (!(input instanceof BuildTargetSpec)) {
+                  throw new IllegalArgumentException(
+                      "Need to specify build targets explicitly when publishing. " +
+                          "Cannot modify " + input);
+                }
+                BuildTargetSpec buildTargetSpec = (BuildTargetSpec) input;
+                BuildTarget buildTarget =
+                    Preconditions.checkNotNull(buildTargetSpec.getBuildTarget());
+                return buildTargetSpec.withBuildTarget(
+                    BuildTarget
+                        .builder(buildTarget)
+                        .addFlavors(JavaLibrary.MAVEN_JAR)
+                        .build());
+              }
+            })
+        .toList();
+
     return specs;
   }
 

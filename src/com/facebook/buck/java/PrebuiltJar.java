@@ -186,6 +186,11 @@ public class PrebuiltJar extends AbstractBuildRule
   }
 
   @Override
+  public ImmutableSortedSet<SourcePath> getSources() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
     return getDeclaredDeps();
   }

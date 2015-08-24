@@ -17,16 +17,10 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 
-/**
- * A {@link BuildRule} that can have its output({@link #getPathToOutput}) published to a
- * maven repository under the maven coordinates provided by {@link #getMavenCoords}
- */
-public interface MavenPublishable extends HasMavenCoordinates {
+public interface HasSources extends BuildRule {
 
-  /**
-   * When published, these will be listed in pom.xml as dependencies
-   */
-  ImmutableSortedSet<HasMavenCoordinates> getMavenDeps();
+  ImmutableSortedSet<SourcePath> getSources();
 }

@@ -16,12 +16,14 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.java.HasMavenCoordinates;
 import com.facebook.buck.java.MavenPublishable;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -70,42 +72,42 @@ public class Pom {
     applyBuildRule();
   }
 
-  public static void generatePomFile(
+  public static Path generatePomFile(MavenPublishable rule) throws IOException {
+    Path pom = getPomPath(rule);
+    generatePomFile(rule, pom);
+    return pom;
+  }
+
+  private static Path getPomPath(HasMavenCoordinates rule) {
+    return rule.getProjectFilesystem().resolve(
+        BuildTargets.getGenPath(
+            rule.getBuildTarget(),
+            "%s.pom"));
+  }
+
+  @VisibleForTesting
+  static void generatePomFile(
       MavenPublishable rule,
       Path optionallyExistingPom) throws IOException {
     new Pom(optionallyExistingPom, rule).flushToFile();
   }
 
   private void applyBuildRule() {
-    Optional<String> mavenCoords = getMavenCoords(publishable);
-    if (!mavenCoordsPresent(mavenCoords)) {
+    if (!HasMavenCoordinates.MAVEN_COORDS_PRESENT_PREDICATE.apply(publishable)) {
       throw new IllegalArgumentException(
           "Cannot retrieve maven coordinates for target" +
               publishable.getBuildTarget().getFullyQualifiedName());
     }
-    DefaultArtifact artifact = new DefaultArtifact(mavenCoords.get());
+    DefaultArtifact artifact = new DefaultArtifact(getMavenCoords(publishable).get());
 
     Iterable<Artifact> deps = FluentIterable
-        .from(publishable.getDeps())
+        .from(publishable.getMavenDeps())
+        .filter(HasMavenCoordinates.MAVEN_COORDS_PRESENT_PREDICATE)
         .transform(
-            new Function<BuildRule, Optional<String>>() {
+            new Function<HasMavenCoordinates, Artifact>() {
               @Override
-              public Optional<String> apply(BuildRule input) {
-                return getMavenCoords(input);
-              }
-            })
-        .filter(
-            new Predicate<Optional<String>>() {
-              @Override
-              public boolean apply(Optional<String> input) {
-                return mavenCoordsPresent(input);
-              }
-            })
-        .transform(
-            new Function<Optional<String>, Artifact>() {
-              @Override
-              public Artifact apply(Optional<String> input) {
-                return new DefaultArtifact(input.get());
+              public Artifact apply(HasMavenCoordinates input) {
+                return new DefaultArtifact(input.getMavenCoords().get());
               }
             });
 
@@ -178,14 +180,10 @@ public class Pom {
   }
 
   private static Optional<String> getMavenCoords(BuildRule buildRule) {
-    if (buildRule instanceof MavenPublishable) {
-      return ((MavenPublishable) buildRule).getMavenCoords();
+    if (buildRule instanceof HasMavenCoordinates) {
+      return ((HasMavenCoordinates) buildRule).getMavenCoords();
     }
     return Optional.absent();
-  }
-
-  private static boolean mavenCoordsPresent(Optional<String> coords) {
-    return coords.isPresent() && !coords.get().isEmpty();
   }
 
   public Model getModel() {

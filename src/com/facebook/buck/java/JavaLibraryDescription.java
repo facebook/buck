@@ -42,6 +42,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +55,9 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     FlavorableDescription<JavaLibraryDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("java_library");
+  public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      JavaLibrary.SRC_JAR,
+      JavaLibrary.MAVEN_JAR);
 
   @VisibleForTesting
   final JavacOptions defaultOptions;
@@ -69,7 +73,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return flavors.equals(ImmutableSet.of(JavaLibrary.SRC_JAR)) || flavors.isEmpty();
+    return SUPPORTED_FLAVORS.containsAll(flavors);
   }
 
   @Override
@@ -89,18 +93,39 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
 
-    if (target.getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(
-          params,
-          pathResolver,
-          args.srcs.get(),
-          args.mavenCoords.transform(
-            new Function<String, String>() {
-              @Override
-              public String apply(String input) {
-                return AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES);
-              }
-            }));
+    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
+    BuildRuleParams paramsWithMavenFlavor = null;
+    if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
+      paramsWithMavenFlavor = params;
+
+      // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
+      // without the maven flavor to prevent output-path conflict
+      params = params.copyWithBuildTarget(
+          params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
+    }
+
+    if (flavors.contains(JavaLibrary.SRC_JAR)) {
+      args.mavenCoords = args.mavenCoords.transform(
+          new Function<String, String>() {
+            @Override
+            public String apply(String input) {
+              return AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES);
+            }
+          });
+
+      if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
+        return new JavaSourceJar(
+            params,
+            pathResolver,
+            args.srcs.get(),
+            args.mavenCoords);
+      } else {
+        return MavenUberJar.SourceJar.create(
+            Preconditions.checkNotNull(paramsWithMavenFlavor),
+            pathResolver,
+            args.srcs.get(),
+            args.mavenCoords);
+      }
     }
 
     JavacOptions.Builder javacOptionsBuilder =
@@ -114,7 +139,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     JavacOptions javacOptions = javacOptionsBuilder.build();
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
-    return new DefaultJavaLibrary(
+    DefaultJavaLibrary defaultJavaLibrary = new DefaultJavaLibrary(
         params.appendExtraDeps(
             Iterables.concat(
                 BuildRules.getExportedRules(
@@ -135,6 +160,16 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         javacOptions,
         args.resourcesRoot,
         args.mavenCoords);
+
+    if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
+      return defaultJavaLibrary;
+    } else {
+      return MavenUberJar.create(
+          defaultJavaLibrary,
+          Preconditions.checkNotNull(paramsWithMavenFlavor),
+          pathResolver,
+          args.mavenCoords);
+    }
   }
 
   // TODO(natthu): Consider adding a validateArg() method on Description which gets called before

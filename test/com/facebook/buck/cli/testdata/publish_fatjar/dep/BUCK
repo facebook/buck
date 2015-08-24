@@ -1,0 +1,12 @@
+java_library(
+  name = 'dep',
+  srcs = glob(['*.java']),
+  resources = [
+  ],
+  deps = [
+    '//mavendepofdep:mavendepofdep'
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

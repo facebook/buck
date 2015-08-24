@@ -39,6 +39,7 @@ import java.util.List;
 public class PublishCommandIntegrationTest {
   public static final String EXPECTED_PUT_URL_PATH_BASE = "/com/example/foo/1.0/foo-1.0";
   public static final String JAR = ".jar";
+  public static final String POM = ".pom";
   public static final String SRC_JAR = Javac.SRC_JAR;
   public static final String SHA1 = ".sha1";
   public static final String TARGET = "//:foo";
@@ -58,9 +59,24 @@ public class PublishCommandIntegrationTest {
   }
 
   @Test
+  public void testDependenciesTriggerPomGeneration() throws IOException {
+    ProjectWorkspace.ProcessResult result = runValidBuckPublish("publish_fatjar");
+    result.assertSuccess();
+    List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
+    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + POM));
+    assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + POM + SHA1));
+  }
+
+  @Test
   public void testBasicCase() throws IOException {
+    ProjectWorkspace.ProcessResult result = runValidBuckPublish("publish");
+    result.assertSuccess();
+  }
+
+  private ProjectWorkspace.ProcessResult runValidBuckPublish(String workspaceName)
+      throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "publish", tmp);
+        this, workspaceName, tmp);
     workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = runBuckPublish(
@@ -72,6 +88,7 @@ public class PublishCommandIntegrationTest {
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR + SHA1));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_JAR));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_JAR + SHA1));
+    return result;
   }
 
   @Test
@@ -105,8 +122,8 @@ public class PublishCommandIntegrationTest {
     assertTrue(stdOut, stdOut.contains("com.example:foo:jar:1.0"));
     assertTrue(stdOut,
         stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
-    assertTrue(stdOut, stdOut.contains("/foo.jar"));
-    assertTrue(stdOut, stdOut.contains("/foo#src" + Javac.SRC_JAR));
+    assertTrue(stdOut, stdOut.contains("/foo#maven.jar"));
+    assertTrue(stdOut, stdOut.contains(Javac.SRC_JAR));
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }
 

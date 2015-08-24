@@ -17,16 +17,22 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 
-/**
- * A {@link BuildRule} that can have its output({@link #getPathToOutput}) published to a
- * maven repository under the maven coordinates provided by {@link #getMavenCoords}
- */
-public interface MavenPublishable extends HasMavenCoordinates {
+public interface HasMavenCoordinates extends BuildRule {
 
   /**
-   * When published, these will be listed in pom.xml as dependencies
+   * Used to identify this library within a maven repository
    */
-  ImmutableSortedSet<HasMavenCoordinates> getMavenDeps();
+  Optional<String> getMavenCoords();
+
+  public static final Predicate<BuildRule> MAVEN_COORDS_PRESENT_PREDICATE =
+      new Predicate<BuildRule>() {
+    @Override
+    public boolean apply(BuildRule input) {
+      return input instanceof HasMavenCoordinates &&
+          ((HasMavenCoordinates) input).getMavenCoords().isPresent();
+    }
+  };
 }

@@ -1,0 +1,12 @@
+java_library(
+  name = 'mavendep',
+  maven_coords = 'com.example:mavendep:1.0',
+  srcs = glob(['*.java']),
+  resources = [
+  ],
+  deps = [
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

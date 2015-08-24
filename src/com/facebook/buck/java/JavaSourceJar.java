@@ -43,7 +43,7 @@ import java.nio.file.Path;
 import java.util.Set;
 
 
-public class JavaSourceJar extends AbstractBuildRule implements MavenPublishable {
+public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordinates, HasSources {
 
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> sources;
@@ -100,6 +100,7 @@ public class JavaSourceJar extends AbstractBuildRule implements MavenPublishable
     return steps.build();
   }
 
+  @Override
   public ImmutableSortedSet<SourcePath> getSources() {
     return sources;
   }

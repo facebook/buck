@@ -205,7 +205,10 @@ public class Build implements Closeable {
                          @Override
                          public BuildRule apply(HasBuildTarget hasBuildTarget) {
                            return Preconditions.checkNotNull(
-                               actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()));
+                               actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()),
+                               "No build rule found for target %s in %s",
+                               hasBuildTarget.getBuildTarget(),
+                               actionGraph);
                          }
                        })
             .toSet());

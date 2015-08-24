@@ -101,7 +101,7 @@ import javax.annotation.Nullable;
  */
 public class DefaultJavaLibrary extends AbstractBuildRule
     implements JavaLibrary, AbiRule, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable, MavenPublishable {
+    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -321,7 +321,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return BuildTargets.getGenPath(target, "lib__%s__output");
   }
 
-  private static Path getOutputJarPath(BuildTarget target) {
+  static Path getOutputJarPath(BuildTarget target) {
     return Paths.get(
         String.format(
             "%s/%s.jar",
@@ -407,6 +407,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public ImmutableSortedSet<Path> getJavaSrcs() {
     return ImmutableSortedSet.copyOf(getResolver().getAllPaths(srcs));
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getSources() {
+    return srcs;
   }
 
   @Override

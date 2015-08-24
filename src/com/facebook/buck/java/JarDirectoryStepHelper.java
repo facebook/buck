@@ -27,6 +27,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -48,6 +49,7 @@ import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import javax.annotation.Nullable;
@@ -70,14 +72,19 @@ public class JarDirectoryStepHelper {
     Manifest manifest = new Manifest();
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
+    Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
     try (CustomZipOutputStream outputFile = ZipOutputStreams.newOutputStream(
-        filesystem.getPathForRelativePath(pathToOutputFile), APPEND_TO_ZIP)) {
+        absoluteOutputPath, APPEND_TO_ZIP)) {
 
       Set<String> alreadyAddedEntries = Sets.newHashSet();
       ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       for (Path entry : entriesToJar) {
         Path file = projectFilesystem.getPathForRelativePath(entry);
         if (Files.isRegularFile(file)) {
+          Preconditions.checkArgument(
+              !file.equals(absoluteOutputPath),
+              "Trying to put file %s into itself",
+              file);
           // Assume the file is a ZIP/JAR file.
           copyZipEntriesToJar(file,
               outputFile,
@@ -216,6 +223,8 @@ public class JarDirectoryStepHelper {
         ByteStreams.copy(inputStream, jar);
         jar.closeEntry();
       }
+    } catch (ZipException e) {
+      throw new IOException("Failed to process zip file " + file + ": " + e.getMessage(), e);
     }
   }
 
