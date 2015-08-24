@@ -49,12 +49,4 @@ public final class BuildRuleFactoryParams {
   public boolean enforceBuckPackageBoundary() {
     return enforceBuckPackageBoundary;
   }
-
-  public BuildRuleFactoryParams withBuildTarget(BuildTarget buildTarget) {
-    return new BuildRuleFactoryParams(
-        filesystem,
-        buildTarget,
-        buildFileTree,
-        enforceBuckPackageBoundary);
-  }
 }

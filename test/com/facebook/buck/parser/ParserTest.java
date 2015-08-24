@@ -38,7 +38,6 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.Watchman;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
@@ -104,7 +103,6 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class ParserTest extends EasyMockSupport {
 
@@ -208,55 +206,35 @@ public class ParserTest extends EasyMockSupport {
       Iterable<Map<String, Object>> rules,
       ProjectBuildFileParserFactory buildFileParserFactory)
       throws IOException, InterruptedException {
-    ParserConfig parserConfig = new ParserConfig(
-        new FakeBuckConfig(
-            ImmutableMap.of(
-                "project", ImmutableMap.of("temp_files", ".*\\.swp$"))));
+    BuckConfig buckConfig = new FakeBuckConfig(
+        "[project]",
+        "temp_files = .*\\.swp$");
+
     return createParser(
         buildFileTreeSupplier,
         rules,
         buildFileParserFactory,
-        parserConfig);
+        buckConfig);
   }
 
   private Parser createParser(
       Supplier<BuildFileTree> buildFileTreeSupplier,
       Iterable<Map<String, Object>> rules,
       ProjectBuildFileParserFactory buildFileParserFactory,
-      ParserConfig parserConfig)
-      throws IOException, InterruptedException {
-    return createParser(
-        buildFileTreeSupplier,
-        rules,
-        buildFileParserFactory,
-        parserConfig.getEnforceBuckPackageBoundary(),
-        parserConfig.getTempFilePatterns()
-    );
-  }
-
-  private Parser createParser(
-      Supplier<BuildFileTree> buildFileTreeSupplier,
-      Iterable<Map<String, Object>> rules,
-      ProjectBuildFileParserFactory buildFileParserFactory,
-      boolean enforcePackageBoundary,
-      ImmutableSet<Pattern> tempFilePatterns)
+      BuckConfig buckConfig)
       throws IOException, InterruptedException {
 
     TestRepositoryBuilder repoBuilder = new TestRepositoryBuilder()
         .setBuildFileParserFactory(buildFileParserFactory)
-        .setBuckConfig(new FakeBuckConfig())
+        .setBuckConfig(buckConfig)
         .setFilesystem(filesystem);
 
     Repository toUse = repoBuilder.build();
 
     Parser parser = new Parser(
         toUse,
-        enforcePackageBoundary,
-        tempFilePatterns,
         buildFileTreeSupplier,
-        "python",
-        false,
-        Watchman.NULL_WATCHMAN);
+        false);
 
     try {
       parser.parseRawRulesInternal(rules);
@@ -885,15 +863,18 @@ public class ParserTest extends EasyMockSupport {
       throws Exception {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes);
+    BuckConfig buckConfig = new FakeBuckConfig(
+        "[project]",
+        "check_package_boundary = false",
+        "temp_files = ''");
+
     Parser parser =
         createParser(
             ofInstance(
                 new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
             emptyBuildTargets(),
             new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes),
-            /* enforcePackageBoundary */ false,
-            /* tempFilePatterns */ ImmutableSet.<Pattern>of()
-        );
+            buckConfig);
 
     Path testAncestorBuildFile = tempDir.newFile("java/BUCK").toPath().toRealPath();
     Files.write(

@@ -16,12 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.io.Watchman.NULL_WATCHMAN;
+
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
@@ -77,6 +78,7 @@ public class TestRepositoryBuilder {
       return new Repository(
           name,
           filesystem,
+          NULL_WATCHMAN,
           buckConfig,
           buildRuleTypes,
           androidDirectoryResolver);
@@ -85,14 +87,12 @@ public class TestRepositoryBuilder {
     return new Repository(
         name,
         filesystem,
+        NULL_WATCHMAN,
         buckConfig,
         buildRuleTypes,
         androidDirectoryResolver) {
       @Override
-      public ProjectBuildFileParserFactory createBuildFileParserFactory(
-          String pythonInterpreter,
-          boolean useWatchmanGlob,
-          Watchman watchman) {
+      public ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
         return parserFactory;
       }
     };

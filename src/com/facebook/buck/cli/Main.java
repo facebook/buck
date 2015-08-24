@@ -196,9 +196,6 @@ public final class Main {
       this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
       this.processExecutor = processExecutor;
       ParserConfig parserConfig = new ParserConfig(repository.getBuckConfig());
-      PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
-          repository.getBuckConfig(),
-          new ExecutableFinder());
       this.fileEventBus = new EventBus("file-change-events");
 
       Watchman watchman = Watchman.build(
@@ -220,11 +217,7 @@ public final class Main {
           useWatchmanGlob);
       this.parser = Parser.createBuildFileParser(
           repository,
-          pythonBuckConfig.getPythonInterpreter(),
-          parserConfig.getEnforceBuckPackageBoundary(),
-          parserConfig.getTempFilePatterns(),
-          useWatchmanGlob,
-          watchman);
+          useWatchmanGlob);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
 
@@ -546,17 +539,26 @@ public final class Main {
 
     ProcessExecutor processExecutor = new ProcessExecutor(console);
 
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
     KnownBuildRuleTypes buildRuleTypes =
         KnownBuildRuleTypes.createInstance(
             buckConfig,
             processExecutor,
             androidDirectoryResolver,
-            new PythonBuckConfig(buckConfig, new ExecutableFinder()).getPythonEnvironment(
+            pythonBuckConfig.getPythonEnvironment(
                 processExecutor));
+
+    Watchman watchman;
+    if (context.isPresent()) {
+      watchman = Watchman.build(projectRoot, clientEnvironment);
+    } else {
+      watchman = Watchman.NULL_WATCHMAN;
+    }
 
     Repository rootRepository = new Repository(
         Optional.<String>absent(),
         filesystem,
+        watchman,
         buckConfig,
         buildRuleTypes,
         androidDirectoryResolver);
@@ -678,17 +680,7 @@ public final class Main {
       }
 
       if (parser == null) {
-        ParserConfig parserConfig = new ParserConfig(rootRepository.getBuckConfig());
-        PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
-            rootRepository.getBuckConfig(),
-            new ExecutableFinder());
-        parser = Parser.createBuildFileParser(
-            rootRepository,
-            pythonBuckConfig.getPythonInterpreter(),
-            parserConfig.getEnforceBuckPackageBoundary(),
-            parserConfig.getTempFilePatterns(),
-            /* useWatchmanGlob */ false,
-            Watchman.NULL_WATCHMAN);
+        parser = Parser.createBuildFileParser(rootRepository, /* useWatchmanGlob */ false);
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());
 

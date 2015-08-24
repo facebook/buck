@@ -311,19 +311,6 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     }
   }
 
-  public TargetNode<T> withConstructorArg(T constructorArg) {
-    return with(description, constructorArg, ruleFactoryParams, declaredDeps, visibilityPatterns);
-  }
-
-  public TargetNode<T> withBuildTarget(BuildTarget buildTarget) {
-    return with(
-        description,
-        constructorArg,
-        ruleFactoryParams.withBuildTarget(buildTarget),
-        declaredDeps,
-        visibilityPatterns);
-  }
-
   @SuppressWarnings("serial")
   public static class InvalidSourcePathInputException extends Exception
       implements ExceptionWithHumanReadableMessage{

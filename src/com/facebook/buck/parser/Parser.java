@@ -27,7 +27,6 @@ import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -102,12 +101,8 @@ public class Parser {
 
   private final CachedState state;
 
-  private final ImmutableSet<Pattern> tempFilePatterns;
-
   private final Repository repository;
-  private final String pythonInterpreter;
   private final boolean useWatchmanGlob;
-  private final Watchman watchman;
 
   /**
    * Key of the meta-rule that lists the build files executed while reading rules.
@@ -121,9 +116,6 @@ public class Parser {
    * that depend on them (typically {@code /jimp/BUCK} files).
    */
   private final ListMultimap<Path, Path> buildFileDependents;
-
-  private final boolean enforceBuckPackageBoundary;
-
 
   /**
    * A BuckEvent used to record the parse start time, which should include the WatchEvent
@@ -193,16 +185,10 @@ public class Parser {
 
   public static Parser createBuildFileParser(
       final Repository repository,
-      String pythonInterpreter,
-      boolean enforceBuckPackageBoundary,
-      ImmutableSet<Pattern> tempFilePatterns,
-      boolean useWatchmanGlob,
-      Watchman watchman)
+      boolean useWatchmanGlob)
       throws IOException, InterruptedException {
     return new Parser(
         repository,
-        enforceBuckPackageBoundary,
-        tempFilePatterns,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         // TODO(simons): Consider momoizing the suppler.
         new Supplier<BuildFileTree>() {
@@ -213,9 +199,7 @@ public class Parser {
                 repository.getBuildFileName());
           }
         },
-        pythonInterpreter,
-        useWatchmanGlob,
-        watchman);
+        useWatchmanGlob);
   }
 
   /**
@@ -224,21 +208,13 @@ public class Parser {
   @VisibleForTesting
   Parser(
       Repository repository,
-      boolean enforceBuckPackageBoundary,
-      ImmutableSet<Pattern> tempFilePatterns,
       Supplier<BuildFileTree> buildFileTreeSupplier,
-      String pythonInterpreter,
-      boolean useWatchmanGlob,
-      Watchman watchman)
+      boolean useWatchmanGlob)
       throws IOException, InterruptedException {
     this.repository = repository;
-    this.pythonInterpreter = pythonInterpreter;
     this.useWatchmanGlob = useWatchmanGlob;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
-    this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
     this.buildFileDependents = ArrayListMultimap.create();
-    this.tempFilePatterns = tempFilePatterns;
-    this.watchman = watchman;
     this.state = new CachedState(repository.getBuildFileName());
   }
 
@@ -417,10 +393,7 @@ public class Parser {
       ImmutableMap<String, String> environment,
       BuckEventBus eventBus) {
     return repository
-        .createBuildFileParserFactory(
-            pythonInterpreter,
-            useWatchmanGlob,
-            watchman)
+        .createBuildFileParserFactory(useWatchmanGlob)
         .createParser(console, environment, eventBus);
   }
 
@@ -795,7 +768,7 @@ public class Parser {
         return pattern.matcher(fileName).matches();
       }
     };
-    return Iterators.any(tempFilePatterns.iterator(), patternMatches);
+    return Iterators.any(repository.getTempFilePatterns().iterator(), patternMatches);
   }
 
   /**
@@ -814,7 +787,7 @@ public class Parser {
 
     // If we're *not* enforcing package boundary checks, it's possible for multiple ancestor
     // packages to reference the same file
-    if (!enforceBuckPackageBoundary) {
+    if (!repository.isEnforcingBuckPackageBoundaries()) {
       while (packageBuildFile.isPresent() && packageBuildFile.get().getParent() != null) {
         packageBuildFile =
             buildFileTreeCache.get()
@@ -1201,7 +1174,7 @@ public class Parser {
             // flavour.
             buildTarget,
             buildFileTreeCache.get(),
-            enforceBuckPackageBoundary);
+            targetRepo.isEnforcingBuckPackageBoundaries());
         Object constructorArg = description.createUnpopulatedConstructorArg();
         TargetNode<?> targetNode;
         try {

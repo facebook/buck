@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
@@ -26,12 +27,14 @@ import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * Represents a single checkout of a code base. Two repositories model the same code base if their
@@ -41,26 +44,37 @@ public class Repository {
 
   private final Optional<String> name;
   private final ProjectFilesystem filesystem;
+  private final Watchman watchman;
   private final BuckConfig config;
   private final KnownBuildRuleTypes knownBuildRuleTypes;
   private final AndroidDirectoryResolver directoryResolver;
+  private final String pythonInterpreter;
   private final String buildFileName;
+  private final boolean enforceBuckPackageBoundaries;
+  private final ImmutableSet<Pattern> tempFilePatterns;
 
   public Repository(
       Optional<String> name,
       ProjectFilesystem filesystem,
+      Watchman watchman,
       BuckConfig config,
       KnownBuildRuleTypes knownBuildRuleTypes,
       AndroidDirectoryResolver directoryResolver) {
 
     this.name = name;
     this.filesystem = filesystem;
+    this.watchman = watchman;
     this.config = config;
     this.knownBuildRuleTypes = knownBuildRuleTypes;
     this.directoryResolver = directoryResolver;
 
     ParserConfig parserConfig = new ParserConfig(config);
     this.buildFileName = parserConfig.getBuildFileName();
+    this.enforceBuckPackageBoundaries = parserConfig.getEnforceBuckPackageBoundary();
+    this.tempFilePatterns = parserConfig.getTempFilePatterns();
+
+    PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
+    this.pythonInterpreter = pythonConfig.getPythonInterpreter();
   }
 
   public Optional<String> getName() {
@@ -87,6 +101,11 @@ public class Repository {
   public String getBuildFileName() {
     return buildFileName;
   }
+
+  public boolean isEnforcingBuckPackageBoundaries() {
+    return enforceBuckPackageBoundaries;
+  }
+
 
   public Description<?> getDescription(BuildRuleType type) {
     return getKnownBuildRuleTypes().getDescription(type);
@@ -115,10 +134,7 @@ public class Repository {
     return getFilesystem().resolve(relativePath);
   }
 
-  public ProjectBuildFileParserFactory createBuildFileParserFactory(
-      String pythonInterpreter,
-      boolean useWatchmanGlob,
-      Watchman watchman) {
+  public ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
     ParserConfig parserConfig = new ParserConfig(getBuckConfig());
 
     return new DefaultProjectBuildFileParserFactory(
@@ -148,6 +164,10 @@ public class Repository {
   @Override
   public int hashCode() {
     return Objects.hash(filesystem, config, directoryResolver);
+  }
+
+  public Iterable<Pattern> getTempFilePatterns() {
+    return tempFilePatterns;
   }
 
   @SuppressWarnings("serial")

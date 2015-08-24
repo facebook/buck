@@ -19,7 +19,12 @@ package com.facebook.buck.cli;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.Arrays;
 
 /**
  * Implementation of {@link BuckConfig} with no data, or only the data specified by
@@ -82,5 +87,13 @@ public class FakeBuckConfig extends BuckConfig {
         filesystem,
         platform,
         environment);
+  }
+
+  public FakeBuckConfig(String... iniFileLines) throws IOException {
+    super(
+        new Config(Inis.read(new StringReader(Joiner.on("\n").join(Arrays.asList(iniFileLines))))),
+        new FakeProjectFilesystem(),
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
   }
 }
