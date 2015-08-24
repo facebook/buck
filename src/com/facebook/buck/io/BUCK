@@ -1,6 +1,48 @@
+WATCHMAN_SRCS = [
+  'Watchman.java',
+]
+java_library(
+  name = 'watchman',
+  srcs = WATCHMAN_SRCS,
+  deps = [
+    ':executable-finder',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:util',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jackson:jackson',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/util:watchman',
+    '//test/com/facebook/buck/...',
+  ],
+)
+
+FINDER_SRCS = [
+  'ExecutableFinder.java',
+]
+java_library(
+  name = 'executable-finder',
+  srcs = FINDER_SRCS,
+  deps = [
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util/environment:env-filter',
+    '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+)
+
 java_library(
   name = 'io',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java'], excludes = FINDER_SRCS + WATCHMAN_SRCS),
+  exported_deps = [
+    ':executable-finder',
+  ],
   deps = [
     # This library is widely used throughout Buck. Please keep
     # the number of dependencies to an absolute minimum.

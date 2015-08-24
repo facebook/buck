@@ -29,6 +29,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
@@ -440,7 +441,7 @@ public class WatchmanWatcherTest {
         "uuid",
         Lists.<Path>newArrayList(),
         Lists.<String>newArrayList(),
-        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME));
 
     assertThat(
         query,
@@ -456,7 +457,7 @@ public class WatchmanWatcherTest {
         "uuid",
         Lists.<Path>newArrayList(),
         Lists.<String>newArrayList(),
-        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
         "[\"query\",\"/path/to/\\\"repo\\\"\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
@@ -474,7 +475,7 @@ public class WatchmanWatcherTest {
         "uuid",
         Lists.newArrayList(Paths.get("foo"), Paths.get("bar/baz")),
         Lists.<String>newArrayList(),
-        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
@@ -494,7 +495,7 @@ public class WatchmanWatcherTest {
         "uuid",
         Lists.newArrayList(Paths.get("foo"), Paths.get("bar/baz")),
         Lists.<String>newArrayList(),
-        ImmutableSet.<WatchmanWatcher.Capability>of());
+        ImmutableSet.<Watchman.Capability>of());
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
@@ -514,7 +515,7 @@ public class WatchmanWatcherTest {
         "uuid",
         Lists.newArrayList(Paths.get("/path/to/repo/foo"), Paths.get("/path/to/repo/bar/baz")),
         Lists.<String>newArrayList(),
-        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +
@@ -534,7 +535,7 @@ public class WatchmanWatcherTest {
         "uuid",
         Lists.<Path>newArrayList(),
         Lists.newArrayList("*.pbxproj"),
-        ImmutableSet.of(WatchmanWatcher.Capability.DIRNAME));
+        ImmutableSet.of(Watchman.Capability.DIRNAME));
     assertEquals(
         "[\"query\",\"/path/to/repo\",{\"since\":\"n:buckduuid\"," +
         "\"expression\":[\"not\",[\"anyof\"," +

@@ -32,6 +32,10 @@ import java.util.Map;
 @BuckStyleImmutable
 abstract class AbstractProcessExecutorParams {
 
+  public static ProcessExecutorParams ofCommand(String... args) {
+    return ProcessExecutorParams.builder().addCommand(args).build();
+  }
+
   /**
    * The command and arguments to launch.
    */

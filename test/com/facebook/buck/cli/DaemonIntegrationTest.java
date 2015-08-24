@@ -509,7 +509,8 @@ public class DaemonIntegrationTest {
             .build(),
         new FakeClock(0),
         objectMapper,
-        fakeProcessExecutor);
+        fakeProcessExecutor,
+        ImmutableMap.<String, String>of());
 
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
@@ -521,7 +522,8 @@ public class DaemonIntegrationTest {
                 .build(),
             new FakeClock(0),
             objectMapper,
-            fakeProcessExecutor));
+            fakeProcessExecutor,
+            ImmutableMap.<String, String>of()));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -535,7 +537,8 @@ public class DaemonIntegrationTest {
                 .build(),
             new FakeClock(0),
             objectMapper,
-            fakeProcessExecutor));
+            fakeProcessExecutor,
+            ImmutableMap.<String, String>of()));
   }
 
   @Test
@@ -586,7 +589,8 @@ public class DaemonIntegrationTest {
             .build(),
         new FakeClock(0),
         objectMapper,
-        fakeProcessExecutor);
+        fakeProcessExecutor,
+        ImmutableMap.<String, String>of());
 
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
@@ -601,7 +605,8 @@ public class DaemonIntegrationTest {
                 .build(),
             new FakeClock(0),
             objectMapper,
-            fakeProcessExecutor));
+            fakeProcessExecutor,
+            ImmutableMap.<String, String>of()));
   }
 
   private void waitForChange(final Path path) throws IOException, InterruptedException {

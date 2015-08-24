@@ -34,8 +34,8 @@ import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.log.CommandThreadAssociation;
@@ -187,7 +187,8 @@ public final class Main {
         Repository repository,
         Clock clock,
         ObjectMapper objectMapper,
-        ProcessExecutor processExecutor)
+        ProcessExecutor processExecutor,
+        ImmutableMap<String, String> env)
         throws IOException, InterruptedException {
       this.repository = repository;
       this.clock = clock;
@@ -199,23 +200,22 @@ public final class Main {
           repository.getBuckConfig(),
           new ExecutableFinder());
       this.fileEventBus = new EventBus("file-change-events");
-      String projectRoot =
-          MorePaths.absolutify(repository.getFilesystem().getRootPath()).toString();
-      String watchRoot = System.getProperty("buck.watchman_root", projectRoot);
-      Optional<String> projectPrefix = Optional.fromNullable(
-          System.getProperty("buck.watchman_project_prefix"));
-      ImmutableSet<WatchmanWatcher.Capability> watchmanCapabilities =
-          WatchmanWatcher.getWatchmanCapabilities(processExecutor, objectMapper);
-      this.watchmanWatcher = createWatcher(watchRoot, projectPrefix, watchmanCapabilities);
+
+      Watchman watchman = Watchman.build(
+          repository.getFilesystem().getRootPath(),
+          env);
+
+      this.watchmanWatcher = createWatcher(watchman);
       boolean useWatchmanGlob =
           parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
-          watchmanCapabilities.contains(WatchmanWatcher.Capability.WILDMATCH_GLOB);
+              watchman.hasWildmatchGlob();
+
       LOG.debug(
           "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s " +
           "Watchman glob enabled: %s",
-          watchmanCapabilities,
-          watchRoot,
-          projectPrefix,
+          watchman.getCapabilities(),
+          watchman.getWatchRoot(),
+          watchman.getProjectPrefix(),
           parserConfig.getGlobHandler(),
           useWatchmanGlob);
       this.parser = Parser.createParser(
@@ -227,8 +227,7 @@ public final class Main {
           parserConfig.getBuildFileName(),
           parserConfig.getDefaultIncludes(),
           useWatchmanGlob,
-          Optional.of(watchRoot),
-          projectPrefix);
+          watchman);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
 
@@ -236,20 +235,16 @@ public final class Main {
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(repository.getFilesystem());
     }
 
-    private WatchmanWatcher createWatcher(
-        String watchRoot,
-        Optional<String> projectPrefix,
-        ImmutableSet<WatchmanWatcher.Capability> watchmanCapabilities) {
+    private WatchmanWatcher createWatcher(Watchman watchman) {
       return new WatchmanWatcher(
-          watchRoot,
-          projectPrefix,
+          watchman.getWatchRoot().or(repository.getFilesystem().getRootPath().toString()),
           fileEventBus,
           clock,
           objectMapper,
           processExecutor,
           repository.getBuckConfig().getIgnorePaths(),
           DEFAULT_IGNORE_GLOBS,
-          watchmanCapabilities);
+          watchman);
     }
 
     private Optional<WebServer> createWebServer(BuckConfig config, ProjectFilesystem filesystem) {
@@ -379,12 +374,13 @@ public final class Main {
       Repository repository,
       Clock clock,
       ObjectMapper objectMapper,
-      ProcessExecutor processExecutor)
+      ProcessExecutor processExecutor,
+      ImmutableMap<String, String> env)
       throws IOException, InterruptedException  {
     Path rootPath = repository.getFilesystem().getRootPath();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(repository, clock, objectMapper, processExecutor);
+      daemon = new Daemon(repository, clock, objectMapper, processExecutor, env);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -402,7 +398,7 @@ public final class Main {
       if (!daemon.repository.equals(repository)) {
         LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
         daemon.close();
-        daemon = new Daemon(repository, clock, objectMapper, processExecutor);
+        daemon = new Daemon(repository, clock, objectMapper, processExecutor, env);
       }
     }
     return daemon;
@@ -586,7 +582,11 @@ public final class Main {
 
     ProjectFileHashCache repoHashCache;
     if (isDaemon) {
-      repoHashCache = getFileHashCacheFromDaemon(rootRepository, clock, processExecutor);
+      repoHashCache = getFileHashCacheFromDaemon(
+          rootRepository,
+          clock,
+          processExecutor,
+          clientEnvironment);
     } else {
       repoHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
     }
@@ -612,7 +612,8 @@ public final class Main {
         context,
         rootRepository,
         clock,
-        processExecutor);
+        processExecutor,
+        clientEnvironment);
 
     TestConfig testConfig = new TestConfig(buckConfig);
 
@@ -669,7 +670,8 @@ public final class Main {
               startedEvent,
               buildEventBus,
               clock,
-              processExecutor);
+              processExecutor,
+              clientEnvironment);
         } catch (WatchmanWatcherException | IOException e) {
           buildEventBus.post(
               ConsoleEvent.warning(
@@ -692,8 +694,7 @@ public final class Main {
             parserConfig.getBuildFileName(),
             parserConfig.getDefaultIncludes(),
             /* useWatchmanGlob */ false,
-            /* watchmanWatchRoot */ Optional.<String>absent(),
-            /* watchmanProjectPrefix */ Optional.<String>absent());
+            Watchman.NULL_WATCHMAN);
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());
 
@@ -853,9 +854,10 @@ public final class Main {
       CommandEvent commandEvent,
       BuckEventBus eventBus,
       Clock clock,
-      ProcessExecutor processExecutor) throws IOException, InterruptedException {
+      ProcessExecutor processExecutor,
+      ImmutableMap<String, String> env) throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemon = getDaemon(repository, clock, objectMapper, processExecutor);
+    Daemon daemon = getDaemon(repository, clock, objectMapper, processExecutor, env);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(commandEvent, eventBus);
     daemon.initWebServer();
@@ -865,9 +867,10 @@ public final class Main {
   private DefaultFileHashCache getFileHashCacheFromDaemon(
       Repository repository,
       Clock clock,
-      ProcessExecutor processExecutor)
+      ProcessExecutor processExecutor,
+      ImmutableMap<String, String> env)
       throws IOException, InterruptedException {
-    Daemon daemon = getDaemon(repository, clock, objectMapper, processExecutor);
+    Daemon daemon = getDaemon(repository, clock, objectMapper, processExecutor, env);
     return daemon.getFileHashCache();
   }
 
@@ -875,10 +878,11 @@ public final class Main {
       Optional<NGContext> context,
       Repository repository,
       Clock clock,
-      ProcessExecutor processExecutor)
+      ProcessExecutor processExecutor,
+      ImmutableMap<String, String> env)
       throws IOException, InterruptedException  {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(repository, clock, objectMapper, processExecutor);
+      Daemon daemon = getDaemon(repository, clock, objectMapper, processExecutor, env);
       return daemon.getWebServer();
     }
     return Optional.absent();

@@ -20,11 +20,12 @@ package com.facebook.buck.util;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.Watchman.Capability;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -32,8 +33,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
 
@@ -46,7 +45,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,13 +62,6 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
   private static final int DEFAULT_OVERFLOW_THRESHOLD = 10000;
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
-  private static final String WATCHMAN_DIRNAME_MIN_VERSION = "3.1";
-  private static final String WATCHMAN_WILDMATCH_GLOB_MIN_VERSION = "3.6.0";
-
-  public enum Capability {
-      DIRNAME,
-      WILDMATCH_GLOB
-  };
 
   private final EventBus fileChangeEventBus;
   private final Clock clock;
@@ -90,15 +81,15 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
 
   private final long timeoutMillis;
 
-  public WatchmanWatcher(String watchRoot,
-                         Optional<String> watchPrefix,
-                         EventBus fileChangeEventBus,
-                         Clock clock,
-                         ObjectMapper objectMapper,
-                         ProcessExecutor processExecutor,
-                         Iterable<Path> ignorePaths,
-                         Iterable<String> ignoreGlobs,
-                         Set<Capability> watchmanCapabilities) {
+  public WatchmanWatcher(
+      String watchRoot,
+      EventBus fileChangeEventBus,
+      Clock clock,
+      ObjectMapper objectMapper,
+      ProcessExecutor processExecutor,
+      Iterable<Path> ignorePaths,
+      Iterable<String> ignoreGlobs,
+      Watchman watchman) {
     this(fileChangeEventBus,
         clock,
         objectMapper,
@@ -108,11 +99,11 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         createQuery(
             objectMapper,
             watchRoot,
-            watchPrefix,
+            watchman.getProjectPrefix(),
             UUID.randomUUID().toString(),
             ignorePaths,
             ignoreGlobs,
-            watchmanCapabilities));
+            watchman.getCapabilities()));
   }
 
   @VisibleForTesting
@@ -461,43 +452,5 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
     public boolean canBuild() {
       return path != null;
     }
-  }
-
-  /**
-   * @return The capabilities of the Watchman server if available.
-   */
-  public static ImmutableSet<Capability> getWatchmanCapabilities(
-      ProcessExecutor processExecutor,
-      ObjectMapper objectMapper) throws InterruptedException {
-    EnumSet<Capability> watchmanCapabilities = EnumSet.noneOf(Capability.class);
-    try {
-      ProcessExecutor.LaunchedProcess watchmanVersionProcess = processExecutor.launchProcess(
-          ProcessExecutorParams.builder()
-              .addCommand("watchman", "version")
-              .build());
-      Map<String, String> watchmanVersionOutput = objectMapper.readValue(
-          watchmanVersionProcess.getInputStream(),
-          new TypeReference<Map<String, String>>() { });
-      int exitCode = processExecutor.waitForLaunchedProcess(watchmanVersionProcess);
-      if (exitCode != 0) {
-        LOG.error("Error %d executing watchman version", exitCode);
-      } else {
-        Optional<String> version = Optional.fromNullable(watchmanVersionOutput.get("version"));
-        if (version.isPresent()) {
-          VersionStringComparator comparator = new VersionStringComparator();
-          if (comparator.compare(version.get(), WATCHMAN_DIRNAME_MIN_VERSION) >= 0) {
-            watchmanCapabilities.add(Capability.DIRNAME);
-          }
-          if (comparator.compare(version.get(), WATCHMAN_WILDMATCH_GLOB_MIN_VERSION) >= 0) {
-            watchmanCapabilities.add(Capability.WILDMATCH_GLOB);
-          }
-        } else {
-          LOG.warn("No version present in watchman version output: %s", watchmanVersionOutput);
-        }
-      }
-    } catch (IOException e) {
-      LOG.error(e, "Could not check if Watchman is available");
-    }
-    return Sets.immutableEnumSet(watchmanCapabilities);
   }
 }

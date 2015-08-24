@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
@@ -83,8 +84,7 @@ public class CommandRunnerParamsForTesting {
             parserConfig.getBuildFileName(),
             parserConfig.getDefaultIncludes(),
             /* useWatchmanGlob */ false,
-            /* watchamWatchRoot */ Optional.<String>absent(),
-            /* watchmanProjectPrefix */ Optional.<String>absent()),
+            Watchman.NULL_WATCHMAN),
         platform,
         environment,
         javaPackageFinder,

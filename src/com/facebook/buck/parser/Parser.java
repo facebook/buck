@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -201,8 +202,7 @@ public class Parser {
       final String buildFileName,
       Iterable<String> defaultIncludes,
       boolean useWatchmanGlob,
-      Optional<String> watchmanWatchRoot,
-      Optional<String> watchmanProjectPrefix)
+      Watchman watchman)
       throws IOException, InterruptedException {
     return new Parser(
         repository,
@@ -229,8 +229,8 @@ public class Parser {
                 .setDefaultIncludes(defaultIncludes)
                 .setDescriptions(repository.getAllDescriptions())
                 .setUseWatchmanGlob(useWatchmanGlob)
-                .setWatchmanWatchRoot(watchmanWatchRoot)
-                .setWatchmanProjectPrefix(watchmanProjectPrefix)
+                .setWatchmanWatchRoot(watchman.getWatchRoot())
+                .setWatchmanProjectPrefix(watchman.getProjectPrefix())
                 .build()));
   }
 

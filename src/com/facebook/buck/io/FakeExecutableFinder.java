@@ -17,6 +17,7 @@
 package com.facebook.buck.io;
 
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
@@ -25,6 +26,10 @@ import javax.annotation.Nullable;
 public class FakeExecutableFinder extends ExecutableFinder {
 
   private final ImmutableCollection<Path> knownPaths;
+
+  public FakeExecutableFinder(Path... knownPaths) {
+    this(ImmutableList.copyOf(knownPaths));
+  }
 
   public FakeExecutableFinder(ImmutableCollection<Path> knownPaths) {
     this.knownPaths = knownPaths;
