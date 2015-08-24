@@ -19,6 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.Watchman;
+import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
@@ -40,6 +44,7 @@ public class Repository {
   private final BuckConfig config;
   private final KnownBuildRuleTypes knownBuildRuleTypes;
   private final AndroidDirectoryResolver directoryResolver;
+  private final String buildFileName;
 
   public Repository(
       Optional<String> name,
@@ -53,6 +58,9 @@ public class Repository {
     this.config = config;
     this.knownBuildRuleTypes = knownBuildRuleTypes;
     this.directoryResolver = directoryResolver;
+
+    ParserConfig parserConfig = new ParserConfig(config);
+    this.buildFileName = parserConfig.getBuildFileName();
   }
 
   public Optional<String> getName() {
@@ -74,6 +82,10 @@ public class Repository {
   // TODO(jacko): This is a hack to avoid breaking the build. Get rid of it.
   public AndroidDirectoryResolver getAndroidDirectoryResolver() {
     return directoryResolver;
+  }
+
+  public String getBuildFileName() {
+    return buildFileName;
   }
 
   public Description<?> getDescription(BuildRuleType type) {
@@ -101,6 +113,25 @@ public class Repository {
       throw new MissingBuildFileException(target, getBuckConfig());
     }
     return getFilesystem().resolve(relativePath);
+  }
+
+  public ProjectBuildFileParserFactory createBuildFileParserFactory(
+      String pythonInterpreter,
+      boolean useWatchmanGlob,
+      Watchman watchman) {
+    ParserConfig parserConfig = new ParserConfig(getBuckConfig());
+
+    return new DefaultProjectBuildFileParserFactory(
+        ProjectBuildFileParserOptions.builder()
+            .setProjectRoot(getFilesystem().getRootPath())
+            .setPythonInterpreter(pythonInterpreter)
+            .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+            .setBuildFileName(getBuildFileName())
+            .setDefaultIncludes(parserConfig.getDefaultIncludes())
+            .setDescriptions(getAllDescriptions())
+            .setUseWatchmanGlob(useWatchmanGlob)
+            .setWatchman(watchman)
+            .build());
   }
 
   @Override

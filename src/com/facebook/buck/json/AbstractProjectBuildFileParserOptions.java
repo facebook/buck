@@ -16,16 +16,15 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.List;
-
-import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -42,6 +41,8 @@ abstract class AbstractProjectBuildFileParserOptions {
     return false;
   }
 
-  abstract Optional<String> getWatchmanWatchRoot();
-  abstract Optional<String> getWatchmanProjectPrefix();
+  @Value.Default
+  Watchman getWatchman() {
+    return Watchman.NULL_WATCHMAN;
+  }
 }

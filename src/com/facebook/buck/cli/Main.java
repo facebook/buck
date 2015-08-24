@@ -218,14 +218,11 @@ public final class Main {
           watchman.getProjectPrefix(),
           parserConfig.getGlobHandler(),
           useWatchmanGlob);
-      this.parser = Parser.createParser(
+      this.parser = Parser.createBuildFileParser(
           repository,
           pythonBuckConfig.getPythonInterpreter(),
-          parserConfig.getAllowEmptyGlobs(),
           parserConfig.getEnforceBuckPackageBoundary(),
           parserConfig.getTempFilePatterns(),
-          parserConfig.getBuildFileName(),
-          parserConfig.getDefaultIncludes(),
           useWatchmanGlob,
           watchman);
       fileEventBus.register(parser);
@@ -685,14 +682,11 @@ public final class Main {
         PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
             rootRepository.getBuckConfig(),
             new ExecutableFinder());
-        parser = Parser.createParser(
+        parser = Parser.createBuildFileParser(
             rootRepository,
             pythonBuckConfig.getPythonInterpreter(),
-            parserConfig.getAllowEmptyGlobs(),
             parserConfig.getEnforceBuckPackageBoundary(),
             parserConfig.getTempFilePatterns(),
-            parserConfig.getBuildFileName(),
-            parserConfig.getDefaultIncludes(),
             /* useWatchmanGlob */ false,
             Watchman.NULL_WATCHMAN);
       }

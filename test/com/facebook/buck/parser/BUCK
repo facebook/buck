@@ -11,6 +11,7 @@ java_test(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/io:watchman',
     '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',

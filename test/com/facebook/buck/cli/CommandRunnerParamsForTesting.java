@@ -75,14 +75,11 @@ public class CommandRunnerParamsForTesting {
             eventBus),
         artifactCacheFactory,
         eventBus,
-        Parser.createParser(
+        Parser.createBuildFileParser(
             repository,
             pythonBuckConfig.getPythonInterpreter(),
-            parserConfig.getAllowEmptyGlobs(),
             parserConfig.getEnforceBuckPackageBoundary(),
             parserConfig.getTempFilePatterns(),
-            parserConfig.getBuildFileName(),
-            parserConfig.getDefaultIncludes(),
             /* useWatchmanGlob */ false,
             Watchman.NULL_WATCHMAN),
         platform,

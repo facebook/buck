@@ -15,7 +15,9 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/json:json',
     '//src/com/facebook/buck/parser:parser',
+    '//src/com/facebook/buck/rules:types',
     '//src/com/facebook/buck/util:watchman',
     '//test/com/facebook/buck/...',
   ],

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -37,6 +38,7 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
@@ -65,9 +67,9 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -119,7 +121,6 @@ public class ParserTest extends EasyMockSupport {
   public TemporaryFolder tempDir = new TemporaryFolder();
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-  private Repository repository;
 
   @Before
   public void setUp() throws IOException, InterruptedException  {
@@ -161,13 +162,9 @@ public class ParserTest extends EasyMockSupport {
     File root = tempDir.getRoot();
     filesystem = new ProjectFilesystem(root.toPath().toRealPath());
     BuckConfig config = new FakeBuckConfig();
-    repository = new TestRepositoryBuilder()
-        .setFilesystem(filesystem)
-        .setBuckConfig(config)
-        .build();
     eventBus = BuckEventBusFactory.newInstance();
 
-    buildRuleTypes = repository.getKnownBuildRuleTypes();
+    buildRuleTypes = new TestRepositoryBuilder().build().getKnownBuildRuleTypes();
 
     ParserConfig parserConfig = new ParserConfig(config);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
@@ -203,26 +200,13 @@ public class ParserTest extends EasyMockSupport {
         ofInstance(
             new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
         rules,
-        buildFileParserFactory,
-        repository);
+        buildFileParserFactory);
   }
 
   private Parser createParser(
-          Supplier<BuildFileTree> buildFileTreeSupplier,
-      Iterable<Map<String, Object>> rules,
-      ProjectBuildFileParserFactory buildFileParserFactory)
-      throws IOException, InterruptedException {
-    return createParser(
-        buildFileTreeSupplier,
-        rules,
-        buildFileParserFactory,
-        repository);
-  }
-  private Parser createParser(
       Supplier<BuildFileTree> buildFileTreeSupplier,
       Iterable<Map<String, Object>> rules,
-      ProjectBuildFileParserFactory buildFileParserFactory,
-      Repository repository)
+      ProjectBuildFileParserFactory buildFileParserFactory)
       throws IOException, InterruptedException {
     ParserConfig parserConfig = new ParserConfig(
         new FakeBuckConfig(
@@ -232,7 +216,6 @@ public class ParserTest extends EasyMockSupport {
         buildFileTreeSupplier,
         rules,
         buildFileParserFactory,
-        repository,
         parserConfig);
   }
 
@@ -240,35 +223,40 @@ public class ParserTest extends EasyMockSupport {
       Supplier<BuildFileTree> buildFileTreeSupplier,
       Iterable<Map<String, Object>> rules,
       ProjectBuildFileParserFactory buildFileParserFactory,
-      Repository repository,
       ParserConfig parserConfig)
       throws IOException, InterruptedException {
     return createParser(
         buildFileTreeSupplier,
         rules,
         buildFileParserFactory,
-        repository,
         parserConfig.getEnforceBuckPackageBoundary(),
-        parserConfig.getTempFilePatterns(),
-        parserConfig.getBuildFileName());
+        parserConfig.getTempFilePatterns()
+    );
   }
 
   private Parser createParser(
       Supplier<BuildFileTree> buildFileTreeSupplier,
       Iterable<Map<String, Object>> rules,
       ProjectBuildFileParserFactory buildFileParserFactory,
-      Repository repository,
       boolean enforcePackageBoundary,
-      ImmutableSet<Pattern> tempFilePatterns,
-      String buildFileName)
+      ImmutableSet<Pattern> tempFilePatterns)
       throws IOException, InterruptedException {
+
+    TestRepositoryBuilder repoBuilder = new TestRepositoryBuilder()
+        .setBuildFileParserFactory(buildFileParserFactory)
+        .setBuckConfig(new FakeBuckConfig())
+        .setFilesystem(filesystem);
+
+    Repository toUse = repoBuilder.build();
+
     Parser parser = new Parser(
-        repository,
+        toUse,
         enforcePackageBoundary,
         tempFilePatterns,
-        buildFileName,
         buildFileTreeSupplier,
-        buildFileParserFactory);
+        "python",
+        false,
+        Watchman.NULL_WATCHMAN);
 
     try {
       parser.parseRawRulesInternal(rules);
@@ -327,7 +315,8 @@ public class ParserTest extends EasyMockSupport {
     thrown.expectMessage(
         "No rule found when resolving target //java/com/facebook:raz in build file " +
             "//java/com/facebook/BUCK");
-    thrown.expectMessage("Defined in file: " + repository.getAbsolutePathToBuildFile(razTarget));
+    thrown.expectMessage("Defined in file: " +
+            filesystem.resolve(razTarget.getBasePath()).resolve(DEFAULT_BUILD_FILE_NAME));
 
     testParser.buildTargetGraphForBuildTargets(
         buildTargets,
@@ -403,7 +392,8 @@ public class ParserTest extends EasyMockSupport {
     BuildTarget fooTarget = BuildTarget.builder("//java/com/facebook/invalid", "foo").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
 
-    thrown.expectMessage("Defined in file: " + repository.getAbsolutePathToBuildFile(fooTarget));
+    thrown.expectMessage("Defined in file: " +
+            filesystem.resolve(fooTarget.getBasePath()).resolve(DEFAULT_BUILD_FILE_NAME));
 
     testParser.buildTargetGraphForBuildTargets(
         buildTargets,
@@ -901,10 +891,9 @@ public class ParserTest extends EasyMockSupport {
                 new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
             emptyBuildTargets(),
             new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes),
-            repository,
             /* enforcePackageBoundary */ false,
-            /* tempFilePatterns */ ImmutableSet.<Pattern>of(),
-            ParserConfig.DEFAULT_BUILD_FILE_NAME);
+            /* tempFilePatterns */ ImmutableSet.<Pattern>of()
+        );
 
     Path testAncestorBuildFile = tempDir.newFile("java/BUCK").toPath().toRealPath();
     Files.write(
@@ -1824,7 +1813,7 @@ public class ParserTest extends EasyMockSupport {
                 .setProjectRoot(projectRoot)
                 .setPythonInterpreter(pythonInterpreter)
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
-                .setBuildFileName(ParserConfig.DEFAULT_BUILD_FILE_NAME)
+                .setBuildFileName(DEFAULT_BUILD_FILE_NAME)
                 .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
                 .setDescriptions(buildRuleTypes.getAllDescriptions())
                 .build(),

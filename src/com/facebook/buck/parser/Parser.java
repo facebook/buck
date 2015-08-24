@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.io.Watchman;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -28,12 +27,10 @@ import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserFactory;
-import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
@@ -108,8 +105,9 @@ public class Parser {
   private final ImmutableSet<Pattern> tempFilePatterns;
 
   private final Repository repository;
-  private final String buildFileName;
-  private final ProjectBuildFileParserFactory buildFileParserFactory;
+  private final String pythonInterpreter;
+  private final boolean useWatchmanGlob;
+  private final Watchman watchman;
 
   /**
    * Key of the meta-rule that lists the build files executed while reading rules.
@@ -193,14 +191,11 @@ public class Parser {
   }
   private final BuildFileTreeCache buildFileTreeCache;
 
-  public static Parser createParser(
+  public static Parser createBuildFileParser(
       final Repository repository,
       String pythonInterpreter,
-      boolean allowEmptyGlobs,
       boolean enforceBuckPackageBoundary,
       ImmutableSet<Pattern> tempFilePatterns,
-      final String buildFileName,
-      Iterable<String> defaultIncludes,
       boolean useWatchmanGlob,
       Watchman watchman)
       throws IOException, InterruptedException {
@@ -208,7 +203,6 @@ public class Parser {
         repository,
         enforceBuckPackageBoundary,
         tempFilePatterns,
-        buildFileName,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         // TODO(simons): Consider momoizing the suppler.
         new Supplier<BuildFileTree>() {
@@ -216,22 +210,12 @@ public class Parser {
           public BuildFileTree get() {
             return new FilesystemBackedBuildFileTree(
                 repository.getFilesystem(),
-                buildFileName);
+                repository.getBuildFileName());
           }
         },
-        // TODO(jacko): Get rid of this global BuildTargetParser completely.
-        new DefaultProjectBuildFileParserFactory(
-            ProjectBuildFileParserOptions.builder()
-                .setProjectRoot(repository.getFilesystem().getRootPath())
-                .setPythonInterpreter(pythonInterpreter)
-                .setAllowEmptyGlobs(allowEmptyGlobs)
-                .setBuildFileName(buildFileName)
-                .setDefaultIncludes(defaultIncludes)
-                .setDescriptions(repository.getAllDescriptions())
-                .setUseWatchmanGlob(useWatchmanGlob)
-                .setWatchmanWatchRoot(watchman.getWatchRoot())
-                .setWatchmanProjectPrefix(watchman.getProjectPrefix())
-                .build()));
+        pythonInterpreter,
+        useWatchmanGlob,
+        watchman);
   }
 
   /**
@@ -242,18 +226,20 @@ public class Parser {
       Repository repository,
       boolean enforceBuckPackageBoundary,
       ImmutableSet<Pattern> tempFilePatterns,
-      String buildFileName,
       Supplier<BuildFileTree> buildFileTreeSupplier,
-      ProjectBuildFileParserFactory buildFileParserFactory)
+      String pythonInterpreter,
+      boolean useWatchmanGlob,
+      Watchman watchman)
       throws IOException, InterruptedException {
     this.repository = repository;
-    this.buildFileName = buildFileName;
+    this.pythonInterpreter = pythonInterpreter;
+    this.useWatchmanGlob = useWatchmanGlob;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
-    this.buildFileParserFactory = buildFileParserFactory;
     this.enforceBuckPackageBoundary = enforceBuckPackageBoundary;
     this.buildFileDependents = ArrayListMultimap.create();
     this.tempFilePatterns = tempFilePatterns;
-    this.state = new CachedState(buildFileName);
+    this.watchman = watchman;
+    this.state = new CachedState(repository.getBuildFileName());
   }
 
   public Path getProjectRoot() {
@@ -311,7 +297,7 @@ public class Parser {
     // Iterate over the build files the given target node spec returns.
     for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(
         repository.getFilesystem(),
-        buildFileName)) {
+        repository.getBuildFileName())) {
 
       // Format a proper error message for non-existent build files.
       if (!repository.getFilesystem().isFile(buildFile)) {
@@ -349,7 +335,7 @@ public class Parser {
       ImmutableMap<String, String> environment,
       boolean enableProfiling)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
-    ProjectBuildFileParser buildFileParser = buildFileParserFactory.createParser(
+    ProjectBuildFileParser buildFileParser = createBuildFileParser(
         console,
         environment,
         eventBus);
@@ -397,7 +383,7 @@ public class Parser {
     TargetGraph graph = null;
     // TODO(jacko): Instantiating one ProjectBuildFileParser here isn't enough. We a collection of
     //              repo-specific parsers.
-    try (ProjectBuildFileParser buildFileParser = buildFileParserFactory.createParser(
+    try (ProjectBuildFileParser buildFileParser = createBuildFileParser(
         console,
         environment,
         eventBus)) {
@@ -424,6 +410,18 @@ public class Parser {
         eventBus.post(ParseEvent.finished(parseStart, Optional.fromNullable(graph)));
       }
     }
+  }
+
+  private ProjectBuildFileParser createBuildFileParser(
+      Console console,
+      ImmutableMap<String, String> environment,
+      BuckEventBus eventBus) {
+    return repository
+        .createBuildFileParserFactory(
+            pythonInterpreter,
+            useWatchmanGlob,
+            watchman)
+        .createParser(console, environment, eventBus);
   }
 
   /**
@@ -621,7 +619,7 @@ public class Parser {
       Console console,
       BuckEventBus buckEventBus)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    try (ProjectBuildFileParser projectBuildFileParser = buildFileParserFactory.createParser(
+    try (ProjectBuildFileParser projectBuildFileParser = createBuildFileParser(
         console,
         environment,
         buckEventBus)) {
@@ -642,10 +640,10 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     if (!isCached(buildFile, parserConfig.getDefaultIncludes(), environment)) {
-      LOG.debug("Parsing %s file: %s", buildFileName, buildFile);
+      LOG.debug("Parsing %s file: %s", repository.getBuildFileName(), buildFile);
       parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile));
     } else {
-      LOG.debug("Not parsing %s file (already in cache)", buildFileName);
+      LOG.debug("Not parsing %s file (already in cache)", repository.getBuildFileName());
     }
     return state.getRawRules(buildFile);
   }
