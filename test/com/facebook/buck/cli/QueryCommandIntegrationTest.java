@@ -307,4 +307,33 @@ public class QueryCommandIntegrationTest {
         parseJSON(workspace.getFileContents("stdout-one-five-seven-kind-deps.json")),
         parseJSON(result.getStdout()));
   }
+
+  @Test
+  public void testGetReverseDependencies() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "rdeps(set(//example:one //example/app:seven), set(//example/app:seven //example:five))");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-five-seven-rdeps"), result.getStdout());
+  }
+
+  @Test
+  public void testMultipleGetTestsofDirectReverseDependenciesJSON() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "testsof(rdeps(//example:one, '%s', 1))",
+        "//example:two",
+        "//example:four");
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-two-four-tests-rdeps.json"), result.getStdout());
+  }
 }

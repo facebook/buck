@@ -57,6 +57,7 @@ a few extensions.
         <li><a href="#set-operations"><code>intersect</code></a></li>
         <li><a href="#kind"><code>kind</code></a></li>
         <li><a href="#owner"><code>owner</code></a></li>
+        <li><a href="#rdeps"><code>rdeps</code></a></li>
         <li><a href="#set"><code>set</code></a></li>
         <li><a href="#testsof"><code>testsof</code></a></li>
         <li><a href="#set-operations"><code>union</code></a></li>
@@ -337,6 +338,34 @@ e.g. <code>//examples:one</code>.
 <p>
 If no target that owns the file is found, the operator evaluates to the empty
 set.
+</p>
+
+
+{call .section}
+{param anchor: 'rdeps' /}
+{param title: 'Transitive closure of reverse dependencies: rdeps'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= rdeps(expr, expr)
+       | rdeps(expr, expr, depth)
+{/literal}
+</pre></p>
+
+<p>
+The <code>rdeps(u, x)</code> operator evaluates to the reverse dependencies
+of the argument set <code>x</code> within the transitive closure of the
+set <code>u</code> (the <i>universe</i>).
+</p>
+
+<p>
+The <code>rdeps</code> operator accepts an optional third argument, which is
+an integer literal specifying an upper bound on the depth of the search.
+So <code>rdeps(/&#x2F;foo:bar, /&#x2F;example:baz, 1)</code> evaluates to the
+targets in the transitive closure of <code>//foo:bar</code> that depend
+directly on <code>//example:baz</code>. If the depth parameter is omitted,
+the search is unbounded.
 </p>
 
 

@@ -188,12 +188,28 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
 
   @Override
   public Collection<BuildTarget> getReverseDeps(Iterable<BuildTarget> targets) {
-    throw new RuntimeException("Not implemented yet.");
+    Set<BuildTarget> result = new LinkedHashSet<>();
+    for (BuildTarget target : targets) {
+      TargetNode<?> node = getNode(target);
+      if (node != null) {
+        // Using an ImmutableSortedSet in order to ensure consistent outputs because
+        // getOutgoingNodesFor() returns a set whose traversal order can vary across compilers.
+        result.addAll(
+            getTargetsFromNodes(ImmutableSortedSet.copyOf(graph.getIncomingNodesFor(node))));
+      }
+    }
+    return result;
   }
 
   @Override
   public Set<BuildTarget> getTransitiveClosure(Set<BuildTarget> targets) {
-    throw new RuntimeException("Not implemented yet.");
+    Set<TargetNode<?>> nodes = new LinkedHashSet<>();
+    for (BuildTarget target : targets) {
+      nodes.add(Preconditions.checkNotNull(getNode(target)));
+    }
+    // Reusing the existing getSubgraph() for simplicity. It builds the graph when we only need the
+    // nodes. The impact of creating the edges in terms of time and space should be minimal.
+    return getTargetsFromNodes(graph.getSubgraph(nodes).getNodes());
   }
 
   @Override
@@ -242,7 +258,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
   @Override
   public Iterable<QueryFunction> getFunctions() {
     return ImmutableList.of(
-        DEFAULT_QUERY_FUNCTIONS.get(9),  // "deps" is the only default function supported for now.
+        DEFAULT_QUERY_FUNCTIONS.get(9),   // "deps"
+        DEFAULT_QUERY_FUNCTIONS.get(10),  // "rdeps"
         new QueryKindFunction(),
         new QueryOwnerFunction(),
         new QueryTestsOfFunction()
