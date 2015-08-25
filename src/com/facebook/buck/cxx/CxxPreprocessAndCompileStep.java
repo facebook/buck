@@ -459,12 +459,23 @@ public class CxxPreprocessAndCompileStep implements Step {
       }
 
       // Process the dependency file, fixing up the paths, and write it out to it's final location.
+      // The paths of the headers written out to the depfile are the paths to the symlinks from the
+      // root of the repo if the compilation included them from the header search paths pointing to
+      // the symlink trees, or paths to headers relative to the source file if the compilation
+      // included them using source relative include paths. To handle both cases we check for the
+      // prerequisites both in the values and the keys of the replacement map.
       if (operation.isPreprocess() && exitCode == 0) {
+        ImmutableSet<Path> values = ImmutableSet.copyOf(replacementPaths.values());
         try (InputStream input = context.getProjectFilesystem().newFileInputStream(getDepTemp());
              BufferedReader reader = new BufferedReader(new InputStreamReader(input));
              OutputStream output = context.getProjectFilesystem().newFileOutputStream(depFile);
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output))) {
           for (String prereq : Makefiles.parseMakefile(reader).getRules().get(0).getPrereqs()) {
+            if (values.contains(Paths.get(prereq))) {
+              writer.write(prereq);
+              writer.newLine();
+              continue;
+            }
             Path replacement = replacementPaths.get(Paths.get(prereq));
             if (replacement != null) {
               writer.write(replacement.toString());

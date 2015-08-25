@@ -16,6 +16,8 @@
 
 package com.facebook.buck.testutil.integration;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -55,6 +57,13 @@ public class BuckBuildLog {
   public void assertTargetWasFetchedFromCache(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
     assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, logEntry.successType.get());
+  }
+
+  public void assertTargetHadMatchingDepfileRuleKey(String buildTargetRaw) {
+    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    assertThat(
+        logEntry.successType.get(),
+        equalTo(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY));
   }
 
   public void assertTargetHadMatchingDepsAbi(String buildTargetRaw) {

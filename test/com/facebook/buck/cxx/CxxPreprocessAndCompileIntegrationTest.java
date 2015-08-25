@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
@@ -167,11 +168,11 @@ public class CxxPreprocessAndCompileIntegrationTest {
     if (mode == CxxPreprocessMode.SEPARATE) {
       assertThat(
           workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
-          Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+          equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
     }
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
     // Now modify the unused genrule input.
     workspace.writeContentsToPath(
@@ -185,17 +186,17 @@ public class CxxPreprocessAndCompileIntegrationTest {
     // Verify that the genrule actually re-ran.
     assertThat(
         workspace.getBuildLog().getLogEntry(genrule).getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
     // Verify that the (preprocess and) compile rules aren't re-run.
     if (mode == CxxPreprocessMode.SEPARATE) {
       assertThat(
           workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
-          Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+          equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
     }
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+        equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
   }
 
   @Test
@@ -221,11 +222,11 @@ public class CxxPreprocessAndCompileIntegrationTest {
     if (mode == CxxPreprocessMode.SEPARATE) {
       assertThat(
           workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
-          Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+          equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
     }
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
     // Now modify the unused genrule input.
     workspace.writeContentsToPath(
@@ -239,17 +240,17 @@ public class CxxPreprocessAndCompileIntegrationTest {
     // Verify that the genrule actually re-ran.
     assertThat(
         workspace.getBuildLog().getLogEntry(genrule).getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
     // Verify that the (preprocess and) compile rules aren't re-run.
     if (mode == CxxPreprocessMode.SEPARATE) {
       assertThat(
           workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
-          Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+          equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
     }
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+        equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
   }
 
   @Test
@@ -276,7 +277,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuckBuildLog.BuildLogEntry firstRunEntry = workspace.getBuildLog().getLogEntry(compileTarget);
     assertThat(
         firstRunEntry.getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
     // Now modify the unused header.
     workspace.writeContentsToPath(
@@ -289,13 +290,84 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuckBuildLog.BuildLogEntry secondRunEntry = workspace.getBuildLog().getLogEntry(compileTarget);
     assertThat(
         secondRunEntry.getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
+        equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
 
 
     // Also, make sure the original rule keys are actually different.
     assertThat(
         secondRunEntry.getRuleKey(),
-        Matchers.not(Matchers.equalTo(firstRunEntry.getRuleKey())));
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:source_relative_header");
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    String usedHeaderName = "source_relative_header.h";
+    String unusedHeaderName = "unused_header.h";
+    String sourceName = "source_relative_header.cpp";
+    BuildTarget preprocessTarget;
+    if (mode == CxxPreprocessMode.SEPARATE) {
+      preprocessTarget = cxxSourceRuleFactory.createPreprocessBuildTarget(
+          sourceName,
+          AbstractCxxSource.Type.CXX,
+          CxxSourceRuleFactory.PicType.PDC);
+    } else {
+      preprocessTarget = cxxSourceRuleFactory.createCompileBuildTarget(
+          sourceName,
+          CxxSourceRuleFactory.PicType.PDC);
+    }
+
+    // Run the build and verify that the C++ source was preprocessed.
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
+    BuckBuildLog.BuildLogEntry firstRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        firstRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    // Now modify the unused header.
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        unusedHeaderName);
+
+    // Run the build again and verify that got a matching depfile rule key, and therefore
+    // didn't recompile.
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
+    BuckBuildLog.BuildLogEntry secondRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        secondRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+
+
+    // Also, make sure the original rule keys are actually different.
+    assertThat(
+        secondRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+
+    workspace.writeContentsToPath(
+        "static inline int newFunction() { return 20; }",
+        usedHeaderName);
+
+    // Run the build again and verify that we recompiled as the header caused the depfile rule key
+    // to change.
+    workspace.runBuckBuild("--config", "build.depfiles=true", target.toString());
+    BuckBuildLog.BuildLogEntry thirdRunEntry =
+        workspace.getBuildLog().getLogEntry(preprocessTarget);
+    assertThat(
+        thirdRunEntry.getSuccessType(),
+        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+
+    // Also, make sure all three rule keys are actually different.
+    assertThat(
+        thirdRunEntry.getRuleKey(),
+        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+    assertThat(
+        thirdRunEntry.getRuleKey(),
+        Matchers.not(equalTo(secondRunEntry.getRuleKey())));
   }
 
   @Test

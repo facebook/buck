@@ -49,3 +49,14 @@ cxx_binary(
     ':gensource',
   ],
 )
+
+cxx_binary(
+  name = 'source_relative_header',
+  headers = [
+    'source_relative_header.h',
+    'unused_header.h',
+  ],
+  srcs = [
+    'source_relative_header.cpp',
+  ],
+)

@@ -790,6 +790,33 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void testCxxBinaryDepfileBuildWithChangedHeader() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx_binary_depfile_build_with_changed_header", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =  workspace.runBuckCommand("build", "//:bin");
+    result.assertSuccess();
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin#binary");
+    buildLog.assertTargetBuiltLocally("//:bin#compile-bin.c.o,default");
+    buildLog.assertTargetBuiltLocally("//:lib1#default,static");
+
+    workspace.resetBuildLogFile();
+
+    workspace.replaceFileContents("lib2.h", "hello", "world");
+
+    result = workspace.runBuckCommand("build", "//:bin");
+    result.assertSuccess();
+
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin#binary");
+    buildLog.assertTargetHadMatchingDepfileRuleKey("//:bin#compile-bin.c.o,default");
+    buildLog.assertTargetBuiltLocally("//:lib1#default,static");
+  }
+
+  @Test
   public void testCxxBinaryWithGeneratedSourceAndHeader() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple", tmp);
