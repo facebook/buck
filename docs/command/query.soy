@@ -53,9 +53,10 @@ a few extensions.
     keywords is:
     <ul style="line-height:0.5em">
         <li><a href="#deps"><code>deps</code></a></li>
-        <li><a href="#owner"><code>owner</code></a></li>
         <li><a href="#set-operations"><code>except</code></a></li>
         <li><a href="#set-operations"><code>intersect</code></a></li>
+        <li><a href="#kind"><code>kind</code></a></li>
+        <li><a href="#owner"><code>owner</code></a></li>
         <li><a href="#set"><code>set</code></a></li>
         <li><a href="#testsof"><code>testsof</code></a></li>
         <li><a href="#set-operations"><code>union</code></a></li>
@@ -282,6 +283,38 @@ omitted, the search is unbounded, i.e. it computes the transitive closure of
 dependencies.
 </p>
 
+
+{call .section}
+{param anchor: 'kind' /}
+{param title: 'Filter targets by rule type: kind'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= kind(word, expr)
+{/literal}
+</pre></p>
+
+<p>
+The <code>kind(p, e)</code> operator evaluates the given expression
+{sp}<code>e</code> and filters the targets whose rule type matches the
+given pattern <code>p</code>.
+For example, <code>kind('java_library', deps('//foo:bar'))</code> will filter
+all <code>java_library</code> targets in the transitive dependencies
+of <code>//foo:bar</code>.
+</p>
+
+<p>
+The pattern can be a regular expression. Hence,
+{sp}<code>kind('.*_test', '//...')</code> will evaluate to all targets in the
+repository whose rule type ends with <code>_test</code>,
+e.g. <code>java_test</code> or <code>cxx_test</code>.
+</p>
+
+<p>
+Quotation of the pattern is often required to make sure regular
+expressions, e.g. <code>.*_test</code>, are parsed correctly.
+</p>
 
 {call .section}
 {param anchor: 'owner' /}
