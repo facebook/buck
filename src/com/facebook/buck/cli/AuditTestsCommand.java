@@ -62,7 +62,8 @@ public class AuditTestsCommand extends AbstractCommand {
 
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
       params.getBuckEventBus().post(ConsoleEvent.info(
-          "'buck audit tests' is deprecated. Please use 'buck query' instead. e.g.\n\t%s",
+          "'buck audit tests' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n" +
+          "The query language is documented at https://buckbuild.com/command/query.html",
           QueryCommand.buildAuditTestsQueryExpression(getArguments(), shouldGenerateJsonOutput())));
     }
     // We're not using any of Bazel's settings.
