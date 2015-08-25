@@ -136,28 +136,50 @@ public class AuditOwnerCommand extends AbstractCommand {
   /**
    * @return relative paths under the project root
    */
-  public Iterable<Path> getArgumentsAsPaths(Path projectRoot) throws IOException {
-    return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, getArguments())
+  public static Iterable<Path> getArgumentsAsPaths(Path projectRoot, Iterable<String> args)
+      throws IOException {
+    return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, args)
         .relativePathsUnderProjectRoot;
   }
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    OwnersReport report = OwnersReport.emptyReport();
-    Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
         params.getRepository().getFilesystem(),
         parserConfig.getBuildFileName());
-    final Path rootPath = params.getRepository().getFilesystem().getRootPath();
+    try {
+      OwnersReport report = buildOwnersReport(
+          params,
+          parserConfig,
+          buildFileTree,
+          getArguments(),
+          isGuessForDeletedEnabled());
+      printReport(params, report);
+    } catch (BuildFileParseException | BuildTargetException e) {
+      return BUILD_TARGET_ERROR;
+    }
+    return 0;
+  }
 
-    for (Path filePath : getArgumentsAsPaths(rootPath)) {
+  static OwnersReport buildOwnersReport(
+      CommandRunnerParams params,
+      ParserConfig parserConfig,
+      BuildFileTree buildFileTree,
+      Iterable<String> arguments,
+      boolean guessForDeletedEnabled)
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+    final Path rootPath = params.getRepository().getFilesystem().getRootPath();
+    Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
+    OwnersReport report = OwnersReport.emptyReport();
+
+    for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
       Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
       if (!basePath.isPresent()) {
         report = report.updatedWith(
             new OwnersReport(
                 ImmutableSetMultimap.<TargetNode<?>, Path>of(),
-              /* inputWithNoOwners */ ImmutableSet.of(filePath),
+                /* inputWithNoOwners */ ImmutableSet.of(filePath),
                 Sets.<String>newHashSet(),
                 Sets.<String>newHashSet()));
         continue;
@@ -203,7 +225,7 @@ public class AuditOwnerCommand extends AbstractCommand {
               .getConsole()
               .getStdErr()
               .format("Could not parse build targets for %s", targetBaseName);
-          return BUILD_TARGET_ERROR;
+          throw e;
         }
       }
 
@@ -213,12 +235,10 @@ public class AuditOwnerCommand extends AbstractCommand {
                 params,
                 targetNode,
                 ImmutableList.of(filePath.toString()),
-                isGuessForDeletedEnabled()));
+                guessForDeletedEnabled));
       }
     }
-
-    printReport(params, report);
-    return 0;
+    return report;
   }
 
   @Override
@@ -227,7 +247,7 @@ public class AuditOwnerCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  OwnersReport generateOwnersReport(
+  static OwnersReport generateOwnersReport(
       CommandRunnerParams params,
       TargetNode<?> targetNode,
       Iterable<String> filePaths,
@@ -270,8 +290,8 @@ public class AuditOwnerCommand extends AbstractCommand {
 
     // Try to guess owners for nonexistent files.
     if (guessForDeletedEnabled) {
-      for (String nonExsitentInput : nonExistentInputs) {
-        owners.put(targetNode, new File(nonExsitentInput).toPath());
+      for (String nonExistentInput : nonExistentInputs) {
+        owners.put(targetNode, new File(nonExistentInput).toPath());
       }
     }
 

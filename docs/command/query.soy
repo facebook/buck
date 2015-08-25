@@ -53,6 +53,7 @@ a few extensions.
     keywords is:
     <ul style="line-height:0.5em">
         <li><a href="#deps"><code>deps</code></a></li>
+        <li><a href="#owner"><code>owner</code></a></li>
         <li><a href="#set-operations"><code>except</code></a></li>
         <li><a href="#set-operations"><code>intersect</code></a></li>
         <li><a href="#set"><code>set</code></a></li>
@@ -279,6 +280,30 @@ includes the nodes directly reachable from the nodes
 in <code>deps(//foo:bar, 1)</code>, and so on. If the depth parameter is
 omitted, the search is unbounded, i.e. it computes the transitive closure of
 dependencies.
+</p>
+
+
+{call .section}
+{param anchor: 'owner' /}
+{param title: 'Find targets that own specified files: owner'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= owner(word)
+{/literal}
+</pre></p>
+
+<p>
+The <code>owner(x)</code> operator evaluates to the targets that own the file
+specified as argument. For example, <code>owner('examples/1.txt')</code>
+{sp}evaluates to the target that owns the file <code>examples/1.txt</code>,
+e.g. <code>//examples:one</code>.
+</p>
+
+<p>
+If no target that owns the file is found, the operator evaluates to the empty
+set.
 </p>
 
 

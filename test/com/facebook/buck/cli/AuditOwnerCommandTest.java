@@ -230,9 +230,8 @@ public class AuditOwnerCommandTest {
     BuildTarget target = BuildTarget.builder("//base", "name").build();
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    AuditOwnerCommand command = new AuditOwnerCommand();
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(
+    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
         inputs,
@@ -263,9 +262,8 @@ public class AuditOwnerCommandTest {
     BuildTarget target = BuildTarget.builder("//base", "name").build();
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    AuditOwnerCommand command = new AuditOwnerCommand();
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(
+    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
         inputs,
@@ -296,9 +294,8 @@ public class AuditOwnerCommandTest {
     BuildTarget target = BuildTarget.builder("//base", "name").build();
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
-    AuditOwnerCommand command = new AuditOwnerCommand();
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(
+    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
         inputs,
@@ -330,9 +327,8 @@ public class AuditOwnerCommandTest {
         target,
         ImmutableSet.of(Paths.get("java/somefolder")));
 
-    AuditOwnerCommand command = new AuditOwnerCommand();
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(
+    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
         inputs,
@@ -367,9 +363,8 @@ public class AuditOwnerCommandTest {
     BuildTarget target = BuildTarget.builder("//base", "name").build();
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
-    AuditOwnerCommand command = new AuditOwnerCommand();
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(
+    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
         inputs,
@@ -408,7 +403,7 @@ public class AuditOwnerCommandTest {
 
     AuditOwnerCommand command = new AuditOwnerCommand();
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
-    AuditOwnerCommand.OwnersReport report = command.generateOwnersReport(
+    AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.generateOwnersReport(
         params,
         targetNode,
         inputs,
@@ -452,11 +447,12 @@ public class AuditOwnerCommandTest {
     TargetNode<?> targetNode1 = createTargetNode(target1, inputPaths);
     TargetNode<?> targetNode2 = createTargetNode(target2, inputPaths);
 
-    AuditOwnerCommand command = new AuditOwnerCommand();
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
     AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.OwnersReport.emptyReport();
-    report = report.updatedWith(command.generateOwnersReport(params, targetNode1, inputs, false));
-    report = report.updatedWith(command.generateOwnersReport(params, targetNode2, inputs, false));
+    report = report.updatedWith(
+        AuditOwnerCommand.generateOwnersReport(params, targetNode1, inputs, false));
+    report = report.updatedWith(
+        AuditOwnerCommand.generateOwnersReport(params, targetNode2, inputs, false));
 
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());

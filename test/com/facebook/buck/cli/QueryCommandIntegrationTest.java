@@ -203,4 +203,52 @@ public class QueryCommandIntegrationTest {
         workspace.getFileContents("stdout-recursive-pkg-pattern-tests.json"),
         result.getStdout());
   }
+
+  @Test
+  public void testOwnerOne() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "owner('example/1.txt')");
+
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-one-owner"), result.getStdout());
+  }
+
+  @Test
+  public void testOwnerOneSevenJSON() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "owner('%s')",
+        "example/1.txt",
+        "example/app/7.txt");
+
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-one-seven-owner.json"), result.getStdout());
+  }
+
+  @Test
+  public void testTestsofOwnerOneSevenJSON() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "testsof(owner('%s'))",
+        "example/1.txt",
+        "example/app/7.txt");
+
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-one-seven-tests-own.json"), result.getStdout());
+  }
 }

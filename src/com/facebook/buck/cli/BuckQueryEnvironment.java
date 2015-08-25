@@ -17,8 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
@@ -49,6 +51,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
   private final Map<String, Set<BuildTarget>> letBindings = new HashMap<>();
   private final CommandRunnerParams params;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
+  private final ParserConfig parserConfig;
+  private final BuildFileTree buildFileTree;
   private TargetGraph graph = TargetGraph.EMPTY;
 
   private final Set<Setting> settings;
@@ -65,9 +69,17 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
         params.getBuckConfig(),
         new BuildTargetPatternTargetNodeParser(
             params.getRepository().getFilesystem().getIgnorePaths()));
+    this.parserConfig = new ParserConfig(params.getBuckConfig());
+    this.buildFileTree = new FilesystemBackedBuildFileTree(
+        params.getRepository().getFilesystem(),
+        parserConfig.getBuildFileName());
   }
 
   public CommandRunnerParams getParams() { return params; }
+
+  public ParserConfig getParserConfig() { return parserConfig; }
+
+  public BuildFileTree getBuildFileTree() { return buildFileTree; }
 
   /**
    * Evaluate the specified query expression in this environment.
@@ -219,6 +231,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
   public Iterable<QueryFunction> getFunctions() {
     return ImmutableList.of(
         DEFAULT_QUERY_FUNCTIONS.get(9),  // "deps" is the only default function supported for now.
+        new QueryOwnerFunction(),
         new QueryTestsOfFunction()
     );
   }
