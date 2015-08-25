@@ -128,6 +128,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
+  private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       declaredClasspathEntriesSupplier;
   private final BuildOutputInitializer<Data> buildOutputInitializer;
@@ -236,6 +237,17 @@ public class DefaultJavaLibrary extends AbstractBuildRule
                 outputJar);
           }
         });
+
+    this.transitiveClasspathDepsSupplier =
+        Suppliers.memoize(
+            new Supplier<ImmutableSet<JavaLibrary>>() {
+              @Override
+              public ImmutableSet<JavaLibrary> get() {
+                return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
+                    DefaultJavaLibrary.this,
+                    outputJar);
+              }
+            });
 
     this.declaredClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
@@ -422,6 +434,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
+  }
+
+  @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return transitiveClasspathDepsSupplier.get();
   }
 
   @Override

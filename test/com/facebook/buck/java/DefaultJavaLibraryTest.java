@@ -95,6 +95,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -323,6 +324,38 @@ public class DefaultJavaLibraryTest {
   }
 
   @Test
+  public void testGetClasspathDeps() {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+
+    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
+    BuildRule libraryOne = JavaLibraryBuilder.createBuilder(libraryOneTarget)
+        .addSrc(Paths.get("java/src/com/libone/Bar.java"))
+        .build(ruleResolver);
+
+    BuildTarget libraryTwoTarget = BuildTargetFactory.newInstance("//:libtwo");
+    BuildRule libraryTwo = JavaLibraryBuilder
+        .createBuilder(libraryTwoTarget)
+        .addSrc(Paths.get("java/src/com/libtwo/Foo.java"))
+        .addDep(libraryOne.getBuildTarget())
+        .build(ruleResolver);
+
+    BuildTarget parentTarget = BuildTargetFactory.newInstance("//:parent");
+    BuildRule parent = JavaLibraryBuilder
+        .createBuilder(parentTarget)
+        .addSrc(Paths.get("java/src/com/parent/Meh.java"))
+        .addDep(libraryTwo.getBuildTarget())
+        .build(ruleResolver);
+
+    assertThat(
+        ((HasClasspathEntries) parent).getTransitiveClasspathDeps(),
+        Matchers.equalTo(
+            ImmutableSet.of(
+                getJavaLibrary(libraryOne),
+                getJavaLibrary(libraryTwo),
+                getJavaLibrary(parent))));
+  }
+
+  @Test
   public void testClasspathForJavacCommand() throws IOException {
     // libraryOne responds like an ordinary prebuilt_jar with no dependencies. We have to use a
     // FakeJavaLibraryRule so that we can override the behavior of getAbiKey().
@@ -352,6 +385,11 @@ public class DefaultJavaLibraryTest {
       @Override
       public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
         return ImmutableSetMultimap.of();
+      }
+
+      @Override
+      public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+        return ImmutableSet.of();
       }
     };
 
@@ -545,6 +583,17 @@ public class DefaultJavaLibraryTest {
             .put(getJavaLibrary(parent), Paths.get("buck-out/gen/lib__parent__output/parent.jar"))
             .build(),
         getJavaLibrary(parent).getTransitiveClasspathEntries());
+
+    assertThat(
+        getJavaLibrary(parent).getTransitiveClasspathDeps(),
+        Matchers.equalTo(
+            ImmutableSet.<JavaLibrary>builder()
+                .add(getJavaLibrary(included))
+                .add(getJavaLibrary(notIncluded))
+                .add(getJavaLibrary(libraryOne))
+                .add(getJavaLibrary(libraryTwo))
+                .add(getJavaLibrary(parent))
+                .build()));
 
     assertEquals(
         "A java_library that depends on //:parent should include only parent.jar in its " +

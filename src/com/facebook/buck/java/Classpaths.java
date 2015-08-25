@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.rules.BuildRule;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 
 import java.nio.file.Path;
@@ -59,4 +60,15 @@ public class Classpaths {
     }
     return classpathEntries.build();
   }
+
+  public static ImmutableSet<JavaLibrary> getClasspathDeps(Iterable<BuildRule> deps) {
+    ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
+    for (BuildRule dep : deps) {
+      if (dep instanceof JavaLibrary) {
+        classpathDeps.addAll(((JavaLibrary) dep).getTransitiveClasspathDeps());
+      }
+    }
+    return classpathDeps.build();
+  }
+
 }

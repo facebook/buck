@@ -1056,6 +1056,11 @@ public class AndroidBinary
   }
 
   @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return Classpaths.getClasspathDeps(getClasspathDeps());
+  }
+
+  @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {

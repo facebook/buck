@@ -44,6 +44,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -74,6 +75,7 @@ public class PrebuiltJar extends AbstractBuildRule
   private final Path abiJar;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
+  private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       declaredClasspathEntriesSupplier;
@@ -109,6 +111,18 @@ public class PrebuiltJar extends AbstractBuildRule
             return classpathEntries.build();
           }
         });
+
+    this.transitiveClasspathDepsSupplier =
+        Suppliers.memoize(
+            new Supplier<ImmutableSet<JavaLibrary>>() {
+              @Override
+              public ImmutableSet<JavaLibrary> get() {
+                return ImmutableSet.<JavaLibrary>builder()
+                    .add(PrebuiltJar.this)
+                    .addAll(Classpaths.getClasspathDeps(PrebuiltJar.this.getDeclaredDeps()))
+                    .build();
+              }
+            });
 
     declaredClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
@@ -168,6 +182,11 @@ public class PrebuiltJar extends AbstractBuildRule
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return transitiveClasspathEntriesSupplier.get();
+  }
+
+  @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return transitiveClasspathDepsSupplier.get();
   }
 
   @Override

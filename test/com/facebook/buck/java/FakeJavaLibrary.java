@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -82,6 +83,13 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
     return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
+        this,
+        Optional.fromNullable(getPathToOutput()));
+  }
+
+  @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
         this,
         Optional.fromNullable(getPathToOutput()));
   }

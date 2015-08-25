@@ -158,6 +158,11 @@ public class JavaBinary extends AbstractBuildRule
     return transitiveClasspathEntries;
   }
 
+  @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return transitiveClasspathEntries.keySet();
+  }
+
   private Path getOutputDirectory() {
     return Paths.get(String.format("%s/%s", BuckConstant.GEN_DIR, getBuildTarget().getBasePath()));
   }

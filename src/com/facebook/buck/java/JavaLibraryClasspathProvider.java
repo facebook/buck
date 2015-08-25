@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 
@@ -93,6 +94,23 @@ public class JavaLibraryClasspathProvider {
     }
 
     return classpathEntries.build();
+  }
+
+  public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(
+      JavaLibrary javaLibrary,
+      Optional<Path> outputJar) {
+    ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
+
+    classpathDeps.addAll(
+        Classpaths.getClasspathDeps(
+            javaLibrary.getDepsForTransitiveClasspathEntries()));
+
+    // Only add ourselves to the classpath if there's a jar to be built.
+    if (outputJar.isPresent()) {
+      classpathDeps.add(javaLibrary);
+    }
+
+    return classpathDeps.build();
   }
 
   public static ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries(
