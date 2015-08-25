@@ -167,14 +167,16 @@ public class WorkspaceAndProjectGenerator {
     if (combinedProject) {
       workspaceName += "-Combined";
       outputDirectory =
-          BuildTargets.getGenPath(workspaceBuildTarget, "%s").getParent();
+          BuildTargets.getGenPath(workspaceBuildTarget, "%s")
+              .getParent()
+              .resolve(workspaceName + ".xcodeproj");
     } else {
       outputDirectory = workspaceBuildTarget.getBasePath();
     }
 
     WorkspaceGenerator workspaceGenerator = new WorkspaceGenerator(
         projectFilesystem,
-        workspaceName,
+        combinedProject ? "project" : workspaceName,
         outputDirectory);
 
     ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder =
@@ -230,7 +232,7 @@ public class WorkspaceAndProjectGenerator {
           targetsInRequiredProjects,
           projectFilesystem,
           reactNativeBuckConfig.getServer(),
-          outputDirectory,
+          outputDirectory.getParent(),
           workspaceName,
           buildFileName,
           projectGeneratorOptions,
@@ -803,7 +805,8 @@ public class WorkspaceAndProjectGenerator {
           orderedBuildTestTargets,
           orderedRunTestTargets,
           schemeName,
-          outputDirectory.resolve(workspaceName + ".xcworkspace"),
+          combinedProject ? outputDirectory
+                          : outputDirectory.resolve(workspaceName + ".xcworkspace"),
           buildWithBuck,
           runnablePath,
           remoteRunnablePath,
