@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,6 +33,12 @@ public class QueryCommandIntegrationTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+
+  private static final ObjectMapper objectMapper = new ObjectMapper();
+
+  private static JsonNode parseJSON(String content) throws IOException {
+    return objectMapper.readTree(objectMapper.getJsonFactory().createJsonParser(content));
+  }
 
   @Test
   public void testTransitiveDependencies() throws IOException {
@@ -250,5 +258,53 @@ public class QueryCommandIntegrationTest {
 
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-one-seven-tests-own.json"), result.getStdout());
+  }
+
+  @Test
+  public void testKindStarTest() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "kind('.*_test', '//example/...')");
+
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-recursive-pattern-kind"), result.getStdout());
+  }
+
+  @Test
+  public void testKindNoResults() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "kind('python_library', deps(//example:one))");
+
+    result.assertSuccess();
+    assertEquals("", result.getStdout());
+  }
+
+  @Test
+  public void testKindDepsDoesNotShowEmptyResultsJSON() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "kind('apple_library', deps('%s') except '%s')",
+        "//example:one",
+        "//example:five",
+        "//example/app:seven");
+
+    result.assertSuccess();
+    assertEquals(
+        parseJSON(workspace.getFileContents("stdout-one-five-seven-kind-deps.json")),
+        parseJSON(result.getStdout()));
   }
 }

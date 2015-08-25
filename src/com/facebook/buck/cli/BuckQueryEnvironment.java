@@ -29,6 +29,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryException;
 import com.google.devtools.build.lib.query2.engine.QueryExpression;
@@ -118,7 +119,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
       throws QueryException {
     try {
       // Sorting to have predictable results across different java libraries implementations.
-      return ImmutableSortedSet.copyOf(
+      Set<BuildTarget> resolvedTargets = ImmutableSortedSet.copyOf(
           params.getParser()
               .resolveTargetSpec(
                   targetNodeSpecParser.parse(pattern),
@@ -127,6 +128,17 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
                   params.getConsole(),
                   params.getEnvironment(),
                   enableProfiling));
+
+      // Update the target nodes graph to include the resolved build targets.
+      // This should be done incrementally but the TargetGraph is immutable.
+      buildTransitiveClosure(
+          owner,
+          Sets.union(
+              resolvedTargets,
+              getTargetsFromNodes(graph.getNodes())),
+          /* maxDepth */ Integer.MAX_VALUE);
+
+      return resolvedTargets;
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error in resolving targets matching " + pattern);
     } catch (InterruptedException e) {
@@ -231,8 +243,13 @@ public class BuckQueryEnvironment implements QueryEnvironment<BuildTarget> {
   public Iterable<QueryFunction> getFunctions() {
     return ImmutableList.of(
         DEFAULT_QUERY_FUNCTIONS.get(9),  // "deps" is the only default function supported for now.
+        new QueryKindFunction(),
         new QueryOwnerFunction(),
         new QueryTestsOfFunction()
     );
+  }
+
+  public String getTargetKind(BuildTarget target) {
+    return Preconditions.checkNotNull(getNode(target)).getType().getName();
   }
 }
