@@ -58,6 +58,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -911,7 +912,7 @@ public class Parser {
      * We parse a build file in search for one particular rule; however, we also keep track of the
      * other rules that were also parsed from it.
      */
-    private final Map<BuildTarget, TargetNode<?>> memoizedTargetNodes;
+    private final Cache<BuildTarget, TargetNode<?>> memoizedTargetNodes;
 
     /**
      * Environment used by build files. If the environment is changed, then build files need to be
@@ -938,7 +939,7 @@ public class Parser {
     private final String buildFile;
 
     public CachedState(String buildFileName) {
-      this.memoizedTargetNodes = Maps.newHashMap();
+      this.memoizedTargetNodes = CacheBuilder.newBuilder().<BuildTarget, TargetNode<?>>build();
       this.symlinkExistenceCache = Maps.newHashMap();
       this.buildInputPathsUnderSymlink = Sets.newHashSet();
       this.parsedBuildFiles = ArrayListMultimap.create();
@@ -959,7 +960,7 @@ public class Parser {
       parsedBuildFiles.clear();
       symlinkExistenceCache.clear();
       buildInputPathsUnderSymlink.clear();
-      memoizedTargetNodes.clear();
+      memoizedTargetNodes.invalidateAll();
       targetsToFile.clear();
       pathsToBuildTargets.clear();
       buildTargetHashCodeCache.invalidateAll();
@@ -1051,7 +1052,7 @@ public class Parser {
       List<BuildTarget> targetsToRemove = pathsToBuildTargets.get(path);
       LOG.debug("Removing targets %s for path %s", targetsToRemove, path);
       for (BuildTarget target : targetsToRemove) {
-        memoizedTargetNodes.remove(target);
+        memoizedTargetNodes.invalidate(target);
       }
       buildTargetHashCodeCache.invalidateAll(targetsToRemove);
       pathsToBuildTargets.removeAll(path);
@@ -1101,7 +1102,7 @@ public class Parser {
         BuildTarget buildTarget,
         Optional<BuckEventBus> eventBus) throws IOException, InterruptedException {
       // Fast path.
-      TargetNode<?> toReturn = memoizedTargetNodes.get(buildTarget);
+      TargetNode<?> toReturn = memoizedTargetNodes.getIfPresent(buildTarget);
       if (toReturn != null) {
         return toReturn;
       }
@@ -1221,15 +1222,17 @@ public class Parser {
               newSymlinksEncountered);
           buildInputPathsUnderSymlink.add(buildFilePath);
         }
-        TargetNode<?> existingTargetNode = memoizedTargetNodes.put(buildTarget, targetNode);
-        if (existingTargetNode != null) {
-          throw new HumanReadableException("Duplicate definition for " + unflavored);
+        synchronized (memoizedTargetNodes) {
+          if (memoizedTargetNodes.getIfPresent(buildTarget) != null) {
+            throw new HumanReadableException("Duplicate definition for " + unflavored);
+          }
+          memoizedTargetNodes.put(buildTarget, targetNode);
         }
 
         // PMD considers it bad form to return while in a loop.
       }
 
-      return memoizedTargetNodes.get(buildTarget);
+      return memoizedTargetNodes.getIfPresent(buildTarget);
     }
 
     public synchronized void cleanCache() {
