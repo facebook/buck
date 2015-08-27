@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -51,7 +53,9 @@ public class QueryCommandIntegrationTest {
         "query",
         "deps(//example:one)");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-transitive-deps"), result.getStdout());
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-one-transitive-deps"))));
   }
 
   @Test
@@ -65,7 +69,7 @@ public class QueryCommandIntegrationTest {
         "query",
         "testsof(//example:one)");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-testsof"), result.getStdout());
+    assertThat(result.getStdout(), is(equalTo(workspace.getFileContents("stdout-one-testsof"))));
   }
 
   @Test
@@ -80,7 +84,9 @@ public class QueryCommandIntegrationTest {
         "--json",
         "testsof(deps(//example:two, 1))");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-two-deps-tests.json"), result.getStdout());
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-two-deps-tests.json")))));
   }
 
   @Test
@@ -95,7 +101,9 @@ public class QueryCommandIntegrationTest {
         "--json",
         "testsof(deps(//example:two, 2))");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-two-deps2lvl-tests.json"), result.getStdout());
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-two-deps2lvl-tests.json")))));
   }
 
   @Test
@@ -110,7 +118,9 @@ public class QueryCommandIntegrationTest {
         "testsof(deps(%s, 1))",
         "//example:two");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-two-deps-tests"), result.getStdout());
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-two-deps-tests"))));
   }
 
   @Test
@@ -126,7 +136,9 @@ public class QueryCommandIntegrationTest {
         "testsof(deps(%s, 1))",
         "//example:two");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-two-deps-tests-map.json"), result.getStdout());
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-two-deps-tests-map.json")))));
   }
 
   @Test
@@ -147,7 +159,9 @@ public class QueryCommandIntegrationTest {
         "//example:five",
         "//example:six");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-all-deps-tests-map.json"), result.getStdout());
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-all-deps-tests-map.json")))));
   }
 
   @Test
@@ -162,7 +176,9 @@ public class QueryCommandIntegrationTest {
         "deps(%s, 1) union testsof(%s)",
         "//example:one");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-direct-deps-tests"), result.getStdout());
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-one-direct-deps-tests"))));
   }
 
   @Test
@@ -176,7 +192,9 @@ public class QueryCommandIntegrationTest {
         "query",
         "testsof(//example:)");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-pkg-pattern-testsof"), result.getStdout());
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-pkg-pattern-testsof"))));
   }
 
   @Test
@@ -190,7 +208,9 @@ public class QueryCommandIntegrationTest {
         "query",
         "testsof(//...)");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-recursive-pattern-testsof"), result.getStdout());
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-recursive-pattern-testsof"))));
   }
 
   @Test
@@ -207,9 +227,10 @@ public class QueryCommandIntegrationTest {
         "//...",
         "//example:");
     result.assertSuccess();
-    assertEquals(
-        workspace.getFileContents("stdout-recursive-pkg-pattern-tests.json"),
-        result.getStdout());
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(
+            parseJSON(workspace.getFileContents("stdout-recursive-pkg-pattern-tests.json")))));
   }
 
   @Test
@@ -223,7 +244,7 @@ public class QueryCommandIntegrationTest {
         "owner('example/1.txt')");
 
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-owner"), result.getStdout());
+    assertThat(result.getStdout(), is(equalTo(workspace.getFileContents("stdout-one-owner"))));
   }
 
   @Test
@@ -240,7 +261,9 @@ public class QueryCommandIntegrationTest {
         "example/app/7.txt");
 
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-seven-owner.json"), result.getStdout());
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-one-seven-owner.json")))));
   }
 
   @Test
@@ -257,7 +280,9 @@ public class QueryCommandIntegrationTest {
         "example/app/7.txt");
 
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one-seven-tests-own.json"), result.getStdout());
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-one-seven-tests-own.json")))));
   }
 
   @Test
@@ -271,7 +296,9 @@ public class QueryCommandIntegrationTest {
         "kind('.*_test', '//example/...')");
 
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-recursive-pattern-kind"), result.getStdout());
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-recursive-pattern-kind"))));
   }
 
   @Test
@@ -285,7 +312,7 @@ public class QueryCommandIntegrationTest {
         "kind('python_library', deps(//example:one))");
 
     result.assertSuccess();
-    assertEquals("", result.getStdout());
+    assertThat(result.getStdout(), is(equalTo("")));
   }
 
   @Test
@@ -303,9 +330,9 @@ public class QueryCommandIntegrationTest {
         "//example/app:seven");
 
     result.assertSuccess();
-    assertEquals(
-        parseJSON(workspace.getFileContents("stdout-one-five-seven-kind-deps.json")),
-        parseJSON(result.getStdout()));
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-one-five-seven-kind-deps.json")))));
   }
 
   @Test
@@ -318,7 +345,9 @@ public class QueryCommandIntegrationTest {
         "query",
         "rdeps(set(//example:one //example/app:seven), set(//example/app:seven //example:five))");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-five-seven-rdeps"), result.getStdout());
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-five-seven-rdeps"))));
   }
 
   @Test
@@ -334,6 +363,8 @@ public class QueryCommandIntegrationTest {
         "//example:two",
         "//example:four");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-two-four-tests-rdeps.json"), result.getStdout());
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-two-four-tests-rdeps.json")))));
   }
 }

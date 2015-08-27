@@ -1,1 +1,8 @@
-{"example/1.txt":["//example:one-tests"],"example/app/7.txt":["//example/app:seven-tests"]}
+{
+  "example/1.txt": [
+    "//example:one-tests"
+  ],
+  "example/app/7.txt": [
+    "//example/app:seven-tests"
+  ]
+}

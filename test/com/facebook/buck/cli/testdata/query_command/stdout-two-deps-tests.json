@@ -1,1 +1,4 @@
-["//example:four-application-tests","//example:four-tests"]
+[
+  "//example:four-application-tests",
+  "//example:four-tests"
+]
