@@ -1111,7 +1111,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void inputBasedRuleKeyAndArtifactAreWrittenForSupportedRules() throws Exception {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
@@ -1137,7 +1137,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
               BuildableContext buildableContext) {
-            return ImmutableList.<Step>of(new WriteFileStep("", output, /* executable */ false));
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
           public Path getPathToOutput() {
@@ -1357,7 +1358,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void depFileRuleKeyAndDepFileAreWrittenForSupportedRules() throws Exception {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
@@ -1387,7 +1388,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
           public ImmutableList<Step> getBuildSteps(
               BuildContext context,
               BuildableContext buildableContext) {
-            return ImmutableList.<Step>of(new WriteFileStep("", output, /* executable */ false));
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
           public ImmutableList<Path> getInputsAfterBuildingLocally() {
@@ -1526,7 +1528,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void depFileInputChangeCausesRebuild() throws Exception {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
         FakeBuildContext.newBuilder(filesystem)
@@ -1555,7 +1557,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             buildableContext.addMetadata(
                 BuildInfo.METADATA_KEY_FOR_DEP_FILE,
                 ImmutableList.of(input.toString()));
-            return ImmutableList.<Step>of(new WriteFileStep("", output, /* executable */ false));
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
           public ImmutableList<Path> getInputsAfterBuildingLocally() {
@@ -1612,7 +1615,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   @Test
   public void depFileDeletedInputCausesRebuild() throws Exception {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
         FakeBuildContext.newBuilder(filesystem)
@@ -1641,7 +1644,8 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             buildableContext.addMetadata(
                 BuildInfo.METADATA_KEY_FOR_DEP_FILE,
                 ImmutableList.of(input.toString()));
-            return ImmutableList.<Step>of(new WriteFileStep("", output, /* executable */ false));
+            return ImmutableList.<Step>of(
+                new WriteFileStep(filesystem, "", output, /* executable */ false));
           }
           @Override
           public ImmutableList<Path> getInputsAfterBuildingLocally() {

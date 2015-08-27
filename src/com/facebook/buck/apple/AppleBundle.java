@@ -285,7 +285,11 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
         new MakeCleanDirectoryStep(bundleRoot),
         new MkdirStep(metadataPath),
         // TODO(user): This is only appropriate for .app bundles.
-        new WriteFileStep("APPLWRUN", metadataPath.resolve("PkgInfo"), /* executable */ false),
+        new WriteFileStep(
+            getProjectFilesystem(),
+            "APPLWRUN",
+            metadataPath.resolve("PkgInfo"),
+            /* executable */ false),
         new FindAndReplaceStep(
           infoPlistInputPath,
           infoPlistSubstitutionTempPath,
@@ -407,6 +411,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
 
       stepsBuilder.add(
           new ProvisioningProfileCopyStep(
+              getProjectFilesystem(),
               infoPlistOutputPath,
               Optional.<String>absent(),  // Provisioning profile UUID -- find automatically.
               entitlementsPlist,

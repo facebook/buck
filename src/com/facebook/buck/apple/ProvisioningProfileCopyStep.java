@@ -21,6 +21,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -55,6 +56,7 @@ public class ProvisioningProfileCopyStep implements Step {
   private static final String APPLICATION_IDENTIFIER = "application-identifier";
   private static final Logger LOG = Logger.get(ProvisioningProfileCopyStep.class);
 
+  private final ProjectFilesystem filesystem;
   private final Optional<Path> entitlementsPlist;
   private final Optional<String> provisioningProfileUUID;
   private final Path provisioningProfileDestination;
@@ -75,13 +77,14 @@ public class ProvisioningProfileCopyStep implements Step {
    *                                        normally a scratch directory.
    */
   public ProvisioningProfileCopyStep(
+      ProjectFilesystem filesystem,
       Path infoPlist,
       Optional<String> provisioningProfileUUID,
       Optional<Path> entitlementsPlist,
       ImmutableSet<ProvisioningProfileMetadata> profiles,
       Path provisioningProfileDestination,
-      Path signingEntitlementsTempPath
-  ) {
+      Path signingEntitlementsTempPath) {
+    this.filesystem = filesystem;
     this.provisioningProfileDestination = provisioningProfileDestination;
     this.infoPlist = infoPlist;
     this.provisioningProfileUUID = provisioningProfileUUID;
@@ -249,6 +252,7 @@ public class ProvisioningProfileCopyStep implements Step {
       entitlements.put(APPLICATION_IDENTIFIER, appID);
       entitlements.put(KEYCHAIN_ACCESS_GROUPS, new String[]{appID});
       return (new WriteFileStep(
+          filesystem,
           entitlements.toXMLPropertyList(),
           signingEntitlementsTempPath,
           /* executable */ false)).execute(context);

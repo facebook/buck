@@ -16,6 +16,8 @@
 
 package com.facebook.buck.java;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -50,7 +52,7 @@ public class CachedTestRunReportingIntegrationTest {
     workspace.setUp();
 
     // No caching for this run.
-      assertFalse(
+    assertFalse(
         "There should not be any caching for the initial test run.",
         isTestRunCached(workspace, true));
 
@@ -87,7 +89,7 @@ public class CachedTestRunReportingIntegrationTest {
       result.assertTestFailure();
     }
     // Test that Test status is reported
-    assertTrue(result.getStderr().contains("com.example.LameTest"));
+    assertThat(result.getStderr(), containsString("com.example.LameTest"));
     String status = expectSuccess ? "PASS    CACHED" : "FAIL    CACHED";
     return result.getStderr().contains(status);
   }

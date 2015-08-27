@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -50,6 +51,7 @@ public class TestRuleKeyFileHelper {
   public Step createRuleKeyInDirStep(TestRule testRule) throws IOException {
     RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
     return new WriteFileStep(
+        ((BuildRule) testRule).getProjectFilesystem(),
         ruleKey.toString(),
         getRuleKeyFilePath(testRule),
         /* executable */ false);
@@ -60,7 +62,8 @@ public class TestRuleKeyFileHelper {
    * @return true if a rule key is written in the specified directory.
    */
   public boolean isRuleKeyInDir(TestRule testRule) throws IOException {
-    Path ruleKeyPath = getRuleKeyFilePath(testRule);
+    ProjectFilesystem filesystem = ((BuildRule) testRule).getProjectFilesystem();
+    Path ruleKeyPath = filesystem.resolve(getRuleKeyFilePath(testRule));
     if (!Files.isRegularFile(ruleKeyPath)) {
       return false;
     }
@@ -75,7 +78,6 @@ public class TestRuleKeyFileHelper {
    * Get the path file where the rule key is written, given the path to the output directory.
    */
   private Path getRuleKeyFilePath(TestRule testRule) {
-    Path keyFile = testRule.getPathToTestOutputDirectory().resolve(RULE_KEY_FILE);
-    return ((BuildRule) testRule).getProjectFilesystem().getAbsolutifier().apply(keyFile);
+    return testRule.getPathToTestOutputDirectory().resolve(RULE_KEY_FILE);
   }
 }

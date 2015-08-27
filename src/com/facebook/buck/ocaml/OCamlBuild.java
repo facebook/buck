@@ -69,6 +69,7 @@ public class OCamlBuild extends AbstractBuildRule {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(ocamlContext.getOutput().getParent()),
         new OCamlBuildStep(
+            getProjectFilesystem(),
             ocamlContext,
             cCompiler.getCommandPrefix(getResolver()),
             cxxCompiler.getCommandPrefix(getResolver())));

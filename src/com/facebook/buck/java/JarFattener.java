@@ -178,7 +178,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
       }
     };
 
-    return new WriteFileStep(source, destination, /* executable */ false);
+    return new WriteFileStep(getProjectFilesystem(), source, destination, /* executable */ false);
   }
 
   /**
@@ -186,6 +186,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
    */
   private Step writeFromResource(Path destination, final String name) {
     return new WriteFileStep(
+        getProjectFilesystem(),
         Resources.asByteSource(Resources.getResource(name)),
         destination,
         /* executable */ false);

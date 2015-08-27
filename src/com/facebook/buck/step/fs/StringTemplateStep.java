@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Charsets;
@@ -35,11 +36,20 @@ import java.nio.file.Path;
 public class StringTemplateStep implements Step {
 
   private final Path templatePath;
+  private final ProjectFilesystem filesystem;
   private final Path outputPath;
   private final Function<ST, ST> configure;
 
-  public StringTemplateStep(Path templatePath, Path outputPath, Function<ST, ST> configure) {
+  public StringTemplateStep(
+      Path templatePath,
+      ProjectFilesystem filesystem,
+      Path outputPath,
+      Function<ST, ST> configure) {
+    Preconditions.checkArgument(
+        !outputPath.isAbsolute(),
+        "Output must be specified as a relative path: %s", outputPath);
     this.templatePath = templatePath;
+    this.filesystem = filesystem;
     this.outputPath = outputPath;
     this.configure = configure;
   }
@@ -57,7 +67,7 @@ public class StringTemplateStep implements Step {
     ST st = new ST(template);
 
     return new WriteFileStep(
-        Preconditions.checkNotNull(configure.apply(st).render()),
+        filesystem, Preconditions.checkNotNull(configure.apply(st).render()),
         outputPath,
         /* executable */ false).execute(context);
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.shell.Shell;
@@ -40,49 +41,24 @@ import java.util.List;
  */
 public class OCamlDebugLauncherStep implements Step {
 
-  public static class Args implements RuleKeyAppendable {
-    public final Path ocamlDebug;
-    public final Path bytecodeOutput;
-    public final ImmutableList<OCamlLibrary> ocamlInput;
-    public final ImmutableList<String> bytecodeIncludeFlags;
-
-    public Args(
-        Path ocamlDebug,
-        Path bytecodeOutput,
-        List<OCamlLibrary> ocamlInput,
-        List<String> bytecodeIncludeFlags) {
-      this.ocamlDebug = ocamlDebug;
-      this.bytecodeOutput = bytecodeOutput;
-      this.ocamlInput = ImmutableList.copyOf(ocamlInput);
-      this.bytecodeIncludeFlags = ImmutableList.copyOf(bytecodeIncludeFlags);
-    }
-
-    public Path getOutput() {
-      return Paths.get(bytecodeOutput.toString() + ".debug");
-    }
-
-    @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
-      return builder
-          .setReflectively("ocamlDebug", ocamlDebug.toString())
-          .setReflectively("bytecodeOutput", bytecodeOutput.toString())
-          .setReflectively("flags", bytecodeIncludeFlags);
-    }
-  }
-
+  private final ProjectFilesystem filesystem;
   private final Args args;
 
-  public OCamlDebugLauncherStep(Args args) {
+  public OCamlDebugLauncherStep(ProjectFilesystem filesystem, Args args) {
+    this.filesystem = filesystem;
     this.args = args;
   }
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException, IOException {
     String debugCmdStr = getDebugCmd();
-    String debugLuancherScript = getDebugLauncherScript(debugCmdStr);
+    String debugLauncherScript = getDebugLauncherScript(debugCmdStr);
 
-    WriteFileStep writeFile =
-        new WriteFileStep(debugLuancherScript, args.getOutput(), /* executable */ false);
+    WriteFileStep writeFile = new WriteFileStep(
+        filesystem,
+        debugLauncherScript,
+        args.getOutput(),
+        /* executable */ false);
     int writeExitCode = writeFile.execute(context);
     if (writeExitCode != 0) {
       return writeExitCode;
@@ -135,4 +111,33 @@ public class OCamlDebugLauncherStep implements Step {
     return getShortName();
   }
 
+  public static class Args implements RuleKeyAppendable {
+    public final Path ocamlDebug;
+    public final Path bytecodeOutput;
+    public final ImmutableList<OCamlLibrary> ocamlInput;
+    public final ImmutableList<String> bytecodeIncludeFlags;
+
+    public Args(
+        Path ocamlDebug,
+        Path bytecodeOutput,
+        List<OCamlLibrary> ocamlInput,
+        List<String> bytecodeIncludeFlags) {
+      this.ocamlDebug = ocamlDebug;
+      this.bytecodeOutput = bytecodeOutput;
+      this.ocamlInput = ImmutableList.copyOf(ocamlInput);
+      this.bytecodeIncludeFlags = ImmutableList.copyOf(bytecodeIncludeFlags);
+    }
+
+    public Path getOutput() {
+      return Paths.get(bytecodeOutput.toString() + ".debug");
+    }
+
+    @Override
+    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+      return builder
+          .setReflectively("ocamlDebug", ocamlDebug.toString())
+          .setReflectively("bytecodeOutput", bytecodeOutput.toString())
+          .setReflectively("flags", bytecodeIncludeFlags);
+    }
+  }
 }

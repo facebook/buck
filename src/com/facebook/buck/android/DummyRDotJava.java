@@ -96,6 +96,7 @@ public class DummyRDotJava extends AbstractBuildRule
       steps.add(new MakeCleanDirectoryStep(emptyRDotJava.getParent()));
       steps.add(
           new WriteFileStep(
+              getProjectFilesystem(),
               "package com.facebook;\n public class R {}\n",
               emptyRDotJava,
               /* executable */ false));

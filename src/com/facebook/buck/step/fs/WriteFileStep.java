@@ -17,11 +17,13 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.io.ByteSource;
@@ -35,26 +37,43 @@ import java.nio.file.StandardCopyOption;
 public class WriteFileStep implements Step {
 
   private static final Logger LOG = Logger.get(WriteFileStep.class);
+
   private final ByteSource source;
+  private final ProjectFilesystem filesystem;
   private final Path outputPath;
   private final boolean executable;
 
-  public WriteFileStep(ByteSource content, Path outputPath, boolean executable) {
+  public WriteFileStep(
+      ProjectFilesystem filesystem,
+      ByteSource content,
+      Path outputPath,
+      boolean executable) {
+    Preconditions.checkArgument(
+        !outputPath.isAbsolute(),
+        "Output path must not be absolute: %s",
+        outputPath);
+
     this.source = content;
+    this.filesystem = filesystem;
     this.outputPath = outputPath;
     this.executable = executable;
   }
 
-  public WriteFileStep(String content, Path outputPath, boolean executable) {
-    this(Suppliers.ofInstance(content), outputPath, executable);
+  public WriteFileStep(
+      ProjectFilesystem filesystem,
+      String content,
+      Path outputPath,
+      boolean executable) {
+    this(filesystem, Suppliers.ofInstance(content), outputPath, executable);
   }
 
   public WriteFileStep(
+      ProjectFilesystem filesystem,
       final Supplier<String> content,
       Path outputPath,
       boolean executable) {
     this(
-        new ByteSource() {
+        filesystem, new ByteSource() {
           @Override
           public InputStream openStream() throws IOException {
             // echo by default writes a trailing new line and so should we.
@@ -68,12 +87,12 @@ public class WriteFileStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try (InputStream sourceStream = source.openStream()) {
-      context.getProjectFilesystem().copyToPath(
+      filesystem.copyToPath(
           sourceStream,
           outputPath,
           StandardCopyOption.REPLACE_EXISTING);
       if (executable) {
-        Path resolvedPath = context.getProjectFilesystem().resolve(outputPath);
+        Path resolvedPath = filesystem.resolve(outputPath);
         MoreFiles.makeExecutable(resolvedPath);
       }
       return 0;

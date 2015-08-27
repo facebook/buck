@@ -90,6 +90,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
         new MakeCleanDirectoryStep(output.getParent()),
         new StringTemplateStep(
             TEMPLATE,
+            getProjectFilesystem(),
             output,
             new Function<ST, ST>() {
               @Override

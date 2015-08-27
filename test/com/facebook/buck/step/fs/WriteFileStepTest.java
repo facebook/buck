@@ -32,16 +32,16 @@ public class WriteFileStepTest {
 
   @Test
   public void testFileIsWrittenWithNewline() throws Exception {
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     WriteFileStep writeFileStep =
-        new WriteFileStep("Hello world", Paths.get("foo.txt"), /* executable */ false);
+        new WriteFileStep(filesystem, "Hello world", Paths.get("foo.txt"), /* executable */ false);
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
+        .setProjectFilesystem(filesystem)
         .build();
     writeFileStep.execute(executionContext);
     assertThat(
-        projectFilesystem.readFileIfItExists(Paths.get("foo.txt")),
+        filesystem.readFileIfItExists(Paths.get("foo.txt")),
         equalTo(Optional.of("Hello world\n")));
   }
 }

@@ -17,6 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -33,6 +34,7 @@ import java.nio.file.Paths;
  */
 public class OCamlBuildStep implements Step {
 
+  private ProjectFilesystem filesystem;
   private final OCamlBuildContext ocamlContext;
   private final ImmutableList<String> cCompiler;
   private final ImmutableList<String> cxxCompiler;
@@ -41,9 +43,11 @@ public class OCamlBuildStep implements Step {
   private final OCamlDepToolStep depToolStep;
 
   public OCamlBuildStep(
+      ProjectFilesystem filesystem,
       OCamlBuildContext ocamlContext,
       ImmutableList<String> cCompiler,
       ImmutableList<String> cxxCompiler) {
+    this.filesystem = filesystem;
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;
@@ -127,6 +131,7 @@ public class OCamlBuildStep implements Step {
 
     if (!ocamlContext.isLibrary()) {
       Step debugLauncher = new OCamlDebugLauncherStep(
+          filesystem,
           new OCamlDebugLauncherStep.Args(
               ocamlContext.getOcamlDebug().get(),
               ocamlContext.getBytecodeOutput(),

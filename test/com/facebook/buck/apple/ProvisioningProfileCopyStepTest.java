@@ -27,9 +27,9 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,12 +40,12 @@ import java.nio.file.Path;
 import java.util.Date;
 
 public class ProvisioningProfileCopyStepTest {
-private Path testdataDir;
-private Path tempOutputDir;
-private Path outputFile;
-private Path xcentFile;
-private ProjectFilesystem projectFilesystem;
-private ExecutionContext executionContext;
+  private Path testdataDir;
+  private Path tempOutputDir;
+  private Path outputFile;
+  private Path xcentFile;
+  private ProjectFilesystem projectFilesystem;
+  private ExecutionContext executionContext;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -178,6 +178,7 @@ private ExecutionContext executionContext;
     thrown.expect(HumanReadableException.class);
 
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
+        projectFilesystem,
         testdataDir.resolve("Info.plist"),
         Optional.<String>absent(),
         Optional.<Path>of(testdataDir.resolve("Invalid.plist")),
@@ -194,6 +195,7 @@ private ExecutionContext executionContext;
     thrown.expect(HumanReadableException.class);
 
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
+        projectFilesystem,
         testdataDir.resolve("Invalid.plist"),
         Optional.<String>absent(),
         Optional.<Path>absent(),
