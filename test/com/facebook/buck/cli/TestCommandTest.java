@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -299,10 +300,14 @@ public class TestCommandTest {
       throws CmdLineException {
     TestCommand command = getCommand("-j", "15");
 
-    assertEquals(15, command.getNumTestThreads(new FakeBuckConfig()));
+    assertThat(
+        command.getNumTestThreads(new FakeBuckConfig(command.getConfigOverrides())),
+        Matchers.equalTo(15));
 
     command = getCommand("-j", "15", "--debug");
 
-    assertEquals(1, command.getNumTestThreads(new FakeBuckConfig()));
+    assertThat(
+        command.getNumTestThreads(new FakeBuckConfig(command.getConfigOverrides())),
+        Matchers.equalTo(1));
   }
 }

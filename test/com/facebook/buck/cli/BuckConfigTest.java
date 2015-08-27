@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -43,6 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -459,4 +461,25 @@ public class BuckConfigTest {
         ImmutableMap.copyOf(System.getenv()));
   }
 
+  @Test
+  public void testShouldSetNumberOfThreadsFromBuckConfig() {
+    BuckConfig buckConfig = new FakeBuckConfig(ImmutableMap.of(
+        "build",
+        ImmutableMap.of("threads", "3")));
+    assertThat(buckConfig.getNumThreads(), Matchers.equalTo(3));
+  }
+
+  @Test
+  public void testDefaultsNumberOfBuildThreadsToOneAndAQuarterTheNumberOfAvailableProcessors() {
+    BuckConfig buckConfig = new FakeBuckConfig();
+    assertThat(
+        buckConfig.getNumThreads(),
+        Matchers.equalTo((int) (Runtime.getRuntime().availableProcessors() * 1.25)));
+  }
+
+  @Test
+  public void testDefaultsNumberOfBuildThreadsSpecified() {
+    BuckConfig buckConfig = new FakeBuckConfig();
+    assertThat(buckConfig.getNumThreads(42), Matchers.equalTo(42));
+  }
 }

@@ -218,7 +218,7 @@ public class TestCommand extends BuildCommand {
     if (isDebugEnabled()) {
       return 1;
     }
-    return getNumThreads(buckConfig);
+    return buckConfig.getNumThreads();
   }
 
   @Override
@@ -386,7 +386,7 @@ public class TestCommand extends BuildCommand {
         // Once all of the rules are built, then run the tests.
         ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
             getNumTestThreads(params.getBuckConfig()),
-            getLoadLimit(params.getBuckConfig()));
+            params.getBuckConfig().getLoadLimit());
         try (CommandThreadManager testPool =
                  new CommandThreadManager("Test-Run", concurrencyLimit)) {
           TestRunningOptions options = TestRunningOptions.builder()

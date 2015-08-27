@@ -45,7 +45,6 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
@@ -73,17 +72,12 @@ import javax.annotation.Nullable;
 
 public class BuildCommand extends AbstractCommand {
 
-  private static final String NUM_THREADS_LONG_ARG = "--num-threads";
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
   private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
   private static final String DEEP_LONG_ARG = "--deep";
   private static final String SHALLOW_LONG_ARG = "--shallow";
-
-  @Option(name = NUM_THREADS_LONG_ARG, aliases = "-j", usage = "Default is 1.25 * num processors.")
-  @Nullable
-  private Integer numThreads = null;
 
   @Option(
       name = KEEP_GOING_LONG_ARG,
@@ -159,25 +153,6 @@ public class BuildCommand extends AbstractCommand {
   }
 
 
-  int getNumThreads(BuckConfig buckConfig) {
-    if (numThreads == null) {
-      ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
-      if (build.containsKey("threads")) {
-        try {
-          numThreads = Integer.parseInt(build.get("threads"));
-        } catch (NumberFormatException e) {
-          throw new HumanReadableException(
-              e,
-              "Unable to determine number of threads to use from building from buck config file. " +
-                  "Value used was '%s'", build.get("threads"));
-        }
-      } else {
-        numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
-      }
-    }
-    return numThreads;
-  }
-
   public boolean isKeepGoing() {
     return keepGoing;
   }
@@ -186,27 +161,8 @@ public class BuildCommand extends AbstractCommand {
     this.keepGoing = keepGoing;
   }
 
-  public double getLoadLimit(BuckConfig buckConfig) {
-    if (loadLimit == null) {
-      ImmutableMap<String, String> build = buckConfig.getEntriesForSection("build");
-      if (build.containsKey("load_limit")) {
-        try {
-          loadLimit = Double.parseDouble(build.get("load_limit"));
-        } catch (NumberFormatException e) {
-          throw new HumanReadableException(
-              e,
-              "Unable to determine load limit to use from building from buck config file. " +
-                  "Value used was '%s'", build.get("load_limit"));
-        }
-      } else {
-        loadLimit = Double.POSITIVE_INFINITY;
-      }
-    }
-    return loadLimit;
-  }
-
   public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
-    return new ConcurrencyLimit(getNumThreads(buckConfig), getLoadLimit(buckConfig));
+    return new ConcurrencyLimit(buckConfig.getNumThreads(), buckConfig.getLoadLimit());
   }
 
   /**
@@ -234,7 +190,7 @@ public class BuildCommand extends AbstractCommand {
       Optional<AdbOptions> adbOptions,
       Optional<TargetDeviceOptions> targetDeviceOptions) {
     if (console.getVerbosity() == Verbosity.ALL) {
-      console.getStdErr().printf("Creating a build with %d threads.\n", numThreads);
+      console.getStdErr().printf("Creating a build with %d threads.\n", buckConfig.getNumThreads());
     }
     return new Build(
         graph,
@@ -398,10 +354,6 @@ public class BuildCommand extends AbstractCommand {
   protected ImmutableList<String> getOptions() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.addAll(super.getOptions());
-    if (numThreads != null) {
-      builder.add(NUM_THREADS_LONG_ARG);
-      builder.add(numThreads.toString());
-    }
     if (keepGoing) {
       builder.add(KEEP_GOING_LONG_ARG);
     }

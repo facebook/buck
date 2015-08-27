@@ -96,7 +96,7 @@ public class ConfigTest {
 
   @Test(expected = HumanReadableException.class)
   public void testGetMalformedFloat() throws IOException {
-      createFromText("[a]", "  f = potato").getFloat("a", "f");
+    createFromText("[a]", "  f = potato").getFloat("a", "f");
   }
 
   @Test

@@ -17,12 +17,14 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -48,41 +50,13 @@ public class BuildCommandOptionsTest {
   }
 
   @Test
-  public void testShouldSetNumberOfThreadsFromBuckConfig() throws CmdLineException {
-    BuckConfig buckConfig = new FakeBuckConfig(ImmutableMap.of(
-        "build",
-        ImmutableMap.of("threads", "3")));
-    BuildCommand command = new BuildCommand();
-    AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(command);
-    parser.parseArgument();
-
-    int count = command.getNumThreads(buckConfig);
-
-    assertEquals(3, count);
-  }
-
-  @Test
-  public void testDefaultsNumberOfBuildThreadsToOneAndAQuarterTheNumberOfAvailableProcessors()
-      throws CmdLineException {
-    BuckConfig buckConfig = new FakeBuckConfig();
-    BuildCommand command = new BuildCommand();
-    AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(command);
-    parser.parseArgument();
-
-    int expected = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
-
-    assertEquals(expected, command.getNumThreads(buckConfig));
-  }
-
-  @Test
   public void testCommandLineOptionOverridesOtherBuildThreadSettings() throws CmdLineException {
-    BuckConfig buckConfig = new FakeBuckConfig();
     BuildCommand command = new BuildCommand();
 
     AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(command);
-    parser.parseArgument("--num-threads", "5");
+    parser.parseArgument("--num-threads", "42");
 
-    assertEquals(5, command.getNumThreads(buckConfig));
+    BuckConfig buckConfig = new FakeBuckConfig(command.getConfigOverrides());
+    assertThat(buckConfig.getNumThreads(), Matchers.equalTo(42));
   }
-
 }

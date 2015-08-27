@@ -785,6 +785,30 @@ public class BuckConfig {
     return getPath(sectionName, name, true);
   }
 
+  /**
+   * @return the number of threads Buck should use.
+   */
+  public int getNumThreads() {
+    return getNumThreads((int) (Runtime.getRuntime().availableProcessors() * 1.25));
+  }
+
+  /**
+   * @return the number of threads Buck should use or the specified defaultValue if it is not set.
+   */
+  public int getNumThreads(int defaultValue) {
+    return config.getLong("build", "threads")
+        .or((long) defaultValue)
+        .intValue();
+  }
+
+  /**
+   * @return the maximum load limit that Buck should stay under on the system.
+   */
+  public float getLoadLimit() {
+    return config.getFloat("build", "load_limit")
+        .or(Float.POSITIVE_INFINITY);
+  }
+
   public Optional<Path> getPath(String sectionName, String name, boolean isRepoRootRelative) {
     Optional<String> pathString = getValue(sectionName, name);
     return pathString.isPresent() ?
