@@ -116,7 +116,8 @@ public class ProjectFilesystem {
 
   @VisibleForTesting
   static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
-  private static final String DEFAULT_CACHE_DIR = "buck-cache";
+  @VisibleForTesting
+  static final String DEFAULT_CACHE_DIR = "buck-cache";
 
   private final Path projectRoot;
 
@@ -172,7 +173,8 @@ public class ProjectFilesystem {
     this.ignoreValidityOfPaths = false;
   }
 
-  private static ImmutableSet<Path> extractIgnorePaths(Path root, Config config) {
+  @VisibleForTesting
+  static ImmutableSet<Path> extractIgnorePaths(Path root, Config config) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
     builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));

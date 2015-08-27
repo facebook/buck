@@ -23,10 +23,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.Config;
+import com.facebook.buck.cli.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -614,5 +617,40 @@ public class ProjectFilesystemTest {
         filesystem.getSortedMatchingDirectoryContents(
             Paths.get("foo"),
             "*.txt"));
+  }
+
+  @Test
+  public void testExtractIgnorePaths() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = .git, foo, bar/, baz//, a/b/c");
+    Path rootPath = tmp.getRoot();
+    ImmutableSet<Path> ignorePaths = ProjectFilesystem.extractIgnorePaths(rootPath, config);
+    assertEquals(
+        "Should ignore paths, sans trailing slashes",
+        ignorePaths,
+        ImmutableSet.of(
+            BuckConstant.BUCK_OUTPUT_PATH,
+            Paths.get(".idea"),
+            Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
+            rootPath.resolve(ProjectFilesystem.DEFAULT_CACHE_DIR),
+            Paths.get(".git"),
+            Paths.get("foo"),
+            Paths.get("bar"),
+            Paths.get("baz"),
+            Paths.get("a/b/c")));
+  }
+
+  @Test
+  public void testExtractIgnorePathsWithCacheDir() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[cache]",
+        "dir = cache_dir");
+    Path rootPath = tmp.getRoot();
+    ImmutableSet<Path> ignorePaths = ProjectFilesystem.extractIgnorePaths(rootPath, config);
+    assertThat(
+        "Cache directory should be in set of ignored paths",
+        ignorePaths,
+        Matchers.hasItem(Paths.get("cache_dir").normalize().toAbsolutePath()));
   }
 }

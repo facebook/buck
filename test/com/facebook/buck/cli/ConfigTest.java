@@ -71,32 +71,32 @@ public class ConfigTest {
   public void shouldGetBooleanValues() throws IOException {
     assertTrue(
         "a.b is true when 'yes'",
-        createFromText("[a]", "  b = yes").getBooleanValue("a", "b", true));
+        ConfigBuilder.createFromText("[a]", "  b = yes").getBooleanValue("a", "b", true));
     assertTrue(
         "a.b is true when literally 'true'",
-        createFromText("[a]", "  b = true").getBooleanValue("a", "b", true));
+        ConfigBuilder.createFromText("[a]", "  b = true").getBooleanValue("a", "b", true));
     assertTrue(
         "a.b is true when 'YES' (capitalized)",
-        createFromText("[a]", "  b = YES").getBooleanValue("a", "b", true));
+        ConfigBuilder.createFromText("[a]", "  b = YES").getBooleanValue("a", "b", true));
     assertFalse(
         "a.b is false by default",
-        createFromText("[x]", "  y = COWS").getBooleanValue("a", "b", false));
+        ConfigBuilder.createFromText("[x]", "  y = COWS").getBooleanValue("a", "b", false));
     assertFalse(
         "a.b is true when 'no'",
-        createFromText("[a]", "  b = no").getBooleanValue("a", "b", true));
+        ConfigBuilder.createFromText("[a]", "  b = no").getBooleanValue("a", "b", true));
   }
 
   @Test
   public void testGetFloat() throws IOException {
     assertEquals(
         Optional.of(0.333f),
-        createFromText("[a]", "  f = 0.333").getFloat("a", "f")
+        ConfigBuilder.createFromText("[a]", "  f = 0.333").getFloat("a", "f")
     );
   }
 
   @Test(expected = HumanReadableException.class)
   public void testGetMalformedFloat() throws IOException {
-    createFromText("[a]", "  f = potato").getFloat("a", "f");
+    ConfigBuilder.createFromText("[a]", "  f = potato").getFloat("a", "f");
   }
 
   @Test
@@ -143,11 +143,5 @@ public class ConfigTest {
             ImmutableMap.of("field", "C")));
     config.getEnum("section", "field", TestEnum.class);
   }
-
-  private Config createFromText(String... lines) throws IOException {
-    StringReader reader = new StringReader(Joiner.on('\n').join(lines));
-    return new Config(Inis.read(reader));
-  }
-
 
 }

@@ -232,7 +232,7 @@ public final class Main {
           clock,
           objectMapper,
           processExecutor,
-          repository.getBuckConfig().getIgnorePaths(),
+          repository.getFilesystem().getIgnorePaths(),
           DEFAULT_IGNORE_GLOBS,
           watchman);
     }

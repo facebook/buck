@@ -41,7 +41,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.unit.SizeUnit;
@@ -54,7 +53,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import com.squareup.okhttp.ConnectionPool;
@@ -226,37 +224,6 @@ public class BuckConfig {
     } else {
       return ImmutableMap.of();
     }
-  }
-
-  /**
-   * A set of paths to subtrees that do not contain source files, build files or files that could
-   * affect either (buck-out, .idea, .buckd, buck-cache, .git, etc.).  May return absolute paths
-   * as well as relative paths.
-   */
-  public ImmutableSet<Path> getIgnorePaths() {
-    final String projectKey = "project";
-    final String ignoreKey = "ignore";
-    final ImmutableMap<String, String> projectConfig = getEntriesForSection(projectKey);
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-
-    builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));
-    builder.add(Paths.get(".idea"));
-
-    Path buckdDir = Paths.get(System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd"));
-    Path cacheDir = getCacheDir();
-    for (Path path : ImmutableList.of(buckdDir, cacheDir)) {
-      if (!path.toString().isEmpty()) {
-        builder.add(path);
-      }
-    }
-
-    if (projectConfig.containsKey(ignoreKey)) {
-      builder.addAll(
-          Lists.transform(getListWithoutComments(projectKey, ignoreKey), MorePaths.TO_PATH));
-    }
-
-    // Normalize paths in order to eliminate trailing '/' characters and whatnot.
-    return builder.build();
   }
 
   public ImmutableList<String> getMessageOfTheDay() {
