@@ -284,6 +284,16 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testCxxLibraryAsAssetWithoutPackaging() throws IOException {
+    workspace.runBuckCommand("build", "//apps/sample:app_cxx_lib_asset_no_package").assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(
+            "buck-out/gen/apps/sample/app_cxx_lib_asset_no_package.apk"));
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset.so");
+  }
+
+  @Test
   public void testCompressAssetLibs() throws IOException {
     workspace.runBuckCommand("build", "//apps/sample:app_compress_lib_asset").assertSuccess();
     ZipInspector zipInspector = new ZipInspector(

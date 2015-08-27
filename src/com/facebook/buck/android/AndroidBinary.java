@@ -375,8 +375,15 @@ public class AndroidBinary
     ImmutableSet<Path> nativeLibraryDirectories = ImmutableSet.of();
     if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
         enhancementResult.getCopyNativeLibraries().isPresent()) {
-      nativeLibraryDirectories = ImmutableSet.of(
-          enhancementResult.getCopyNativeLibraries().get().getPathToNativeLibsDir());
+      CopyNativeLibraries copyNativeLibraries = enhancementResult.getCopyNativeLibraries().get();
+
+      if (packageAssetLibraries.or(Boolean.FALSE)) {
+        nativeLibraryDirectories = ImmutableSet.of(copyNativeLibraries.getPathToNativeLibsDir());
+      } else {
+        nativeLibraryDirectories = ImmutableSet.of(copyNativeLibraries.getPathToNativeLibsDir(),
+            copyNativeLibraries.getPathToNativeLibsAssetsDir());
+      }
+
     }
 
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
@@ -407,7 +414,6 @@ public class AndroidBinary
             .getCopyNativeLibraries()
             .get()
             .getPathToNativeLibsAssetsDir();
-
         steps.add(CopyStep.forDirectory(cxxNativeLibsSrc,
                 libSubdirectory,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
