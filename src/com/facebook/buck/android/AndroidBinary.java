@@ -70,7 +70,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
@@ -83,7 +82,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -400,6 +398,8 @@ public class AndroidBinary
             steps);
       }
 
+      final ImmutableList.Builder<Path> inputAssetLibrariesBuilder = ImmutableList.builder();
+
       if (packageAssetLibraries.or(Boolean.FALSE)) {
         // Copy in cxx libraries marked as assets. Filtering and renaming was already done
         // in CopyNativeLibraries.getBuildSteps().
@@ -411,11 +411,7 @@ public class AndroidBinary
         steps.add(CopyStep.forDirectory(cxxNativeLibsSrc,
                 libSubdirectory,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
-      }
 
-      final List<Path> inputAssetLibraries = Lists.newArrayList();
-      final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
-      if (compressAssetLibraries.or(Boolean.FALSE)) {
         steps.add(
             // Step that populates a list of libraries and writes a metadata.txt to decompress.
             new AbstractExecutionStep("write_metadata_for_asset_libraries") {
@@ -423,7 +419,7 @@ public class AndroidBinary
               public int execute(ExecutionContext context) {
                 ProjectFilesystem filesystem = getProjectFilesystem();
                 try {
-                  // HACK: Rename libraries as temp files so ApkBuilder doesn't add them to the apk
+                  // Walk file tree to find libraries
                   filesystem.walkRelativeFileTree(
                       libSubdirectory, new SimpleFileVisitor<Path>() {
                         @Override
@@ -432,29 +428,23 @@ public class AndroidBinary
                           if (!file.toString().endsWith(".so")) {
                             throw new IOException("unexpected file in lib directory");
                           }
-                          inputAssetLibraries.add(file);
+                          inputAssetLibrariesBuilder.add(file);
                           return FileVisitResult.CONTINUE;
                         }
                       });
-                  for (Path libPath : inputAssetLibraries) {
-                    Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
-                    filesystem.move(libPath, tempPath);
-                    outputAssetLibrariesBuilder.add(tempPath);
-                  }
+
 
                   // Write a metadata
-                  ImmutableList<Path> outputAssetLibraries = outputAssetLibrariesBuilder.build();
+                  ImmutableList<Path> inputAssetLibraries = inputAssetLibrariesBuilder.build();
                   ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
                   Path metadataOutput = libSubdirectory.resolve("metadata.txt");
-                  for (Path libPath : outputAssetLibraries) {
+                  for (Path libPath : inputAssetLibraries) {
                     // Should return something like x86/libfoo.so
                     Path relativeLibPath = libSubdirectory.relativize(libPath);
                     long filesize = filesystem.getFileSize(libPath);
-                    String output = relativeLibPath.toString();
-                    // Remove the ~ from the desired filename as the client shouldn't have to deal
-                    // with the hassle of renaming.
-                    String desiredOutput = output.substring(0, output.length() - 1);
-                    metadataLines.add(desiredOutput + ' ' + filesize);
+                    String desiredOutput = relativeLibPath.toString();
+                    String checksum = filesystem.computeSha256(libPath);
+                    metadataLines.add(desiredOutput + ' ' + filesize + ' ' + checksum);
                   }
                   ImmutableList<String> metadata = metadataLines.build();
                   if (!metadata.isEmpty()) {
@@ -467,7 +457,28 @@ public class AndroidBinary
                 return 0;
               }
             });
-
+      }
+      if (compressAssetLibraries.or(Boolean.FALSE)) {
+        final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
+        steps.add(
+            new AbstractExecutionStep("rename_asset_libraries_as_temp_files") {
+              @Override
+              public int execute(ExecutionContext context) {
+                try {
+                  ProjectFilesystem filesystem = getProjectFilesystem();
+                  for (Path libPath : inputAssetLibrariesBuilder.build()) {
+                    Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
+                    filesystem.move(libPath, tempPath);
+                    outputAssetLibrariesBuilder.add(tempPath);
+                  }
+                  return 0;
+                } catch (IOException e) {
+                  context.logError(e, "Renaming asset libraries failed");
+                  return 1;
+                }
+              }
+            }
+        );
         // Concat and xz compress.
         Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
         steps.add(new ConcatStep(outputAssetLibrariesBuilder, libOutputBlob));

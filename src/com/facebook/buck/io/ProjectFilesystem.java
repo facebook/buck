@@ -767,6 +767,11 @@ public class ProjectFilesystem {
     return Hashing.sha1().hashBytes(Files.readAllBytes(fileToHash)).toString();
   }
 
+  public String computeSha256(Path pathRelativeToProjectRoot) throws IOException {
+    Path fileToHash = getPathForRelativePath(pathRelativeToProjectRoot);
+    return Hashing.sha256().hashBytes(Files.readAllBytes(fileToHash)).toString();
+  }
+
   /**
    * @param event The event to be tested.
    * @return true if event is a path change notification.
