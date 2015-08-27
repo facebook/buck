@@ -74,7 +74,6 @@ java_immutables_library(
     '//src/com/facebook/buck/util/environment:platform',
     '//third-party/java/guava:guava',
     '//third-party/java/infer-annotations:infer-annotations',
-    '//third-party/java/jparsec:jparsec',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/gson:gson',
   ],

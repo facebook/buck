@@ -17,6 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -466,11 +468,18 @@ public class CxxPreprocessAndCompileStep implements Step {
       // prerequisites both in the values and the keys of the replacement map.
       if (operation.isPreprocess() && exitCode == 0) {
         ImmutableSet<Path> values = ImmutableSet.copyOf(replacementPaths.values());
+        LOG.debug("Processing dependency file %s as Makefile", getDepTemp());
+        ImmutableMap<String, Object> params = ImmutableMap.<String, Object>of(
+            "input", this.input, "output", this.output);
         try (InputStream input = context.getProjectFilesystem().newFileInputStream(getDepTemp());
              BufferedReader reader = new BufferedReader(new InputStreamReader(input));
              OutputStream output = context.getProjectFilesystem().newFileOutputStream(depFile);
-             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output))) {
-          for (String prereq : Makefiles.parseMakefile(reader).getRules().get(0).getPrereqs()) {
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output));
+             SimplePerfEvent.Scope perfEvent = SimplePerfEvent.scope(
+                 context.getBuckEventBus(),
+                 PerfEventId.of("depfile-parse"),
+                 params)) {
+          for (String prereq : Depfiles.parseDepfile(reader).getPrereqs()) {
             if (values.contains(Paths.get(prereq))) {
               writer.write(prereq);
               writer.newLine();

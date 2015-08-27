@@ -1,8 +1,0 @@
-prebuilt_jar(
-  name = 'jparsec',
-  binary_jar = 'jparsec-2.2.1.jar',
-  source_jar = 'jparsec-2.2.1-sources.jar',
-  visibility = [
-    'PUBLIC',
-  ],
-)
