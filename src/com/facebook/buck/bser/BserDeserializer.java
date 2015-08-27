@@ -110,7 +110,7 @@ public class BserDeserializer {
     try {
       return deserializeRecursive(readBserBuffer(inputStream));
     } catch (BufferUnderflowException e) {
-      throw new BserEofException(String.format("Prematurely reached end of BSER buffer"), e);
+      throw new BserEofException("Prematurely reached end of BSER buffer", e);
     }
   }
 
@@ -257,8 +257,7 @@ public class BserDeserializer {
         throw new IOException(
             String.format(
                 "Unrecognized BSER object key type %d, expected string",
-                stringType,
-                BSER_STRING));
+                stringType));
       }
       String key = deserializeString(buffer);
       Object value = deserializeRecursive(buffer);

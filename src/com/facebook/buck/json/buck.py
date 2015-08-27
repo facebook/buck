@@ -389,7 +389,7 @@ class BuildFileProcessor(object):
             raise ValueError(
                 'include_defs argument "%s" must begin with //' % name)
         relative_path = name[2:]
-        return os.path.join(self._project_root, name[2:])
+        return os.path.join(self._project_root, relative_path)
 
     def _include_defs(self, name, implicit_includes=[]):
         """
