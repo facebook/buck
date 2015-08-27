@@ -45,6 +45,11 @@ public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.
     return this;
   }
 
+  public CxxTestBuilder setUseDefaultTestMain(boolean useDefaultTestMain) {
+    arg.useDefaultTestMain = Optional.of(useDefaultTestMain);
+    return this;
+  }
+
   public CxxTestBuilder setFramework(CxxTestType framework) {
     arg.framework = Optional.of(framework);
     return this;

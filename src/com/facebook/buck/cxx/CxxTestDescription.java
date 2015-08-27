@@ -165,6 +165,10 @@ public class CxxTestDescription implements
     switch (type) {
       case GTEST: {
         deps.add(cxxBuckConfig.getGtestDep());
+        boolean useDefaultTestMain = constructorArg.useDefaultTestMain.or(true);
+        if (useDefaultTestMain) {
+          deps.add(cxxBuckConfig.getGtestDefaultTestMainDep());
+        }
         break;
       }
       case BOOST: {
@@ -207,6 +211,7 @@ public class CxxTestDescription implements
     public Optional<CxxTestType> framework;
     public Optional<ImmutableMap<String, String>> env;
     public Optional<Boolean> runTestSeparately;
+    public Optional<Boolean> useDefaultTestMain;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

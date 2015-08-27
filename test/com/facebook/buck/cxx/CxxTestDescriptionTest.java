@@ -46,11 +46,16 @@ public class CxxTestDescriptionTest {
   @Test
   public void findDepsFromParams() {
     BuildTarget gtest = BuildTargetFactory.newInstance("//:gtest");
+    BuildTarget gtestMain = BuildTargetFactory.newInstance("//:gtest_main");
 
     FakeBuckConfig buckConfig = new FakeBuckConfig(
         ImmutableMap.of(
             "cxx",
-            ImmutableMap.of("gtest_dep", gtest.toString())));
+            ImmutableMap.of(
+                            "gtest_dep", gtest.toString(),
+                            "gtest_default_test_main_dep", gtestMain.toString()
+                            )
+                        ));
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
     CxxTestDescription desc = new CxxTestDescription(
@@ -61,11 +66,13 @@ public class CxxTestDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.framework = Optional.of(CxxTestType.GTEST);
+    constructorArg.useDefaultTestMain = Optional.of(true);
     constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     Iterable<BuildTarget> implicit = desc
         .findDepsForTargetFromConstructorArgs(target, constructorArg);
 
     assertTrue(Iterables.contains(implicit, gtest));
+    assertTrue(Iterables.contains(implicit, gtestMain));
   }
 
   @Test
@@ -76,6 +83,10 @@ public class CxxTestDescriptionTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtest"))
             .setOut("out")
             .build(resolver);
+    BuildRule gtestMain =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtestMain"))
+            .setOut("out")
+            .build(resolver);
     CxxTestBuilder builder =
         new CxxTestBuilder(
             BuildTargetFactory.newInstance("//:test"),
@@ -83,7 +94,11 @@ public class CxxTestDescriptionTest {
                 new FakeBuckConfig(
                     ImmutableMap.of(
                         "cxx",
-                        ImmutableMap.of("gtest_dep", gtest.getBuildTarget().toString())))),
+                        ImmutableMap.of(
+                                        "gtest_dep", gtest.getBuildTarget().toString(),
+                                        "gtest_default_test_main_dep",
+                                        gtestMain.getBuildTarget().toString()
+                                        )))),
             CxxTestBuilder.createDefaultPlatform(),
             CxxTestBuilder.createDefaultPlatforms());
     CxxTest test = (CxxTest) builder
@@ -118,11 +133,14 @@ public class CxxTestDescriptionTest {
                           "cxx",
                           ImmutableMap.of(
                               "gtest_dep", frameworkRule.getBuildTarget().toString(),
+                              "gtest_default_test_main_dep",
+                              frameworkRule.getBuildTarget().toString(),
                               "boost_test_dep", frameworkRule.getBuildTarget().toString())))),
               CxxTestBuilder.createDefaultPlatform(),
               CxxTestBuilder.createDefaultPlatforms());
       CxxTest test = (CxxTest) builder
           .setRunTestSeparately(true)
+          .setUseDefaultTestMain(true)
           .setFramework(framework)
           .build(resolver);
       assertTrue(test.runTestSeparately());

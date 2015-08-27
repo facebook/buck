@@ -93,6 +93,15 @@ public class CxxBuckConfig {
   }
 
   /**
+   * @return the {@link BuildTarget} which represents the main function that
+   * gtest tests should use by default (if no other main is given).
+   */
+  public BuildTarget getGtestDefaultTestMainDep() {
+    return delegate.getBuildTarget(cxxSection, "gtest_default_test_main_dep")
+        .or(getGtestDep());
+  }
+
+  /**
    * @return the {@link BuildTarget} which represents the boost testing library.
    */
   public BuildTarget getBoostTestDep() {
