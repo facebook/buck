@@ -1,4 +1,6 @@
+from __future__ import print_function
 import os
+import re
 import sys
 import subprocess
 import tempfile
@@ -41,9 +43,19 @@ def is_git(dirpath):
 
 
 def is_dirty(dirpath):
+    # Ignore any changes under these paths for the purposes of forcing a rebuild
+    # of Buck itself.
+    IGNORE_PATHS = ['test']
+    IGNORE_PATHS_RE_GROUP = '|'.join([re.escape(e) for e in IGNORE_PATHS])
+    IGNORE_PATHS_RE = re.compile('^.. (?:' + IGNORE_PATHS_RE_GROUP + ')')
+
+    if not is_git(dirpath):
+        return False
+
     output = check_output(
         ['git', 'status', '--porcelain'],
         cwd=dirpath)
+    output = '\n'.join([line for line in output.splitlines() if not IGNORE_PATHS_RE.search(line)])
     return bool(output.strip())
 
 
