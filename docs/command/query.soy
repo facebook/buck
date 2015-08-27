@@ -161,6 +161,32 @@ element, while <code>//foo/...</code> matches all targets in every directory
 beneath the </code>foo</code> directory.
 </p>
 
+
+<h4>Aliases</h4>
+
+<p><pre>
+expr ::= word
+</pre></p>
+
+<p>
+Aliases defined in <a href="{ROOT}concept/buck_config.html">.buckconfig</a> can
+be used in queries. The aliases will be resolved to the corresponding build
+targets. Suppose there is an alias <code>app = /&#x2F;apps/myapp:app</code>,
+then <code>app</code> can be used instead <code>//apps/myapp:app</code> in
+query expressions.
+</p>
+
+<p><code>buck query</code> can also be used to resolve aliases. e.g.
+</p>
+
+<p><pre>
+{literal}
+$ buck query app
+/&#x2F;apps/myapp:app
+{/literal}
+</pre></p>
+
+
 <h4>Parenthesized expressions</h4>
 
 <p><pre>
@@ -507,6 +533,45 @@ cxx_test(
 {/literal}
 </pre>
 
+<p>
+Lists all the targets in the repository.
+</p>
+
+<p>
+<pre>buck query "//..."</pre>
+<pre>
+{literal}
+//examples:five
+//examples:four
+//examples:one
+//examples:three
+//examples:three-tests
+//examples:two
+//examples:two-tests
+{/literal}
+</pre>
+</p>
+
+
+<p>
+Resolve multiple aliases. Suppose there is an alias
+{sp}<code>app = /&#x2F;apps/myapp:app</code> and another
+{sp}<code>lib = /&#x2F;libraries/mylib:lib</code>.
+<p>
+
+<p>
+<pre>buck query "%s" app lib --json</pre>
+<pre class="prettyprint lang-js">
+{literal}
+{
+  "app": ["//apps/myapp:app"],
+  "lib": ["//libraries/mylib:lib"],
+}
+{/literal}
+</pre>
+</p>
+
+
 Lists all of the rules that the <code>one</code> library directly depends on
 <pre>buck query "deps(/&#x2F;examples:one, 1)"</pre>
 <pre>
@@ -520,14 +585,14 @@ Lists all of the rules that the <code>one</code> library directly depends on
 Lists the JSON representation of the transitive closure of the rules that
 the <code>one</code> library depends on
 <pre>buck query "deps(/&#x2F;examples:one)"</pre>
-<pre>
+<pre class="prettyprint lang-js">
 {literal}
 [
   "//examples:five",
   "//examples:four",
   "//examples:one",
   "//examples:three",
-  "//examples:two",
+  "//examples:two"
 ]
 {/literal}
 </pre>
@@ -539,7 +604,7 @@ Outputs a JSON representation of the tests associated with the{sp}
 {literal}
 {
   "//examples:one": ["//examples:two-tests"],
-  "//examples:three": ["//examples:three-tests"],
+  "//examples:three": ["//examples:three-tests"]
 }
 {/literal}
 </pre>
