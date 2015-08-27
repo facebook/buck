@@ -18,6 +18,8 @@ package com.facebook.buck.json;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -38,6 +40,7 @@ import javax.annotation.Nullable;
  * A simple JSON parser that can parse a JSON map to a raw {@code Map<String, Object>} Java object.
  */
 public class RawParser {
+  private static Interner<String> interner = Interners.newWeakInterner();
 
   /** Utility class: do not instantiate. */
   private RawParser() {}
@@ -70,7 +73,7 @@ public class RawParser {
     if (json.isJsonPrimitive()) {
       JsonPrimitive primitive = json.getAsJsonPrimitive();
       if (primitive.isString()) {
-        return primitive.getAsString();
+        return interner.intern(primitive.getAsString());
       } else if (primitive.isBoolean()) {
         return primitive.getAsBoolean();
       } else if (primitive.isNumber()) {
@@ -99,7 +102,7 @@ public class RawParser {
         // 39.6% of the memory was spent on char[] objects while 14.5% was spent on Strings.
         // (Another 10.5% was spent on java.util.HashMap$Entry.) Introducing intern() stopped the
         // OOM from happening.
-        out.put(entry.getKey().intern(), toRawTypes(entry.getValue()));
+        out.put(interner.intern(entry.getKey()), toRawTypes(entry.getValue()));
       }
       return out;
     } else if (json.isJsonNull()) {
