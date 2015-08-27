@@ -20,6 +20,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.bser.BserDeserializer;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
@@ -160,49 +162,55 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private void init() throws IOException {
     projectBuildFileParseEventStarted = new ProjectBuildFileParseEvents.Started();
     buckEventBus.post(projectBuildFileParseEventStarted);
+    try (SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
+        buckEventBus,
+        PerfEventId.of("ParserInit"))) {
 
-    ProcessExecutorParams params = ProcessExecutorParams.builder()
-        .setCommand(buildArgs())
-        .setEnvironment(environment)
-        .build();
+      ProcessExecutorParams params = ProcessExecutorParams.builder()
+          .setCommand(buildArgs())
+          .setEnvironment(environment)
+          .build();
 
-    LOG.debug(
-        "Starting buck.py command: %s environment: %s",
-        params.getCommand(),
-        params.getEnvironment());
-    buckPyProcess = processExecutor.launchProcess(params);
-    LOG.debug("Started process %s successfully", buckPyProcess);
+      LOG.debug(
+          "Starting buck.py command: %s environment: %s",
+          params.getCommand(),
+          params.getEnvironment());
+      buckPyProcess = processExecutor.launchProcess(params);
+      LOG.debug("Started process %s successfully", buckPyProcess);
 
-    OutputStream stdin = buckPyProcess.getOutputStream();
-    InputStream stderr = buckPyProcess.getErrorStream();
+      OutputStream stdin = buckPyProcess.getOutputStream();
+      InputStream stderr = buckPyProcess.getErrorStream();
 
-    stderrConsumer = Threads.namedThread(
-        ProjectBuildFileParser.class.getSimpleName(),
-        new InputStreamConsumer(stderr,
-            console.getStdErr(),
-            console.getAnsi(),
+      stderrConsumer = Threads.namedThread(
+          ProjectBuildFileParser.class.getSimpleName(),
+          new InputStreamConsumer(
+              stderr,
+              console.getStdErr(),
+              console.getAnsi(),
             /* flagOutputWrittenToStream */ true,
-            Optional.<InputStreamConsumer.Handler>of(new InputStreamConsumer.Handler() {
-              @Override
-              public void handleLine(String line) {
-                LOG.warn("buck.py warning: %s", line);
-              }
-            })));
-    stderrConsumer.start();
+              Optional.<InputStreamConsumer.Handler>of(
+                  new InputStreamConsumer.Handler() {
+                    @Override
+                    public void handleLine(String line) {
+                      LOG.warn("buck.py warning: %s", line);
+                    }
+                  })));
+      stderrConsumer.start();
 
-    buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
+      buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
 
-    Reader reader = new InputStreamReader(buckPyProcess.getInputStream(), Charsets.UTF_8);
-    // We explicitly do not close this reader, since it closes the underlying stream.
-    BufferedReader bufferedReader = new BufferedReader(reader);
-    String format = bufferedReader.readLine();
-    if (format == null) {
-      throw new RuntimeException("Cannot determine buck.py output format");
-    }
-    buckPyOutputFormat = BuckPyOutputFormat.valueOf(format);
+      Reader reader = new InputStreamReader(buckPyProcess.getInputStream(), Charsets.UTF_8);
+      // We explicitly do not close this reader, since it closes the underlying stream.
+      BufferedReader bufferedReader = new BufferedReader(reader);
+      String format = bufferedReader.readLine();
+      if (format == null) {
+        throw new RuntimeException("Cannot determine buck.py output format");
+      }
+      buckPyOutputFormat = BuckPyOutputFormat.valueOf(format);
 
-    if (buckPyOutputFormat == BuckPyOutputFormat.JSON) {
-      buckPyStdoutParser = new BuildFileToJsonParser(reader);
+      if (buckPyOutputFormat == BuckPyOutputFormat.JSON) {
+        buckPyStdoutParser = new BuildFileToJsonParser(reader);
+      }
     }
   }
 
