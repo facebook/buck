@@ -103,8 +103,11 @@ public class TemporaryPaths extends ExternalResource {
     return Files.createTempFile(root, "junit", "file");
   }
 
-  public Path newFolder(String name) throws IOException {
-    Path toCreate = root.resolve(name);
+  public Path newFolder(String... name) throws IOException {
+    Path toCreate = root;
+    for (String segment : name) {
+      toCreate = toCreate.resolve(segment);
+    }
 
     if (Files.exists(toCreate)) {
       throw new IOException(

@@ -20,14 +20,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,13 +35,13 @@ import java.nio.file.Paths;
 
 public class ExecutableFinderTest {
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testSearchPathsFileFoundReturnsPath() throws IOException {
-    Path dir1 = tmp.newFolder("foo").toPath();
-    Path dir2 = tmp.newFolder("bar").toPath();
-    Path dir3 = tmp.newFolder("baz").toPath();
+    Path dir1 = tmp.newFolder("foo");
+    Path dir2 = tmp.newFolder("bar");
+    Path dir3 = tmp.newFolder("baz");
     Path file = createExecutable("bar/blech");
 
     assertEquals(
@@ -55,11 +55,11 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsNonExecutableFileIsIgnored() throws IOException {
-    Path dir1 = tmp.newFolder("foo").toPath();
+    Path dir1 = tmp.newFolder("foo");
     // Note this is not executable.
     tmp.newFile("foo/blech");
-    Path dir2 = tmp.newFolder("bar").toPath();
-    Path dir3 = tmp.newFolder("baz").toPath();
+    Path dir2 = tmp.newFolder("bar");
+    Path dir3 = tmp.newFolder("baz");
     Path file = createExecutable("bar/blech");
 
     assertEquals(
@@ -72,10 +72,10 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsDirAndFileFoundReturnsFileNotDir() throws IOException {
-    Path dir1 = tmp.newFolder("foo").toPath();
+    Path dir1 = tmp.newFolder("foo");
     // We don't want to find this folder.
     tmp.newFolder("foo", "foo");
-    Path dir2 = tmp.newFolder("bar").toPath();
+    Path dir2 = tmp.newFolder("bar");
     Path file = createExecutable("bar/foo");
 
     assertEquals(
@@ -88,9 +88,9 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsMultipleFileFoundReturnsFirstPath() throws IOException {
-    Path dir1 = tmp.newFolder("foo").toPath();
-    Path dir2 = tmp.newFolder("bar").toPath();
-    Path dir3 = tmp.newFolder("baz").toPath();
+    Path dir1 = tmp.newFolder("foo");
+    Path dir2 = tmp.newFolder("bar");
+    Path dir3 = tmp.newFolder("baz");
     Path file1 = createExecutable("bar/blech");
     createExecutable("baz/blech");
 
@@ -104,9 +104,9 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsSymlinkToExecutableOutsideSearchPathReturnsPath() throws IOException {
-    Path dir1 = tmp.newFolder("foo").toPath();
-    Path dir2 = tmp.newFolder("bar").toPath();
-    Path dir3 = tmp.newFolder("baz").toPath();
+    Path dir1 = tmp.newFolder("foo");
+    Path dir2 = tmp.newFolder("bar");
+    Path dir3 = tmp.newFolder("baz");
     tmp.newFolder("unsearched");
     Path binary = createExecutable("unsearched/binary");
     Path file1 = dir2.resolve("blech");
@@ -122,9 +122,9 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsFileNotFoundReturnsAbsent() throws IOException {
-    Path dir1 = tmp.newFolder("foo").toPath();
-    Path dir2 = tmp.newFolder("bar").toPath();
-    Path dir3 = tmp.newFolder("baz").toPath();
+    Path dir1 = tmp.newFolder("foo");
+    Path dir2 = tmp.newFolder("bar");
+    Path dir3 = tmp.newFolder("baz");
 
     assertEquals(
         Optional.<Path>absent(),
@@ -147,7 +147,7 @@ public class ExecutableFinderTest {
   @Test
   public void testSearchPathsWithIsExecutableFunctionFailure() throws IOException {
     // Path to search
-    Path baz = tmp.newFolder("baz").toPath();
+    Path baz = tmp.newFolder("baz");
 
     // Unexecutable "executable"
     Path bar = baz.resolve("bar");
@@ -164,7 +164,7 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsWithExtensions() throws IOException {
-    Path dir = tmp.newFolder("foo").toPath();
+    Path dir = tmp.newFolder("foo");
     Path file = createExecutable("foo/bar.EXE");
 
     assertEquals(
@@ -177,7 +177,7 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsWithExtensionsNoMatch() throws IOException {
-    Path dir = tmp.newFolder("foo").toPath();
+    Path dir = tmp.newFolder("foo");
     createExecutable("foo/bar.COM");
 
     assertEquals(
@@ -188,9 +188,22 @@ public class ExecutableFinderTest {
             ImmutableList.of(".BAT", ".EXE")));
   }
 
+  @Test
+  public void testThatADirectoryIsNotConsideredAnExecutable() throws IOException {
+    Path dir = tmp.newFolder();
+    Path exe = dir.resolve("exe");
+    Files.createDirectories(exe);
+
+    assertEquals(
+        Optional.absent(),
+        new ExecutableFinder().getOptionalExecutable(
+            exe.toAbsolutePath(),
+            ImmutableMap.<String, String>of()));
+  }
+
   private Path createExecutable(String executablePath) throws IOException {
-    File file = tmp.newFile(executablePath);
-    assertTrue(file.setExecutable(true));
-    return file.toPath();
+    Path file = tmp.newFile(executablePath);
+    MoreFiles.makeExecutable(file);
+    return file;
   }
 }

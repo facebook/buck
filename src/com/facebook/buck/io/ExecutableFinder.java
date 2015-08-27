@@ -128,7 +128,7 @@ public class ExecutableFinder {
       ImmutableCollection<Path> searchPath,
       ImmutableCollection<String> fileSuffixes) {
     // Fast path out of here.
-    if (Files.exists(suggestedPath) && Files.isExecutable(suggestedPath)) {
+    if (isExecutable(suggestedPath)) {
       return suggestedPath;
     }
 
@@ -140,15 +140,30 @@ public class ExecutableFinder {
     for (Path path : searchPath) {
       for (String suffix : fileSuffixes) {
         Path exe = path.resolve(path).resolve(suggestedPath + suffix);
-        if (Files.exists(exe) && !Files.isDirectory(exe)) {
-          if (Files.isExecutable(exe)) {
-            return exe;
-          }
-          LOG.debug("Found potential executable, but not actually executable: %s", exe);
+        if (isExecutable(exe)) {
+          return exe;
         }
       }
     }
     return null;
+  }
+
+  private boolean isExecutable(Path exe) {
+    if (!Files.exists(exe)) {
+      return false;
+    }
+
+    if (Files.isDirectory(exe)) {
+      LOG.debug("Found potential executable, but is a directory: %s", exe);
+      return false;
+    }
+
+    if (!Files.isExecutable(exe)) {
+      LOG.debug("Found potential executable, but not actually executable: %s", exe);
+      return false;
+    }
+
+    return true;
   }
 
   private ImmutableSet<Path> getPaths(ImmutableMap<String, String> env) {
