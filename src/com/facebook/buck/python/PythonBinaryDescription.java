@@ -263,7 +263,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
                 Suppliers.ofInstance(componentDeps),
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
-            pythonBuckConfig.getPathToPex(),
+            pythonBuckConfig.getPexTool(resolver),
             buildArgs,
             pythonBuckConfig.getPathToPexExecuter(),
             pythonBuckConfig.getPexExtension(),

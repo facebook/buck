@@ -256,7 +256,9 @@ public class PythonBinaryDescriptionTest {
     PexStep pexStep = FluentIterable.from(buildSteps)
         .filter(PexStep.class)
         .get(0);
-    assertThat(pexStep.getArgs(), Matchers.equalTo(buildArgs));
+    assertThat(
+        pexStep.getCommandPrefix(),
+        Matchers.hasItems(buildArgs.toArray(new String[buildArgs.size()])));
   }
 
 }

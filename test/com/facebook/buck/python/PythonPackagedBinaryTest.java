@@ -25,11 +25,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -52,7 +54,7 @@ import java.nio.file.Paths;
 
 public class PythonPackagedBinaryTest {
 
-  private static final Path PATH_TO_PEX = Paths.get("dummy_path_to_pex");
+  private static final Tool PEX = new CommandTool.Builder().addArg("something").build();
 
   @Rule
   public final TemporaryFolder tmpDir = new TemporaryFolder();
@@ -70,7 +72,7 @@ public class PythonPackagedBinaryTest {
         BuildRuleParamsFactory.createTrivialBuildRuleParams(
             BuildTargetFactory.newInstance("//:bin")),
         resolver,
-        PATH_TO_PEX,
+        PEX,
         ImmutableList.<String>of(),
         Paths.get("dummy_path_to_pex_runner"),
         ".pex",
@@ -113,7 +115,6 @@ public class PythonPackagedBinaryTest {
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
-                    PATH_TO_PEX.toString(), Strings.repeat("a", 40),
                     mainRelative.toString(), Strings.repeat("a", 40),
                     source1Relative.toString(), Strings.repeat("b", 40),
                     source2Relative.toString(), Strings.repeat("c", 40))),

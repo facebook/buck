@@ -17,7 +17,11 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.model.BuckVersion;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -122,8 +126,16 @@ public class PythonBuckConfig {
     return delegate.getPath(SECTION, "path_to_python_test_main").or(DEFAULT_PATH_TO_TEST_MAIN);
   }
 
-  public Path getPathToPex() {
-    return delegate.getPath(SECTION, "path_to_pex").or(DEFAULT_PATH_TO_PEX);
+  public Tool getPexTool(BuildRuleResolver resolver) {
+    Optional<Tool> executable = delegate.getTool(SECTION, "path_to_pex", resolver);
+    if (executable.isPresent()) {
+      return executable.get();
+    }
+    return new VersionedTool(
+        Paths.get(getPythonInterpreter()),
+        ImmutableList.of(DEFAULT_PATH_TO_PEX.toString()),
+        "pex",
+        BuckVersion.getVersion());
   }
 
   public Path getPathToPexExecuter() {

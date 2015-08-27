@@ -34,11 +34,8 @@ import java.nio.file.Path;
 public class PexStep extends ShellStep {
   private static final String SRC_ZIP = ".src.zip";
 
-  // Path to the tool to generate the pex file.
-  private final Path pathToPex;
-
-  // Additional args to pass the PEX invocation.
-  private final ImmutableList<String> args;
+  // The PEX builder command prefix.
+  private final ImmutableList<String> commandPrefix;
 
   // The path to the executable to create.
   private final Path destination;
@@ -63,8 +60,7 @@ public class PexStep extends ShellStep {
   private final boolean zipSafe;
 
   public PexStep(
-      Path pathToPex,
-      ImmutableList<String> args,
+      ImmutableList<String> commandPrefix,
       Path pythonPath,
       Path tempDir,
       Path destination,
@@ -74,8 +70,7 @@ public class PexStep extends ShellStep {
       ImmutableMap<Path, Path> nativeLibraries,
       ImmutableSet<Path> prebuiltLibraries,
       boolean zipSafe) {
-    this.pathToPex = pathToPex;
-    this.args = args;
+    this.commandPrefix = commandPrefix;
     this.pythonPath = pythonPath;
     this.tempDir = tempDir;
     this.destination = destination;
@@ -139,9 +134,7 @@ public class PexStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.add(pythonPath.toString());
-    builder.add(pathToPex.toString());
-    builder.addAll(args);
+    builder.addAll(commandPrefix);
     builder.add("--python");
     builder.add(pythonPath.toString());
     builder.add("--entry-point");
@@ -184,8 +177,8 @@ public class PexStep extends ShellStep {
   }
 
   @VisibleForTesting
-  protected ImmutableList<String> getArgs() {
-    return args;
+  protected ImmutableList<String> getCommandPrefix() {
+    return commandPrefix;
   }
 
 }
