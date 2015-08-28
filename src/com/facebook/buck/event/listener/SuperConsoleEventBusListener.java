@@ -175,7 +175,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     String lastRenderClear = clearLastRender();
     ImmutableList<String> lines = createRenderLinesAtTime(clock.currentTimeMillis());
     ImmutableList<String> logLines = createLogRenderLines();
-    lastNumLinesPrinted = lines.size() + logLines.size();
+    lastNumLinesPrinted = lines.size();
 
     // Synchronize on the DirtyPrintStreamDecorator to prevent interlacing of output.
     synchronized (console.getStdOut()) {
@@ -191,13 +191,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           stopRenderScheduler();
         } else if (!lastRenderClear.isEmpty() || !lines.isEmpty() || !logLines.isEmpty()) {
           Iterable<String> renderedLines = Iterables.concat(
+              MoreIterables.zipAndConcat(
+                  logLines,
+                  Iterables.cycle("\n")),
               ansi.asNoWrap(
                   MoreIterables.zipAndConcat(
                       lines,
-                      Iterables.cycle("\n"))),
-              MoreIterables.zipAndConcat(
-                  logLines,
-                  Iterables.cycle("\n")));
+                      Iterables.cycle("\n"))));
           StringBuilder fullFrame = new StringBuilder(lastRenderClear);
           for (String part : renderedLines) {
             fullFrame.append(part);
@@ -212,7 +212,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    * Creates a list of lines to be rendered at a given time.
    * @param currentTimeMillis The time in ms to use when computing elapsed times.
    */
-  private ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
+  @VisibleForTesting
+  ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
     if (parseStarted == null && parseFinished == null) {
@@ -325,28 +326,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   /**
    * Adds log messages for rendering.
    */
-  private ImmutableList<String> createLogRenderLines() {
-    ImmutableList.Builder<String> lines = ImmutableList.builder();
-    if (!logEvents.isEmpty()) {
-      ImmutableList.Builder<String> logEventLinesBuilder = ImmutableList.builder();
-      for (ConsoleEvent logEvent : logEvents) {
-        formatConsoleEvent(logEvent, logEventLinesBuilder);
-      }
-      ImmutableList<String> logEventLines = logEventLinesBuilder.build();
-      if (!logEventLines.isEmpty()) {
-        lines.add("Log:");
-        lines.addAll(logEventLines);
-      }
-    }
-    return lines.build();
-  }
-
   @VisibleForTesting
-  protected ImmutableList<String> createAllRenderLines(long currentTimeMillis) {
-    return ImmutableList.<String>builder()
-        .addAll(createRenderLinesAtTime(currentTimeMillis))
-        .addAll(createLogRenderLines())
-        .build();
+  ImmutableList<String> createLogRenderLines() {
+    ImmutableList.Builder<String> logEventLinesBuilder = ImmutableList.builder();
+    ConsoleEvent logEvent;
+    while ((logEvent = logEvents.poll()) != null) {
+      formatConsoleEvent(logEvent, logEventLinesBuilder);
+    }
+    return logEventLinesBuilder.build();
   }
 
   /**

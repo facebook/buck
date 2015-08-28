@@ -16,7 +16,9 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -251,10 +253,14 @@ public class SuperConsoleEventBusListenerTest {
         ConsoleEvent.severe("I've made a huge mistake."),
         1500L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    validateConsole(console, listener, 1600L, ImmutableList.of(parsingLine,
-        buildingLine,
-        "Log:",
-        "I've made a huge mistake."));
+    validateConsoleWithLogLines(
+        console,
+        listener,
+        1600L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine),
+        ImmutableList.of("I've made a huge mistake."));
 
     InstallEvent.Started installEventStarted = InstallEvent.started(fakeTarget);
     rawEventBus.post(configureTestEventAtTime(
@@ -263,9 +269,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 3000L, ImmutableList.of(parsingLine,
         buildingLine,
-        formatConsoleTimes("[+] INSTALLING...%s", 0.5),
-        "Log:",
-        "I've made a huge mistake."));
+        formatConsoleTimes("[+] INSTALLING...%s", 0.5)));
 
     rawEventBus.post(configureTestEventAtTime(
         InstallEvent.finished(installEventStarted, true, Optional.<Long>absent()),
@@ -273,9 +277,7 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 5000L, ImmutableList.of(parsingLine,
         buildingLine,
-        formatConsoleTimes("[-] INSTALLING...FINISHED %s", 1.5),
-        "Log:",
-        "I've made a huge mistake."));
+        formatConsoleTimes("[-] INSTALLING...FINISHED %s", 1.5)));
 
     listener.render();
     String beforeStderrWrite = console.getTextWrittenToStdErr();
@@ -536,21 +538,22 @@ public class SuperConsoleEventBusListenerTest {
     final String testingLine = formatConsoleTimes("[-] TESTING...FINISHED %s (1 PASS/0 FAIL)", 1.6);
 
     validateConsoleWithStdOutAndErr(
-            console,
-            listener,
-            4200L,
-            ImmutableList.of(
-                    parsingLine,
-                    buildingLine,
-                    testingLine),
-            Optional.of(
-                    Joiner.on('\n').join(
-                            "RESULTS FOR ALL TESTS",
-                            "PASS    <100ms  1 Passed   0 Skipped   0 Failed   TestClass",
-                            "TESTS PASSED",
-                            "")),
-            // We don't care about stderr, since the last frame will be flushed there.
-            Optional.<String>absent());
+        console,
+        listener,
+        4200L,
+        ImmutableList.of(
+            parsingLine,
+            buildingLine,
+            testingLine),
+        ImmutableList.<String>of(),
+        Optional.of(
+            Joiner.on('\n').join(
+                "RESULTS FOR ALL TESTS",
+                "PASS    <100ms  1 Passed   0 Skipped   0 Failed   TestClass",
+                "TESTS PASSED",
+                "")),
+        // We don't care about stderr, since the last frame will be flushed there.
+        Optional.<String>absent());
   }
 
   @Test
@@ -812,6 +815,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             buildingLine,
             testingLine),
+        ImmutableList.<String>of(),
         Optional.of(
             Joiner.on('\n').join(
                 "RESULTS FOR ALL TESTS",
@@ -1041,7 +1045,7 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(
+    validateConsoleWithLogLines(
         console,
         listener,
         4000L,
@@ -1049,8 +1053,8 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             buildingLine,
             formatConsoleTimes("[+] TESTING...%s (0 PASS/1 FAIL)", 1.5),
-            formatConsoleTimes(" |=> //:test...  %s", 0.9),
-            "Log:",
+            formatConsoleTimes(" |=> //:test...  %s", 0.9)),
+        ImmutableList.of(
             "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'"));
 
     rawEventBus.post(
@@ -1080,9 +1084,8 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             buildingLine,
-            testingLine,
-            "Log:",
-            "FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'"),
+            testingLine),
+        ImmutableList.<String>of(),
         Optional.of(
             Joiner.on('\n').join(
                 "RESULTS FOR ALL TESTS",
@@ -1358,7 +1361,12 @@ public class SuperConsoleEventBusListenerTest {
 
     rawEventBus.post(ConsoleEvent.info("Hello world!"));
 
-    validateConsole(console, listener, 0L, ImmutableList.of("Log:", "Hello world!"));
+    validateConsoleWithLogLines(
+        console,
+        listener,
+        0L,
+        ImmutableList.<String>of(),
+        ImmutableList.of("Hello world!"));
 
     rawEventBus.post(
         configureTestEventAtTime(
@@ -1366,9 +1374,7 @@ public class SuperConsoleEventBusListenerTest {
             0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 0L, ImmutableList.of(
-        formatConsoleTimes("[+] GENERATING PROJECT...%s", 0.0),
-        "Log:",
-        "Hello world!"));
+        formatConsoleTimes("[+] GENERATING PROJECT...%s", 0.0)));
 
     rawEventBus.post(
         configureTestEventAtTime(
@@ -1376,20 +1382,32 @@ public class SuperConsoleEventBusListenerTest {
             0L, TimeUnit.MILLISECONDS, 0L));
 
     validateConsole(console, listener, 0L, ImmutableList.of(
-        formatConsoleTimes("[-] GENERATING PROJECT...FINISHED %s", 0.0),
-        "Log:",
-        "Hello world!"));
+        formatConsoleTimes("[-] GENERATING PROJECT...FINISHED %s", 0.0)));
   }
 
   private void validateConsole(TestConsole console,
       SuperConsoleEventBusListener listener,
       long timeMs,
       ImmutableList<String> lines) {
+    validateConsoleWithLogLines(
+        console,
+        listener,
+        timeMs,
+        lines,
+        ImmutableList.<String>of());
+  }
+
+  private void validateConsoleWithLogLines(TestConsole console,
+      SuperConsoleEventBusListener listener,
+      long timeMs,
+      ImmutableList<String> lines,
+      ImmutableList<String> logLines) {
     validateConsoleWithStdOutAndErr(
         console,
         listener,
         timeMs,
         lines,
+        logLines,
         Optional.of(""),
         Optional.of(""));
   }
@@ -1399,15 +1417,17 @@ public class SuperConsoleEventBusListenerTest {
       SuperConsoleEventBusListener listener,
       long timeMs,
       ImmutableList<String> lines,
+      ImmutableList<String> logLines,
       Optional<String> stdout,
       Optional<String> stderr) {
 
     if (stdout.isPresent()) {
-      assertEquals(stdout.get(), console.getTextWrittenToStdOut());
+      assertThat(console.getTextWrittenToStdOut(), equalTo(stdout.get()));
     }
     if (stderr.isPresent()) {
-      assertEquals(stderr.get(), console.getTextWrittenToStdErr());
+      assertThat(console.getTextWrittenToStdErr(), equalTo(stderr.get()));
     }
-    assertEquals(lines, listener.createAllRenderLines(timeMs));
+    assertThat(listener.createRenderLinesAtTime(timeMs), equalTo(lines));
+    assertThat(listener.createLogRenderLines(), equalTo(logLines));
   }
 }
