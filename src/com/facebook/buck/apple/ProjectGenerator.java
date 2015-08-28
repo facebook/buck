@@ -69,7 +69,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.ExportFileDescription;
-import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
@@ -1282,9 +1281,7 @@ public class ProjectGenerator {
         }
       } else if (type.equals(XcodePostbuildScriptDescription.TYPE)) {
         postRules.add(targetNode);
-      } else if (
-          type.equals(XcodePrebuildScriptDescription.TYPE) ||
-              type.equals(GenruleDescription.TYPE)) {
+      } else if (type.equals(XcodePrebuildScriptDescription.TYPE)) {
         preRules.add(targetNode);
       }
     }

@@ -68,7 +68,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
-import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -88,16 +87,14 @@ import java.util.List;
 import java.util.Set;
 
 public class NewNativeTargetProjectMutatorTest {
-  private BuildRuleResolver buildRuleResolver;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
   private SourcePathResolver sourcePathResolver;
 
   @Before
   public void setUp() {
-    buildRuleResolver = new BuildRuleResolver();
     generatedProject = new PBXProject("TestProject");
-    sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     pathRelativizer = new PathRelativizer(
         Paths.get("_output"),
         sourcePathResolver.getPathFunction());
@@ -353,13 +350,11 @@ public class NewNativeTargetProjectMutatorTest {
     PBXBuildPhase copyFilesPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyFilesPhase));
 
-    TargetNode<?> genruleNode = GenruleBuilder
-        .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
-        .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
+    TargetNode<?> postbuildNode = XcodePostbuildScriptBuilder
+        .createBuilder(BuildTarget.builder("//foo", "script").build())
         .setCmd("echo \"hello world!\"")
-        .setOut("helloworld.txt")
         .build();
-    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(genruleNode));
+    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(postbuildNode));
 
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
@@ -428,66 +423,24 @@ public class NewNativeTargetProjectMutatorTest {
   public void testScriptBuildPhase() throws NoSuchBuildTargetException{
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    TargetNode<?> genruleNode = GenruleBuilder
-        .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
-        .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
+    TargetNode<?> prebuildNode = XcodePrebuildScriptBuilder
+        .createBuilder(BuildTarget.builder("//foo", "script").build())
         .setCmd("echo \"hello world!\"")
-        .setOut("helloworld.txt")
         .build();
 
-    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(genruleNode));
+    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(prebuildNode));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
 
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     assertEquals(
-        "Should set input paths correctly",
-        "../script/input.png",
-        Iterables.getOnlyElement(phase.getInputPaths()));
-    assertEquals(
         "should set script correctly",
         "echo \"hello world!\"",
         phase.getShellScript());
   }
 
-  @Test
-  public void testScriptBuildPhaseWithGenruleDep() throws NoSuchBuildTargetException{
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-
-    BuildTarget depBuildTarget = BuildTarget.builder("//foo", "dep").build();
-    // This has the side effect of adding the dependency to the BuildRuleResolver map.
-    GenruleBuilder
-        .newGenruleBuilder(depBuildTarget)
-        .setCmd("echo \"hello dep!\"")
-        .setOut("dep.txt")
-        .build(buildRuleResolver);
-
-    TargetNode<?> genruleNode = GenruleBuilder
-        .newGenruleBuilder(BuildTarget.builder("//foo", "script").build())
-        .setSrcs(ImmutableList.<SourcePath>of(new TestSourcePath("script/input.png")))
-        .setCmd("echo \"hello world!\"")
-        .setOut("helloworld.txt")
-        .setDeps(ImmutableSortedSet.of(depBuildTarget))
-        .build();
-
-    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(genruleNode));
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject);
-
-    PBXShellScriptBuildPhase phase =
-        getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
-    assertEquals(
-        "Should set input paths correctly",
-        "../script/input.png",
-        Iterables.getOnlyElement(phase.getInputPaths()));
-    assertEquals(
-        "should set script correctly",
-        "echo \"hello world!\"",
-        phase.getShellScript());
-  }
-
-  @Test
+@Test
   public void testScriptBuildPhaseWithReactNative() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 

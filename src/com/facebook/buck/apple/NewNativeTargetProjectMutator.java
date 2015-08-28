@@ -46,7 +46,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
-import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -661,21 +660,7 @@ public class NewNativeTargetProjectMutator {
       // we can't handle it currently.
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
       target.getBuildPhases().add(shellScriptBuildPhase);
-      if (GenruleDescription.TYPE.equals(node.getType())) {
-        GenruleDescription.Arg arg = (GenruleDescription.Arg) node.getConstructorArg();
-        for (Path path : Iterables.transform(arg.srcs.get(), sourcePathResolver)) {
-          shellScriptBuildPhase.getInputPaths().add(
-              pathRelativizer.outputDirToRootRelative(path).toString());
-        }
-        if (arg.cmd.isPresent() && !arg.cmd.get().isEmpty()) {
-          shellScriptBuildPhase.setShellScript(arg.cmd.get());
-        } else if (arg.bash.isPresent() || arg.cmdExe.isPresent()) {
-          throw new IllegalStateException("Shell script phase only supports cmd for genrule.");
-        }
-        if (!arg.out.isEmpty()) {
-          shellScriptBuildPhase.getOutputPaths().add(arg.out);
-        }
-      } else if (XcodePrebuildScriptDescription.TYPE.equals(node.getType())) {
+      if (XcodePrebuildScriptDescription.TYPE.equals(node.getType())) {
         XcodePrebuildScriptDescription.Arg arg =
             (XcodePrebuildScriptDescription.Arg) node.getConstructorArg();
         shellScriptBuildPhase.setShellScript(arg.cmd);
