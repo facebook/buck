@@ -32,12 +32,14 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.Either;
 import com.facebook.buck.shell.DefaultShellStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.FindAndReplaceStep;
@@ -45,6 +47,9 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +57,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -62,7 +68,7 @@ import java.util.Set;
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
-public class AppleBundle extends AbstractBuildRule implements NativeTestable {
+public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps, NativeTestable {
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private static final String CODE_SIGN_IDENTITY = "CODE_SIGN_IDENTITY";
@@ -125,6 +131,9 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
   private final String binaryName;
   private final Path bundleRoot;
   private final Path binaryPath;
+  private final Path bundleBinaryPath;
+  private final Path dsymPath;
+  private final boolean hasDebugSymbols;
 
   AppleBundle(
       BuildRuleParams params,
@@ -231,6 +240,12 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
       this.provisioningProfiles = Optional.absent();
       this.codeSignIdentity = Optional.absent();
     }
+    bundleBinaryPath = bundleRoot.resolve(binaryPath);
+    dsymPath = bundleBinaryPath
+        .getParent()
+        .getParent()
+        .resolve(bundleBinaryPath.getFileName().toString() + ".dSYM");
+    hasDebugSymbols = binary.isPresent() && binary.get().getPathToOutput() != null;
   }
 
   public static String getBinaryName(BuildTarget buildTarget) {
@@ -308,10 +323,10 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
             getInfoPlistOverrideKeys(platformName),
             PlistProcessStep.OutputFormat.BINARY));
 
-    if (binary.isPresent() && binary.get().getPathToOutput() != null) {
+    if (hasDebugSymbols) {
       stepsBuilder.add(
           new MkdirStep(bundleRoot.resolve(this.destinations.getExecutablesPath())));
-      Path bundleBinaryPath = bundleRoot.resolve(binaryPath);
+      buildableContext.recordArtifact(dsymPath);
       stepsBuilder.add(
           CopyStep.forFile(
               binary.get().getPathToOutput(),
@@ -320,10 +335,7 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
           new DsymStep(
               dsymutil.getCommandPrefix(getResolver()),
               bundleBinaryPath,
-              bundleBinaryPath
-                  .getParent()
-                  .getParent()
-                  .resolve(bundleBinaryPath.getFileName().toString() + ".dSYM")));
+              dsymPath));
       stepsBuilder.add(
           new DefaultShellStep(
               ImmutableList.<String>builder()
@@ -435,6 +447,45 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
     buildableContext.recordArtifact(getPathToOutput());
 
     return stepsBuilder.build();
+  }
+
+  @Override
+  public ImmutableList<Step> getPostBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    if (!hasDebugSymbols) {
+      return ImmutableList.of();
+    }
+    return ImmutableList.<Step>of(
+        new Step() {
+          @Override
+          public int execute(ExecutionContext context) throws IOException, InterruptedException {
+            ProcessExecutorParams params = ProcessExecutorParams
+                .builder()
+                .addCommand("lldb")
+                .build();
+            return context.getProcessExecutor().launchAndExecute(
+                params,
+                ImmutableSet.<ProcessExecutor.Option>of(),
+                Optional.of(
+                    String.format("target create %s\ntarget symbols add %s", bundleRoot, dsymPath)),
+                Optional.<Long>absent(),
+                Optional.<Function<Process, Void>>absent()).getExitCode();
+          }
+
+          @Override
+          public String getShortName() {
+            return "register debug symbols";
+          }
+
+          @Override
+          public String getDescription(ExecutionContext context) {
+            return String.format(
+                "register debug symbols for binary '%s': '%s'",
+                bundleRoot,
+                dsymPath);
+          }
+        });
   }
 
   public void addStepsToCopyExtensionBundlesDependencies(
