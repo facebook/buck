@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -319,6 +320,18 @@ public class CxxLibraryDescription implements
             params.getBuildTarget(),
             cxxPlatform.getFlavor(),
             pic);
+
+    if (objects.isEmpty()) {
+      return new NoopBuildRule(
+          new BuildRuleParams(
+              staticTarget,
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              params.getProjectFilesystem(),
+              params.getRuleKeyBuilderFactory()),
+          pathResolver);
+    }
+
     Path staticLibraryPath =
         CxxDescriptionEnhancer.getStaticLibraryPath(
             params.getBuildTarget(),
@@ -388,6 +401,18 @@ public class CxxLibraryDescription implements
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
             params.getBuildTarget(),
             cxxPlatform.getFlavor());
+
+    if (objects.isEmpty()) {
+      return new NoopBuildRule(
+          new BuildRuleParams(
+              sharedTarget,
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              params.getProjectFilesystem(),
+              params.getRuleKeyBuilderFactory()),
+          pathResolver);
+    }
+
     String sharedLibrarySoname =
         soname.or(
             CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(

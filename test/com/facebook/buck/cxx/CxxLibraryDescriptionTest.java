@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -34,7 +37,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -974,13 +979,13 @@ public class CxxLibraryDescriptionTest {
         .build(new BuildRuleResolver(), filesystem, targetGraph1);
     assertThat(
         cxxLibrary.getSharedLibraries(targetGraph1, CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
-        Matchers.not(Matchers.empty()));
+        Matchers.not(empty()));
     assertThat(
         cxxLibrary
             .getPythonPackageComponents(targetGraph1, CxxPlatformUtils.DEFAULT_PLATFORM)
             .getNativeLibraries()
             .entrySet(),
-        Matchers.not(Matchers.empty()));
+        Matchers.not(empty()));
     assertThat(
         cxxLibrary
             .getNativeLinkableInput(
@@ -988,7 +993,7 @@ public class CxxLibraryDescriptionTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.SHARED)
             .getArgs(),
-        Matchers.not(Matchers.empty()));
+        Matchers.not(empty()));
 
     // Now, verify we get nothing when the supported platform regex excludes our platform.
     cxxLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
@@ -997,13 +1002,13 @@ public class CxxLibraryDescriptionTest {
         .build(new BuildRuleResolver(), filesystem, targetGraph2);
     assertThat(
         cxxLibrary.getSharedLibraries(targetGraph2, CxxPlatformUtils.DEFAULT_PLATFORM).entrySet(),
-        Matchers.empty());
+        empty());
     assertThat(
         cxxLibrary
             .getPythonPackageComponents(targetGraph2, CxxPlatformUtils.DEFAULT_PLATFORM)
             .getNativeLibraries()
             .entrySet(),
-        Matchers.empty());
+        empty());
     assertThat(
         cxxLibrary
             .getNativeLinkableInput(
@@ -1011,7 +1016,7 @@ public class CxxLibraryDescriptionTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.SHARED)
             .getArgs(),
-        Matchers.empty());
+        empty());
   }
 
   @Test
@@ -1306,4 +1311,46 @@ public class CxxLibraryDescriptionTest {
         Matchers.not(Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString()))));
   }
 
+  @Test
+  public void libraryWithoutSourcesDoesntHaveOutput() {
+    BuildTarget target = BuildTargetFactory
+        .newInstance("//foo:bar")
+        .withFlavors(
+            CxxDescriptionEnhancer.STATIC_FLAVOR,
+            CxxLibraryBuilder.createDefaultPlatform().getFlavor());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        libBuilder.build());
+    BuildRule lib = libBuilder.build(
+        resolver,
+        filesystem,
+        targetGraph);
+
+    assertThat(lib.getPathToOutput(), nullValue());
+  }
+
+  @Test
+  public void libraryWithoutSourcesDoesntBuildAnything() {
+    BuildTarget target = BuildTargetFactory
+        .newInstance("//foo:bar")
+        .withFlavors(
+            CxxDescriptionEnhancer.STATIC_FLAVOR,
+            CxxLibraryBuilder.createDefaultPlatform().getFlavor());
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        libBuilder.build());
+    BuildRule lib = libBuilder.build(
+        resolver,
+        filesystem,
+        targetGraph);
+
+    assertThat(lib.getDeps(), is(empty()));
+    assertThat(
+        lib.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()),
+        is(empty()));
+  }
 }
