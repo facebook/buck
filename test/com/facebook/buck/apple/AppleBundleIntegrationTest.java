@@ -230,7 +230,9 @@ public class AppleBundleIntegrationTest {
     Path bundlePath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
         .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app");
-    Path dwarfPath = bundlePath.resolve("DemoApp.dSYM/Contents/Resources/DWARF/DemoApp");
+    Path dwarfPath = bundlePath
+        .getParent()
+        .resolve("DemoApp.dSYM/Contents/Resources/DWARF/DemoApp");
     Path binaryPath = bundlePath.resolve("DemoApp");
     assertTrue(Files.exists(dwarfPath));
     String dwarfdumpMainStdout =

@@ -320,8 +320,10 @@ public class AppleBundle extends AbstractBuildRule implements NativeTestable {
           new DsymStep(
               dsymutil.getCommandPrefix(getResolver()),
               bundleBinaryPath,
-              bundleBinaryPath.resolveSibling(
-                  bundleBinaryPath.getFileName().toString() + ".dSYM")));
+              bundleBinaryPath
+                  .getParent()
+                  .getParent()
+                  .resolve(bundleBinaryPath.getFileName().toString() + ".dSYM")));
       stepsBuilder.add(
           new DefaultShellStep(
               ImmutableList.<String>builder()

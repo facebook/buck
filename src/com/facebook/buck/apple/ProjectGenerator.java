@@ -459,6 +459,7 @@ public class ProjectGenerator {
     String productName = getXcodeTargetName(buildTarget) + BUILD_WITH_BUCK_POSTFIX;
     String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get());
     Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get());
+    Path dsymDestination = getScratchPathForDsymBundle(targetToBuildWithBuck.get());
 
     PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
     ST template = new ST(Resources.toString(
@@ -479,7 +480,10 @@ public class ProjectGenerator {
     String escapedBuildTarget = Escaper.escapeAsBashString(buildTarget.getFullyQualifiedName());
     Path resolvedBundleSource = projectFilesystem.resolve(
         AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app"));
+    Path resolvedDsymSource = projectFilesystem.resolve(
+        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "dSYM"));
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
+    Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
 
     template.add("repo_root", projectFilesystem.getRootPath());
     template.add("path_to_buck", pathToBuck);
@@ -490,6 +494,8 @@ public class ProjectGenerator {
     template.add("resolved_bundle_source", resolvedBundleSource);
     template.add("resolved_bundle_destination", resolvedBundleDestination);
     template.add("resolved_bundle_destination_parent", resolvedBundleDestination.getParent());
+    template.add("resolved_dsym_source", resolvedDsymSource);
+    template.add("resolved_dsym_destination", resolvedDsymDestination);
     template.add("binary_name", binaryName);
 
     shellScriptBuildPhase.setShellScript(template.render());
@@ -535,6 +541,12 @@ public class ProjectGenerator {
     return BuildTargets
         .getScratchPath(targetToBuildWithBuck, "/%s-unsanitised")
         .resolve(AppleBundle.getBinaryName(targetToBuildWithBuck) + ".app");
+  }
+
+  static Path getScratchPathForDsymBundle(BuildTarget targetToBuildWithBuck) {
+    return BuildTargets
+        .getScratchPath(targetToBuildWithBuck, "/%s-unsanitised")
+        .resolve(AppleBundle.getBinaryName(targetToBuildWithBuck) + ".dSYM");
   }
 
   @SuppressWarnings("unchecked")
