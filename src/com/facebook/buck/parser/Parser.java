@@ -54,6 +54,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -63,6 +64,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -111,12 +113,6 @@ public class Parser {
    * build files as the tail, for example: {"__includes":["/jimp/BUCK", "/jimp/buck_includes"]}
    */
   private static final String INCLUDES_META_RULE = "__includes";
-
-  /**
-   * A map from absolute included files ({@code /jimp/BUILD_DEFS}, for example) to the build files
-   * that depend on them (typically {@code /jimp/BUCK} files).
-   */
-  private final ListMultimap<Path, Path> buildFileDependents;
 
   /**
    * A BuckEvent used to record the parse start time, which should include the WatchEvent
@@ -215,7 +211,6 @@ public class Parser {
     this.repository = repository;
     this.useWatchmanGlob = useWatchmanGlob;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
-    this.buildFileDependents = ArrayListMultimap.create();
     this.state = new CachedState(repository.getBuildFileName());
   }
 
@@ -671,9 +666,17 @@ public class Parser {
     List<String> fileNames = ((List<String>) map.get(INCLUDES_META_RULE));
     Preconditions.checkNotNull(fileNames);
     Path dependent = normalize(Paths.get(fileNames.get(0)));
-    for (String fileName : fileNames) {
-      buildFileDependents.put(normalize(Paths.get(fileName)), dependent);
-    }
+    state.putDependents(
+        FluentIterable.from(fileNames)
+            .transform(
+                new Function<String, Path>() {
+                  @Override
+                  public Path apply(String path) {
+                    return normalize(Paths.get(path));
+                  }
+                })
+            .toSet(),
+        dependent);
     return true;
   }
 
@@ -936,6 +939,12 @@ public class Parser {
 
     private final LoadingCache<BuildTarget, HashCode> buildTargetHashCodeCache;
 
+    /**
+     * A map from absolute included files ({@code /jimp/BUILD_DEFS}, for example) to the build files
+     * that depend on them (typically {@code /jimp/BUCK} files).
+     */
+    private final ListMultimap<Path, Path> buildFileDependents;
+
     private final String buildFile;
 
     public CachedState(String buildFileName) {
@@ -952,6 +961,7 @@ public class Parser {
               return loadHashCodeForBuildTarget(buildTarget);
             }
           });
+      this.buildFileDependents = ArrayListMultimap.create();
       this.buildFile = buildFileName;
     }
 
@@ -964,6 +974,7 @@ public class Parser {
       targetsToFile.clear();
       pathsToBuildTargets.clear();
       buildTargetHashCodeCache.invalidateAll();
+      buildFileDependents.clear();
     }
 
     @Override
@@ -1021,6 +1032,17 @@ public class Parser {
         return true;
       }
       return false;
+    }
+
+    /**
+     * Add a target at {@code paths} to the cache for {@code dependent}.
+     * @param paths The absolute Path that {@code dependent} should be invalidated for.
+     * @param dependent The absolute Path to the build file that depends on {@code path}.
+     */
+    void putDependents(ImmutableSet<Path> paths, Path dependent) {
+      for (Path path : paths) {
+        buildFileDependents.put(path, dependent);
+      }
     }
 
     /**
