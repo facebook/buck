@@ -89,7 +89,8 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
       ProcessExecutor processExecutor,
       Iterable<Path> ignorePaths,
       Iterable<String> ignoreGlobs,
-      Watchman watchman) {
+      Watchman watchman,
+      UUID queryUUID) {
     this(fileChangeEventBus,
         clock,
         objectMapper,
@@ -100,7 +101,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
             objectMapper,
             watchRoot,
             watchman.getProjectPrefix(),
-            UUID.randomUUID().toString(),
+            queryUUID.toString(),
             ignorePaths,
             ignoreGlobs,
             watchman.getCapabilities()));
@@ -394,10 +395,6 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
         return "Watchman Overflow WatchEvent " + kind();
       }
     };
-  }
-
-  @Override
-  public void close() throws IOException {
   }
 
   private static class PathEventBuilder {

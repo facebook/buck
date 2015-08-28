@@ -33,5 +33,4 @@ public interface ProjectFilesystemWatcher {
    * send console events in case there are warnings that need to be shown to the user.
    */
   public void postEvents(BuckEventBus buckEventBus) throws IOException, InterruptedException;
-  public void close() throws IOException;
 }

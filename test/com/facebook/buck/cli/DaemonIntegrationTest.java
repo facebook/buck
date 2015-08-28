@@ -25,56 +25,46 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeNoException;
-import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.event.BuckEventBus;
+
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.rules.TestRunEvent;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
-import com.google.gson.Gson;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.util.Map;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -82,36 +72,53 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@Ignore("t7761196")
 public class DaemonIntegrationTest {
 
   private static final int SUCCESS_EXIT_CODE = 0;
+  private static final ImmutableList<String> TMP_ENV_VARS = ImmutableList.of(
+      "BUCK_ORIG_TEMPDIR", "BUCK_ORIG_TEMP", "BUCK_ORIG_TMPDIR", "BUCK_ORIG_TMP");
   private ScheduledExecutorService executorService;
-  private static final Gson gson = new Gson();
+  private Watchman watchman;
+
+  private static String getTempDir() {
+    // We can't use the default temporary directory or $TMP in this test, since they're overridden
+    // by JUnitStep to 'buck-out/bin/...' which is not watched by watchman, causing this test to
+    // fail.
+    for (String envVar : TMP_ENV_VARS) {
+      String val = System.getenv(envVar);
+      if (val != null) {
+        return val;
+      }
+    }
+    return "/tmp";
+  }
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder(new File(getTempDir()));
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
+  private static ImmutableMap<String, String> getWatchmanEnv() {
+    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
+    String systemPath = System.getenv("PATH");
+    if (systemPath != null) {
+      envBuilder.put("PATH", systemPath);
+    }
+    return envBuilder.build();
+  }
 
   @Before
   public void setUp() throws IOException, InterruptedException{
     executorService = Executors.newScheduledThreadPool(5);
+    // In case root_restrict_files is enabled in /etc/watchmanconfig, assume
+    // this is one of the entries so it doesn't give up.
+    tmp.newFolder(".git");
+    watchman = Watchman.build(tmp.getRootPath(), getWatchmanEnv());
+
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
-    try {
-      ProcessExecutor.Result result = new ProcessExecutor(new TestConsole()).launchAndExecute(
-          ProcessExecutorParams.builder()
-              .setCommand(ImmutableList.of("watchman", "version", tmp.getRootPath().toString()))
-              .build());
-      assumeTrue(result.getStdout().isPresent());
-      Map<String, Object> response = gson.<Map<String, Object>>fromJson(
-          result.getStdout().get(),
-          Map.class);
-      assumeNotNull(response);
-      assumeTrue(response.containsKey("version"));
-      assumeFalse(response.containsKey("error"));
-    } catch (IOException e) {
-      assumeNoException(e);
-    }
+    assumeFalse(watchman == Watchman.NULL_WATCHMAN);
   }
 
   @After
@@ -393,6 +400,7 @@ public class DaemonIntegrationTest {
   public void whenAppBuckFileRemovedThenRebuildFails()
       throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
+
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "file_watching", tmp);
     workspace.setUp();
@@ -402,7 +410,6 @@ public class DaemonIntegrationTest {
 
     String fileName = "apps/myapp/BUCK";
     Files.delete(workspace.getPath(fileName));
-    waitForChange(Paths.get(fileName));
 
     workspace.runBuckdCommand("build", "app").assertFailure();
   }
@@ -419,7 +426,6 @@ public class DaemonIntegrationTest {
 
     String fileName = "java/com/example/activity/BUCK";
     Files.delete(workspace.getPath(fileName));
-    waitForChange(Paths.get(fileName));
 
     workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
   }
@@ -436,7 +442,6 @@ public class DaemonIntegrationTest {
 
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     Files.delete(workspace.getPath(fileName));
-    waitForChange(Paths.get(fileName));
 
     try {
       workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
@@ -459,9 +464,11 @@ public class DaemonIntegrationTest {
 
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     Files.delete(workspace.getPath(fileName));
-    waitForChange(Paths.get(fileName));
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertFailure();
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(containsString("MyFirstActivity.java"));
+
+    workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
   }
 
   @Test
@@ -476,7 +483,6 @@ public class DaemonIntegrationTest {
 
     String fileName = "apps/myapp/BUCK";
     Files.write(workspace.getPath(fileName), "Some Illegal Python".getBytes(Charsets.US_ASCII));
-    waitForChange(Paths.get(fileName));
 
     ProcessResult result = workspace.runBuckdCommand("build", "app");
     assertThat(
@@ -490,16 +496,6 @@ public class DaemonIntegrationTest {
   public void whenBuckConfigChangesParserInvalidated()
       throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    ProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        new Function<ProcessExecutorParams, FakeProcess>() {
-          @Override
-          public FakeProcess apply(ProcessExecutorParams params) {
-            return new FakeProcess(0);
-          }
-        },
-        new TestConsole());
 
     Object daemon = Main.getDaemon(
         new TestRepositoryBuilder().setBuckConfig(
@@ -507,11 +503,7 @@ public class DaemonIntegrationTest {
                 ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
             .setFilesystem(filesystem)
             .build(),
-        new FakeClock(0),
-        objectMapper,
-        fakeProcessExecutor,
-        ImmutableMap.<String, String>of());
-
+        ParserConfig.GlobHandler.PYTHON);
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
@@ -520,10 +512,7 @@ public class DaemonIntegrationTest {
                     ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
                 .setFilesystem(filesystem)
                 .build(),
-            new FakeClock(0),
-            objectMapper,
-            fakeProcessExecutor,
-            ImmutableMap.<String, String>of()));
+            ParserConfig.GlobHandler.PYTHON));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -535,10 +524,7 @@ public class DaemonIntegrationTest {
                         ImmutableMap.of("somename", "someothervalue"))))
                 .setFilesystem(filesystem)
                 .build(),
-            new FakeClock(0),
-            objectMapper,
-            fakeProcessExecutor,
-            ImmutableMap.<String, String>of()));
+            ParserConfig.GlobHandler.PYTHON));
   }
 
   @Test
@@ -568,15 +554,6 @@ public class DaemonIntegrationTest {
   public void whenAndroidDirectoryResolverChangesParserInvalidated()
       throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    ObjectMapper objectMapper = new ObjectMapper();
-    ProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        new Function<ProcessExecutorParams, FakeProcess>() {
-          @Override
-          public FakeProcess apply(ProcessExecutorParams params) {
-            return new FakeProcess(0);
-          }
-        },
-        new TestConsole());
 
     Object daemon = Main.getDaemon(
         new TestRepositoryBuilder()
@@ -587,10 +564,7 @@ public class DaemonIntegrationTest {
                     Optional.of("something")))
             .setFilesystem(filesystem)
             .build(),
-        new FakeClock(0),
-        objectMapper,
-        fakeProcessExecutor,
-        ImmutableMap.<String, String>of());
+        ParserConfig.GlobHandler.PYTHON);
 
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
@@ -603,40 +577,6 @@ public class DaemonIntegrationTest {
                         Optional.of("different")))
                 .setFilesystem(filesystem)
                 .build(),
-            new FakeClock(0),
-            objectMapper,
-            fakeProcessExecutor,
-            ImmutableMap.<String, String>of()));
-  }
-
-  private void waitForChange(final Path path) throws IOException, InterruptedException {
-
-    class Watcher {
-      private Path watchedPath;
-      private boolean watchedChange = false;
-
-      public Watcher(Path watchedPath) {
-        this.watchedPath = watchedPath;
-        watchedChange = false;
-      }
-
-      public boolean watchedChange() {
-        return watchedChange;
-      }
-
-      @Subscribe
-      public synchronized void onEvent(WatchEvent<?> event) throws IOException {
-        if (watchedPath.equals(event.context()) ||
-            event.kind() == StandardWatchEventKinds.OVERFLOW) {
-          watchedChange = true;
-        }
-      }
-    }
-
-    Watcher watcher = new Watcher(path);
-    Main.registerFileWatcher(watcher);
-    while (!watcher.watchedChange()) {
-      Main.watchFilesystem(new BuckEventBus(new FakeClock(0), new BuildId()));
-    }
+            ParserConfig.GlobHandler.PYTHON));
   }
 }

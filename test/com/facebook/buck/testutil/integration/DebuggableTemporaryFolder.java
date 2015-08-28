@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 
 import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.nio.file.Path;
 
 /**
@@ -39,6 +40,9 @@ public class DebuggableTemporaryFolder extends TemporaryFolder {
   private boolean doNotDeleteOnExit;
 
   public DebuggableTemporaryFolder() {}
+  public DebuggableTemporaryFolder(File parentFolder) {
+    super(parentFolder);
+  }
 
   /**
    * If invoked, the directory created by this {@link TemporaryFolder} will not be deleted when the
