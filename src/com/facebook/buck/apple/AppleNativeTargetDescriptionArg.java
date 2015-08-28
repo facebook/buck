@@ -36,7 +36,6 @@ public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg i
   public Optional<ImmutableList<SourcePath>> extraXcodeSources;
 
   public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
-  public Optional<String> gid;
   public Optional<String> headerPathPrefix;
   public Optional<Boolean> useBuckHeaderMaps;
 

@@ -736,22 +736,7 @@ public class ProjectGenerator {
       Optional<Iterable<PBXBuildPhase>> copyFilesPhases,
       Optional<TargetNode<AppleBundleDescription.Arg>> bundleLoaderNode)
       throws IOException {
-    Optional<String> targetGid = targetNode.getConstructorArg().gid;
-    LOG.debug("Generating binary target for node %s (GID %s)", targetNode, targetGid);
-    if (targetGid.isPresent()) {
-      // Check if we have used this hardcoded GID before.
-      // If not, remember it so we don't use it again.
-      String thisTargetName = targetNode.getBuildTarget().getFullyQualifiedName();
-      String conflictingTargetName = gidsToTargetNames.get(targetGid.get());
-      if (conflictingTargetName != null) {
-        throw new HumanReadableException(
-            "Targets %s have the same hardcoded GID (%s)",
-            ImmutableSortedSet.of(thisTargetName, conflictingTargetName),
-            targetGid.get());
-      }
-      gidsToTargetNames.put(targetGid.get(), thisTargetName);
-    }
-
+    LOG.debug("Generating binary target for node %s", targetNode);
     TargetNode<?> buildTargetNode = bundle.isPresent() ? bundle.get() : targetNode;
     final BuildTarget buildTarget = buildTargetNode.getBuildTarget();
 
@@ -769,7 +754,6 @@ public class ProjectGenerator {
             productType,
             productName,
             Paths.get(String.format(productOutputFormat, productName)))
-        .setGid(targetGid)
         .setShouldGenerateCopyHeadersPhase(
             !targetNode.getConstructorArg().getUseBuckHeaderMaps())
         .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs.get()))

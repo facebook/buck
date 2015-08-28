@@ -95,7 +95,6 @@ public class NewNativeTargetProjectMutator {
   private String productName = "";
   private String targetName = "";
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
-  private Optional<String> gid = Optional.absent();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
   private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
@@ -136,11 +135,6 @@ public class NewNativeTargetProjectMutator {
     this.productName = productName;
     this.productType = productType;
     this.productOutputPath = productOutputPath;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setGid(Optional<String> gid) {
-    this.gid = gid;
     return this;
   }
 
@@ -262,10 +256,6 @@ public class NewNativeTargetProjectMutator {
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateDescendantGroupByPath(targetGroupPath);
     targetGroup = targetGroup.getOrCreateChildGroupByName(targetName);
-
-    if (gid.isPresent()) {
-      target.setGlobalID(gid.get());
-    }
 
     // Phases
     addRunScriptBuildPhases(target, preBuildRunScriptPhases);

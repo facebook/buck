@@ -1721,7 +1721,6 @@ public class ProjectGeneratorTest {
                             Paths.get("Foo.framework"),
                             Optional.<String>absent())))))
         .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
-        .setGid(Optional.<String>absent())
         .setHeaderPathPrefix(Optional.<String>absent())
         .setUseBuckHeaderMaps(Optional.of(false))
         .setPrefixHeader(Optional.<SourcePath>absent())
@@ -2733,80 +2732,6 @@ public class ProjectGeneratorTest {
     assertEquals(
         expectedAttribute.value(),
         actualAttribute.value());
-  }
-
-  @Test
-  public void targetGidInDescriptionSetsTargetGidInGeneratedProject() throws IOException {
-    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
-    TargetNode<?> node = AppleLibraryBuilder
-        .createBuilder(buildTarget)
-        .setGid(Optional.of("D00D64738"))
-        .build();
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node));
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//foo:lib");
-    // Ensure the GID for the target uses the gid value in the description.
-    assertThat(target.getGlobalID(), equalTo("D00D64738"));
-  }
-
-  @Test
-  public void targetGidInDescriptionReservesGidFromUseByAnotherTarget() throws IOException {
-    BuildTarget fooTarget = BuildTarget.builder("//foo", "lib").build();
-    TargetNode<?> fooNode = AppleLibraryBuilder
-        .createBuilder(fooTarget)
-        .setGid(Optional.of("E66DC04E36F2D8BE00000000"))
-        .build();
-
-    BuildTarget barTarget = BuildTarget.builder("//bar", "lib").build();
-    TargetNode<?> barNode = AppleLibraryBuilder
-        .createBuilder(barTarget)
-        .build();
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooNode, barNode));
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(),
-        "//bar:lib");
-    // Note the '1': normally //bar:lib's GID would be
-    // E66DC04E36F2D8BE00000000 but we hard-coded that in //foo:lib, so //bar:lib
-    // will try and fail to use GID, as it'll already have been reserved.
-    String expectedGID = String.format(
-        "%08X%08X%08X", target.isa().hashCode(), target.getName().hashCode(), 1);
-    assertEquals(
-        "expected GID has correct value",
-        "E66DC04E36F2D8BE00000001", expectedGID);
-    assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
-  }
-
-  @Test
-  public void conflictingHardcodedGidsThrow() throws IOException {
-    BuildTarget fooTarget = BuildTarget.builder("//foo", "lib").build();
-    TargetNode<?> fooNode = AppleLibraryBuilder
-        .createBuilder(fooTarget)
-        .setGid(Optional.of("E66DC04E36F2D8BE00000000"))
-        .build();
-
-    BuildTarget barTarget = BuildTarget.builder("//bar", "lib").build();
-    TargetNode<?> barNode = AppleLibraryBuilder
-        .createBuilder(barTarget)
-        .setGid(Optional.of("E66DC04E36F2D8BE00000000"))
-        .build();
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(fooNode, barNode));
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "Targets [//bar:lib, //foo:lib] have the same hardcoded GID (E66DC04E36F2D8BE00000000)");
-
-    projectGenerator.createXcodeProjects();
   }
 
   @Test
