@@ -17,5 +17,4 @@ apple_library(
   visibility = [
     'PUBLIC',
   ],
-  use_buck_header_maps = False,
 )

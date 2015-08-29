@@ -140,11 +140,6 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
-  public BUILDER setUseBuckHeaderMaps(Optional<Boolean> useBuckHeaderMaps) {
-    arg.useBuckHeaderMaps = useBuckHeaderMaps;
-    return getThis();
-  }
-
   public BUILDER setPrefixHeader(Optional<SourcePath> prefixHeader) {
     arg.prefixHeader = prefixHeader;
     return getThis();

@@ -37,9 +37,4 @@ public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg i
 
   public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
   public Optional<String> headerPathPrefix;
-  public Optional<Boolean> useBuckHeaderMaps;
-
-  public boolean getUseBuckHeaderMaps() {
-    return useBuckHeaderMaps.or(true);
-  }
 }

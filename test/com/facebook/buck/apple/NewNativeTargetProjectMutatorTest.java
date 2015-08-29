@@ -28,7 +28,6 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -36,16 +35,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.dd.plist.NSArray;
-import com.dd.plist.NSDictionary;
-import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
@@ -84,7 +78,6 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
 
 public class NewNativeTargetProjectMutatorTest {
   private PBXProject generatedProject;
@@ -198,32 +191,6 @@ public class NewNativeTargetProjectMutatorTest {
     assertThat(group2.getChildren(), hasSize(1));
     PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
     assertEquals("baz.h", fileRefBaz.getName());
-
-    PBXBuildPhase headersBuildPhase =
-        Iterables.find(result.target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
-              @Override
-              public boolean apply(PBXBuildPhase input) {
-                return input instanceof PBXHeadersBuildPhase;
-              }
-            });
-    PBXBuildFile barHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 0);
-    assertTrue(
-        "bar.h should have settings dictionary",
-        barHeaderBuildFile.getSettings().isPresent());
-    NSDictionary barBuildFileSettings = barHeaderBuildFile.getSettings().get();
-    NSArray barAttributes = (NSArray) barBuildFileSettings.get("ATTRIBUTES");
-    assertArrayEquals(new NSString[]{new NSString("Public")}, barAttributes.getArray());
-    PBXBuildFile fooHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 1);
-    assertFalse(
-        "foo.h should not have settings dictionary",
-        fooHeaderBuildFile.getSettings().isPresent());
-    PBXBuildFile bazHeaderBuildFile = Iterables.get(headersBuildPhase.getFiles(), 2);
-    assertTrue(
-        "baz.h should have settings dictionary",
-        bazHeaderBuildFile.getSettings().isPresent());
-    NSDictionary blechBuildFileSettings = bazHeaderBuildFile.getSettings().get();
-    NSArray blechAttributes = (NSArray) blechBuildFileSettings.get("ATTRIBUTES");
-    assertArrayEquals(new NSString[]{new NSString("Public")}, blechAttributes.getArray());
   }
 
   @Test
@@ -241,38 +208,6 @@ public class NewNativeTargetProjectMutatorTest {
     assertThat(sourcesGroup.getChildren(), hasSize(1));
     PBXFileReference fileRef = (PBXFileReference) Iterables.get(sourcesGroup.getChildren(), 0);
     assertEquals("prefix.pch", fileRef.getName());
-  }
-
-  @Test
-  public void testSuppressCopyHeaderOption() throws NoSuchBuildTargetException {
-    Set<SourcePath> privateHeaders = ImmutableSet.<SourcePath>of(new TestSourcePath("foo"));
-
-    {
-      NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-      mutator
-          .setShouldGenerateCopyHeadersPhase(false)
-          .setPrivateHeaders(privateHeaders);
-      NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
-          generatedProject);
-
-      assertThat(
-          "copy headers phase should be omitted",
-          Iterables.filter(result.target.getBuildPhases(), PBXHeadersBuildPhase.class),
-          emptyIterable());
-    }
-
-    {
-      NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-      mutator
-          .setShouldGenerateCopyHeadersPhase(true)
-          .setPrivateHeaders(privateHeaders);
-      NewNativeTargetProjectMutator.Result result = mutator.buildTargetAndAddToProject(
-          generatedProject);
-      assertThat(
-          "copy headers phase should be generated",
-          Iterables.filter(result.target.getBuildPhases(), PBXHeadersBuildPhase.class),
-          not(emptyIterable()));
-    }
   }
 
   @Test

@@ -65,17 +65,12 @@ public class AppleDescriptions {
   /** Utility class: do not instantiate. */
   private AppleDescriptions() {}
 
-  public static Optional<Path> getPathToHeaderSymlinkTree(
+  public static Path getPathToHeaderSymlinkTree(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderVisibility headerVisibility) {
-    if (!targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      return Optional.absent();
-    }
-
-    return Optional.of(
-        BuildTargets.getGenPath(
-            targetNode.getBuildTarget().getUnflavoredBuildTarget(),
-            "%s" + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility)));
+    return BuildTargets.getGenPath(
+        targetNode.getBuildTarget().getUnflavoredBuildTarget(),
+        "%s" + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
   }
 
   public static Path getHeaderPathPrefix(

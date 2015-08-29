@@ -14,7 +14,6 @@ apple_binary(
   deps = [
     '//Libraries/EXExample:EXExample',
   ],
-  use_buck_header_maps = False,
 )
 
 xcode_workspace_config(

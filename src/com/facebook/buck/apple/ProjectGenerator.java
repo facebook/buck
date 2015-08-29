@@ -766,8 +766,6 @@ public class ProjectGenerator {
             productType,
             productName,
             Paths.get(String.format(productOutputFormat, productName)))
-        .setShouldGenerateCopyHeadersPhase(
-            !targetNode.getConstructorArg().getUseBuckHeaderMaps())
         .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs.get()))
         .setExtraXcodeSources(ImmutableSet.copyOf(arg.extraXcodeSources.get()))
         .setPublicHeaders(exportedHeaders)
@@ -880,9 +878,7 @@ public class ProjectGenerator {
       extraSettingsBuilder.put("GCC_PREFIX_HEADER", prefixHeaderPath.toString());
       extraSettingsBuilder.put("GCC_PRECOMPILE_PREFIX_HEADER", "YES");
     }
-    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      extraSettingsBuilder.put("USE_HEADERMAP", "NO");
-    }
+    extraSettingsBuilder.put("USE_HEADERMAP", "NO");
 
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
     defaultSettingsBuilder.put(
@@ -894,10 +890,6 @@ public class ProjectGenerator {
           "WRAPPER_EXTENSION",
           getExtensionString(bundle.get().getConstructorArg().getExtension()));
     }
-    String publicHeadersPath =
-        getHeaderOutputPath(buildTargetNode, targetNode.getConstructorArg().headerPathPrefix);
-    LOG.debug("Public headers path for %s: %s", targetNode, publicHeadersPath);
-    defaultSettingsBuilder.put("PUBLIC_HEADERS_FOLDER_PATH", publicHeadersPath);
     // We use BUILT_PRODUCTS_DIR as the root for the everything being built. Target-
     // specific output is placed within CONFIGURATION_BUILD_DIR, inside BUILT_PRODUCTS_DIR.
     // That allows Copy Files build phases to reference files in the CONFIGURATION_BUILD_DIR
@@ -922,19 +914,13 @@ public class ProjectGenerator {
     appendConfigsBuilder
         .put(
             "HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(
-                Iterables.concat(
-                    collectRecursiveHeaderSearchPaths(targetNode),
-                    recursiveHeaderMaps,
-                    headerMapBases)))
+            Joiner.on(' ').join(Iterables.concat(recursiveHeaderMaps, headerMapBases)))
         .put(
             "LIBRARY_SEARCH_PATHS",
-            Joiner.on(' ').join(
-                collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
+            Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
         .put(
             "FRAMEWORK_SEARCH_PATHS",
-            Joiner.on(' ').join(
-                collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))))
+            Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))))
         .put(
             "OTHER_CFLAGS",
             Joiner
@@ -1003,24 +989,22 @@ public class ProjectGenerator {
         appendConfigsBuilder.build());
 
     // -- phases
-    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      Path headerPathPrefix =
-          AppleDescriptions.getHeaderPathPrefix(arg, targetNode.getBuildTarget());
-      createHeaderSymlinkTree(
-          sourcePathResolver,
-          AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
-              sourcePathResolver,
-              headerPathPrefix,
-              arg),
-          AppleDescriptions.getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC).get());
-      createHeaderSymlinkTree(
-          sourcePathResolver,
-          AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
-              sourcePathResolver,
-              headerPathPrefix,
-              arg),
-          AppleDescriptions.getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE).get());
-    }
+    Path headerPathPrefix =
+        AppleDescriptions.getHeaderPathPrefix(arg, targetNode.getBuildTarget());
+    createHeaderSymlinkTree(
+        sourcePathResolver,
+        AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
+            sourcePathResolver,
+            headerPathPrefix,
+            arg),
+        AppleDescriptions.getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
+    createHeaderSymlinkTree(
+        sourcePathResolver,
+        AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
+            sourcePathResolver,
+            headerPathPrefix,
+            arg),
+        AppleDescriptions.getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE));
 
     // Use Core Data models from immediate dependencies only.
     addCoreDataModelBuildPhase(
@@ -1090,7 +1074,6 @@ public class ProjectGenerator {
             dylibProductTypeByBundleExtension(key.getExtension().getLeft()).get(),
             productName,
             Paths.get(productName + "." + getExtensionString(key.getExtension())))
-        .setShouldGenerateCopyHeadersPhase(false)
         .setSourcesWithFlags(
             ImmutableSet.of(
                 SourceWithFlags.of(
@@ -1568,40 +1551,20 @@ public class ProjectGenerator {
     return buildTarget.getShortName();
   }
 
-  private String getHeaderOutputPath(
-      TargetNode<?> buildTargetNode,
-      Optional<String> headerPathPrefix) {
-    // This is automatically appended to $CONFIGURATION_BUILD_DIR.
-    return Joiner.on('/').join(
-        getBuiltProductsRelativeTargetOutputPath(buildTargetNode),
-        "Headers",
-        headerPathPrefix.or("$TARGET_NAME"));
-  }
-
   /**
    * @param targetNode Must have a header symlink tree or an exception will be thrown.
    */
   private Path getHeaderSymlinkTreeRelativePath(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       HeaderVisibility headerVisibility) {
-    Optional<Path> treeRoot = AppleDescriptions.getPathToHeaderSymlinkTree(
+    Path treeRoot = AppleDescriptions.getPathToHeaderSymlinkTree(
         targetNode,
         headerVisibility);
-    Preconditions.checkState(
-        treeRoot.isPresent(),
-        "%s does not have a header symlink tree.",
-        targetNode);
-    return pathRelativizer.outputDirToRootRelative(treeRoot.get());
+    return pathRelativizer.outputDirToRootRelative(treeRoot);
   }
 
   private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
     return headerSymlinkTreeRoot.resolve(".tree.hmap");
-  }
-
-  private String getHeaderSearchPath(TargetNode<?> targetNode) {
-    return Joiner.on('/').join(
-        getTargetOutputPath(targetNode),
-        "Headers");
   }
 
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
@@ -1676,38 +1639,6 @@ public class ProjectGenerator {
             AppleBundleExtension.FRAMEWORK));
   }
 
-  private ImmutableSet<String> collectRecursiveHeaderSearchPaths(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
-    LOG.debug("Collecting recursive header search paths for %s...", targetNode);
-    return FluentIterable
-        .from(
-            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                targetGraph,
-                AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-                targetNode,
-                Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES)))
-        .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode =
-                    getAppleNativeNode(targetGraph, input);
-                return nativeNode.isPresent() &&
-                    !nativeNode.get().getConstructorArg().getUseBuckHeaderMaps();
-              }
-            })
-        .transform(
-            new Function<TargetNode<?>, String>() {
-              @Override
-              public String apply(TargetNode<?> input) {
-                String result = getHeaderSearchPath(input);
-                LOG.debug("Header search path for %s: %s", input, result);
-                return result;
-              }
-            })
-        .toSet();
-  }
-
   private ImmutableSet<Path> collectRecursiveHeaderMaps(
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
@@ -1723,10 +1654,8 @@ public class ProjectGenerator {
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
-    if (targetNode.getConstructorArg().getUseBuckHeaderMaps()) {
-      builder.add(getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PRIVATE));
-      builder.add(getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PUBLIC));
-    }
+    builder.add(getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PRIVATE));
+    builder.add(getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PUBLIC));
 
     for (TargetNode<?> input :
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -1736,7 +1665,7 @@ public class ProjectGenerator {
             Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))) {
       Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode =
           getAppleNativeNode(targetGraph, input);
-      if (nativeNode.isPresent() && nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
+      if (nativeNode.isPresent()) {
         builder.add(
             getHeaderSymlinkTreeRelativePath(
                 nativeNode.get(),
@@ -1758,9 +1687,7 @@ public class ProjectGenerator {
     for (TargetNode<?> dependency : directDependencies) {
       Optional<TargetNode<AppleNativeTargetDescriptionArg>> nativeNode =
           getAppleNativeNode(targetGraph, dependency);
-      if (nativeNode.isPresent() &&
-          isSourceUnderTest(dependency, nativeNode.get(), targetNode) &&
-          nativeNode.get().getConstructorArg().getUseBuckHeaderMaps()) {
+      if (nativeNode.isPresent() && isSourceUnderTest(dependency, nativeNode.get(), targetNode)) {
         headerSymlinkTreesBuilder.add(
             getHeaderSymlinkTreeRelativePath(
                 nativeNode.get(),

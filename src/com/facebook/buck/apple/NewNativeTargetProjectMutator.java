@@ -100,7 +100,6 @@ public class NewNativeTargetProjectMutator {
   private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
   private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
   private Optional<SourcePath> prefixHeader = Optional.absent();
-  private boolean shouldGenerateCopyHeadersPhase = true;
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescription.Arg> recursiveResources = ImmutableSet.of();
@@ -174,11 +173,6 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setPrefixHeader(Optional<SourcePath> prefixHeader) {
     this.prefixHeader = prefixHeader;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setShouldGenerateCopyHeadersPhase(boolean value) {
-    this.shouldGenerateCopyHeadersPhase = value;
     return this;
   }
 
@@ -295,11 +289,6 @@ public class NewNativeTargetProjectMutator {
     traverseGroupsTreeAndHandleSources(
         sourcesGroup,
         sourcesBuildPhase,
-        // We still want to create groups for header files even if header build phases
-        // are replaced with header maps.
-        !shouldGenerateCopyHeadersPhase
-            ? Optional.<PBXHeadersBuildPhase>absent()
-            : Optional.of(headersBuildPhase),
         RuleUtils.createGroupsFromSourcePaths(
             new Function<SourcePath, Path>() {
               @Override
@@ -331,7 +320,6 @@ public class NewNativeTargetProjectMutator {
   private void traverseGroupsTreeAndHandleSources(
       final PBXGroup sourcesGroup,
       final PBXSourcesBuildPhase sourcesBuildPhase,
-      final Optional<PBXHeadersBuildPhase> headersBuildPhase,
       Iterable<GroupedSource> groupedSources) {
     GroupedSource.Visitor visitor = new GroupedSource.Visitor() {
       @Override
@@ -347,7 +335,6 @@ public class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             publicHeader,
             sourcesGroup,
-            headersBuildPhase,
             HeaderVisibility.PUBLIC);
       }
 
@@ -356,7 +343,6 @@ public class NewNativeTargetProjectMutator {
         addSourcePathToHeadersBuildPhase(
             privateHeader,
             sourcesGroup,
-            headersBuildPhase,
             HeaderVisibility.PRIVATE);
       }
 
@@ -373,7 +359,6 @@ public class NewNativeTargetProjectMutator {
         traverseGroupsTreeAndHandleSources(
             newSourceGroup,
             sourcesBuildPhase,
-            headersBuildPhase,
             sourceGroup);
       }
     };
@@ -411,7 +396,6 @@ public class NewNativeTargetProjectMutator {
   private void addSourcePathToHeadersBuildPhase(
       SourcePath headerPath,
       PBXGroup headersGroup,
-      Optional<PBXHeadersBuildPhase> headersBuildPhase,
       HeaderVisibility visibility) {
     PBXFileReference fileReference = headersGroup.getOrCreateFileReferenceBySourceTreePath(
         new SourceTreePath(
@@ -427,20 +411,6 @@ public class NewNativeTargetProjectMutator {
       buildFile.setSettings(Optional.of(settings));
     } else {
       buildFile.setSettings(Optional.<NSDictionary>absent());
-    }
-    if (headersBuildPhase.isPresent()) {
-      headersBuildPhase.get().getFiles().add(buildFile);
-      LOG.verbose(
-          "Added header path %s to headers group %s, PBXFileReference %s",
-          headerPath,
-          headersGroup.getName(),
-          fileReference);
-    } else {
-      LOG.verbose(
-          "Skipped header path %s to headers group %s, PBXFileReference %s",
-          headerPath,
-          headersGroup.getName(),
-          fileReference);
     }
   }
 
