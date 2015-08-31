@@ -17,8 +17,8 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -67,7 +67,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
   public abstract Optional<Boolean> isZipSafe();
 
   @Override
-  public final RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public final RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     // Hash all the input components here so we can detect changes in both input file content
     // and module name mappings.
     // TODO(agallagher): Change the types of these fields from Map to SortedMap so that we don't

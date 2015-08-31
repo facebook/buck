@@ -16,8 +16,8 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 
 import java.nio.file.Path;
 
@@ -39,7 +39,7 @@ public class PythonEnvironment implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder.setReflectively("python-version", getPythonVersion().getVersionString());
   }
 }

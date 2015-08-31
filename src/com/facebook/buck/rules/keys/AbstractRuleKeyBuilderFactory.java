@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -47,17 +48,17 @@ public abstract class AbstractRuleKeyBuilderFactory implements RuleKeyBuilderFac
     knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
   }
 
-  protected abstract RuleKey.Builder newBuilder(
+  protected abstract RuleKeyBuilder newBuilder(
       SourcePathResolver pathResolver,
       FileHashCache hashCache,
       BuildRule rule);
 
   /**
-   * Initialize a new {@link com.facebook.buck.rules.RuleKey.Builder}.
+   * Initialize a new {@link RuleKeyBuilder}.
    */
   @Override
-  public final RuleKey.Builder newInstance(BuildRule buildRule) {
-    RuleKey.Builder builder = newBuilder(pathResolver, hashCache, buildRule);
+  public final RuleKeyBuilder newInstance(BuildRule buildRule) {
+    RuleKeyBuilder builder = newBuilder(pathResolver, hashCache, buildRule);
     builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());
     // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
     builder.setReflectively("buck.type", buildRule.getType());

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
@@ -44,7 +44,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
   public abstract Path getPlugInsPath();
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
         .setReflectively("metadata_path", getMetadataPath().toString())
         .setReflectively("resources_path", getResourcesPath().toString())

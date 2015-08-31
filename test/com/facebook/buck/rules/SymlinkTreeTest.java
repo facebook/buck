@@ -171,9 +171,9 @@ public class SymlinkTreeTest {
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of()),
             resolver);
-    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(
+    RuleKeyBuilder builder1 = ruleKeyBuilderFactory.newInstance(
         symlinkTreeBuildRule);
-    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(
+    RuleKeyBuilder builder2 = ruleKeyBuilderFactory.newInstance(
         modifiedSymlinkTreeBuildRule);
     RuleKey pair1 = builder1.build();
     RuleKey pair2 = builder2.build();
@@ -192,7 +192,7 @@ public class SymlinkTreeTest {
             resolver);
 
     // Calculate the rule key
-    RuleKey.Builder builder1 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
+    RuleKeyBuilder builder1 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
     RuleKey pair1 = builder1.build();
 
     // Change the contents of the target of the link.
@@ -203,7 +203,7 @@ public class SymlinkTreeTest {
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key
-    RuleKey.Builder builder2 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
+    RuleKeyBuilder builder2 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
     RuleKey pair2 = builder2.build();
 
     // Verify that the rules keys are the same.

@@ -143,7 +143,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     if (ruleKeyPair == null) {
       synchronized (this) {
         if (ruleKeyPair == null) {
-          RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(this);
+          RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(this);
           RuleKey ruleKeyWithoutDeps = builder.build();
           // Now introduce the deps into the RuleKey.
           builder.setReflectively("deps", getDeclaredDeps());

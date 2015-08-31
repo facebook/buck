@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -57,7 +57,7 @@ public class OCamlCCompileStep extends ShellStep {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
       builder.setReflectively("cCompiler", cCompiler);
       builder.setReflectively("ocamlCompiler", ocamlCompiler);
       // TODO(user): Ensure that this is not an absolute path.

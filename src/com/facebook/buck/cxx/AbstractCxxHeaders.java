@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -47,7 +47,7 @@ abstract class AbstractCxxHeaders implements RuleKeyAppendable {
   abstract Map<Path, SourcePath> getFullNameToPathMap();
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     for (Path path : ImmutableSortedSet.copyOf(getNameToPathMap().keySet())) {
       SourcePath source = getNameToPathMap().get(path);
       builder.setReflectively("include(" + path + ")", source);

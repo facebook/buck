@@ -40,7 +40,7 @@ public class HashedFileTool implements Tool {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder.setReflectively("path", path);
   }
 

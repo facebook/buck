@@ -20,6 +20,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -72,7 +73,7 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
   }
 
   @Override
-  protected RuleKey.Builder newBuilder(
+  protected RuleKeyBuilder newBuilder(
       SourcePathResolver pathResolver,
       FileHashCache hashCache,
       final BuildRule rule) {
@@ -90,7 +91,7 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
     };
   }
 
-  public class Builder extends RuleKey.Builder {
+  public class Builder extends RuleKeyBuilder {
 
     private final SourcePathResolver pathResolver;
 
@@ -117,7 +118,7 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
     // disk, and so we can always resolve the `Path` packaged in a `SourcePath`.  We hash this,
     // rather than the rule key from it's `BuildRule`.
     @Override
-    protected RuleKey.Builder setSourcePath(SourcePath sourcePath) {
+    protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
         deps.addAll(pathResolver.getRule(sourcePath).asSet());
         setSingleValue(pathResolver.getPath(sourcePath));
@@ -129,7 +130,7 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
     // inputs.  If we see a `BuildRule` when generating the rule key, this is likely a break in
     // that contract, so check for that.
     @Override
-    protected RuleKey.Builder setBuildRule(BuildRule rule) {
+    protected RuleKeyBuilder setBuildRule(BuildRule rule) {
       throw new IllegalStateException("Input-based rule key builders cannot process build rules");
     }
 

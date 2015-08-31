@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -138,7 +139,7 @@ public class NdkCxxPlatformTest {
         default:
           throw new IllegalStateException();
       }
-      RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(rule);
+      RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(rule);
       ruleKeys.put(entry.getKey(), builder.build());
     }
     return ruleKeys.build();
@@ -176,7 +177,7 @@ public class NdkCxxPlatformTest {
           Optional.<Linker.CxxRuntimeType>absent(),
           Optional.<SourcePath>absent(),
           ImmutableSet.<BuildRule>of());
-      RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(rule);
+      RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(rule);
       ruleKeys.put(entry.getKey(), builder.build());
     }
     return ruleKeys.build();

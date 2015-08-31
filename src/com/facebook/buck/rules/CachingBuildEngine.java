@@ -938,7 +938,7 @@ public class CachingBuildEngine implements BuildEngine {
     // this means something changed and a dep-file based rule key can't be calculated.
     ImmutableList<Path> inputs =
         FluentIterable.from(depFile.get()).transform(MorePaths.TO_PATH).toList();
-    RuleKey.Builder builder = depFileRuleKeyBuilderFactory.newInstance(rule);
+    RuleKeyBuilder builder = depFileRuleKeyBuilderFactory.newInstance(rule);
     for (Path input : inputs) {
       try {
         builder.setPath(input);

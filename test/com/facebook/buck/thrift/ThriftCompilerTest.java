@@ -29,6 +29,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -73,7 +74,7 @@ public class ThriftCompilerTest {
       RuleKeyBuilderFactory factory,
       AbstractBuildRule rule) {
 
-    RuleKey.Builder builder = factory.newInstance(rule);
+    RuleKeyBuilder builder = factory.newInstance(rule);
     return builder.build();
   }
 

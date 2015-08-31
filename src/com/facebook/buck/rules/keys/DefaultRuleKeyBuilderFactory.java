@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.cache.CacheBuilder;
@@ -39,17 +40,17 @@ public class DefaultRuleKeyBuilderFactory extends AbstractRuleKeyBuilderFactory 
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
           public RuleKey load(@Nonnull RuleKeyAppendable appendable) throws Exception {
-            RuleKey.Builder subKeyBuilder = newBuilder(pathResolver, hashCache);
+            RuleKeyBuilder subKeyBuilder = newBuilder(pathResolver, hashCache);
             appendable.appendToRuleKey(subKeyBuilder);
             return subKeyBuilder.build();
           }
         });
   }
 
-  private RuleKey.Builder newBuilder(
+  private RuleKeyBuilder newBuilder(
       SourcePathResolver pathResolver,
       FileHashCache hashCache) {
-    return new RuleKey.Builder(
+    return new RuleKeyBuilder(
         pathResolver,
         hashCache) {
       @Override
@@ -63,7 +64,7 @@ public class DefaultRuleKeyBuilderFactory extends AbstractRuleKeyBuilderFactory 
   }
 
   @Override
-  protected RuleKey.Builder newBuilder(
+  protected RuleKeyBuilder newBuilder(
       SourcePathResolver pathResolver,
       FileHashCache hashCache,
       BuildRule rule) {

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.RuleKey;
@@ -157,7 +158,7 @@ public class ToolTest {
     assertEquals(tool1RuleKey, tool2RuleKey);
   }
 
-  private RuleKey.Builder createRuleKeyBuilder(
+  private RuleKeyBuilder createRuleKeyBuilder(
       RuleKeyBuilderFactory factory,
       SourcePathResolver resolver) {
     return factory.newInstance(new FakeBuildRule("//:test", resolver));

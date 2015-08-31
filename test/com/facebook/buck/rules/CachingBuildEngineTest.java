@@ -2222,12 +2222,12 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public RuleKey.Builder newInstance(final BuildRule buildRule) {
+    public RuleKeyBuilder newInstance(final BuildRule buildRule) {
       SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-      return new RuleKey.Builder(resolver, fileHashCache) {
+      return new RuleKeyBuilder(resolver, fileHashCache) {
 
         @Override
-        public RuleKey.Builder setReflectively(String key, @Nullable Object val) {
+        public RuleKeyBuilder setReflectively(String key, @Nullable Object val) {
           return this;
         }
 

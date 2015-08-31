@@ -22,7 +22,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
@@ -100,7 +100,7 @@ public class RustLinkableTest {
             }
 
             @Override
-            public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+            public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
               return builder;
             }
           });

@@ -49,6 +49,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.NoopArtifactCache;
@@ -1112,8 +1113,8 @@ public class DefaultJavaLibraryTest {
             FakeFileHashCache.createFromStrings(fileHashes.build()),
             pathResolver2);
 
-    RuleKey.Builder builder1 = ruleKeyBuilderFactory1.newInstance(rule1);
-    RuleKey.Builder builder2 = ruleKeyBuilderFactory2.newInstance(rule2);
+    RuleKeyBuilder builder1 = ruleKeyBuilderFactory1.newInstance(rule1);
+    RuleKeyBuilder builder2 = ruleKeyBuilderFactory2.newInstance(rule2);
     RuleKey key1 = builder1.build();
     RuleKey key2 = builder2.build();
     assertEquals(key1, key2);

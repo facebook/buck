@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.ZipSplitter;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -206,7 +206,7 @@ class DexSplitMode implements RuleKeyAppendable {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     builder.setReflectively("dexStore", dexStore.name());
     builder.setReflectively("dexSplitStrategy", dexSplitStrategy.name());
     builder.setReflectively("isPrimaryDexScenarioOverflowAllowed",

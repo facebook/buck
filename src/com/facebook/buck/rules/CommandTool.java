@@ -71,7 +71,7 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
         .setReflectively("args", args)
         .setReflectively("extraInputs", extraInputs);
@@ -146,7 +146,7 @@ public class CommandTool implements Tool {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
       return builder
           .setReflectively("format", format)
           .setReflectively("inputs", inputs);

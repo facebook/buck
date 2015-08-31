@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -90,7 +91,7 @@ public class PythonPackagedBinaryTest {
         ImmutableSortedSet.<BuildRule>of());
 
     // Calculate and return the rule key.
-    RuleKey.Builder builder = ruleKeyBuilderFactory.newInstance(binary);
+    RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(binary);
     return builder.build();
   }
 

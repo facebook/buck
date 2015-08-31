@@ -146,7 +146,7 @@ public class CommandToolTest {
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of(
                 "input", Strings.repeat("a", 40)));
-    RuleKey ruleKey = new RuleKey.Builder(pathResolver, hashCache)
+    RuleKey ruleKey = new RuleKeyBuilder(pathResolver, hashCache)
         .setReflectively("key",  tool)
         .build();
 
@@ -154,7 +154,7 @@ public class CommandToolTest {
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of(
                 "input", Strings.repeat("b", 40)));
-    RuleKey changedRuleKey = new RuleKey.Builder(pathResolver, hashCache)
+    RuleKey changedRuleKey = new RuleKeyBuilder(pathResolver, hashCache)
         .setReflectively("key",  tool)
         .build();
 

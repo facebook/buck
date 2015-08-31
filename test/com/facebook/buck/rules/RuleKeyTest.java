@@ -528,7 +528,7 @@ public class RuleKeyTest {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
       return builder
           .setReflectively("value", value)
           .setReflectively("foo", "foo")
@@ -555,13 +555,13 @@ public class RuleKeyTest {
     }
 
     @Override
-    public RuleKey.Builder appendToRuleKey(RuleKey.Builder builder) {
+    public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
       return builder
           .setReflectively("foo", foo);
     }
   }
 
-  private RuleKey.Builder createEmptyRuleKey(SourcePathResolver resolver) {
+  private RuleKeyBuilder createEmptyRuleKey(SourcePathResolver resolver) {
     FileHashCache fileHashCache =
         new FileHashCache() {
           @Override
