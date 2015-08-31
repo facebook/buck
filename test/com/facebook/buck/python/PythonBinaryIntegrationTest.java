@@ -16,11 +16,18 @@
 
 package com.facebook.buck.python;
 
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
+
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,6 +35,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 
 @RunWith(Parameterized.class)
@@ -63,6 +72,25 @@ public class PythonBinaryIntegrationTest {
   public void nonComponentDepsArePreserved() throws IOException {
     workspace.runBuckBuild("//:bar").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:extra");
+  }
+
+  @Test
+  public void executionThroughSymlink() throws IOException, InterruptedException {
+    assumeThat(Platform.detect(), Matchers.oneOf(Platform.MACOS, Platform.LINUX));
+    workspace.runBuckBuild("//:bar").assertSuccess();
+    String output = workspace.runBuckCommand("targets", "--show-output", "//:bar")
+        .assertSuccess()
+        .getStdout()
+        .trim();
+    Path link = workspace.getPath("link");
+    Files.createSymbolicLink(
+        link,
+        workspace.getPath(Splitter.on(" ").splitToList(output).get(1)).toAbsolutePath());
+    ProcessExecutor.Result result = workspace.runCommand(link.toString());
+    assertThat(
+        result.getStdout().or("") + result.getStderr().or(""),
+        result.getExitCode(),
+        Matchers.equalTo(0));
   }
 
 }

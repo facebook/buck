@@ -7,7 +7,7 @@ main_module = <MAIN_MODULE>
 modules_dir = <MODULES_DIR>
 native_libs_dir = <NATIVE_LIBS_DIR>
 
-dirpath = os.path.dirname(sys.argv[0])
+dirpath = os.path.dirname(os.path.realpath(__file__))
 os.environ['PYTHONPATH'] = os.path.join(dirpath, modules_dir)
 if native_libs_dir is not None:
     os.environ['LD_LIBRARY_PATH'] = os.path.join(dirpath, native_libs_dir)
