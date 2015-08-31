@@ -16,27 +16,38 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
+import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableCollection;
+
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;
 
-public class DefaultRuleKeyBuilderFactory extends AbstractRuleKeyBuilderFactory {
+/**
+ * A {@link RuleKeyBuilderFactory} which adds some default settings to {@link RuleKey}s.
+ */
+public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
 
-  private final LoadingCache<RuleKeyAppendable, RuleKey> cache;
+  protected final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
+  private final FileHashCache hashCache;
+  private final SourcePathResolver pathResolver;
+  private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
+      knownFields;
 
   public DefaultRuleKeyBuilderFactory(
       final FileHashCache hashCache,
       final SourcePathResolver pathResolver) {
-    super(hashCache, pathResolver);
-    cache = CacheBuilder.newBuilder().weakKeys().build(
+    ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
           public RuleKey load(@Nonnull RuleKeyAppendable appendable) throws Exception {
@@ -45,9 +56,12 @@ public class DefaultRuleKeyBuilderFactory extends AbstractRuleKeyBuilderFactory 
             return subKeyBuilder.build();
           }
         });
+    this.hashCache = hashCache;
+    this.pathResolver = pathResolver;
+    knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
   }
 
-  private RuleKeyBuilder newBuilder(
+  protected RuleKeyBuilder newBuilder(
       SourcePathResolver pathResolver,
       FileHashCache hashCache) {
     return new RuleKeyBuilder(
@@ -58,17 +72,47 @@ public class DefaultRuleKeyBuilderFactory extends AbstractRuleKeyBuilderFactory 
           SourcePathResolver resolver,
           FileHashCache hashCache,
           RuleKeyAppendable appendable) {
-        return cache.getUnchecked(appendable);
+        return ruleKeyCache.getUnchecked(appendable);
       }
     };
   }
 
-  @Override
   protected RuleKeyBuilder newBuilder(
       SourcePathResolver pathResolver,
       FileHashCache hashCache,
-      BuildRule rule) {
+      @SuppressWarnings("unused") BuildRule rule) {
     return newBuilder(pathResolver, hashCache);
+  }
+
+  /**
+   * Initialize a new {@link RuleKeyBuilder}.
+   */
+  @Override
+  public final RuleKeyBuilder newInstance(BuildRule buildRule) {
+    RuleKeyBuilder builder = newBuilder(pathResolver, hashCache, buildRule);
+    builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());
+    // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
+    builder.setReflectively("buck.type", buildRule.getType());
+    builder.setReflectively("buckVersionUid", BuckVersion.getVersion());
+
+    if (buildRule instanceof RuleKeyAppendable) {
+      // We call `setAppendableRuleKey` explicitly, since using `setReflectively` will try to add
+      // the rule key of the `BuildRule`, which is what we're trying to calculate now.
+      //
+      // "." is not a valid first character for a field name, and so will never be seen in the
+      // reflective rule key setting.
+      builder.setAppendableRuleKey(".buck", (RuleKeyAppendable) buildRule);
+    }
+
+    try {
+      for (AlterRuleKey alterRuleKey : knownFields.get(buildRule.getClass())) {
+        alterRuleKey.amendKey(builder, buildRule);
+      }
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+
+    return builder;
   }
 
 }
