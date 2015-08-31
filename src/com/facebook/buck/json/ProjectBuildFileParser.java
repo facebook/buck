@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.bser.BserDeserializer;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.MorePaths;
@@ -27,7 +28,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreThrowables;
@@ -43,6 +44,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 
 import java.io.BufferedReader;
@@ -52,6 +54,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
@@ -100,7 +103,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   @Nullable private BufferedWriter buckPyStdinWriter;
 
   private final ProjectBuildFileParserOptions options;
-  private final Console console;
   private final BuckEventBus buckEventBus;
   private final ProcessExecutor processExecutor;
   private final BserDeserializer bserDeserializer;
@@ -115,13 +117,11 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   protected ProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
-      Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor) {
     this.pathToBuckPy = Optional.absent();
     this.options = options;
-    this.console = console;
     this.environment = environment;
     this.buckEventBus = buckEventBus;
     this.processExecutor = processExecutor;
@@ -185,14 +185,17 @@ public class ProjectBuildFileParser implements AutoCloseable {
           ProjectBuildFileParser.class.getSimpleName(),
           new InputStreamConsumer(
               stderr,
-              console.getStdErr(),
-              console.getAnsi(),
-            /* flagOutputWrittenToStream */ true,
+              // We don't want to copy the output to stderr directly;
+              // we'll post console events instead.
+              new PrintStream(ByteStreams.nullOutputStream()),
+              Ansi.withoutTty(),
+              /* flagOutputWrittenToStream */ true,
               Optional.<InputStreamConsumer.Handler>of(
                   new InputStreamConsumer.Handler() {
                     @Override
                     public void handleLine(String line) {
-                      LOG.warn("buck.py warning: %s", line);
+                      buckEventBus.post(
+                          ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line));
                     }
                   })));
       stderrConsumer.start();

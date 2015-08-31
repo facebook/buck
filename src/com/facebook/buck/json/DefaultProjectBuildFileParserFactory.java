@@ -35,7 +35,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       BuckEventBus buckEventBus) {
     return new ProjectBuildFileParser(
         options,
-        console,
         environment,
         buckEventBus,
         new ProcessExecutor(console));

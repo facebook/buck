@@ -34,6 +34,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
@@ -62,6 +63,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -84,6 +86,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
@@ -101,6 +104,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -1273,6 +1277,35 @@ public class ParserTest extends EasyMockSupport {
   }
 
   @Test
+  public void whenSubprocessRaisesWarningThenConsoleEventPublished()
+      throws IOException, BuildFileParseException, InterruptedException {
+    // This test depends on unix utilities that don't exist on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes);
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    class EventListener {
+      @Subscribe
+      public void onConsoleEvent(ConsoleEvent consoleEvent) {
+        consoleEvents.add(consoleEvent);
+      }
+    }
+    EventListener eventListener = new EventListener();
+    buckEventBus.register(eventListener);
+    try (ProjectBuildFileParser buildFileParser =
+             buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessAndPrintsWarning(
+                 buckEventBus)) {
+        buildFileParser.initIfNeeded();
+    }
+    assertThat(
+        consoleEvents,
+        Matchers.contains(
+            Matchers.hasToString("Warning raised by BUCK file parser: Don't Panic!")));
+  }
+
+  @Test
   public void whenBuildFilePathChangedThenFlavorsOfTargetsInPathAreInvalidated() throws Exception {
     Parser parser = createParser(emptyBuildTargets());
 
@@ -1785,10 +1818,31 @@ public class ParserTest extends EasyMockSupport {
               new TestConsole()));
     }
 
+    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessAndPrintsWarning(
+        BuckEventBus buckEventBus) {
+      return new TestProjectBuildFileParser(
+          "fake-python",
+          new FakeProcessExecutor(
+              new Function<ProcessExecutorParams, FakeProcess>() {
+                @Override
+                public FakeProcess apply(ProcessExecutorParams params) {
+                  return new FakeProcess(0, "JSON\n", "Don't Panic!");
+                }
+              },
+              new TestConsole()),
+          buckEventBus);
+    }
+
     private class TestProjectBuildFileParser extends ProjectBuildFileParser {
       public TestProjectBuildFileParser(
           String pythonInterpreter,
           ProcessExecutor processExecutor) {
+        this(pythonInterpreter, processExecutor, BuckEventBusFactory.newInstance());
+      }
+      public TestProjectBuildFileParser(
+          String pythonInterpreter,
+          ProcessExecutor processExecutor,
+          BuckEventBus buckEventBus) {
         super(
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(projectRoot)
@@ -1798,9 +1852,8 @@ public class ParserTest extends EasyMockSupport {
                 .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
                 .setDescriptions(buildRuleTypes.getAllDescriptions())
                 .build(),
-            new TestConsole(),
             ImmutableMap.<String, String>of(),
-            BuckEventBusFactory.newInstance(),
+            buckEventBus,
             processExecutor);
       }
 
