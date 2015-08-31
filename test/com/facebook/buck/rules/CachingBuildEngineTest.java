@@ -41,7 +41,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
-import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -58,10 +57,10 @@ import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -2225,7 +2224,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     @Override
     public RuleKey.Builder newInstance(final BuildRule buildRule) {
       SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-      return new RuleKeyBuilder(resolver, fileHashCache) {
+      return new RuleKey.Builder(resolver, fileHashCache) {
 
         @Override
         public RuleKey.Builder setReflectively(String key, @Nullable Object val) {

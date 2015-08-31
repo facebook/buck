@@ -1,25 +1,7 @@
-TESTUTIL_SRCS = [
-  'RuleKeyBuilder.java',
-]
-
-java_library(
-  name = 'testutil',
-  srcs = TESTUTIL_SRCS,
-  deps = [
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/util/cache:cache',
-  ],
-  visibility = [
-    '//test/...',
-  ],
-)
-
 java_test(
   name = 'keys',
-  srcs = glob(['*.java'], excludes=TESTUTIL_SRCS),
+  srcs = glob(['*.java']),
   deps = [
-    ':testutil',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',

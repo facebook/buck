@@ -150,7 +150,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
         new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
 
     RuleKey subKey =
-        new RuleKeyBuilder(pathResolver, fileHashCache)
+        new RuleKey.Builder(pathResolver, fileHashCache)
             .setReflectively("cheese", "brie")
             .build();
 
@@ -203,7 +203,7 @@ public class DefaultRuleKeyBuilderFactoryTest {
     AppendableRule appendableRule = new AppendableRule(depTarget);
 
     RuleKey subKey =
-        new RuleKeyBuilder(pathResolver, fileHashCache)
+        new RuleKey.Builder(pathResolver, fileHashCache)
             .setReflectively("cheese", "brie")
             .build();
 

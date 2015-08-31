@@ -116,7 +116,7 @@ public class RuleKey {
     return this.getHashCode().hashCode();
   }
 
-  public abstract static class Builder {
+  public static class Builder {
 
     @VisibleForTesting
     static final byte SEPARATOR = '\0';
@@ -180,10 +180,14 @@ public class RuleKey {
      *
      * @return the {@link RuleKey} to be used for the given {@code appendable}.
      */
-    protected abstract RuleKey getAppendableRuleKey(
+    protected RuleKey getAppendableRuleKey(
         SourcePathResolver resolver,
         FileHashCache hashCache,
-        RuleKeyAppendable appendable);
+        RuleKeyAppendable appendable) {
+      RuleKey.Builder subKeyBuilder = new RuleKey.Builder(resolver, hashCache);
+      appendable.appendToRuleKey(subKeyBuilder);
+      return subKeyBuilder.build();
+    }
 
     public Builder setAppendableRuleKey(String key, RuleKeyAppendable appendable) {
       setReflectively(

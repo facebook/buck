@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -147,7 +146,7 @@ public class CommandToolTest {
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of(
                 "input", Strings.repeat("a", 40)));
-    RuleKey ruleKey = new RuleKeyBuilder(pathResolver, hashCache)
+    RuleKey ruleKey = new RuleKey.Builder(pathResolver, hashCache)
         .setReflectively("key",  tool)
         .build();
 
@@ -155,7 +154,7 @@ public class CommandToolTest {
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of(
                 "input", Strings.repeat("b", 40)));
-    RuleKey changedRuleKey = new RuleKeyBuilder(pathResolver, hashCache)
+    RuleKey changedRuleKey = new RuleKey.Builder(pathResolver, hashCache)
         .setReflectively("key",  tool)
         .build();
 
