@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.ProjectGenerator;
@@ -688,6 +689,7 @@ public class ProjectCommand extends BuildCommand {
           combinedProject,
           buildWithBuck,
           super.getOptions(),
+          !(new AppleConfig(params.getBuckConfig()).getXcodeDisableParallelizeBuild()),
           new ExecutableFinder(),
           params.getEnvironment(),
           params.getRepository().getKnownBuildRuleTypes().getCxxPlatforms(),

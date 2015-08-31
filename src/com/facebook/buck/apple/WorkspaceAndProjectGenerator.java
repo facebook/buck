@@ -70,6 +70,7 @@ public class WorkspaceAndProjectGenerator {
   private final boolean combinedProject;
   private final boolean buildWithBuck;
   private final ImmutableList<String> buildWithBuckFlags;
+  private final boolean parallelizeBuild;
   private final ExecutableFinder executableFinder;
   private final ImmutableMap<String, String> environment;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
@@ -95,6 +96,7 @@ public class WorkspaceAndProjectGenerator {
       boolean combinedProject,
       boolean buildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
+      boolean parallelizeBuild,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
@@ -110,6 +112,7 @@ public class WorkspaceAndProjectGenerator {
     this.combinedProject = combinedProject;
     this.buildWithBuck = buildWithBuck;
     this.buildWithBuckFlags = buildWithBuckFlags;
+    this.parallelizeBuild = parallelizeBuild;
     this.executableFinder = executableFinder;
     this.environment = environment;
     this.cxxPlatforms = cxxPlatforms;
@@ -805,9 +808,11 @@ public class WorkspaceAndProjectGenerator {
           orderedBuildTestTargets,
           orderedRunTestTargets,
           schemeName,
-          combinedProject ? outputDirectory
-                          : outputDirectory.resolve(workspaceName + ".xcworkspace"),
+          combinedProject ?
+              outputDirectory :
+              outputDirectory.resolve(workspaceName + ".xcworkspace"),
           buildWithBuck,
+          parallelizeBuild,
           runnablePath,
           remoteRunnablePath,
           XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),

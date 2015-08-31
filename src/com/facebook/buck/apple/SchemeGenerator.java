@@ -74,6 +74,7 @@ class SchemeGenerator {
   private final String schemeName;
   private final Path outputDirectory;
   private final boolean primaryTargetIsBuildWithBuck;
+  private final boolean parallelizeBuild;
   private final Optional<String> runnablePath;
   private final Optional<String> remoteRunnablePath;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
@@ -89,6 +90,7 @@ class SchemeGenerator {
       String schemeName,
       Path outputDirectory,
       boolean primaryTargetIsBuildWithBuck,
+      boolean parallelizeBuild,
       Optional<String> runnablePath,
       Optional<String> remoteRunnablePath,
       Map<SchemeActionType, String> actionConfigNames,
@@ -101,6 +103,7 @@ class SchemeGenerator {
     this.schemeName = schemeName;
     this.outputDirectory = outputDirectory;
     this.primaryTargetIsBuildWithBuck = primaryTargetIsBuildWithBuck;
+    this.parallelizeBuild = parallelizeBuild;
     this.runnablePath = runnablePath;
     this.remoteRunnablePath = remoteRunnablePath;
     this.actionConfigNames = ImmutableMap.copyOf(actionConfigNames);
@@ -139,7 +142,7 @@ class SchemeGenerator {
       buildTargetToBuildableReferenceMap.put(target , buildableReference);
     }
 
-    XCScheme.BuildAction buildAction = new XCScheme.BuildAction();
+    XCScheme.BuildAction buildAction = new XCScheme.BuildAction(parallelizeBuild);
 
     // For aesthetic reasons put all non-test build actions before all test build actions.
     for (PBXTarget target : orderedBuildTargets) {
@@ -246,8 +249,12 @@ class SchemeGenerator {
 
   public static Element serializeBuildAction(Document doc, XCScheme.BuildAction buildAction) {
     Element buildActionElem = doc.createElement("BuildAction");
-    buildActionElem.setAttribute("parallelizeBuildables", "NO");
-    buildActionElem.setAttribute("buildImplicitDependencies", "NO");
+    buildActionElem.setAttribute(
+        "parallelizeBuildables",
+        buildAction.getParallelizeBuild() ? "YES" : "NO");
+    buildActionElem.setAttribute(
+        "buildImplicitDependencies",
+        buildAction.getParallelizeBuild() ? "YES" : "NO");
 
     Element buildActionEntriesElem = doc.createElement("BuildActionEntries");
     buildActionElem.appendChild(buildActionEntriesElem);

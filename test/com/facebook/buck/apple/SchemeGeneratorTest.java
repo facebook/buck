@@ -126,6 +126,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         false /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.<String>absent() /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -218,6 +219,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         false /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.<String>absent() /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -309,6 +311,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         false /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.<String>absent() /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -387,6 +390,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         false /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.<String>absent() /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -445,6 +449,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         false /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.<String>absent() /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -530,6 +535,7 @@ public class SchemeGeneratorTest {
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
           false /* primaryTargetIsBuildWithBuck */,
+          false /* parallelizeBuild */,
           Optional.<String>absent() /* runnablePath */,
           Optional.<String>absent() /* remoteRunnablePath */,
           SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -562,6 +568,7 @@ public class SchemeGeneratorTest {
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
           false /* primaryTargetIsBuildWithBuck */,
+          false /* parallelizeBuild */,
           Optional.<String>absent() /* runnablePath */,
           Optional.<String>absent() /* remoteRunnablePath */,
           SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -597,6 +604,7 @@ public class SchemeGeneratorTest {
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
           false /* primaryTargetIsBuildWithBuck */,
+          false /* parallelizeBuild */,
           Optional.<String>absent() /* runnablePath */,
           Optional.<String>absent() /* remoteRunnablePath */,
           SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -629,6 +637,7 @@ public class SchemeGeneratorTest {
           "TestScheme",
           Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
           false /* primaryTargetIsBuildWithBuck */,
+          false /* parallelizeBuild */,
           Optional.<String>absent() /* runnablePath */,
           Optional.<String>absent() /* remoteRunnablePath */,
           SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -686,6 +695,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         false /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.<String>absent() /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -791,6 +801,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         false /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.<String>absent() /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -839,6 +850,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         false /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.<String>absent() /* runnablePath */,
         Optional.of("/RemoteApp") /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -903,6 +915,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         true /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.of(runnablePath) /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -963,6 +976,7 @@ public class SchemeGeneratorTest {
         "TestScheme",
         Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
         true /* primaryTargetIsBuildWithBuck */,
+        false /* parallelizeBuild */,
         Optional.of(runnablePath) /* runnablePath */,
         Optional.<String>absent() /* remoteRunnablePath */,
         SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -1001,6 +1015,62 @@ public class SchemeGeneratorTest {
     assertThat(
         libraryNode.getAttributes().getNamedItem("buildForRunning").getNodeValue(),
         equalTo("NO"));
+  }
+
+  @Test
+  public void enablingParallelizeBuild() throws Exception {
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a",
+            "root.a",
+            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+            Optional.<String>absent()));
+    rootTarget.setProductType(ProductType.STATIC_LIBRARY);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
+
+    SchemeGenerator schemeGenerator = new SchemeGenerator(
+        projectFilesystem,
+        Optional.of(rootTarget),
+        ImmutableSet.of(rootTarget),
+        ImmutableSet.<PBXTarget>of(),
+        ImmutableSet.<PBXTarget>of(),
+        "TestScheme",
+        Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+        true /* primaryTargetIsBuildWithBuck */,
+        true /* parallelizeBuild */,
+        Optional.<String>absent() /* runnablePath */,
+        Optional.<String>absent() /* remoteRunnablePath */,
+        SchemeActionType.DEFAULT_CONFIG_NAMES,
+        targetToProjectPathMapBuilder.build());
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    XPath buildActionXpath = xpathFactory.newXPath();
+    XPathExpression buildActionExpr = buildActionXpath.compile("//BuildAction");
+    NodeList buildActionNodes = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
+
+    assertThat(buildActionNodes.getLength(), is(1));
+
+    Node buildActionNode = buildActionNodes.item(0);
+
+    assertThat(
+        buildActionNode.getAttributes().getNamedItem("buildImplicitDependencies").getNodeValue(),
+        equalTo("YES"));
+    assertThat(
+        buildActionNode.getAttributes().getNamedItem("parallelizeBuildables").getNodeValue(),
+        equalTo("YES"));
   }
 
 }

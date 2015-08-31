@@ -113,8 +113,11 @@ public class XCScheme {
   public static class BuildAction {
     private List<BuildActionEntry> buildActionEntries;
 
-    public BuildAction() {
+    private final boolean parallelizeBuild;
+
+    public BuildAction(boolean parallelizeBuild) {
       buildActionEntries = Lists.newArrayList();
+      this.parallelizeBuild = parallelizeBuild;
     }
 
     public void addBuildAction(BuildActionEntry entry) {
@@ -123,6 +126,10 @@ public class XCScheme {
 
     public List<BuildActionEntry> getBuildActionEntries() {
       return buildActionEntries;
+    }
+
+    public boolean getParallelizeBuild() {
+      return parallelizeBuild;
     }
   }
 

@@ -240,6 +240,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -306,6 +307,7 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -357,6 +359,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -437,6 +440,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -486,6 +490,7 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -516,6 +521,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         true /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -620,6 +626,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1032,6 +1039,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1181,6 +1189,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1241,6 +1250,58 @@ public class WorkspaceAndProjectGeneratorTest {
         withNameAndBuildingFor(
             "BazLib",
             equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+  }
+
+  @Test
+  public void enablingParallelizeBuild() throws IOException {
+    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "FooLib").build();
+    TargetNode<AppleNativeTargetDescriptionArg> fooLib = AppleLibraryBuilder
+        .createBuilder(fooLibTarget)
+        .build();
+
+    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
+        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .setWorkspaceName(Optional.of("workspace"))
+        .setSrcTarget(Optional.of(fooLibTarget))
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(fooLib, workspaceNode);
+
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        reactNativeBuckConfig,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
+        false /* combinedProject */,
+        false /* buildWithBuck */,
+        ImmutableList.<String>of(),
+        true /* parallelizeBuild */,
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph));
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
+    XCScheme.BuildAction mainSchemeBuildAction = mainScheme.getBuildAction().get();
+    // I wish we could use Hamcrest contains() here, but we hit
+    // https://code.google.com/p/hamcrest/issues/detail?id=190 if we do that.
+    assertThat(
+        mainSchemeBuildAction.getBuildActionEntries(),
+        hasSize(1));
+    assertThat(
+        mainSchemeBuildAction.getBuildActionEntries().get(0),
+        withNameAndBuildingFor(
+            "FooLib",
+            equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+    assertThat(
+        mainSchemeBuildAction.getParallelizeBuild(),
+        is(true));
   }
 
   private Matcher<XCScheme.BuildActionEntry> buildActionEntryWithName(String name) {
