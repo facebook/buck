@@ -59,6 +59,10 @@ public class ClangPreprocessor implements Preprocessor {
           public Iterable<String> apply(String input) {
             String remainder = input;
             ImmutableList.Builder<String> processedLines = ImmutableList.builder();
+            if (remainder.isEmpty()) {
+              processedLines.add(remainder);
+            }
+
             while (!remainder.isEmpty()) {
               Matcher m = PRAGMA_TOKEN_PLACEHOLDER_PATTERN.matcher(remainder);
               if (!m.matches()) {
