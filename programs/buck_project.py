@@ -42,7 +42,6 @@ class BuckProject:
 
         self.buckd_dir = os.path.join(root, ".buckd")
         self.autobuild_pid_file = os.path.join(self.buckd_dir, "autobuild.pid")
-        self.buckd_port_file = os.path.join(self.buckd_dir, "buckd.port")
         self.buckd_run_count_file = (os.path.join(
             self.buckd_dir, "buckd.runcount"))
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
@@ -66,14 +65,14 @@ class BuckProject:
     def get_buckd_run_count(self):
         return int(get_file_contents_if_exists(self.buckd_run_count_file, -1))
 
+    def get_buckd_socket_path(self):
+        return os.path.join(self.buckd_dir, 'sock')
+
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
 
     def get_autobuild_pid(self):
         return get_file_contents_if_exists(self.autobuild_pid_file)
-
-    def get_buckd_port(self):
-        return get_file_contents_if_exists(self.buckd_port_file)
 
     def get_buck_out_log_dir(self):
         return self._buck_out_log
@@ -95,9 +94,6 @@ class BuckProject:
         self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.",
                                               dir=tmp_dir_parent)
         return self.buckd_tmp_dir
-
-    def save_buckd_port(self, port):
-        write_contents_to_file(self.buckd_port_file, port)
 
     def save_buckd_version(self, version):
         write_contents_to_file(self.buckd_version_file, version)

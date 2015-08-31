@@ -1,4 +1,5 @@
 from __future__ import print_function
+import errno
 import json
 import os
 import platform
@@ -18,7 +19,6 @@ MAX_BUCKD_RUN_COUNT = 64
 BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
 GC_MAX_PAUSE_TARGET = 15000
 
-BUCKD_LOG_FILE_PATTERN = re.compile('^NGServer.* port (\d+)\.$')
 NAILGUN_CONNECTION_REFUSED_CODE = 230
 # TODO(natthu): CI servers, for some reason, encounter this error.
 # For now, simply skip this error. Need to figure out why this happens.
@@ -139,27 +139,26 @@ class BuckTool(object):
             env['BUCK_BUILD_ID'] = build_id
 
             buck_client_file = self._get_resource(CLIENT)
-            if use_buckd and self._is_buckd_running() and os.path.exists(buck_client_file):
+            buck_socket_path = self._buck_project.get_buckd_socket_path()
+
+            if use_buckd and self._is_buckd_running() and os.path.exists(buck_client_file) and \
+                    os.path.exists(buck_socket_path):
                 print("Using buckd.", file=sys.stderr)
-                buckd_port = self._buck_project.get_buckd_port()
-                if not buckd_port or not buckd_port.isdigit():
-                    print(
-                        "Daemon port file is corrupt, starting new buck process.",
-                        file=sys.stderr)
-                    self.kill_buckd()
-                else:
-                    command = [buck_client_file]
-                    command.append("--nailgun-port")
-                    command.append(buckd_port)
-                    command.append("com.facebook.buck.cli.Main")
-                    command.extend(sys.argv[1:])
-                    with Tracing('buck', args={'command': command}):
-                        exit_code = subprocess.call(command, cwd=self._buck_project.root, env=env)
-                        if exit_code == 2:
-                            print('Daemon is busy, please wait',
-                                  'or run "buck kill" to terminate it.',
-                                  file=sys.stderr)
-                        return exit_code
+                command = [buck_client_file]
+                command.append("--nailgun-server")
+                # We don't use buck_socket_path because it's absolute,
+                # and we want a relative path to avoid hitting the
+                # (very small) limit on unix domain socket length.
+                command.append("local:.buckd/sock")
+                command.append("com.facebook.buck.cli.Main")
+                command.extend(sys.argv[1:])
+                with Tracing('buck', args={'command': command}):
+                    exit_code = subprocess.call(command, cwd=self._buck_project.root, env=env)
+                    if exit_code == 2:
+                        print('Daemon is busy, please wait',
+                              'or run "buck kill" to terminate it.',
+                              file=sys.stderr)
+                    return exit_code
 
             command = ["buck"]
             command.extend(self._get_java_args(buck_version_uid))
@@ -203,7 +202,7 @@ class BuckTool(object):
                 ngserver_output_path))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append("com.martiansoftware.nailgun.NGServer")
-            command.append("localhost:0")
+            command.append("local:.buckd/sock")
             command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
 
             '''
@@ -224,6 +223,18 @@ class BuckTool(object):
                 os.dup2(dev_null_fd, 2)
                 os.close(dev_null_fd)
 
+            buck_socket_path = self._buck_project.get_buckd_socket_path()
+
+            # Make sure the Unix domain socket doesn't exist before this call.
+            try:
+                os.unlink(buck_socket_path)
+            except OSError, e:
+                if e.errno == errno.ENOENT:
+                    # Socket didn't previously exist.
+                    pass
+                else:
+                    raise e
+
             process = subprocess.Popen(
                 command,
                 executable=which("java"),
@@ -232,32 +243,16 @@ class BuckTool(object):
                 preexec_fn=preexec_func,
                 env=self._environ_for_buck())
 
-            buckd_port = None
-            for i in range(100):
-                if buckd_port:
-                    break
-                try:
-                    with open(ngserver_output_path) as f:
-                        for line in f:
-                            match = BUCKD_LOG_FILE_PATTERN.match(line)
-                            if match:
-                                buckd_port = match.group(1)
-                                break
-                except IOError as e:
-                    pass
-                finally:
-                    time.sleep(0.1)
-            else:
-                print(
-                    "nailgun server did not respond after 10s. Aborting buckd.",
-                    file=sys.stderr)
-                return 1
-
-            self._buck_project.save_buckd_port(buckd_port)
             self._buck_project.save_buckd_version(buck_version_uid)
             self._buck_project.update_buckd_run_count(0)
 
+            # Give Java some time to create the listening socket.
+            for i in range(0, 100):
+                if not os.path.exists(buck_socket_path):
+                    time.sleep(0.01)
+
             returncode = process.poll()
+
             # If the process hasn't exited yet, everything is working as expected
             if returncode is None:
                 return 0
@@ -275,30 +270,26 @@ class BuckTool(object):
 
     def kill_buckd(self):
         with Tracing('BuckRepo.kill_buckd'):
-            buckd_port = self._buck_project.get_buckd_port()
-
-            if buckd_port:
-                if not buckd_port.isdigit():
-                    print("WARNING: Corrupt buckd port: '{0}'.".format(buckd_port))
-                else:
-                    print("Shutting down nailgun server...", file=sys.stderr)
-                    buck_client_file = self._get_resource(CLIENT)
-                    command = [buck_client_file]
-                    command.append('ng-stop')
-                    command.append('--nailgun-port')
-                    command.append(buckd_port)
-                    try:
-                        check_output(
-                            command,
-                            cwd=self._buck_project.root,
-                            stderr=subprocess.STDOUT)
-                    except CalledProcessError as e:
-                        if (e.returncode not in
-                                [NAILGUN_CONNECTION_REFUSED_CODE,
-                                    NAILGUN_CONNECTION_BROKEN_CODE,
-                                    NAILGUN_UNEXPECTED_CHUNK_TYPE]):
-                            print(e.output, end='', file=sys.stderr)
-                            raise
+            buckd_socket_path = self._buck_project.get_buckd_socket_path()
+            if os.path.exists(buckd_socket_path):
+                print("Shutting down nailgun server...", file=sys.stderr)
+                buck_client_file = self._get_resource(CLIENT)
+                command = [buck_client_file]
+                command.append('ng-stop')
+                command.append('--nailgun-server')
+                command.append("local:.buckd/sock")
+                try:
+                    check_output(
+                        command,
+                        cwd=self._buck_project.root,
+                        stderr=subprocess.STDOUT)
+                except CalledProcessError as e:
+                    if (e.returncode not in
+                        [NAILGUN_CONNECTION_REFUSED_CODE,
+                         NAILGUN_CONNECTION_BROKEN_CODE,
+                         NAILGUN_UNEXPECTED_CHUNK_TYPE]):
+                        print(e.output, end='', file=sys.stderr)
+                        raise
 
             self._buck_project.clean_up_buckd()
 
@@ -318,16 +309,16 @@ class BuckTool(object):
 
     def _is_buckd_running(self):
         with Tracing('BuckRepo._is_buckd_running'):
-            buckd_port = self._buck_project.get_buckd_port()
+            buckd_socket_path = self._buck_project.get_buckd_socket_path()
 
-            if buckd_port is None or not buckd_port.isdigit():
+            if not os.path.exists(buckd_socket_path):
                 return False
 
             buck_client_file = self._get_resource(CLIENT)
             command = [buck_client_file]
             command.append('ng-stats')
-            command.append('--nailgun-port')
-            command.append(buckd_port)
+            command.append('--nailgun-server')
+            command.append('local:.buckd/sock')
             try:
                 check_output(
                     command,

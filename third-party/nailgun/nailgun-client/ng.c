@@ -27,6 +27,7 @@
 	#include <netdb.h>
 	#include <netinet/in.h>
 	#include <sys/socket.h>
+	#include <sys/un.h>
 	#include <sys/time.h>
 	#include <sys/types.h>
 #endif
@@ -242,7 +243,7 @@ void sendChunk(unsigned int size, char chunkType, char* buf) {
   bytesSent = sendAll(nailgunsocket, header, CHUNK_HEADER_LEN);
   if (bytesSent != 0 && size > 0) {
     bytesSent = sendAll(nailgunsocket, buf, size);
-  } else if (bytesSent == 0 && (chunkType != CHUNKTYPE_HEARTBEAT || errno != EPIPE)) {
+  } else if (bytesSent == 0 && (chunkType != CHUNKTYPE_HEARTBEAT || !(errno == EPIPE || errno == ECONNRESET))) {
     perror("send");
     handleSocketClose();
   }
@@ -650,7 +651,12 @@ void usage(int exitcode) {
 
 int main(int argc, char *argv[], char *env[]) {
   int i;
-  struct sockaddr_in server_addr;
+  struct sockaddr *server_addr;
+  socklen_t server_addr_len;
+  struct sockaddr_in server_addr_in;
+  #ifndef WIN32
+    struct sockaddr_un server_addr_un;
+  #endif
   char *nailgun_server;        /* server as specified by user */
   char *nailgun_port;          /* port as specified by user */
   char *cwd;
@@ -743,30 +749,60 @@ int main(int argc, char *argv[], char *env[]) {
   if (cmd == NULL) {
     usage(NAILGUN_BAD_ARGUMENTS);
   }
-  
-  /* jump through a series of connection hoops */  
-  hostinfo = gethostbyname(nailgun_server);
 
-  if (hostinfo == NULL) {
-    fprintf(stderr, "Unknown host: %s\n", nailgun_server);
-    cleanUpAndExit(NAILGUN_CONNECT_FAILED);
-  }
- 
-  port = atoi(nailgun_port);
+  #ifndef WIN32
+    if (strncmp(nailgun_server, "local:", 6) == 0) {
+      const char *socket_path = nailgun_server + 6;
+      size_t socket_path_len = strlen(socket_path);
+      if (socket_path_len > sizeof(server_addr_un.sun_path) - 1) {
+        fprintf(stderr, "Socket path [%s] too long (%ld)\n", socket_path, (long) socket_path_len);
+        cleanUpAndExit(NAILGUN_SOCKET_FAILED);
+      }
+      if ((nailgunsocket = socket(PF_LOCAL, SOCK_STREAM, 0)) == -1) {
+        perror("socket");
+        cleanUpAndExit(NAILGUN_SOCKET_FAILED);
+      }
 
-  if ((nailgunsocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-    perror("socket");
-    cleanUpAndExit(NAILGUN_SOCKET_FAILED);
-  }
+      server_addr_un.sun_family = AF_LOCAL;
+      strncpy(server_addr_un.sun_path, socket_path, socket_path_len);
+      server_addr_un.sun_path[socket_path_len] = '\0';
 
-  server_addr.sin_family = AF_INET;    
-  server_addr.sin_port = htons(port);
-  server_addr.sin_addr = *(struct in_addr *) hostinfo->h_addr;
-  
-  memset(&(server_addr.sin_zero), '\0', 8);
+      #ifdef BSD
+        server_addr_un.sun_len = offsetof(struct sockaddr_un, sun_path) + socket_path_len;
+      #endif
+      server_addr = (struct sockaddr *)&server_addr_un;
+      server_addr_len = sizeof(server_addr_un);
+    } else {
+  #endif
 
-  if (connect(nailgunsocket, (struct sockaddr *)&server_addr,
-    sizeof(struct sockaddr)) == -1) {
+      /* jump through a series of connection hoops */
+      hostinfo = gethostbyname(nailgun_server);
+
+      if (hostinfo == NULL) {
+        fprintf(stderr, "Unknown host: %s\n", nailgun_server);
+        cleanUpAndExit(NAILGUN_CONNECT_FAILED);
+      }
+
+      port = atoi(nailgun_port);
+
+      if ((nailgunsocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        perror("socket");
+        cleanUpAndExit(NAILGUN_SOCKET_FAILED);
+      }
+
+      server_addr_in.sin_family = AF_INET;
+      server_addr_in.sin_port = htons(port);
+      server_addr_in.sin_addr = *(struct in_addr *) hostinfo->h_addr;
+
+      memset(&(server_addr_in.sin_zero), '\0', 8);
+      server_addr = (struct sockaddr *)&server_addr_in;
+      server_addr_len = sizeof(server_addr_in);
+
+  #ifndef WIN32
+    }
+  #endif
+
+  if (connect(nailgunsocket, server_addr, server_addr_len) == -1) {
     perror("connect");
     cleanUpAndExit(NAILGUN_CONNECT_FAILED);
   } 
