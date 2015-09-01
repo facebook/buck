@@ -507,7 +507,7 @@ public final class Main {
     Watchman watchman;
     ParserConfig.GlobHandler globHandler;
     if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
-      watchman = Watchman.build(projectRoot, clientEnvironment);
+      watchman = Watchman.build(projectRoot, clientEnvironment, console);
       if (parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
           watchman.hasWildmatchGlob()) {
         globHandler = ParserConfig.GlobHandler.WATCHMAN;

@@ -18,6 +18,7 @@ package com.facebook.buck.io;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -46,11 +47,7 @@ public class WatchmanTest {
         new FakeProcess(1));
     ProcessExecutor executor = new FakeProcessExecutor(processMap);
 
-    Watchman watchman = Watchman.build(
-        executor,
-        Paths.get(root),
-        env,
-        finder);
+    Watchman watchman = Watchman.build(executor, Paths.get(root), env, finder, new TestConsole());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -67,7 +64,7 @@ public class WatchmanTest {
 
     ProcessExecutor executor = new FakeProcessExecutor(processMap);
 
-    Watchman watchman = Watchman.build(executor, Paths.get(root), env, finder);
+    Watchman watchman = Watchman.build(executor, Paths.get(root), env, finder, new TestConsole());
 
     assertEquals("3.0.0", watchman.getVersion().get());
     assertEquals(root, watchman.getWatchRoot().get());
@@ -85,7 +82,7 @@ public class WatchmanTest {
         new FakeProcess(0, "{\"version\":\"3.4.0\",\"watch\":\"" + root + "\"}", ""));
 
     ProcessExecutor executor = new FakeProcessExecutor(processMap);
-    Watchman watchman = Watchman.build(executor, Paths.get(root), env, finder);
+    Watchman watchman = Watchman.build(executor, Paths.get(root), env, finder, new TestConsole());
 
     assertEquals("3.4.0", watchman.getVersion().get());
     assertEquals(root, watchman.getWatchRoot().get());

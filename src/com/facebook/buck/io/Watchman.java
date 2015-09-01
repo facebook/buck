@@ -72,7 +72,8 @@ public class Watchman {
 
   public static Watchman build(
       Path rootPath,
-      ImmutableMap<String, String> env)
+      ImmutableMap<String, String> env,
+      Console console)
       throws InterruptedException {
     // We have to create our own process executor, since the one from Main may well have ansi
     // enabled, causing some commands to output escape codes.
@@ -86,7 +87,7 @@ public class Watchman {
               stderr,
               Ansi.withoutTty()));
 
-      return build(executor, rootPath, env, new ExecutableFinder());
+      return build(executor, rootPath, env, new ExecutableFinder(), console);
     }
   }
 
@@ -95,7 +96,8 @@ public class Watchman {
       ProcessExecutor executor,
       Path rootPath,
       ImmutableMap<String, String> env,
-      ExecutableFinder exeFinder) throws InterruptedException {
+      ExecutableFinder exeFinder,
+      Console console) throws InterruptedException {
     try {
       String watchman = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath().toString();
       Optional<Map<String, String>> result;
@@ -114,8 +116,11 @@ public class Watchman {
 
       ImmutableSet<Capability> capabilities = deriveCapabilities(rawVersion.get());
 
-      // TODO(simons): Using error to force this to the console. There has to be something better.
-      LOG.error("Adding watchman root: %s", rootPath);
+      // We write to the raw stream since it's not the end of the world if this gets overwritten,
+      // and if we don't we freeze the super console.
+      console.getStdErr().getRawStream().format("Adding watchman root: %s\n", rootPath);
+      LOG.info("Adding watchman root: %s", rootPath);
+
       long start = System.currentTimeMillis();
       if (capabilities.contains(Capability.SUPPORTS_PROJECT_WATCH)) {
         result = execute(executor, watchman, "watch-project", rootPath.toAbsolutePath().toString());

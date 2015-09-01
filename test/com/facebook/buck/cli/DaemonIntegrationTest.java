@@ -29,7 +29,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
@@ -37,6 +36,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.rules.TestRunEvent;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -64,7 +64,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -78,7 +77,6 @@ public class DaemonIntegrationTest {
   private static final ImmutableList<String> TMP_ENV_VARS = ImmutableList.of(
       "BUCK_ORIG_TEMPDIR", "BUCK_ORIG_TEMP", "BUCK_ORIG_TMPDIR", "BUCK_ORIG_TMP");
   private ScheduledExecutorService executorService;
-  private Watchman watchman;
 
   private static String getTempDir() {
     // We can't use the default temporary directory or $TMP in this test, since they're overridden
@@ -114,7 +112,7 @@ public class DaemonIntegrationTest {
     // In case root_restrict_files is enabled in /etc/watchmanconfig, assume
     // this is one of the entries so it doesn't give up.
     tmp.newFolder(".git");
-    watchman = Watchman.build(tmp.getRootPath(), getWatchmanEnv());
+    Watchman watchman = Watchman.build(tmp.getRootPath(), getWatchmanEnv(), new TestConsole());
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
