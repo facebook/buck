@@ -764,6 +764,7 @@ public class CachingBuildEngine implements BuildEngine {
       }
       return cacheResult;
     }
+    LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
 
     // We unzip the file in the root of the project directory.
     // Ideally, the following would work:
