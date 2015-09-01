@@ -317,7 +317,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public BuildTarget binary;
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
-    public Optional<ImmutableMap<String, SourcePath>> headers;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<SourcePath> provisioningProfileSearchPath;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
