@@ -1,15 +1,55 @@
+genrule(
+  name = 'gen',
+  out = 'out',
+  cmd = '$(exe :bin) > $OUT',
+)
+
+python_binary(
+  name = 'bin',
+  main_module = 'main',
+  deps = [
+    ':lib',
+  ],
+)
+
 python_library(
-  name = 'foo',
+  name = 'lib',
   srcs = [
-    'foo.py',
+    'main.py',
+    'foo/bar/mod.py',
   ],
 )
 
 python_binary(
-  name = 'bar',
-  main_module = 'foo',
+  name = 'bin-with-native-libs',
+  main_module = 'main_with_native_libs',
+  deps = [
+    ':lib-with-native-libs',
+  ],
+)
+
+python_library(
+  name = 'lib-with-native-libs',
+  srcs = [
+    'main_with_native_libs.py',
+  ],
   deps = [
     ':foo',
+  ],
+)
+
+cxx_library(
+  name = 'foo',
+  srcs = [
+    'foo.c',
+  ],
+)
+
+python_binary(
+  name = 'bin-with-extra-dep',
+  main_module = 'main',
+  deps = [
+    ':lib',
     ':extra',
   ],
 )
