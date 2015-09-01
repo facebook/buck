@@ -51,6 +51,7 @@ java_test(
     '//third-party/java/jackson:jackson-annotations',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',
+    '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',
   ],
 )
