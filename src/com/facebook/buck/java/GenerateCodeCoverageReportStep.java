@@ -60,7 +60,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
   @Override
   public String getShortName() {
-    return String.format("emma_report");
+    return "emma_report";
   }
 
   @Override

@@ -277,8 +277,7 @@ class FixJunit3Use(SingleLineFixer):
                 start_index = translate_metadata['start_index']
                 end_index = translate_metadata['end_index']
                 offset_array = translate_metadata['offset_array']
-                if (problem.line >= start_index and
-                        problem.line < end_index):
+                if start_index <= problem.line < end_index:
                     new_line = offset_array.index(problem.line) + start_index
                     return problem.cloneWithNewOffset(
                         new_line,

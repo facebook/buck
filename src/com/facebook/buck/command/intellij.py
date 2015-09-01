@@ -467,7 +467,6 @@ def write_misc_file(java_settings):
         'java_language_level': java_settings.get('languageLevel', 'JDK_1_6'),
         'project_jdk_name': java_settings.get('jdkName', 'Android API 21 Platform'),
         'project_jdk_type': java_settings.get('jdkType', 'Android SDK'),
-        'project_jdk_type': java_settings.get('jdkType', 'Android SDK'),
         'project_output_url': output_url
     }
 

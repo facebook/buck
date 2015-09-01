@@ -247,7 +247,7 @@ public final class Main {
       return parser;
     }
 
-    private final DefaultFileHashCache getFileHashCache() {
+    private DefaultFileHashCache getFileHashCache() {
       return hashCache;
     }
 

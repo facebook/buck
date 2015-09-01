@@ -246,7 +246,7 @@ public class AndroidPackageableCollectorTest {
         .toList();
 
     assertEquals(
-        String.format("Android resources should be topologically sorted."),
+        "Android resources should be topologically sorted.",
         result,
         collector.build().getResourceDetails().getResourcesWithNonEmptyResDir());
 
@@ -269,7 +269,7 @@ public class AndroidPackageableCollectorTest {
         .build(ruleResolver);
 
     assertEquals(
-        String.format("Android resources should be topologically sorted."),
+        "Android resources should be topologically sorted.",
         result,
         androidBinary
             .getAndroidPackageableCollection()
