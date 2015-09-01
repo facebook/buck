@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.CaseFormat;
@@ -41,7 +42,11 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   @JsonIgnore
   private final ImmutableSet<RuleKey> ruleKeys;
 
-  protected ArtifactCacheEvent(Operation operation, ImmutableSet<RuleKey> ruleKeys) {
+  protected ArtifactCacheEvent(
+      EventKey eventKey,
+      Operation operation,
+      ImmutableSet<RuleKey> ruleKeys) {
+    super(eventKey);
     this.operation = operation;
     this.ruleKeys = ruleKeys;
   }
@@ -81,7 +86,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   public static class Started extends ArtifactCacheEvent {
     protected Started(Operation operation, ImmutableSet<RuleKey> ruleKeys) {
-      super(operation, ruleKeys);
+      super(EventKey.unique(), operation, ruleKeys);
     }
 
     @Override
@@ -102,14 +107,13 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     protected Finished(
         Started started,
         Optional<CacheResult> cacheResult) {
-      super(started.getOperation(), started.getRuleKeys());
+      super(started.getEventKey(), started.getOperation(), started.getRuleKeys());
       Preconditions.checkArgument(
           (started.getOperation().equals(Operation.FETCH) && cacheResult.isPresent()) ||
           (!started.getOperation().equals(Operation.FETCH) && !cacheResult.isPresent()),
           "For FETCH operations, cacheResult must be non-null. " +
           "For non-FETCH operations, cacheResult must be null.");
       this.cacheResult = cacheResult;
-      chain(started);
     }
 
     public boolean isSuccess() {

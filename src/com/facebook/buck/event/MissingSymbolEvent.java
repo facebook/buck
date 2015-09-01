@@ -29,6 +29,7 @@ public class MissingSymbolEvent extends AbstractBuckEvent {
   private final SymbolType type;
 
   private MissingSymbolEvent(BuildTarget target, String symbol, SymbolType type) {
+    super(EventKey.unique());
     this.target = target;
     this.symbol = symbol;
     this.type = type;

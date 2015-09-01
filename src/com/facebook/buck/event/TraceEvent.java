@@ -36,6 +36,7 @@ public class TraceEvent extends AbstractBuckEvent {
       String name,
       ChromeTraceEvent.Phase phase,
       ImmutableMap<String, String> properties) {
+    super(EventKey.unique());
     this.name = name;
     this.phase = phase;
     this.properties = properties;

@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
@@ -31,7 +32,8 @@ import com.google.common.collect.ImmutableList;
 public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent {
   private final ImmutableList<BuildTarget> buildTargets;
 
-  protected ParseEvent(Iterable<BuildTarget> buildTargets) {
+  protected ParseEvent(EventKey eventKey, Iterable<BuildTarget> buildTargets) {
+    super(eventKey);
     this.buildTargets = ImmutableList.copyOf(buildTargets);
   }
 
@@ -61,7 +63,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
 
   public static class Started extends ParseEvent {
     protected Started(Iterable<BuildTarget> buildTargets) {
-      super(buildTargets);
+      super(EventKey.unique(), buildTargets);
     }
 
     @Override
@@ -75,9 +77,8 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent 
     private final Optional<TargetGraph> graph;
 
     protected Finished(Started started, Optional<TargetGraph> graph) {
-      super(started.getBuildTargets());
+      super(started.getEventKey(), started.getBuildTargets());
       this.graph = graph;
-      chain(started);
     }
 
     @Override

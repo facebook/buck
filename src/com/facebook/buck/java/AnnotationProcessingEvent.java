@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.CaseFormat;
 
@@ -41,11 +42,13 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent {
   private final boolean isLastRound;
 
   protected AnnotationProcessingEvent(
+      EventKey eventKey,
       BuildTarget buildTarget,
       String annotationProcessorName,
       Operation operation,
       int round,
       boolean isLastRound) {
+    super(eventKey);
     this.buildTarget = buildTarget;
     this.annotationProcessorName = annotationProcessorName;
     this.operation = operation;
@@ -104,7 +107,7 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent {
         Operation operation,
         int round,
         boolean isLastRound) {
-      super(buildTarget, annotationProcessorName, operation, round, isLastRound);
+      super(EventKey.unique(), buildTarget, annotationProcessorName, operation, round, isLastRound);
     }
 
     @Override
@@ -119,12 +122,12 @@ public abstract class AnnotationProcessingEvent extends AbstractBuckEvent {
   public static class Finished extends AnnotationProcessingEvent {
     public Finished(Started started) {
       super(
+          started.getEventKey(),
           started.getBuildTarget(),
           started.getAnnotationProcessorName(),
           started.getOperation(),
           started.getRound(),
           started.isLastRound());
-      chain(started);
     }
 
     @Override

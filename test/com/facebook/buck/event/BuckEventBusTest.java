@@ -128,6 +128,7 @@ public class BuckEventBusTest {
     public final long milliseconds;
 
     private SleepEvent(long milliseconds) {
+      super(EventKey.unique());
       this.milliseconds = milliseconds;
     }
 
@@ -150,6 +151,10 @@ public class BuckEventBusTest {
   }
 
   private static class TestEvent extends AbstractBuckEvent {
+
+    public TestEvent() {
+      super(EventKey.unique());
+    }
 
     @Override
     protected String getValueString() {

@@ -17,6 +17,7 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 
 import java.net.URI;
 
@@ -24,7 +25,8 @@ public abstract class DownloadEvent extends AbstractBuckEvent {
 
   protected URI uri;
 
-  private DownloadEvent(URI uri) {
+  private DownloadEvent(EventKey eventKey, URI uri) {
+    super(eventKey);
     this.uri = uri;
   }
 
@@ -43,7 +45,7 @@ public abstract class DownloadEvent extends AbstractBuckEvent {
 
   public static class Started extends DownloadEvent {
     public Started(URI uri) {
-      super(uri);
+      super(EventKey.unique(), uri);
     }
 
     @Override
@@ -54,8 +56,7 @@ public abstract class DownloadEvent extends AbstractBuckEvent {
 
   public static class Finished extends DownloadEvent {
     public Finished(Started started) {
-      super(started.uri);
-      chain(started);
+      super(started.getEventKey(), started.uri);
     }
 
     @Override

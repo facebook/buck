@@ -27,6 +27,7 @@ public class ConsoleEvent extends AbstractBuckEvent {
   private final String message;
 
   protected ConsoleEvent(Level level, String message) {
+    super(EventKey.unique());
     this.level = level;
     this.message = message;
   }

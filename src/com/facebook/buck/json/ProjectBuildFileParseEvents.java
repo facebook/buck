@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 
 /**
@@ -24,13 +25,18 @@ import com.facebook.buck.event.LeafEvent;
  */
 public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent implements LeafEvent {
   // This class does nothing; it exists only to group two AbstractBuckEvents.
-  private ProjectBuildFileParseEvents() {
+  private ProjectBuildFileParseEvents(EventKey eventKey) {
+    super(eventKey);
   }
 
   /**
    * Event posted immediately before launching buck.py to parse BUCK files.
    */
   public static class Started extends ProjectBuildFileParseEvents {
+    public Started() {
+      super(EventKey.unique());
+    }
+
     @Override
     public String getEventName() {
       return "BuckFilesParseStarted";
@@ -53,7 +59,7 @@ public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent impl
   public static class Finished extends ProjectBuildFileParseEvents {
 
     public Finished(Started started) {
-      chain(started);
+      super(started.getEventKey());
     }
 
     @Override

@@ -34,6 +34,10 @@ import org.immutables.value.Value;
  */
 public abstract class SimplePerfEvent extends AbstractBuckEvent {
 
+  public SimplePerfEvent(EventKey eventKey) {
+    super(eventKey);
+  }
+
   public enum Type {
     STARTED("Started"),
     UPDATED("Updated"),
@@ -334,6 +338,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     @JsonValue
     @Value.Parameter
     public abstract String getValue();
+
+    @Value.Check
+    protected void nameIsNotEmpty() {
+      Preconditions.checkArgument(!getValue().isEmpty());
+    }
   }
 
   private static class NoopScope implements AutoCloseable, Scope {
@@ -406,9 +415,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     private ImmutableMap<String, Object> info;
 
     public AbstractChainablePerfEvent(
+        EventKey eventKey,
         PerfEventId perfEventId,
         Type perfEventType,
         ImmutableMap<String, Object> info) {
+      super(eventKey);
       this.perfEventId = perfEventId;
       this.perfEventType = perfEventType;
       this.info = info;
@@ -521,23 +532,21 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     }
 
     public StartedImpl(PerfEventId perfEventId, ImmutableMap<String, Object> info) {
-      super(perfEventId, Type.STARTED, info);
+      super(EventKey.unique(), perfEventId, Type.STARTED, info);
     }
   }
 
   private static class Updated extends AbstractChainablePerfEvent {
 
     public Updated(StartedImpl started, ImmutableMap<String, Object> updateInfo) {
-      super(started.getEventId(), Type.UPDATED, updateInfo);
-      chain(started);
+      super(started.getEventKey(), started.getEventId(), Type.UPDATED, updateInfo);
     }
   }
 
   private static class Finished extends AbstractChainablePerfEvent {
 
     public Finished(StartedImpl started, ImmutableMap<String, Object> finishedInfo) {
-      super(started.getEventId(), Type.FINISHED, finishedInfo);
-      chain(started);
+      super(started.getEventKey(), started.getEventId(), Type.FINISHED, finishedInfo);
       started.markChainFinished();
     }
   }

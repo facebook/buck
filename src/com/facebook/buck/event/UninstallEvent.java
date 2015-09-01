@@ -21,7 +21,8 @@ import com.google.common.base.Objects;
 public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEvent {
   private final String packageName;
 
-  public UninstallEvent(String packageName) {
+  protected UninstallEvent(EventKey eventKey, String packageName) {
+    super(eventKey);
     this.packageName = packageName;
   }
 
@@ -49,7 +50,7 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
 
   public static class Started extends UninstallEvent {
     protected Started(String packageName) {
-      super(packageName);
+      super(EventKey.unique(), packageName);
     }
 
     @Override
@@ -62,9 +63,8 @@ public abstract class UninstallEvent extends AbstractBuckEvent implements LeafEv
     private final boolean success;
 
     protected Finished(Started started, boolean success) {
-      super(started.getPackageName());
+      super(started.getEventKey(), started.getPackageName());
       this.success = success;
-      chain(started);
     }
 
     public boolean isSuccess() {

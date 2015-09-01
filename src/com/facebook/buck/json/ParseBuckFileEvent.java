@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.google.common.base.Objects;
 
 import java.nio.file.Path;
@@ -27,7 +28,8 @@ import java.nio.file.Path;
 public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
   private final Path buckFilePath;
 
-  protected ParseBuckFileEvent(Path buckFilePath) {
+  protected ParseBuckFileEvent(EventKey eventKey, Path buckFilePath) {
+    super(eventKey);
     this.buckFilePath = buckFilePath;
   }
 
@@ -50,7 +52,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
 
   public static class Started extends ParseBuckFileEvent {
     protected Started(Path buckFilePath) {
-      super(buckFilePath);
+      super(EventKey.unique(), buckFilePath);
     }
 
     @Override
@@ -63,9 +65,8 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent {
     private final int numRules;
 
     protected Finished(Started started, int numRules) {
-      super(started.getBuckFilePath());
+      super(started.getEventKey(), started.getBuckFilePath());
       this.numRules = numRules;
-      chain(started);
     }
 
     @Override

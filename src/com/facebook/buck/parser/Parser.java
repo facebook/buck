@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
@@ -830,6 +831,10 @@ public class Parser {
    */
   public void recordParseStartTime(BuckEventBus eventBus) {
     class ParseStartTime extends AbstractBuckEvent {
+
+      public ParseStartTime() {
+        super(EventKey.unique());
+      }
 
       @Override
       protected String getValueString() {

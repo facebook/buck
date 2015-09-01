@@ -17,6 +17,7 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.google.common.base.Preconditions;
 
 import java.net.URI;
@@ -28,6 +29,7 @@ public class DownloadProgressEvent extends AbstractBuckEvent {
   private final String size;
 
   public DownloadProgressEvent(URI uri, long size, long downloadedSoFar) {
+    super(EventKey.unique());
     this.uri = uri;
     this.size = size == -1 ? "unknown" : String.valueOf(size);
     Preconditions.checkArgument(downloadedSoFar > 0);

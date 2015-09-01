@@ -23,7 +23,8 @@ import com.google.common.base.Optional;
 public abstract class InstallEvent extends AbstractBuckEvent implements LeafEvent {
   private final BuildTarget buildTarget;
 
-  protected InstallEvent(BuildTarget buildTarget) {
+  protected InstallEvent(EventKey eventKey, BuildTarget buildTarget) {
+    super(eventKey);
     this.buildTarget = buildTarget;
   }
 
@@ -51,7 +52,7 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
 
   public static class Started extends InstallEvent {
     protected Started(BuildTarget buildTarget) {
-      super(buildTarget);
+      super(EventKey.unique(), buildTarget);
     }
 
     @Override
@@ -68,10 +69,9 @@ public abstract class InstallEvent extends AbstractBuckEvent implements LeafEven
     private final long pid;
 
     protected Finished(Started started, boolean success, Optional<Long> pid) {
-      super(started.getBuildTarget());
+      super(started.getEventKey(), started.getBuildTarget());
       this.success = success;
       this.pid = pid.or(invalidPid);
-      chain(started);
     }
 
     public boolean isSuccess() {

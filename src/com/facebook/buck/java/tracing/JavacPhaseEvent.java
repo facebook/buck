@@ -17,6 +17,7 @@
 package com.facebook.buck.java.tracing;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 
@@ -78,9 +79,11 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent {
   private final ImmutableMap<String, String> args;
 
   protected JavacPhaseEvent(
+      EventKey eventKey,
       BuildTarget buildTarget,
       Phase phase,
       ImmutableMap<String, String> args) {
+    super(eventKey);
     this.buildTarget = buildTarget;
     this.phase = phase;
     this.args = args;
@@ -121,7 +124,7 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent {
         BuildTarget buildTarget,
         Phase phase,
         ImmutableMap<String, String> args) {
-      super(buildTarget, phase, args);
+      super(EventKey.unique(), buildTarget, phase, args);
     }
 
     @Override
@@ -134,8 +137,10 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent {
     public Finished(
         Started startedEvent,
         ImmutableMap<String, String> args) {
-      super(startedEvent.getBuildTarget(), startedEvent.getPhase(), args);
-      chain(startedEvent);
+      super(startedEvent.getEventKey(),
+          startedEvent.getBuildTarget(),
+          startedEvent.getPhase(),
+          args);
     }
 
     @Override

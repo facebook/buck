@@ -46,7 +46,7 @@ abstract class AbstractEventKey {
   /**
    * @return an EventKey unique to the current process.
    */
-  public static EventKey of() {
+  public static EventKey unique() {
     return EventKey.of(SEQUENCE_NUMBER.incrementAndGet());
   }
 

@@ -29,10 +29,12 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent {
   private final ImmutableMap<String, String> args;
 
   protected CompilerPluginDurationEvent(
+      EventKey eventKey,
       BuildTarget buildTarget,
       String pluginName,
       String durationName,
       ImmutableMap<String, String> args) {
+    super(eventKey);
     this.buildTarget = buildTarget;
     this.pluginName = pluginName;
     this.durationName = durationName;
@@ -80,7 +82,7 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent {
         String pluginName,
         String durationName,
         ImmutableMap<String, String> args) {
-      super(buildTarget, pluginName, durationName, args);
+      super(EventKey.unique(), buildTarget, pluginName, durationName, args);
     }
 
     @Override
@@ -94,11 +96,11 @@ public abstract class CompilerPluginDurationEvent extends AbstractBuckEvent {
         Started startedEvent,
         ImmutableMap<String, String> args) {
       super(
+          startedEvent.getEventKey(),
           startedEvent.getBuildTarget(),
           startedEvent.getPluginName(),
           startedEvent.getDurationName(),
           args);
-      chain(startedEvent);
     }
 
     @Override

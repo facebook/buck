@@ -18,6 +18,10 @@ package com.facebook.buck.event;
 
 public abstract class ProjectGenerationEvent extends AbstractBuckEvent {
 
+  public ProjectGenerationEvent() {
+    super(EventKey.unique());
+  }
+
   @Override
   public String getValueString() {
     return "";

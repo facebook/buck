@@ -37,16 +37,11 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   private long threadId;
   @Nullable
   private BuildId buildId;
-  @Nullable
-  private EventKey eventKey;
+  private final EventKey eventKey;
 
-  protected AbstractBuckEvent(@Nullable EventKey eventKey) {
-    isConfigured = false;
-    this.eventKey = eventKey;
-  }
-
-  protected AbstractBuckEvent() {
-    this(null);
+  protected AbstractBuckEvent(EventKey eventKey) {
+    this.isConfigured = false;
+    this.eventKey = Preconditions.checkNotNull(eventKey);
   }
 
   /**
@@ -95,20 +90,12 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
   @Override
   public final EventKey getEventKey() {
-    if (eventKey == null) {
-      eventKey = EventKey.of();
-    }
     return eventKey;
   }
 
   @Override
   public final boolean isRelatedTo(BuckEvent event) {
     return getEventKey().equals(event.getEventKey());
-  }
-
-  protected void chain(AbstractBuckEvent event) {
-    Preconditions.checkState(eventKey == null);
-    eventKey = event.getEventKey();
   }
 
   @JsonIgnore

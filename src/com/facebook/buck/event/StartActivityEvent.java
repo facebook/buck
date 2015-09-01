@@ -26,7 +26,8 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
   private final BuildTarget buildTarget;
   private final String activityName;
 
-  protected StartActivityEvent(BuildTarget buildTarget, String activityName) {
+  protected StartActivityEvent(EventKey eventKey, BuildTarget buildTarget, String activityName) {
+    super(eventKey);
     this.buildTarget = buildTarget;
     this.activityName = activityName;
   }
@@ -59,7 +60,7 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
 
   public static class Started extends StartActivityEvent {
     protected Started(BuildTarget buildTarget, String activityName) {
-      super(buildTarget, activityName);
+      super(EventKey.unique(), buildTarget, activityName);
     }
 
     @Override
@@ -72,9 +73,8 @@ public abstract class StartActivityEvent extends AbstractBuckEvent implements Le
     private final boolean success;
 
     protected Finished(Started started, boolean success) {
-      super(started.getBuildTarget(), started.getActivityName());
+      super(started.getEventKey(), started.getBuildTarget(), started.getActivityName());
       this.success = success;
-      chain(started);
     }
 
     public boolean isSuccess() {

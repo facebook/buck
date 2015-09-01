@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -32,7 +33,12 @@ public abstract class CommandEvent extends AbstractBuckEvent {
    * @param args The arguments passed to the subcommand. These are often build targets.
    * @param isDaemon Whether the daemon was in use.
    */
-  private CommandEvent(String commandName, ImmutableList<String> args, boolean isDaemon) {
+  private CommandEvent(
+      EventKey eventKey,
+      String commandName,
+      ImmutableList<String> args,
+      boolean isDaemon) {
+    super(eventKey);
     this.commandName = commandName;
     this.args = args;
     this.isDaemon = isDaemon;
@@ -66,7 +72,7 @@ public abstract class CommandEvent extends AbstractBuckEvent {
 
   public static class Started extends CommandEvent {
     private Started(String commandName, ImmutableList<String> args, boolean isDaemon) {
-      super(commandName, args, isDaemon);
+      super(EventKey.unique(), commandName, args, isDaemon);
     }
 
     @Override
@@ -80,9 +86,8 @@ public abstract class CommandEvent extends AbstractBuckEvent {
 
     private Finished(Started started,
         int exitCode) {
-      super(started.getCommandName(), started.getArgs(), started.isDaemon());
+      super(started.getEventKey(), started.getCommandName(), started.getArgs(), started.isDaemon());
       this.exitCode = exitCode;
-      chain(started);
     }
 
     public int getExitCode() {
