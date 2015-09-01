@@ -116,9 +116,10 @@ public class IjProject {
         libraryFactory,
         moduleFactory,
         aggregationMode);
-    ParsingJavaPackageFinder parsingJavaPackageFinder = new ParsingJavaPackageFinder(
+    JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
         javaFileParser,
         projectFilesystem,
+        IjProjectTemplateDataPreparer.createPackageLookupPathSet(moduleGraph),
         javaPackageFinder);
     IjProjectWriter writer = new IjProjectWriter(
         new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),

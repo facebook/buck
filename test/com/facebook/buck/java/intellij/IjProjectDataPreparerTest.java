@@ -411,6 +411,32 @@ public class IjProjectDataPreparerTest {
         distillExcludeFolders(dataPreparer.createExcludes(rootModule)));
   }
 
+  @Test
+  public void testCreatePackageLookupPahtSet() {
+    TargetNode<?> guavaTargetNode = PrebuiltJarBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
+        .setBinaryJar(Paths.get("lib/guava.jar"))
+        .build();
+
+    Path sourcePath = Paths.get("java/com/src/Source.java");
+    Path subSourcePath = Paths.get("java/com/src/subpackage/SubSource.java");
+    TargetNode<?> srcTargetNode = JavaLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
+        .addDep(guavaTargetNode.getBuildTarget())
+        .addSrc(sourcePath)
+        .addSrc(subSourcePath)
+        .build();
+
+    IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
+        ImmutableSet.of(guavaTargetNode, srcTargetNode));
+
+    assertThat(
+        IjProjectTemplateDataPreparer.createPackageLookupPathSet(moduleGraph),
+        containsInAnyOrder(
+            subSourcePath,
+            sourcePath));
+  }
+
   private static ImmutableSet<Path> distillExcludeFolders(ImmutableSet<IjFolder> folders) {
     Preconditions.checkArgument(!FluentIterable.from(folders)
             .anyMatch(

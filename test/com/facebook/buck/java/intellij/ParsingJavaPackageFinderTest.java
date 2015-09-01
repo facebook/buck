@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class ParsingJavaPackageFinderTest {
   @Before
   public void setUp() throws IOException {
     matchPath = Paths.get("case1/org/test/package1/Match.java");
-    mismatchPath = Paths.get("case2/org/test/package2/Mismatch.java");
+    mismatchPath = Paths.get("case1/org/test/package2/Mismatch.java");
     placeholderPath = Paths.get("case3/com/test/placeholder");
 
     fakeProjectFilesystem = new FakeProjectFilesystem(
@@ -87,40 +88,60 @@ public class ParsingJavaPackageFinderTest {
 
   @Test
   public void testFindsPackageFromFile() {
-    ParsingJavaPackageFinder parsingJavaPackageFinder =
-        new ParsingJavaPackageFinder(javaFileParser, fakeProjectFilesystem, dummyPackageFinder);
+    JavaPackageFinder parsingJavaPackageFinder =
+        ParsingJavaPackageFinder.preparse(
+            javaFileParser,
+            fakeProjectFilesystem,
+            ImmutableSortedSet.of(matchPath),
+            dummyPackageFinder);
 
     assertEquals("org.test.package1", parsingJavaPackageFinder.findJavaPackage(matchPath));
   }
 
   @Test
   public void testFallBackToDefaultFinder() {
-    ParsingJavaPackageFinder parsingJavaPackageFinder =
-        new ParsingJavaPackageFinder(javaFileParser, fakeProjectFilesystem, dummyPackageFinder);
+    JavaPackageFinder parsingJavaPackageFinder =
+        ParsingJavaPackageFinder.preparse(
+            javaFileParser,
+            fakeProjectFilesystem,
+            ImmutableSortedSet.of(placeholderPath),
+            dummyPackageFinder);
 
     assertEquals("dummy", parsingJavaPackageFinder.findJavaPackage(placeholderPath));
   }
 
   @Test
   public void testFileContentsOverConvention() {
-    ParsingJavaPackageFinder parsingJavaPackageFinder =
-        new ParsingJavaPackageFinder(javaFileParser, fakeProjectFilesystem, dummyPackageFinder);
+    JavaPackageFinder parsingJavaPackageFinder =
+        ParsingJavaPackageFinder.preparse(
+            javaFileParser,
+            fakeProjectFilesystem,
+            ImmutableSortedSet.of(mismatchPath),
+            dummyPackageFinder);
 
     assertEquals("org.test.haha", parsingJavaPackageFinder.findJavaPackage(mismatchPath));
   }
 
   @Test
   public void testCaching() {
-    ParsingJavaPackageFinder parsingJavaPackageFinder =
-        new ParsingJavaPackageFinder(javaFileParser, fakeProjectFilesystem, dummyPackageFinder);
+    JavaPackageFinder parsingJavaPackageFinder =
+        ParsingJavaPackageFinder.preparse(
+            javaFileParser,
+            fakeProjectFilesystem,
+            ImmutableSortedSet.of(matchPath, mismatchPath),
+            dummyPackageFinder);
 
     assertEquals("org.test.package1", parsingJavaPackageFinder.findJavaPackage(matchPath));
+    assertEquals("org.test.haha", parsingJavaPackageFinder.findJavaPackage(mismatchPath));
     assertEquals(
-        "org.test.package2",
-        parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/org/test/package2/notfound")));
+        "org.test.package3",
+        parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/org/test/package3/notfound")));
     assertEquals(
-        "dummy",
-        parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/com/test")));
+        "org.test",
+        parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/org/test/notfound")));
+    assertEquals(
+        "com",
+        parsingJavaPackageFinder.findJavaPackage(Paths.get("case1/com/notfound")));
   }
 }
 

@@ -22,6 +22,8 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -97,6 +99,32 @@ public class IjProjectTemplateDataPreparer {
         .transform(IjModule.TO_MODULE_BASE_PATH)
         .append(IjProjectWriter.IDEA_CONFIG_DIR_PREFIX)
         .toSet();
+  }
+
+  public static ImmutableSet<Path> createPackageLookupPathSet(IjModuleGraph moduleGraph) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+
+    for (IjModule module : moduleGraph.getModuleNodes()) {
+      for (IjFolder folder : module.getFolders()) {
+        if (!folder.getWantsPackagePrefix()) {
+          continue;
+        }
+        Optional<Path> firstJavaFile = FluentIterable.from(folder.getInputs())
+            .filter(
+                new Predicate<Path>() {
+                  @Override
+                  public boolean apply(Path input) {
+                    return input.getFileName().toString().endsWith(".java");
+                  }
+                })
+            .first();
+        if (firstJavaFile.isPresent()) {
+          builder.add(firstJavaFile.get());
+        }
+      }
+    }
+
+    return builder.build();
   }
 
   private static ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
