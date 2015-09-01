@@ -72,6 +72,7 @@ public class AaptStep extends ShellStep {
   private final boolean isCrunchPngFiles;
 
   public AaptStep(
+      Path workingDirectory,
       Path androidManifest,
       ImmutableList<Path> resDirectories,
       Optional<Path> assetsDirectory,
@@ -79,6 +80,7 @@ public class AaptStep extends ShellStep {
       Path pathToRDotTxtDir,
       Optional<Path> pathToGeneratedProguardConfig,
       boolean isCrunchPngFiles) {
+    super(workingDirectory);
     this.androidManifest = androidManifest;
     this.resDirectories = resDirectories;
     this.assetsDirectory = assetsDirectory;

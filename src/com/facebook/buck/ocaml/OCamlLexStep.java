@@ -44,7 +44,8 @@ public class OCamlLexStep extends ShellStep {
 
   private final Args args;
 
-  public OCamlLexStep(Args args) {
+  public OCamlLexStep(Path workingDirectory, Args args) {
+    super(workingDirectory);
     this.args = args;
   }
 

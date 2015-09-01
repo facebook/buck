@@ -110,6 +110,7 @@ public class ShTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
 
     // Return a single command that runs an .sh file with no arguments.
     Step runTest = new RunShTestAndRecordResultStep(
+        getProjectFilesystem().getRootPath(),
         getResolver().getPath(test),
         args,
         getPathToTestOutputResult());

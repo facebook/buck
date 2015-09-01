@@ -208,11 +208,22 @@ public class ProjectFilesystem {
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
    */
   public Path resolve(Path path) {
-    return getRootPath().resolve(path).toAbsolutePath().normalize();
+    return resolvePathFromOtherVfs(path).toAbsolutePath().normalize();
   }
 
   public Path resolve(String path) {
     return getRootPath().resolve(path).toAbsolutePath().normalize();
+  }
+
+  /**
+   * We often create {@link Path} instances using {@link Paths#get(String, String...)}, but there's
+   * no guarantee that the underlying {@link FileSystem} is the default one.
+   */
+  protected Path resolvePathFromOtherVfs(Path path) {
+    if (path.getFileSystem().equals(getRootPath().getFileSystem())) {
+      return getRootPath().resolve(path);
+    }
+    return getRootPath().resolve(path.toString());
   }
 
   /**
@@ -245,7 +256,7 @@ public class ProjectFilesystem {
   }
 
   public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
-    return projectRoot.resolve(pathRelativeToProjectRoot);
+    return resolvePathFromOtherVfs(pathRelativeToProjectRoot);
   }
 
   public Path getPathForRelativePath(String pathRelativeToProjectRoot) {

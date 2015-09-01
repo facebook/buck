@@ -271,6 +271,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       }
       steps.add(
           new XctoolRunTestsStep(
+              getProjectFilesystem().getRootPath(),
               xctoolBinaryPath,
               platformName,
               destinationSpecifierArg,

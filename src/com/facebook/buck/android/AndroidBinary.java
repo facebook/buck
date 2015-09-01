@@ -560,7 +560,10 @@ public class AndroidBinary
     }
 
     Path apkPath = getApkPath();
-    ZipalignStep zipalign = new ZipalignStep(apkToAlign, apkPath);
+    ZipalignStep zipalign = new ZipalignStep(
+        getProjectFilesystem().getRootPath(),
+        apkToAlign,
+        apkPath);
     steps.add(zipalign);
 
     // Inform the user where the APK can be found.
@@ -625,7 +628,7 @@ public class AndroidBinary
       steps.add(new AbstractGenruleStep(
           this.getBuildTarget(),
           commandString,
-          context.getProjectRoot().resolve(preprocessJavaClassesInDir).toFile()) {
+          context.getProjectRoot().resolve(preprocessJavaClassesInDir)) {
 
         @Override
         protected void addEnvironmentVariables(
@@ -828,6 +831,7 @@ public class AndroidBinary
         .getPathToGeneratedProguardConfigDir();
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
+        getProjectFilesystem().getRootPath(),
         proguardJarOverride,
         proguardMaxHeapSize,
         proguardConfigDir.resolve("proguard.txt"),
@@ -1008,15 +1012,16 @@ public class AndroidBinary
 
     if (isReorderingClasses()) {
       IntraDexReorderStep intraDexReorderStep = new IntraDexReorderStep(
-        dexReorderToolFile,
-        dexReorderDataDumpFile,
-        getResolver(),
-        getBuildTarget(),
-        selectedPrimaryDexPath,
-        primaryDexPath,
-        secondaryOutputToInputs,
-        SMART_DEX_SECONDARY_DEX_SUBDIR,
-        SECONDARY_DEX_SUBDIR);
+          getProjectFilesystem().getRootPath(),
+          dexReorderToolFile,
+          dexReorderDataDumpFile,
+          getResolver(),
+          getBuildTarget(),
+          selectedPrimaryDexPath,
+          primaryDexPath,
+          secondaryOutputToInputs,
+          SMART_DEX_SECONDARY_DEX_SUBDIR,
+          SECONDARY_DEX_SUBDIR);
       steps.add(intraDexReorderStep);
     }
   }

@@ -1048,7 +1048,7 @@ public class Project {
 
     final ImmutableList<String> args = argsBuilder.build();
 
-    ShellStep command = new ShellStep() {
+    ShellStep command = new ShellStep(projectFilesystem.getRootPath()) {
 
       @Override
       public String getShortName() {

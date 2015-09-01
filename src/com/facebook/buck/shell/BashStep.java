@@ -20,6 +20,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+
 /**
  * Command that makes it possible to run an arbitrary command in Bash. Whenever possible, a more
  * specific subclass of {@link ShellStep} should be preferred. BashCommand should be reserved
@@ -34,7 +36,8 @@ public class BashStep extends ShellStep {
    * @param bashCommand command to execute. For convenience, multiple arguments are supported
    *     and will be joined with space characters if more than one is present.
    */
-  public BashStep(String... bashCommand) {
+  public BashStep(Path workingDirectory, String... bashCommand) {
+    super(workingDirectory);
     this.bashCommand = Joiner.on(' ').join(bashCommand);
   }
 

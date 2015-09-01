@@ -62,6 +62,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
    * @param steps Where to append the generated steps.
    */
   public static void create(
+      Path workingDirectory,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
       Path generatedProGuardConfig,
@@ -77,6 +78,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 
     CommandLineHelperStep commandLineHelperStep = new CommandLineHelperStep(
+        workingDirectory,
         generatedProGuardConfig,
         customProguardConfigs,
         sdkProguardConfig,
@@ -87,6 +89,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         pathToProGuardCommandLineArgsFile);
 
     ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
+        workingDirectory,
         inputAndOutputEntries,
         pathToProGuardCommandLineArgsFile,
         proguardJarOverride,
@@ -110,10 +113,12 @@ public final class ProGuardObfuscateStep extends ShellStep {
    * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
    */
   private ProGuardObfuscateStep(
+      Path workingDirectory,
       Map<Path, Path> inputAndOutputEntries,
       Path pathToProGuardCommandLineArgsFile,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize) {
+    super(workingDirectory);
     this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
     this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
     this.proguardJarOverride = proguardJarOverride;
@@ -214,6 +219,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   @VisibleForTesting
   static class CommandLineHelperStep extends AbstractExecutionStep {
 
+    private final Path workingDirectory;
     private final Path generatedProGuardConfig;
     private final Set<Path> customProguardConfigs;
     private final Map<Path, Path> inputAndOutputEntries;
@@ -235,6 +241,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
      * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
      */
     private CommandLineHelperStep(
+        Path workingDirectory,
         Path generatedProGuardConfig,
         Set<Path> customProguardConfigs,
         SdkProguardType sdkProguardConfig,
@@ -244,6 +251,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
         Path proguardDirectory,
         Path pathToProGuardCommandLineArgsFile) {
       super("write_proguard_command_line_parameters");
+
+      this.workingDirectory = workingDirectory;
       this.generatedProGuardConfig = generatedProGuardConfig;
       this.customProguardConfigs = ImmutableSet.copyOf(customProguardConfigs);
       this.sdkProguardConfig = sdkProguardConfig;
@@ -256,7 +265,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     @Override
     public int execute(ExecutionContext context) {
-      String proGuardArguments = Joiner.on('\n').join(getParameters(context));
+      String proGuardArguments = Joiner.on('\n').join(getParameters(context, workingDirectory));
       try {
         context.getProjectFilesystem().writeContentsToPath(
             proGuardArguments,
@@ -273,14 +282,14 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     /** @return the list of arguments to pass to ProGuard. */
     @VisibleForTesting
-    ImmutableList<String> getParameters(ExecutionContext context) {
+    ImmutableList<String> getParameters(ExecutionContext context, Path workingDirectory) {
       ImmutableList.Builder<String> args = ImmutableList.builder();
       AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
 
       // Relative paths should be interpreted relative to project directory root, not the
       // written parameters file.
       args.add("-basedirectory")
-          .add(context.getProjectDirectoryRoot().toAbsolutePath().toString());
+          .add(workingDirectory.toAbsolutePath().toString());
 
       // -include
       switch (sdkProguardConfig) {

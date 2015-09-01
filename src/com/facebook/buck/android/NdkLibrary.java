@@ -141,6 +141,7 @@ public class NdkLibrary extends AbstractBuildRule
     // All of them should be recorded via the BuildableContext.
     Path binDirectory = buildArtifactsDirectory.resolve("libs");
     Step nkdBuildStep = new NdkBuildStep(
+        getProjectFilesystem().getRootPath(),
         root,
         makefile,
         buildArtifactsDirectory,

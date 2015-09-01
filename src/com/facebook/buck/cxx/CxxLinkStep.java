@@ -39,12 +39,14 @@ public class CxxLinkStep extends ShellStep {
   private final ImmutableSet<String> libraries;
 
   public CxxLinkStep(
+      Path workingDirectory,
       ImmutableList<String> linker,
       Path output,
       ImmutableList<String> args,
       ImmutableSet<Path> frameworkRoots,
       ImmutableSet<Path> librarySearchDirectories,
       ImmutableSet<String> libraries) {
+    super(workingDirectory);
     this.linker = linker;
     this.output = output;
     this.args = args;

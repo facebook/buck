@@ -299,7 +299,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           javacOptions,
           target,
           suggestBuildRules,
-          getResolver());
+          getResolver(),
+          getProjectFilesystem());
 
       commands.add(javacStep);
     }
@@ -544,7 +545,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         steps,
         target);
 
-    addPostprocessClassesCommands(steps, postprocessClassesCommands, outputDirectory);
+    addPostprocessClassesCommands(
+        getProjectFilesystem().getRootPath(),
+        steps,
+        postprocessClassesCommands,
+        outputDirectory);
 
     // If there are resources, then link them to the appropriate place in the classes directory.
     JavaPackageFinder finder = context.getJavaPackageFinder();
@@ -733,11 +738,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    */
   @VisibleForTesting
   static void addPostprocessClassesCommands(
+      Path workingDirectory,
       ImmutableList.Builder<Step> commands,
       List<String> postprocessClassesCommands,
       Path outputDirectory) {
     for (final String postprocessClassesCommand : postprocessClassesCommands) {
-      BashStep bashStep = new BashStep(postprocessClassesCommand + " " + outputDirectory);
+      BashStep bashStep = new BashStep(
+          workingDirectory,
+          postprocessClassesCommand + " " + outputDirectory);
       commands.add(bashStep);
     }
   }

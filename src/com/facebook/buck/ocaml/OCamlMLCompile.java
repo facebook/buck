@@ -49,7 +49,7 @@ public class OCamlMLCompile extends AbstractBuildRule {
     }
     return ImmutableList.of(
       new MkdirStep(args.output.getParent()),
-      new OCamlMLCompileStep(args)
+      new OCamlMLCompileStep(getProjectFilesystem().getRootPath(), args)
     );
   }
 

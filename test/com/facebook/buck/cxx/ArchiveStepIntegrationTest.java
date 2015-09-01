@@ -62,6 +62,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build an archive step.
     ArchiveStep archiveStep = new ArchiveStep(
+        filesystem.getRootPath(),
         archiver,
         output,
         ImmutableList.of(input));

@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -372,7 +371,7 @@ public class OCamlRuleBuilder {
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
             .build();
 
-    File baseDir = params.getProjectFilesystem().getRootPath().toAbsolutePath().toFile();
+    Path baseDir = params.getProjectFilesystem().getRootPath().toAbsolutePath();
     ImmutableMap<Path, ImmutableList<Path>> mlInput = getMLInputWithDeps(
         baseDir,
         ocamlContext);
@@ -436,9 +435,10 @@ public class OCamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
-      File baseDir,
+      Path baseDir,
       OCamlBuildContext ocamlContext) {
     OCamlDepToolStep depToolStep = new OCamlDepToolStep(
+        baseDir,
         ocamlContext.getOcamlDepTool().get(),
         ocamlContext.getMLInput(),
         ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true));
@@ -487,27 +487,29 @@ public class OCamlRuleBuilder {
   }
 
   private static Optional<String> executeProcessAndGetStdout(
-      File baseDir,
+      Path baseDir,
       ImmutableList<String> cmd) throws IOException, InterruptedException {
-    CapturingPrintStream stdout = new CapturingPrintStream();
-    CapturingPrintStream stderr = new CapturingPrintStream();
+    try (
+        CapturingPrintStream stdout = new CapturingPrintStream();
+        CapturingPrintStream stderr = new CapturingPrintStream()) {
 
-    ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
-    options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
-    Console console = new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
-    ProcessExecutor exe = new ProcessExecutor(console);
-    ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-    processBuilder.directory(baseDir);
-    ProcessExecutor.Result result = exe.execute(
-        processBuilder.start(),
-        options.build(),
+      ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
+      options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
+      Console console = new Console(Verbosity.SILENT, stdout, stderr, Ansi.withoutTty());
+      ProcessExecutor exe = new ProcessExecutor(console);
+      ProcessBuilder processBuilder = new ProcessBuilder(cmd);
+      processBuilder.directory(baseDir.toFile());
+      ProcessExecutor.Result result = exe.execute(
+          processBuilder.start(),
+          options.build(),
         /* stdin */ Optional.<String>absent(),
         /* timeOutMs */ Optional.<Long>absent(),
         /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
-    if (result.getExitCode() != 0) {
-      throw new HumanReadableException(stderr.getContentsAsString(StandardCharsets.UTF_8));
-    }
+      if (result.getExitCode() != 0) {
+        throw new HumanReadableException(stderr.getContentsAsString(StandardCharsets.UTF_8));
+      }
 
-    return result.getStdout();
+      return result.getStdout();
+    }
   }
 }

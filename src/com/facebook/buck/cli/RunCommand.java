@@ -138,7 +138,9 @@ public class RunCommand extends AbstractCommand {
         .addAll(getTargetArguments())
         .build();
 
-    ShellStep step = new DefaultShellStep(fullCommand) {
+    ShellStep step = new DefaultShellStep(
+        params.getRepository().getFilesystem().getRootPath(),
+        fullCommand) {
       // Print the output from the step directly to stdout and stderr rather than buffering it and
       // printing it as two individual strings. This preserves the expected behavior where output
       // written to stdout and stderr may be interleaved when displayed in a terminal.

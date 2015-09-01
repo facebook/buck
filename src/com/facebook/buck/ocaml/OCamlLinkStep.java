@@ -97,7 +97,8 @@ public class OCamlLinkStep extends ShellStep {
   private final ImmutableList<String> ocamlInput;
   private final ImmutableList<String> systemSoLibs;
 
-  public OCamlLinkStep(Args args) {
+  public OCamlLinkStep(Path workingDirectory, Args args) {
+    super(workingDirectory);
     this.args = args;
 
     ImmutableList.Builder<String> aAndOInputBuilder = ImmutableList.builder();

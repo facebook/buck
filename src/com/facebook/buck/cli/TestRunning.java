@@ -752,6 +752,7 @@ public class TestRunning {
     }
 
     return new GenerateCodeCoverageReportStep(
+        filesystem.getRootPath(),
         srcDirectories.build(),
         pathsToClasses.build(),
         outputDirectory,

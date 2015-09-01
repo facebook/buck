@@ -206,6 +206,7 @@ public class ResourcesFilter extends AbstractBuildRule
 
     ImmutableBiMap<Path, Path> resSourceToDestDirMap = filteredResourcesDirMapBuilder.build();
     FilterResourcesStep.Builder filterResourcesStepBuilder = FilterResourcesStep.builder()
+        .setWorkingDirectory(getProjectFilesystem().getRootPath())
         .setInResToOutResDirMap(resSourceToDestDirMap)
         .setResourceFilter(resourceFilter);
 

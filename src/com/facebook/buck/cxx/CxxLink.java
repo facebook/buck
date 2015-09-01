@@ -114,6 +114,7 @@ public class CxxLink
     return ImmutableList.of(
         new MkdirStep(output.getParent()),
         new CxxLinkStep(
+            getProjectFilesystem().getRootPath(),
             linker.getCommandPrefix(getResolver()),
             output,
             args,

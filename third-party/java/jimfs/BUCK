@@ -3,6 +3,6 @@ prebuilt_jar(
   binary_jar = 'jimfs-1.0.jar',
   source_jar = 'jimfs-1.0-sources.jar',
   visibility = [
-    'PUBLIC',
+    '//test/...',
   ],
 )

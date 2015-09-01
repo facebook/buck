@@ -16,10 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.getCurrentArguments;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +28,7 @@ import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -42,7 +40,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 
 import org.easymock.EasyMockSupport;
-import org.easymock.IAnswer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -67,17 +64,11 @@ public class SmartDexingStepTest extends EasyMockSupport {
    */
   @Test
   public void testDxPseudoRuleCaching() throws IOException {
-    ExecutionContext context = createMock(ExecutionContext.class);
-    replay(context);
-
     File testIn = new File(tmpDir.getRoot(), "testIn");
-    ZipOutputStream zipOut = new ZipOutputStream(
-        new BufferedOutputStream(new FileOutputStream(testIn)));
-    try {
+    try (ZipOutputStream zipOut = new ZipOutputStream(
+        new BufferedOutputStream(new FileOutputStream(testIn)))) {
       zipOut.putNextEntry(new ZipEntry("foobar"));
-      zipOut.write(new byte[] { 0 });
-    } finally {
-      zipOut.close();
+      zipOut.write(new byte[]{0});
     }
 
     File outputFile = tmpDir.newFile("out.dex");
@@ -107,12 +98,17 @@ public class SmartDexingStepTest extends EasyMockSupport {
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithXzOutput() {
+  public void testCreateDxStepForDxPseudoRuleWithXzOutput() throws IOException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
+        filesystem.getRootPath(),
+        filesToDex,
         outputPath,
         dxOptions,
         Optional.<Integer>absent());
@@ -123,29 +119,35 @@ public class SmartDexingStepTest extends EasyMockSupport {
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            "(cd / && " +
+            "(cd /opt/src/buck && " +
             Paths.get("/usr/bin/dx") + " " + xmx +
-                "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar)",
+                "--dex --output /opt/src/buck/classes.dex.tmp.jar " +
+                "/opt/src/buck/foo.dex.jar /opt/src/buck/bar.dex.jar)",
             "repack classes.dex.tmp.jar in classes.dex.jar",
-            "rm -f classes.dex.tmp.jar",
+            "rm -f /opt/src/buck/classes.dex.tmp.jar",
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -4 --check=crc32 classes.dex.jar"),
         steps,
-        createMockedExecutionContext());
+        createMockedExecutionContext(filesystem));
 
     verifyAll();
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression() {
+  public void testCreateDxStepForDxPseudoRuleWithXzOutputNonDefaultCompression()
+      throws IOException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
+        filesystem.getRootPath(),
+        filesToDex,
         outputPath,
         dxOptions,
-        Optional.<Integer>of(new Integer(9)));
+        Optional.of(9));
 
     assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
     List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
@@ -153,89 +155,97 @@ public class SmartDexingStepTest extends EasyMockSupport {
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            "(cd / && " +
-            Paths.get("/usr/bin/dx") + " " + xmx +
-                "--dex --output classes.dex.tmp.jar foo.dex.jar bar.dex.jar)",
+            "(cd /opt/src/buck && " +
+            "/usr/bin/dx " + xmx +
+                "--dex --output " +
+                "/opt/src/buck/classes.dex.tmp.jar " +
+                "/opt/src/buck/foo.dex.jar " +
+                "/opt/src/buck/bar.dex.jar)",
             "repack classes.dex.tmp.jar in classes.dex.jar",
-            "rm -f classes.dex.tmp.jar",
+            "rm -f /opt/src/buck/classes.dex.tmp.jar",
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -9 --check=crc32 classes.dex.jar"),
         steps,
-        createMockedExecutionContext());
+        createMockedExecutionContext(filesystem));
 
     verifyAll();
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithDexOutput() {
+  public void testCreateDxStepForDxPseudoRuleWithDexOutput() throws IOException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
+        filesystem.getRootPath(),
+        filesToDex,
         outputPath,
         dxOptions,
         Optional.<Integer>absent());
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
-        "(cd / && " +
+        "(cd /opt/src/buck && " +
         Paths.get("/usr/bin/dx") + " " + xmx +
-            "--dex --output classes.dex foo.dex.jar bar.dex.jar)",
-        dxStep.getDescription(createMockedExecutionContext()));
+            "--dex --output /opt/src/buck/classes.dex " +
+            "/opt/src/buck/foo.dex.jar /opt/src/buck/bar.dex.jar)",
+        dxStep.getDescription(createMockedExecutionContext(filesystem)));
     verifyAll();
   }
 
   @Test
-  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() {
+  public void testCreateDxStepForDxPseudoRuleWithDexJarOutput() throws IOException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+    Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
+        filesystem.getRootPath(),
+        filesToDex,
         outputPath,
         dxOptions,
         Optional.<Integer>absent());
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
-        "(cd / && " +
-        Paths.get("/usr/bin/dx") + " " + xmx + "--dex --output classes.dex.jar " +
-        "foo.dex.jar bar.dex.jar) && dex_meta dexPath:classes.dex.jar " +
-        "dexMetaPath:classes.dex.jar.meta",
-        dxStep.getDescription(createMockedExecutionContext()));
+        "(cd /opt/src/buck && " +
+        Paths.get("/usr/bin/dx") + " " + xmx + "--dex --output /opt/src/buck/classes.dex.jar " +
+        "/opt/src/buck/foo.dex.jar /opt/src/buck/bar.dex.jar) && " +
+        "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
+        dxStep.getDescription(createMockedExecutionContext(filesystem)));
     verifyAll();
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+
     ImmutableList<Path> filesToDex = ImmutableList.of(
         Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
-    SmartDexingStep.createDxStepForDxPseudoRule(filesToDex,
+    SmartDexingStep.createDxStepForDxPseudoRule(
+        filesystem.getRootPath(),
+        filesToDex,
         outputPath,
         dxOptions,
         Optional.<Integer>absent());
   }
 
-  private ExecutionContext createMockedExecutionContext() {
+  private ExecutionContext createMockedExecutionContext(ProjectFilesystem filesystem)
+      throws IOException {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem.getRootPath()).andReturn(Paths.get("/"));
-    expect(projectFilesystem.resolve(anyObject(Path.class))).andAnswer(
-        new IAnswer<Path>() {
-          @Override
-          public Path answer() throws Throwable {
-            return (Path) getCurrentArguments()[0];
-          }
-        }).anyTimes();
     replayAll();
 
     return TestExecutionContext.newBuilder()
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .setProjectFilesystem(projectFilesystem)
+        .setProjectFilesystem(filesystem)
         .build();
   }
 }

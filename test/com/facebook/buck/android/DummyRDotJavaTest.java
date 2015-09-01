@@ -33,6 +33,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -165,7 +166,8 @@ public class DummyRDotJavaTest {
         Paths.get(rDotJavaClassesFolder),
         ANDROID_JAVAC_OPTIONS,
         /* buildTarget */ null,
-        resolver)
+        resolver,
+        new FakeProjectFilesystem())
         .getDescription(TestExecutionContext.newInstance());
   }
 

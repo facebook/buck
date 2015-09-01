@@ -82,8 +82,8 @@ public class DxStep extends ShellStep {
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    */
-  public DxStep(Path outputDexFile, Iterable<Path> filesToDex) {
-    this(outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
+  public DxStep(Path workingDirectory, Path outputDexFile, Iterable<Path> filesToDex) {
+    this(workingDirectory, outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
   }
 
   /**
@@ -92,13 +92,22 @@ public class DxStep extends ShellStep {
    *     files, or a directory of .class files.
    * @param options to pass to {@code dx}.
    */
-  public DxStep(Path outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options) {
-    this(outputDexFile, filesToDex, options, DEFAULT_GET_CUSTOM_DX);
+  public DxStep(
+      Path workingDirectory,
+      Path outputDexFile,
+      Iterable<Path> filesToDex,
+      EnumSet<Option> options) {
+    this(workingDirectory, outputDexFile, filesToDex, options, DEFAULT_GET_CUSTOM_DX);
   }
 
   @VisibleForTesting
-  DxStep(Path outputDexFile, Iterable<Path> filesToDex, EnumSet<Option> options,
+  DxStep(
+      Path workingDirectory,
+      Path outputDexFile,
+      Iterable<Path> filesToDex,
+      EnumSet<Option> options,
       Supplier<String> getPathToCustomDx) {
+    super(workingDirectory);
     this.outputDexFile = outputDexFile;
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);

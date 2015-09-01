@@ -221,6 +221,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         executionContext.getTargetDeviceOptional());
 
     junit = new JUnitStep(
+        getProjectFilesystem().getRootPath(),
         classpathEntries,
         reorderedTestClasses,
         properVmArgs,

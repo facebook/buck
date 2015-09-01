@@ -41,6 +41,7 @@ import java.util.Map;
 
 public class PexStepTest {
 
+  private static final Path WORKING_DIRECTORY = Paths.get(".").toAbsolutePath().normalize();
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
   private static final ImmutableList<String> PEX_COMMAND = ImmutableList.of();
   private static final Path TEMP_PATH = Paths.get("/tmp/");
@@ -56,10 +57,12 @@ public class PexStepTest {
   private static final ImmutableSet<Path> PREBUILT_LIBRARIES = ImmutableSet.of(
       Paths.get("/src/p.egg"));
 
+
   @Test
   public void testCommandLine() {
     PexStep step =
         new PexStep(
+            WORKING_DIRECTORY,
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -83,6 +86,7 @@ public class PexStepTest {
   public void testCommandLineNoZipSafe() {
     PexStep step =
         new PexStep(
+            WORKING_DIRECTORY,
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -104,6 +108,7 @@ public class PexStepTest {
   public void testCommandStdin() throws IOException {
     PexStep step =
         new PexStep(
+            WORKING_DIRECTORY,
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -136,6 +141,7 @@ public class PexStepTest {
   public void testArgs() {
     PexStep step =
         new PexStep(
+            WORKING_DIRECTORY,
             ImmutableList.<String>builder()
                 .add("build")
                 .add("--some", "--args")

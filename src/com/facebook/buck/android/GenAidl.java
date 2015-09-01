@@ -109,6 +109,7 @@ public class GenAidl extends AbstractBuildRule {
     commands.add(new MakeCleanDirectoryStep(outputDirectory));
 
     AidlStep command = new AidlStep(
+        getProjectFilesystem(),
         target,
         aidlFilePath,
         ImmutableSet.of(importPath),

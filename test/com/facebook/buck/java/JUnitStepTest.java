@@ -77,6 +77,7 @@ public class JUnitStepTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     JUnitStep junit = new JUnitStep(
+        filesystem.getRootPath(),
         classpathEntries,
         testClassNames,
         vmArgs,
@@ -159,6 +160,7 @@ public class JUnitStepTest {
     Path testRunnerClasspath = Paths.get("build/classes/junit");
 
     JUnitStep junit = new JUnitStep(
+        Paths.get("."),
         classpathEntries,
         testClassNames,
         vmArgs,

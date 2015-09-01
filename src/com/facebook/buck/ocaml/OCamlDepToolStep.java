@@ -39,9 +39,11 @@ public class OCamlDepToolStep extends ShellStep {
   private Path ocamlDepTool;
 
   public OCamlDepToolStep(
+      Path workingDirectory,
       Path ocamlDepTool,
       List<Path> input,
       List<String> flags) {
+    super(workingDirectory);
     this.ocamlDepTool = ocamlDepTool;
     this.flags = ImmutableList.copyOf(flags);
     this.input = ImmutableList.copyOf(input);

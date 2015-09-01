@@ -53,6 +53,7 @@ public class CxxLinkStepTest {
 
     // Create our CxxLinkStep to test.
     CxxLinkStep cxxLinkStep = new CxxLinkStep(
+        projectFilesystem.getRootPath(),
         linker,
         output,
         args,

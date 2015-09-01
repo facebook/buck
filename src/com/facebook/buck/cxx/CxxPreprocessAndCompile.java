@@ -329,6 +329,7 @@ public class CxxPreprocessAndCompile
     }
 
     return new CxxPreprocessAndCompileStep(
+        getProjectFilesystem().getRootPath(),
         operation,
         output,
         getDepFilePath(),

@@ -27,7 +27,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -38,10 +37,14 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -50,13 +53,28 @@ public class GenAidlTest {
 
   @Test
   public void testSimpleGenAidlRule() throws IOException {
-    BuildContext context = null;
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path root = vfs.getPath("/");
+    Files.createDirectories(root);
+    ProjectFilesystem stubFilesystem = new ProjectFilesystem(root) {
+      @Override
+      public Path resolve(Path path) {
+        return path;
+      }
+
+      @Override
+      public boolean exists(Path pathRelativeToProjectRoot) {
+        return true;
+      }
+    };
 
     Path pathToAidl = Paths.get("java/com/example/base/IWhateverService.aidl");
     String importPath = Paths.get("java/com/example/base").toString();
 
     BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
+        .setProjectFilesystem(stubFilesystem)
+        .build();
     GenAidl genAidlRule = new GenAidl(
         params,
         new SourcePathResolver(new BuildRuleResolver()),
@@ -67,7 +85,7 @@ public class GenAidlTest {
     assertEquals(GenAidlDescription.TYPE, description.getBuildRuleType());
     assertTrue(genAidlRule.getProperties().is(ANDROID));
 
-    List<Step> steps = genAidlRule.getBuildSteps(context, new FakeBuildableContext());
+    List<Step> steps = genAidlRule.getBuildSteps(null, new FakeBuildableContext());
 
     final String pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
     final String pathToFrameworkAidl = Paths.get(
@@ -79,19 +97,6 @@ public class GenAidlTest {
 
     ExecutionContext executionContext = createMock(ExecutionContext.class);
     expect(executionContext.getAndroidPlatformTarget()).andReturn(androidPlatformTarget);
-    expect(executionContext.getProjectDirectoryRoot()).andReturn(Paths.get("/"));
-    expect(executionContext.getProjectFilesystem()).andReturn(
-        new ProjectFilesystem(Paths.get(".")) {
-          @Override
-          public Path resolve(Path path) {
-            return path;
-          }
-
-          @Override
-          public boolean exists(Path pathRelativeToProjectRoot) {
-            return true;
-          }
-        });
     replay(androidPlatformTarget, executionContext);
 
     Path outputDirectory = Paths.get(

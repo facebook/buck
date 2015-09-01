@@ -53,6 +53,7 @@ public class ThriftCompilerStepTest {
 
     // Create our ThriftCompilerStep to test.
     ThriftCompilerStep thriftCompilerStep = new ThriftCompilerStep(
+        projectFilesystem.getRootPath(),
         compilerPrefix,
         outputDir,
         input,

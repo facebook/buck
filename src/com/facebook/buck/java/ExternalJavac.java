@@ -161,6 +161,7 @@ public class ExternalJavac implements Javac {
   @Override
   public int buildWithClasspath(
       ExecutionContext context,
+      ProjectFilesystem filesystem,
       SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
@@ -174,7 +175,7 @@ public class ExternalJavac implements Javac {
     ImmutableList<Path> expandedSources;
     try {
       expandedSources = getExpandedSourcePaths(
-          context,
+          filesystem,
           invokingRule,
           javaSourceFilePaths,
           workingDirectory);
@@ -186,7 +187,7 @@ public class ExternalJavac implements Javac {
     }
     if (pathToSrcsList.isPresent()) {
       try {
-        context.getProjectFilesystem().writeLinesToPath(
+        filesystem.writeLinesToPath(
             FluentIterable.from(expandedSources)
                 .transform(Functions.toStringFunction())
                 .transform(ARGFILES_ESCAPER),
@@ -213,9 +214,9 @@ public class ExternalJavac implements Javac {
     env.putAll(context.getEnvironment());
     env.put("BUCK_INVOKING_RULE", invokingRule.toString());
     env.put("BUCK_TARGET", invokingRule.toString());
-    env.put("BUCK_DIRECTORY_ROOT", context.getProjectDirectoryRoot().toString());
+    env.put("BUCK_DIRECTORY_ROOT", filesystem.getRootPath().toAbsolutePath().toString());
 
-    processBuilder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
+    processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
     // Run the command
     int exitCode = -1;
     try {
@@ -230,11 +231,10 @@ public class ExternalJavac implements Javac {
   }
 
   private ImmutableList<Path> getExpandedSourcePaths(
-      ExecutionContext context,
+      ProjectFilesystem projectFilesystem,
       BuildTarget invokingRule,
       ImmutableSet<Path> javaSourceFilePaths,
       Optional<Path> workingDirectory) throws IOException {
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();

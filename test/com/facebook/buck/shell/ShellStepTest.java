@@ -45,6 +45,8 @@ import org.easymock.IAnswer;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -56,7 +58,7 @@ public class ShellStepTest {
       "V1", "two words",
       "V2", "$foo'bar'");
 
-  private static final File PATH = new File("/tmp/a b");
+  private static final Path PATH = Paths.get("/tmp/a b");
   private static final String ERROR_MSG = "some syntax error\ncompilation failed\n";
   private static final String OUTPUT_MSG = "processing data...\n";
   private static final int EXIT_FAILURE = 1;
@@ -97,7 +99,7 @@ public class ShellStepTest {
   private static ShellStep createCommand(
       ImmutableMap<String, String> env,
       ImmutableList<String> cmd,
-      File workingDirectory) {
+      Path workingDirectory) {
     return createCommand(
         env,
         cmd,
@@ -120,10 +122,15 @@ public class ShellStepTest {
   private static ShellStep createCommand(
       final ImmutableMap<String, String> env,
       final ImmutableList<String> cmd,
-      File workingDirectory,
+      Path workingDirectory,
       final boolean shouldPrintStdErr,
       final boolean shouldPrintStdOut,
       final Optional<String> stdin) {
+    workingDirectory =
+        workingDirectory == null ?
+            Paths.get(".").toAbsolutePath().normalize() :
+            workingDirectory;
+
     return new ShellStep(workingDirectory) {
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -155,6 +162,7 @@ public class ShellStepTest {
 
   @Test
   public void testDescriptionWithEnvironment() {
+    Path workingDirectory = Paths.get(".").toAbsolutePath().normalize();
     ShellStep command = createCommand(ENV, ARGS, null);
     ExecutionContext context = TestExecutionContext
         .newBuilder()
@@ -163,8 +171,7 @@ public class ShellStepTest {
     assertEquals(
         String.format(
             "(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')",
-            Escaper.escapeAsBashString(
-                context.getProjectDirectoryRoot().toAbsolutePath().toFile().getPath())),
+            Escaper.escapeAsBashString(workingDirectory)),
         command.getDescription(context));
   }
 
@@ -177,7 +184,7 @@ public class ShellStepTest {
         .build();
     assertEquals(
         String.format("(cd %s && V1='two words' V2='$foo'\\''bar'\\''' bash -c 'echo $V1 $V2')",
-            Escaper.escapeAsBashString(PATH.getPath())),
+            Escaper.escapeAsBashString(PATH)),
         command.getDescription(context));
   }
 
@@ -191,12 +198,13 @@ public class ShellStepTest {
     assertEquals(
         String.format(
             "(cd %s && bash -c 'echo $V1 $V2')",
-            Escaper.escapeAsBashString(PATH.getPath())),
+            Escaper.escapeAsBashString(PATH)),
         command.getDescription(context));
   }
 
   @Test
   public void testDescription() {
+    Path workingDirectory = Paths.get(".").toAbsolutePath().normalize();
     ShellStep command = createCommand(ImmutableMap.<String, String>of(), ARGS, null);
     ExecutionContext context = TestExecutionContext
         .newBuilder()
@@ -205,8 +213,7 @@ public class ShellStepTest {
     assertEquals(
         String.format(
             "(cd %s && bash -c 'echo $V1 $V2')",
-            Escaper.escapeAsBashString(
-                context.getProjectDirectoryRoot().toAbsolutePath().toFile().getPath())),
+            Escaper.escapeAsBashString(workingDirectory)),
         command.getDescription(context));
   }
 

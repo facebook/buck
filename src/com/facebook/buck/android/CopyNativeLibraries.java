@@ -159,6 +159,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
       steps.add(new MkdirStep(destination.getParent()));
       steps.add(
           new StripStep(
+              getProjectFilesystem().getRootPath(),
               platform.getCxxPlatform().getStrip().getCommandPrefix(getResolver()),
               ImmutableList.of("--strip-unneeded"),
               getResolver().getPath(entry.getValue()),

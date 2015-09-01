@@ -33,13 +33,15 @@ import java.nio.file.Path;
 public class ArchiveStep extends CompositeStep {
 
   public ArchiveStep(
+      Path workingDirectory,
       ImmutableList<String> archiver,
       Path output,
       ImmutableList<Path> inputs) {
-    super(getArchiveCommandSteps(archiver, output, inputs));
+    super(getArchiveCommandSteps(workingDirectory, archiver, output, inputs));
   }
 
   private static ImmutableList<Step> getArchiveCommandSteps(
+      Path workingDirectory,
       ImmutableList<String> archiver,
       Path output,
       ImmutableList<Path> inputs) {
@@ -55,7 +57,7 @@ public class ArchiveStep extends CompositeStep {
         .transform(Functions.toStringFunction());
     for (final ImmutableList<String> command : commandSplitter.getCommandsForArguments(arguments)) {
       stepsBuilder.add(
-          new ShellStep() {
+          new ShellStep(workingDirectory) {
             @Override
             public String getShortName() {
               return "archive";

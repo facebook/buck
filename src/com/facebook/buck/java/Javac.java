@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -46,6 +47,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
 
   int buildWithClasspath(
       ExecutionContext context,
+      ProjectFilesystem filesystem,
       SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,

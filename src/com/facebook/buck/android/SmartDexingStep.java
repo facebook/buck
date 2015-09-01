@@ -75,7 +75,7 @@ public class SmartDexingStep implements Step {
   public static final String SHORT_NAME = "smart_dex";
   private static final String SECONDARY_SOLID_DEX_FILENAME = "secondary.dex.jar.xzs";
 
-  public static interface DexInputHashesProvider {
+  public interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
   }
 
@@ -354,7 +354,13 @@ public class SmartDexingStep implements Step {
 
       List<Step> steps = Lists.newArrayList();
 
-      steps.add(createDxStepForDxPseudoRule(srcs, outputPath, dxOptions, xzCompressionLevel));
+      steps.add(
+          createDxStepForDxPseudoRule(
+              filesystem.getRootPath(),
+              srcs,
+              outputPath,
+              dxOptions,
+              xzCompressionLevel));
       steps.add(
           new WriteFileStep(filesystem, newInputsHash, outputHashPath, /* executable */ false));
 
@@ -372,7 +378,9 @@ public class SmartDexingStep implements Step {
    * compressed and uncompressed size of the dex; this information is useful later, in applications,
    * when unpacking.
    */
-  static Step createDxStepForDxPseudoRule(Collection<Path> filesToDex,
+  static Step createDxStepForDxPseudoRule(
+      Path workingDirectory,
+      Collection<Path> filesToDex,
       Path outputPath,
       EnumSet<Option> dxOptions,
       Optional<Integer> xzCompressionLevel) {
@@ -382,7 +390,7 @@ public class SmartDexingStep implements Step {
 
     if (DexStore.XZ.matchesPath(outputPath)) {
       Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
-      steps.add(new DxStep(tempDexJarOutput, filesToDex, dxOptions));
+      steps.add(new DxStep(workingDirectory, tempDexJarOutput, filesToDex, dxOptions));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
       // compression won't be effective.
       Path repackedJar = Paths.get(output.replaceAll("\\.xz$", ""));
@@ -408,7 +416,7 @@ public class SmartDexingStep implements Step {
 
       // Ensure classes.dex is stored.
       Path tempDexJarOutput = Paths.get(output.replaceAll("\\.jar\\.xzs\\.tmp~$", ".tmp.jar"));
-      steps.add(new DxStep(tempDexJarOutput, filesToDex, dxOptions));
+      steps.add(new DxStep(workingDirectory, tempDexJarOutput, filesToDex, dxOptions));
       steps.add(new RepackZipEntriesStep(
           tempDexJarOutput,
           outputPath,
@@ -424,7 +432,7 @@ public class SmartDexingStep implements Step {
                   outputPath.getFileName() + ".meta")));
     } else if (DexStore.JAR.matchesPath(outputPath) || DexStore.RAW.matchesPath(outputPath) ||
         output.endsWith("classes.dex")) {
-      steps.add(new DxStep(outputPath, filesToDex, dxOptions));
+      steps.add(new DxStep(workingDirectory, outputPath, filesToDex, dxOptions));
       if (DexStore.JAR.matchesPath(outputPath)) {
         steps.add(
             new DexJarAnalysisStep(

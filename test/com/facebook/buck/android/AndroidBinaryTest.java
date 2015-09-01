@@ -130,6 +130,7 @@ public class AndroidBinaryTest {
     ImmutableList.Builder<Step> expectedSteps = ImmutableList.builder();
 
     ProGuardObfuscateStep.create(
+        Paths.get("."),
         Optional.<Path>absent(),
         "1024M",
         GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/" +

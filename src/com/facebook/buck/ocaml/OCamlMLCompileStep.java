@@ -93,7 +93,8 @@ public class OCamlMLCompileStep extends ShellStep {
 
   private final Args args;
 
-  public OCamlMLCompileStep(Args args) {
+  public OCamlMLCompileStep(Path workingDirectory, Args args) {
+    super(workingDirectory);
     this.args = args;
   }
 

@@ -26,12 +26,8 @@ public class DefaultShellStep extends ShellStep {
 
   private ImmutableList<String> args;
 
-  public DefaultShellStep(List<String> args) {
-    this.args = ImmutableList.copyOf(args);
-  }
-
   public DefaultShellStep(Path workingDirectory, List<String> args) {
-    super(workingDirectory.toFile());
+    super(workingDirectory);
     this.args = ImmutableList.copyOf(args);
   }
 

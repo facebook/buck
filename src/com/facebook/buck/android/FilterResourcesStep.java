@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -24,14 +25,12 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.facebook.buck.util.Filters;
 import com.facebook.buck.util.Filters.Density;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -120,6 +119,7 @@ public class FilterResourcesStep implements Step {
     Preconditions.checkArgument(filterDrawables || enableStringWhitelisting || !locales.isEmpty());
     Preconditions.checkArgument(!filterDrawables ||
         (targetDensities != null && drawableFinder != null));
+
     this.inResDirToOutResDirMap = inResDirToOutResDirMap;
     this.filterDrawables = filterDrawables;
     this.enableStringWhitelisting = enableStringWhitelisting;
@@ -320,8 +320,8 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface ImageScaler {
-    public boolean isAvailable(ExecutionContext context) throws IOException, InterruptedException;
-    public void scale(double factor, Path source, Path destination, ExecutionContext context)
+    boolean isAvailable(ExecutionContext context) throws IOException, InterruptedException;
+    void scale(double factor, Path source, Path destination, ExecutionContext context)
         throws IOException, InterruptedException;
   }
 
@@ -330,39 +330,26 @@ public class FilterResourcesStep implements Step {
    *
    * @see <a href="http://www.imagemagick.org/script/index.php">ImageMagick</a>
    */
-  public static class ImageMagickScaler implements ImageScaler {
+  static class ImageMagickScaler implements ImageScaler {
 
-    private static final ImageMagickScaler instance = new ImageMagickScaler();
+    private final Path workingDirectory;
 
-    public static ImageMagickScaler getInstance() {
-      return instance;
-    }
-
-    private ExecutionContext getContextWithSilentConsole(ExecutionContext context) {
-      // Using the normal console results in the super console freezing.
-      Console console = context.getConsole();
-      return ExecutionContext.builder()
-          .setExecutionContext(context)
-          .setConsole(new Console(
-              Verbosity.SILENT,
-              console.getStdOut(),
-              console.getStdErr(),
-              console.getAnsi()
-          ))
-          .build();
+    public ImageMagickScaler(Path workingDirectory) {
+      this.workingDirectory = workingDirectory;
     }
 
     @Override
     public boolean isAvailable(ExecutionContext context) throws IOException, InterruptedException {
-      try (ExecutionContext silentContext = getContextWithSilentConsole(context)) {
-        return 0 == new BashStep("which convert").execute(silentContext);
-      }
+      return new ExecutableFinder().getOptionalExecutable(
+          Paths.get("convert"),
+          context.getEnvironment()).isPresent();
     }
 
     @Override
     public void scale(double factor, Path source, Path destination, ExecutionContext context)
         throws IOException, InterruptedException {
       Step convertStep = new BashStep(
+          workingDirectory,
           "convert",
           "-adaptive-resize", (int) (factor * 100) + "%",
           Escaper.escapeAsBashString(source),
@@ -442,8 +429,15 @@ public class FilterResourcesStep implements Step {
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
     private ImmutableSet<String> locales = ImmutableSet.of();
     private boolean enableStringWhitelisting = false;
+    @Nullable
+    private Path workingDirectory;
 
     private Builder() {
+    }
+
+    public Builder setWorkingDirectory(Path workingDirectory) {
+      this.workingDirectory = workingDirectory;
+      return this;
     }
 
     public Builder setInResToOutResDirMap(ImmutableBiMap<Path, Path> inResDirToOutResDirMap) {
@@ -475,6 +469,7 @@ public class FilterResourcesStep implements Step {
       Preconditions.checkNotNull(resourceFilter);
       LOG.info("FilterResourcesStep.Builder: resource filter: %s", resourceFilter);
       Preconditions.checkNotNull(inResDirToOutResDirMap);
+      Preconditions.checkNotNull(workingDirectory);
       return new FilterResourcesStep(
           inResDirToOutResDirMap,
           resourceFilter.isEnabled(),
@@ -484,7 +479,7 @@ public class FilterResourcesStep implements Step {
           DefaultFilteredDirectoryCopier.getInstance(),
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),
-          resourceFilter.shouldDownscale() ? ImageMagickScaler.getInstance() : null);
+          resourceFilter.shouldDownscale() ? new ImageMagickScaler(workingDirectory) : null);
     }
   }
 }

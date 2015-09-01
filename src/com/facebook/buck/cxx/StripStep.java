@@ -33,10 +33,12 @@ public class StripStep extends ShellStep {
   private final Path destination;
 
   public StripStep(
+      Path workingDirectory,
       ImmutableList<String> stripCommandPrefix,
       ImmutableList<String> flags,
       Path source,
       Path destination) {
+    super(workingDirectory);
     this.stripCommandPrefix = stripCommandPrefix;
     this.flags = flags;
     this.source = source;

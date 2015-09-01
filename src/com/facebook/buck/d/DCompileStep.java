@@ -33,10 +33,12 @@ public class DCompileStep extends ShellStep {
   private final ImmutableCollection<Path> inputs;
 
   public DCompileStep(
+      Path workingDirectory,
       ImmutableList<String> compiler,
       ImmutableList<String> flags,
       Path output,
       ImmutableCollection<Path> inputs) {
+    super(workingDirectory);
     this.compiler = compiler;
     this.flags = flags;
     this.output = output;

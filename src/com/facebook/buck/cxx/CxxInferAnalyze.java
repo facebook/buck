@@ -119,7 +119,10 @@ public class CxxInferAnalyze extends AbstractBuildRule {
                           }
                         }).toList(),
                 resultsDir))
-        .add(new DefaultShellStep(getAnalyzeCommand(getSpecsOfAllDeps())))
+        .add(
+            new DefaultShellStep(
+                getProjectFilesystem().getRootPath(),
+                getAnalyzeCommand(getSpecsOfAllDeps())))
         .build();
   }
 

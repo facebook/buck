@@ -31,12 +31,13 @@ public class LexStep extends ShellStep {
   private final Path input;
 
   public LexStep(
+      Path workingDirectory,
       ImmutableList<String> lexPrefix,
       ImmutableList<String> flags,
       Path outputSource,
       Path outputHeader,
       Path input) {
-
+    super(workingDirectory);
     this.lexPrefix = lexPrefix;
     this.flags = flags;
     this.outputSource = outputSource;

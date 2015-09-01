@@ -62,6 +62,9 @@ import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.zip.CustomZipEntry;
+import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -81,10 +84,8 @@ import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
@@ -93,8 +94,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.annotation.Nullable;
 
@@ -2329,10 +2328,9 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
   private static void writeEntriesToZip(Path file, ImmutableMap<String, String> entries)
       throws IOException {
-    try (ZipOutputStream zip = new ZipOutputStream(
-        new BufferedOutputStream(Files.newOutputStream(file)))) {
+    try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(file)) {
       for (Map.Entry<String, String> mapEntry : entries.entrySet()) {
-        ZipEntry entry = new ZipEntry(mapEntry.getKey());
+        CustomZipEntry entry = new CustomZipEntry(mapEntry.getKey());
         entry.setTime(0);
         zip.putNextEntry(entry);
         zip.write(mapEntry.getValue().getBytes());

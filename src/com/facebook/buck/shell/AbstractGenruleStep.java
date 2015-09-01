@@ -25,10 +25,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
-
-import javax.annotation.Nullable;
 
 public abstract class AbstractGenruleStep extends ShellStep {
 
@@ -38,7 +36,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   public AbstractGenruleStep(
       BuildTarget target,
       CommandString commandString,
-      @Nullable File workingDirectory) {
+      Path workingDirectory) {
     super(workingDirectory);
     this.target = target;
     this.commandString = commandString;

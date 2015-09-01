@@ -117,6 +117,7 @@ public class JUnitStep extends ShellStep {
    * @param tmpDirectory directory tests can use for local file scratch space.
    */
   public JUnitStep(
+      Path workingDirectory,
       Set<Path> classpathEntries,
       Iterable<String> testClassNames,
       List<String> vmArgs,
@@ -133,7 +134,9 @@ public class JUnitStep extends ShellStep {
       Optional<Long> testRuleTimeoutMs,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
-    this(classpathEntries,
+    this(
+        workingDirectory,
+        classpathEntries,
         testClassNames,
         vmArgs,
         nativeLibsEnvironment,
@@ -155,6 +158,7 @@ public class JUnitStep extends ShellStep {
 
   @VisibleForTesting
   JUnitStep(
+      Path workingDirectory,
       Set<Path> classpathEntries,
       Iterable<String> testClassNames,
       List<String> vmArgs,
@@ -172,6 +176,7 @@ public class JUnitStep extends ShellStep {
       Optional<Long> testRuleTimeoutMs,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
+    super(workingDirectory);
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = Iterables.unmodifiableIterable(testClassNames);
     this.vmArgs = ImmutableList.copyOf(vmArgs);

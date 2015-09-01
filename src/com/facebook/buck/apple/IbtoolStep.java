@@ -34,9 +34,11 @@ public class IbtoolStep extends ShellStep {
   private final Path output;
 
   public IbtoolStep(
+      Path workingDirectory,
       List<String> ibtoolCommand,
       Path input,
       Path output) {
+    super(workingDirectory);
     this.ibtoolCommand = ImmutableList.copyOf(ibtoolCommand);
     this.input = input;
     this.output = output;

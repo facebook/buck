@@ -22,6 +22,7 @@ java_library(
     '//test/com/facebook/buck/timing:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jimfs:jimfs',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',
     '//third-party/java/okio:okio',

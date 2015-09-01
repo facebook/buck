@@ -53,6 +53,7 @@ public class ArchiveStepTest {
 
     // Create and archive step.
     ArchiveStep archiveStep = new ArchiveStep(
+        projectFilesystem.getRootPath(),
         archiver,
         output,
         inputs);

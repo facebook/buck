@@ -69,16 +69,19 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
   public void testSdkConfigArgs() {
     ExecutionContext context = createMock(ExecutionContext.class);
     AndroidPlatformTarget target = createMock(AndroidPlatformTarget.class);
-    expect(context.getProjectDirectoryRoot()).andStubReturn(Paths.get("root"));
     expect(context.getAndroidPlatformTarget()).andStubReturn(target);
     expect(target.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
     expect(target.getOptimizedProguardConfig()).andStubReturn(Paths.get("sdk-optimized.pro"));
     expect(target.getBootclasspathEntries()).andStubReturn(ImmutableList.<Path>of());
+    Path cwd = Paths.get("root");
     replayAll();
 
-    checkSdkConfig(context, ProGuardObfuscateStep.SdkProguardType.DEFAULT, "sdk-default.pro");
-    checkSdkConfig(context, ProGuardObfuscateStep.SdkProguardType.OPTIMIZED, "sdk-optimized.pro");
-    checkSdkConfig(context, ProGuardObfuscateStep.SdkProguardType.NONE, null);
+    checkSdkConfig(context, cwd, ProGuardObfuscateStep.SdkProguardType.DEFAULT, "sdk-default.pro");
+    checkSdkConfig(
+        context,
+        cwd,
+        ProGuardObfuscateStep.SdkProguardType.OPTIMIZED, "sdk-optimized.pro");
+    checkSdkConfig(context, cwd, ProGuardObfuscateStep.SdkProguardType.NONE, null);
 
     verifyAll();
   }
@@ -87,15 +90,16 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
   public void testAdditionalLibraryJarsParameterFormatting() {
     ExecutionContext context = createMock(ExecutionContext.class);
     AndroidPlatformTarget target = createMock(AndroidPlatformTarget.class);
-    expect(context.getProjectDirectoryRoot()).andStubReturn(Paths.get("root"));
     expect(context.getAndroidPlatformTarget()).andStubReturn(target);
     expect(target.getProguardConfig()).andStubReturn(Paths.get("sdk-default.pro"));
     expect(target.getOptimizedProguardConfig()).andStubReturn(Paths.get("sdk-optimized.pro"));
     expect(target.getBootclasspathEntries()).andStubReturn(ImmutableList.<Path>of());
+    Path cwd = Paths.get("root");
     replayAll();
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
+        cwd,
         /* proguardJarOverride */ Optional.<Path>absent(),
         "1024M",
         Paths.get("generated/proguard.txt"),
@@ -110,7 +114,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         steps);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
         (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(0);
-    ImmutableList<String> parameters = commandLineHelperStep.getParameters(context);
+    ImmutableList<String> parameters = commandLineHelperStep.getParameters(context, cwd);
     int libraryJarsArgIndex = parameters.indexOf("-libraryjars");
     int libraryJarsValueIndex = parameters.indexOf(
         "myfavorite.jar" + File.pathSeparatorChar + "another.jar");
@@ -120,10 +124,12 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
 
   private void checkSdkConfig(
       ExecutionContext context,
+      Path cwd,
       ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
       String expectedPath) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
+        cwd,
         /* proguardJarOverride */ Optional.<Path>absent(),
         "1024M",
         Paths.get("generated/proguard.txt"),
@@ -139,7 +145,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(0);
 
     String found = null;
-    Iterator<String> argsIt = commandLineHelperStep.getParameters(context).iterator();
+    Iterator<String> argsIt = commandLineHelperStep.getParameters(context, cwd).iterator();
     while (argsIt.hasNext()) {
       String arg = argsIt.next();
       if (!arg.equals("-include")) {

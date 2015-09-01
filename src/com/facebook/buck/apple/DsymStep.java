@@ -42,7 +42,8 @@ public class DsymStep extends ShellStep {
   private final Path input;
   private final Path output;
 
-  public DsymStep(List<String> command, Path input, Path output) {
+  public DsymStep(Path workingDirectory, List<String> command, Path input, Path output) {
+    super(workingDirectory);
     this.command = ImmutableList.copyOf(command);
     this.input = input;
     this.output = output;

@@ -53,7 +53,7 @@ public class GwtBinary extends AbstractBuildRule {
    * Valid values for the GWT Compiler's {@code -style} flag.
    * Acceptable values are defined in the GWT docs at http://bit.ly/1sclx5O.
    */
-  static enum Style {
+  enum Style {
     /** Named "obf" for "obfuscated". This is the default style. */
     OBF,
     PRETTY,
@@ -141,7 +141,7 @@ public class GwtBinary extends AbstractBuildRule {
     final Path deployDirectory = workingDirectory.resolve("deploy");
     steps.add(new MkdirStep(deployDirectory));
 
-    Step javaStep = new ShellStep() {
+    Step javaStep = new ShellStep(getProjectFilesystem().getRootPath()) {
       @Override
       public String getShortName() {
         return "gwt-compile";

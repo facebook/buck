@@ -41,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -56,8 +57,7 @@ public abstract class ShellStep implements Step {
   private ImmutableList<String> shellCommandArgs;
 
   /** If specified, working directory will be different from project root. **/
-  @Nullable
-  protected final File workingDirectory;
+  protected final Path workingDirectory;
 
   /**
    * This is set if {@link #shouldPrintStdout(Verbosity)} returns {@code true} when the command is
@@ -74,33 +74,14 @@ public abstract class ShellStep implements Step {
   private long startTime = 0L;
   private long endTime = 0L;
 
-  protected ShellStep() {
-    this(/* workingDirectory */ null);
-  }
-
-  protected ShellStep(@Nullable File workingDirectory) {
-    this.workingDirectory = workingDirectory;
+  protected ShellStep(Path workingDirectory) {
+    this.workingDirectory = Preconditions.checkNotNull(workingDirectory);
     this.stdout = Optional.absent();
     this.stderr = Optional.absent();
-  }
 
-  /**
-   * Get the working directory for this command.
-   * @return working directory specified on construction
-   *         ({@code null} if project directory will be used).
-   */
-  @Nullable
-  @VisibleForTesting
-  public File getWorkingDirectory() {
-    return workingDirectory;
-  }
-
-  private File getFinalWorkingDirectory(ExecutionContext context) {
-    if (workingDirectory != null) {
-      return workingDirectory;
+    if (!workingDirectory.isAbsolute()) {
+      LOG.info("Working directory is not absolute: %s", workingDirectory);
     }
-
-    return context.getProjectDirectoryRoot().toAbsolutePath().toFile();
   }
 
   @Override
@@ -108,13 +89,11 @@ public abstract class ShellStep implements Step {
     // Kick off a Process in which this ShellCommand will be run.
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
 
-    File workDir = getFinalWorkingDirectory(context);
-
     builder.setCommand(getShellCommand(context));
     Map<String, String> environment = Maps.newHashMap();
-    setProcessEnvironment(context, environment, workDir);
+    setProcessEnvironment(context, environment, workingDirectory.toFile());
     builder.setEnvironment(environment);
-    builder.setDirectory(workDir);
+    builder.setDirectory(workingDirectory.toFile());
 
     Optional<String> stdin = getStdin(context);
     if (stdin.isPresent()) {
@@ -268,7 +247,7 @@ public abstract class ShellStep implements Step {
     // resolve symbolic links in this case, and the default PWD might leave symbolic links
     // unresolved.  We try to make PWD match, and cd sets PWD.
     return String.format("(cd %s && %s)",
-        Escaper.escapeAsBashString(getFinalWorkingDirectory(context).getPath()),
+        Escaper.escapeAsBashString(workingDirectory),
         shellCommand);
   }
 

@@ -57,6 +57,7 @@ public class CxxPreprocessAndCompileStepTest {
     // Create our CxxPreprocessAndCompileStep to test.
     CxxPreprocessAndCompileStep cxxPreprocessStep =
         new CxxPreprocessAndCompileStep(
+            Paths.get("."),
             CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             output,
             depFile,
@@ -113,6 +114,7 @@ public class CxxPreprocessAndCompileStepTest {
     // Create our CxxPreprocessAndCompileStep to test.
     CxxPreprocessAndCompileStep cxxPreprocessStep =
         new CxxPreprocessAndCompileStep(
+            Paths.get("."),
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             output,
             depFile,

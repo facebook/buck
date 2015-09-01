@@ -27,7 +27,8 @@ public class ZipalignStep extends ShellStep {
   private final Path inputFile;
   private final Path outputFile;
 
-  public ZipalignStep(Path inputFile, Path outputFile) {
+  public ZipalignStep(Path workingDirectory, Path inputFile, Path outputFile) {
+    super(workingDirectory);
     this.inputFile = inputFile;
     this.outputFile = outputFile;
   }

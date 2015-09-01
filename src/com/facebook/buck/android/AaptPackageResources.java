@@ -265,6 +265,7 @@ public class AaptPackageResources extends AbstractBuildRule
 
     steps.add(
         new AaptStep(
+            getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getResDirectories(),
             assetsDirectory,
@@ -287,7 +288,9 @@ public class AaptPackageResources extends AbstractBuildRule
       if (rDotJavaNeedsDexing) {
         Path rDotJavaDexDir = getPathToRDotJavaDexFiles();
         steps.add(new MakeCleanDirectoryStep(rDotJavaDexDir));
-        steps.add(new DxStep(
+        steps.add(
+            new DxStep(
+                getProjectFilesystem().getRootPath(),
                 getPathToRDotJavaDex(),
                 Collections.singleton(getPathToCompiledRDotJavaFiles()),
                 DX_OPTIONS));
@@ -376,7 +379,8 @@ public class AaptPackageResources extends AbstractBuildRule
         rDotJavaBin,
         javacOptions,
         getBuildTarget(),
-        getResolver());
+        getResolver(),
+        getProjectFilesystem());
     steps.add(javacStep);
 
     Path rDotJavaClassesTxt = getPathToRDotJavaClassesTxt();

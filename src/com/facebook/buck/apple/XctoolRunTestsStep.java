@@ -47,6 +47,8 @@ import java.util.Map;
  */
 public class XctoolRunTestsStep implements Step {
 
+  private final Path workingDirectory;
+
   public interface StdoutReadingCallback {
     void readStdout(InputStream stdout) throws IOException;
   }
@@ -58,6 +60,7 @@ public class XctoolRunTestsStep implements Step {
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
 
   public XctoolRunTestsStep(
+      Path workingDirectory,
       Path xctoolPath,
       String sdkName,
       Optional<String> destinationSpecifier,
@@ -71,6 +74,8 @@ public class XctoolRunTestsStep implements Step {
         "Either logic tests (%s) or app tests (%s) must be present",
         logicTestBundlePaths,
         appTestBundleToHostAppPaths);
+
+    this.workingDirectory = workingDirectory;
 
     // Each test bundle must have one of these extensions. (xctool
     // depends on them to choose which test runner to use.)
@@ -104,7 +109,7 @@ public class XctoolRunTestsStep implements Step {
   public int execute(ExecutionContext context) throws InterruptedException {
     ProcessExecutorParams processExecutorParams = ProcessExecutorParams.builder()
         .setCommand(command)
-        .setDirectory(context.getProjectDirectoryRoot().toAbsolutePath().toFile())
+        .setDirectory(workingDirectory.toAbsolutePath().toFile())
         .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
         .build();
 

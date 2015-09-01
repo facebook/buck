@@ -286,7 +286,12 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     buildableContext.recordArtifact(primaryDexPath);
 
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
-    steps.add(new DxStep(primaryDexPath, filesToDex, DX_MERGE_OPTIONS));
+    steps.add(
+        new DxStep(
+            getProjectFilesystem().getRootPath(),
+            primaryDexPath,
+            filesToDex,
+            DX_MERGE_OPTIONS));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,

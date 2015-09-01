@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -112,6 +113,7 @@ public abstract class Jsr199Javac implements Javac {
   @Override
   public int buildWithClasspath(
       ExecutionContext context,
+      ProjectFilesystem filesystem,
       SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,

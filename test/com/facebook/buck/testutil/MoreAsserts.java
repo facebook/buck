@@ -271,7 +271,10 @@ public final class MoreAsserts {
     }
 
     if (Files.size(one) != Files.size(two)) {
-      fail(String.format("File sizes differ: %s, %s", one, two));
+      fail(String.format(
+              "File sizes differ: %s (%d bytes), %s (%d bytes)",
+              one, Files.size(one),
+              two, Files.size(two)));
     }
 
     try (

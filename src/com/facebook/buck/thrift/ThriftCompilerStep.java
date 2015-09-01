@@ -38,13 +38,14 @@ public class ThriftCompilerStep extends ShellStep {
   private final ImmutableList<Path> includes;
 
   public ThriftCompilerStep(
+      Path workingDirectory,
       ImmutableList<String> compilerPrefix,
       Path outputDir,
       Path input,
       String language,
       ImmutableSet<String> options,
       ImmutableList<Path> includes) {
-
+    super(workingDirectory);
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;
     this.input = input;

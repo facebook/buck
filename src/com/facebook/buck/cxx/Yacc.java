@@ -80,6 +80,7 @@ public class Yacc extends AbstractBuildRule {
         new RmStep(getHeaderOutputPath(outputPrefix), /* shouldForceDeletion */ true),
         new RmStep(getSourceOutputPath(outputPrefix), /* shouldForceDeletion */ true),
         new YaccStep(
+            getProjectFilesystem().getRootPath(),
             yacc.getCommandPrefix(getResolver()),
             flags,
             outputPrefix,

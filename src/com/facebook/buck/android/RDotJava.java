@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.JavacStep;
@@ -46,13 +47,15 @@ public class RDotJava {
       Path outputDirectory,
       JavacOptions javacOptions,
       BuildTarget buildTarget,
-      SourcePathResolver resolver) {
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem) {
     return createJavacStepForDummyRDotJavaFiles(
         javaSourceFilePaths,
         outputDirectory,
         javacOptions,
         buildTarget,
-        resolver);
+        resolver,
+        filesystem);
   }
 
   static JavacStep createJavacStepForDummyRDotJavaFiles(
@@ -60,7 +63,8 @@ public class RDotJava {
       Path outputDirectory,
       JavacOptions javacOptions,
       BuildTarget buildTarget,
-      SourcePathResolver resolver) {
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem) {
 
     return new JavacStep(
         outputDirectory,
@@ -73,6 +77,7 @@ public class RDotJava {
             .build(),
         buildTarget,
         Optional.<JavacStep.SuggestBuildRules>absent(),
-        resolver);
+        resolver,
+        filesystem);
   }
 }

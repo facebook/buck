@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.easymock.EasyMock.expect;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
@@ -45,6 +46,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
@@ -59,6 +61,8 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -86,11 +90,19 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/home/user");
+    createFiles(
+        filesystem,
+        "buck-out/gen/foo/bar#dex.dex.jar",
+        "buck-out/gen/foo/bar.jar");
+
     BuildTarget buildTarget = BuildTarget
         .builder("//foo", "bar")
         .addFlavors(ImmutableFlavor.of("dex"))
         .build();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setProjectFilesystem(filesystem)
+        .build();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(params, pathResolver, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
@@ -101,20 +113,12 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getDxExecutable()).andReturn(Paths.get("/usr/bin/dx"));
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
-    expect(projectFilesystem.getRootPath()).andReturn(Paths.get("/"));
-    expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo")))
-        .andStubReturn(Paths.get("/home/user/buck-out/gen/foo"));
-    expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar#dex.dex.jar")))
-        .andStubReturn(Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar"));
-    expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar.jar")))
-        .andStubReturn(Paths.get("/home/user/buck-out/gen/foo/bar.jar"));
     replayAll();
 
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .setProjectFilesystem(projectFilesystem)
+        .setProjectFilesystem(filesystem)
         .build();
 
     String expectedDxCommand = String.format(
@@ -127,7 +131,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
             String.format("rm -f %s", Paths.get("/home/user/buck-out/gen/foo/bar#dex.dex.jar")),
             String.format("mkdir -p %s", Paths.get("/home/user/buck-out/gen/foo")),
             "estimate_linear_alloc",
-            "(cd / && " + expectedDxCommand + ")",
+            "(cd /home/user && " + expectedDxCommand + ")",
             "zip-scrub buck-out/gen/foo/bar#dex.dex.jar",
             "record_dx_success"),
         steps,
@@ -150,6 +154,15 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "250");
 
     verifyAll();
+  }
+
+  private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {
+    Path root = filesystem.getRootPath();
+    for (String path : paths) {
+      Path resolved = root.resolve(path);
+      Files.createDirectories(resolved.getParent());
+      Files.write(resolved, "".getBytes(UTF_8));
+    }
   }
 
   @Test

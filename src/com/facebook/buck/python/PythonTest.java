@@ -73,7 +73,8 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
   }
 
   private Step getRunTestStep() {
-    return new ShellStep() {
+    // TODO(simons): I'm not convinced this is the right root path
+    return new ShellStep(getProjectFilesystem().getRootPath()) {
 
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {

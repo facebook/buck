@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -270,7 +269,6 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
     // as srcs. Without this, a genrule is not guaranteed to be hermetic.
-    File workingDirectory = new File(absolutePathToSrcDirectory.toString());
 
     return new AbstractGenruleStep(
         getBuildTarget(),
@@ -278,7 +276,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
             cmd.transform(macroExpander),
             bash.transform(macroExpander),
             cmdExe.transform(macroExpander)),
-        workingDirectory) {
+        absolutePathToSrcDirectory) {
       @Override
       protected void addEnvironmentVariables(
           ExecutionContext context,

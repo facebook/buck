@@ -174,7 +174,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(resultsDir))
         .add(new MkdirStep(output.getParent()))
-        .add(new DefaultShellStep(frontendCommand))
+        .add(new DefaultShellStep(getProjectFilesystem().getRootPath(), frontendCommand))
         .build();
   }
 

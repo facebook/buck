@@ -31,16 +31,21 @@ import java.util.Set;
 
 public class AidlStep extends ShellStep {
 
+  private final ProjectFilesystem filesystem;
   private final BuildTarget target;
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
 
   public AidlStep(
+      ProjectFilesystem filesystem,
       BuildTarget target,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
+    super(filesystem.getRootPath());
+
+    this.filesystem = filesystem;
     this.target = target;
     this.aidlFilePath = aidlFilePath;
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
@@ -54,8 +59,7 @@ public class AidlStep extends ShellStep {
     // The arguments passed to aidl are based off of what I observed when running Ant in verbose
     // mode.
     AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    verifyImportPaths(projectFilesystem, importDirectoryPaths);
+    verifyImportPaths(filesystem, importDirectoryPaths);
     args.add(androidPlatformTarget.getAidlExecutable().toString());
 
     // For some reason, all of the flags to aidl do not permit a space between the flag name and
@@ -69,12 +73,12 @@ public class AidlStep extends ShellStep {
 
     // search path for import statements
     for (String importDirectoryPath : importDirectoryPaths) {
-      Path resovled = projectFilesystem.resolve(Paths.get(importDirectoryPath));
+      Path resovled = filesystem.resolve(Paths.get(importDirectoryPath));
       args.add("-I" + resovled);
     }
 
     // base output folder for generated files
-    args.add("-o" + projectFilesystem.resolve(destinationDirectory));
+    args.add("-o" + filesystem.resolve(destinationDirectory));
 
     args.add(aidlFilePath.toString());
 

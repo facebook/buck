@@ -333,11 +333,13 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               bundleBinaryPath));
       stepsBuilder.add(
           new DsymStep(
+              getProjectFilesystem().getRootPath(),
               dsymutil.getCommandPrefix(getResolver()),
               bundleBinaryPath,
               dsymPath));
       stepsBuilder.add(
           new DefaultShellStep(
+              getProjectFilesystem().getRootPath(),
               ImmutableList.<String>builder()
                   .addAll(strip.getCommandPrefix(getResolver()))
                   .add("-S")
@@ -436,6 +438,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
       stepsBuilder.add(
           new CodeSignStep(
+              getProjectFilesystem().getRootPath(),
               bundleDestinationPath,
               signingEntitlementsTempPath,
               codeSignIdentity.get().getHash()
@@ -568,6 +571,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
         LOG.debug("Compiling XIB %s to NIB %s", sourcePath, destinationPath);
         stepsBuilder.add(
             new IbtoolStep(
+                getProjectFilesystem().getRootPath(),
                 ibtool.getCommandPrefix(getResolver()),
                 sourcePath,
                 compiledNibPath));

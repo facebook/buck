@@ -71,7 +71,8 @@ public class OCamlCCompileStep extends ShellStep {
 
   private final Args args;
 
-  OCamlCCompileStep(Args args) {
+  OCamlCCompileStep(Path workingDirectory, Args args) {
+    super(workingDirectory);
     this.args = args;
   }
 

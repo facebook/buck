@@ -34,14 +34,17 @@ import java.nio.file.Path;
 
 public class RunShTestAndRecordResultStep implements Step {
 
+  private Path workingDirectory;
   private Path pathToShellScript;
   private final ImmutableList<String> args;
   private Path pathToTestResultFile;
 
   public RunShTestAndRecordResultStep(
+      Path workingDirectory,
       Path pathToShellScript,
       ImmutableList<String> args,
       Path pathToTestResultFile) {
+    this.workingDirectory = workingDirectory;
     this.pathToShellScript = pathToShellScript;
     this.args = args;
     this.pathToTestResultFile = pathToTestResultFile;
@@ -72,7 +75,7 @@ public class RunShTestAndRecordResultStep implements Step {
           /* stdout */ null,
           /* stderr */ null);
     } else {
-      ShellStep test = new ShellStep() {
+      ShellStep test = new ShellStep(workingDirectory) {
         @Override
         public String getShortName() {
           return pathToShellScript.toString();

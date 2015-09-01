@@ -29,13 +29,14 @@ import java.nio.file.Paths;
 public class YaccStep extends CompositeStep {
 
   public YaccStep(
+      Path workingDirectory,
       final ImmutableList<String> yaccPrefix,
       final ImmutableList<String> flags,
       final Path outputPrefix,
       final Path input) {
 
     super(ImmutableList.of(
-        new ShellStep() {
+        new ShellStep(workingDirectory) {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return ImmutableList.<String>builder()

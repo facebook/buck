@@ -79,6 +79,7 @@ public class Lex extends AbstractBuildRule {
         new MkdirStep(outputHeader.getParent()),
         new RmStep(outputHeader, /* shouldForceDeletion */ true),
         new LexStep(
+            getProjectFilesystem().getRootPath(),
             lex.getCommandPrefix(getResolver()),
             flags,
             outputSource,

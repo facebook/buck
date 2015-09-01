@@ -34,12 +34,14 @@ public class RustCompileStep extends ShellStep {
   private final Path crateRoot;
 
   public RustCompileStep(
+      Path workingDirectory,
       ImmutableList<String> compilerCommandPrefix,
       ImmutableList<String> flags,
       ImmutableSet<String> features,
       Path output,
       ImmutableMap<String, Path> crates,
       Path crateRoot) {
+    super(workingDirectory);
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.flags = flags;
     this.features = features;

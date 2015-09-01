@@ -43,7 +43,6 @@ import org.immutables.value.Value;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -136,10 +135,6 @@ public abstract class ExecutionContext implements Closeable {
 
   public void postEvent(BuckEvent event) {
     getBuckEventBus().post(event);
-  }
-
-  public Path getProjectDirectoryRoot() {
-    return getProjectFilesystem().getRootPath();
   }
 
   public PrintStream getStdErr() {

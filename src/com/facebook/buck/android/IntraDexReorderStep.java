@@ -48,6 +48,7 @@ import java.util.Set;
  */
 public class IntraDexReorderStep implements Step {
 
+  private final Path workingDirectory;
   private final Path reorderTool;
   private final Path reorderDataFile;
   private final Path inputPrimaryDexPath;
@@ -58,6 +59,7 @@ public class IntraDexReorderStep implements Step {
   private final String outputSubDir;
 
   IntraDexReorderStep(
+      Path workingDirectory,
       Optional<SourcePath> reorderTool,
       Optional<SourcePath> reorderDataFile,
       SourcePathResolver sourcePathResolver,
@@ -67,6 +69,7 @@ public class IntraDexReorderStep implements Step {
       final Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap,
       String inputSubDir,
       String outputSubDir) {
+    this.workingDirectory = workingDirectory;
     this.reorderTool = reorderTool.transform(sourcePathResolver.getPathFunction()).get();
     this.reorderDataFile = reorderDataFile.transform(sourcePathResolver.getPathFunction()).get();
     this.inputPrimaryDexPath = inputPrimaryDexPath;
@@ -75,7 +78,7 @@ public class IntraDexReorderStep implements Step {
     this.buildTarget = buildTarget;
     this.inputSubDir = inputSubDir;
     this.outputSubDir = outputSubDir;
-      }
+  }
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
@@ -116,10 +119,13 @@ public class IntraDexReorderStep implements Step {
       // un-zip
       steps.add(new UnzipStep(inputPath, temp));
       // run reorder tool
-      steps.add(new DefaultShellStep(ImmutableList.of(
-              reorderTool.toString(),
-              reorderDataFile.toString(),
-              temp.resolve("classes.dex").toString())));
+      steps.add(
+          new DefaultShellStep(
+              workingDirectory,
+              ImmutableList.of(
+                  reorderTool.toString(),
+                  reorderDataFile.toString(),
+                  temp.resolve("classes.dex").toString())));
       Path outputPath = Paths.get(inputPath.toString().replace(inputSubDir, outputSubDir));
       // re-zip
       steps.add(new ZipStep(
@@ -134,10 +140,13 @@ public class IntraDexReorderStep implements Step {
       // copy dex
       // apply reorder directly on dex
       steps.add(CopyStep.forFile(inputPrimaryDexPath, outputPrimaryDexPath));
-      steps.add(new DefaultShellStep(ImmutableList.of(
-              reorderTool.toString(),
-              reorderDataFile.toString(),
-              outputPrimaryDexPath.toString())));
+      steps.add(
+          new DefaultShellStep(
+              workingDirectory,
+              ImmutableList.of(
+                  reorderTool.toString(),
+                  reorderDataFile.toString(),
+                  outputPrimaryDexPath.toString())));
     }
     return 0;
        }

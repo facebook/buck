@@ -95,6 +95,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
                 getProjectFilesystem().getAbsolutifier()));
     stepsBuilder.add(
         new ActoolStep(
+            getProjectFilesystem().getRootPath(),
             applePlatformName,
             actool.getCommandPrefix(getResolver()),
             absoluteAssetCatalogDirs,

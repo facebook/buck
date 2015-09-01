@@ -60,6 +60,7 @@ public class PexStep extends ShellStep {
   private final boolean zipSafe;
 
   public PexStep(
+      Path workingDirectory,
       ImmutableList<String> commandPrefix,
       Path pythonPath,
       Path tempDir,
@@ -70,6 +71,7 @@ public class PexStep extends ShellStep {
       ImmutableMap<Path, Path> nativeLibraries,
       ImmutableSet<Path> prebuiltLibraries,
       boolean zipSafe) {
+    super(workingDirectory);
     this.commandPrefix = commandPrefix;
     this.pythonPath = pythonPath;
     this.tempDir = tempDir;

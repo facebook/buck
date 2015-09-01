@@ -30,15 +30,17 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public class CodeSignStep implements Step {
+  private final Path workingDirectory;
   private final Path pathToSign;
   private final Path pathToSigningEntitlements;
   private final String codeSignIdentity;
 
   public CodeSignStep(
+      Path workingDirectory,
       Path pathToSign,
       Path pathToSigningEntitlements,
-      String codeSignIdentity
-  ) {
+      String codeSignIdentity) {
+    this.workingDirectory = workingDirectory;
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
     this.codeSignIdentity = codeSignIdentity;
@@ -55,7 +57,7 @@ public class CodeSignStep implements Step {
                     "--sign", codeSignIdentity,
                     "--entitlements", pathToSigningEntitlements.toString(),
                     pathToSign.toString()))
-            .setDirectory(context.getProjectDirectoryRoot().toFile())
+            .setDirectory(workingDirectory.toFile())
             .build();
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);

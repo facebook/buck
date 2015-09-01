@@ -76,6 +76,7 @@ public class CxxCompileStepIntegrationTest {
 
     // Build an archive step.
     CxxPreprocessAndCompileStep step = new CxxPreprocessAndCompileStep(
+        filesystem.getRootPath(),
         CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
         output,
         depFile,

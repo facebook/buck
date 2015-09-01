@@ -68,6 +68,7 @@ public class Archive extends AbstractBuildRule {
         new MkdirStep(output.getParent()),
         new RmStep(output, /* shouldForceDeletion */ true),
         new ArchiveStep(
+            getProjectFilesystem().getRootPath(),
             archiver.getCommandPrefix(getResolver()),
             output,
             getResolver().getAllPaths(inputs)),

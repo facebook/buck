@@ -47,6 +47,7 @@ public class LexStepTest {
 
     // Create our CxxLinkStep to test.
     LexStep lexStep = new LexStep(
+        projectFilesystem.getRootPath(),
         lexPrefix,
         flags,
         outputSource,

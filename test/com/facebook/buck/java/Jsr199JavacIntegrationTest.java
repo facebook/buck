@@ -114,6 +114,7 @@ public class Jsr199JavacIntegrationTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.buildWithClasspath(
         executionContext,
+        executionContext.getProjectFilesystem(),
         PATH_RESOLVER,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
@@ -145,6 +146,7 @@ public class Jsr199JavacIntegrationTest {
     ExecutionContext executionContext = createExecutionContext();
     int exitCode = javac.buildWithClasspath(
         executionContext,
+        executionContext.getProjectFilesystem(),
         PATH_RESOLVER,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
@@ -232,6 +234,7 @@ public class Jsr199JavacIntegrationTest {
     try {
       javac.buildWithClasspath(
           executionContext,
+          executionContext.getProjectFilesystem(),
           PATH_RESOLVER,
           BuildTargetFactory.newInstance("//some:example"),
           ImmutableList.<String>of(),

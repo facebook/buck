@@ -59,6 +59,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
 
+  private final Path workingDirectory;
   private final Operation operation;
   private final Path output;
   private final Path depFile;
@@ -78,6 +79,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   );
 
   public CxxPreprocessAndCompileStep(
+      Path workingDirectory,
       Operation operation,
       Path output,
       Path depFile,
@@ -90,6 +92,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       Optional<Function<String, Iterable<String>>> extraLineProcessor) {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
+
+    this.workingDirectory = workingDirectory;
     this.operation = operation;
     this.output = output;
     this.depFile = depFile;
@@ -185,9 +189,9 @@ public class CxxPreprocessAndCompileStep implements Step {
    *
    * @return Half-configured ProcessBuilder
    */
-  private ProcessBuilder makeSubprocessBuilder(ExecutionContext context) {
+  private ProcessBuilder makeSubprocessBuilder() {
     ProcessBuilder builder = new ProcessBuilder();
-    builder.directory(context.getProjectDirectoryRoot().toAbsolutePath().toFile());
+    builder.directory(workingDirectory.toAbsolutePath().toFile());
     builder.redirectError(ProcessBuilder.Redirect.PIPE);
 
     // A forced compilation directory is set in the constructor.  Now, we can't actually force
@@ -207,8 +211,8 @@ public class CxxPreprocessAndCompileStep implements Step {
         // We only need to expand the working directory if compiling, as we override it in the
         // preprocessed otherwise.
         operation == Operation.COMPILE_MUNGE_DEBUGINFO ?
-            sanitizer.getExpandedPath(context.getProjectDirectoryRoot().toAbsolutePath()) :
-            context.getProjectDirectoryRoot().toAbsolutePath().toString());
+            sanitizer.getExpandedPath(workingDirectory.toAbsolutePath()) :
+            workingDirectory.toAbsolutePath().toString());
 
     return builder;
   }
@@ -263,12 +267,12 @@ public class CxxPreprocessAndCompileStep implements Step {
   private int executePiped(ExecutionContext context)
       throws IOException, InterruptedException {
     ByteArrayOutputStream preprocessError = new ByteArrayOutputStream();
-    ProcessBuilder preprocessBuilder = makeSubprocessBuilder(context);
+    ProcessBuilder preprocessBuilder = makeSubprocessBuilder();
     preprocessBuilder.command(makePreprocessCommand());
     preprocessBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
 
     ByteArrayOutputStream compileError = new ByteArrayOutputStream();
-    ProcessBuilder compileBuilder = makeSubprocessBuilder(context);
+    ProcessBuilder compileBuilder = makeSubprocessBuilder();
     compileBuilder.command(
         makeCompileCommand(
             "-",
@@ -295,21 +299,21 @@ public class CxxPreprocessAndCompileStep implements Step {
           new FunctionLineProcessorThread(
               preprocess.getErrorStream(),
               preprocessError,
-              createErrorLineProcessor(context.getProjectDirectoryRoot()));
+              createErrorLineProcessor(workingDirectory));
       errorProcessorPreprocess.start();
 
       errorProcessorCompile =
           new FunctionLineProcessorThread(
               compile.getErrorStream(),
               compileError,
-              createErrorLineProcessor(context.getProjectDirectoryRoot()));
+              createErrorLineProcessor(workingDirectory));
       errorProcessorCompile.start();
 
       lineDirectiveMunger =
           new FunctionLineProcessorThread(
               preprocess.getInputStream(),
               compile.getOutputStream(),
-              createPreprocessOutputLineProcessor(context.getProjectDirectoryRoot()));
+              createPreprocessOutputLineProcessor(workingDirectory));
       lineDirectiveMunger.start();
 
       int compileStatus = compile.waitFor();
@@ -371,7 +375,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   private int executeOther(ExecutionContext context) throws Exception {
-    ProcessBuilder builder = makeSubprocessBuilder(context);
+    ProcessBuilder builder = makeSubprocessBuilder();
 
     // If we're preprocessing, file output goes through stdout, so we can postprocess it.
     if (operation == Operation.PREPROCESS) {
@@ -404,7 +408,7 @@ public class CxxPreprocessAndCompileStep implements Step {
                new FunctionLineProcessorThread(
                    process.getErrorStream(),
                    error,
-                   createErrorLineProcessor(context.getProjectDirectoryRoot()))) {
+                   createErrorLineProcessor(workingDirectory))) {
         errorProcessor.start();
 
         // If we're preprocessing, we pipe the output through a processor to sanitize the line
@@ -416,7 +420,7 @@ public class CxxPreprocessAndCompileStep implements Step {
                    new FunctionLineProcessorThread(
                        process.getInputStream(),
                        output,
-                       createPreprocessOutputLineProcessor(context.getProjectDirectoryRoot()))) {
+                       createPreprocessOutputLineProcessor(workingDirectory))) {
             outputProcessor.start();
             outputProcessor.waitFor();
           } catch (Throwable thrown) {
@@ -501,8 +505,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       if (exitCode == 0 && operation == Operation.COMPILE_MUNGE_DEBUGINFO) {
         try {
           sanitizer.restoreCompilationDirectory(
-              context.getProjectDirectoryRoot().toAbsolutePath().resolve(output),
-              context.getProjectDirectoryRoot().toAbsolutePath());
+              workingDirectory.toAbsolutePath().resolve(output),
+              workingDirectory.toAbsolutePath());
         } catch (IOException e) {
           context.logError(e, "error updating compilation directory");
           return 1;

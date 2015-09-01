@@ -49,6 +49,7 @@ public class YaccStepTest {
 
     // Create our CxxLinkStep to test.
     YaccStep yaccStep = new YaccStep(
+        projectFilesystem.getRootPath(),
         yaccPrefix,
         flags,
         outputPrefix,

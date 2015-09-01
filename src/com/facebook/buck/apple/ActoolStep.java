@@ -34,10 +34,12 @@ public class ActoolStep extends ShellStep {
   private final Path output;
 
   public ActoolStep(
+      Path workingDirectory,
       String applePlatformName,
       List<String> actoolCommand,
       SortedSet<Path> assetCatalogDirs,
       Path output) {
+    super(workingDirectory);
     this.applePlatformName = applePlatformName;
     this.actoolCommand = ImmutableList.copyOf(actoolCommand);
     this.assetCatalogDirs = assetCatalogDirs;

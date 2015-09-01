@@ -64,9 +64,12 @@ public class JavacStep implements Step {
 
   private final SourcePathResolver resolver;
 
+  private final ProjectFilesystem filesystem;
+
   /**
-   * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, SourcePathResolver,
-   * BuildTarget, ImmutableList, ImmutableSet, Optional, Optional)} has been invoked.
+   * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, ProjectFilesystem,
+   * SourcePathResolver, BuildTarget, ImmutableList, ImmutableSet, Optional, Optional)} has been
+   * invoked.
    */
   private AtomicBoolean isExecuted = new AtomicBoolean(false);
 
@@ -109,7 +112,8 @@ public class JavacStep implements Step {
       JavacOptions javacOptions,
       BuildTarget invokingRule,
       Optional<SuggestBuildRules> suggestBuildRules,
-      SourcePathResolver resolver) {
+      SourcePathResolver resolver,
+      ProjectFilesystem filesystem) {
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
     this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
@@ -120,27 +124,30 @@ public class JavacStep implements Step {
     this.invokingRule = invokingRule;
     this.suggestBuildRules = suggestBuildRules;
     this.resolver = resolver;
+    this.filesystem = filesystem;
   }
 
   @Override
   public final int execute(ExecutionContext context) throws IOException, InterruptedException {
     try {
-      return tryBuildWithFirstOrderDeps(context);
+      return tryBuildWithFirstOrderDeps(context, filesystem);
     } finally {
       isExecuted.set(true);
     }
   }
 
-  private int tryBuildWithFirstOrderDeps(ExecutionContext context)
+  private int tryBuildWithFirstOrderDeps(ExecutionContext context, ProjectFilesystem filesystem)
       throws InterruptedException, IOException {
-    CapturingPrintStream stdout = new CapturingPrintStream();
-    CapturingPrintStream stderr = new CapturingPrintStream();
-    try (ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr)) {
+    try (
+        CapturingPrintStream stdout = new CapturingPrintStream();
+        CapturingPrintStream stderr = new CapturingPrintStream();
+        ExecutionContext firstOrderContext = context.createSubContext(stdout, stderr)) {
 
       Javac javac = getJavac();
 
       int declaredDepsResult = javac.buildWithClasspath(
           firstOrderContext,
+          filesystem,
           resolver,
           invokingRule,
           getOptions(context, declaredClasspathEntries),

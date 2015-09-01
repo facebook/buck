@@ -1187,6 +1187,7 @@ public class DefaultJavaLibraryTest {
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     DefaultJavaLibrary.addPostprocessClassesCommands(
+        new FakeProjectFilesystem().getRootPath(),
         commands,
         postprocessClassesCommands,
         outputDirectory);

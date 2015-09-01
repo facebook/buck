@@ -95,7 +95,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     steps.add(new MakeCleanDirectoryStep(sourceMapOutput.getParent()));
 
     steps.add(
-        new ShellStep() {
+        new ShellStep(getProjectFilesystem().getRootPath()) {
           @Override
           public String getShortName() {
             return "bundle_react_native";

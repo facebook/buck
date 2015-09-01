@@ -43,12 +43,14 @@ public class NdkBuildStep extends ShellStep {
   private final Function<String, String> macroExpander;
 
   public NdkBuildStep(
+      Path workingDirectory,
       Path root,
       Path makefile,
       Path buildArtifactsDirectory,
       Path binDirectory,
       Iterable<String> flags,
       Function<String, String> macroExpander) {
+    super(workingDirectory);
     this.root = root;
     this.makefile = makefile;
     this.buildArtifactsDirectory = buildArtifactsDirectory;

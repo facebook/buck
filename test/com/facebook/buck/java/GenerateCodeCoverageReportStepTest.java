@@ -58,14 +58,21 @@ public class GenerateCodeCoverageReportStepTest {
 
   @Before
   public void setUp() {
+    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
+
     step = new GenerateCodeCoverageReportStep(
-        SOURCE_DIRECTORIES, CLASSES_DIRECTORIES,
-        Paths.get(OUTPUT_DIRECTORY), CoverageReportFormat.HTML, "TitleFoo");
+        filesystem.getRootPath(),
+        SOURCE_DIRECTORIES,
+        CLASSES_DIRECTORIES,
+        Paths.get(OUTPUT_DIRECTORY),
+        CoverageReportFormat.HTML,
+        "TitleFoo");
 
     context = createMock(ExecutionContext.class);
+
     expect(
         context.getProjectFilesystem())
-        .andReturn(new ProjectFilesystem(Paths.get(".")))
+        .andReturn(filesystem)
         .anyTimes();
     replay(context);
   }

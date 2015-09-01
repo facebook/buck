@@ -45,11 +45,13 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   private final Path propertyFile;
 
   public GenerateCodeCoverageReportStep(
+      Path workingDirectory,
       Set<String> sourceDirectories,
       Set<Path> classesDirectories,
       Path outputDirectory,
       CoverageReportFormat format,
       String title) {
+    super(workingDirectory);
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
     this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
     this.outputDirectory = outputDirectory;

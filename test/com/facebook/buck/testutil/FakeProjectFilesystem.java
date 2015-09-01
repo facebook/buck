@@ -36,6 +36,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,10 +51,12 @@ import java.io.StringReader;
 import java.math.BigInteger;
 import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
+import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.NotLinkException;
@@ -192,6 +196,25 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   private final Map<Path, Path> symLinks;
   private final Set<Path> directories;
   private final Clock clock;
+
+  public static ProjectFilesystem createJavaOnlyFilesystem() throws IOException {
+    return createJavaOnlyFilesystem("/opt/src/buck");
+  }
+
+  public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath) throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+
+    Path root = vfs.getPath(rootPath);
+    Files.createDirectories(root);
+
+    return new ProjectFilesystem(root) {
+      @Override
+      public Path resolve(Path path) {
+        // Avoid resolving paths from different Java FileSystems.
+        return super.resolve(path.toString());
+      }
+    };
+  }
 
   public FakeProjectFilesystem() {
     this(new FakeClock(0), Paths.get("").toFile(), ImmutableSet.<Path>of());
@@ -711,5 +734,4 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     fileLastModifiedTimes.put(MorePaths.normalize(target),
         fileLastModifiedTimes.remove(MorePaths.normalize(source)));
   }
-
 }

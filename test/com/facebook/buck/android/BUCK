@@ -122,6 +122,7 @@ java_test(
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jimfs:jimfs',
     '//third-party/java/junit:junit',
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',

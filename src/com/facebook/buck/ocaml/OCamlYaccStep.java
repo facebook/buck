@@ -44,7 +44,8 @@ public class OCamlYaccStep extends ShellStep {
 
   private final Args args;
 
-  public OCamlYaccStep(Args args) {
+  public OCamlYaccStep(Path workingDirectory, Args args) {
+    super(workingDirectory);
     this.args = args;
   }
 
