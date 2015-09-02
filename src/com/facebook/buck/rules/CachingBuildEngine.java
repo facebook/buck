@@ -184,7 +184,7 @@ public class CachingBuildEngine implements BuildEngine {
             rule.getRuleKey(),
             buildInfoRecorder,
             context.getArtifactCache(),
-            context.getProjectFilesystem(),
+            rule.getProjectFilesystem(),
             context);
     if (cacheResult.getType().isSuccess()) {
       return Futures.immediateFuture(
@@ -270,7 +270,7 @@ public class CachingBuildEngine implements BuildEngine {
                       inputRuleKey,
                       buildInfoRecorder,
                       context.getArtifactCache(),
-                      context.getProjectFilesystem(),
+                      rule.getProjectFilesystem(),
                       context);
               if (cacheResult.getType().isSuccess()) {
                 return Futures.immediateFuture(
@@ -343,9 +343,11 @@ public class CachingBuildEngine implements BuildEngine {
     // Log to the event bus.
     context.getEventBus().logVerboseAndPost(LOG, BuildRuleEvent.resumed(rule));
 
-    final OnDiskBuildInfo onDiskBuildInfo = context.createOnDiskBuildInfoFor(rule.getBuildTarget());
+    final OnDiskBuildInfo onDiskBuildInfo = context.createOnDiskBuildInfoFor(
+        rule.getBuildTarget(),
+        rule.getProjectFilesystem());
     final BuildInfoRecorder buildInfoRecorder =
-        context.createBuildInfoRecorder(rule.getBuildTarget())
+        context.createBuildInfoRecorder(rule.getBuildTarget(), rule.getProjectFilesystem())
             .addBuildMetadata(
                 BuildInfo.METADATA_KEY_FOR_RULE_KEY,
                 rule.getRuleKey().toString())

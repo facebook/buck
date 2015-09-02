@@ -70,19 +70,6 @@ public abstract class BuildContext {
   public abstract ActionGraph getActionGraph();
   public abstract StepRunner getStepRunner();
 
-  /**
-   * By design, there is no public getter for {@link ProjectFilesystem}. At the point where a
-   * {@link BuildRule} is using a {@link BuildContext} to generate its
-   * {@link com.facebook.buck.step.Step}s, it should not be doing any I/O on local disk. Any reads
-   * should be mediated through {@link OnDiskBuildInfo}, and {@link BuildInfoRecorder} will take
-   * care of writes after the fact. The {@link BuildRule} should be working with relative file paths
-   * so that builds can ultimately be distributed.
-   * <p>
-   * The primary reason this method exists is so that someone who blindly tries to add such a getter
-   * will encounter a compilation error and will [hopefully] discover this comment.
-   */
-  protected abstract ProjectFilesystem getProjectFilesystem();
-
   protected abstract Clock getClock();
   public abstract ArtifactCache getArtifactCache();
   public abstract JavaPackageFinder getJavaPackageFinder();
@@ -101,18 +88,14 @@ public abstract class BuildContext {
     return false;
   }
 
-  public Path getProjectRoot() {
-    return getProjectFilesystem().getRootPath();
-  }
-
   /**
    * Creates an {@link OnDiskBuildInfo}.
    * <p>
    * This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s
    * in general.
    */
-  OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target) {
-    return new DefaultOnDiskBuildInfo(target, getProjectFilesystem());
+  OnDiskBuildInfo createOnDiskBuildInfoFor(BuildTarget target, ProjectFilesystem filesystem) {
+    return new DefaultOnDiskBuildInfo(target, filesystem);
   }
 
   /**
@@ -121,10 +104,10 @@ public abstract class BuildContext {
    * This method should be visible to {@link AbstractBuildRule}, but not {@link BuildRule}s
    * in general.
    */
-  BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget) {
+  BuildInfoRecorder createBuildInfoRecorder(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return new BuildInfoRecorder(
         buildTarget,
-        getProjectFilesystem(),
+        filesystem,
         getClock(),
         getBuildId(),
         ImmutableMap.copyOf(getEnvironment()));

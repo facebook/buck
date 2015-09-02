@@ -1271,7 +1271,6 @@ public class DefaultJavaLibraryTest {
     return ImmutableBuildContext.builder()
         .setActionGraph(RuleMap.createGraphFromSingleRule(javaLibrary))
         .setStepRunner(EasyMock.createMock(StepRunner.class))
-        .setProjectFilesystem(projectFilesystem)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
         .setArtifactCache(new NoopArtifactCache())

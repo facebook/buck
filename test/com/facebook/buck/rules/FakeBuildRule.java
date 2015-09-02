@@ -16,9 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -54,15 +56,20 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
     this(new FakeBuildRuleParamsBuilder(buildTarget).build(), resolver);
   }
 
-  public FakeBuildRule(BuildTarget target, SourcePathResolver resolver, BuildRule... deps) {
+  public FakeBuildRule(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      SourcePathResolver resolver,
+      BuildRule... deps) {
     this(
         new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(filesystem)
             .setDeps(ImmutableSortedSet.copyOf(deps))
             .build(), resolver);
   }
 
   public FakeBuildRule(String target, SourcePathResolver resolver, BuildRule... deps) {
-    this(BuildTargetFactory.newInstance(target), resolver, deps);
+    this(BuildTargetFactory.newInstance(target), new FakeProjectFilesystem(), resolver, deps);
   }
 
   @Override

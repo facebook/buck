@@ -58,7 +58,6 @@ public class FakeBuildContext {
 
     return ImmutableBuildContext.builder()
         .setStepRunner(new DefaultStepRunner(executionContext))
-        .setProjectFilesystem(projectFilesystem)
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
         .setArtifactCache(new NoopArtifactCache())

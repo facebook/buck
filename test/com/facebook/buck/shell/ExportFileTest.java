@@ -63,7 +63,6 @@ import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -79,8 +78,7 @@ public class ExportFileTest {
   @Before
   public void createFixtures() {
     target = BuildTarget.builder("//", "example.html").build();
-    File root = new File(".");
-    context = getBuildContext(root);
+    context = getBuildContext();
   }
 
   @Test
@@ -215,9 +213,8 @@ public class ExportFileTest {
     assertNotEquals(original, refreshed);
   }
 
-  private BuildContext getBuildContext(File root) {
+  private BuildContext getBuildContext() {
     return ImmutableBuildContext.builder()
-        .setProjectFilesystem(new ProjectFilesystem(root.toPath()))
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setEventBus(BuckEventBusFactory.newInstance())
         .setClock(new DefaultClock())

@@ -100,7 +100,7 @@ abstract class RustLinkable extends AbstractBuildRule {
     return ImmutableList.of(
         new MakeCleanDirectoryStep(scratchDir),
         new SymlinkFilesIntoDirectoryStep(
-            context.getProjectRoot(),
+            getProjectFilesystem().getRootPath(),
             getResolver().getAllPaths(srcs),
             scratchDir),
         new MakeCleanDirectoryStep(output.getParent()),

@@ -406,7 +406,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     // Copy the .mobileprovision file if the platform requires it.
     if (provisioningProfiles.isPresent()) {
       Optional<Path> entitlementsPlist = Optional.absent();
-      final String srcRoot = context.getProjectRoot().resolve(
+      final String srcRoot = getProjectFilesystem().getRootPath().resolve(
           getBuildTarget().getBasePath()).toString();
       Optional<String> entitlementsPlistString =
           InfoPlistSubstitution.getVariableExpansionForPlatform(

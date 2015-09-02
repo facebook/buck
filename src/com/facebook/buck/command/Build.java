@@ -178,7 +178,6 @@ public class Build implements Closeable {
     buildContext = ImmutableBuildContext.builder()
         .setActionGraph(actionGraph)
         .setStepRunner(stepRunner)
-        .setProjectFilesystem(executionContext.getProjectFilesystem())
         .setClock(clock)
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)

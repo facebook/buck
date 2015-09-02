@@ -121,7 +121,7 @@ public class CxxLink
             frameworkRoots,
             getLibrarySearchDirectories(),
             getLibraryNames()),
-        new FileScrubberStep(output, linker.getScrubbers(context.getProjectRoot())));
+        new FileScrubberStep(output, linker.getScrubbers(getProjectFilesystem().getRootPath())));
   }
 
   @Override

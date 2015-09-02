@@ -171,7 +171,6 @@ public class ApkGenruleTest {
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(EasyMock.createMock(ActionGraph.class))
         .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
-        .setProjectFilesystem(EasyMock.createNiceMock(ProjectFilesystem.class))
         .setClock(EasyMock.createMock(Clock.class))
         .setBuildId(EasyMock.createMock(BuildId.class))
         .setArtifactCache(EasyMock.createMock(ArtifactCache.class))

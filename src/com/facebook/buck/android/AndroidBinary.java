@@ -363,7 +363,7 @@ public class AndroidBinary
 
     // Create the .dex files if we aren't doing pre-dexing.
     Path signedApkPath = getSignedApkPath();
-    DexFilesInfo dexFilesInfo = addFinalDxSteps(context, buildableContext, steps);
+    DexFilesInfo dexFilesInfo = addFinalDxSteps(buildableContext, steps);
 
     ////
     // BE VERY CAREFUL adding any code below here.
@@ -592,7 +592,6 @@ public class AndroidBinary
    * Adds steps to do the final dexing or dex merging before building the apk.
    */
   private DexFilesInfo addFinalDxSteps(
-      BuildContext context,
       BuildableContext buildableContext,
       ImmutableList.Builder<Step> steps) {
 
@@ -609,7 +608,7 @@ public class AndroidBinary
       steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesInDir));
       steps.add(new MakeCleanDirectoryStep(preprocessJavaClassesOutDir));
       steps.add(new SymlinkFilesIntoDirectoryStep(
-          context.getProjectRoot(),
+          getProjectFilesystem().getRootPath(),
           enhancementResult.getClasspathEntriesToDex(),
           preprocessJavaClassesInDir));
       classpathEntriesToDex = FluentIterable.from(enhancementResult.getClasspathEntriesToDex())
@@ -628,7 +627,7 @@ public class AndroidBinary
       steps.add(new AbstractGenruleStep(
           this.getBuildTarget(),
           commandString,
-          context.getProjectRoot().resolve(preprocessJavaClassesInDir)) {
+          getProjectFilesystem().getRootPath().resolve(preprocessJavaClassesInDir)) {
 
         @Override
         protected void addEnvironmentVariables(
