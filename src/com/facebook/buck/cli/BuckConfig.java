@@ -43,6 +43,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.network.HostnameFetching;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
@@ -62,11 +63,9 @@ import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
@@ -588,8 +587,8 @@ public class BuckConfig {
 
   private String getLocalhost() {
     try {
-      return InetAddress.getLocalHost().getHostName();
-    } catch (UnknownHostException e) {
+      return HostnameFetching.getHostname();
+    } catch (IOException e) {
       return "<unknown>";
     }
   }

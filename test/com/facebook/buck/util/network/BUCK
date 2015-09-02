@@ -5,8 +5,10 @@ java_test(
     '//src/com/facebook/buck/util/network:network',
   ],
   deps = [
+    '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/network:network',
+    '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jackson:jackson-annotations',

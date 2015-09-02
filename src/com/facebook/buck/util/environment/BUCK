@@ -35,6 +35,7 @@ java_immutables_library(
     '//third-party/java/guava:guava',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util/network:network',
   ],
   visibility = [
     'PUBLIC',

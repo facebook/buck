@@ -16,6 +16,7 @@
 package com.facebook.buck.util.environment;
 
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.network.HostnameFetching;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
@@ -24,8 +25,6 @@ import com.sun.management.OperatingSystemMXBean;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,8 +54,8 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   public String getHostname() {
     String localHostname;
     try {
-      localHostname = InetAddress.getLocalHost().getHostName();
-    } catch (UnknownHostException e) {
+      localHostname = HostnameFetching.getHostname();
+    } catch (IOException e) {
       localHostname = "unknown";
     }
     return localHostname;
