@@ -213,6 +213,9 @@ public class AndroidBinaryGraphEnhancer {
                 .addAll(getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir()))
                 .addAll(
                     pathResolver.filterBuildRuleInputs(resourceDetails.getResourceDirectories()))
+                .addAll(
+                    pathResolver.filterBuildRuleInputs(
+                        packageableCollection.getAssetsDirectories()))
                 .addAll(getAdditionalAaptDeps(pathResolver, resourceRules, packageableCollection))
                 .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));

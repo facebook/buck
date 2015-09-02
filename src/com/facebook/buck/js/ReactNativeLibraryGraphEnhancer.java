@@ -23,7 +23,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
@@ -112,7 +112,7 @@ public class ReactNativeLibraryGraphEnhancer {
               paramsForResource,
               sourcePathResolver,
               /* deps */ ImmutableSortedSet.<BuildRule>of(),
-              new PathSourcePath(params.getProjectFilesystem(), bundle.getResources()),
+              new BuildTargetSourcePath(bundle.getBuildTarget(), bundle.getResources()),
               /* resSrcs */ ImmutableSortedSet.<Path>of(),
               args.rDotJavaPackage.get(),
               /* assets */ null,

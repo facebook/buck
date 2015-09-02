@@ -20,22 +20,17 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class AndroidReactNativeLibrary extends AbstractBuildRule
-    implements AndroidPackageable, HasRuntimeDeps {
+public class AndroidReactNativeLibrary extends AbstractBuildRule implements AndroidPackageable {
 
   private final ReactNativeBundle bundle;
 
@@ -54,9 +49,7 @@ public class AndroidReactNativeLibrary extends AbstractBuildRule
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addAssetsDirectory(
-        getBuildTarget(),
-        new PathSourcePath(getProjectFilesystem(), bundle.getJSBundleDir()));
+    collector.addAssetsDirectory(getBuildTarget(), bundle.getJSBundleDir());
   }
 
   @Override
@@ -70,10 +63,5 @@ public class AndroidReactNativeLibrary extends AbstractBuildRule
   @Nullable
   public Path getPathToOutput() {
     return bundle.getPathToOutput();
-  }
-
-  @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>of(bundle);
   }
 }

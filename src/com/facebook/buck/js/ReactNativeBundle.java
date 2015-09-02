@@ -23,6 +23,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
@@ -115,12 +116,12 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
         });
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
-    buildableContext.recordArtifact(sourceMapOutput);
+    buildableContext.recordArtifact(sourceMapOutput.getParent());
     return steps.build();
   }
 
-  public Path getJSBundleDir() {
-    return jsOutputDir;
+  public SourcePath getJSBundleDir() {
+    return new BuildTargetSourcePath(getBuildTarget(), jsOutputDir);
   }
 
   public Path getResources() {
