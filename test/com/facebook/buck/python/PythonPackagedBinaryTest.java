@@ -21,11 +21,10 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
@@ -70,8 +69,7 @@ public class PythonPackagedBinaryTest {
 
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary = new PythonPackagedBinary(
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(
-            BuildTargetFactory.newInstance("//:bin")),
+        new FakeBuildRuleParamsBuilder("//:bin").build(),
         resolver,
         PEX,
         ImmutableList.<String>of(),

@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
@@ -42,7 +42,7 @@ public class PythonLibraryDescriptionTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     String sourceName = "main.py";
     SourcePath source = new TestSourcePath("foo/" + sourceName);
     PythonLibraryDescription desc = new PythonLibraryDescription();

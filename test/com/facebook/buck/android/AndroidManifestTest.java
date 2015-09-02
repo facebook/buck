@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
@@ -78,8 +78,8 @@ public class AndroidManifestTest {
 
   private AndroidManifest createSimpleAndroidManifestRule() {
     // First, create the AndroidManifest object.
-    BuildRuleParams buildRuleParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
-        BuildTarget.builder("//java/com/example", "manifest").build());
+    BuildRuleParams buildRuleParams =
+        new FakeBuildRuleParamsBuilder("//java/com/example:manifest").build();
     AndroidManifestDescription description = new AndroidManifestDescription();
     AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.skeleton = new TestSourcePath("java/com/example/AndroidManifestSkeleton.xml");

@@ -19,11 +19,10 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -65,8 +64,7 @@ public class AssembleDirectoriesTest {
     tmp.newFile("folder_b/c.txt");
     tmp.newFile("folder_b/d.txt");
 
-    BuildRuleParams buildRuleParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
-        BuildTarget.builder("//", "output_folder").build());
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder("//:output_folder").build();
     ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
         new TestSourcePath("folder_a"), new TestSourcePath("folder_b"));
     AssembleDirectories assembleDirectories = new AssembleDirectories(

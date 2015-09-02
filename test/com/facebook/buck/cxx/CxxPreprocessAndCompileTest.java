@@ -25,9 +25,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -98,7 +98,7 @@ public class CxxPreprocessAndCompileTest {
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
@@ -371,7 +371,7 @@ public class CxxPreprocessAndCompileTest {
   public void sanitizedPathsInFlagsDoNotAffectRuleKey() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
@@ -461,7 +461,7 @@ public class CxxPreprocessAndCompileTest {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ImmutableList<String> platformFlags = ImmutableList.of("-ffunction-sections");
     ImmutableList<String> ruleFlags = ImmutableList.of("-O3");
     Path output = Paths.get("test.o");
@@ -511,7 +511,7 @@ public class CxxPreprocessAndCompileTest {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ImmutableList<String> platformFlags = ImmutableList.of("-Dtest=blah");
     ImmutableList<String> ruleFlags = ImmutableList.of("-Dfoo=bar");
     Path output = Paths.get("test.ii");
@@ -577,7 +577,7 @@ public class CxxPreprocessAndCompileTest {
 
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+      BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     CxxPreprocessAndCompile cxxPreprocess =
         new CxxPreprocessAndCompile(

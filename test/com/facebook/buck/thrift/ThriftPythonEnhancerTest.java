@@ -26,7 +26,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -73,8 +72,7 @@ public class ThriftPythonEnhancerTest {
       String target,
       SourcePathResolver resolver) {
     return new ThriftCompiler(
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(
-            BuildTargetFactory.newInstance(target)),
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
         resolver,
         new CommandTool.Builder()
             .addArg(new TestSourcePath("compiler"))
@@ -199,7 +197,7 @@ public class ThriftPythonEnhancerTest {
   public void createBuildRule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRuleParams flavoredParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(TARGET);
+    BuildRuleParams flavoredParams = new FakeBuildRuleParamsBuilder(TARGET).build();
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
@@ -235,7 +233,7 @@ public class ThriftPythonEnhancerTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+        new FakeBuildRuleParamsBuilder(target).build();
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
@@ -283,7 +281,7 @@ public class ThriftPythonEnhancerTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRuleParams flavoredParams =
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+        new FakeBuildRuleParamsBuilder(target).build();
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();

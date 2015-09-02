@@ -41,7 +41,6 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -449,8 +448,7 @@ public class AndroidBinaryGraphEnhancerTest {
     AndroidResource resource =
         ruleResolver.addToIndex(
           new AndroidResource(
-              BuildRuleParamsFactory.createTrivialBuildRuleParams(
-                  BuildTargetFactory.newInstance("//:resources"))
+              new FakeBuildRuleParamsBuilder("//:resources").build()
                   .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
               pathResolver,
               ImmutableSortedSet.<BuildRule>of(),

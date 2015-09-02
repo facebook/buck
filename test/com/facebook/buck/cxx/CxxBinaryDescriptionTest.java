@@ -28,7 +28,6 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -99,7 +98,7 @@ public class CxxBinaryDescriptionTest {
     final BuildRule archive = createFakeBuildRule("//:archive", pathResolver);
     final Path archiveOutput = Paths.get("output/path/lib.a");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
-    BuildRuleParams depParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget);
+    BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
     AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
 
       @Override

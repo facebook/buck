@@ -37,7 +37,7 @@ public class FakeBuildRuleParamsBuilder {
   private Optional<FileHashCache> fileHashCache = Optional.absent();
 
   public FakeBuildRuleParamsBuilder(BuildTarget buildTarget) {
-    this.buildTarget = buildTarget;
+    this.buildTarget = Preconditions.checkNotNull(buildTarget);
   }
 
   public FakeBuildRuleParamsBuilder(String buildTarget) {

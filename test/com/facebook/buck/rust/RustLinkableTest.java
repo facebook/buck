@@ -20,8 +20,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -76,8 +76,7 @@ public class RustLinkableTest {
         String target,
         ImmutableSet<SourcePath> srcs) {
       super(
-          BuildRuleParamsFactory.createTrivialBuildRuleParams(
-              BuildTargetFactory.newInstance(target)),
+          new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
           new SourcePathResolver(new BuildRuleResolver()),
           srcs,
           /* flags */ ImmutableList.<String>of(),

@@ -28,10 +28,10 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -161,7 +161,7 @@ public class ExecutableMacroExpanderTest {
             .build(ruleResolver, filesystem);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ruleResolver.addToIndex(
         new NoopBinaryBuildRule(params, pathResolver) {
           @Override

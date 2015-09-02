@@ -23,10 +23,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
@@ -92,7 +92,7 @@ public class ThriftCompilerTest {
                     "thrift", Strings.repeat("a", 40),
                     "test.thrift", Strings.repeat("b", 40))),
             resolver);
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Generate a rule key for the defaults.
     RuleKey defaultRuleKey = generateRuleKey(
@@ -302,7 +302,7 @@ public class ThriftCompilerTest {
   public void thatCorrectBuildStepsAreUsed() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     ThriftCompiler thriftCompiler = new ThriftCompiler(
         params,

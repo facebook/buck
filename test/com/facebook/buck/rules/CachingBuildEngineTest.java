@@ -1090,8 +1090,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     BuildRule rule =
         new NoopBuildRule(
-            BuildRuleParamsFactory.createTrivialBuildRuleParams(
-                BuildTargetFactory.newInstance("//:rule")),
+            new FakeBuildRuleParamsBuilder("//:rule").build(),
             resolver);
     CachingBuildEngine cachingBuildEngine =
         new CachingBuildEngine(

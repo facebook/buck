@@ -30,8 +30,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -93,7 +93,7 @@ public class NdkCxxPlatformTest {
     for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =
           new CxxSourceRuleFactory(
-              BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+              new FakeBuildRuleParamsBuilder(target).build(),
               resolver,
               pathResolver,
               entry.getValue().getCxxPlatform(),
@@ -164,7 +164,7 @@ public class NdkCxxPlatformTest {
       BuildRule rule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
           TargetGraph.EMPTY,
           entry.getValue().getCxxPlatform(),
-          BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+          new FakeBuildRuleParamsBuilder(target).build(),
           pathResolver,
           ImmutableList.<String>of(),
           target,

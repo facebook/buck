@@ -43,8 +43,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
@@ -707,7 +707,7 @@ AppleSdkPaths appleSdkPaths =
     for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =
           new CxxSourceRuleFactory(
-              BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+              new FakeBuildRuleParamsBuilder(target).build(),
               resolver,
               pathResolver,
               entry.getValue().getCxxPlatform(),
@@ -779,7 +779,7 @@ AppleSdkPaths appleSdkPaths =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               TargetGraph.EMPTY,
               entry.getValue().getCxxPlatform(),
-              BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+              new FakeBuildRuleParamsBuilder(target).build(),
               pathResolver,
               ImmutableList.<String>of(),
               target,

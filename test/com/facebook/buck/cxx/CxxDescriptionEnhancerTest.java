@@ -30,7 +30,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -79,7 +78,7 @@ public class CxxDescriptionEnhancerTest {
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Setup a genrule that generates our lex source.
     String lexSourceName = "test.ll";
@@ -157,7 +156,7 @@ public class CxxDescriptionEnhancerTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
-    BuildRuleParams libParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(libTarget);
+    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,
@@ -208,7 +207,7 @@ public class CxxDescriptionEnhancerTest {
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
-    BuildRuleParams libParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(libTarget);
+    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget).build();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,

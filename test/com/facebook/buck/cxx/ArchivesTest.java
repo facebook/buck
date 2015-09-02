@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -55,7 +54,7 @@ public class ArchivesTest {
   public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Create a couple of genrules to generate inputs for an archive rule.
     Genrule genrule1 = (Genrule) GenruleBuilder
@@ -95,8 +94,8 @@ public class ArchivesTest {
     // propagate to the `Archive` rule, since it only cares about dependencies generating
     // it's immediate inputs.
     BuildRule dep = new FakeBuildRule(
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(
-            BuildTargetFactory.newInstance("//:fake")), pathResolver);
+        new FakeBuildRuleParamsBuilder("//:fake").build(),
+        pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:archive");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))

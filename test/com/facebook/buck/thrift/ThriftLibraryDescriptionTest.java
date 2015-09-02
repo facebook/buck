@@ -30,7 +30,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -153,8 +152,8 @@ public class ThriftLibraryDescriptionTest {
       checkCreateBuildRuleInputs(sources, deps);
 
       return new FakeBuildRule(
-          BuildRuleParamsFactory.createTrivialBuildRuleParams(
-              BuildTargetFactory.newInstance("//:fake-lang")), new SourcePathResolver(resolver));
+          new FakeBuildRuleParamsBuilder("//:fake-lang").build(),
+          new SourcePathResolver(resolver));
     }
 
     @Override
@@ -351,7 +350,7 @@ public class ThriftLibraryDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
     BuildRuleParams unflavoredParams =
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(unflavoredTarget);
+        new FakeBuildRuleParamsBuilder(unflavoredTarget).build();
 
     // Setup an empty thrift buck config, missing the compiler.
     FakeBuckConfig buckConfig = new FakeBuckConfig(
@@ -372,7 +371,7 @@ public class ThriftLibraryDescriptionTest {
     HeaderSymlinkTree depIncludeSymlinkTree =
         createFakeSymlinkTree(depTarget, pathResolver, depIncludeRoot);
     ThriftLibrary dep = new ThriftLibrary(
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(depTarget),
+        new FakeBuildRuleParamsBuilder(depTarget).build(),
         pathResolver,
         ImmutableSortedSet.<ThriftLibrary>of(),
         depIncludeSymlinkTree,

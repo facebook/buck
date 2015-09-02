@@ -30,7 +30,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -79,8 +78,7 @@ public class PythonBinaryDescriptionTest {
         .newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
         .setOut("blah.py")
         .build(resolver);
-    BuildRuleParams libParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
-        BuildTargetFactory.newInstance("//:lib"));
+    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder("//:lib").build();
     PythonLibrary lib = new PythonLibrary(
         libParams,
         new SourcePathResolver(resolver),
@@ -122,8 +120,7 @@ public class PythonBinaryDescriptionTest {
         .newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
         .setOut("blah.py")
         .build(resolver);
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(
-        BuildTargetFactory.newInstance("//:bin"));
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:bin").build();
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
             PYTHON_BUCK_CONFIG,
@@ -150,7 +147,7 @@ public class PythonBinaryDescriptionTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     String mainName = "main.py";
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
@@ -189,7 +186,7 @@ public class PythonBinaryDescriptionTest {
   public void mainModule() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     String mainModule = "foo.main";
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
@@ -213,7 +210,7 @@ public class PythonBinaryDescriptionTest {
   public void pexExtension() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     PythonBuckConfig config =
         new PythonBuckConfig(
             new FakeBuckConfig(

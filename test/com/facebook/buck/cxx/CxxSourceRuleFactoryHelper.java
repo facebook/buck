@@ -17,8 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
@@ -31,7 +31,7 @@ public class CxxSourceRuleFactoryHelper {
   public static CxxSourceRuleFactory of(BuildTarget target, CxxPlatform cxxPlatform) {
     BuildRuleResolver resolver = new BuildRuleResolver();
     return new CxxSourceRuleFactory(
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+        new FakeBuildRuleParamsBuilder(target).build(),
         resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,

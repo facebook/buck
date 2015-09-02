@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -121,7 +120,7 @@ public class CxxLinkableEnhancerTest {
   public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Create a couple of genrules to generate inputs for an archive rule.
     Genrule genrule1 = (Genrule) GenruleBuilder
@@ -170,8 +169,8 @@ public class CxxLinkableEnhancerTest {
     // propagate to the `Archive` rule, since it only cares about dependencies generating
     // it's immediate inputs.
     BuildRule dep = new FakeBuildRule(
-        BuildRuleParamsFactory.createTrivialBuildRuleParams(
-            BuildTargetFactory.newInstance("//:fake")), pathResolver);
+        new FakeBuildRuleParamsBuilder("//:fake").build(),
+        pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:archive");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
@@ -203,7 +202,7 @@ public class CxxLinkableEnhancerTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Create a dummy build rule and add it to the resolver.
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//:fake");
@@ -251,7 +250,7 @@ public class CxxLinkableEnhancerTest {
   public void createCxxLinkableBuildRuleExecutableVsShared() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     String soname = "soname";
     ImmutableList<String> sonameArgs =
@@ -322,7 +321,7 @@ public class CxxLinkableEnhancerTest {
   public void createCxxLinkableBuildRuleStaticVsSharedDeps() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency
@@ -396,7 +395,7 @@ public class CxxLinkableEnhancerTest {
         .build();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     ImmutableList<Optional<Linker.CxxRuntimeType>> runtimeTypes =
         ImmutableList.of(
@@ -478,7 +477,7 @@ public class CxxLinkableEnhancerTest {
   public void machOBundleWithBundleLoaderHasExpectedArgs() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         TargetGraph.EMPTY,
         CXX_PLATFORM,
@@ -508,8 +507,7 @@ public class CxxLinkableEnhancerTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
 
     BuildTarget bundleLoaderTarget = BuildTargetFactory.newInstance("//foo:bundleLoader");
-    BuildRuleParams bundleLoaderParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
-        bundleLoaderTarget);
+    BuildRuleParams bundleLoaderParams = new FakeBuildRuleParamsBuilder(bundleLoaderTarget).build();
     CxxLink bundleLoaderRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         TargetGraph.EMPTY,
         CXX_PLATFORM,
@@ -529,8 +527,7 @@ public class CxxLinkableEnhancerTest {
     resolver.addToIndex(bundleLoaderRule);
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
-    BuildRuleParams bundleParams = BuildRuleParamsFactory.createTrivialBuildRuleParams(
-        bundleTarget);
+    BuildRuleParams bundleParams = new FakeBuildRuleParamsBuilder(bundleTarget).build();
     CxxLink bundleRule = CxxLinkableEnhancer.createCxxLinkableBuildRule(
         TargetGraph.EMPTY,
         CXX_PLATFORM,

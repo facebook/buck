@@ -23,9 +23,9 @@ import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -109,7 +109,7 @@ public class CopyNativeLibrariesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     CopyNativeLibraries copyNativeLibraries =
         new CopyNativeLibraries(
-            BuildRuleParamsFactory.createTrivialBuildRuleParams(target),
+            new FakeBuildRuleParamsBuilder(target).build(),
             new SourcePathResolver(new BuildRuleResolver()),
             ImmutableSet.<SourcePath>of(new TestSourcePath("lib1"), new TestSourcePath("lib2")),
             ImmutableSet.<TargetCpuType>of(),

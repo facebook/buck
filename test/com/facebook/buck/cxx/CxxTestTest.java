@@ -23,9 +23,9 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleParamsFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -52,7 +52,7 @@ public class CxxTestTest {
 
     private static BuildRuleParams createBuildParams() {
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
-      return BuildRuleParamsFactory.createTrivialBuildRuleParams(target);
+      return new FakeBuildRuleParamsBuilder(target).build();
     }
 
     public FakeCxxTest() {
