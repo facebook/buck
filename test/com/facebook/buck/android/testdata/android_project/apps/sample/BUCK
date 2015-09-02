@@ -249,6 +249,24 @@ android_binary(
   ],
 )
 
+android_binary(
+  name = 'app_no_res',
+  manifest = 'AndroidManifestNoRes.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//third-party:card-io',
+  ],
+)
+
+android_instrumentation_apk(
+  name = 'instrumentation_apk',
+  manifest = 'AndroidInstrumentationManifest.xml',
+  apk = ':app',
+  deps = [
+    '//third-party:card-io',
+  ],
+)
+
 project_config(
   src_target = ':app',
 )
