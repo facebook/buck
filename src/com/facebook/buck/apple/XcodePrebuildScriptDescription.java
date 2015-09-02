@@ -23,7 +23,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 /**
  * Description for an xcode_prebuild_script rule which runs a shell script
@@ -41,7 +40,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
  * Buck and Xcode build. Those rules do nothing when building with Buck.
  */
 public class XcodePrebuildScriptDescription
-  implements Description<XcodePrebuildScriptDescription.Arg> {
+  implements Description<XcodeScriptDescriptionArg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("xcode_prebuild_script");
 
@@ -51,12 +50,12 @@ public class XcodePrebuildScriptDescription
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public XcodeScriptDescriptionArg createUnpopulatedConstructorArg() {
+    return new XcodeScriptDescriptionArg();
   }
 
   @Override
-  public <A extends Arg> NoopBuildRule createBuildRule(
+  public <A extends XcodeScriptDescriptionArg> NoopBuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -64,8 +63,4 @@ public class XcodePrebuildScriptDescription
     return new NoopBuildRule(params, new SourcePathResolver(resolver));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg {
-    public String cmd;
-  }
 }

@@ -17,10 +17,9 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
 
 public class XcodePrebuildScriptBuilder
-    extends AbstractNodeBuilder<XcodePrebuildScriptDescription.Arg> {
+    extends AbstractXcodeScriptBuilder<XcodePrebuildScriptBuilder> {
 
   protected XcodePrebuildScriptBuilder(BuildTarget target) {
     super(new XcodePrebuildScriptDescription(), target);
@@ -30,8 +29,8 @@ public class XcodePrebuildScriptBuilder
     return new XcodePrebuildScriptBuilder(target);
   }
 
-  public XcodePrebuildScriptBuilder setCmd(String cmd) {
-    arg.cmd = cmd;
+  @Override
+  protected XcodePrebuildScriptBuilder getThis() {
     return this;
   }
 

@@ -53,6 +53,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -616,17 +617,20 @@ public class NewNativeTargetProjectMutator {
       PBXNativeTarget target,
       Iterable<TargetNode<?>> nodes) throws NoSuchBuildTargetException{
     for (TargetNode<?> node : nodes) {
-      // TODO(user): Check and validate dependencies of the script. If it depends on libraries etc.
-      // we can't handle it currently.
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
       target.getBuildPhases().add(shellScriptBuildPhase);
-      if (XcodePrebuildScriptDescription.TYPE.equals(node.getType())) {
-        XcodePrebuildScriptDescription.Arg arg =
-            (XcodePrebuildScriptDescription.Arg) node.getConstructorArg();
-        shellScriptBuildPhase.setShellScript(arg.cmd);
-      } else if (XcodePostbuildScriptDescription.TYPE.equals(node.getType())) {
-        XcodePostbuildScriptDescription.Arg arg =
-            (XcodePostbuildScriptDescription.Arg) node.getConstructorArg();
+      if (XcodePrebuildScriptDescription.TYPE.equals(node.getType()) ||
+          XcodePostbuildScriptDescription.TYPE.equals(node.getType())) {
+        XcodeScriptDescriptionArg arg = (XcodeScriptDescriptionArg) node.getConstructorArg();
+        shellScriptBuildPhase
+            .getInputPaths()
+            .addAll(
+                FluentIterable.from(arg.srcs.get())
+                    .transform(sourcePathResolver)
+                    .transform(pathRelativizer.outputDirToRootRelative())
+                    .transform(Functions.toStringFunction())
+                    .toSet());
+        shellScriptBuildPhase.getOutputPaths().addAll(arg.outputs.get());
         shellScriptBuildPhase.setShellScript(arg.cmd);
       } else if (IosReactNativeLibraryDescription.TYPE.equals(node.getType())) {
         shellScriptBuildPhase.setShellScript(generateXcodeShellScript(node));

@@ -23,6 +23,7 @@ import static com.facebook.buck.apple.ProjectGeneratorTestUtils.createDescriptio
 import static com.facebook.buck.apple.ProjectGeneratorTestUtils.getSingletonPhaseByType;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -360,6 +361,8 @@ public class NewNativeTargetProjectMutatorTest {
 
     TargetNode<?> prebuildNode = XcodePrebuildScriptBuilder
         .createBuilder(BuildTarget.builder("//foo", "script").build())
+        .setSrcs(ImmutableSortedSet.<SourcePath>of(new TestSourcePath("script/input.png")))
+        .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
         .setCmd("echo \"hello world!\"")
         .build();
 
@@ -369,6 +372,14 @@ public class NewNativeTargetProjectMutatorTest {
 
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
+    assertThat(
+        "Should set input paths correctly",
+        "../script/input.png",
+        is(equalTo(Iterables.getOnlyElement(phase.getInputPaths()))));
+    assertThat(
+        "Should set output paths correctly",
+        "helloworld.txt",
+        is(equalTo(Iterables.getOnlyElement(phase.getOutputPaths()))));
     assertEquals(
         "should set script correctly",
         "echo \"hello world!\"",

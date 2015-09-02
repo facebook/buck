@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,22 +16,14 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSortedSet;
 
-public class XcodePostbuildScriptBuilder
-    extends AbstractXcodeScriptBuilder<XcodePostbuildScriptBuilder> {
-
-  protected XcodePostbuildScriptBuilder(BuildTarget target) {
-    super(new XcodePostbuildScriptDescription(), target);
-  }
-
-  public static XcodePostbuildScriptBuilder createBuilder(BuildTarget target) {
-    return new XcodePostbuildScriptBuilder(target);
-  }
-
-  @Override
-  protected XcodePostbuildScriptBuilder getThis() {
-    return this;
-  }
-
+@SuppressFieldNotInitialized
+public class XcodeScriptDescriptionArg {
+  public Optional<ImmutableSortedSet<SourcePath>> srcs;
+  public Optional<ImmutableSortedSet<String>> outputs;
+  public String cmd;
 }
