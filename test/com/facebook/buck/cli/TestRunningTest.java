@@ -165,6 +165,28 @@ public class TestRunningTest {
     verify(defaultJavaPackageFinder);
   }
 
+  @Test
+  public void testNonGeneratedSourceFileWithoutPathElements() {
+    Path pathToNonGenFile = Paths.get("package/src/SourceFile1.java");
+    assertFalse(MorePaths.isGeneratedFile(pathToNonGenFile));
+
+    ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
+    JavaLibrary javaLibrary = new FakeJavaLibrary(
+        BuildTarget.builder("//foo", "bar").build(),
+        new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
+
+    DefaultJavaPackageFinder defaultJavaPackageFinder =
+        createMock(DefaultJavaPackageFinder.class);
+    expect(defaultJavaPackageFinder.getPathsFromRoot()).andReturn(pathsFromRoot);
+    expect(defaultJavaPackageFinder.getPathElements()).andReturn(ImmutableSet.<String>of("/"));
+
+    replay(defaultJavaPackageFinder);
+
+    TestRunning.getPathToSourceFolders(
+        javaLibrary, Optional.of(defaultJavaPackageFinder), new FakeProjectFilesystem());
+
+    verify(defaultJavaPackageFinder);
+  }
   /**
    * If the source paths specified are from the new unified source tmp then we should return
    * the correct source tmp corresponding to the unified source path.
