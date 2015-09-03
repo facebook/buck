@@ -40,10 +40,15 @@ public class CommandTool implements Tool {
 
   private final ImmutableList<Arg> args;
   private final ImmutableSortedSet<SourcePath> extraInputs;
+  private final ImmutableSortedSet<BuildRule> extraDeps;
 
-  private CommandTool(ImmutableList<Arg> args, ImmutableSortedSet<SourcePath> extraInputs) {
+  private CommandTool(
+      ImmutableList<Arg> args,
+      ImmutableSortedSet<SourcePath> extraInputs,
+      ImmutableSortedSet<BuildRule> extraDeps) {
     this.args = args;
     this.extraInputs = extraInputs;
+    this.extraDeps = extraDeps;
   }
 
   @Override
@@ -58,7 +63,10 @@ public class CommandTool implements Tool {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(getInputs());
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(resolver.filterBuildRuleInputs(getInputs()))
+        .addAll(extraDeps)
+        .build();
   }
 
   @Override
@@ -82,6 +90,8 @@ public class CommandTool implements Tool {
 
     private final ImmutableList.Builder<Arg> args = ImmutableList.builder();
     private final ImmutableSortedSet.Builder<SourcePath> extraInputs =
+        ImmutableSortedSet.naturalOrder();
+    private final ImmutableSortedSet.Builder<BuildRule> extraDeps =
         ImmutableSortedSet.naturalOrder();
 
     /**
@@ -116,8 +126,20 @@ public class CommandTool implements Tool {
       return addInputs(ImmutableList.copyOf(inputs));
     }
 
+    /**
+     * Adds additional non-argument deps to the tool.
+     */
+    public Builder addDeps(Iterable<? extends BuildRule> deps) {
+      extraDeps.addAll(deps);
+      return this;
+    }
+
+    public Builder addDep(BuildRule... deps) {
+      return addDeps(ImmutableList.copyOf(deps));
+    }
+
     public CommandTool build() {
-      return new CommandTool(args.build(), extraInputs.build());
+      return new CommandTool(args.build(), extraInputs.build(), extraDeps.build());
     }
 
   }

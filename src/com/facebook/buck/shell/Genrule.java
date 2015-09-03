@@ -42,6 +42,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -129,6 +131,10 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
   private final Path absolutePathToSrcDirectory;
   protected final Function<Path, Path> relativeToAbsolutePathFunction;
 
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
+  private final Supplier<ImmutableList<Object>> macroRuleKeyAppendables;
+
   protected Genrule(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -138,7 +144,8 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       Optional<String> bash,
       Optional<String> cmdExe,
       String out,
-      final Function<Path, Path> relativeToAbsolutePathFunction) {
+      final Function<Path, Path> relativeToAbsolutePathFunction,
+      Supplier<ImmutableList<Object>> macroRuleKeyAppendables) {
     super(params, resolver);
     this.srcs = ImmutableList.copyOf(srcs);
     this.macroExpander = macroExpander;
@@ -183,6 +190,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
 
     this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
+    this.macroRuleKeyAppendables = Suppliers.memoize(macroRuleKeyAppendables);
   }
 
   /** @return the absolute path to the output file */

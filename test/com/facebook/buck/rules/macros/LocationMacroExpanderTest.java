@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -26,10 +27,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -105,6 +108,17 @@ public class LocationMacroExpanderTest {
     // Verify that the correct cmd was created.
     String expectedCmd = String.format("%s %s $OUT", absolutePath, absolutePath);
     assertEquals(expectedCmd, transformedString);
+  }
+
+  @Test
+  public void extractRuleKeyAppendable() throws MacroException {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    LocationMacroExpander macroExpander = new LocationMacroExpander();
+    assertThat(
+        macroExpander.extractRuleKeyAppendables(target, resolver, "//some/other:rule"),
+        Matchers.<Object>equalTo(
+            new BuildTargetSourcePath(BuildTargetFactory.newInstance("//some/other:rule"))));
   }
 
 }

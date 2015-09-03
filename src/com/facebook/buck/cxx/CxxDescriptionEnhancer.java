@@ -869,7 +869,7 @@ public class CxxDescriptionEnhancer {
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
-      executableBuilder.addInput(new BuildTargetSourcePath(sharedLibraries.getBuildTarget()));
+      executableBuilder.addDep(sharedLibraries);
       executableBuilder.addInputs(sharedLibraries.getLinks().values());
     }
 

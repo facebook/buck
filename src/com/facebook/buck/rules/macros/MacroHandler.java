@@ -113,7 +113,8 @@ public class MacroHandler {
     // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
     // extract for their respective macros.
     for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
-      deps.addAll(getExpander(match.getFirst()).extractAdditionalBuildTimeDeps(
+      deps.addAll(
+          getExpander(match.getFirst()).extractAdditionalBuildTimeDeps(
               target,
               resolver,
               match.getSecond()));
@@ -133,6 +134,27 @@ public class MacroHandler {
     // extract for their respective macros.
     for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
       targets.addAll(getExpander(match.getFirst()).extractParseTimeDeps(target, match.getSecond()));
+    }
+
+    return targets.build();
+  }
+
+  public ImmutableList<Object> extractRuleKeyAppendables(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String blob)
+      throws MacroException {
+
+    ImmutableList.Builder<Object> targets = ImmutableList.builder();
+
+    // Iterate over all macros found in the string, collecting all `BuildTargets` each expander
+    // extract for their respective macros.
+    for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
+      targets.add(
+          getExpander(match.getFirst()).extractRuleKeyAppendables(
+              target,
+              resolver,
+              match.getSecond()));
     }
 
     return targets.build();

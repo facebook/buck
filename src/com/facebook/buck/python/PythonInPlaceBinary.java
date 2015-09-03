@@ -85,7 +85,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     return new CommandTool.Builder()
         .addArg(python.toString())
         .addArg(new BuildTargetSourcePath(script.getBuildTarget()))
-        .addInput(new BuildTargetSourcePath(linkTree.getBuildTarget()))
+        .addDep(linkTree)
         .addInputs(components.getModules().values())
         .addInputs(components.getResources().values())
         .addInputs(components.getNativeLibraries().values())

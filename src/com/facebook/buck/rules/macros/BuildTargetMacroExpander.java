@@ -23,6 +23,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -93,6 +94,15 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
       BuildTarget target,
       String input) {
     return ImmutableList.of(
+        BuildTargetParser.INSTANCE.parse(
+            input,
+            BuildTargetPatternParser.forBaseName(target.getBaseName())));
+  }
+
+  @Override
+  public Object extractRuleKeyAppendables(
+      BuildTarget target, BuildRuleResolver resolver, String input) throws MacroException {
+    return new BuildTargetSourcePath(
         BuildTargetParser.INSTANCE.parse(
             input,
             BuildTargetPatternParser.forBaseName(target.getBaseName())));

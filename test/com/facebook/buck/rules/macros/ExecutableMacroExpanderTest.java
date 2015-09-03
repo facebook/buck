@@ -187,6 +187,26 @@ public class ExecutableMacroExpanderTest {
                 Preconditions.checkNotNull(dep2.getPathToOutput()).toAbsolutePath())));
   }
 
+  @Test
+  public void extractRuleKeyAppendable() throws MacroException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    final Tool tool = new CommandTool.Builder().addArg("command").build();
+    ruleResolver.addToIndex(
+        new NoopBinaryBuildRule(params, pathResolver) {
+          @Override
+          public Tool getExecutableCommand() {
+            return tool;
+          }
+        });
+    ExecutableMacroExpander expander = new ExecutableMacroExpander();
+    assertThat(
+        expander.extractRuleKeyAppendables(target, ruleResolver, "//:rule"),
+        Matchers.<Object>equalTo(tool));
+  }
+
   private abstract static class NoopBinaryBuildRule
       extends NoopBuildRule
       implements BinaryBuildRule {

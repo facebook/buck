@@ -25,11 +25,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -127,6 +129,30 @@ public class ClasspathMacroExpanderTest {
             rule.getBuildTarget().toString());
 
     assertThat(deps, Matchers.containsInAnyOrder(rule, dep));
+  }
+
+  @Test
+  public void extractRuleKeyAppendables() throws MacroException {
+    BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    BuildRule dep =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
+            .addSrc(Paths.get("Dep.java"))
+            .build(ruleResolver);
+    BuildRule rule =
+        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
+            .addSrc(Paths.get("Other.java"))
+            .addDep(dep.getBuildTarget())
+            .build(ruleResolver);
+    BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
+    assertThat(
+        expander.extractRuleKeyAppendables(
+            forTarget,
+            ruleResolver,
+            rule.getBuildTarget().toString()),
+        Matchers.<Object>equalTo(
+            ImmutableSortedSet.of(
+                new BuildTargetSourcePath(rule.getBuildTarget()),
+                new BuildTargetSourcePath(dep.getBuildTarget()))));
   }
 
   private void assertExpandsTo(

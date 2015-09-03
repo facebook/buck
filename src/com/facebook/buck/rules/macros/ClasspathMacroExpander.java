@@ -18,12 +18,15 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.HasClasspathEntries;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
@@ -81,6 +84,26 @@ public class ClasspathMacroExpander
             .transform(filesystem.getAbsolutifier())
             .transform(Functions.toStringFunction())
             .toSortedSet(Ordering.natural()));
+  }
+
+  @Override
+  public Object extractRuleKeyAppendables(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException {
+    return FluentIterable.from(
+            getHasClasspathEntries(resolve(target, resolver, input))
+                .getTransitiveClasspathDeps())
+        .filter(
+            new Predicate<JavaLibrary>() {
+              @Override
+              public boolean apply(JavaLibrary input) {
+                return input.getPathToOutput() != null;
+              }
+            })
+        .transform(SourcePaths.getToBuildTargetSourcePath())
+        .toSortedSet(Ordering.natural());
   }
 
 }

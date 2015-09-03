@@ -36,6 +36,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,10 +73,10 @@ public class GenruleDescription
 
   @Override
   public <A extends Arg> Genrule createBuildRule(
-      TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+      final TargetGraph targetGraph,
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      final A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     ImmutableList<SourcePath> srcs = args.srcs.get();
@@ -86,7 +87,7 @@ public class GenruleDescription
     return new Genrule(
         params
             .copyWithExtraDeps(Suppliers.ofInstance(extraDeps))
-            // Attach any extra dependencies found from macro expansion.
+                // Attach any extra dependencies found from macro expansion.
             .appendExtraDeps(findExtraDepsFromArgs(params.getBuildTarget(), resolver, args)),
         pathResolver,
         srcs,
@@ -98,7 +99,29 @@ public class GenruleDescription
         args.bash,
         args.cmdExe,
         args.out,
-        params.getProjectFilesystem().getAbsolutifier());
+        params.getProjectFilesystem().getAbsolutifier(),
+        new Supplier<ImmutableList<Object>>() {
+          @Override
+          public ImmutableList<Object> get() {
+            return findRuleKeyAppendables(params.getBuildTarget(), resolver, args);
+          }
+        });
+  }
+
+  private ImmutableList<Object> findRuleKeyAppendables(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      Arg arg) {
+    ImmutableList.Builder<Object> deps = ImmutableList.builder();
+    try {
+      for (String val :
+          Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
+        deps.addAll(macroHandler.extractRuleKeyAppendables(target, resolver, val));
+      }
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+    return deps.build();
   }
 
   private ImmutableList<BuildRule> findExtraDepsFromArgs(

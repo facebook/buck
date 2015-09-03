@@ -78,6 +78,15 @@ public class OutputToFileExpander implements MacroExpander {
     return delegate.extractParseTimeDeps(target, input);
   }
 
+  @Override
+  public Object extractRuleKeyAppendables(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException {
+    return delegate.extractRuleKeyAppendables(target, resolver, input);
+  }
+
   /**
    * @return The absolute path to the temp file.
    */

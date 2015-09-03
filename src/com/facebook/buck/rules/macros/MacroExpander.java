@@ -55,4 +55,13 @@ public interface MacroExpander {
   ImmutableList<BuildTarget> extractParseTimeDeps(BuildTarget target, String input)
       throws MacroException;
 
+  /**
+   * @return something that should be added to the rule key of the rule that expands this macro.
+   */
+  Object extractRuleKeyAppendables(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException;
+
 }

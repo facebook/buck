@@ -57,4 +57,13 @@ class StringExpander implements MacroExpander {
     return ImmutableList.of();
   }
 
+  @Override
+  public Object extractRuleKeyAppendables(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException {
+    return new Object();
+  }
+
 }

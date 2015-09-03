@@ -17,10 +17,12 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -31,14 +33,14 @@ import com.google.common.collect.Iterables;
  */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander {
 
-  private BinaryBuildRule getBinaryRule(BuildRule rule) throws MacroException {
+  private Tool getTool(BuildRule rule) throws MacroException {
     if (!(rule instanceof BinaryBuildRule)) {
       throw new MacroException(
           String.format(
               "%s used in executable macro does not correspond to a binary rule",
               rule.getBuildTarget()));
     }
-    return (BinaryBuildRule) rule;
+    return ((BinaryBuildRule) rule).getExecutableCommand();
   }
 
   @Override
@@ -46,10 +48,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
       BuildRuleResolver resolver,
       BuildRule rule)
       throws MacroException {
-    return ImmutableList.copyOf(
-        getBinaryRule(rule)
-            .getExecutableCommand()
-            .getDeps(new SourcePathResolver(resolver)));
+    return ImmutableList.copyOf(getTool(rule).getDeps(new SourcePathResolver(resolver)));
   }
 
   @Override
@@ -57,10 +56,17 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
       throws MacroException {
     return Joiner.on(' ').join(
         Iterables.transform(
-            getBinaryRule(rule)
-                .getExecutableCommand()
-                .getCommandPrefix(resolver),
+            getTool(rule).getCommandPrefix(resolver),
             Escaper.SHELL_ESCAPER));
+  }
+
+  @Override
+  public Object extractRuleKeyAppendables(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      String input)
+      throws MacroException {
+    return getTool(resolve(target, resolver, input));
   }
 
 }
