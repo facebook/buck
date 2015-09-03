@@ -56,6 +56,7 @@ a few extensions.
         <li><a href="#set-operations"><code>except</code></a></li>
         <li><a href="#set-operations"><code>intersect</code></a></li>
         <li><a href="#kind"><code>kind</code></a></li>
+        <li><a href="#labels"><code>labels</code></a></li>
         <li><a href="#owner"><code>owner</code></a></li>
         <li><a href="#rdeps"><code>rdeps</code></a></li>
         <li><a href="#set"><code>set</code></a></li>
@@ -342,6 +343,38 @@ e.g. <code>java_test</code> or <code>cxx_test</code>.
 Quotation of the pattern is often required to make sure regular
 expressions, e.g. <code>.*_test</code>, are parsed correctly.
 </p>
+
+
+{call .section}
+{param anchor: 'labels' /}
+{param title: 'Extract content of rule attributes: labels'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= labels(word, expr)
+{/literal}
+</pre></p>
+
+<p>
+The <code>labels(name, expr)</code> operator evaluates to the set of build
+targets and file paths specified in the attribute <code>name</code> of the
+targets that result from the evaluation of the expression <code>expr</code>.
+</p>
+
+<p>
+For example, <code>labels(srcs, '//foo:bar')</code> will return all files
+and build targets specified in the <code>srcs</code> attribute of the rule
+{sp}<code>//foo:bar</code>.
+</p>
+
+<p>
+<code>labels('deps', testsof('//foo:bar'))</code> evaluates to the build
+targets and file paths of the <code>deps</code> attribute of the tests of the
+rule <code>//foo:bar</code>. Note that <code>deps</code> must be quoted because
+it is a reserved keyword of the query language.
+</p>
+
 
 {call .section}
 {param anchor: 'owner' /}
