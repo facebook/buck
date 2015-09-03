@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import static org.hamcrest.Matchers.containsString;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -42,10 +44,10 @@ public class MainIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
 
     result.assertFailure();
-    assertEquals(
+    assertThat(
         "When the user does not specify any arguments, the usage information should be displayed",
-        getUsageString(),
-        result.getStderr());
+        result.getStderr(),
+        containsString(getUsageString()));
   }
 
   @Test
@@ -57,9 +59,10 @@ public class MainIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand();
 
     result.assertFailure();
-    assertEquals("Users instinctively try running `buck --help`, so it should print usage info.",
-        getUsageString(),
-        result.getStderr());
+    assertThat(
+        "Users instinctively try running `buck --help`, so it should print usage info.",
+        result.getStderr(),
+        containsString(getUsageString()));
   }
 
   @Test

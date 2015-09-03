@@ -21,6 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
+
+import static org.hamcrest.Matchers.containsString;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -108,7 +111,9 @@ public class TargetsCommandIntegrationTest {
         "targets",
         "--show-output");
     result.assertFailure();
-    assertEquals("BUILD FAILED: Must specify at least one build target.\n", result.getStderr());
+    assertThat(
+        result.getStderr(),
+        containsString("BUILD FAILED: Must specify at least one build target.\n"));
   }
 
   @Test
@@ -121,7 +126,9 @@ public class TargetsCommandIntegrationTest {
         "targets",
         "--show-rulekey");
     result.assertFailure();
-    assertEquals("BUILD FAILED: Must specify at least one build target.\n", result.getStderr());
+    assertThat(
+        result.getStderr(),
+        containsString("BUILD FAILED: Must specify at least one build target.\n"));
   }
 
   private String parseAndVerifyTargetAndHash(String target, String outputLine) {

@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import static org.hamcrest.Matchers.containsString;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -46,10 +48,10 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build");
     result.assertFailure("buck build should exit with an error.");
 
-    assertEquals(
+    assertThat(
         "`buck build` should display an error message if no targets are provided.",
-        "BUILD FAILED: Must specify at least one build target.\n",
-        result.getStderr());
+        result.getStderr(),
+        containsString("BUILD FAILED: Must specify at least one build target.\n"));
   }
 
   @Test
@@ -61,13 +63,14 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build");
     result.assertFailure("buck build should exit with an error.");
 
-    assertEquals(
+    assertThat(
         "`buck build` should suggest the alias found in .buckconfig as a target.",
-        Joiner.on('\n').join(
+        result.getStderr(),
+        containsString(Joiner.on('\n').join(
             "BUILD FAILED: Must specify at least one build target.",
             "Try building one of the following targets:",
-            "myapp") + '\n',
-        result.getStderr());
+            "myapp") + '\n'));
+
   }
 
   /**
@@ -83,15 +86,16 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build");
     result.assertFailure("buck build should exit with an error.");
 
-    assertEquals(
+    assertThat(
         Joiner.on(' ').join(
             "`buck build` should suggest the five aliases found in .buckconfig",
             "(in the order in which they are listed in) as targets."),
-        Joiner.on('\n').join(
-            "BUILD FAILED: Must specify at least one build target.",
-            "Try building one of the following targets:",
-            "myapp my_app mi_app mon_app mein_app") + '\n',
-        result.getStderr());
+        result.getStderr(),
+        containsString(
+            Joiner.on('\n').join(
+                "BUILD FAILED: Must specify at least one build target.",
+                "Try building one of the following targets:",
+                "myapp my_app mi_app mon_app mein_app") + '\n'));
   }
 
   /**
@@ -107,15 +111,15 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build");
     result.assertFailure("buck build should exit with an error.");
 
-    assertEquals(
+    assertThat(
         Joiner.on(' ').join(
             "`buck build` should suggest the first ten aliases found in .buckconfig",
             "(in the order in which they are listed in) as targets."),
-        Joiner.on('\n').join(
+        result.getStderr(),
+        containsString(Joiner.on('\n').join(
             "BUILD FAILED: Must specify at least one build target.",
             "Try building one of the following targets:",
-            "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4") + '\n',
-        result.getStderr());
+            "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4") + '\n'));
   }
 
 }

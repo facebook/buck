@@ -17,6 +17,9 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import static org.hamcrest.Matchers.containsString;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -42,7 +45,9 @@ public class AuditTestsCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "tests");
     result.assertFailure();
-    assertEquals("BUILD FAILED: Must specify at least one build target.\n", result.getStderr());
+    assertThat(
+        result.getStderr(),
+        containsString("BUILD FAILED: Must specify at least one build target.\n"));
   }
 
   @Test
