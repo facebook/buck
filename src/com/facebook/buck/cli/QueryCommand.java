@@ -16,11 +16,19 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultimap;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryException;
@@ -29,9 +37,11 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedMap;
 
 public class QueryCommand extends AbstractCommand {
 
@@ -41,8 +51,18 @@ public class QueryCommand extends AbstractCommand {
       usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
+  @Option(name = "--output-attributes",
+      usage = "List of attributes to output, --output-attributes attr1 att2 ... attrN --other-opt",
+      handler = StringSetOptionHandler.class)
+  @SuppressFieldNotInitialized
+  private Supplier<ImmutableSet<String>> outputAttributes;
+
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
+  }
+
+  public boolean shouldOutputAttributes() {
+    return !outputAttributes.get().isEmpty();
   }
 
   @Argument
@@ -124,7 +144,9 @@ public class QueryCommand extends AbstractCommand {
       Set<QueryTarget> queryResult = env.evaluateQuery(query);
 
       LOG.debug("Printing out the following targets: " + queryResult);
-      if (shouldGenerateJsonOutput()) {
+      if (shouldOutputAttributes()) {
+        collectAndPrintAttributes(params, env, queryResult);
+      } else if (shouldGenerateJsonOutput()) {
         CommandHelper.printJSON(params, queryResult);
       } else {
         CommandHelper.printToConsole(params, queryResult);
@@ -137,6 +159,52 @@ public class QueryCommand extends AbstractCommand {
       return 1;
     }
     return 0;
+  }
+
+  private void collectAndPrintAttributes(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult)
+      throws InterruptedException, IOException {
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
+    SortedMap<String, SortedMap<String, Object>> result = Maps.newTreeMap();
+    for (QueryTarget target : queryResult) {
+      if (!(target instanceof QueryBuildTarget)) {
+        continue;
+      }
+      TargetNode<?> node = env.getNode(target);
+      try {
+        SortedMap<String, Object> sortedTargetRule =
+            TargetsCommand.getBuildTargetRules(params, parserConfig, node);
+        if (sortedTargetRule == null) {
+          params.getConsole().printErrorText(
+              "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+          continue;
+        }
+        SortedMap<String, Object> attributes = Maps.newTreeMap();
+        for (String attribute : outputAttributes.get()) {
+          if (sortedTargetRule.containsKey(attribute)) {
+            attributes.put(attribute, sortedTargetRule.get(attribute));
+          }
+        }
+        result.put(
+            node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(),
+            attributes);
+      } catch (BuildFileParseException e) {
+        params.getConsole().printErrorText(
+            "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+        continue;
+      }
+    }
+    StringWriter stringWriter = new StringWriter();
+    try {
+      params.getObjectMapper().writerWithDefaultPrettyPrinter().writeValue(stringWriter, result);
+    } catch (IOException e) {
+      // Shouldn't be possible while writing to a StringWriter...
+      throw Throwables.propagate(e);
+    }
+    String output = stringWriter.getBuffer().toString();
+    params.getConsole().getStdOut().println(output);
   }
 
   @Override

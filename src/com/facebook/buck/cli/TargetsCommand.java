@@ -468,48 +468,15 @@ public class TargetsCommand extends AbstractCommand {
 
     while (valueIterator.hasNext()) {
       TargetNode<?> targetNode = valueIterator.next();
-      BuildTarget buildTarget = targetNode.getBuildTarget();
 
-      List<Map<String, Object>> rules;
-      try {
-        Path buildFile = params.getRepository().getAbsolutePathToBuildFile(buildTarget);
-        rules = params.getParser().parseBuildFile(
-            buildFile,
-            parserConfig,
-            params.getEnvironment(),
-            params.getConsole(),
-            params.getBuckEventBus());
-      } catch (BuildTargetException e) {
+      SortedMap<String, Object> sortedTargetRule =
+          getBuildTargetRules(params, parserConfig, targetNode);
+      if (sortedTargetRule == null) {
         params.getConsole().printErrorText(
-            "unable to find rule for target " + buildTarget.getFullyQualifiedName());
+            "unable to find rule for target " +
+                targetNode.getBuildTarget().getFullyQualifiedName());
         continue;
       }
-
-      // Find the build rule information that corresponds to this build buildTarget.
-      Map<String, Object> targetRule = null;
-      for (Map<String, Object> rule : rules) {
-        String name = (String) Preconditions.checkNotNull(rule.get("name"));
-        if (name.equals(buildTarget.getShortNameAndFlavorPostfix())) {
-          targetRule = rule;
-          break;
-        }
-      }
-
-      if (targetRule == null) {
-        params.getConsole().printErrorText(
-            "unable to find rule for target " + buildTarget.getFullyQualifiedName());
-        continue;
-      }
-
-      targetRule.put(
-          "buck.direct_dependencies",
-          ImmutableList.copyOf((Iterables.transform(targetNode.getDeps(),
-          Functions.toStringFunction()))));
-
-      // Sort the rule items, both so we have a stable order for unit tests and
-      // to improve readability of the output.
-      SortedMap<String, Object> sortedTargetRule = Maps.newTreeMap();
-      sortedTargetRule.putAll(targetRule);
 
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
@@ -527,6 +494,51 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     params.getConsole().getStdOut().println("]");
+  }
+
+  static SortedMap<String, Object> getBuildTargetRules(
+      CommandRunnerParams params,
+      ParserConfig parserConfig,
+      TargetNode<?> targetNode)
+      throws BuildFileParseException, InterruptedException, IOException {
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    List<Map<String, Object>> rules;
+    try {
+      Path buildFile = params.getRepository().getAbsolutePathToBuildFile(buildTarget);
+      rules = params.getParser().parseBuildFile(
+          buildFile,
+          parserConfig,
+          params.getEnvironment(),
+          params.getConsole(),
+          params.getBuckEventBus());
+    } catch (BuildTargetException e) {
+      return null;
+    }
+
+    // Find the build rule information that corresponds to this build buildTarget.
+    Map<String, Object> targetRule = null;
+    for (Map<String, Object> rule : rules) {
+      String name = (String) Preconditions.checkNotNull(rule.get("name"));
+      if (name.equals(buildTarget.getShortName())) {
+        targetRule = rule;
+        break;
+      }
+    }
+
+    if (targetRule == null) {
+      return null;
+    }
+
+    targetRule.put(
+        "buck.direct_dependencies",
+        ImmutableList.copyOf((Iterables.transform(targetNode.getDeps(),
+            Functions.toStringFunction()))));
+
+    // Sort the rule items, both so we have a stable order for unit tests and
+    // to improve readability of the output.
+    SortedMap<String, Object> sortedTargetRule = Maps.newTreeMap();
+    sortedTargetRule.putAll(targetRule);
+    return sortedTargetRule;
   }
 
   @VisibleForTesting

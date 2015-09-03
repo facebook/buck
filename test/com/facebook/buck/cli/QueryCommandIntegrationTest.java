@@ -426,4 +426,22 @@ public class QueryCommandIntegrationTest {
         is(equalTo(parseJSON(workspace.getFileContents("stdout-pkg-sources.json")))));
   }
 
+  @Test
+  public void testOutputAttributes() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "//example:one + //example:four",
+        "--output-attributes",
+        "name",
+        "deps");
+    result.assertSuccess();
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-name-deps-multi-attr-out.json")))));
+  }
+
 }
