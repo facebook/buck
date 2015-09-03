@@ -344,7 +344,7 @@ public final class Main {
       // buckd scripts attempt to enforce this, so a change in project root is an error that
       // should be reported rather than silently worked around by invalidating the cache and
       // creating a new daemon object.
-      Path parserRoot = daemon.getParser().getProjectRoot();
+      Path parserRoot = repository.getFilesystem().getRootPath();
       if (!rootPath.equals(parserRoot)) {
         throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
             rootPath, parserRoot));

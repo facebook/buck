@@ -215,10 +215,6 @@ public class Parser {
     this.state = new CachedState(repository.getBuildFileName());
   }
 
-  public Path getProjectRoot() {
-    return repository.getFilesystem().getRootPath();
-  }
-
   /**
    * The rules in a build file are cached if that specific build file was parsed or all build
    * files in the project were parsed and the includes and environment haven't changed since the
