@@ -17,42 +17,25 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
-public class QueryBuildTarget implements QueryTarget {
+import org.immutables.value.Value;
 
-  private final BuildTarget target;
+@BuckStyleImmutable
+@Value.Immutable
+abstract class AbstractQueryBuildTarget implements QueryTarget {
 
-  public QueryBuildTarget(BuildTarget target) {
-    this.target = target;
-  }
-
-  public BuildTarget getBuildTarget() {
-    return target;
-  }
-
-  @Override
-  public String getKey() {
-    return target.getFullyQualifiedName();
-  }
+  @Value.Parameter
+  abstract BuildTarget getBuildTarget();
 
   @Override
   public int compareTo(QueryTarget other) {
-    return getKey().compareTo(other.getKey());
+    return toString().compareTo(other.toString());
   }
 
   @Override
   public String toString() {
-    return target.toString();
+    return getBuildTarget().toString();
   }
 
-  @Override
-  public int hashCode() {
-    return getKey().hashCode();
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    return (other instanceof QueryBuildTarget) &&
-        this.target.equals(((QueryBuildTarget) other).getBuildTarget());
-  }
 }

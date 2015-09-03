@@ -30,7 +30,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-class ParamInfo<T> implements Comparable<ParamInfo<T>> {
+public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
 
   private final TypeCoercer<?> typeCoercer;
 

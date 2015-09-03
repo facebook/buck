@@ -21,10 +21,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.ParserConfig;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +35,7 @@ public class TargetPatternEvaluator {
   private final boolean enableProfiling;
   private final CommandRunnerParams params;
   private final ParserConfig parserConfig;
+  private final Path projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
 
   private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
@@ -41,6 +44,7 @@ public class TargetPatternEvaluator {
     this.enableProfiling = enableProfiling;
     this.params = params;
     this.parserConfig = new ParserConfig(params.getBuckConfig());
+    this.projectRoot = params.getRepository().getFilesystem().getRootPath();
     this.targetNodeSpecParser = new CommandLineTargetNodeSpecParser(
         params.getBuckConfig(),
         new BuildTargetPatternTargetNodeParser(
@@ -59,10 +63,46 @@ public class TargetPatternEvaluator {
 
   ImmutableSet<QueryTarget> resolveTargetPattern(String pattern)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+    // First check if this pattern was resolved before.
     ImmutableSet<QueryTarget> targets = resolvedTargets.get(pattern);
     if (targets != null) {
       return targets;
     }
+    // Check if this is an alias.
+    targets = resolveAlias(pattern);
+    if (targets == null) {
+      // Check if the pattern corresponds to a build target or a path.
+      if (pattern.startsWith("//") || pattern.startsWith(":") || pattern.startsWith("@")) {
+        targets = resolveBuildTargetPattern(pattern);
+      } else {
+        targets = resolveFilePattern(pattern);
+      }
+    }
+    resolvedTargets.put(pattern, targets);
+    return targets;
+  }
+
+  ImmutableSet<QueryTarget> resolveAlias(String pattern) {
+    BuildTarget buildTarget = params.getBuckConfig().getBuildTargetForAlias(pattern).getFirst();
+    if (buildTarget != null) {
+      return ImmutableSet.of((QueryTarget) QueryBuildTarget.of(buildTarget));
+    }
+    return null;
+  }
+
+  ImmutableSet<QueryTarget> resolveFilePattern(String pattern) throws IOException {
+    ImmutableSet<Path> filePaths =
+        PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, ImmutableList.of(pattern))
+            .relativePathsUnderProjectRoot;
+    ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+    for (Path filePath : filePaths) {
+      builder.add(QueryFileTarget.of(filePath));
+    }
+    return builder.build();
+  }
+
+  ImmutableSet<QueryTarget> resolveBuildTargetPattern(String pattern)
+      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     Set<BuildTarget> buildTargets = params.getParser()
         .resolveTargetSpec(
             targetNodeSpecParser.parse(pattern),
@@ -72,12 +112,10 @@ public class TargetPatternEvaluator {
             params.getEnvironment(),
             enableProfiling);
     // Sorting to have predictable results across different java libraries implementations.
-    ImmutableSortedSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
     for (BuildTarget target : buildTargets) {
-      builder.add(new QueryBuildTarget(target));
+      builder.add(QueryBuildTarget.of(target));
     }
-    targets = builder.build();
-    resolvedTargets.put(pattern, targets);
-    return targets;
+    return builder.build();
   }
 }

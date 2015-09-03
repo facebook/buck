@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.MorePaths;
@@ -234,20 +235,26 @@ public class BuckConfig {
   }
 
   @Nullable
-  public String getBuildTargetForAlias(String possiblyFlavoredAlias) {
-    String alias = possiblyFlavoredAlias;
-    int poundIdx = possiblyFlavoredAlias.indexOf('#');
-    if (poundIdx != -1) {
-      alias = possiblyFlavoredAlias.substring(0, poundIdx);
-    }
-
-    BuildTarget buildTarget = aliasToBuildTargetMap.get(alias);
+  public String getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
+    Pair<BuildTarget, Integer> buildTargetPoundIdx = getBuildTargetForAlias(possiblyFlavoredAlias);
+    BuildTarget buildTarget = buildTargetPoundIdx.getFirst();
+    int poundIdx = buildTargetPoundIdx.getSecond();
     if (buildTarget != null) {
       return buildTarget.getFullyQualifiedName() +
           (poundIdx == -1 ? "" : possiblyFlavoredAlias.substring(poundIdx));
     } else {
       return null;
     }
+  }
+
+  public Pair<BuildTarget, Integer> getBuildTargetForAlias(String possiblyFlavoredAlias) {
+    String alias = possiblyFlavoredAlias;
+    int poundIdx = possiblyFlavoredAlias.indexOf('#');
+    if (poundIdx != -1) {
+      alias = possiblyFlavoredAlias.substring(0, poundIdx);
+    }
+    BuildTarget buildTarget = aliasToBuildTargetMap.get(alias);
+    return new Pair<>(buildTarget, poundIdx);
   }
 
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {

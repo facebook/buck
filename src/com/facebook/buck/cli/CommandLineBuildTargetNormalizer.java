@@ -64,7 +64,7 @@ class CommandLineBuildTargetNormalizer {
     this.normalizer = new Function<String, String>() {
       @Override
       public String apply(String arg) {
-        String aliasValue = buckConfig.getBuildTargetForAlias(arg);
+        String aliasValue = buckConfig.getBuildTargetForAliasAsString(arg);
         if (aliasValue != null) {
           return aliasValue;
         } else {

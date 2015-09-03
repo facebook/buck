@@ -74,7 +74,7 @@ public class CommandLineTargetNodeSpecParser {
   }
 
   public TargetNodeSpec parse(String arg) {
-    arg = Optional.fromNullable(config.getBuildTargetForAlias(arg)).or(arg);
+    arg = Optional.fromNullable(config.getBuildTargetForAliasAsString(arg)).or(arg);
     arg = normalizeBuildTargetString(arg);
     return parser.parse(arg);
   }

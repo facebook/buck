@@ -68,7 +68,7 @@ public class BuckQueryEnvironmentTest {
   }
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
-    return new QueryBuildTarget(BuildTarget.builder(baseName, shortName).build());
+    return QueryBuildTarget.of(BuildTarget.builder(baseName, shortName).build());
   }
 
   @Before

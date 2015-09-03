@@ -367,4 +367,63 @@ public class QueryCommandIntegrationTest {
         parseJSON(result.getStdout()),
         is(equalTo(parseJSON(workspace.getFileContents("stdout-two-four-tests-rdeps.json")))));
   }
+
+  @Test
+  public void testGetSrcsAttribute() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "labels('srcs', '//example:one')");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalTo("example/1.txt\n")));
+  }
+
+  @Test
+  public void testEvaluateFiles() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "example/1.txt + example/2.txt");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalTo("example/1.txt\nexample/2.txt\n")));
+  }
+
+  @Test
+  public void testUnionMultipleAttributes() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "labels('tests', '//example:four') + labels('srcs', '//example:five') - '//example:six'");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-one-five-except-six-sources-tests"))));
+  }
+
+  @Test
+  public void testGetMultipleSrcsAttribute() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--json",
+        "labels('srcs', '%s')",
+        "//example:");
+    result.assertSuccess();
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-pkg-sources.json")))));
+  }
+
 }

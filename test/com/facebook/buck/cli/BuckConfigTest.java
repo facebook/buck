@@ -140,25 +140,27 @@ public class BuckConfigTest {
         temporaryFolder,
         reader);
 
-    assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("foo"));
-    assertEquals("//java/com/example:bar", config.getBuildTargetForAlias("bar"));
+    assertEquals("//java/com/example:foo", config.getBuildTargetForAliasAsString("foo"));
+    assertEquals("//java/com/example:bar", config.getBuildTargetForAliasAsString("bar"));
     // Flavors on alias.
-    assertEquals("//java/com/example:foo#src_jar", config.getBuildTargetForAlias("foo#src_jar"));
-    assertEquals("//java/com/example:bar#fl1,fl2", config.getBuildTargetForAlias("bar#fl1,fl2"));
+    assertEquals("//java/com/example:foo#src_jar", config.getBuildTargetForAliasAsString(
+        "foo#src_jar"));
+    assertEquals("//java/com/example:bar#fl1,fl2", config.getBuildTargetForAliasAsString(
+        "bar#fl1,fl2"));
 
     assertNull(
         "Invalid alias names, such as build targets, should be tolerated by this method.",
-        config.getBuildTargetForAlias("//java/com/example:foo"));
-    assertNull(config.getBuildTargetForAlias("baz"));
-    assertNull(config.getBuildTargetForAlias("baz#src_jar"));
+        config.getBuildTargetForAliasAsString("//java/com/example:foo"));
+    assertNull(config.getBuildTargetForAliasAsString("baz"));
+    assertNull(config.getBuildTargetForAliasAsString("baz#src_jar"));
 
     Reader noAliasesReader = new StringReader("");
     BuckConfig noAliasesConfig = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         noAliasesReader);
-    assertNull(noAliasesConfig.getBuildTargetForAlias("foo"));
-    assertNull(noAliasesConfig.getBuildTargetForAlias("bar"));
-    assertNull(noAliasesConfig.getBuildTargetForAlias("baz"));
+    assertNull(noAliasesConfig.getBuildTargetForAliasAsString("foo"));
+    assertNull(noAliasesConfig.getBuildTargetForAliasAsString("bar"));
+    assertNull(noAliasesConfig.getBuildTargetForAliasAsString("baz"));
   }
 
   /**
@@ -168,7 +170,7 @@ public class BuckConfigTest {
   public void testEmptyConfig() {
     BuckConfig emptyConfig = new FakeBuckConfig();
     assertEquals(ImmutableMap.<String, String>of(), emptyConfig.getEntriesForSection("alias"));
-    assertNull(emptyConfig.getBuildTargetForAlias("fb4a"));
+    assertNull(emptyConfig.getBuildTargetForAliasAsString("fb4a"));
     assertEquals(ImmutableMap.<Path, String>of(), emptyConfig.getBasePathToAliasMap());
   }
 
@@ -210,12 +212,12 @@ public class BuckConfigTest {
     BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader);
-    assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("foo"));
-    assertEquals("//java/com/example:bar", config.getBuildTargetForAlias("bar"));
-    assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("foo_codename"));
-    assertEquals("//java/com/example:foo", config.getBuildTargetForAlias("automation_foo"));
-    assertEquals("//java/com/example:bar", config.getBuildTargetForAlias("automation_bar"));
-    assertNull(config.getBuildTargetForAlias("baz"));
+    assertEquals("//java/com/example:foo", config.getBuildTargetForAliasAsString("foo"));
+    assertEquals("//java/com/example:bar", config.getBuildTargetForAliasAsString("bar"));
+    assertEquals("//java/com/example:foo", config.getBuildTargetForAliasAsString("foo_codename"));
+    assertEquals("//java/com/example:foo", config.getBuildTargetForAliasAsString("automation_foo"));
+    assertEquals("//java/com/example:bar", config.getBuildTargetForAliasAsString("automation_bar"));
+    assertNull(config.getBuildTargetForAliasAsString("baz"));
   }
 
   @Test

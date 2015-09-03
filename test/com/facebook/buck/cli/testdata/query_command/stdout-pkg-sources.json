@@ -1,0 +1,15 @@
+{
+  "//example:" : [
+    "//example:six",
+    "example/1-test.txt",
+    "example/1.txt",
+    "example/2.txt",
+    "example/3.txt",
+    "example/4-application-test.txt",
+    "example/4-test.txt",
+    "example/4.txt",
+    "example/5.txt",
+    "example/6-test.txt",
+    "example/6.txt"
+  ]
+}

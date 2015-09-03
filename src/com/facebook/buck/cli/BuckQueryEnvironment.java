@@ -159,7 +159,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     if (buildTargetToQueryTarget.containsKey(buildTarget)) {
       return buildTargetToQueryTarget.get(buildTarget);
     }
-    QueryBuildTarget queryBuildTarget = new QueryBuildTarget(buildTarget);
+    AbstractQueryBuildTarget queryBuildTarget = QueryBuildTarget.of(buildTarget);
     buildTargetToQueryTarget.put(buildTarget, queryBuildTarget);
     return queryBuildTarget;
   }
@@ -186,7 +186,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   public Collection<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
-      Preconditions.checkState(target instanceof QueryBuildTarget);
+      Preconditions.checkState(target instanceof AbstractQueryBuildTarget);
       TargetNode<?> node = getNode(target);
       if (node != null) {
         result.addAll(getTargetsFromBuildTargetsContainer(graph.getOutgoingNodesFor(node)));
@@ -251,7 +251,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       buildGraphForBuildTargets(Sets.union(newBuildTargets, graphTargets));
       for (BuildTarget buildTarget : getTargetsFromNodes(graph.getNodes())) {
         if (!buildTargetToQueryTarget.containsKey(buildTarget)) {
-          buildTargetToQueryTarget.put(buildTarget, new QueryBuildTarget(buildTarget));
+          buildTargetToQueryTarget.put(buildTarget, QueryBuildTarget.of(buildTarget));
         }
       }
     }
@@ -293,6 +293,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
         DEFAULT_QUERY_FUNCTIONS.get(9),   // "deps"
         DEFAULT_QUERY_FUNCTIONS.get(10),  // "rdeps"
         new QueryKindFunction(),
+        new QueryLabelsFunction(),
         new QueryOwnerFunction(),
         new QueryTestsOfFunction()
     );
@@ -300,5 +301,12 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
 
   public String getTargetKind(QueryTarget target) {
     return Preconditions.checkNotNull(getNode(target)).getType().getName();
+  }
+
+  public ImmutableSet<QueryTarget> getAttributeValue(QueryTarget target, String attribute)
+      throws QueryException {
+    Preconditions.checkState(target instanceof AbstractQueryBuildTarget);
+    return QueryTargetAccessor.getAttributeValue(
+        Preconditions.checkNotNull(getNode(target)), attribute);
   }
 }

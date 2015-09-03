@@ -16,6 +16,26 @@
 
 package com.facebook.buck.cli;
 
-public interface QueryTarget extends Comparable<QueryTarget> {
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
+import org.immutables.value.Value;
+
+import java.nio.file.Path;
+
+@BuckStyleImmutable
+@Value.Immutable
+abstract class AbstractQueryFileTarget implements QueryTarget {
+
+  @Value.Parameter
+  abstract Path getPath();
+
+  @Override
+  public int compareTo(QueryTarget other) {
+    return toString().compareTo(other.toString());
+  }
+
+  @Override
+  public String toString() {
+    return getPath().toString();
+  }
 }
