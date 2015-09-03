@@ -49,4 +49,9 @@ public final class BuildRuleFactoryParams {
   public boolean enforceBuckPackageBoundary() {
     return enforceBuckPackageBoundary;
   }
+
+  public boolean isSameTarget(BuildRuleFactoryParams other) {
+    return target.equals(other.target) &&
+        filesystem.equals(other.filesystem);
+  }
 }

@@ -259,7 +259,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       return false;
     }
     TargetNode<?> that = (TargetNode<?>) obj;
-    return this.getBuildTarget().equals(that.getBuildTarget());
+    return getRuleFactoryParams().isSameTarget(that.getRuleFactoryParams());
   }
 
   @Override
