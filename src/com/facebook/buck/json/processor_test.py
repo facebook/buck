@@ -4,7 +4,16 @@ import unittest
 import shutil
 import tempfile
 
-from .buck import BuildFileProcessor
+from .buck import BuildFileProcessor, add_rule
+
+
+def foo_rule(name, srcs=[], visibility=[], build_env=None):
+    add_rule({
+        'buck.type': 'foo',
+        'name': name,
+        'srcs': srcs,
+        'visibility': visibility,
+    }, build_env)
 
 
 class ProjectFile(object):
@@ -23,6 +32,8 @@ class BuckTest(unittest.TestCase):
         self.project_root = tempfile.mkdtemp()
         self.allow_empty_globs = False
         self.build_file_name = 'BUCK'
+        self.watchman_client = None
+        self.watchman_error = None
 
     def tearDown(self):
         shutil.rmtree(self.project_root, True)
@@ -35,15 +46,17 @@ class BuckTest(unittest.TestCase):
         for pfile in pfiles:
             self.write_file(pfile)
 
-    def create_build_file_processor(self, *includes):
+    def create_build_file_processor(self, *includes, **kwargs):
         return BuildFileProcessor(
             self.project_root,
-            None,
-            None,
+            self.project_root,  # watchman_watch_root
+            None,               # watchman_project_prefix
             self.build_file_name,
             self.allow_empty_globs,
-            None,
-            includes)
+            self.watchman_client,
+            self.watchman_error,
+            includes,
+            **kwargs)
 
     def test_sibling_includes_use_separate_globals(self):
         """
@@ -255,3 +268,37 @@ class BuckTest(unittest.TestCase):
             ValueError,
             build_file_processor.process,
             build_file.path)
+
+    def test_watchman_glob_failure_falls_back_to_regular_glob(self):
+        class FakeWatchmanError(Exception):
+            pass
+
+        class FakeWatchmanClient:
+            def FakeWatchmanClient(self):
+                self.query_invoked = False
+
+            def query(self, *args):
+                self.query_invoked = True
+                raise FakeWatchmanError("whoops")
+
+            def close(self):
+                pass
+
+        self.watchman_client = FakeWatchmanClient()
+        self.watchman_error = FakeWatchmanError
+
+        build_file = ProjectFile(
+            path='BUCK',
+            contents=(
+                'foo_rule(',
+                '  name="foo",'
+                '  srcs=glob(["*.java"]),',
+                ')'
+            ))
+        java_file = ProjectFile(path='Foo.java', contents=())
+        self.write_files(build_file, java_file)
+        build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        build_file_processor.install_builtins(__builtin__.__dict__)
+        rules = build_file_processor.process(build_file.path)
+        self.assertTrue(self.watchman_client.query_invoked)
+        self.assertEqual(['Foo.java'], rules[0]['srcs'])

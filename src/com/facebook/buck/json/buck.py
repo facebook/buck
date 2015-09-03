@@ -16,6 +16,7 @@ import optparse
 import os
 import os.path
 import subprocess
+import sys
 
 
 # When build files are executed, the functions in this file tagged with
@@ -61,7 +62,8 @@ class BuildFileContext(object):
     type = BuildContextType.BUILD_FILE
 
     def __init__(self, base_path, dirname, allow_empty_globs, watchman_client,
-                 watchman_watch_root, watchman_project_prefix, sync_cookie_state):
+                 watchman_watch_root, watchman_project_prefix, sync_cookie_state,
+                 watchman_error):
         self.globals = {}
         self.includes = set()
         self.base_path = base_path
@@ -71,6 +73,7 @@ class BuildFileContext(object):
         self.watchman_watch_root = watchman_watch_root
         self.watchman_project_prefix = watchman_project_prefix
         self.sync_cookie_state = sync_cookie_state
+        self.watchman_error = watchman_error
         self.rules = {}
 
 
@@ -169,19 +172,29 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
     assert not isinstance(excludes, basestring), \
         "The excludes argument must be a list of strings."
 
+    results = None
     if not includes:
         results = []
     elif build_env.watchman_client:
-        results = glob_watchman(
-            includes,
-            excludes,
-            include_dotfiles,
-            build_env.base_path,
-            build_env.watchman_watch_root,
-            build_env.watchman_project_prefix,
-            build_env.sync_cookie_state,
-            build_env.watchman_client)
-    else:
+        try:
+            results = glob_watchman(
+                includes,
+                excludes,
+                include_dotfiles,
+                build_env.base_path,
+                build_env.watchman_watch_root,
+                build_env.watchman_project_prefix,
+                build_env.sync_cookie_state,
+                build_env.watchman_client)
+        except build_env.watchman_error, e:
+            print >>sys.stderr, 'Watchman error, falling back to slow glob: ' + str(e)
+            try:
+                build_env.watchman_client.close()
+            except:
+                pass
+            build_env.watchman_client = None
+
+    if results is None:
         search_base = Path(build_env.dirname)
         results = glob_internal(
             includes,
@@ -244,10 +257,6 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
 
     query = ["query", watchman_watch_root, query_params]
     res = watchman_client.query(*query)
-    if res.get('error'):
-        raise RuntimeError('Error from Watchman query {}: {}'.format(
-            query,
-            res.get('error')))
     if res.get('warning'):
         print >> sys.stderr, 'Watchman warning from query {}: {}'.format(
             query,
@@ -326,7 +335,8 @@ def add_deps(name, deps=[], build_env=None):
 class BuildFileProcessor(object):
 
     def __init__(self, project_root, watchman_watch_root, watchman_project_prefix, build_file_name,
-                 allow_empty_globs, watchman_client, implicit_includes=[]):
+                 allow_empty_globs, watchman_client, watchman_error, implicit_includes=[],
+                 extra_funcs=[]):
         self._cache = {}
         self._build_env_stack = []
         self._sync_cookie_state = SyncCookieState()
@@ -338,9 +348,10 @@ class BuildFileProcessor(object):
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
         self._watchman_client = watchman_client
+        self._watchman_error = watchman_error
 
         lazy_functions = {}
-        for func in BUILD_FUNCTIONS:
+        for func in BUILD_FUNCTIONS + extra_funcs:
             func_with_env = LazyBuildEnvPartial(func)
             lazy_functions[func.__name__] = func_with_env
         self._functions = lazy_functions
@@ -519,7 +530,8 @@ class BuildFileProcessor(object):
             self._watchman_client,
             self._watchman_watch_root,
             self._watchman_project_prefix,
-            self._sync_cookie_state)
+            self._sync_cookie_state,
+            self._watchman_error)
 
         return self._process(
             build_env,
@@ -621,6 +633,7 @@ def main():
     project_root = os.path.abspath(options.project_root)
 
     watchman_client = None
+    watchman_error = None
     output_format = 'JSON'
     output_encode = lambda val: json.dumps(val, sort_keys=True)
     if options.use_watchman_glob:
@@ -629,6 +642,7 @@ def main():
             # in that case.
             import pywatchman
             watchman_client = pywatchman.client()
+            watchman_error = pywatchman.WatchmanError
             output_format = 'BSER'
             output_encode = lambda val: pywatchman.bser.dumps(val)
         except ImportError, e:
@@ -646,6 +660,7 @@ def main():
         options.build_file_name,
         options.allow_empty_globs,
         watchman_client,
+        watchman_error,
         implicit_includes=options.include or [])
 
     buildFileProcessor.install_builtins(__builtin__.__dict__)
