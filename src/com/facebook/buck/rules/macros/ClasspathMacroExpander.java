@@ -24,14 +24,19 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 
 import java.io.File;
+import java.nio.file.Path;
+
+import javax.annotation.Nullable;
 
 /**
  * Used to expand the macro {@literal $(classpath //some:target)} to the transitive classpath of
@@ -80,7 +85,16 @@ public class ClasspathMacroExpander
   protected String expand(SourcePathResolver resolver, ProjectFilesystem filesystem, BuildRule rule)
       throws MacroException {
     return Joiner.on(File.pathSeparator).join(
-        FluentIterable.from(getHasClasspathEntries(rule).getTransitiveClasspathEntries().values())
+        FluentIterable.from(getHasClasspathEntries(rule).getTransitiveClasspathDeps())
+            .transform(
+                new Function<JavaLibrary, Path>() {
+                  @Nullable
+                  @Override
+                  public Path apply(JavaLibrary input) {
+                    return input.getPathToOutput();
+                  }
+                })
+            .filter(Predicates.notNull())
             .transform(filesystem.getAbsolutifier())
             .transform(Functions.toStringFunction())
             .toSortedSet(Ordering.natural()));
