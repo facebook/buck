@@ -147,6 +147,7 @@ public class Repository {
             .setDescriptions(getAllDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchman(watchman)
+            .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .build());
   }
 

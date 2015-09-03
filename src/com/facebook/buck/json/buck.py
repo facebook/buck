@@ -617,6 +617,12 @@ def main():
         dest='watchman_project_prefix',
         help='Relative project prefix as returned by `watchman watch-project`.')
     parser.add_option(
+        '--watchman_query_timeout_ms',
+        action='store',
+        type='int',
+        dest='watchman_query_timeout_ms',
+        help='Maximum time in milliseconds to wait for watchman query to respond.')
+    parser.add_option(
         '--include',
         action='append',
         dest='include')
@@ -641,7 +647,12 @@ def main():
             # pywatchman may not be built, so fall back to non-watchman
             # in that case.
             import pywatchman
-            watchman_client = pywatchman.client()
+            client_args = {}
+            if options.watchman_query_timeout_ms is not None:
+                # pywatchman expects a timeout as a nonnegative floating-point
+                # value in seconds.
+                client_args['timeout'] = max(0.0, options.watchman_query_timeout_ms / 1000.0)
+            watchman_client = pywatchman.client(**client_args)
             watchman_error = pywatchman.WatchmanError
             output_format = 'BSER'
             output_encode = lambda val: pywatchman.bser.dumps(val)

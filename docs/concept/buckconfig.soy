@@ -513,6 +513,16 @@ You can define which glob handler Buck will use in this section by setting the
   glob_handler = python
 </pre>{/literal}
 
+When Buck talks to Watchman, by default each query times out after 1000 ms.
+You can change this by setting the
+{sp}<code>watchman_query_timeout_ms</code> property, which allows you to set
+a shorter or longer timeout for each Watchman query.
+
+{literal}<pre class="prettyprint lang-ini">
+[project]
+  watchman_query_timeout_ms = 3000
+</pre>{/literal}
+
 This section may also define an <code>initial_targets</code> property,
 which is a space-delimited list of build targets to run when
 {sp}<code>buck project</code> is executed. Frequently, this is a list of

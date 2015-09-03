@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
@@ -45,4 +46,6 @@ abstract class AbstractProjectBuildFileParserOptions {
   Watchman getWatchman() {
     return Watchman.NULL_WATCHMAN;
   }
+
+  abstract Optional<Long> getWatchmanQueryTimeoutMs();
 }

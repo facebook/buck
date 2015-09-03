@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -95,4 +96,7 @@ public class ParserConfig {
     return delegate.getEnum("project", "glob_handler", GlobHandler.class).or(GlobHandler.PYTHON);
   }
 
+  public Optional<Long> getWatchmanQueryTimeoutMs() {
+    return delegate.getLong("project", "watchman_query_timeout_ms");
+  }
 }
