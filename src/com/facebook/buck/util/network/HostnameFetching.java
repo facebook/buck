@@ -51,14 +51,15 @@ public class HostnameFetching {
   private static String getHostnameWin32() throws IOException {
     char[] hostnameBuf = new char[HOSTNAME_MAX_LEN];
     IntByReference hostnameBufLen = new IntByReference(hostnameBuf.length);
-    try {
-      HostnameFetchingWin32Library.INSTANCE.GetComputerNameEx(
-          HostnameFetchingWin32Library.NAME_TYPE_DNS_HOSTNAME,
-          hostnameBuf,
-          hostnameBufLen);
-      return new String(hostnameBuf, 0, hostnameBufLen.getValue());
-    } catch (LastErrorException e) {
-      throw new IOException(e);
+    boolean result = HostnameFetchingWin32Library.INSTANCE.GetComputerNameEx(
+        HostnameFetchingWin32Library.NAME_TYPE_DNS_HOSTNAME,
+        hostnameBuf,
+        hostnameBufLen);
+    if (!result) {
+      throw new IOException(String.format(
+          "Call to GetComputerNameEx failed with code %d",
+          Native.getLastError()));
     }
+    return new String(hostnameBuf, 0, hostnameBufLen.getValue());
   }
 }

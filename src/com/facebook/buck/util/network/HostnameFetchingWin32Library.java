@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.network;
 
-import com.sun.jna.LastErrorException;
 import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.StdCallLibrary;
@@ -29,6 +28,5 @@ public interface HostnameFetchingWin32Library extends StdCallLibrary {
   int NAME_TYPE_DNS_HOSTNAME = 1;
 
   @SuppressWarnings("checkstyle:methodname")
-  boolean GetComputerNameEx(int nameType, char[] buffer, IntByReference bufferSize)
-    throws LastErrorException;
+  boolean GetComputerNameEx(int nameType, char[] buffer, IntByReference bufferSize);
 }
