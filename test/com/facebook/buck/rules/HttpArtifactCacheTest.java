@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.HttpArtifactCacheEvent;
+import com.facebook.buck.event.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -79,6 +81,12 @@ public class HttpArtifactCacheTest {
       dataOut.write(data.getBytes(Charsets.UTF_8));
       return ResponseBody.create(OCTET_STREAM, out.toByteArray());
     }
+  }
+
+  private static Finished.Builder createFinishedEventBuilder() {
+    HttpArtifactCacheEvent.Started started = HttpArtifactCacheEvent.newFetchStartedEvent();
+    started.configure(-1, -1, -1, new BuildId());
+    return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
   }
 
   @Test
@@ -330,7 +338,11 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    cache.storeImpl(ImmutableSet.of(ruleKey), ImmutableMap.<String, String>of(), output);
+    cache.storeImpl(
+        ImmutableSet.of(ruleKey),
+        ImmutableMap.<String, String>of(),
+        output,
+        createFinishedEventBuilder());
     assertTrue(hasCalled.get());
     cache.close();
   }
@@ -358,7 +370,8 @@ public class HttpArtifactCacheTest {
     cache.storeImpl(
         ImmutableSet.of(new RuleKey("00000000000000000000000000000000")),
         ImmutableMap.<String, String>of(),
-        output);
+        output,
+        createFinishedEventBuilder());
     cache.close();
   }
 
@@ -399,7 +412,11 @@ public class HttpArtifactCacheTest {
                 .build();
           }
         };
-    cache.storeImpl(ImmutableSet.of(ruleKey1, ruleKey2), ImmutableMap.<String, String>of(), output);
+    cache.storeImpl(
+        ImmutableSet.of(ruleKey1, ruleKey2),
+        ImmutableMap.<String, String>of(),
+        output,
+        createFinishedEventBuilder());
     assertThat(
         stored,
         Matchers.containsInAnyOrder(ruleKey1, ruleKey2));

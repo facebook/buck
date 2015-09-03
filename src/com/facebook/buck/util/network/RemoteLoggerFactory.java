@@ -18,6 +18,11 @@ package com.facebook.buck.util.network;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -44,4 +49,38 @@ public abstract class RemoteLoggerFactory {
     }
   }
 
+  /**
+   * Uploads log entries to the given scribe category.
+   */
+  public static class ScribeBatchingLogger extends BatchingLogger {
+
+    private final ScribeLogger scribeLogger;
+    private final String category;
+
+    public ScribeBatchingLogger(URI uri, ScribeLogger scribeLogger) {
+      this(uri.getSchemeSpecificPart(), scribeLogger);
+    }
+
+    public ScribeBatchingLogger(String category, ScribeLogger scribeLogger) {
+      this.category = category;
+      this.scribeLogger = scribeLogger;
+    }
+
+    public static boolean isValidScheme(URI uri) {
+      return uri.getScheme().equals("scribe");
+    }
+
+    @Override
+    protected ListenableFuture<Void> logMultiple(ImmutableCollection<BatchEntry> data) {
+      ImmutableList<String> lines = FluentIterable.from(data)
+          .transform(
+              new Function<BatchEntry, String>() {
+                @Override
+                public String apply(BatchEntry input) {
+                  return input.getLine();
+                }
+              }).toList();
+      return scribeLogger.log(category, lines);
+    }
+  }
 }

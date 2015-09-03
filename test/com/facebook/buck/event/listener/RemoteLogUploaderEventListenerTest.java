@@ -63,8 +63,8 @@ public class RemoteLogUploaderEventListenerTest {
     List<String> loggedEntries = new ArrayList<>();
 
     @Override
-    public Optional<ListenableFuture<Void>> log(String jsonBlob) {
-      loggedEntries.add(jsonBlob);
+    public Optional<ListenableFuture<Void>> log(String logLine) {
+      loggedEntries.add(logLine);
       return Optional.absent();
     }
 
@@ -111,7 +111,7 @@ public class RemoteLogUploaderEventListenerTest {
     RemoteLogger consistentlyFailingLogger = new RemoteLogger() {
 
       @Override
-      public Optional<ListenableFuture<Void>> log(String jsonBlob) {
+      public Optional<ListenableFuture<Void>> log(String logLine) {
         logCount.incrementAndGet();
         return Optional.of(Futures.<Void>immediateFailedFuture(new Throwable()));
       }
@@ -143,8 +143,8 @@ public class RemoteLogUploaderEventListenerTest {
     RemoteLogger failingEveryOtherTimeLogger = new RemoteLogger() {
 
       @Override
-      public Optional<ListenableFuture<Void>> log(String jsonBlob) {
-        System.out.println(jsonBlob);
+      public Optional<ListenableFuture<Void>> log(String logLine) {
+        System.out.println(logLine);
         int i = logCount.incrementAndGet();
         if (i % 2 == 0) {
           return Optional.of(Futures.<Void>immediateFailedFuture(new Throwable()));

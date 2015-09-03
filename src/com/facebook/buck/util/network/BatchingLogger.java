@@ -77,9 +77,9 @@ public abstract class BatchingLogger implements RemoteLogger {
   }
 
   @Override
-  public final Optional<ListenableFuture<Void>> log(String jsonBlob) {
-    batch.add(new BatchEntry(jsonBlob));
-    currentBatchSize += jsonBlob.length();
+  public final Optional<ListenableFuture<Void>> log(String logLine) {
+    batch.add(new BatchEntry(logLine));
+    currentBatchSize += logLine.length();
     if (currentBatchSize >= minBatchSize) {
       return Optional.of(sendBatch());
     }

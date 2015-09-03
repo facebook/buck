@@ -16,25 +16,8 @@
 
 package com.facebook.buck.util.network;
 
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 
-/**
- * Implemented by classes providing the functionality to upload log data to remote entities.
- */
-public interface RemoteLogger {
-  /**
-   * @param logLine data to upload.
-   * @return {@link Optional#absent()} if the data has merely been buffered, a
-   *         {@link ListenableFuture} representing the upload otherwise.
-   */
-  Optional<ListenableFuture<Void>> log(String logLine);
-
-  /**
-   * If the underlying logger employs buffering this signals it to upload whatever remaining
-   * information it had stored.
-   *
-   * @return future representing the forced upload.
-   */
-  ListenableFuture<Void> close();
+public interface ScribeLogger {
+  ListenableFuture<Void> log(String category, Iterable<String> lines);
 }

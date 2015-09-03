@@ -18,14 +18,20 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.HttpArtifactCacheEvent;
+import com.facebook.buck.event.HttpArtifactCacheEvent.Finished;
+import com.facebook.buck.event.HttpArtifactCacheEvent.Started;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.hash.HasherInputStream;
 import com.facebook.buck.util.hash.HasherOutputStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -53,7 +59,6 @@ import java.util.Map;
 import java.util.Set;
 
 import okio.BufferedSink;
-import okio.BufferedSource;
 
 public class HttpArtifactCache implements ArtifactCache {
 
@@ -114,13 +119,18 @@ public class HttpArtifactCache implements ArtifactCache {
     }
   }
 
-  public CacheResult fetchImpl(RuleKey ruleKey, Path file) throws IOException {
+  public CacheResult fetchImpl(
+      RuleKey ruleKey,
+      Path file,
+      final Finished.Builder eventBuilder) throws IOException {
+
     Request request =
         new Request.Builder()
             .url(new URL(url, "artifacts/key/" + ruleKey.toString()))
             .get()
             .build();
     Response response = fetchCall(request);
+    eventBuilder.setResponseSizeBytes(response.body().contentLength());
 
     if (response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
       readTillEnd(response);
@@ -132,6 +142,8 @@ public class HttpArtifactCache implements ArtifactCache {
       readTillEnd(response);
       String msg = String.format("unexpected response: %d", response.code());
       reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
+      eventBuilder
+          .setErrorMessage(msg);
       return CacheResult.error(name, msg);
     }
 
@@ -180,6 +192,8 @@ public class HttpArtifactCache implements ArtifactCache {
             readTillEnd(response);
             String msg = "incorrect key name";
             reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
+            eventBuilder
+                .setErrorMessage(msg);
             return CacheResult.error(name, msg);
           }
 
@@ -205,9 +219,12 @@ public class HttpArtifactCache implements ArtifactCache {
 
       // The remaining data is the payload, which we write to the created file, and also include
       // in our verification checksum.
-      try (InputStream payload = new HasherInputStream(hasher, response.body().byteStream());
+      Hasher artifactOnlyHasher = hashFunction.newHasher();
+      try (InputStream payload = new HasherInputStream(artifactOnlyHasher,
+          new HasherInputStream(hasher, response.body().byteStream()));
            OutputStream output = projectFilesystem.newFileOutputStream(temp)) {
-        ByteStreams.copy(payload, output);
+         eventBuilder.setResponseSizeBytes(ByteStreams.copy(payload, output));
+         eventBuilder.setArtifactContentHash(artifactOnlyHasher.hash().toString());
       }
     }
 
@@ -221,6 +238,8 @@ public class HttpArtifactCache implements ArtifactCache {
       String msg = "artifact had invalid checksum";
       reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
       projectFilesystem.deleteFileAtPath(temp);
+      eventBuilder
+          .setErrorMessage(msg);
       return CacheResult.error(name, msg);
     }
 
@@ -232,13 +251,29 @@ public class HttpArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, Path output) throws InterruptedException {
+  public CacheResult fetch(
+      RuleKey ruleKey,
+      Path output) throws InterruptedException {
+    Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent();
+    buckEventBus.post(startedEvent);
+    Finished.Builder eventBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
+        .setRuleKeys(Lists.newArrayList(ruleKey.toString()));
+
     try {
-      return fetchImpl(ruleKey, output);
+      CacheResult result =  fetchImpl(ruleKey, output, eventBuilder);
+      buckEventBus.post(eventBuilder
+          .setFetchResult(result.toString())
+          .build());
+      return result;
     } catch (IOException e) {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
       reportFailure(e, "fetch(%s, %s): %s", url, ruleKey, msg);
-      return CacheResult.error(name, msg);
+      CacheResult cacheResult = CacheResult.error(name, msg);
+      buckEventBus.post(eventBuilder
+          .setFetchResult(cacheResult.toString())
+          .setErrorMessage(msg)
+          .build());
+      return cacheResult;
     }
   }
 
@@ -299,9 +334,9 @@ public class HttpArtifactCache implements ArtifactCache {
   protected void storeImpl(
       ImmutableSet<RuleKey> ruleKeys,
       final ImmutableMap<String, String> metadata,
-      final Path file)
+      final Path file,
+      final Finished.Builder eventBuilder)
       throws IOException {
-
     // Build the request, hitting the multi-key endpoint.
     Request.Builder builder = new Request.Builder();
     builder.url(new URL(url, "artifacts/key"));
@@ -322,6 +357,15 @@ public class HttpArtifactCache implements ArtifactCache {
             },
             hashFunction);
 
+    final long fileSizeBytes = projectFilesystem.getFileSize(file);
+    final long contentLength =
+        rawKeys.length +
+            Integer.SIZE / Byte.SIZE +
+            rawMetadata.length +
+            fileSizeBytes;
+    eventBuilder.setArtifactSizeBytes(fileSizeBytes);
+    eventBuilder.setRequestSizeBytes(contentLength);
+
     // Wrap the file into a `RequestBody` which uses `ProjectFilesystem`.
     builder.put(
         new RequestBody() {
@@ -332,11 +376,7 @@ public class HttpArtifactCache implements ArtifactCache {
 
           @Override
           public long contentLength() throws IOException {
-            return
-                rawKeys.length +
-                Integer.SIZE / Byte.SIZE +
-                rawMetadata.length +
-                projectFilesystem.getFileSize(file);
+            return contentLength;
           }
 
           @Override
@@ -344,8 +384,11 @@ public class HttpArtifactCache implements ArtifactCache {
             bufferedSink.write(rawKeys);
             bufferedSink.writeInt(rawMetadata.length);
             bufferedSink.write(rawMetadata);
-            try (BufferedSource fileSource = projectFilesystem.newSource(file)) {
-              bufferedSink.writeAll(fileSource);
+            Hasher hasher = hashFunction.newHasher();
+            try (InputStream is = new HasherInputStream(
+                hasher, projectFilesystem.newSource(file).inputStream())) {
+              ByteStreams.copy(is, bufferedSink.outputStream());
+              eventBuilder.setArtifactContentHash(hasher.hash().toString());
             }
           }
         });
@@ -353,9 +396,12 @@ public class HttpArtifactCache implements ArtifactCache {
     // Dispatch the store operation and verify it succeeded.
     Request request = builder.build();
     Response response = storeCall(request);
-    if (response.code() != HttpURLConnection.HTTP_ACCEPTED) {
+    final boolean requestFailed = response.code() != HttpURLConnection.HTTP_ACCEPTED;
+    if (requestFailed) {
       reportFailure("store(%s, %s): unexpected response: %d", url, ruleKeys, response.code());
     }
+
+    eventBuilder.setWasUploadSuccessful(!requestFailed);
   }
 
   @Override
@@ -367,8 +413,16 @@ public class HttpArtifactCache implements ArtifactCache {
     if (!isStoreSupported()) {
       return;
     }
+
+    Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent();
+    buckEventBus.post(startedEvent);
+    Finished.Builder finishedEventBuilder =
+        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
+            .setRuleKeys(Iterables.transform(ruleKeys, Functions.toStringFunction()));
+
     try {
-      storeImpl(ruleKeys, metadata, output);
+      storeImpl(ruleKeys, metadata, output, finishedEventBuilder);
+      buckEventBus.post(finishedEventBuilder.build());
     } catch (IOException e) {
       reportFailure(
           e,
@@ -377,6 +431,11 @@ public class HttpArtifactCache implements ArtifactCache {
           ruleKeys,
           e.getClass().getName(),
           e.getMessage());
+
+      buckEventBus.post(finishedEventBuilder
+          .setWasUploadSuccessful(false)
+          .setErrorMessage(e.toString())
+          .build());
     }
   }
 
