@@ -34,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -66,6 +67,8 @@ public class CxxTestDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.framework = Optional.of(CxxTestType.GTEST);
+    constructorArg.env = Optional.absent();
+    constructorArg.args = Optional.absent();
     constructorArg.useDefaultTestMain = Optional.of(true);
     constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     Iterable<BuildTarget> implicit = desc
@@ -77,8 +80,11 @@ public class CxxTestDescriptionTest {
 
   @Test
   public void environmentIsPropagated() {
-    ImmutableMap<String, String> env = ImmutableMap.of("TEST", "value");
     BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRule someRule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
+            .setOut("someRule")
+            .build(resolver);
     BuildRule gtest =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtest"))
             .setOut("out")
@@ -102,7 +108,7 @@ public class CxxTestDescriptionTest {
             CxxTestBuilder.createDefaultPlatform(),
             CxxTestBuilder.createDefaultPlatforms());
     CxxTest test = (CxxTest) builder
-          .setEnv(env)
+          .setEnv(ImmutableMap.of("TEST", "value $(location //:some_rule)"))
           .build(resolver);
     ImmutableList<Step> steps =
         test.runTests(
@@ -113,7 +119,60 @@ public class CxxTestDescriptionTest {
             TestSelectorList.empty(),
             TestRule.NOOP_REPORTING_CALLBACK);
     CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
-    assertThat(testStep.getEnv(), Matchers.equalTo(env));
+    assertThat(
+        testStep.getEnv(),
+        Matchers.equalTo(
+            ImmutableMap.of(
+                "TEST",
+                "value " +
+                    Preconditions.checkNotNull(someRule.getPathToOutput()).toAbsolutePath())));
+  }
+
+  @Test
+  public void testArgsArePropagated() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRule someRule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
+            .setOut("someRule")
+            .build(resolver);
+    BuildRule gtest =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtest"))
+            .setOut("out")
+            .build(resolver);
+    BuildRule gtestMain =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtestMain"))
+            .setOut("out")
+            .build(resolver);
+    CxxTestBuilder builder =
+        new CxxTestBuilder(
+            BuildTargetFactory.newInstance("//:test"),
+            new CxxBuckConfig(
+                new FakeBuckConfig(
+                    ImmutableMap.of(
+                        "cxx",
+                        ImmutableMap.of(
+                            "gtest_dep", gtest.getBuildTarget().toString(),
+                            "gtest_default_test_main_dep",
+                            gtestMain.getBuildTarget().toString()
+                        )))),
+            CxxTestBuilder.createDefaultPlatform(),
+            CxxTestBuilder.createDefaultPlatforms());
+    CxxTest test = (CxxTest) builder
+        .setArgs(ImmutableList.of("value $(location //:some_rule)"))
+        .build(resolver);
+    ImmutableList<Step> steps =
+        test.runTests(
+            FakeBuildContext.NOOP_CONTEXT,
+            TestExecutionContext.newInstance(),
+            /* isDryRun */ false,
+            /* isShufflingTests */ false,
+            TestSelectorList.empty(),
+            TestRule.NOOP_REPORTING_CALLBACK);
+    CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
+    assertThat(
+        testStep.getCommand(),
+        Matchers.hasItem(
+            "value " + Preconditions.checkNotNull(someRule.getPathToOutput()).toAbsolutePath()));
   }
 
   @Test

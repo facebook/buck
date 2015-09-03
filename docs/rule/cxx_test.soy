@@ -50,6 +50,32 @@ it as part of <code>buck test</code>.
   {{param default : '{}' /}}
   {param desc}
   A map of environment names and values to set when running the test.
+  <br><br>
+  It is also possible to expand references to other rules within the <b>values</b> of
+  these environment variables, using builtin {call buck.string_parameter_macros /}:
+  <dl>
+    <dt><code>$(location /&#x2F;path/to:target)</code></dt>
+    <dd>Expands to the location of the output of the build rule. This
+    means that you can refer to these without needing to be aware of how
+    Buck is storing data on the disk mid-build.</dd>
+  </dl>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'args' /}
+  {{param default : '{}' /}}
+  {param desc}
+  A list of additional arguments to pass to the test when it's run.
+  <br><br>
+  It is also possible to expand references to other rules within these
+  arguments, using builtin {call buck.string_parameter_macros /}:
+  <dl>
+    <dt><code>$(location /&#x2F;path/to:target)</code></dt>
+    <dd>Expands to the location of the output of the build rule. This
+    means that you can refer to these without needing to be aware of how
+    Buck is storing data on the disk mid-build.</dd>
+  </dl>
   {/param}
 {/call}
 

@@ -31,13 +31,22 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroException;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public class CxxTestDescription implements
@@ -47,6 +56,11 @@ public class CxxTestDescription implements
 
   private static final BuildRuleType TYPE = BuildRuleType.of("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
+
+  private static final MacroHandler MACRO_HANDLER =
+      new MacroHandler(
+          ImmutableMap.<String, MacroExpander>of(
+              "location", new LocationMacroExpander()));
 
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
@@ -74,9 +88,9 @@ public class CxxTestDescription implements
   @Override
   public <A extends Arg> CxxTest createBuildRule(
       TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      final A args) {
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -92,7 +106,7 @@ public class CxxTestDescription implements
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Generate the link rule that builds the test binary.
-    CxxDescriptionEnhancer.CxxLinkAndCompileRules cxxLinkAndCompileRules =
+    final CxxDescriptionEnhancer.CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             targetGraph,
             params,
@@ -106,21 +120,82 @@ public class CxxTestDescription implements
     BuildRuleParams testParams =
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver));
 
+    // Supplier which expands macros in the passed in test environment.
+    Supplier<ImmutableMap<String, String>> testEnv =
+        new Supplier<ImmutableMap<String, String>>() {
+          @Override
+          public ImmutableMap<String, String> get() {
+            return ImmutableMap.copyOf(
+                Maps.transformValues(
+                    args.env.or(ImmutableMap.<String, String>of()),
+                    MACRO_HANDLER.getExpander(
+                        params.getBuildTarget(),
+                        resolver,
+                        params.getProjectFilesystem())));
+          }
+        };
+
+    // Supplier which expands macros in the passed in test arguments.
+    Supplier<ImmutableList<String>> testArgs =
+        new Supplier<ImmutableList<String>>() {
+          @Override
+          public ImmutableList<String> get() {
+            return FluentIterable.from(args.args.or(ImmutableList.<String>of()))
+                .transform(
+                    MACRO_HANDLER.getExpander(
+                        params.getBuildTarget(),
+                        resolver,
+                        params.getProjectFilesystem()))
+                .toList();
+          }
+        };
+
+    Supplier<ImmutableSortedSet<BuildRule>> additionalDeps =
+        new Supplier<ImmutableSortedSet<BuildRule>>() {
+          @Override
+          public ImmutableSortedSet<BuildRule> get() {
+            ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+
+            // It's not uncommon for users to add dependencies onto other binaries that they run
+            // during the test, so make sure to add them as runtime deps.
+            deps.addAll(
+                Sets.difference(params.getDeps(), cxxLinkAndCompileRules.cxxLink.getDeps()));
+
+            // Add any build-time from any macros embedded in the `env` or `args` parameter.
+            for (String part :
+                Iterables.concat(
+                    args.args.or(ImmutableList.<String>of()),
+                    args.env.or(ImmutableMap.<String, String>of()).values())) {
+              try {
+                deps.addAll(
+                    MACRO_HANDLER.extractAdditionalBuildTimeDeps(
+                        params.getBuildTarget(),
+                        resolver,
+                        part));
+              } catch (MacroException e) {
+                throw new HumanReadableException(
+                    e,
+                    "%s: %s",
+                    params.getBuildTarget(),
+                    e.getMessage());
+              }
+            }
+
+            return deps.build();
+          }
+        };
+
     CxxTest test;
 
     CxxTestType type = args.framework.or(getDefaultTestType());
-    // It's not uncommon for users to add dependencies onto other binaries that they run during
-    // the test, so make sure to add them as runtime deps.
-    ImmutableSortedSet<BuildRule> additionalDeps =
-        ImmutableSortedSet.copyOf(
-            Sets.difference(params.getDeps(), cxxLinkAndCompileRules.cxxLink.getDeps()));
     switch (type) {
       case GTEST: {
         test = new CxxGtestTest(
             testParams,
             pathResolver,
             cxxLinkAndCompileRules.executable,
-            args.env.or(ImmutableMap.<String, String>of()),
+            testEnv,
+            testArgs,
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
@@ -133,7 +208,8 @@ public class CxxTestDescription implements
             testParams,
             pathResolver,
             cxxLinkAndCompileRules.executable,
-            args.env.or(ImmutableMap.<String, String>of()),
+            testEnv,
+            testArgs,
             additionalDeps,
             args.labels.get(),
             args.contacts.get(),
@@ -159,6 +235,18 @@ public class CxxTestDescription implements
 
     if (!constructorArg.lexSrcs.get().isEmpty()) {
       deps.add(cxxBuckConfig.getLexDep());
+    }
+
+    // Extract parse time deps from args and environment parameters.
+    for (String part :
+          Iterables.concat(
+              constructorArg.args.or(ImmutableList.<String>of()),
+              constructorArg.env.or(ImmutableMap.<String, String>of()).values())) {
+      try {
+        deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, part));
+      } catch (MacroException e) {
+        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
+      }
     }
 
     CxxTestType type = constructorArg.framework.or(getDefaultTestType());
@@ -210,6 +298,7 @@ public class CxxTestDescription implements
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
     public Optional<CxxTestType> framework;
     public Optional<ImmutableMap<String, String>> env;
+    public Optional<ImmutableList<String>> args;
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> useDefaultTestMain;
 

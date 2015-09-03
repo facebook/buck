@@ -36,6 +36,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -82,8 +83,9 @@ public class CxxGtestTestTest {
         new CommandTool.Builder()
             .addArg(new TestSourcePath(""))
             .build(),
-        ImmutableMap.<String, String>of(),
-        ImmutableSortedSet.<BuildRule>of(),
+        Suppliers.ofInstance(ImmutableMap.<String, String>of()),
+        Suppliers.ofInstance(ImmutableList.<String>of()),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         ImmutableSet.<Label>of(),
         ImmutableSet.<String>of(),
         ImmutableSet.<BuildRule>of(),

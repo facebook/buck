@@ -36,9 +36,11 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Test;
@@ -60,7 +62,9 @@ public class CxxTestTest {
       super(
           createBuildParams(),
           new SourcePathResolver(new BuildRuleResolver()),
-          ImmutableMap.<String, String>of(),
+          Suppliers.ofInstance(ImmutableMap.<String, String>of()),
+          Suppliers.ofInstance(ImmutableList.<String>of()),
+          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
           ImmutableSet.<Label>of(),
           ImmutableSet.<String>of(),
           ImmutableSet.<BuildRule>of(),

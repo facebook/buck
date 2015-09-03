@@ -30,6 +30,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -64,21 +65,29 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
   private final Tool executable;
-  private final ImmutableSortedSet<BuildRule> additionalDeps;
 
   public CxxBoostTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
       Tool executable,
-      ImmutableMap<String, String> env,
-      ImmutableSortedSet<BuildRule> additionalDeps,
+      Supplier<ImmutableMap<String, String>> env,
+      Supplier<ImmutableList<String>> args,
+      Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
       boolean runTestSeparately) {
-    super(params, resolver, env, labels, contacts, sourceUnderTest, runTestSeparately);
+    super(
+        params,
+        resolver,
+        env,
+        args,
+        additionalDeps,
+        labels,
+        contacts,
+        sourceUnderTest,
+        runTestSeparately);
     this.executable = executable;
-    this.additionalDeps = additionalDeps;
   }
 
   @Override
@@ -208,8 +217,8 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(super.getRuntimeDeps())
         .addAll(executable.getDeps(getResolver()))
-        .addAll(additionalDeps)
         .build();
   }
 

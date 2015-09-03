@@ -17,9 +17,11 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -34,10 +36,13 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
@@ -45,9 +50,13 @@ import java.util.concurrent.Callable;
 /**
  * A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests.
  */
-public abstract class CxxTest extends NoopBuildRule implements TestRule {
+public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
 
-  private final ImmutableMap<String, String> env;
+  @AddToRuleKey
+  private final Supplier<ImmutableMap<String, String>> env;
+  @AddToRuleKey
+  private final Supplier<ImmutableList<String>> args;
+  private final Supplier<ImmutableSortedSet<BuildRule>> additionalDeps;
   private final ImmutableSet<Label> labels;
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
@@ -56,13 +65,17 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
   public CxxTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableMap<String, String> env,
+      Supplier<ImmutableMap<String, String>> env,
+      Supplier<ImmutableList<String>> args,
+      Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
       boolean runTestSeparately) {
     super(params, resolver);
-    this.env = env;
+    this.env = Suppliers.memoize(env);
+    this.args = Suppliers.memoize(args);
+    this.additionalDeps = Suppliers.memoize(additionalDeps);
     this.labels = labels;
     this.contacts = contacts;
     this.sourceUnderTest = sourceUnderTest;
@@ -116,8 +129,11 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
         new TouchStep(getProjectFilesystem(), getPathToTestResults()),
         new CxxTestStep(
             getProjectFilesystem(),
-            getShellCommand(executionContext, getPathToTestResults()),
-            env,
+            ImmutableList.<String>builder()
+                .addAll(getShellCommand(executionContext, getPathToTestResults()))
+                .addAll(args.get())
+                .build(),
+            env.get(),
             getPathToTestExitCode(),
             getPathToTestOutput()));
   }
@@ -190,4 +206,10 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
   public boolean supportsStreamingTests() {
     return false;
   }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return additionalDeps.get();
+  }
+
 }
