@@ -16,15 +16,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.Argument;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.ArgumentType;
@@ -34,7 +29,6 @@ import com.google.devtools.build.lib.query2.engine.QueryExpression;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 /**
  * A "owner" query expression, which computes the rules that own the given files.
@@ -63,7 +57,10 @@ public class QueryOwnerFunction implements QueryFunction {
 
   @SuppressWarnings("unchecked")
   @Override
-  public <T> Set<T> eval(QueryEnvironment<T> env, QueryExpression expression, List<Argument> args)
+  public <T> ImmutableSet<T> eval(
+      QueryEnvironment<T> env,
+      QueryExpression expression,
+      List<Argument> args)
       throws QueryException, InterruptedException {
     // Casts are made in order to keep Bazel's structure for evaluating queries unchanged.
     if (!(env instanceof BuckQueryEnvironment)) {
@@ -78,16 +75,7 @@ public class QueryOwnerFunction implements QueryFunction {
           buckEnv.getBuildFileTree(),
           files,
           /* guessForDeletedEnabled */ false);
-
-      return (Set<T>) Sets.newHashSet(
-          Collections2.transform(
-              report.owners.keySet(),
-              new Function<TargetNode<?>, BuildTarget>() {
-                @Override
-                public BuildTarget apply(TargetNode<?> input) {
-                  return Preconditions.checkNotNull(input.getBuildTarget());
-                }
-              }));
+      return (ImmutableSet<T>) buckEnv.getTargetsFromBuildTargetsContainer(report.owners.keySet());
     } catch (BuildFileParseException | BuildTargetException | IOException e) {
       throw new QueryException("Could not parse build targets.\n" + e.getMessage());
     }

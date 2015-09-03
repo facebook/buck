@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
@@ -32,15 +31,15 @@ public abstract class CommandHelper {
 
   public static void printJSON(
       CommandRunnerParams params,
-      Multimap<String, BuildTarget> targetsAndResults)
+      Multimap<String, QueryTarget> targetsAndResults)
       throws IOException {
     Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
             targetsAndResults,
-            new Function<BuildTarget, String>() {
+            new Function<QueryTarget, String>() {
               @Override
-              public String apply(BuildTarget input) {
-                return Preconditions.checkNotNull(input.getFullyQualifiedName());
+              public String apply(QueryTarget input) {
+                return Preconditions.checkNotNull(input.toString());
               }
             });
     params.getObjectMapper().writeValue(
@@ -50,14 +49,14 @@ public abstract class CommandHelper {
 
   public static void printJSON(
       CommandRunnerParams params,
-      Set<BuildTarget> targets) throws IOException {
+      Set<QueryTarget> targets) throws IOException {
     Set<String> targetsNames = ImmutableSet.copyOf(
         Collections2.transform(
             targets,
-            new Function<BuildTarget, String>() {
+            new Function<QueryTarget, String>() {
               @Override
-              public String apply(BuildTarget input) {
-                return Preconditions.checkNotNull(input.getFullyQualifiedName());
+              public String apply(QueryTarget input) {
+                return Preconditions.checkNotNull(input.toString());
               }
             }));
     params.getObjectMapper().writeValue(
@@ -67,17 +66,17 @@ public abstract class CommandHelper {
 
   public static void printToConsole(
       CommandRunnerParams params,
-      Multimap<String, BuildTarget> targetsAndDependencies) {
-    for (BuildTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
-      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
+      Multimap<String, QueryTarget> targetsAndDependencies) {
+    for (QueryTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
+      params.getConsole().getStdOut().println(target);
     }
   }
 
   public static void printToConsole(
       CommandRunnerParams params,
-      Set<BuildTarget> targets) {
-    for (BuildTarget target : targets) {
-      params.getConsole().getStdOut().println(target.getFullyQualifiedName());
+      Set<QueryTarget> targets) {
+    for (QueryTarget target : targets) {
+      params.getConsole().getStdOut().println(target);
     }
   }
 }

@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.cli;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.google.common.base.Preconditions;
@@ -67,14 +66,16 @@ public class QueryTestsOfFunction implements QueryFunction {
     if (!(env instanceof BuckQueryEnvironment)) {
       throw new QueryException("The environment should be an instance of BuckQueryEnvironment");
     }
+    BuckQueryEnvironment buckEnv = (BuckQueryEnvironment) env;
     Set<T> targets = args.get(0).getExpression().eval(env);
     env.buildTransitiveClosure(expression, targets, Integer.MAX_VALUE);
 
     Set<T> tests = new LinkedHashSet<>();
     for (T target : targets) {
-      TargetNode<?> node = Preconditions.checkNotNull(
-          ((BuckQueryEnvironment) env).getNode((BuildTarget) target));
-      tests.addAll((Collection<T>) TargetNodes.getTestTargetsForNode(node));
+      TargetNode<?> node = Preconditions.checkNotNull(buckEnv.getNode((QueryTarget) target));
+      tests.addAll(
+          (Collection<T>) buckEnv.getTargetsFromBuildTargetsContainer(
+              TargetNodes.getTestTargetsForNode(node)));
     }
     return tests;
   }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.Argument;
@@ -82,7 +81,7 @@ public class QueryKindFunction implements QueryFunction {
 
     Set<T> result = new LinkedHashSet<>();
     for (T target : argument.eval(env)) {
-      if (compiledPattern.matcher(buckEnv.getTargetKind((BuildTarget) target)).find()) {
+      if (compiledPattern.matcher(buckEnv.getTargetKind((QueryTarget) target)).find()) {
         result.add(target);
       }
     }

@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -95,11 +94,11 @@ public class QueryCommand extends AbstractCommand {
     }
 
     try {
-      TreeMultimap<String, BuildTarget> queryResultMap = TreeMultimap.create();
+      TreeMultimap<String, QueryTarget> queryResultMap = TreeMultimap.create();
 
       for (String input : inputsFormattedAsBuildTargets) {
         String query = queryFormat.replace("%s", input);
-        Set<BuildTarget> queryResult = env.evaluateQuery(query);
+        Set<QueryTarget> queryResult = env.evaluateQuery(query);
         queryResultMap.putAll(input, queryResult);
       }
 
@@ -122,7 +121,7 @@ public class QueryCommand extends AbstractCommand {
   int runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException {
     try {
-      Set<BuildTarget> queryResult = env.evaluateQuery(query);
+      Set<QueryTarget> queryResult = env.evaluateQuery(query);
 
       LOG.debug("Printing out the following targets: " + queryResult);
       if (shouldGenerateJsonOutput()) {

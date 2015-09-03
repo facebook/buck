@@ -67,6 +67,10 @@ public class BuckQueryEnvironmentTest {
     return new FunctionExpression(function, arguments);
   }
 
+  private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
+    return new QueryBuildTarget(BuildTarget.builder(baseName, shortName).build());
+  }
+
   @Before
   public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
@@ -98,44 +102,36 @@ public class BuckQueryEnvironmentTest {
 
   @Test
   public void testResolveSingleTargets() throws QueryException {
-    ImmutableSet<BuildTarget> targets;
+    ImmutableSet<QueryTarget> targets;
+    ImmutableSet<QueryTarget> expectedTargets;
     QueryExpression expr = createDummyQueryExpression();
-    BuildTarget buildTargetSix = BuildTarget.builder("//example", "six").build();
-    targets = buckQueryEnvironment.getTargetsMatchingPattern(expr, "//example:six");
-    assertThat(targets, is(equalTo(ImmutableSet.of(buildTargetSix))));
-    assertThat(
-        buckQueryEnvironment.targetPatternEvaluator.getKnownTargets(),
-        is(equalTo(ImmutableSet.of(buildTargetSix, buildTargetSix))));
 
-    BuildTarget buildTargetSeven = BuildTarget.builder("//example/app", "seven").build();
+    targets = buckQueryEnvironment.getTargetsMatchingPattern(expr, "//example:six");
+    expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example", "six"));
+    assertThat(targets, is(equalTo(expectedTargets)));
+
     targets = buckQueryEnvironment.getTargetsMatchingPattern(expr, "//example/app:seven");
-    assertThat(targets, is(equalTo(ImmutableSet.of(buildTargetSeven))));
-    assertThat(
-        buckQueryEnvironment.targetPatternEvaluator.getKnownTargets(),
-        is(equalTo(ImmutableSet.of(buildTargetSix, buildTargetSeven))));
+    expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example/app", "seven"));
+    assertThat(targets, is(equalTo(expectedTargets)));
   }
 
   @Test
   public void testResolveTargetPattern() throws QueryException {
-    ImmutableSet<BuildTarget> targets;
+    ImmutableSet<QueryTarget> targets;
     QueryExpression expr = createDummyQueryExpression();
-    ImmutableSet<BuildTarget> expectedTargets = ImmutableSortedSet.of(
-        BuildTarget.builder("//example", "one").build(),
-        BuildTarget.builder("//example", "two").build(),
-        BuildTarget.builder("//example", "three").build(),
-        BuildTarget.builder("//example", "four").build(),
-        BuildTarget.builder("//example", "five").build(),
-        BuildTarget.builder("//example", "six").build(),
-        BuildTarget.builder("//example", "application-test-lib").build(),
-        BuildTarget.builder("//example", "one-tests").build(),
-        BuildTarget.builder("//example", "four-tests").build(),
-        BuildTarget.builder("//example", "four-application-tests").build(),
-        BuildTarget.builder("//example", "six-tests").build()
-    );
+    ImmutableSet<QueryTarget> expectedTargets = ImmutableSortedSet.of(
+        createQueryBuildTarget("//example", "one"),
+        createQueryBuildTarget("//example", "two"),
+        createQueryBuildTarget("//example", "three"),
+        createQueryBuildTarget("//example", "four"),
+        createQueryBuildTarget("//example", "five"),
+        createQueryBuildTarget("//example", "six"),
+        createQueryBuildTarget("//example", "application-test-lib"),
+        createQueryBuildTarget("//example", "one-tests"),
+        createQueryBuildTarget("//example", "four-tests"),
+        createQueryBuildTarget("//example", "four-application-tests"),
+        createQueryBuildTarget("//example", "six-tests"));
     targets = buckQueryEnvironment.getTargetsMatchingPattern(expr, "//example:");
     assertThat(targets, is(equalTo(expectedTargets)));
-    assertThat(
-        buckQueryEnvironment.targetPatternEvaluator.getKnownTargets(),
-        is(equalTo(expectedTargets)));
   }
 }

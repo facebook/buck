@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,8 +35,7 @@ public class TargetPatternEvaluator {
   private final ParserConfig parserConfig;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
 
-  private Map<String, ImmutableSet<BuildTarget>> resolvedTargets = new HashMap<>();
-  private Set<BuildTarget> knownTargets = new HashSet<>();
+  private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
 
   public TargetPatternEvaluator(CommandRunnerParams params, boolean enableProfiling) {
     this.enableProfiling = enableProfiling;
@@ -49,13 +47,8 @@ public class TargetPatternEvaluator {
             params.getRepository().getFilesystem().getIgnorePaths()));
   }
 
-  public ImmutableSet<BuildTarget> getKnownTargets() {
-    return ImmutableSet.copyOf(knownTargets);
-  }
-
   /**
-   * Attempts to parse and load the given collection of patterns; the returned map contains the
-   * results for each pattern successfully parsed.
+   * Attempts to parse and load the given collection of patterns.
    */
   public void preloadTargetPatterns(Iterable<String> patterns)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
@@ -64,23 +57,27 @@ public class TargetPatternEvaluator {
     }
   }
 
-  ImmutableSet<BuildTarget> resolveTargetPattern(String pattern)
+  ImmutableSet<QueryTarget> resolveTargetPattern(String pattern)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
-    ImmutableSet<BuildTarget> targets = resolvedTargets.get(pattern);
-    if (targets == null) {
-      // Sorting to have predictable results across different java libraries implementations.
-      targets = ImmutableSortedSet.copyOf(
-          params.getParser()
-              .resolveTargetSpec(
-                  targetNodeSpecParser.parse(pattern),
-                  parserConfig,
-                  params.getBuckEventBus(),
-                  params.getConsole(),
-                  params.getEnvironment(),
-                  enableProfiling));
-      resolvedTargets.put(pattern, targets);
-      knownTargets.addAll(targets);
+    ImmutableSet<QueryTarget> targets = resolvedTargets.get(pattern);
+    if (targets != null) {
+      return targets;
     }
+    Set<BuildTarget> buildTargets = params.getParser()
+        .resolveTargetSpec(
+            targetNodeSpecParser.parse(pattern),
+            parserConfig,
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment(),
+            enableProfiling);
+    // Sorting to have predictable results across different java libraries implementations.
+    ImmutableSortedSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget target : buildTargets) {
+      builder.add(new QueryBuildTarget(target));
+    }
+    targets = builder.build();
+    resolvedTargets.put(pattern, targets);
     return targets;
   }
 }
