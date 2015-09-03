@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,5 +31,7 @@ public interface SupportsDependencyFileRuleKey {
   boolean useDependencyFileRuleKeys();
 
   ImmutableList<Path> getInputsAfterBuildingLocally() throws IOException;
+
+  Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() throws IOException;
 
 }

@@ -41,8 +41,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 
 import java.io.IOException;
@@ -522,6 +524,31 @@ public class CxxPreprocessAndCompile
             MorePaths.TO_PATH));
 
     return inputs.build();
+  }
+
+
+
+  @Override
+  public Optional<ImmutableMultimap<String, String>> getSymlinkTreeInputMap() throws IOException {
+    ImmutableMultimap.Builder<String, String> fullHeaderMapBuilder = ImmutableMultimap.builder();
+    for (HeaderSymlinkTree headerSymlinkTree :
+        Iterables.filter(getDeps(), HeaderSymlinkTree.class)) {
+      for (Map.Entry<Path, Path> entry : Maps
+          .transformValues(headerSymlinkTree.getFullLinks(), getResolver().getPathFunction())
+          .entrySet()) {
+        fullHeaderMapBuilder.put(entry.getValue().toString(), entry.getKey().toString());
+      }
+    }
+    ImmutableMultimap<String, String> fullHeaderMap = fullHeaderMapBuilder.build();
+
+    ImmutableMultimap.Builder<String, String> headerMap = ImmutableMultimap.builder();
+    for (String input : getProjectFilesystem().readLines(getDepFilePath())) {
+      if (!fullHeaderMap.containsKey(input)) {
+        return Optional.absent();
+      }
+      headerMap.putAll(input, fullHeaderMap.get(input));
+    }
+    return Optional.of(headerMap.build());
   }
 
 }

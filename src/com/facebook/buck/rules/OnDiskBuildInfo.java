@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,6 +35,11 @@ public interface OnDiskBuildInfo {
    * @return the sequence of values associated with the specified key, if it exists.
    */
   Optional<ImmutableList<String>> getValues(String key);
+
+  /**
+   * @return the map of values associated with the specified key, if it exists.
+   */
+  Optional<ImmutableMultimap<String, String>> getMultimap(String key);
 
   /**
    * @return Assuming the value associated with the specified key is a valid sha1 hash, returns it

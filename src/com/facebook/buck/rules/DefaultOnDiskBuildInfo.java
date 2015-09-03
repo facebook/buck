@@ -23,14 +23,17 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonStreamParser;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utility for reading the metadata associated with a build rule's output. This is metadata that
@@ -44,22 +47,48 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   private static final Function<String, ImmutableList<String>> TO_STRINGS =
       new Function<String, ImmutableList<String>>() {
-    @Override
-    public ImmutableList<String> apply(String input) {
-      JsonElement element = new JsonStreamParser(input).next();
-      Preconditions.checkState(element.isJsonArray(),
-          "Value for %s should have been a JSON array but was %s.",
-          input,
-          element);
+        @Override
+        public ImmutableList<String> apply(String input) {
+          JsonElement element = new JsonStreamParser(input).next();
+          Preconditions.checkState(
+              element.isJsonArray(),
+              "Value for %s should have been a JSON array but was %s.",
+              input,
+              element);
 
-      JsonArray array = element.getAsJsonArray();
-      ImmutableList.Builder<String> out = ImmutableList.builder();
-      for (JsonElement item : array) {
-        out.add(item.getAsString());
-      }
-      return out.build();
-    }
-  };
+          JsonArray array = element.getAsJsonArray();
+          ImmutableList.Builder<String> out = ImmutableList.builder();
+          for (JsonElement item : array) {
+            out.add(item.getAsString());
+          }
+          return out.build();
+        }
+      };
+  private static final Function<String, ImmutableMultimap<String, String>> TO_MULTIMAP =
+      new Function<String, ImmutableMultimap<String, String>>() {
+        @Override
+        public ImmutableMultimap<String, String> apply(String input) {
+          JsonElement element = new JsonStreamParser(input).next();
+          Preconditions.checkState(
+              element.isJsonObject(),
+              "Value for %s should have been a JSON object but was %s.",
+              input,
+              element);
+          JsonObject multimap = element.getAsJsonObject();
+          ImmutableMultimap.Builder<String, String> out = ImmutableMultimap.builder();
+          for (Map.Entry<String, JsonElement> entry : multimap.entrySet()) {
+            Preconditions.checkState(
+                entry.getValue().isJsonArray(),
+                "Value for %s should have been a JSON array but was %s.",
+                entry.getKey(),
+                entry.getValue());
+            for (JsonElement value : entry.getValue().getAsJsonArray()) {
+              out.put(entry.getKey(), value.getAsString());
+            }
+          }
+          return out.build();
+        }
+      };
 
   private final ProjectFilesystem projectFilesystem;
   private final Path metadataDirectory;
@@ -78,6 +107,15 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   public Optional<ImmutableList<String>> getValues(String key) {
     try {
       return getValue(key).transform(TO_STRINGS);
+    } catch (JsonParseException | IllegalStateException ignored) {
+      return Optional.absent();
+    }
+  }
+
+  @Override
+  public Optional<ImmutableMultimap<String, String>> getMultimap(String key) {
+    try {
+      return getValue(key).transform(TO_MULTIMAP);
     } catch (JsonParseException | IllegalStateException ignored) {
       return Optional.absent();
     }

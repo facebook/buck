@@ -1,0 +1,12 @@
+cxx_binary(
+  name = 'bin',
+  headers = ['bin.h'],
+  srcs = ['bin.c'],
+  deps = [':lib1'],
+)
+
+cxx_library(
+  name = 'lib1',
+  exported_headers = ['lib1.h'],
+  srcs = ['lib1.c'],
+)

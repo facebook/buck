@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.collect.Multimap;
+
 import java.nio.file.Path;
 
 public class DefaultBuildableContext implements BuildableContext {
@@ -33,6 +35,11 @@ public class DefaultBuildableContext implements BuildableContext {
 
   @Override
   public void addMetadata(String key, Iterable<String> values) {
+    recorder.addMetadata(key, values);
+  }
+
+  @Override
+  public void addMetadata(String key, Multimap<String, String> values) {
     recorder.addMetadata(key, values);
   }
 

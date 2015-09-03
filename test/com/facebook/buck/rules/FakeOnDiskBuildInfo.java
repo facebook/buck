@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Maps;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
   private Map<String, String> metadata = Maps.newHashMap();
   private Map<String, ImmutableList<String>> metadataValues = Maps.newHashMap();
+  private Map<String, ImmutableMultimap<String, String>> metadataMultimaps = Maps.newHashMap();
   private Map<Path, ImmutableList<String>> pathsToContents = Maps.newHashMap();
 
   /** @return this */
@@ -52,6 +54,11 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
     return this;
   }
 
+  public FakeOnDiskBuildInfo putMetadata(String key, ImmutableMultimap<String, String> value) {
+    this.metadataMultimaps.put(key, value);
+    return this;
+  }
+
   @Override
   public Optional<String> getValue(String key) {
     return Optional.fromNullable(metadata.get(key));
@@ -60,6 +67,11 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   @Override
   public Optional<ImmutableList<String>> getValues(String key) {
     return Optional.fromNullable(metadataValues.get(key));
+  }
+
+  @Override
+  public Optional<ImmutableMultimap<String, String>> getMultimap(String key) {
+    return Optional.fromNullable(metadataMultimaps.get(key));
   }
 
   @Override

@@ -29,7 +29,7 @@ public class DependencyFileRuleKeyBuilderFactory extends InputBasedRuleKeyBuilde
   public DependencyFileRuleKeyBuilderFactory(
       FileHashCache hashCache,
       SourcePathResolver pathResolver) {
-    super(hashCache, pathResolver, InputHandling.IGNORE);
+    super(hashCache, pathResolver, NOOP_ADD_DEPS_TO_RULE_KEY, InputHandling.IGNORE);
   }
 
 }

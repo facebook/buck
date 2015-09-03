@@ -40,6 +40,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -220,11 +221,11 @@ public class CachingBuildEngine implements BuildEngine {
             if (useDependencyFileRuleKey(rule)) {
 
               // Try to get the current dep-file rule key.
-              Optional<RuleKey> depFileRuleKey =
-                  calculateDepFileRuleKey(
-                      rule,
-                      onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
-                      /* allowMissingInputs */ true);
+              Optional<RuleKey> depFileRuleKey = calculateDepFileRuleKey(
+                  rule,
+                  onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
+                  onDiskBuildInfo.getMultimap(BuildInfo.METADATA_KEY_FOR_INPUT_MAP),
+                  /* allowMissingInputs */ true);
               if (depFileRuleKey.isPresent()) {
 
                 // Check the input-based rule key says we're already built.
@@ -430,12 +431,19 @@ public class CachingBuildEngine implements BuildEngine {
                   BuildInfo.METADATA_KEY_FOR_DEP_FILE,
                   inputStrings);
 
+              // Get the input from the rule if applicable
+              Optional<ImmutableMultimap<String, String>> inputMap =
+                  ((SupportsDependencyFileRuleKey) rule).getSymlinkTreeInputMap();
+              if (inputMap.isPresent()) {
+                buildInfoRecorder.addMetadata(BuildInfo.METADATA_KEY_FOR_INPUT_MAP, inputMap.get());
+              }
+
               // Re-calculate and store the depfile rule key for next time.
-              Optional<RuleKey> depFileRuleKey =
-                  calculateDepFileRuleKey(
-                      rule,
-                      Optional.of(inputStrings),
-                      /* allowMissingInputs */ false);
+              Optional<RuleKey> depFileRuleKey = calculateDepFileRuleKey(
+                  rule,
+                  Optional.of(inputStrings),
+                  inputMap,
+                  /* allowMissingInputs */ false);
               Preconditions.checkState(depFileRuleKey.isPresent());
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
@@ -902,6 +910,7 @@ public class CachingBuildEngine implements BuildEngine {
   private Optional<RuleKey> calculateDepFileRuleKey(
       BuildRule rule,
       Optional<ImmutableList<String>> depFile,
+      Optional<ImmutableMultimap<String, String>> inputMap,
       boolean allowMissingInputs)
       throws IOException {
 
@@ -926,6 +935,19 @@ public class CachingBuildEngine implements BuildEngine {
         }
         return Optional.absent();
       }
+    }
+
+    // If there is an input map, use that to represent the mapping of inputs done by symlink trees.
+    if (inputMap.isPresent()) {
+      for (BuildRule dep : rule.getDeps()) {
+        if (dep instanceof SymlinkTree) {
+          continue;
+        }
+        builder.setReflectively("buck.deps", dep);
+      }
+      builder.setReflectively("buck.input-map", inputMap);
+    } else {
+      builder.setReflectively("buck.deps", rule.getDeps());
     }
 
     return Optional.of(builder.build());

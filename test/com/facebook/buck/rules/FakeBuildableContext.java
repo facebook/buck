@@ -22,8 +22,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -54,6 +56,11 @@ public class FakeBuildableContext implements BuildableContext {
   @Override
   public void addMetadata(String key, Iterable<String> values) {
     metadata.put(key, ImmutableList.copyOf(values));
+  }
+
+  @Override
+  public void addMetadata(String key, Multimap<String, String> values) {
+    metadata.put(key, ImmutableMultimap.copyOf(values));
   }
 
   @Override

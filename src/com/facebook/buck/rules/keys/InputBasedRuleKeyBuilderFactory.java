@@ -24,6 +24,7 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -49,8 +50,9 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
   protected InputBasedRuleKeyBuilderFactory(
       final FileHashCache hashCache,
       final SourcePathResolver pathResolver,
+      Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder> addDepsToRuleKey,
       InputHandling inputHandling) {
-    super(hashCache, pathResolver);
+    super(hashCache, pathResolver, addDepsToRuleKey);
     this.inputHandling = inputHandling;
 
     // Build the cache around the sub-rule-keys and their dep lists.
@@ -64,6 +66,13 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
             return subKeyBuilder.buildWithDeps();
           }
         });
+  }
+
+  protected InputBasedRuleKeyBuilderFactory(
+      FileHashCache hashCache,
+      SourcePathResolver pathResolver,
+      InputHandling inputHandling) {
+    this(hashCache, pathResolver, DEFAULT_ADD_DEPS_TO_RULE_KEY, inputHandling);
   }
 
   public InputBasedRuleKeyBuilderFactory(
@@ -124,14 +133,6 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
         setSingleValue(pathResolver.getPath(sourcePath));
       }
       return this;
-    }
-
-    // Rules supporting input-based rule keys should be described entirely by their `SourcePath`
-    // inputs.  If we see a `BuildRule` when generating the rule key, this is likely a break in
-    // that contract, so check for that.
-    @Override
-    protected RuleKeyBuilder setBuildRule(BuildRule rule) {
-      throw new IllegalStateException("Input-based rule key builders cannot process build rules");
     }
 
     // Build the rule key and the list of deps found from this builder.

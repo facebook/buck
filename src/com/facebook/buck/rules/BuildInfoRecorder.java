@@ -36,12 +36,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import java.io.IOException;
@@ -50,6 +52,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -111,6 +114,18 @@ public class BuildInfoRecorder {
     JsonArray out = new JsonArray();
     for (String str : values) {
       out.add(new JsonPrimitive(str));
+    }
+    return out.toString();
+  }
+
+  private String toJson(Multimap<String, String> multimap) {
+    JsonObject out = new JsonObject();
+    for (Map.Entry<String, Collection<String>> entry : multimap.asMap().entrySet()) {
+      JsonArray values = new JsonArray();
+      for (String value : entry.getValue()) {
+        values.add(new JsonPrimitive(value));
+      }
+      out.add(entry.getKey(), values);
     }
     return out.toString();
   }
@@ -181,6 +196,10 @@ public class BuildInfoRecorder {
   }
 
   public void addMetadata(String key, Iterable<String> value) {
+    addMetadata(key, toJson(value));
+  }
+
+  public void addMetadata(String key, Multimap<String, String> value) {
     addMetadata(key, toJson(value));
   }
 
