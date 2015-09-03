@@ -53,14 +53,17 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
   private final JavacOptions templateOptions;
   private final Optional<Long> testRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
+  private final Optional<Path> testTempDirOverride;
 
   public JavaTestDescription(
       JavacOptions templateOptions,
       Optional<Long> testRuleTimeoutMs,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      Optional<Path> testTempDirOverride) {
     this.templateOptions = templateOptions;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
+    this.testTempDirOverride = testTempDirOverride;
   }
 
   @Override
@@ -133,7 +136,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         testRuleTimeoutMs,
         args.getRunTestSeparately(),
         args.stdOutLogLevel,
-        args.stdErrLogLevel
+        args.stdErrLogLevel,
+        testTempDirOverride
     );
   }
 

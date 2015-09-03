@@ -109,6 +109,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
   @AddToRuleKey
   private final boolean runTestSeparately;
 
+  private final Optional<Path> testTempDirOverride;
+
   protected JavaTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -128,7 +130,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
       Optional<Long> testRuleTimeoutMs,
       boolean runTestSeparately,
       Optional<Level> stdOutLogLevel,
-      Optional<Level> stdErrLogLevel) {
+      Optional<Level> stdErrLogLevel,
+      Optional<Path> testTempDirOverride) {
     super(
         params,
         resolver,
@@ -153,6 +156,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
     this.runTestSeparately = runTestSeparately;
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
+    this.testTempDirOverride = testTempDirOverride;
   }
 
   @Override
@@ -333,7 +337,19 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
   }
 
   private Path getPathToTmpDirectory() {
-    Path base = BuildTargets.getScratchPath(getBuildTarget(), "__java_test_%s_tmp__");
+    Path base;
+    if (testTempDirOverride.isPresent()) {
+      base = testTempDirOverride.get()
+          .resolve(getBuildTarget().getBasePath())
+          .resolve(
+              String.format(
+                  "__java_test_%s_tmp__",
+                  getBuildTarget().getShortNameAndFlavorPostfix()));
+      LOG.debug("Using overridden test temp dir base %s", base);
+    } else {
+      base = BuildTargets.getScratchPath(getBuildTarget(), "__java_test_%s_tmp__");
+      LOG.debug("Using standard test temp dir base %s", base);
+    }
     String subdir = BuckConstant.oneTimeTestSubdirectory;
     if (subdir != null && !subdir.isEmpty()) {
       base = base.resolve(subdir);

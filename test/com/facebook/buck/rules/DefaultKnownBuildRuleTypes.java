@@ -25,10 +25,12 @@ import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class DefaultKnownBuildRuleTypes {
@@ -51,7 +53,8 @@ public class DefaultKnownBuildRuleTypes {
         config,
         new FakeProcessExecutor(ImmutableMap.of(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)),
         new FakeAndroidDirectoryResolver(),
-        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")));
+        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
+        Optional.<Path>absent());
   }
 
 }

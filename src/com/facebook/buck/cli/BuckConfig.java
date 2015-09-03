@@ -460,6 +460,21 @@ public class BuckConfig {
   }
 
   /**
+   * By default, running tests use a temporary directory under
+   * buck-out. Since this directory is ignored by Watchman and other
+   * tools, allow overriding this behavior for projects that need it
+   * by specifying one or more environment variables which are checked
+   * for a temporary directory to use.
+   */
+  public Optional<ImmutableList<String>> getTestTempDirEnvVars() {
+    if (!getValue("test", "temp_dir_env_vars").isPresent()) {
+      return Optional.absent();
+    } else {
+      return Optional.of(getListWithoutComments("test", "temp_dir_env_vars"));
+    }
+  }
+
+  /**
    * Create an Ansi object appropriate for the current output. First respect the user's
    * preferences, if set. Next, respect any default provided by the caller. (This is used by buckd
    * to tell the daemon about the client's terminal.) Finally, allow the Ansi class to autodetect

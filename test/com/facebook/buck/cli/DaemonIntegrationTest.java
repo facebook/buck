@@ -60,7 +60,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -74,25 +73,10 @@ import java.util.concurrent.TimeUnit;
 public class DaemonIntegrationTest {
 
   private static final int SUCCESS_EXIT_CODE = 0;
-  private static final ImmutableList<String> TMP_ENV_VARS = ImmutableList.of(
-      "BUCK_ORIG_TEMPDIR", "BUCK_ORIG_TEMP", "BUCK_ORIG_TMPDIR", "BUCK_ORIG_TMP");
   private ScheduledExecutorService executorService;
 
-  private static String getTempDir() {
-    // We can't use the default temporary directory or $TMP in this test, since they're overridden
-    // by JUnitStep to 'buck-out/bin/...' which is not watched by watchman, causing this test to
-    // fail.
-    for (String envVar : TMP_ENV_VARS) {
-      String val = System.getenv(envVar);
-      if (val != null) {
-        return val;
-      }
-    }
-    return "/tmp";
-  }
-
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder(new File(getTempDir()));
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();

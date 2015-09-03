@@ -35,6 +35,7 @@ import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.TempDirectoryCreator;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.java.JavaBuckConfig;
 import com.facebook.buck.java.JavacOptions;
@@ -410,6 +411,24 @@ public final class Main {
     }
   }
 
+  private static Optional<Path> getTestTempDirOverride(
+      BuckConfig config,
+      ImmutableMap<String, String> clientEnvironment,
+      String tmpDirName) {
+    Optional<ImmutableList<String>> testTempDirEnvVars = config.getTestTempDirEnvVars();
+    if (!testTempDirEnvVars.isPresent()) {
+      return Optional.absent();
+    } else {
+      for (String envVar : testTempDirEnvVars.get()) {
+        String val = clientEnvironment.get(envVar);
+        if (val != null) {
+          return Optional.of(Paths.get(val).resolve(tmpDirName));
+        }
+      }
+      return Optional.of(Paths.get("/tmp").resolve(tmpDirName));
+    }
+  }
+
   /**
    *
    * @param buildId an identifier for this command execution.
@@ -495,13 +514,22 @@ public final class Main {
     ProcessExecutor processExecutor = new ProcessExecutor(console);
 
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
+    Optional<Path> testTempDirOverride = getTestTempDirOverride(
+        buckConfig,
+        clientEnvironment,
+        "buck-" + buildId.toString());
+    if (testTempDirOverride.isPresent()) {
+      // We'll create this directory a little later using TempDirectoryCreator.
+      LOG.debug("Using test temp dir override %s", testTempDirOverride.get());
+    }
     KnownBuildRuleTypes buildRuleTypes =
         KnownBuildRuleTypes.createInstance(
             buckConfig,
             processExecutor,
             androidDirectoryResolver,
             pythonBuckConfig.getPythonEnvironment(
-                processExecutor));
+                processExecutor),
+            testTempDirOverride);
 
     ParserConfig parserConfig = new ParserConfig(buckConfig);
     Watchman watchman;
@@ -603,6 +631,8 @@ public final class Main {
                  testConfig.getResultSummaryVerbosity(),
                  executionEnvironment,
                  webServer);
+         TempDirectoryCreator tempDirectoryCreator =
+             new TempDirectoryCreator(testTempDirOverride);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
       artifactCacheFactory = new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
 

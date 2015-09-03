@@ -161,7 +161,8 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT).build();
+        DUMMY_PYTHON_ENVIRONMENT,
+        Optional.<Path>absent()).build();
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
 
     Javac javac = libraryRule.getJavacOptions().getJavac();
@@ -184,7 +185,8 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT)
+        DUMMY_PYTHON_ENVIRONMENT,
+        Optional.<Path>absent())
         .build();
 
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
@@ -212,7 +214,8 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT)
+        DUMMY_PYTHON_ENVIRONMENT,
+        Optional.<Path>absent())
         .build();
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
@@ -240,7 +243,8 @@ public class KnownBuildRuleTypesTest {
         new FakeAndroidDirectoryResolver(),
         new PythonEnvironment(
             Paths.get("fake_python"),
-            PythonVersion.of("Python 2.7"))).build();
+            PythonVersion.of("Python 2.7")),
+        Optional.<Path>absent()).build();
     AndroidLibraryDescription description =
         (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
 
@@ -270,7 +274,8 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         processExecutor,
     new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT)
+        DUMMY_PYTHON_ENVIRONMENT,
+        Optional.<Path>absent())
         .build();
     AndroidLibraryDescription description =
         (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
@@ -334,7 +339,8 @@ public class KnownBuildRuleTypesTest {
         new FakeBuckConfig(),
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT);
+        DUMMY_PYTHON_ENVIRONMENT,
+        Optional.<Path>absent());
 
     final File javac = temporaryFolder.newFile();
     javac.setExecutable(true);
@@ -348,7 +354,8 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT);
+        DUMMY_PYTHON_ENVIRONMENT,
+        Optional.<Path>absent());
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
   }
@@ -365,7 +372,8 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT).build();
+        DUMMY_PYTHON_ENVIRONMENT,
+        Optional.<Path>absent()).build();
   }
 
   private ProcessExecutor createExecutor() throws IOException {
