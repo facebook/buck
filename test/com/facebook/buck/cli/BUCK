@@ -182,6 +182,7 @@ java_test(
     '//test/com/facebook/buck/timing:testutil',
     '//test/com/facebook/buck/util:testutil',
     '//third-party/java/args4j:args4j',
+    '//third-party/java/bazel:query-engine',
     '//third-party/java/ddmlib:ddmlib',
     '//third-party/java/easymock:easymock',
     '//third-party/java/gson:gson',
