@@ -1045,7 +1045,6 @@ public class DefaultJavaLibraryTest {
     Optional<JavacStep.SuggestBuildRules> suggestFn =
         ((DefaultJavaLibrary) grandparent).createSuggestBuildFunction(
             context,
-            transitive,
             /* declaredClasspathEntries */ ImmutableSetMultimap.<JavaLibrary, Path>of(),
             createJarResolver(classToSymbols));
 

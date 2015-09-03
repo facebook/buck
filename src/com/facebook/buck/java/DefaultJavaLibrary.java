@@ -484,12 +484,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           .build();
     }
 
-    ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
-        ImmutableSetMultimap.<JavaLibrary, Path>builder()
-            .putAll(getTransitiveClasspathEntries())
-            .putAll(this, additionalClasspathEntries)
-            .build();
-
     ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries =
         ImmutableSetMultimap.<JavaLibrary, Path>builder()
             .putAll(getDeclaredClasspathEntries())
@@ -513,8 +507,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory));
 
     Optional<JavacStep.SuggestBuildRules> suggestBuildRule =
-        createSuggestBuildFunction(context,
-            transitiveClasspathEntries,
+        createSuggestBuildFunction(
+            context,
             declaredClasspathEntries,
             JAR_RESOLVER);
 
@@ -648,7 +642,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @VisibleForTesting
   Optional<JavacStep.SuggestBuildRules> createSuggestBuildFunction(
       final BuildContext context,
-      final ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries,
       final ImmutableSetMultimap<JavaLibrary, Path> declaredClasspathEntries,
       final JarResolver jarResolver) {
 
@@ -657,6 +650,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             new Supplier<ImmutableList<JavaLibrary>>() {
               @Override
               public ImmutableList<JavaLibrary> get() {
+                ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
+                    ImmutableSetMultimap.<JavaLibrary, Path>builder()
+                        .putAll(getTransitiveClasspathEntries())
+                        .putAll(
+                            DefaultJavaLibrary.this,
+                            DefaultJavaLibrary.this.additionalClasspathEntries)
+                        .build();
                 Set<JavaLibrary> transitiveNotDeclaredDeps = Sets.difference(
                     transitiveClasspathEntries.keySet(),
                     Sets.union(ImmutableSet.of(this), declaredClasspathEntries.keySet()));
