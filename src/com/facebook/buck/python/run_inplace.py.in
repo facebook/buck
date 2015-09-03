@@ -5,11 +5,45 @@ import sys
 
 main_module = <MAIN_MODULE>
 modules_dir = <MODULES_DIR>
+native_libs_env_var = <NATIVE_LIBS_ENV_VAR>
 native_libs_dir = <NATIVE_LIBS_DIR>
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
-os.environ['PYTHONPATH'] = os.path.join(dirpath, modules_dir)
-if native_libs_dir is not None:
-    os.environ['LD_LIBRARY_PATH'] = os.path.join(dirpath, native_libs_dir)
 
-os.execv(sys.executable, [sys.executable, '-m', main_module] + sys.argv[1:])
+# Update the environment variable for the dynamic loader to the native
+# libraries location.
+old_native_libs_dir = os.environ.get(native_libs_env_var)
+if native_libs_dir is not None:
+    os.environ[native_libs_env_var] = os.path.join(dirpath, native_libs_dir)
+
+STARTUP = """\
+import os
+import runpy
+import sys
+
+# Set `argv[0]` to the executing script.
+assert sys.argv[0] == '-c'
+sys.argv[0] = {arg0!r}
+
+# Replace the working directory with location of the modules directory.
+assert sys.path[0] == ''
+sys.path[0] = {pythonpath!r}
+
+def setenv(var, val):
+    if val is None:
+        os.environ.pop(var, None)
+    else:
+        os.environ[var] = val
+
+# Restore the native libs env var to its original value.
+setenv({native_libs_env_var!r}, {native_libs_dir!r})
+
+runpy.run_module({main_module!r}, run_name='__main__')
+""".format(
+    arg0=sys.argv[0],
+    pythonpath=os.path.join(dirpath, modules_dir),
+    native_libs_env_var=native_libs_env_var,
+    native_libs_dir=old_native_libs_dir,
+    main_module=main_module)
+
+os.execv(sys.executable, [sys.executable, '-E', '-c', STARTUP] + sys.argv[1:])

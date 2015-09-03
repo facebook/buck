@@ -217,6 +217,9 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
                     .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
                     .add("MODULES_DIR", relativeLinkTreeRootStr)
                     .add(
+                        "NATIVE_LIBS_ENV_VAR",
+                        Escaper.escapeAsPythonString(cxxPlatform.getLd().searchPathEnvVar()))
+                    .add(
                         "NATIVE_LIBS_DIR",
                         components.getNativeLibraries().isEmpty() ?
                             "None" :
