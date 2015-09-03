@@ -144,7 +144,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             Iterables.concat(
                 BuildRules.getExportedRules(
                     Iterables.concat(
-                        params.getDeclaredDeps(),
+                        params.getDeclaredDeps().get(),
                         exportedDeps,
                         resolver.getAllRules(args.providedDeps.get()))),
                 pathResolver.filterBuildRuleInputs(

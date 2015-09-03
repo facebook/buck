@@ -276,13 +276,13 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     return params.copyWithDeps(
         Suppliers.ofInstance(
             FluentIterable
-                .from(params.getDeclaredDeps())
+                .from(params.getDeclaredDeps().get())
                 .filter(notOriginalBinaryRule)
                 .append(newDeps)
                 .toSortedSet(Ordering.natural())),
         Suppliers.ofInstance(
             FluentIterable
-                .from(params.getExtraDeps())
+                .from(params.getExtraDeps().get())
                 .filter(notOriginalBinaryRule)
                 .toSortedSet(Ordering.natural())));
   }

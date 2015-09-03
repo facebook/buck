@@ -33,7 +33,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -121,8 +120,8 @@ public class CxxBinaryDescription implements
       BuildRuleParams typeParams =
           params.copyWithChanges(
               target,
-              Suppliers.ofInstance(params.getDeclaredDeps()),
-              Suppliers.ofInstance(params.getExtraDeps()));
+              params.getDeclaredDeps(),
+              params.getExtraDeps());
 
       return createHeaderSymlinkTreeBuildRule(
           typeParams,

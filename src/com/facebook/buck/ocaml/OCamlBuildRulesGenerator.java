@@ -179,9 +179,9 @@ public class OCamlBuildRulesGenerator {
                           params.getBuildTarget(),
                           resolver,
                           cxxPreprocessorInput.getRules()))
-                  .addAll(params.getDeclaredDeps())
+                  .addAll(params.getDeclaredDeps().get())
                   .build()),
-        /* extraDeps */ Suppliers.ofInstance(params.getExtraDeps()));
+        /* extraDeps */ params.getExtraDeps());
 
       Path outputPath = ocamlContext.getCOutput(pathResolver.getPath(cSrc));
       OCamlCCompile compileRule = new OCamlCCompile(
@@ -447,11 +447,11 @@ public class OCamlBuildRulesGenerator {
         buildTarget,
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps())
+                .addAll(params.getDeclaredDeps().get())
                 .addAll(deps)
                 .addAll(ocamlContext.getCompileDeps())
                 .build()),
-        Suppliers.ofInstance(params.getExtraDeps()));
+        params.getExtraDeps());
 
     String outputFileName = getMLOutputName(name);
     Path outputPath = ocamlContext.getCompileOutputDir()
@@ -542,11 +542,11 @@ public class OCamlBuildRulesGenerator {
         buildTarget,
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getDeclaredDeps())
+                .addAll(params.getDeclaredDeps().get())
                 .addAll(deps)
                 .addAll(ocamlContext.getBytecodeCompileDeps())
                 .build()),
-        Suppliers.ofInstance(params.getExtraDeps()));
+        params.getExtraDeps());
 
     String outputFileName = getMLBytecodeOutputName(name);
     Path outputPath = ocamlContext.getCompileBytecodeOutputDir()

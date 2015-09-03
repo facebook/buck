@@ -239,10 +239,10 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         params.copyWithDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(params.getDeclaredDeps())
+                    .addAll(params.getDeclaredDeps().get())
                     .add(binary)
                     .build()),
-            Suppliers.ofInstance(params.getExtraDeps())),
+            params.getExtraDeps()),
         pathResolver,
         binary,
         ImmutableSortedSet.copyOf(Sets.difference(params.getDeps(), binaryParams.getDeps())),

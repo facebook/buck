@@ -252,10 +252,10 @@ public class OCamlRuleBuilder {
           params.copyWithDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(params.getDeclaredDeps())
+                      .addAll(params.getDeclaredDeps().get())
                       .add(ocamlLibraryBuild)
                       .build()),
-              Suppliers.ofInstance(params.getExtraDeps())),
+              params.getExtraDeps()),
           pathResolver,
           compileParams,
           linkerFlags,
@@ -276,10 +276,10 @@ public class OCamlRuleBuilder {
           params.copyWithDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(params.getDeclaredDeps())
+                      .addAll(params.getDeclaredDeps().get())
                       .add(ocamlLibraryBuild)
                       .build()),
-              Suppliers.ofInstance(params.getExtraDeps())),
+              params.getExtraDeps()),
           pathResolver,
           ocamlLibraryBuild);
     }
@@ -395,10 +395,10 @@ public class OCamlRuleBuilder {
           params.copyWithDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(params.getDeclaredDeps())
+                      .addAll(params.getDeclaredDeps().get())
                       .addAll(result.getRules())
                       .build()),
-              Suppliers.ofInstance(params.getExtraDeps())),
+              params.getExtraDeps()),
           pathResolver,
           compileParams,
           linkerFlags,
@@ -416,10 +416,10 @@ public class OCamlRuleBuilder {
           params.copyWithDeps(
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(params.getDeclaredDeps())
+                      .addAll(params.getDeclaredDeps().get())
                       .addAll(result.getRules())
                       .build()),
-              Suppliers.ofInstance(params.getExtraDeps())),
+              params.getExtraDeps()),
           pathResolver,
           result.getRules().get(0));
     }

@@ -81,7 +81,7 @@ public class GenruleDescription
 
     ImmutableList<SourcePath> srcs = args.srcs.get();
     ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(params.getExtraDeps())
+        .addAll(params.getExtraDeps().get())
         .addAll(pathResolver.filterBuildRuleInputs(srcs))
         .build();
     return new Genrule(

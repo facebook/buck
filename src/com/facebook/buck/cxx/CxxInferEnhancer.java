@@ -359,7 +359,7 @@ public final class CxxInferEnhancer {
                         .addAll(captureAnalyzeRules.captureRules)
                         .addAll(captureAnalyzeRules.allAnalyzeRules)
                         .build()),
-                Suppliers.ofInstance(buildRuleParams.getExtraDeps())),
+                buildRuleParams.getExtraDeps()),
             pathResolver,
             inferTools,
             captureAnalyzeRules));
@@ -394,7 +394,7 @@ public final class CxxInferEnhancer {
                         .addAll(analysisToReport.getTransitiveAnalyzeRules())
                         .add(analysisToReport)
                         .build()),
-                Suppliers.ofInstance(buildRuleParams.getExtraDeps())),
+                buildRuleParams.getExtraDeps()),
             sourcePathResolver,
             reportsToMerge));
   }

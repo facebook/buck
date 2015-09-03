@@ -75,7 +75,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
     return new CxxCompilationDatabase(
         params.copyWithDeps(
             Suppliers.ofInstance(deps.build()),
-            Suppliers.ofInstance(params.getExtraDeps())),
+            params.getExtraDeps()),
         pathResolver,
         compileRules.build(),
         preprocessMode);
@@ -92,8 +92,8 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
 
     return params.copyWithChanges(
         target,
-        Suppliers.ofInstance(params.getDeclaredDeps()),
-        Suppliers.ofInstance(params.getExtraDeps()));
+        params.getDeclaredDeps(),
+        params.getExtraDeps());
   }
 
   CxxCompilationDatabase(

@@ -104,7 +104,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     if (dummyRDotJava.isPresent()) {
       additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder());
       ImmutableSortedSet<BuildRule> newExtraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-          .addAll(params.getExtraDeps())
+          .addAll(params.getExtraDeps().get())
           .add(dummyRDotJava.get())
           .build();
       params = params.copyWithExtraDeps(Suppliers.ofInstance(newExtraDeps));
@@ -124,7 +124,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             Iterables.concat(
                 BuildRules.getExportedRules(
                     Iterables.concat(
-                        params.getDeclaredDeps(),
+                        params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps.get()))),
                 pathResolver.filterBuildRuleInputs(
                     javacOptions.getInputs(pathResolver)))),

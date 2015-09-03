@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.annotations.Beta;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
 
 import javax.annotation.Nullable;
@@ -33,8 +34,8 @@ import javax.annotation.Nullable;
 public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;
-  private final ImmutableSortedSet<BuildRule> declaredDeps;
-  private final ImmutableSortedSet<BuildRule> deps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final SourcePathResolver resolver;
   private final ProjectFilesystem projectFilesystem;
@@ -43,7 +44,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
-    this.deps = buildRuleParams.getDeps();
+    this.deps = buildRuleParams.getTotalDeps();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
     this.resolver = resolver;
     this.projectFilesystem = buildRuleParams.getProjectFilesystem();
@@ -66,11 +67,11 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public final ImmutableSortedSet<BuildRule> getDeps() {
-    return deps;
+    return deps.get();
   }
 
   public final ImmutableSortedSet<BuildRule> getDeclaredDeps() {
-    return declaredDeps;
+    return declaredDeps.get();
   }
 
   @Override

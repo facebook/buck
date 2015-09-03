@@ -878,8 +878,8 @@ public class CxxLibraryDescription implements
       BuildRuleParams typeParams =
           params.copyWithChanges(
               target,
-              Suppliers.ofInstance(params.getDeclaredDeps()),
-              Suppliers.ofInstance(params.getExtraDeps()));
+              params.getDeclaredDeps(),
+              params.getExtraDeps());
       if (type.get().getValue().equals(Type.HEADERS)) {
         return createHeaderSymlinkTreeBuildRule(
             typeParams,

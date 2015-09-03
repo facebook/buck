@@ -123,8 +123,8 @@ public class BuildRuleParams implements HasDependencies {
 
     return copyWithChanges(
         target,
-        Suppliers.ofInstance(getDeclaredDeps()),
-        Suppliers.ofInstance(getExtraDeps()));
+        declaredDeps,
+        extraDeps);
   }
 
   public BuildRuleParams withFlavor(Flavor flavor) {
@@ -138,8 +138,8 @@ public class BuildRuleParams implements HasDependencies {
 
     return copyWithChanges(
         target,
-        Suppliers.ofInstance(getDeclaredDeps()),
-        Suppliers.ofInstance(getExtraDeps()));
+        declaredDeps,
+        extraDeps);
   }
 
   public BuildTarget getBuildTarget() {
@@ -151,12 +151,16 @@ public class BuildRuleParams implements HasDependencies {
     return totalDeps.get();
   }
 
-  public ImmutableSortedSet<BuildRule> getDeclaredDeps() {
-    return declaredDeps.get();
+  public Supplier<ImmutableSortedSet<BuildRule>> getTotalDeps() {
+    return totalDeps;
   }
 
-  public ImmutableSortedSet<BuildRule> getExtraDeps() {
-    return extraDeps.get();
+  public Supplier<ImmutableSortedSet<BuildRule>> getDeclaredDeps() {
+    return declaredDeps;
+  }
+
+  public Supplier<ImmutableSortedSet<BuildRule>> getExtraDeps() {
+    return extraDeps;
   }
 
   public ProjectFilesystem getProjectFilesystem() {

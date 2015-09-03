@@ -229,8 +229,8 @@ public class AppleTestDescription implements
             BuildTarget.builder(params.getBuildTarget())
                 .addAllFlavors(extraFlavorsBuilder.build())
                 .build(),
-            Suppliers.ofInstance(params.getDeclaredDeps()),
-            Suppliers.ofInstance(params.getExtraDeps())),
+            params.getDeclaredDeps(),
+            params.getExtraDeps()),
         resolver,
         args,
         // For now, instead of building all deps as dylibs and fixing up their install_names,
@@ -293,7 +293,7 @@ public class AppleTestDescription implements
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .add(library)
                     .addAll(assetCatalog.asSet())
-                    .addAll(params.getDeclaredDeps())
+                    .addAll(params.getDeclaredDeps().get())
                     .addAll(
                         BuildRules.toBuildRulesFor(
                             params.getBuildTarget(),
@@ -305,7 +305,7 @@ public class AppleTestDescription implements
                                     dirsContainingResourceDirs,
                                     resourceVariantFiles))))
                     .build()),
-            Suppliers.ofInstance(params.getExtraDeps())),
+            params.getExtraDeps()),
         sourcePathResolver,
         args.extension,
         args.infoPlist,

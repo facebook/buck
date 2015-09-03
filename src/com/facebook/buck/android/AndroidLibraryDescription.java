@@ -112,12 +112,12 @@ public class AndroidLibraryDescription
       if (dummyRDotJava.isPresent()) {
         additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getRDotJavaBinFolder());
         ImmutableSortedSet<BuildRule> newDeclaredDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-            .addAll(params.getDeclaredDeps())
+            .addAll(params.getDeclaredDeps().get())
             .add(dummyRDotJava.get())
             .build();
         params = params.copyWithDeps(
             Suppliers.ofInstance(newDeclaredDeps),
-            Suppliers.ofInstance(params.getExtraDeps()));
+            params.getExtraDeps());
       }
 
       ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
@@ -126,7 +126,7 @@ public class AndroidLibraryDescription
               Iterables.concat(
                   BuildRules.getExportedRules(
                       Iterables.concat(
-                          params.getDeclaredDeps(),
+                          params.getDeclaredDeps().get(),
                           exportedDeps,
                           resolver.getAllRules(args.providedDeps.get()))),
                   pathResolver.filterBuildRuleInputs(

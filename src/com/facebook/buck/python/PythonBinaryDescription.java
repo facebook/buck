@@ -276,7 +276,8 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
             // Attach any additional declared deps that don't qualify as build time deps,
             // as runtime deps, so that we make to include other things we depend on in
             // the build.
-            ImmutableSortedSet.copyOf(Sets.difference(params.getDeclaredDeps(), componentDeps)));
+            ImmutableSortedSet.copyOf(
+                Sets.difference(params.getDeclaredDeps().get(), componentDeps)));
 
       default:
         throw new IllegalStateException();

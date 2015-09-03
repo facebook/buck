@@ -85,8 +85,8 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
     if (!nativeLibraries.isEmpty()) {
       binaryParams = params.copyWithChanges(
           BuildTarget.builder(params.getBuildTarget()).addFlavors(FAT_JAR_INNER_JAR_FLAVOR).build(),
-          Suppliers.ofInstance(params.getDeclaredDeps()),
-          Suppliers.ofInstance(params.getExtraDeps()));
+          params.getDeclaredDeps(),
+          params.getExtraDeps());
     }
 
     // Construct the build rule to build the binary JAR.

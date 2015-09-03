@@ -107,7 +107,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
             Iterables.concat(
                 BuildRules.getExportedRules(
                     Iterables.concat(
-                        params.getDeclaredDeps(),
+                        params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps.get()))),
                 pathResolver.filterBuildRuleInputs(
                     javacOptions.getInputs(pathResolver)))),

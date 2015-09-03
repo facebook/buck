@@ -128,10 +128,10 @@ public class AndroidBuildConfigDescription
     // Create one build rule to generate BuildConfig.java.
     BuildRuleParams buildConfigParams = params.copyWithChanges(
         buildConfigBuildTarget,
-        Suppliers.ofInstance(params.getDeclaredDeps()),
+        params.getDeclaredDeps(),
         /* extraDeps */ Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getExtraDeps())
+                .addAll(params.getExtraDeps().get())
                 .addAll(pathResolver.filterBuildRuleInputs(valuesFile.asSet()))
                 .build()));
     AndroidBuildConfig androidBuildConfig = new AndroidBuildConfig(
