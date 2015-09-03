@@ -28,9 +28,11 @@ import com.facebook.buck.util.environment.Platform;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+@Ignore("t8238587: Should be able to use any simulator")
 public class InstallCommandIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
