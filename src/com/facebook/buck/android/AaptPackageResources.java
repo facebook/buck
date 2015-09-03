@@ -44,6 +44,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -189,6 +190,10 @@ public class AaptPackageResources extends AbstractBuildRule
     return BuildTargets.getScratchPath(getBuildTarget(), "__%s_res_symbols__");
   }
 
+  private Path getPathToRDotTxtFile() {
+    return getPathToRDotTxtDir().resolve("R.txt");
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
@@ -283,6 +288,10 @@ public class AaptPackageResources extends AbstractBuildRule
              */
             !skipCrunchPngs /* && packageType.isCrunchPngFiles() */));
 
+    // If we had an empty res directory, we won't generate an R.txt file.  This ensures that it
+    // always exists.
+    steps.add(new TouchStep(getPathToRDotTxtFile()));
+
     if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
       generateAndCompileRDotJavaFiles(steps, buildableContext);
       if (rDotJavaNeedsDexing) {
@@ -348,7 +357,7 @@ public class AaptPackageResources extends AbstractBuildRule
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
         getProjectFilesystem(),
         resourceDeps,
-        rDotTxtDir.resolve("R.txt"),
+        getPathToRDotTxtFile(),
         shouldWarnIfMissingResource,
         rDotJavaSrc);
     steps.add(mergeStep);

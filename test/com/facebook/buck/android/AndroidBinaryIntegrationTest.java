@@ -347,8 +347,16 @@ public class AndroidBinaryIntegrationTest {
     }
     file.close();
     contents.close();
+  }
 
+  @Test
+  public void testApkEmptyResDirectoriesBuildsCorrectly() throws IOException {
+    workspace.runBuckBuild("//apps/sample:app_no_res").assertSuccess();
+  }
 
+  @Test
+  public void testInstrumentationApkWithEmptyResDepBuildsCorrectly() throws IOException {
+    workspace.runBuckBuild("//apps/sample:instrumentation_apk").assertSuccess();
   }
 
 }
