@@ -16,6 +16,7 @@ java_test(
     '//third-party/java/commons-compress:commons-compress',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jimfs:jimfs',
     '//third-party/java/junit:junit',
   ],
 )
