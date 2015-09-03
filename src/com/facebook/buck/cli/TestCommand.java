@@ -35,6 +35,7 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.AdbOptions;
@@ -335,6 +336,8 @@ public class TestCommand extends BuildCommand {
 
     try (CommandThreadManager pool =
              new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()))) {
+      SourcePathResolver pathResolver =
+          new SourcePathResolver(targetGraphToActionGraph.getRuleResolver());
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),
@@ -343,10 +346,13 @@ public class TestCommand extends BuildCommand {
               params.getBuckConfig().getBuildDepFiles(),
               new InputBasedRuleKeyBuilderFactory(
                   params.getFileHashCache(),
-                  new SourcePathResolver(targetGraphToActionGraph.getRuleResolver())),
+                  pathResolver),
+              new AbiRuleKeyBuilderFactory(
+                  params.getFileHashCache(),
+                  pathResolver),
               new DependencyFileRuleKeyBuilderFactory(
                   params.getFileHashCache(),
-                  new SourcePathResolver(targetGraphToActionGraph.getRuleResolver())));
+                  pathResolver));
       try (Build build = createBuild(
           params.getBuckConfig(),
           graph,

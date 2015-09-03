@@ -21,7 +21,7 @@ import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;

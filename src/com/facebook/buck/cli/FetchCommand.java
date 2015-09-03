@@ -32,6 +32,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.AdbOptions;
@@ -91,6 +92,7 @@ public class FetchCommand extends BuildCommand {
     }
 
     int exitCode;
+    SourcePathResolver pathResolver = new SourcePathResolver(transformer.getRuleResolver());
     try (CommandThreadManager pool =
              new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()));
          Build build = createBuild(
@@ -105,10 +107,13 @@ public class FetchCommand extends BuildCommand {
                  params.getBuckConfig().getBuildDepFiles(),
                  new InputBasedRuleKeyBuilderFactory(
                      params.getFileHashCache(),
-                     new SourcePathResolver(transformer.getRuleResolver())),
+                     pathResolver),
+                 new AbiRuleKeyBuilderFactory(
+                     params.getFileHashCache(),
+                     pathResolver),
                  new DependencyFileRuleKeyBuilderFactory(
                      params.getFileHashCache(),
-                     new SourcePathResolver(transformer.getRuleResolver()))),
+                     pathResolver)),
              getArtifactCache(params),
              params.getConsole(),
              params.getBuckEventBus(),

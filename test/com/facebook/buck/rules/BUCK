@@ -3,6 +3,7 @@ java_library(
   srcs = [
     'AbstractNodeBuilder.java',
     'DefaultKnownBuildRuleTypes.java',
+    'FakeAbiRuleBuildRule.java',
     'FakeBuildableContext.java',
     'FakeBuildContext.java',
     'FakeBuildEngine.java',

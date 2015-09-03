@@ -29,7 +29,7 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;

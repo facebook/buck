@@ -58,10 +58,9 @@ public enum BuildRuleSuccessType {
   ),
 
   /**
-   * Computed {@link RuleKey} without deps matches the one on disk <em>AND</em> the ABI key for
-   * the deps matches the one on disk.
+   * Computed ABI {@link RuleKey} matches the one on disk.
    */
-  MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS(
+  MATCHING_ABI_RULE_KEY(
       Property.SHOULD_UPDATE_METADATA_ON_DISK
   ),
 

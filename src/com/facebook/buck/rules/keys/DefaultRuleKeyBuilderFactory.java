@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.BuckVersion;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -24,6 +25,7 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -41,12 +43,14 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
   protected final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
   private final FileHashCache hashCache;
   private final SourcePathResolver pathResolver;
+  private final Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder> addDepsToRuleKey;
   private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
       knownFields;
 
-  public DefaultRuleKeyBuilderFactory(
+  protected DefaultRuleKeyBuilderFactory(
       final FileHashCache hashCache,
-      final SourcePathResolver pathResolver) {
+      final SourcePathResolver pathResolver,
+      Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>addDepsToRuleKey) {
     ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
@@ -58,7 +62,22 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
         });
     this.hashCache = hashCache;
     this.pathResolver = pathResolver;
+    this.addDepsToRuleKey = addDepsToRuleKey;
     knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
+  }
+
+  public DefaultRuleKeyBuilderFactory(
+      final FileHashCache hashCache,
+      final SourcePathResolver pathResolver) {
+    this(
+        hashCache,
+        pathResolver,
+        new Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>() {
+          @Override
+          public RuleKeyBuilder apply(Pair<RuleKeyBuilder, BuildRule> input) {
+            return input.getFirst().setReflectively("buck.deps", input.getSecond().getDeps());
+          }
+        });
   }
 
   protected RuleKeyBuilder newBuilder(
@@ -80,8 +99,9 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
   protected RuleKeyBuilder newBuilder(
       SourcePathResolver pathResolver,
       FileHashCache hashCache,
-      @SuppressWarnings("unused") BuildRule rule) {
-    return newBuilder(pathResolver, hashCache);
+      BuildRule rule) {
+    return addDepsToRuleKey.apply(
+        new Pair<>(newBuilder(pathResolver, hashCache), rule));
   }
 
   /**

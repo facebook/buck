@@ -42,14 +42,14 @@ class BuildInfo {
   static final String METADATA_KEY_FOR_RULE_KEY = "RULE_KEY";
 
   /**
-   * Key for {@link OnDiskBuildInfo} to identify the RuleKey without deps for a build rule.
-   */
-  static final String METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS = "RULE_KEY_NO_DEPS";
-
-  /**
-   * Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule.
+   * Key for {@link OnDiskBuildInfo} to identify the input RuleKey for a build rule.
    */
   static final String METADATA_KEY_FOR_INPUT_BASED_RULE_KEY = "INPUT_BASED_RULE_KEY";
+
+  /**
+   * Key for {@link OnDiskBuildInfo} to identify the ABI RuleKey for a build rule.
+   */
+  static final String METADATA_KEY_FOR_ABI_RULE_KEY = "ABI_RULE_KEY";
 
   /**
    * Key for {@link OnDiskBuildInfo} to identify the dependency-file {@link RuleKey} for a build

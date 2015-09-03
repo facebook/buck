@@ -36,13 +36,6 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
     return putMetadata(BuildInfo.METADATA_KEY_FOR_RULE_KEY, ruleKey.toString());
   }
 
-  /** @return this */
-  public FakeOnDiskBuildInfo setRuleKeyWithoutDeps(RuleKey ruleKeyWithoutDeps) {
-    return putMetadata(
-        BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS,
-        ruleKeyWithoutDeps.toString());
-  }
-
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
     return getValue(key).transform(RuleKey.TO_RULE_KEY);

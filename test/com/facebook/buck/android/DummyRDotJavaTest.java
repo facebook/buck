@@ -21,7 +21,7 @@ import static com.facebook.buck.java.JavaCompilationConstants.ANDROID_JAVAC_OPTI
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;

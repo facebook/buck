@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;

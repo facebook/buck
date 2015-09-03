@@ -39,7 +39,7 @@ import com.facebook.buck.java.abi.AbiWriterProtocol;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -679,7 +679,7 @@ public class DefaultJavaLibraryTest {
   }
 
   /**
-   * @see com.facebook.buck.rules.AbiRule#getAbiKeyForDeps()
+   * @see AbiRule#getAbiKeyForDeps()
    */
   @Test
   public void testGetAbiKeyForDepsInThePresenceOfExportedDeps() throws IOException {

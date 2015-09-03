@@ -69,7 +69,7 @@ public class BuckBuildLog {
   public void assertTargetHadMatchingDepsAbi(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
     assertEquals(
-        BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
+        BuildRuleSuccessType.MATCHING_ABI_RULE_KEY,
         logEntry.successType.get());
   }
 

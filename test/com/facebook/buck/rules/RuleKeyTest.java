@@ -476,50 +476,6 @@ public class RuleKeyTest {
     assertNotEquals(ruleKey1, ruleKey2);
   }
 
-  @Test
-  public void declaredDepsAndExtraDepsGenerateDifferentRuleKeys() {
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
-    BuildTarget target = BuildTargetFactory.newInstance("//a:target");
-
-    BuildTarget depTarget = BuildTargetFactory.newInstance("//some:dep");
-    BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
-    NoopBuildRule dep = new NoopBuildRule(depParams, sourcePathResolver);
-
-    BuildRuleParams paramsWithDeclaredDep = new FakeBuildRuleParamsBuilder(target)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .build();
-    NoopBuildRule ruleWithDeclaredDep =
-        new NoopBuildRule(paramsWithDeclaredDep, sourcePathResolver);
-
-    BuildRuleParams paramsWithExtraDep = new FakeBuildRuleParamsBuilder(target)
-        .setExtraDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .build();
-    NoopBuildRule ruleWithExtraDep =
-        new NoopBuildRule(paramsWithExtraDep, sourcePathResolver);
-
-    BuildRuleParams paramsWithBothDeps = new FakeBuildRuleParamsBuilder(target)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .setExtraDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .build();
-    NoopBuildRule ruleWithBothDeps =
-        new NoopBuildRule(paramsWithBothDeps, sourcePathResolver);
-
-    assertNotEquals(ruleWithDeclaredDep.getRuleKey(), ruleWithExtraDep.getRuleKey());
-    assertNotEquals(ruleWithDeclaredDep.getRuleKey(), ruleWithBothDeps.getRuleKey());
-    assertNotEquals(ruleWithExtraDep.getRuleKey(), ruleWithBothDeps.getRuleKey());
-
-    assertEquals(
-        ruleWithDeclaredDep.getRuleKeyWithoutDeps(),
-        ruleWithExtraDep.getRuleKeyWithoutDeps());
-    assertEquals(
-        ruleWithDeclaredDep.getRuleKeyWithoutDeps(),
-        ruleWithBothDeps.getRuleKeyWithoutDeps());
-    assertEquals(
-        ruleWithExtraDep.getRuleKeyWithoutDeps(),
-        ruleWithBothDeps.getRuleKeyWithoutDeps());
-
-  }
-
   private static class TestRuleKeyAppendable implements RuleKeyAppendable {
     private final String value;
 

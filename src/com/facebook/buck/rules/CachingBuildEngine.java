@@ -23,6 +23,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -77,12 +78,6 @@ public class CachingBuildEngine implements BuildEngine {
   private static final Logger LOG = Logger.get(CachingBuildEngine.class);
 
   /**
-   * Key for {@link OnDiskBuildInfo} to identify the ABI key for the deps of a build rule.
-   */
-  @VisibleForTesting
-  public static final String ABI_KEY_FOR_DEPS_ON_DISK_METADATA = "ABI_KEY_FOR_DEPS";
-
-  /**
    * These are the values returned by {@link #build(BuildContext, BuildRule)}.
    * This must always return the same value for the build of each target.
    */
@@ -100,6 +95,7 @@ public class CachingBuildEngine implements BuildEngine {
   private final BuildMode buildMode;
   private final DepFiles depFiles;
   private final RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
+  private final RuleKeyBuilderFactory abiRuleKeyBuilderFactory;
   private final RuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
 
   public CachingBuildEngine(
@@ -108,12 +104,14 @@ public class CachingBuildEngine implements BuildEngine {
       BuildMode buildMode,
       DepFiles depFiles,
       RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
+      RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
       RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
     this.service = service;
     this.fileHashCache = fileHashCache;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
     this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;
+    this.abiRuleKeyBuilderFactory = abiRuleKeyBuilderFactory;
     this.depFileRuleKeyBuilderFactory = depFileRuleKeyBuilderFactory;
   }
 
@@ -169,7 +167,7 @@ public class CachingBuildEngine implements BuildEngine {
     // 1. Check if it's already built.
     Optional<RuleKey> cachedRuleKey =
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
-    if (cachedRuleKey.isPresent() && rule.getRuleKey().equals(cachedRuleKey.get())) {
+    if (rule.getRuleKey().equals(cachedRuleKey.orNull())) {
       return Futures.immediateFuture(
           BuildResult.success(
               rule,
@@ -232,8 +230,7 @@ public class CachingBuildEngine implements BuildEngine {
                 // Check the input-based rule key says we're already built.
                 Optional<RuleKey> lastDepFileRuleKey =
                     onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY);
-                if (lastDepFileRuleKey.isPresent() &&
-                    lastDepFileRuleKey.get().equals(depFileRuleKey.get())) {
+                if (depFileRuleKey.equals(lastDepFileRuleKey)) {
                   return Futures.immediateFuture(
                       BuildResult.success(
                           rule,
@@ -255,7 +252,7 @@ public class CachingBuildEngine implements BuildEngine {
               // Check the input-based rule key says we're already built.
               Optional<RuleKey> lastInputRuleKey =
                   onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
-              if (lastInputRuleKey.isPresent() && lastInputRuleKey.get().equals(inputRuleKey)) {
+              if (inputRuleKey.equals(lastInputRuleKey.orNull())) {
                 return Futures.immediateFuture(
                     BuildResult.success(
                         rule,
@@ -302,30 +299,25 @@ public class CachingBuildEngine implements BuildEngine {
             // that means a change in one of the leaves can result in almost all rules being
             // rebuilt, which is slow. Fortunately, we limit the effects of this when building Java
             // code when checking the ABI of deps instead of the RuleKey for deps.
-            AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule(rule);
-            if (abiRule != null) {
-              RuleKey ruleKeyNoDeps = rule.getRuleKeyWithoutDeps();
-              Optional<RuleKey> cachedRuleKeyNoDeps =
-                  onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS);
-              if (ruleKeyNoDeps.equals(cachedRuleKeyNoDeps.orNull())) {
-                // The RuleKey for the definition of this build rule and its input files has not
-                // changed.  Therefore, if the ABI of its deps has not changed, there is nothing to
-                // rebuild.
-                Sha1HashCode abiKeyForDeps = abiRule.getAbiKeyForDeps();
-                Optional<Sha1HashCode> cachedAbiKeyForDeps = onDiskBuildInfo.getHash(
-                    ABI_KEY_FOR_DEPS_ON_DISK_METADATA);
-                if (abiKeyForDeps.equals(cachedAbiKeyForDeps.orNull())) {
-                  return Futures.immediateFuture(
-                      BuildResult.success(
-                          rule,
-                          BuildRuleSuccessType.MATCHING_DEPS_ABI_AND_RULE_KEY_NO_DEPS,
-                          AbstractCacheResult.localKeyUnchangedHit()));
-                }
+            if (rule instanceof AbiRule) {
+              RuleKey abiRuleKey = abiRuleKeyBuilderFactory.newInstance(rule).build();
+              buildInfoRecorder.addBuildMetadata(
+                  BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY,
+                  abiRuleKey.toString());
+
+              Optional<RuleKey> lastAbiRuleKey =
+                  onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY);
+              if (abiRuleKey.equals(lastAbiRuleKey.orNull())) {
+                return Futures.immediateFuture(
+                    BuildResult.success(
+                        rule,
+                        BuildRuleSuccessType.MATCHING_ABI_RULE_KEY,
+                        AbstractCacheResult.localKeyUnchangedHit()));
               }
             }
 
             // 5. build the rule
-            executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext, buildInfoRecorder);
+            executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
 
             return Futures.immediateFuture(
                 BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
@@ -350,10 +342,7 @@ public class CachingBuildEngine implements BuildEngine {
         context.createBuildInfoRecorder(rule.getBuildTarget(), rule.getProjectFilesystem())
             .addBuildMetadata(
                 BuildInfo.METADATA_KEY_FOR_RULE_KEY,
-                rule.getRuleKey().toString())
-            .addBuildMetadata(
-                BuildInfo.METADATA_KEY_FOR_RULE_KEY_WITHOUT_DEPS,
-                rule.getRuleKeyWithoutDeps().toString());
+                rule.getRuleKey().toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
 
     // Dispatch the build job for this rule.
@@ -829,8 +818,7 @@ public class CachingBuildEngine implements BuildEngine {
   private void executeCommandsNowThatDepsAreBuilt(
       BuildRule rule,
       BuildContext context,
-      BuildableContext buildableContext,
-      BuildInfoRecorder buildInfoRecorder)
+      BuildableContext buildableContext)
       throws InterruptedException, StepFailedException {
 
     LOG.debug("Building locally: %s", rule);
@@ -840,13 +828,6 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Get and run all of the commands.
     List<Step> steps = rule.getBuildSteps(context, buildableContext);
-
-    AbiRule abiRule = checkIfRuleOrBuildableIsAbiRule(rule);
-    if (abiRule != null) {
-      buildInfoRecorder.addBuildMetadata(
-          ABI_KEY_FOR_DEPS_ON_DISK_METADATA,
-          abiRule.getAbiKeyForDeps().getHash());
-    }
 
     StepRunner stepRunner = context.getStepRunner();
     Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
@@ -908,14 +889,6 @@ public class CachingBuildEngine implements BuildEngine {
       return null;
     }
     return result.get();
-  }
-
-  @Nullable
-  private AbiRule checkIfRuleOrBuildableIsAbiRule(BuildRule rule) {
-    if (rule instanceof AbiRule) {
-      return (AbiRule) rule;
-    }
-    return null;
   }
 
   private boolean useDependencyFileRuleKey(BuildRule rule) {

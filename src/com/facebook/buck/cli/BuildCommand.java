@@ -38,6 +38,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
+import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.AdbOptions;
@@ -290,6 +291,7 @@ public class BuildCommand extends AbstractCommand {
       buildTargets = ImmutableSet.of(explicitTarget);
     }
 
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     try (CommandThreadManager pool = new CommandThreadManager(
         "Build",
         getConcurrencyLimit(params.getBuckConfig()));
@@ -305,10 +307,13 @@ public class BuildCommand extends AbstractCommand {
                  params.getBuckConfig().getBuildDepFiles(),
                  new InputBasedRuleKeyBuilderFactory(
                      params.getFileHashCache(),
-                     new SourcePathResolver(resolver)),
+                     pathResolver),
+                 new AbiRuleKeyBuilderFactory(
+                     params.getFileHashCache(),
+                     pathResolver),
                  new DependencyFileRuleKeyBuilderFactory(
                      params.getFileHashCache(),
-                     new SourcePathResolver(resolver))),
+                     pathResolver)),
              artifactCache,
              params.getConsole(),
              params.getBuckEventBus(),

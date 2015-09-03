@@ -427,11 +427,6 @@ public class DefaultRuleKeyBuilderFactoryTest {
     }
 
     @Override
-    public RuleKey getRuleKeyWithoutDeps() {
-      throw new UnsupportedOperationException("getRuleKeyWithoutDeps");
-    }
-
-    @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
       throw new UnsupportedOperationException("getBuildSteps");

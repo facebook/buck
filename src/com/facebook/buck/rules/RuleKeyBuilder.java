@@ -291,6 +291,8 @@ public class RuleKeyBuilder {
         feed(",".getBytes());
       }
       feed("]".getBytes());
+    } else if (val instanceof Sha1HashCode) {
+      setSingleValue(((Sha1HashCode) val).getHash());
     } else {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
     }

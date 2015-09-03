@@ -20,7 +20,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbiRule;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
