@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -59,7 +60,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
 
-  private final Path workingDirectory;
+  private final ProjectFilesystem filesystem;
   private final Operation operation;
   private final Path output;
   private final Path depFile;
@@ -79,7 +80,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   );
 
   public CxxPreprocessAndCompileStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Operation operation,
       Path output,
       Path depFile,
@@ -93,7 +94,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
 
-    this.workingDirectory = workingDirectory;
+    this.filesystem = filesystem;
     this.operation = operation;
     this.output = output;
     this.depFile = depFile;
@@ -191,7 +192,7 @@ public class CxxPreprocessAndCompileStep implements Step {
    */
   private ProcessBuilder makeSubprocessBuilder() {
     ProcessBuilder builder = new ProcessBuilder();
-    builder.directory(workingDirectory.toAbsolutePath().toFile());
+    builder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
     builder.redirectError(ProcessBuilder.Redirect.PIPE);
 
     // A forced compilation directory is set in the constructor.  Now, we can't actually force
@@ -211,8 +212,8 @@ public class CxxPreprocessAndCompileStep implements Step {
         // We only need to expand the working directory if compiling, as we override it in the
         // preprocessed otherwise.
         operation == Operation.COMPILE_MUNGE_DEBUGINFO ?
-            sanitizer.getExpandedPath(workingDirectory.toAbsolutePath()) :
-            workingDirectory.toAbsolutePath().toString());
+            sanitizer.getExpandedPath(filesystem.getRootPath().toAbsolutePath()) :
+            filesystem.getRootPath().toAbsolutePath().toString());
 
     return builder;
   }
@@ -299,21 +300,21 @@ public class CxxPreprocessAndCompileStep implements Step {
           new FunctionLineProcessorThread(
               preprocess.getErrorStream(),
               preprocessError,
-              createErrorLineProcessor(workingDirectory));
+              createErrorLineProcessor(filesystem.getRootPath()));
       errorProcessorPreprocess.start();
 
       errorProcessorCompile =
           new FunctionLineProcessorThread(
               compile.getErrorStream(),
               compileError,
-              createErrorLineProcessor(workingDirectory));
+              createErrorLineProcessor(filesystem.getRootPath()));
       errorProcessorCompile.start();
 
       lineDirectiveMunger =
           new FunctionLineProcessorThread(
               preprocess.getInputStream(),
               compile.getOutputStream(),
-              createPreprocessOutputLineProcessor(workingDirectory));
+              createPreprocessOutputLineProcessor(filesystem.getRootPath()));
       lineDirectiveMunger.start();
 
       int compileStatus = compile.waitFor();
@@ -408,19 +409,19 @@ public class CxxPreprocessAndCompileStep implements Step {
                new FunctionLineProcessorThread(
                    process.getErrorStream(),
                    error,
-                   createErrorLineProcessor(workingDirectory))) {
+                   createErrorLineProcessor(filesystem.getRootPath()))) {
         errorProcessor.start();
 
         // If we're preprocessing, we pipe the output through a processor to sanitize the line
         // markers.  So fire that up...
         if (operation == Operation.PREPROCESS) {
           try (OutputStream output =
-                   context.getProjectFilesystem().newFileOutputStream(this.output);
+                   filesystem.newFileOutputStream(this.output);
                FunctionLineProcessorThread outputProcessor =
                    new FunctionLineProcessorThread(
                        process.getInputStream(),
                        output,
-                       createPreprocessOutputLineProcessor(workingDirectory))) {
+                       createPreprocessOutputLineProcessor(filesystem.getRootPath()))) {
             outputProcessor.start();
             outputProcessor.waitFor();
           } catch (Throwable thrown) {
@@ -475,9 +476,9 @@ public class CxxPreprocessAndCompileStep implements Step {
         LOG.debug("Processing dependency file %s as Makefile", getDepTemp());
         ImmutableMap<String, Object> params = ImmutableMap.<String, Object>of(
             "input", this.input, "output", this.output);
-        try (InputStream input = context.getProjectFilesystem().newFileInputStream(getDepTemp());
+        try (InputStream input = filesystem.newFileInputStream(getDepTemp());
              BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-             OutputStream output = context.getProjectFilesystem().newFileOutputStream(depFile);
+             OutputStream output = filesystem.newFileOutputStream(depFile);
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output));
              SimplePerfEvent.Scope perfEvent = SimplePerfEvent.scope(
                  context.getBuckEventBus(),
@@ -505,8 +506,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       if (exitCode == 0 && operation == Operation.COMPILE_MUNGE_DEBUGINFO) {
         try {
           sanitizer.restoreCompilationDirectory(
-              workingDirectory.toAbsolutePath().resolve(output),
-              workingDirectory.toAbsolutePath());
+              filesystem.getRootPath().toAbsolutePath().resolve(output),
+              filesystem.getRootPath().toAbsolutePath());
         } catch (IOException e) {
           context.logError(e, "error updating compilation directory");
           return 1;

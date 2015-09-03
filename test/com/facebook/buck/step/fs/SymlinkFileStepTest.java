@@ -52,9 +52,7 @@ public class SymlinkFileStepTest {
   }
 
   public void internalTestSymlinkFiles(boolean useAbsolutePaths) throws IOException {
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmpDir.getRoot().toPath()))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     File source = tmpDir.newFile();
     Files.write("foobar", source, Charsets.UTF_8);
@@ -63,6 +61,7 @@ public class SymlinkFileStepTest {
     target.delete();
 
     SymlinkFileStep step = new SymlinkFileStep(
+        new ProjectFilesystem(tmpDir.getRoot().toPath()),
         /* source */ Paths.get(source.getName()),
         /* target */ Paths.get(target.getName()),
         useAbsolutePaths);
@@ -99,12 +98,11 @@ public class SymlinkFileStepTest {
 
     // Create an ExecutionContext to return the ProjectFilesystem.
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     tmpDir.newFile("dummy");
     SymlinkFileStep symlinkStep = new SymlinkFileStep(
+        projectFilesystem,
         /* source */ Paths.get("dummy"),
         /* target */ Paths.get("my_symlink"),
         /* useAbsolutePaths*/ true);

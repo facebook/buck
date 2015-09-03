@@ -66,11 +66,10 @@ public class ZipScrubberStepIntegrationTest {
     }
 
     // Execute the zip scrubber step.
-    ExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setProjectFilesystem(new ProjectFilesystem(tmp.getRootPath()))
-            .build();
-    ZipScrubberStep step = new ZipScrubberStep(Paths.get("output.zip"));
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+    ZipScrubberStep step = new ZipScrubberStep(
+        new ProjectFilesystem(tmp.getRootPath()),
+        Paths.get("output.zip"));
     assertEquals(0, step.execute(executionContext));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Objects;
@@ -26,10 +27,12 @@ import java.nio.file.Path;
 
 public class SymlinkTreeStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final Path root;
   private final ImmutableMap<Path, Path> links;
 
-  public SymlinkTreeStep(Path root, ImmutableMap<Path, Path> links) {
+  public SymlinkTreeStep(ProjectFilesystem filesystem, Path root, ImmutableMap<Path, Path> links) {
+    this.filesystem = filesystem;
     this.root = root;
     this.links = links;
   }
@@ -47,11 +50,11 @@ public class SymlinkTreeStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     for (ImmutableMap.Entry<Path, Path> ent : links.entrySet()) {
-      Path target = context.getProjectFilesystem().resolve(ent.getValue());
-      Path link = context.getProjectFilesystem().resolve(root.resolve(ent.getKey()));
+      Path target = filesystem.resolve(ent.getValue());
+      Path link = filesystem.resolve(root.resolve(ent.getKey()));
       try {
-        context.getProjectFilesystem().mkdirs(link.getParent());
-        context.getProjectFilesystem().createSymLink(link, target, true /* force */);
+        filesystem.mkdirs(link.getParent());
+        filesystem.createSymLink(link, target, true /* force */);
       } catch (IOException e) {
         String msg = String.format("failed creating linking \"%s\" -> \"%s\"", link, target);
         context.logError(e, msg);

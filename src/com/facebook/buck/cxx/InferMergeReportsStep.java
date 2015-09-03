@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
@@ -39,12 +40,15 @@ import javax.annotation.Nullable;
 
 class InferMergeReportsStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private ImmutableSortedSet<Path> reportFilesRelativeToProjectRoot;
   private Path destinationRelativeToProjectRoot;
 
   public InferMergeReportsStep(
+      ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> reportFilesRelativeToProjectRoot,
       Path destinationRelativeToProjectRoot) {
+    this.filesystem = filesystem;
     this.reportFilesRelativeToProjectRoot = reportFilesRelativeToProjectRoot;
     this.destinationRelativeToProjectRoot = destinationRelativeToProjectRoot;
   }
@@ -57,12 +61,12 @@ class InferMergeReportsStep implements Step {
               @Nullable
               @Override
               public Path apply(Path input) {
-                return context.getProjectFilesystem().getRootPath().resolve(input);
+                return filesystem.getRootPath().resolve(input);
               }
             })
         .toSortedSet(Ordering.natural());
     Path destination =
-        context.getProjectFilesystem().getRootPath().resolve(destinationRelativeToProjectRoot);
+        filesystem.getRootPath().resolve(destinationRelativeToProjectRoot);
     new InferReportMerger(reportsToMerge, destination).merge();
     return 0;
   }

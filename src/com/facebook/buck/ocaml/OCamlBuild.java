@@ -67,7 +67,7 @@ public class OCamlBuild extends AbstractBuildRule {
     buildableContext.recordArtifact(
         baseArtifactDir.resolve(OCamlBuildContext.OCAML_COMPILED_BYTECODE_DIR));
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(ocamlContext.getOutput().getParent()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), ocamlContext.getOutput().getParent()),
         new OCamlBuildStep(
             getProjectFilesystem(),
             ocamlContext,

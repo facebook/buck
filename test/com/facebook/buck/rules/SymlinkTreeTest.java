@@ -129,11 +129,14 @@ public class SymlinkTreeTest {
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
     // Verify the build steps are as expected.
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
-            new MakeCleanDirectoryStep(outputPath),
+            new MakeCleanDirectoryStep(filesystem, outputPath),
             new SymlinkTreeStep(
+                filesystem,
                 outputPath,
                 new SourcePathResolver(new BuildRuleResolver()).getMappedPaths(links)));
     ImmutableList<Step> actualBuildSteps =

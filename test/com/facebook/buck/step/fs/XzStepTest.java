@@ -47,7 +47,7 @@ public class XzStepTest {
   @Test
   public void testXzStepDefaultDestinationFile() {
     final Path sourceFile = Paths.get("/path/to/source.file");
-    XzStep step = new XzStep(sourceFile);
+    XzStep step = new XzStep(new ProjectFilesystem(tmp.getRoot().toPath()), sourceFile);
     assertEquals(Paths.get(sourceFile + ".xz"), step.getDestinationFile());
   }
 
@@ -58,15 +58,14 @@ public class XzStepTest {
     final File destinationFile = tmp.newFile("xzstep.data.xz");
 
     XzStep step = new XzStep(
+        new ProjectFilesystem(tmp.getRoot().toPath()),
         sourceFile,
         destinationFile.toPath(),
         /* compressionLevel -- for faster testing */ 1,
         /* keep */ true,
         XZ.CHECK_CRC32);
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     assertEquals(0, step.execute(context));
 

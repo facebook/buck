@@ -122,7 +122,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
     // Since the step to generate the commands json output is super fast, it's ok if we always build
     // this rule locally.
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MkdirStep(outputJsonFile.getParent()));
+    steps.add(new MkdirStep(getProjectFilesystem(), outputJsonFile.getParent()));
     steps.add(new GenerateCompilationCommandsJson());
     return steps.build();
   }

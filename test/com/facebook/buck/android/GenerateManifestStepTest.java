@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
@@ -63,6 +64,7 @@ public class GenerateManifestStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     GenerateManifestStep manifestCommand = new GenerateManifestStep(
+        new FakeProjectFilesystem(),
         skeletonPath,
         libraryManifestFiles.build(),
         manifestPath);

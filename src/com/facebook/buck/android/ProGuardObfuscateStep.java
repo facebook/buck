@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -49,6 +50,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     NONE,
   }
 
+  private final ProjectFilesystem filesystem;
   private final Map<Path, Path> inputAndOutputEntries;
   private final Path pathToProGuardCommandLineArgsFile;
   private final Optional<Path> proguardJarOverride;
@@ -62,7 +64,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
    * @param steps Where to append the generated steps.
    */
   public static void create(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
       Path generatedProGuardConfig,
@@ -78,7 +80,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
 
     CommandLineHelperStep commandLineHelperStep = new CommandLineHelperStep(
-        workingDirectory,
+        filesystem,
         generatedProGuardConfig,
         customProguardConfigs,
         sdkProguardConfig,
@@ -89,7 +91,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         pathToProGuardCommandLineArgsFile);
 
     ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
-        workingDirectory,
+        filesystem,
         inputAndOutputEntries,
         pathToProGuardCommandLineArgsFile,
         proguardJarOverride,
@@ -104,7 +106,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         // Some proguard configs can propagate the "-dontobfuscate" flag which disables
         // obfuscation and prevents the mapping.txt file from being generated.  So touch it
         // here to guarantee it's around when we go to cache this rule.
-        new TouchStep(commandLineHelperStep.getMappingTxt()));
+        new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()));
   }
 
   /**
@@ -113,12 +115,14 @@ public final class ProGuardObfuscateStep extends ShellStep {
    * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
    */
   private ProGuardObfuscateStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Map<Path, Path> inputAndOutputEntries,
       Path pathToProGuardCommandLineArgsFile,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize) {
-    super(workingDirectory);
+    super(filesystem.getRootPath());
+
+    this.filesystem = filesystem;
     this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
     this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
     this.proguardJarOverride = proguardJarOverride;
@@ -135,8 +139,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     // Run ProGuard as a standalone executable JAR file.
     Path proguardJar;
     if (proguardJarOverride.isPresent()) {
-      proguardJar =
-          context.getProjectFilesystem().getPathForRelativePath(proguardJarOverride.get());
+      proguardJar = filesystem.getPathForRelativePath(proguardJarOverride.get());
     } else {
       AndroidPlatformTarget androidPlatformTarget = context.getAndroidPlatformTarget();
       proguardJar = androidPlatformTarget.getProguardJar();
@@ -219,7 +222,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   @VisibleForTesting
   static class CommandLineHelperStep extends AbstractExecutionStep {
 
-    private final Path workingDirectory;
+    private final ProjectFilesystem filesystem;
     private final Path generatedProGuardConfig;
     private final Set<Path> customProguardConfigs;
     private final Map<Path, Path> inputAndOutputEntries;
@@ -241,7 +244,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
      * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
      */
     private CommandLineHelperStep(
-        Path workingDirectory,
+        ProjectFilesystem filesystem,
         Path generatedProGuardConfig,
         Set<Path> customProguardConfigs,
         SdkProguardType sdkProguardConfig,
@@ -252,7 +255,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         Path pathToProGuardCommandLineArgsFile) {
       super("write_proguard_command_line_parameters");
 
-      this.workingDirectory = workingDirectory;
+      this.filesystem = filesystem;
       this.generatedProGuardConfig = generatedProGuardConfig;
       this.customProguardConfigs = ImmutableSet.copyOf(customProguardConfigs);
       this.sdkProguardConfig = sdkProguardConfig;
@@ -265,9 +268,10 @@ public final class ProGuardObfuscateStep extends ShellStep {
 
     @Override
     public int execute(ExecutionContext context) {
-      String proGuardArguments = Joiner.on('\n').join(getParameters(context, workingDirectory));
+      String proGuardArguments = Joiner.on('\n')
+          .join(getParameters(context, filesystem.getRootPath()));
       try {
-        context.getProjectFilesystem().writeContentsToPath(
+        filesystem.writeContentsToPath(
             proGuardArguments,
             pathToProGuardCommandLineArgsFile);
       } catch (IOException e) {

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Objects;
@@ -28,10 +29,15 @@ import java.util.Map;
 
 public class HeaderMapStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final Path output;
   private final ImmutableMap<Path, Path> entries;
 
-  public HeaderMapStep(Path output, ImmutableMap<Path, Path> entries) {
+  public HeaderMapStep(
+      ProjectFilesystem filesystem,
+      Path output,
+      ImmutableMap<Path, Path> entries) {
+    this.filesystem = filesystem;
     this.output = output;
     this.entries = entries;
   }
@@ -53,7 +59,7 @@ public class HeaderMapStep implements Step {
       builder.add(entry.getKey().toString(), entry.getValue());
     }
     HeaderMap headerMap = builder.build();
-    context.getProjectFilesystem().writeBytesToPath(headerMap.getBytes(), output);
+    filesystem.writeBytesToPath(headerMap.getBytes(), output);
     return 0;
   }
 

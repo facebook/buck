@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -57,7 +58,7 @@ public class CxxPreprocessAndCompileStepTest {
     // Create our CxxPreprocessAndCompileStep to test.
     CxxPreprocessAndCompileStep cxxPreprocessStep =
         new CxxPreprocessAndCompileStep(
-            Paths.get("."),
+            new FakeProjectFilesystem(),
             CxxPreprocessAndCompileStep.Operation.PREPROCESS,
             output,
             depFile,
@@ -114,7 +115,7 @@ public class CxxPreprocessAndCompileStepTest {
     // Create our CxxPreprocessAndCompileStep to test.
     CxxPreprocessAndCompileStep cxxPreprocessStep =
         new CxxPreprocessAndCompileStep(
-            Paths.get("."),
+            new FakeProjectFilesystem(),
             CxxPreprocessAndCompileStep.Operation.COMPILE,
             output,
             depFile,

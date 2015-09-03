@@ -27,6 +27,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -63,6 +64,7 @@ public class AndroidManifestTest {
     Step generateManifestStep = steps.get(2);
     assertEquals(
         new GenerateManifestStep(
+            new FakeProjectFilesystem(),
             Paths.get("java/com/example/AndroidManifestSkeleton.xml"),
             /* libraryManifestPaths */ ImmutableSet.<Path>of(),
             BuckConstant.GEN_PATH.resolve("java/com/example/AndroidManifest__manifest__.xml")),

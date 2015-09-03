@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -177,7 +176,6 @@ public class BuildCommand extends AbstractCommand {
   Build createBuild(
       BuckConfig buckConfig,
       ActionGraph graph,
-      ProjectFilesystem projectFilesystem,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       BuildEngine buildEngine,
       ArtifactCache artifactCache,
@@ -196,7 +194,6 @@ public class BuildCommand extends AbstractCommand {
     return new Build(
         graph,
         targetDevice,
-        projectFilesystem,
         androidPlatformTargetSupplier,
         buildEngine,
         artifactCache,
@@ -298,7 +295,6 @@ public class BuildCommand extends AbstractCommand {
          Build build = createBuild(
              params.getBuckConfig(),
              actionGraph,
-             params.getRepository().getFilesystem(),
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),

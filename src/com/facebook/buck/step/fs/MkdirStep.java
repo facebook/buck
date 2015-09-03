@@ -29,16 +29,18 @@ import java.nio.file.Path;
  */
 public class MkdirStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final Path pathRelativeToProjectRoot;
 
-  public MkdirStep(Path pathRelativeToProjectRoot) {
+  public MkdirStep(ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
+    this.filesystem = filesystem;
     this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
   }
 
   @Override
   public int execute(ExecutionContext context) {
     try {
-      context.getProjectFilesystem().mkdirs(pathRelativeToProjectRoot);
+      filesystem.mkdirs(pathRelativeToProjectRoot);
     } catch (IOException e) {
       context.logError(e, "Cannot make directories: %s", pathRelativeToProjectRoot);
       return 1;
@@ -54,15 +56,14 @@ public class MkdirStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return String.format("mkdir -p %s",
-        Escaper.escapeAsShellString(getPath(context).toString()));
+        Escaper.escapeAsShellString(getPath().toString()));
   }
 
   /**
    * Get the path of the directory to make.
    * @return Path of the directory to make.
    */
-  public Path getPath(ExecutionContext context) {
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    return projectFilesystem.resolve(pathRelativeToProjectRoot);
+  public Path getPath() {
+    return filesystem.resolve(pathRelativeToProjectRoot);
   }
 }

@@ -26,11 +26,17 @@ import java.nio.file.Path;
 
 public class MoveStep implements Step {
 
+  private  final ProjectFilesystem filesystem;
   private final Path source;
   private final Path destination;
   private final CopyOption[] options;
 
-  public MoveStep(Path source, Path destination, CopyOption... options) {
+  public MoveStep(
+      ProjectFilesystem filesystem,
+      Path source,
+      Path destination,
+      CopyOption... options) {
+    this.filesystem = filesystem;
     this.source = source;
     this.destination = destination;
     this.options = options;
@@ -38,7 +44,6 @@ public class MoveStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try {
       filesystem.move(source, destination, options);
     } catch (IOException e) {

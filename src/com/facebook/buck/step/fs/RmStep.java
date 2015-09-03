@@ -30,23 +30,27 @@ public class RmStep implements Step {
 
   private static final Logger LOG = Logger.get(RmStep.class);
 
+  private final ProjectFilesystem filesystem;
   private final Path toDelete;
   private final boolean shouldForceDeletion;
   private final boolean shouldRecurse;
 
-  public RmStep(Path toDelete, boolean shouldForceDeletion) {
-    this(toDelete, shouldForceDeletion, false /* shouldRecurse */);
+  public RmStep(ProjectFilesystem filesystem, Path toDelete, boolean shouldForceDeletion) {
+    this(filesystem, toDelete, shouldForceDeletion, false /* shouldRecurse */);
   }
 
-  public RmStep(Path toDelete,
+  public RmStep(
+      ProjectFilesystem filesystem,
+      Path toDelete,
       boolean shouldForceDeletion,
       boolean shouldRecurse) {
+    this.filesystem = filesystem;
     this.toDelete = toDelete;
     this.shouldForceDeletion = shouldForceDeletion;
     this.shouldRecurse = shouldRecurse;
   }
 
-  public ImmutableList<String> getShellCommand(ExecutionContext context) {
+  public ImmutableList<String> getShellCommand() {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("rm");
 
@@ -58,7 +62,7 @@ public class RmStep implements Step {
       args.add("-f");
     }
 
-    Path absolutePath = context.getProjectFilesystem().resolve(toDelete);
+    Path absolutePath = filesystem.resolve(toDelete);
     args.add(absolutePath.toString());
 
     return args.build();
@@ -71,21 +75,20 @@ public class RmStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     try {
       if (shouldRecurse) {
         // Delete a folder recursively
         if (shouldForceDeletion) {
-          projectFilesystem.deleteRecursivelyIfExists(toDelete);
+          filesystem.deleteRecursivelyIfExists(toDelete);
         } else {
-          projectFilesystem.deleteRecursively(toDelete);
+          filesystem.deleteRecursively(toDelete);
         }
       } else {
         // Delete a single file
         if (shouldForceDeletion) {
-          projectFilesystem.deleteFileAtPathIfExists(toDelete);
+          filesystem.deleteFileAtPathIfExists(toDelete);
         } else {
-          projectFilesystem.deleteFileAtPath(toDelete);
+          filesystem.deleteFileAtPath(toDelete);
         }
       }
     } catch (IOException e) {
@@ -97,6 +100,6 @@ public class RmStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return Joiner.on(" ").join(getShellCommand(context));
+    return Joiner.on(" ").join(getShellCommand());
   }
 }

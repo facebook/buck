@@ -59,7 +59,7 @@ public class WriteFile extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
-        new MkdirStep(output.getParent()),
+        new MkdirStep(getProjectFilesystem(), output.getParent()),
         new WriteFileStep(getProjectFilesystem(), fileContents, output, executable));
   }
 

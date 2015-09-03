@@ -59,16 +59,17 @@ public class ApplePackage extends AbstractBuildRule {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Create temp folder to store the files going to be zipped
-    commands.add(new MakeCleanDirectoryStep(temp));
+    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
 
     Path payloadDir = temp.resolve("Payload");
-    commands.add(new MkdirStep(payloadDir));
+    commands.add(new MkdirStep(getProjectFilesystem(), payloadDir));
 
     // Remove the output .ipa file if it exists already
-    commands.add(new RmStep(pathToOutputFile, /* shouldForceDeletion */ true));
+    commands.add(new RmStep(getProjectFilesystem(), pathToOutputFile, /* force delete */ true));
 
     // Recursively copy the .app directory into the Payload folder
     commands.add(CopyStep.forDirectory(
+            getProjectFilesystem(),
             bundle.getPathToOutput(),
             payloadDir,
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
@@ -76,6 +77,7 @@ public class ApplePackage extends AbstractBuildRule {
     // do the zipping
     commands.add(
         new ZipStep(
+            getProjectFilesystem(),
             pathToOutputFile,
             ImmutableSet.<Path>of(),
             false,

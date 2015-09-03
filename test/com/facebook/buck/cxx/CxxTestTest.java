@@ -35,6 +35,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -111,6 +112,7 @@ public class CxxTestTest {
 
     CxxTestStep cxxTestStep =
         new CxxTestStep(
+            new FakeProjectFilesystem(),
             command,
             ImmutableMap.<String, String>of(),
             cxxTest.getPathToTestExitCode(),

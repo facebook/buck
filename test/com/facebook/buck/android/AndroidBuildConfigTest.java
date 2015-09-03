@@ -33,6 +33,7 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
@@ -66,6 +67,7 @@ public class AndroidBuildConfigTest {
         FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
     Step generateBuildConfigStep = steps.get(1);
     GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
+        new FakeProjectFilesystem(),
         /* source */ BuildTargetFactory.newInstance("//java/com/example:build_config"),
         /* javaPackage */ "com.example",
         /* useConstantExpressions */ false,
@@ -92,7 +94,6 @@ public class AndroidBuildConfigTest {
     ReadValuesStep step = new ReadValuesStep(projectFilesystem, pathToValues);
     ExecutionContext context = TestExecutionContext
         .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
         .build();
     int exitCode = step.execute(context);
     assertEquals(0, exitCode);

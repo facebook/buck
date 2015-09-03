@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.CompositeStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -32,10 +33,10 @@ public final class MkdirAndSymlinkFileStep extends CompositeStep {
   private final Path source;
   private final Path target;
 
-  public MkdirAndSymlinkFileStep(Path source, Path target) {
+  public MkdirAndSymlinkFileStep(ProjectFilesystem filesystem, Path source, Path target) {
     super(ImmutableList.of(
-        new MkdirStep(target.getParent()),
-        new SymlinkFileStep(source, target, /* useAbsolutePaths */ true)));
+        new MkdirStep(filesystem, target.getParent()),
+        new SymlinkFileStep(filesystem, source, target, /* useAbsolutePaths */ true)));
     this.source = source;
     this.target = target;
   }

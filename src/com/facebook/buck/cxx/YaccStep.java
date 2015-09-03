@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -29,14 +30,14 @@ import java.nio.file.Paths;
 public class YaccStep extends CompositeStep {
 
   public YaccStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       final ImmutableList<String> yaccPrefix,
       final ImmutableList<String> flags,
       final Path outputPrefix,
       final Path input) {
 
     super(ImmutableList.of(
-        new ShellStep(workingDirectory) {
+        new ShellStep(filesystem.getRootPath()) {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return ImmutableList.<String>builder()
@@ -53,11 +54,13 @@ public class YaccStep extends CompositeStep {
           }
         },
         new FindAndReplaceStep(
+            filesystem,
             getIntermediateSourceOutputPath(outputPrefix),
             getSourceOutputPath(outputPrefix),
             getIntermediateSourceOutputPath(outputPrefix).toString(),
             getSourceOutputPath(outputPrefix).toString()),
         new MoveStep(
+            filesystem,
             getIntermediateHeaderOutputPath(outputPrefix),
             getHeaderOutputPath(outputPrefix))));
   }

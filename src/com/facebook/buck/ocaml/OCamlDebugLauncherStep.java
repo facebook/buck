@@ -64,7 +64,7 @@ public class OCamlDebugLauncherStep implements Step {
       return writeExitCode;
     }
 
-    Step chmod = new MakeExecutableStep(args.getOutput());
+    Step chmod = new MakeExecutableStep(filesystem, args.getOutput());
     return chmod.execute(context);
   }
 

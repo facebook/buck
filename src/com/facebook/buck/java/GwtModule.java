@@ -67,21 +67,25 @@ public class GwtModule extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path workingDirectory = outputFile.getParent();
-    steps.add(new MakeCleanDirectoryStep(workingDirectory));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory));
 
     // A CopyResourcesStep is needed so that a file that is at java/com/example/resource.txt in the
     // repository will be added as com/example/resource.txt in the resulting JAR (assuming that
     // "/java/" is listed under src_roots in .buckconfig).
     Path tempJarFolder = workingDirectory.resolve("tmp");
-    steps.add(new CopyResourcesStep(
-        getResolver(),
-        getBuildTarget(),
-        filesForGwtModule,
-        tempJarFolder,
-        context.getJavaPackageFinder()));
+    steps.add(
+        new CopyResourcesStep(
+            getProjectFilesystem(),
+            getResolver(),
+            getBuildTarget(),
+            filesForGwtModule,
+            tempJarFolder,
+            context.getJavaPackageFinder()));
 
-    steps.add(new JarDirectoryStep(
-        outputFile,
+    steps.add(
+        new JarDirectoryStep(
+            getProjectFilesystem(),
+            outputFile,
         /* entriesToJar */ ImmutableSet.of(tempJarFolder),
         /* mainClass */ null,
         /* manifestFile */ null));

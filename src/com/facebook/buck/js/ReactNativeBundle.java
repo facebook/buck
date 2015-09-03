@@ -90,10 +90,10 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     final Path jsOutput = jsOutputDir.resolve(bundleName);
-    steps.add(new MakeCleanDirectoryStep(jsOutput.getParent()));
-    steps.add(new MakeCleanDirectoryStep(resource));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), jsOutput.getParent()));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resource));
     final Path sourceMapOutput = getPathToSourceMap(getBuildTarget());
-    steps.add(new MakeCleanDirectoryStep(sourceMapOutput.getParent()));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutput.getParent()));
 
     steps.add(
         new ShellStep(getProjectFilesystem().getRootPath()) {

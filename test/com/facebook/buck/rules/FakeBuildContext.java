@@ -17,13 +17,11 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 
@@ -36,7 +34,7 @@ public class FakeBuildContext {
   private FakeBuildContext() {}
 
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
-  public static final BuildContext NOOP_CONTEXT = newBuilder(new FakeProjectFilesystem())
+  public static final BuildContext NOOP_CONTEXT = newBuilder()
       .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
       .setJavaPackageFinder(new FakeJavaPackageFinder())
       .setArtifactCache(new NoopArtifactCache())
@@ -47,13 +45,10 @@ public class FakeBuildContext {
    * and {@link ImmutableBuildContext.Builder#setJavaPackageFinder(
    * com.facebook.buck.java.JavaPackageFinder)}
    * before the {@link ImmutableBuildContext.Builder#build()} method of the builder can be invoked.
-   * @param projectFilesystem for the {@link BuildContext} and for the {@link ExecutionContext} that
-   *     is passed to the {@link DefaultStepRunner} for the {@link BuildContext}.
    */
-  public static ImmutableBuildContext.Builder newBuilder(ProjectFilesystem projectFilesystem) {
+  public static ImmutableBuildContext.Builder newBuilder() {
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
         .build();
 
     return ImmutableBuildContext.builder()

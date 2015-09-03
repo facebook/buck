@@ -128,15 +128,18 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   @Test
   public void testSymlinkTreePostBuildSteps() throws IOException {
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
-            new MakeCleanDirectoryStep(symlinkTreeRoot),
+            new MakeCleanDirectoryStep(filesystem, symlinkTreeRoot),
             new SymlinkTreeStep(
+                filesystem,
                 symlinkTreeRoot,
                 new SourcePathResolver(new BuildRuleResolver()).getMappedPaths(links)),
             new HeaderMapStep(
+                filesystem,
                 headerMapPath,
                 ImmutableMap.of(
                     Paths.get("file"),

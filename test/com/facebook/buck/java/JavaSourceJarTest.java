@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -87,7 +86,7 @@ public class JavaSourceJarTest {
         ImmutableSortedSet.of(fileBased, ruleBased),
         Optional.<String>absent());
 
-    BuildContext buildContext = FakeBuildContext.newBuilder(new FakeProjectFilesystem())
+    BuildContext buildContext = FakeBuildContext.newBuilder()
         .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
         .setJavaPackageFinder(finderStub)
         .build();

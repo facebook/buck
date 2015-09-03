@@ -34,9 +34,7 @@ public class LexStepTest {
   @Test
   public void lexStepUsesCorrectCommand() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<String> lexPrefix = ImmutableList.of("lex");

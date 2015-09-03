@@ -119,7 +119,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
       BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MkdirStep(primaryDexPath.getParent()));
+    steps.add(new MkdirStep(getProjectFilesystem(), primaryDexPath.getParent()));
 
     if (dexSplitMode.isShouldSplitDex()) {
       addStepsForSplitDex(steps, context, buildableContext);
@@ -180,11 +180,11 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     }
     // Do not clear existing directory which might contain secondary dex files that are not
     // re-merged (since their contents did not change).
-    steps.add(new MkdirStep(paths.jarfilesSubdir));
-    steps.add(new MkdirStep(paths.successDir));
+    steps.add(new MkdirStep(getProjectFilesystem(), paths.jarfilesSubdir));
+    steps.add(new MkdirStep(getProjectFilesystem(), paths.successDir));
 
-    steps.add(new MakeCleanDirectoryStep(paths.metadataSubdir));
-    steps.add(new MakeCleanDirectoryStep(paths.scratchDir));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), paths.metadataSubdir));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), paths.scratchDir));
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
@@ -209,23 +209,27 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
             getProjectFilesystem(),
             steps);
 
-    steps.add(new SmartDexingStep(
-        primaryDexPath,
-        Suppliers.ofInstance(sortResult.primaryDexInputs),
-        Optional.of(paths.jarfilesSubdir),
-        Optional.of(Suppliers.ofInstance(sortResult.secondaryOutputToInputs)),
-        sortResult.dexInputHashesProvider,
-        paths.successDir,
-        DX_MERGE_OPTIONS,
-        dxExecutorService,
-        xzCompressionLevel));
+    steps.add(
+        new SmartDexingStep(
+            getProjectFilesystem(),
+            primaryDexPath,
+            Suppliers.ofInstance(sortResult.primaryDexInputs),
+            Optional.of(paths.jarfilesSubdir),
+            Optional.of(Suppliers.ofInstance(sortResult.secondaryOutputToInputs)),
+            sortResult.dexInputHashesProvider,
+            paths.successDir,
+            DX_MERGE_OPTIONS,
+            dxExecutorService,
+            xzCompressionLevel));
 
     // Record the primary dex SHA1 so exopackage apks can use it to compute their ABI keys.
     // Single dex apks cannot be exopackages, so they will never need ABI keys.
-    steps.add(new RecordFileSha1Step(
-        primaryDexPath,
-        PRIMARY_DEX_HASH_KEY,
-        buildableContext));
+    steps.add(
+        new RecordFileSha1Step(
+            getProjectFilesystem(),
+            primaryDexPath,
+            PRIMARY_DEX_HASH_KEY,
+            buildableContext));
 
     steps.add(new AbstractExecutionStep("write_metadata_txt") {
       @Override
@@ -288,7 +292,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
     steps.add(
         new DxStep(
-            getProjectFilesystem().getRootPath(),
+            getProjectFilesystem(),
             primaryDexPath,
             filesToDex,
             DX_MERGE_OPTIONS));

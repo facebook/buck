@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 
@@ -24,15 +25,17 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class MakeExecutableStep implements Step {
+  private final ProjectFilesystem filesystem;
   private final Path file;
 
-  public MakeExecutableStep(Path file) {
+  public MakeExecutableStep(ProjectFilesystem filesystem, Path file) {
+    this.filesystem = filesystem;
     this.file = file;
   }
 
   @Override
   public int execute(ExecutionContext context) throws IOException, InterruptedException {
-    MoreFiles.makeExecutable(context.getProjectFilesystem().resolve(file));
+    MoreFiles.makeExecutable(filesystem.resolve(file));
     return 0;
   }
 

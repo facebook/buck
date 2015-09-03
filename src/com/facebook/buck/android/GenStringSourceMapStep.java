@@ -76,6 +76,7 @@ import java.util.Map;
  */
 public class GenStringSourceMapStep extends AbstractExecutionStep {
 
+  private final ProjectFilesystem filesystem;
   private final Path rDotTxtDir;
   private final ImmutableList<Path> resDirectories;
   private final Path destinationPath;
@@ -92,10 +93,12 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
    * @param destinationPath Directory where where {@code strings.json} is written to.
    */
   public GenStringSourceMapStep(
+      ProjectFilesystem filesystem,
       Path rDotTxtDir,
       ImmutableList<Path> resDirectories,
       Path destinationPath) {
     super("build_string_source_map");
+    this.filesystem = filesystem;
     this.rDotTxtDir = rDotTxtDir;
     this.resDirectories = ImmutableList.copyOf(resDirectories);
     this.destinationPath = destinationPath;
@@ -107,7 +110,6 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     // This file contains all the resource names and the integer id that aapt assigned.
     Path rDotTxtPath = rDotTxtDir.resolve("R.txt");
     try {
-      ProjectFilesystem filesystem = context.getProjectFilesystem();
       CompileStringsStep.buildResourceNameToIdMap(filesystem, rDotTxtPath, mapResNameToResId);
     } catch (FileNotFoundException ex) {
       context.logError(ex,
@@ -125,7 +127,6 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     Path outputPath = destinationPath.resolve("strings.json");
     try {
       ObjectMapper mapper = new ObjectMapper();
-      ProjectFilesystem filesystem = context.getProjectFilesystem();
       mapper.writeValue(filesystem.getPathForRelativePath(outputPath).toFile(), nativeStrings);
     } catch (IOException ex) {
       context.logError(
@@ -137,8 +138,6 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   }
 
   private Map<String, NativeStringInfo> parseStringFiles(ExecutionContext context) {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
-
     Map<String, NativeStringInfo> nativeStrings = Maps.newHashMap();
 
     for (Path resDir : resDirectories) {

@@ -61,9 +61,10 @@ public class SrcZip extends AbstractBuildRule {
     buildableContext.recordArtifact(sourceZip);
 
     return ImmutableList.of(
-        new RmStep(sourceZip, true),
-        new MkdirStep(sourceZip.getParent()),
+        new RmStep(getProjectFilesystem(), sourceZip, true),
+        new MkdirStep(getProjectFilesystem(), sourceZip.getParent()),
         new ZipStep(
+            getProjectFilesystem(),
             sourceZip,
             /* paths */ ImmutableSet.<Path>of(),
             /* junkPaths */ false,

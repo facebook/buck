@@ -43,7 +43,7 @@ public class TouchStepTest {
   @Test
   public void testGetShortName() {
     Path someFile = Paths.get("a/file.txt");
-    TouchStep touchStep = new TouchStep(someFile);
+    TouchStep touchStep = new TouchStep(new FakeProjectFilesystem(tmp.getRoot()), someFile);
     assertEquals("touch", touchStep.getShortName());
   }
 
@@ -56,11 +56,8 @@ public class TouchStepTest {
         new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
         tmp.getRoot(),
         ImmutableSet.<Path>of());
-    TouchStep touchStep = new TouchStep(path);
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    TouchStep touchStep = new TouchStep(projectFilesystem, path);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     touchStep.execute(executionContext);
     assertTrue(projectFilesystem.exists(path));
   }
@@ -74,11 +71,8 @@ public class TouchStepTest {
         tmp.getRoot(),
         ImmutableSet.of(path));
     long lastModifiedTime = projectFilesystem.getLastModifiedTime(path);
-    TouchStep touchStep = new TouchStep(path);
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    TouchStep touchStep = new TouchStep(projectFilesystem, path);
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     touchStep.execute(executionContext);
     assertTrue(projectFilesystem.exists(path));
     assertTrue(lastModifiedTime < projectFilesystem.getLastModifiedTime(path));

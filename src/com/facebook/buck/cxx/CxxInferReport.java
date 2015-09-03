@@ -53,8 +53,8 @@ public class CxxInferReport extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(report);
     return ImmutableList.<Step>builder()
-        .add(new MkdirStep(resultsDir))
-        .add(new InferMergeReportsStep(reportsToMerge, report))
+        .add(new MkdirStep(getProjectFilesystem(), resultsDir))
+        .add(new InferMergeReportsStep(getProjectFilesystem(), reportsToMerge, report))
         .build();
   }
 

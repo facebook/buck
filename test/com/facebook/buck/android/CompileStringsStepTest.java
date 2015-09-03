@@ -16,12 +16,12 @@
 
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Function;
@@ -265,6 +265,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
   private CompileStringsStep createNonExecutingStep() {
     return new CompileStringsStep(
+        new FakeProjectFilesystem(),
         ImmutableList.<Path>of(),
         createMock(Path.class),
         new Function<String, Path>() {
@@ -286,7 +287,6 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     ExecutionContext context = createMock(ExecutionContext.class);
     FakeProjectFileSystem fileSystem = new FakeProjectFileSystem();
-    expect(context.getProjectFilesystem()).andStubReturn(fileSystem);
 
     ImmutableList<Path> stringFiles = ImmutableList.of(
         firstFile,
@@ -297,6 +297,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
 
     replayAll();
     CompileStringsStep step = new CompileStringsStep(
+        fileSystem,
         stringFiles,
         rDotJavaSrcDir,
         new Function<String, Path>() {

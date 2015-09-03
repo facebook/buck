@@ -1354,7 +1354,6 @@ public class DefaultJavaLibraryTest {
       JavacStep javacCommand = lastJavacCommand(steps);
 
       executionContext = TestExecutionContext.newBuilder()
-          .setProjectFilesystem(projectFilesystem)
           .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
           .setDebugEnabled(true)
           .build();

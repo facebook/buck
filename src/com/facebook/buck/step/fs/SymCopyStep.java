@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -51,10 +52,15 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 public class SymCopyStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableList<Path> roots;
   private final Path dest;
 
-  public SymCopyStep(ImmutableList<Path> rootsRelativeToProjectRoot, Path dest) {
+  public SymCopyStep(
+      ProjectFilesystem filesystem,
+      ImmutableList<Path> rootsRelativeToProjectRoot,
+      Path dest) {
+    this.filesystem = filesystem;
     this.roots = rootsRelativeToProjectRoot;
     this.dest = dest;
   }
@@ -63,10 +69,10 @@ public class SymCopyStep implements Step {
   public int execute(ExecutionContext context) throws IOException, InterruptedException {
     for (Path source : roots) {
       Preconditions.checkArgument(
-          !source.isAbsolute() && context.getProjectFilesystem().exists(source));
-      context.getProjectFilesystem().walkRelativeFileTree(
+          !source.isAbsolute() && filesystem.exists(source));
+      filesystem.walkRelativeFileTree(
           source,
-          new SymCopyFileVisitor(source, dest, context));
+          new SymCopyFileVisitor(source, dest));
     }
     return 0;
   }
@@ -85,12 +91,10 @@ public class SymCopyStep implements Step {
 
     private final Path sourceRoot;
     private final Path destRoot;
-    private final ExecutionContext context;
 
-    public SymCopyFileVisitor(Path sourceRoot, Path destRoot, ExecutionContext context) {
+    public SymCopyFileVisitor(Path sourceRoot, Path destRoot) {
       this.sourceRoot = sourceRoot;
       this.destRoot = destRoot;
-      this.context = context;
     }
 
     @Override
@@ -98,7 +102,7 @@ public class SymCopyStep implements Step {
         Path dir, BasicFileAttributes attrs) throws IOException {
       Path relativeVisitedDir = sourceRoot.relativize(dir);
       Path newDir = destRoot.resolve(relativeVisitedDir);
-      context.getProjectFilesystem().mkdirs(newDir);
+      filesystem.mkdirs(newDir);
       return FileVisitResult.CONTINUE;
     }
 
@@ -106,9 +110,9 @@ public class SymCopyStep implements Step {
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
       Path relativeVisitedFile = sourceRoot.relativize(file);
       Path link = destRoot.resolve(relativeVisitedFile);
-      context.getProjectFilesystem().createSymLink(
-          context.getProjectFilesystem().resolve(link),
-          context.getProjectFilesystem().resolve(file),
+      filesystem.createSymLink(
+          filesystem.resolve(link),
+          filesystem.resolve(file),
           true);
       return FileVisitResult.CONTINUE;
     }

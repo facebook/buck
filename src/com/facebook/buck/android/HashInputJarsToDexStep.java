@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
@@ -46,18 +47,21 @@ import java.util.Set;
 public class HashInputJarsToDexStep extends AbstractExecutionStep
     implements SmartDexingStep.DexInputHashesProvider {
 
+  private final ProjectFilesystem filesystem;
   private final Supplier<Set<Path>> primaryInputsToDex;
   private final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
-  private final Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
 
+  private final Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
   private final ImmutableMap.Builder<Path, Sha1HashCode> dexInputsToHashes;
   private boolean stepFinished;
 
   public HashInputJarsToDexStep(
+      ProjectFilesystem filesystem,
       Supplier<Set<Path>> primaryInputsToDex,
       Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs,
       Supplier<Map<String, HashCode>> classNamesToHashesSupplier) {
     super("collect_smart_dex_inputs_hash");
+    this.filesystem = filesystem;
     this.primaryInputsToDex = primaryInputsToDex;
     this.secondaryOutputToInputs = secondaryOutputToInputs;
     this.classNamesToHashesSupplier = classNamesToHashesSupplier;
@@ -80,7 +84,7 @@ public class HashInputJarsToDexStep extends AbstractExecutionStep
       try {
         final Hasher hasher = Hashing.sha1().newHasher();
         new DefaultClasspathTraverser().traverse(
-            new ClasspathTraversal(Collections.singleton(path), context.getProjectFilesystem()) {
+            new ClasspathTraversal(Collections.singleton(path), filesystem) {
               @Override
               public void visit(FileLike fileLike) throws IOException {
                 String className = fileLike.getRelativePath().replaceAll("\\.class$", "");

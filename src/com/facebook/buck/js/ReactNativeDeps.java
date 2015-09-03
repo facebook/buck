@@ -92,7 +92,7 @@ public class ReactNativeDeps extends AbstractBuildRule
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     final Path output = BuildTargets.getScratchPath(getBuildTarget(), "__%s/deps.txt");
-    steps.add(new MakeCleanDirectoryStep(output.getParent()));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
 
     steps.add(new ShellStep(getProjectFilesystem().getRootPath()) {
       @Override

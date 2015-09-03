@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
 
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +42,6 @@ import java.util.Map;
 
 public class PexStepTest {
 
-  private static final Path WORKING_DIRECTORY = Paths.get(".").toAbsolutePath().normalize();
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
   private static final ImmutableList<String> PEX_COMMAND = ImmutableList.of();
   private static final Path TEMP_PATH = Paths.get("/tmp/");
@@ -62,7 +62,7 @@ public class PexStepTest {
   public void testCommandLine() {
     PexStep step =
         new PexStep(
-            WORKING_DIRECTORY,
+            new FakeProjectFilesystem(),
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -86,7 +86,7 @@ public class PexStepTest {
   public void testCommandLineNoZipSafe() {
     PexStep step =
         new PexStep(
-            WORKING_DIRECTORY,
+            new FakeProjectFilesystem(),
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -108,7 +108,7 @@ public class PexStepTest {
   public void testCommandStdin() throws IOException {
     PexStep step =
         new PexStep(
-            WORKING_DIRECTORY,
+            new FakeProjectFilesystem(),
             PEX_COMMAND,
             PYTHON_PATH,
             TEMP_PATH,
@@ -141,7 +141,7 @@ public class PexStepTest {
   public void testArgs() {
     PexStep step =
         new PexStep(
-            WORKING_DIRECTORY,
+            new FakeProjectFilesystem(),
             ImmutableList.<String>builder()
                 .add("build")
                 .add("--some", "--args")

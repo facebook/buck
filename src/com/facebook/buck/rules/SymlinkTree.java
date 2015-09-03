@@ -111,8 +111,8 @@ public class SymlinkTree
       BuildContext context,
       BuildableContext buildableContext) {
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(root),
-        new SymlinkTreeStep(root, resolveLinks()));
+        new MakeCleanDirectoryStep(getProjectFilesystem(), root),
+        new SymlinkTreeStep(getProjectFilesystem(), root, resolveLinks()));
   }
 
   public Path getRoot() {

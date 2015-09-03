@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.CompositeStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -37,12 +38,14 @@ public final class MakeCleanDirectoryStep extends CompositeStep {
 
   private final Path pathRelativeToProjectRoot;
 
-  public MakeCleanDirectoryStep(Path pathRelativeToProjectRoot) {
+  public MakeCleanDirectoryStep(ProjectFilesystem filesystem, Path pathRelativeToProjectRoot) {
     super(ImmutableList.of(
-        new RmStep(pathRelativeToProjectRoot,
+        new RmStep(
+            filesystem,
+            pathRelativeToProjectRoot,
             /* shouldForceDeletion */ true,
             /* shouldRecurse */ true),
-        new MkdirStep(pathRelativeToProjectRoot)));
+        new MkdirStep(filesystem, pathRelativeToProjectRoot)));
     this.pathRelativeToProjectRoot = pathRelativeToProjectRoot;
   }
 

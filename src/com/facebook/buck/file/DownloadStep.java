@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
@@ -33,12 +34,19 @@ import java.nio.file.Path;
  * Download a file from a known location.
  */
 public class DownloadStep implements Step {
+  private final ProjectFilesystem filesystem;
   private final URI url;
   private final HashCode sha1;
   private final Path output;
   private final Downloader downloader;
 
-  public DownloadStep(Downloader downloader, URI url, HashCode sha1, Path output) {
+  public DownloadStep(
+      ProjectFilesystem filesystem,
+      Downloader downloader,
+      URI url,
+      HashCode sha1,
+      Path output) {
+    this.filesystem = filesystem;
     this.downloader = downloader;
     this.url = url;
     this.sha1 = sha1;
@@ -49,7 +57,7 @@ public class DownloadStep implements Step {
   public int execute(ExecutionContext context) throws InterruptedException {
     BuckEventBus eventBus = context.getBuckEventBus();
     try {
-      Path resolved = context.getProjectFilesystem().resolve(output);
+      Path resolved = filesystem.resolve(output);
       downloader.fetch(eventBus, url, resolved);
 
       HashCode readHash = Files.asByteSource(resolved.toFile()).hash(Hashing.sha1());

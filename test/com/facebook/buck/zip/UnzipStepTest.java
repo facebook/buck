@@ -16,6 +16,7 @@
 
 package com.facebook.buck.zip;
 
+import static com.facebook.buck.testutil.FakeProjectFilesystem.createJavaOnlyFilesystem;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -34,26 +35,24 @@ public class UnzipStepTest {
   public void testGetShortName() {
     Path zipFile = Paths.get("the/zipfile.zip");
     Path outputDirectory = Paths.get("an/output/dir");
-    UnzipStep unzipStep = new UnzipStep(zipFile, outputDirectory);
+    UnzipStep unzipStep = new UnzipStep(createJavaOnlyFilesystem(), zipFile, outputDirectory);
     assertEquals("unzip", unzipStep.getShortName());
   }
 
   @Test
   public void testGetShellCommand() {
-    Path zipFile = Paths.get("the/zipfile.zip");
-    Path outputDirectory = Paths.get("an/output/dir");
-    UnzipStep unzipStep = new UnzipStep(zipFile, outputDirectory);
-
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem() {
       @Override
       public Path resolve(Path relativePath) {
         return Paths.get("/abs/path").resolve(relativePath);
       }
     };
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+
+    Path zipFile = Paths.get("the/zipfile.zip");
+    Path outputDirectory = Paths.get("an/output/dir");
+    UnzipStep unzipStep = new UnzipStep(projectFilesystem, zipFile, outputDirectory);
+
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     assertEquals(
         "unzip /abs/path/the/zipfile.zip -d /abs/path/an/output/dir",
         unzipStep.getDescription(executionContext));

@@ -197,15 +197,19 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   private final Set<Path> directories;
   private final Clock clock;
 
-  public static ProjectFilesystem createJavaOnlyFilesystem() throws IOException {
+  public static ProjectFilesystem createJavaOnlyFilesystem() {
     return createJavaOnlyFilesystem("/opt/src/buck");
   }
 
-  public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath) throws IOException {
+  public static ProjectFilesystem createJavaOnlyFilesystem(String rootPath) {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
 
     Path root = vfs.getPath(rootPath);
-    Files.createDirectories(root);
+    try {
+      Files.createDirectories(root);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
 
     return new ProjectFilesystem(root) {
       @Override

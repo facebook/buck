@@ -21,7 +21,6 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -52,6 +51,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -60,7 +60,6 @@ import com.facebook.buck.testutil.RuleMap;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -168,7 +167,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setEventBus(buckEventBus)
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -256,7 +255,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(
                 new NoopArtifactCache() {
                   @Override
@@ -512,7 +511,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setEventBus(buckEventBus)
             .setArtifactCache(new NoopArtifactCache())
             .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -609,7 +608,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setEventBus(buckEventBus)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -741,7 +740,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setEventBus(buckEventBus)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -866,7 +865,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // The BuildContext that will be used by the rule's build() method.
     BuildContext context =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setEventBus(buckEventBus)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -906,7 +905,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Use the artifact cache when running a simple rule that will build locally.
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -939,7 +938,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1001,7 +1000,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1087,7 +1086,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1189,7 +1188,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1280,7 +1279,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1368,7 +1367,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1460,7 +1459,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1553,7 +1552,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1606,7 +1605,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1709,7 +1708,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setKeepGoing(true)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
@@ -1809,7 +1808,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1857,7 +1856,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -1906,7 +1905,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     DefaultFileHashCache fileHashCache = new DefaultFileHashCache(filesystem);
     InMemoryArtifactCache cache = new InMemoryArtifactCache();
     BuildContext buildContext =
-        FakeBuildContext.newBuilder(filesystem)
+        FakeBuildContext.newBuilder()
             .setArtifactCache(cache)
             .setJavaPackageFinder(new FakeJavaPackageFinder())
             .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
@@ -2254,15 +2253,10 @@ public class CachingBuildEngineTest extends EasyMockSupport {
   }
 
   private StepRunner createStepRunner(@Nullable BuckEventBus eventBus) {
-    ExecutionContext executionContext = createMock(ExecutionContext.class);
-    expect(executionContext.getVerbosity()).andReturn(Verbosity.SILENT).anyTimes();
-    if (eventBus != null) {
-      expect(executionContext.getBuckEventBus()).andStubReturn(eventBus);
-      expect(executionContext.getBuckEventBus()).andStubReturn(eventBus);
-    }
-    executionContext.postEvent(anyObject(BuckEvent.class));
-    expectLastCall().anyTimes();
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setEventBus(eventBus == null ? BuckEventBusFactory.newInstance() : eventBus)
+        .build();
+
     return new DefaultStepRunner(executionContext);
   }
-
 }

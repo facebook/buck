@@ -81,7 +81,7 @@ public class DummyRDotJava extends AbstractBuildRule
       final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     final Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget());
-    steps.add(new MakeCleanDirectoryStep(rDotJavaSrcFolder));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
     Set<Path> javaSourceFilePaths;
@@ -93,7 +93,7 @@ public class DummyRDotJava extends AbstractBuildRule
       // TODO(mbolin): Stop hardcoding com.facebook. This should match the package in the
       // associated TestAndroidManifest.xml file.
       Path emptyRDotJava = rDotJavaSrcFolder.resolve("com/facebook/R.java");
-      steps.add(new MakeCleanDirectoryStep(emptyRDotJava.getParent()));
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), emptyRDotJava.getParent()));
       steps.add(
           new WriteFileStep(
               getProjectFilesystem(),
@@ -113,10 +113,10 @@ public class DummyRDotJava extends AbstractBuildRule
 
     // Clear out the directory where the .class files will be generated.
     final Path rDotJavaClassesFolder = getRDotJavaBinFolder();
-    steps.add(new MakeCleanDirectoryStep(rDotJavaClassesFolder));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaClassesFolder));
 
     Path pathToAbiOutputDir = getPathToAbiOutputDir(getBuildTarget());
-    steps.add(new MakeCleanDirectoryStep(pathToAbiOutputDir));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToAbiOutputDir));
     Path pathToAbiOutputFile = pathToAbiOutputDir.resolve("abi.jar");
 
     // Compile the .java files.
@@ -131,7 +131,12 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.add(javacStep);
     buildableContext.recordArtifact(rDotJavaClassesFolder);
 
-    steps.add(new CalculateAbiStep(buildableContext, rDotJavaClassesFolder, pathToAbiOutputFile));
+    steps.add(
+        new CalculateAbiStep(
+            buildableContext,
+            getProjectFilesystem(),
+            rDotJavaClassesFolder,
+            pathToAbiOutputFile));
 
     return steps.build();
   }

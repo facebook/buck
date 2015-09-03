@@ -183,6 +183,7 @@ public class CachingBuildEngine implements BuildEngine {
             rule.getRuleKey(),
             buildInfoRecorder,
             context.getArtifactCache(),
+            // TODO(simons): This should be a shared between all tests, not one per repo
             rule.getProjectFilesystem(),
             context);
     if (cacheResult.getType().isSuccess()) {
@@ -268,6 +269,7 @@ public class CachingBuildEngine implements BuildEngine {
                       inputRuleKey,
                       buildInfoRecorder,
                       context.getArtifactCache(),
+                      // TODO(simons): This should be a shared between all tests, not one per repo
                       rule.getProjectFilesystem(),
                       context);
               if (cacheResult.getType().isSuccess()) {

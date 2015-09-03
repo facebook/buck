@@ -21,6 +21,7 @@ import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -43,6 +44,7 @@ public class CxxTestStepTest {
   private Path exitCode;
   private Path output;
   private ExecutionContext context;
+  private FakeProjectFilesystem filesystem;
 
   private static int readExitCode(Path file) throws IOException {
     try (FileInputStream fileIn = new FileInputStream(file.toFile());
@@ -60,12 +62,14 @@ public class CxxTestStepTest {
     exitCode = tmpDir.newFile("exitCode").toPath();
     output = tmpDir.newFile("output").toPath();
     context = TestExecutionContext.newInstance();
+    filesystem = new FakeProjectFilesystem();
   }
 
   @Test
   public void success() throws IOException, InterruptedException {
     CxxTestStep step =
         new CxxTestStep(
+            filesystem,
             ImmutableList.of("true"),
             ImmutableMap.<String, String>of(),
             exitCode,
@@ -79,6 +83,7 @@ public class CxxTestStepTest {
   public void failure() throws IOException, InterruptedException {
     CxxTestStep step =
         new CxxTestStep(
+            filesystem,
             ImmutableList.of("false"),
             ImmutableMap.<String, String>of(),
             exitCode,
@@ -93,6 +98,7 @@ public class CxxTestStepTest {
     String stdout = "hello world";
     CxxTestStep step =
         new CxxTestStep(
+            filesystem,
             ImmutableList.of("echo", stdout),
             ImmutableMap.<String, String>of(),
             exitCode,

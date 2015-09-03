@@ -18,6 +18,7 @@ package com.facebook.buck.java;
 import static com.facebook.buck.util.BuckConstant.SCRATCH_PATH;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -25,6 +26,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -43,8 +45,10 @@ public class CopyResourcesStepTest {
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget = BuildTarget.builder("//android/java", "resources").build();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     CopyResourcesStep step = new CopyResourcesStep(
+        filesystem,
         resolver,
         buildTarget,
         ImmutableSet.of(
@@ -55,10 +59,12 @@ public class CopyResourcesStepTest {
 
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
+            filesystem,
             Paths.get("android/java/src/com/facebook/base/data.json"),
             SCRATCH_PATH.resolve(
                 "android/java/lib__resources__classes/com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
+            filesystem,
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
             SCRATCH_PATH.resolve(
                 "android/java/lib__resources__classes/com/facebook/common/util/data.json")));
@@ -73,8 +79,10 @@ public class CopyResourcesStepTest {
     // android/java/src/com/facebook/common/util/data.json
     BuildTarget buildTarget = BuildTarget.builder("//android/java/src", "resources").build();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     CopyResourcesStep step = new CopyResourcesStep(
+        filesystem,
         new SourcePathResolver(new BuildRuleResolver()),
         buildTarget,
         ImmutableSet.<SourcePath>of(
@@ -85,10 +93,12 @@ public class CopyResourcesStepTest {
 
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
+            filesystem,
             Paths.get("android/java/src/com/facebook/base/data.json"),
             SCRATCH_PATH.resolve(
                 "android/java/src/lib__resources__classes/com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
+            filesystem,
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
             SCRATCH_PATH.resolve(
                 "android/java/src/lib__resources__classes/com/facebook/common/util/data.json")));
@@ -104,8 +114,10 @@ public class CopyResourcesStepTest {
     BuildTarget buildTarget =
         BuildTarget.builder("//android/java/src/com/facebook", "resources").build();
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     CopyResourcesStep step = new CopyResourcesStep(
+        filesystem,
         new SourcePathResolver(new BuildRuleResolver()),
         buildTarget,
         ImmutableSet.of(
@@ -116,11 +128,13 @@ public class CopyResourcesStepTest {
 
     List<? extends Step> expected = ImmutableList.of(
         new MkdirAndSymlinkFileStep(
+            filesystem,
             Paths.get("android/java/src/com/facebook/base/data.json"),
             SCRATCH_PATH.resolve(
                 "android/java/src/com/facebook/lib__resources__classes/" +
                     "com/facebook/base/data.json")),
         new MkdirAndSymlinkFileStep(
+            filesystem,
             Paths.get("android/java/src/com/facebook/common/util/data.json"),
             SCRATCH_PATH.resolve(
                 "android/java/src/com/facebook/lib__resources__classes/" +

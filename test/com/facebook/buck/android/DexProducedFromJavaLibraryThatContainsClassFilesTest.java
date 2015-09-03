@@ -118,7 +118,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .setProjectFilesystem(filesystem)
         .build();
 
     String expectedDxCommand = String.format(
@@ -174,11 +173,14 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     BuildContext context = createMock(BuildContext.class);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
+    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
 
     replayAll();
 
     BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
+        .setProjectFilesystem(projectFilesystem)
+        .build();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             params,
@@ -189,7 +191,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     verifyAll();
     resetAll();
 
-    ProjectFilesystem projectFilesystem = createMock(ProjectFilesystem.class);
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo")))
         .andReturn(Paths.get("/home/user/buck-out/gen/foo"));
     expect(projectFilesystem.resolve(Paths.get("buck-out/gen/foo/bar.dex.jar")))
@@ -198,7 +199,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
         .build();
 
     MoreAsserts.assertSteps("Do not generate a .dex.jar file.",

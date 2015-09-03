@@ -132,10 +132,7 @@ public class RemoteFileTest {
     ImmutableList<Step> buildSteps = remoteFile.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(filesystem)
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
     for (Step buildStep : buildSteps) {
       int result = buildStep.execute(context);
       if (result != 0) {

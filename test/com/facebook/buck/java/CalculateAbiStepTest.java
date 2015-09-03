@@ -54,12 +54,10 @@ public class CalculateAbiStepTest {
 
     Path abiJar = outDir.resolve("abi.jar");
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(filesystem)
-        .build();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     FakeBuildableContext context = new FakeBuildableContext();
-    new CalculateAbiStep(context, binJar, abiJar).execute(executionContext);
+    new CalculateAbiStep(context, filesystem, binJar, abiJar).execute(executionContext);
 
     String expectedHash = filesystem.computeSha1(Paths.get("abi.jar"));
     ImmutableMap<String, Object> metadata = context.getRecordedMetadata();
@@ -82,11 +80,10 @@ public class CalculateAbiStepTest {
     Path abiJar = outDir.resolve("abi.jar");
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(filesystem)
         .build();
 
     FakeBuildableContext context = new FakeBuildableContext();
-    new CalculateAbiStep(context, binJar, abiJar).execute(executionContext);
+    new CalculateAbiStep(context, filesystem, binJar, abiJar).execute(executionContext);
 
     ImmutableMap<String, Object> metadata = context.getRecordedMetadata();
     Object seenHash = metadata.get(AbiRule.ABI_KEY_ON_DISK_METADATA);

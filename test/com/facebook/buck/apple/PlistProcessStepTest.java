@@ -45,6 +45,7 @@ public class PlistProcessStepTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     PlistProcessStep plistProcessStep = new PlistProcessStep(
+        projectFilesystem,
         INPUT_PATH,
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(),
@@ -57,7 +58,6 @@ public class PlistProcessStepTest {
 
     ExecutionContext executionContext = TestExecutionContext
         .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
         .build();
     int errorCode = plistProcessStep.execute(executionContext);
     assertThat(errorCode, equalTo(1));
@@ -68,6 +68,7 @@ public class PlistProcessStepTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     PlistProcessStep plistProcessStep = new PlistProcessStep(
+        projectFilesystem,
         INPUT_PATH,
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(),
@@ -82,10 +83,7 @@ public class PlistProcessStepTest {
         dict.toXMLPropertyList(),
         INPUT_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     int errorCode = plistProcessStep.execute(executionContext);
     assertThat(errorCode, equalTo(0));
 
@@ -100,6 +98,7 @@ public class PlistProcessStepTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     PlistProcessStep plistProcessStep = new PlistProcessStep(
+        projectFilesystem,
         INPUT_PATH,
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(
@@ -114,10 +113,7 @@ public class PlistProcessStepTest {
         dict.toXMLPropertyList(),
         INPUT_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     int errorCode = plistProcessStep.execute(executionContext);
     assertThat(errorCode, equalTo(0));
 
@@ -131,6 +127,7 @@ public class PlistProcessStepTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     PlistProcessStep plistProcessStep = new PlistProcessStep(
+        projectFilesystem,
         INPUT_PATH,
         OUTPUT_PATH,
         ImmutableMap.<String, NSObject>of(),
@@ -145,10 +142,7 @@ public class PlistProcessStepTest {
         array.toXMLPropertyList(),
         INPUT_PATH);
 
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     int errorCode = plistProcessStep.execute(executionContext);
     assertThat(errorCode, equalTo(0));
 

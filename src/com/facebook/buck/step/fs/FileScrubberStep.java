@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -31,12 +32,15 @@ import java.nio.file.StandardOpenOption;
  */
 public class FileScrubberStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final Path input;
   private final ImmutableList<FileScrubber> scrubbers;
 
   public FileScrubberStep(
+      ProjectFilesystem filesystem,
       Path input,
       ImmutableList<FileScrubber> scrubbers) {
+    this.filesystem = filesystem;
     this.input = input;
     this.scrubbers = scrubbers;
   }
@@ -47,7 +51,7 @@ public class FileScrubberStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    Path filePath = context.getProjectFilesystem().resolve(input);
+    Path filePath = filesystem.resolve(input);
     try {
       for (FileScrubber scrubber : scrubbers) {
         try (FileChannel channel = readWriteChannel(filePath)) {

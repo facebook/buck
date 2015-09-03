@@ -177,13 +177,15 @@ public class AndroidBuildConfig extends AbstractBuildRule {
       totalFields = Suppliers.ofInstance(defaultValues);
     }
 
-    steps.add(new MakeCleanDirectoryStep(pathToOutputFile.getParent()));
-    steps.add(new GenerateBuildConfigStep(
-        getBuildTarget(),
-        javaPackage,
-        useConstantExpressions,
-        totalFields,
-        pathToOutputFile));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToOutputFile.getParent()));
+    steps.add(
+        new GenerateBuildConfigStep(
+            getProjectFilesystem(),
+            getBuildTarget(),
+            javaPackage,
+            useConstantExpressions,
+            totalFields,
+            pathToOutputFile));
 
     buildableContext.recordArtifact(pathToOutputFile);
     return steps.build();

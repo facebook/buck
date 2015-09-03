@@ -156,7 +156,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
               .resolve(entry.getKey().getSecond());
       NdkCxxPlatform platform =
           Preconditions.checkNotNull(nativePlatforms.get(entry.getKey().getFirst()));
-      steps.add(new MkdirStep(destination.getParent()));
+      steps.add(new MkdirStep(getProjectFilesystem(), destination.getParent()));
       steps.add(
           new StripStep(
               getProjectFilesystem().getRootPath(),
@@ -174,10 +174,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     final Path pathToNativeLibs = getPathToNativeLibsDir();
-    steps.add(new MakeCleanDirectoryStep(pathToNativeLibs));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToNativeLibs));
 
     final Path pathToNativeLibsAssets = getPathToNativeLibsAssetsDir();
-    steps.add(new MakeCleanDirectoryStep(pathToNativeLibsAssets));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToNativeLibsAssets));
 
     for (SourcePath nativeLibDir : nativeLibDirectories.asList().reverse()) {
       copyNativeLibrary(
@@ -199,7 +199,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
         new AbstractExecutionStep("hash_native_libs") {
           @Override
           public int execute(ExecutionContext context) {
-            ProjectFilesystem filesystem = context.getProjectFilesystem();
+            ProjectFilesystem filesystem = getProjectFilesystem();
             ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
             try {
               for (Path nativeLib : filesystem.getFilesUnderPath(pathToNativeLibs)) {
@@ -245,6 +245,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
     if (cpuFilters.isEmpty()) {
       steps.add(
           CopyStep.forDirectory(
+              filesystem,
               sourceDir,
               destinationDir,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
@@ -256,8 +257,9 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
         final Path libSourceDir = sourceDir.resolve(abiDirectoryComponent.get());
         Path libDestinationDir = destinationDir.resolve(abiDirectoryComponent.get());
 
-        final MkdirStep mkDirStep = new MkdirStep(libDestinationDir);
+        final MkdirStep mkDirStep = new MkdirStep(filesystem, libDestinationDir);
         final CopyStep copyStep = CopyStep.forDirectory(
+            filesystem,
             libSourceDir,
             libDestinationDir,
             CopyStep.DirectoryMode.CONTENTS_ONLY);
@@ -301,8 +303,6 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
         new AbstractExecutionStep("rename_native_executables") {
           @Override
           public int execute(ExecutionContext context) {
-
-            ProjectFilesystem filesystem = context.getProjectFilesystem();
             final ImmutableSet.Builder<Path> executablesBuilder = ImmutableSet.builder();
             try {
               filesystem.walkRelativeFileTree(destinationDir, new SimpleFileVisitor<Path>() {

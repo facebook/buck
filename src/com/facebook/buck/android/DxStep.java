@@ -43,7 +43,7 @@ public class DxStep extends ShellStep {
       "";
 
   /** Options to pass to {@code dx}. */
-  public static enum Option {
+  public enum Option {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
     NO_OPTIMIZE,
 
@@ -72,6 +72,7 @@ public class DxStep extends ShellStep {
     }
   };
 
+  private final ProjectFilesystem filesystem;
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
@@ -82,8 +83,8 @@ public class DxStep extends ShellStep {
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    */
-  public DxStep(Path workingDirectory, Path outputDexFile, Iterable<Path> filesToDex) {
-    this(workingDirectory, outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
+  public DxStep(ProjectFilesystem filesystem, Path outputDexFile, Iterable<Path> filesToDex) {
+    this(filesystem, outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
   }
 
   /**
@@ -93,21 +94,22 @@ public class DxStep extends ShellStep {
    * @param options to pass to {@code dx}.
    */
   public DxStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options) {
-    this(workingDirectory, outputDexFile, filesToDex, options, DEFAULT_GET_CUSTOM_DX);
+    this(filesystem, outputDexFile, filesToDex, options, DEFAULT_GET_CUSTOM_DX);
   }
 
   @VisibleForTesting
   DxStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
       Supplier<String> getPathToCustomDx) {
-    super(workingDirectory);
+    super(filesystem.getRootPath());
+    this.filesystem = filesystem;
     this.outputDexFile = outputDexFile;
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
@@ -159,10 +161,9 @@ public class DxStep extends ShellStep {
       builder.add("--verbose");
     }
 
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    builder.add("--output", projectFilesystem.resolve(outputDexFile).toString());
+    builder.add("--output", filesystem.resolve(outputDexFile).toString());
     for (Path fileToDex : filesToDex) {
-      builder.add(projectFilesystem.resolve(fileToDex).toString());
+      builder.add(filesystem.resolve(fileToDex).toString());
     }
 
     return builder.build();

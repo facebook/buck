@@ -87,35 +87,40 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Create temp folder to store the files going to be zipped
-    commands.add(new MakeCleanDirectoryStep(temp));
+    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
 
     // Remove the output .aar file
-    commands.add(new RmStep(pathToOutputFile, /* shouldForceDeletion */ true));
+    commands.add(new RmStep(getProjectFilesystem(), pathToOutputFile, /* force delete */ true));
 
     // put manifest into tmp folder
     commands.add(
         CopyStep.forFile(
+            getProjectFilesystem(),
             manifest.getPathToOutput(),
             temp.resolve("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
     commands.add(
         CopyStep.forFile(
+            getProjectFilesystem(),
             Preconditions.checkNotNull(androidResource.getPathToOutput()),
             temp.resolve("R.txt")));
 
     // put res/ and assets/ into tmp folder
     commands.add(CopyStep.forDirectory(
+            getProjectFilesystem(),
             assembledResourceDirectory,
             temp.resolve("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
     commands.add(CopyStep.forDirectory(
+            getProjectFilesystem(),
             assembledAssetsDirectory,
             temp.resolve("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
     // Create our Uber-jar, and place it in the tmp folder.
     commands.add(new JarDirectoryStep(
+            getProjectFilesystem(),
             temp.resolve("classes.jar"),
             ImmutableSet.copyOf(getTransitiveClasspathEntries().values()),
             null,
@@ -125,6 +130,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     if (assembledNativeLibs.isPresent()) {
       commands.add(
           CopyStep.forDirectory(
+              getProjectFilesystem(),
               assembledNativeLibs.get(),
               temp.resolve("jni"),
               CopyStep.DirectoryMode.CONTENTS_ONLY));
@@ -142,6 +148,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     // do the zipping
     commands.add(
         new ZipStep(
+            getProjectFilesystem(),
             pathToOutputFile,
             ImmutableSet.<Path>of(),
             false,

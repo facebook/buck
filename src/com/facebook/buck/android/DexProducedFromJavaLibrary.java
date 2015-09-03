@@ -106,10 +106,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new RmStep(getPathToDex(), /* shouldForceDeletion */ true));
+    steps.add(new RmStep(getProjectFilesystem(), getPathToDex(), /* shouldForceDeletion */ true));
 
     // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
-    steps.add(new MkdirStep(getPathToDex().getParent()));
+    steps.add(new MkdirStep(getProjectFilesystem(), getPathToDex().getParent()));
 
     // If there are classes, run dx.
     final ImmutableSortedMap<String, HashCode> classNamesToHashes =
@@ -118,14 +118,16 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     final Supplier<Integer> linearAllocEstimate;
     if (hasClassesToDx) {
       Path pathToOutputFile = javaLibrary.getPathToOutput();
-      EstimateLinearAllocStep estimate = new EstimateLinearAllocStep(pathToOutputFile);
+      EstimateLinearAllocStep estimate = new EstimateLinearAllocStep(
+          getProjectFilesystem(),
+          pathToOutputFile);
       steps.add(estimate);
       linearAllocEstimate = estimate;
 
       // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
       // merged into a final classes.dex that uses jumbo instructions.
       DxStep dx = new DxStep(
-          getProjectFilesystem().getRootPath(),
+          getProjectFilesystem(),
           getPathToDex(),
           Collections.singleton(pathToOutputFile),
           EnumSet.of(
@@ -137,7 +139,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
       // the output non-deterministic.  So use an additional scrubbing step to zero these out.
-      steps.add(new ZipScrubberStep(getPathToDex()));
+      steps.add(new ZipScrubberStep(getProjectFilesystem(), getPathToDex()));
 
     } else {
       linearAllocEstimate = Suppliers.ofInstance(0);

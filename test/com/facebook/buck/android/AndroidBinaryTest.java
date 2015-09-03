@@ -40,6 +40,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -130,7 +131,7 @@ public class AndroidBinaryTest {
     ImmutableList.Builder<Step> expectedSteps = ImmutableList.builder();
 
     ProGuardObfuscateStep.create(
-        Paths.get("."),
+        new FakeProjectFilesystem(),
         Optional.<Path>absent(),
         "1024M",
         GEN_PATH.resolve("java/src/com/facebook/base/__apk#aapt_package__proguard__/" +

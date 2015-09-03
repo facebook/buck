@@ -39,16 +39,19 @@ import java.nio.file.Path;
  */
 public class CxxTestStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableList<String> command;
   private final ImmutableMap<String, String> env;
   private final Path exitCode;
   private final Path output;
 
   public CxxTestStep(
+      ProjectFilesystem filesystem,
       ImmutableList<String> command,
       ImmutableMap<String, String> env,
       Path exitCode,
       Path output) {
+    this.filesystem = filesystem;
     this.command = command;
     this.env = env;
     this.exitCode = exitCode;
@@ -57,8 +60,6 @@ public class CxxTestStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
-
     // Build the process, redirecting output to the provided output file.  In general,
     // it's undesirable that both stdout and stderr are being redirected to the same
     // input stream.  However, due to the nature of OS pipe buffering, we can't really

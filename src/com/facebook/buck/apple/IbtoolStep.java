@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -29,16 +30,19 @@ import java.util.List;
  */
 public class IbtoolStep extends ShellStep {
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableList<String> ibtoolCommand;
   private final Path input;
   private final Path output;
 
   public IbtoolStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       List<String> ibtoolCommand,
       Path input,
       Path output) {
-    super(workingDirectory);
+    super(filesystem.getRootPath());
+
+    this.filesystem = filesystem;
     this.ibtoolCommand = ImmutableList.copyOf(ibtoolCommand);
     this.input = input;
     this.output = output;
@@ -55,8 +59,8 @@ public class IbtoolStep extends ShellStep {
         "--warnings",
         "--errors",
         "--compile",
-        context.getProjectFilesystem().resolve(output).toString(),
-        context.getProjectFilesystem().resolve(input).toString());
+        filesystem.resolve(output).toString(),
+        filesystem.resolve(input).toString());
 
     return commandBuilder.build();
   }

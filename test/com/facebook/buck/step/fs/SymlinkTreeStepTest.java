@@ -43,9 +43,7 @@ public class SymlinkTreeStepTest {
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     Path root = Paths.get("symlink-tree-root");
 
@@ -58,6 +56,7 @@ public class SymlinkTreeStepTest {
     projectFilesystem.writeContentsToPath("bar", source2);
 
     SymlinkTreeStep step = new SymlinkTreeStep(
+        projectFilesystem,
         root,
         ImmutableMap.of(
             link1, source1,

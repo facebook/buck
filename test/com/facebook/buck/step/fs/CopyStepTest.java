@@ -20,11 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 
-import org.easymock.EasyMock;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -32,24 +30,13 @@ import java.nio.file.Paths;
 
 public class CopyStepTest {
 
-  private ExecutionContext context;
-
-  @Before
-  public void setUp() {
-    context = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.replay(context);
-  }
-
-  @After
-  public void tearDown() {
-    EasyMock.verify(context);
-  }
+  private ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
   @Test
   public void testGetShellCommandInternalPath() {
     Path source = Paths.get("path/to/source.txt");
     Path destination = Paths.get("path/to/destination.txt");
-    CopyStep copyCommand = CopyStep.forFile(source, destination);
+    CopyStep copyCommand = CopyStep.forFile(filesystem, source, destination);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertFalse(copyCommand.isRecursive());
@@ -59,7 +46,7 @@ public class CopyStepTest {
   public void testGetShellCommandInternal() {
     Path source = Paths.get("path/to/source.txt");
     Path destination = Paths.get("path/to/destination.txt");
-    CopyStep copyCommand = CopyStep.forFile(source, destination);
+    CopyStep copyCommand = CopyStep.forFile(filesystem, source, destination);
     assertEquals(source, copyCommand.getSource());
     assertEquals(destination, copyCommand.getDestination());
     assertFalse(copyCommand.isRecursive());
@@ -70,6 +57,7 @@ public class CopyStepTest {
     Path source = Paths.get("path/to/source");
     Path destination = Paths.get("path/to/destination");
     CopyStep copyCommand = CopyStep.forDirectory(
+        filesystem,
         source,
         destination,
         CopyStep.DirectoryMode.CONTENTS_ONLY);
@@ -80,7 +68,7 @@ public class CopyStepTest {
 
   @Test
   public void testGetShortName() {
-    CopyStep copyCommand = CopyStep.forFile(Paths.get("here"), Paths.get("there"));
+    CopyStep copyCommand = CopyStep.forFile(filesystem, Paths.get("here"), Paths.get("there"));
     assertEquals("cp", copyCommand.getShortName());
   }
 

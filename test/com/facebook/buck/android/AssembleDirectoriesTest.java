@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -30,41 +31,41 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class AssembleDirectoriesTest {
   private ExecutionContext context;
   private ProjectFilesystem filesystem;
 
-  @Rule public TemporaryFolder tmp = new TemporaryFolder();
-
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    context = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(filesystem)
-        .build();
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    context = TestExecutionContext.newInstance();
   }
 
   @Test
   public void testAssembleFoldersWithRelativePath() throws IOException, InterruptedException {
-    tmp.newFolder("folder_a");
-    tmp.newFile("folder_a/a.txt");
-    tmp.newFile("folder_a/b.txt");
-    tmp.newFolder("folder_b");
-    tmp.newFile("folder_b/c.txt");
-    tmp.newFile("folder_b/d.txt");
+    Path tmp = filesystem.getRootPath();
+    Files.createDirectories(tmp.resolve("folder_a"));
+    Files.write(tmp.resolve("folder_a/a.txt"), "".getBytes(UTF_8));
+    Files.write(tmp.resolve("folder_a/b.txt"), "".getBytes(UTF_8));
+    Files.createDirectories(tmp.resolve("folder_b"));
+    Files.write(tmp.resolve("folder_b/c.txt"), "".getBytes(UTF_8));
+    Files.write(tmp.resolve("folder_b/d.txt"), "".getBytes(UTF_8));
 
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder("//:output_folder").build();
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder("//:output_folder")
+        .setProjectFilesystem(filesystem)
+        .build();
     ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
         new TestSourcePath("folder_a"), new TestSourcePath("folder_b"));
     AssembleDirectories assembleDirectories = new AssembleDirectories(
@@ -75,7 +76,9 @@ public class AssembleDirectoriesTest {
     for (Step step : steps) {
       assertEquals(0, step.execute(context));
     }
-    File outputFile = filesystem.resolve(assembleDirectories.getPathToOutput()).toFile();
-    assertEquals(4, outputFile.list().length);
+    Path outputFile = filesystem.resolve(assembleDirectories.getPathToOutput());
+    try (DirectoryStream<Path> dir = Files.newDirectoryStream(outputFile)) {
+      assertEquals(4, Iterables.size(dir));
+    }
   }
 }

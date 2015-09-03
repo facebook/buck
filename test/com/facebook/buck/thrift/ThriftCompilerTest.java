@@ -319,7 +319,7 @@ public class ThriftCompilerTest {
         DEFAULT_GENERATED_SOURCES);
 
     ImmutableList<Step> expected = ImmutableList.of(
-        new MakeCleanDirectoryStep(DEFAULT_OUTPUT_DIR),
+        new MakeCleanDirectoryStep(params.getProjectFilesystem(), DEFAULT_OUTPUT_DIR),
         new ThriftCompilerStep(
             params.getProjectFilesystem().getRootPath(),
             ImmutableList.<String>builder()

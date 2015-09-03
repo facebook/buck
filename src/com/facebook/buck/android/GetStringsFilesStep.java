@@ -38,6 +38,7 @@ public class GetStringsFilesStep implements Step {
   static final Pattern STRINGS_FILE_PATH = Pattern.compile(
       "(\\b|.*/)res/values(-.+)*/strings.xml", Pattern.CASE_INSENSITIVE);
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableList<Path> resDirs;
   private final ImmutableList.Builder<Path> stringFilesBuilder;
   private final ImmutableSet<Path> whitelistedStringDirs;
@@ -47,9 +48,11 @@ public class GetStringsFilesStep implements Step {
    * @param whitelistedStringDirs set of directories that will be filtered out
    */
   GetStringsFilesStep(
+      ProjectFilesystem filesystem,
       ImmutableList<Path> resDirs,
       ImmutableList.Builder<Path> stringFilesBuilder,
       ImmutableSet<Path> whitelistedStringDirs) {
+    this.filesystem = filesystem;
     this.resDirs = resDirs;
     this.stringFilesBuilder = stringFilesBuilder;
     this.whitelistedStringDirs = whitelistedStringDirs;
@@ -58,7 +61,6 @@ public class GetStringsFilesStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try {
-      ProjectFilesystem filesystem = context.getProjectFilesystem();
       Predicate<Path> filter = new Predicate<Path>() {
         @Override
         public boolean apply(Path pathRelativeToProjectRoot) {

@@ -112,16 +112,16 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     Path binPath = getBinPath();
 
     // Make sure the parent directory exists.
-    steps.add(new MkdirStep(binPath.getParent()));
+    steps.add(new MkdirStep(getProjectFilesystem(), binPath.getParent()));
 
     Path workingDirectory = BuildTargets.getGenPath(
         getBuildTarget(), "__%s__working_directory");
-    steps.add(new MakeCleanDirectoryStep(workingDirectory));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), workingDirectory));
 
     // Generate and return the PEX build step.
     steps.add(
         new PexStep(
-            getProjectFilesystem().getRootPath(),
+            getProjectFilesystem(),
             ImmutableList.<String>builder()
                 .addAll(builder.getCommandPrefix(getResolver()))
                 .addAll(buildArgs)

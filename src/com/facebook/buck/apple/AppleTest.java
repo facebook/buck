@@ -205,7 +205,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
 
     Path pathToTestOutput = getProjectFilesystem().resolve(
         getPathToTestOutputDirectory());
-    steps.add(new MakeCleanDirectoryStep(pathToTestOutput));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(
         testOutputPath);
@@ -242,9 +242,10 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       if (xctoolZipRule.isPresent()) {
         Path resolvedXctoolUnzipDirectory = getProjectFilesystem().resolve(
             xctoolUnzipDirectory);
-        steps.add(new MakeCleanDirectoryStep(resolvedXctoolUnzipDirectory));
+        steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resolvedXctoolUnzipDirectory));
         steps.add(
             new UnzipStep(
+                getProjectFilesystem(),
                 // This is added as a runtime dependency via getRuntimeDeps() earlier.
                 Preconditions.checkNotNull(xctoolZipRule.get().getPathToOutput()),
                 resolvedXctoolUnzipDirectory));
@@ -271,7 +272,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       }
       steps.add(
           new XctoolRunTestsStep(
-              getProjectFilesystem().getRootPath(),
+              getProjectFilesystem(),
               xctoolBinaryPath,
               platformName,
               destinationSpecifierArg,
@@ -292,6 +293,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       }
       steps.add(
           new XctestRunTestsStep(
+              getProjectFilesystem(),
               testRunningTool.getCommandPrefix(getResolver()),
               (testBundleExtension.equals("xctest") ? "-XCTest" : "-SenTest"),
               resolvedTestBundleDirectory,

@@ -35,10 +35,7 @@ public class WriteFileStepTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     WriteFileStep writeFileStep =
         new WriteFileStep(filesystem, "Hello world", Paths.get("foo.txt"), /* executable */ false);
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(filesystem)
-        .build();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     writeFileStep.execute(executionContext);
     assertThat(
         filesystem.readFileIfItExists(Paths.get("foo.txt")),

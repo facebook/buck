@@ -25,11 +25,17 @@ import java.nio.file.Path;
 
 public class RecordFileSha1Step implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final Path inputFile;
   private final String metadataKey;
   private final BuildableContext buildableContext;
 
-  public RecordFileSha1Step(Path inputFile, String metadataKey, BuildableContext buildableContext) {
+  public RecordFileSha1Step(
+      ProjectFilesystem filesystem,
+      Path inputFile,
+      String metadataKey,
+      BuildableContext buildableContext) {
+    this.filesystem = filesystem;
     this.inputFile = inputFile;
     this.metadataKey = metadataKey;
     this.buildableContext = buildableContext;
@@ -37,7 +43,6 @@ public class RecordFileSha1Step implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try {
       buildableContext.addMetadata(metadataKey, filesystem.computeSha1(inputFile));
     } catch (IOException e) {

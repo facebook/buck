@@ -212,8 +212,9 @@ public class DTest extends DLinkable implements TestRule {
       return ImmutableList.of();
     } else {
       return ImmutableList.of(
-          new MakeCleanDirectoryStep(getPathToTestOutputDirectory()),
+          new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
           new DTestStep(
+              getProjectFilesystem(),
               getShellCommand(),
               getPathToTestExitCode(),
               getPathToTestOutput()));

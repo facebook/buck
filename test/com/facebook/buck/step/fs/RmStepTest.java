@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.fs;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,115 +24,117 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class RmStepTest {
 
-  @Rule
-  public final TemporaryFolder tmpDir = new TemporaryFolder();
-
   private ExecutionContext context;
+  private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() {
-    context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmpDir.getRoot().toPath()))
-        .build();
+  public void setUp() throws IOException {
+    context = TestExecutionContext.newInstance();
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 
   @Test
   public void deletesAFile() throws IOException {
-    File file = createFile();
+    Path file = createFile();
 
     RmStep step = new RmStep(
-        file.toPath(),
+        filesystem,
+        file,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ false);
     assertEquals(0, step.execute(context));
 
-    assertFalse(file.exists());
+    assertFalse(Files.exists(file));
   }
 
   @Test
   public void deletesAFileWithForce() throws IOException {
-    File file = createFile();
+    Path file = createFile();
 
     RmStep step = new RmStep(
-        file.toPath(),
+        filesystem,
+        file,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ false);
     assertEquals(0, step.execute(context));
 
-    assertFalse(file.exists());
+    assertFalse(Files.exists(file));
   }
 
   @Test
   public void deletesADirectory() throws IOException {
-    File dir = createNonEmptyDirectory();
+    Path dir = createNonEmptyDirectory();
 
     RmStep step = new RmStep(
-        dir.toPath(),
+        filesystem,
+        dir,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ true);
     assertEquals(0, step.execute(context));
 
-    assertFalse(dir.exists());
+    assertFalse(Files.exists(dir));
   }
 
   @Test
   public void deletesADirectoryWithForce() throws IOException {
-    File dir = createNonEmptyDirectory();
+    Path dir = createNonEmptyDirectory();
 
     RmStep step = new RmStep(
-        dir.toPath(),
+        filesystem,
+        dir,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ true);
     assertEquals(0, step.execute(context));
 
-    assertFalse(dir.exists());
+    assertFalse(Files.exists(dir));
   }
 
   @Test
   public void recursiveModeWorksOnFiles() throws IOException {
-    File file = createFile();
+    Path file = createFile();
 
     RmStep step = new RmStep(
-        file.toPath(),
+        filesystem,
+        file,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ true);
     assertEquals(0, step.execute(context));
 
-    assertFalse(file.exists());
+    assertFalse(Files.exists(file));
   }
 
   @Test
   public void recursiveModeWithForceWorksOnFiles() throws IOException {
-    File file = createFile();
+    Path file = createFile();
 
     RmStep step = new RmStep(
-        file.toPath(),
+        filesystem,
+        file,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ true);
     assertEquals(0, step.execute(context));
 
-    assertFalse(file.exists());
+    assertFalse(Files.exists(file));
   }
 
   @Test
   public void nonRecursiveModeFailsOnDirectories() throws IOException {
-    File dir = createNonEmptyDirectory();
+    Path dir = createNonEmptyDirectory();
 
     RmStep step = new RmStep(
-        dir.toPath(),
+        filesystem,
+        dir,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ false);
     assertEquals(1, step.execute(context));
@@ -139,10 +142,11 @@ public class RmStepTest {
 
   @Test
   public void nonRecursiveModeWithForceFailsOnDirectories() throws IOException {
-    File dir = createNonEmptyDirectory();
+    Path dir = createNonEmptyDirectory();
 
     RmStep step = new RmStep(
-        dir.toPath(),
+        filesystem,
+        dir,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ false);
     assertEquals(1, step.execute(context));
@@ -150,10 +154,11 @@ public class RmStepTest {
 
   @Test
   public void deletingNonExistentFileFails() throws IOException {
-    File file = getNonExistentFile();
+    Path file = getNonExistentFile();
 
     RmStep step = new RmStep(
-        file.toPath(),
+        filesystem,
+        file,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ false);
     assertEquals(1, step.execute(context));
@@ -161,23 +166,25 @@ public class RmStepTest {
 
   @Test
   public void deletingNonExistentFileWithForceSucceeds() throws IOException {
-    File file = getNonExistentFile();
+    Path file = getNonExistentFile();
 
     RmStep step = new RmStep(
-        file.toPath(),
+        filesystem,
+        file,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ false);
     assertEquals(0, step.execute(context));
 
-    assertFalse(file.exists());
+    assertFalse(Files.exists(file));
   }
 
   @Test
   public void deletingNonExistentFileRecursivelyFails() throws IOException {
-    File file = getNonExistentFile();
+    Path file = getNonExistentFile();
 
     RmStep step = new RmStep(
-        file.toPath(),
+        filesystem,
+        file,
         /* shouldForceDeletion */ false,
         /* shouldRecurse */ true);
     assertEquals(1, step.execute(context));
@@ -185,35 +192,36 @@ public class RmStepTest {
 
   @Test
   public void deletingNonExistentFileRecursivelyWithForceSucceeds() throws IOException {
-    File file = getNonExistentFile();
+    Path file = getNonExistentFile();
 
     RmStep step = new RmStep(
-        file.toPath(),
+        filesystem,
+        file,
         /* shouldForceDeletion */ true,
         /* shouldRecurse */ true);
     assertEquals(0, step.execute(context));
 
-    assertFalse(file.exists());
+    assertFalse(Files.exists(file));
   }
 
-  private File createFile() throws IOException {
-    File file = tmpDir.newFile();
-    Files.write("blahblah", file, Charsets.UTF_8);
-    assertTrue(file.exists());
+  private Path createFile() throws IOException {
+    Path file = Files.createTempFile(filesystem.getRootPath(), "buck", ".txt");
+    Files.write(file, "blahblah".getBytes(UTF_8));
+    assertTrue(Files.exists(file));
     return file;
   }
 
-  private File createNonEmptyDirectory() throws IOException {
-    File dir = tmpDir.newFolder();
-    File file = dir.toPath().resolve("file").toFile();
-    Files.write("blahblah", file, Charsets.UTF_8);
-    assertTrue(dir.exists());
+  private Path createNonEmptyDirectory() throws IOException {
+    Path dir = Files.createTempDirectory(filesystem.getRootPath(), "buck");
+    Path file = dir.resolve("file");
+    Files.write(file, "blahblah".getBytes(UTF_8));
+    assertTrue(Files.exists(dir));
     return dir;
   }
 
-  private File getNonExistentFile() {
-    File file = tmpDir.getRoot().toPath().resolve("foo").toFile();
-    assertFalse(file.exists());
+  private Path getNonExistentFile() {
+    Path file = filesystem.getRootPath().resolve("does-not-exist");
+    assertFalse(Files.exists(file));
     return file;
   }
 

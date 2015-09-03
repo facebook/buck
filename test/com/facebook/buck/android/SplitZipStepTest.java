@@ -134,12 +134,10 @@ public class SplitZipStepTest {
         /* pathToReportDir */ Paths.get(""));
 
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem);
     EasyMock.replay(projectFilesystem, context);
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
-            context,
             ProguardTranslatorFactory.createForTest(Optional.<Map<String, String>>absent()),
             Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
     assertTrue(
@@ -228,7 +226,6 @@ public class SplitZipStepTest {
         /* pathToReportDir */ Paths.get(""));
 
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
     EasyMock.replay(projectFilesystem, context);
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
@@ -237,7 +234,6 @@ public class SplitZipStepTest {
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
-            context,
             translatorFactory,
             Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
     assertTrue(
@@ -302,7 +298,6 @@ public class SplitZipStepTest {
         /* pathToReportDir */ Paths.get(""));
 
     ExecutionContext context = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.expect(context.getProjectFilesystem()).andReturn(projectFilesystem).anyTimes();
     EasyMock.replay(projectFilesystem, context);
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
@@ -311,7 +306,6 @@ public class SplitZipStepTest {
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
-            context,
             translatorFactory,
             Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
     assertTrue(

@@ -73,6 +73,7 @@ public class FilterResourcesStep implements Step {
   static final Pattern NON_ENGLISH_STRINGS_FILE_PATH = Pattern.compile(
       "\\b|.*/res/values-([a-z]{2})(?:-r([A-Z]{2}))*/strings.xml");
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
   private final boolean filterDrawables;
   private final boolean enableStringWhitelisting;
@@ -106,6 +107,7 @@ public class FilterResourcesStep implements Step {
    */
   @VisibleForTesting
   FilterResourcesStep(
+      ProjectFilesystem filesystem,
       ImmutableBiMap<Path, Path> inResDirToOutResDirMap,
       boolean filterDrawables,
       boolean enableStringWhitelisting,
@@ -120,6 +122,7 @@ public class FilterResourcesStep implements Step {
     Preconditions.checkArgument(!filterDrawables ||
         (targetDensities != null && drawableFinder != null));
 
+    this.filesystem = filesystem;
     this.inResDirToOutResDirMap = inResDirToOutResDirMap;
     this.filterDrawables = filterDrawables;
     this.enableStringWhitelisting = enableStringWhitelisting;
@@ -154,7 +157,7 @@ public class FilterResourcesStep implements Step {
       Preconditions.checkNotNull(drawableFinder);
       Set<Path> drawables = drawableFinder.findDrawables(
           inResDirToOutResDirMap.keySet(),
-          context.getProjectFilesystem());
+          filesystem);
       pathPredicates.add(
           Filters.createImageDensityFilter(
               drawables,
@@ -191,7 +194,7 @@ public class FilterResourcesStep implements Step {
 
     // Create filtered copies of all resource directories. These will be passed to aapt instead.
     filteredDirectoryCopier.copyDirs(
-        context.getProjectFilesystem(),
+        filesystem,
         inResDirToOutResDirMap,
         Predicates.and(pathPredicates));
 
@@ -232,14 +235,13 @@ public class FilterResourcesStep implements Step {
    */
   private void scaleUnmatchedDrawables(ExecutionContext context)
       throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     Filters.Density targetDensity = Filters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
     Preconditions.checkNotNull(drawableFinder);
     Collection<Path> drawables = drawableFinder.findDrawables(
         inResDirToOutResDirMap.values(),
-        context.getProjectFilesystem());
+        filesystem);
     for (Path drawable : drawables) {
       if (drawable.toString().endsWith(".9.png")) {
         // Skip nine-patch for now.
@@ -422,6 +424,7 @@ public class FilterResourcesStep implements Step {
 
   public static class Builder {
 
+    private ProjectFilesystem filesystem;
     @Nullable
     private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
     @Nullable
@@ -429,14 +432,12 @@ public class FilterResourcesStep implements Step {
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
     private ImmutableSet<String> locales = ImmutableSet.of();
     private boolean enableStringWhitelisting = false;
-    @Nullable
-    private Path workingDirectory;
 
     private Builder() {
     }
 
-    public Builder setWorkingDirectory(Path workingDirectory) {
-      this.workingDirectory = workingDirectory;
+    public Builder setProjectFilesystem(ProjectFilesystem filesystem) {
+      this.filesystem = filesystem;
       return this;
     }
 
@@ -466,11 +467,12 @@ public class FilterResourcesStep implements Step {
     }
 
     public FilterResourcesStep build() {
+      Preconditions.checkNotNull(filesystem);
       Preconditions.checkNotNull(resourceFilter);
       LOG.info("FilterResourcesStep.Builder: resource filter: %s", resourceFilter);
       Preconditions.checkNotNull(inResDirToOutResDirMap);
-      Preconditions.checkNotNull(workingDirectory);
       return new FilterResourcesStep(
+          filesystem,
           inResDirToOutResDirMap,
           resourceFilter.isEnabled(),
           enableStringWhitelisting,
@@ -479,7 +481,9 @@ public class FilterResourcesStep implements Step {
           DefaultFilteredDirectoryCopier.getInstance(),
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),
-          resourceFilter.shouldDownscale() ? new ImageMagickScaler(workingDirectory) : null);
+          resourceFilter.shouldDownscale() ?
+              new ImageMagickScaler(filesystem.getRootPath()) :
+              null);
     }
   }
 }

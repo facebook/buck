@@ -41,6 +41,7 @@ import java.util.zip.ZipInputStream;
  */
 public class RepackZipEntriesStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final Path inputPath;
   private final Path outputPath;
   private final ImmutableSet<String> entries;
@@ -54,10 +55,11 @@ public class RepackZipEntriesStep implements Step {
    * @param entries files to repack (e.g. {@code ImmutableSet.of("resources.arsc")})
    */
   public RepackZipEntriesStep(
+      ProjectFilesystem filesystem,
       Path inputPath,
       Path outputPath,
       ImmutableSet<String> entries) {
-    this(inputPath, outputPath, entries, ZipStep.MAX_COMPRESSION_LEVEL);
+    this(filesystem, inputPath, outputPath, entries, ZipStep.MAX_COMPRESSION_LEVEL);
   }
 
   /**
@@ -68,10 +70,12 @@ public class RepackZipEntriesStep implements Step {
    * @param compressionLevel 0 to 9
    */
   public RepackZipEntriesStep(
+      ProjectFilesystem filesystem,
       Path inputPath,
       Path outputPath,
       ImmutableSet<String> entries,
       int compressionLevel) {
+    this.filesystem = filesystem;
     this.inputPath = inputPath;
     this.outputPath = outputPath;
     this.entries = entries;
@@ -80,7 +84,6 @@ public class RepackZipEntriesStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     Path inputFile = filesystem.getPathForRelativePath(inputPath);
     Path outputFile = filesystem.getPathForRelativePath(outputPath);
     try (

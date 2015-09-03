@@ -331,7 +331,7 @@ public class CxxPreprocessAndCompile
     }
 
     return new CxxPreprocessAndCompileStep(
-        getProjectFilesystem().getRootPath(),
+        getProjectFilesystem(),
         operation,
         output,
         getDepFilePath(),
@@ -357,7 +357,7 @@ public class CxxPreprocessAndCompile
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
-        new MkdirStep(output.getParent()),
+        new MkdirStep(getProjectFilesystem(), output.getParent()),
         makeMainStep());
   }
 

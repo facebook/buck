@@ -305,18 +305,19 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
     // Delete the old output for this rule, if it exists.
     commands.add(
         new RmStep(
+            getProjectFilesystem(),
             getPathToOutput(),
             /* shouldForceDeletion */ true,
             /* shouldRecurse */ true));
 
     // Make sure that the directory to contain the output file exists. Rules get output to a
     // directory named after the base path, so we don't want to nuke the entire directory.
-    commands.add(new MkdirStep(pathToOutDirectory));
+    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutDirectory));
 
     // Delete the old temp directory
-    commands.add(new MakeCleanDirectoryStep(pathToTmpDirectory));
+    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTmpDirectory));
     // Create a directory to hold all the source files.
-    commands.add(new MakeCleanDirectoryStep(pathToSrcDirectory));
+    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToSrcDirectory));
 
     addSymlinkCommands(commands);
 
@@ -351,7 +352,8 @@ public class Genrule extends AbstractBuildRule implements HasOutputName {
       }
 
       Path destination = pathToSrcDirectory.resolve(localPath);
-      commands.add(new MkdirAndSymlinkFileStep(entry.getKey(), destination));
+      commands.add(
+          new MkdirAndSymlinkFileStep(getProjectFilesystem(), entry.getKey(), destination));
     }
   }
 

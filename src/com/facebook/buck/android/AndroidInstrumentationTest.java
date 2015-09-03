@@ -111,7 +111,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
-    steps.add(new MakeCleanDirectoryStep(pathToTestOutput));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
     steps.add(new ApkInstallStep(apk));
     if (apk instanceof AndroidInstrumentationApk) {
       steps.add(new ApkInstallStep(

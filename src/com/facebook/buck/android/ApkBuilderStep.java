@@ -60,6 +60,7 @@ public class ApkBuilderStep implements Step {
    */
   private static final String JARSIGNER_KEY_STORE_TYPE = "jks";
 
+  private final ProjectFilesystem filesystem;
   private final Path resourceApk;
   private final Path dexFile;
   private final Path pathToOutputApkFile;
@@ -85,6 +86,7 @@ public class ApkBuilderStep implements Step {
    *     information about the keystore used to sign the APK.
    */
   public ApkBuilderStep(
+      ProjectFilesystem filesystem,
       Path resourceApk,
       Path pathToOutputApkFile,
       Path dexFile,
@@ -95,6 +97,7 @@ public class ApkBuilderStep implements Step {
       Path pathToKeystore,
       Path pathToKeystorePropertiesFile,
       boolean debugMode) {
+    this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
     this.dexFile = dexFile;
@@ -114,32 +117,31 @@ public class ApkBuilderStep implements Step {
       output = context.getStdOut();
     }
 
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     try {
-      PrivateKeyAndCertificate privateKeyAndCertificate = createKeystoreProperties(context);
+      PrivateKeyAndCertificate privateKeyAndCertificate = createKeystoreProperties();
       ApkBuilder builder = new ApkBuilder(
-          projectFilesystem.getPathForRelativePath(pathToOutputApkFile).toFile(),
-          projectFilesystem.getPathForRelativePath(resourceApk).toFile(),
-          projectFilesystem.getPathForRelativePath(dexFile).toFile(),
+          filesystem.getPathForRelativePath(pathToOutputApkFile).toFile(),
+          filesystem.getPathForRelativePath(resourceApk).toFile(),
+          filesystem.getPathForRelativePath(dexFile).toFile(),
           privateKeyAndCertificate.privateKey,
           privateKeyAndCertificate.certificate,
           output);
       builder.setDebugMode(debugMode);
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(
-            projectFilesystem.getPathForRelativePath(nativeLibraryDirectory).toFile());
+            filesystem.getPathForRelativePath(nativeLibraryDirectory).toFile());
       }
       for (Path assetDirectory : assetDirectories) {
-        builder.addSourceFolder(projectFilesystem.getPathForRelativePath(assetDirectory).toFile());
+        builder.addSourceFolder(filesystem.getPathForRelativePath(assetDirectory).toFile());
       }
       for (Path zipFile : zipFiles) {
         // TODO(natthu): Skipping silently is bad. These should really be assertions.
-        if (projectFilesystem.exists(zipFile) && projectFilesystem.isFile(zipFile)) {
-          builder.addZipFile(projectFilesystem.getPathForRelativePath(zipFile).toFile());
+        if (filesystem.exists(zipFile) && filesystem.isFile(zipFile)) {
+          builder.addZipFile(filesystem.getPathForRelativePath(zipFile).toFile());
         }
       }
       for (Path jarFileThatMayContainResources : jarFilesThatMayContainResources) {
-        Path jarFile  = projectFilesystem.getPathForRelativePath(jarFileThatMayContainResources);
+        Path jarFile  = filesystem.getPathForRelativePath(jarFileThatMayContainResources);
         builder.addResourcesFromJar(jarFile.toFile());
       }
 
@@ -163,19 +165,18 @@ public class ApkBuilderStep implements Step {
     return 0;
   }
 
-  private PrivateKeyAndCertificate createKeystoreProperties(ExecutionContext context)
+  private PrivateKeyAndCertificate createKeystoreProperties()
       throws CertificateException,
           IOException,
           KeyStoreException,
           NoSuchAlgorithmException,
           UnrecoverableKeyException {
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
         pathToKeystore,
         pathToKeystorePropertiesFile,
-        projectFilesystem);
+        filesystem);
     KeyStore keystore = KeyStore.getInstance(JARSIGNER_KEY_STORE_TYPE);
-    InputStream inputStream = projectFilesystem.getInputStreamForRelativePath(pathToKeystore);
+    InputStream inputStream = filesystem.getInputStreamForRelativePath(pathToKeystore);
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
     try {
       keystore.load(inputStream, keystorePassword);

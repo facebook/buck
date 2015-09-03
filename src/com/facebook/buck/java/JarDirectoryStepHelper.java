@@ -59,6 +59,7 @@ public class JarDirectoryStepHelper {
   private JarDirectoryStepHelper() {}
 
   public static int createJarFile(
+      ProjectFilesystem filesystem,
       Path pathToOutputFile,
       ImmutableSet<Path> entriesToJar,
       @Nullable String mainClass,
@@ -66,7 +67,6 @@ public class JarDirectoryStepHelper {
       boolean mergeManifests,
       Iterable<Pattern> blacklist,
       ExecutionContext context) throws IOException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
 
     // Write the manifest, as appropriate.
     Manifest manifest = new Manifest();
@@ -77,9 +77,8 @@ public class JarDirectoryStepHelper {
         absoluteOutputPath, APPEND_TO_ZIP)) {
 
       Set<String> alreadyAddedEntries = Sets.newHashSet();
-      ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       for (Path entry : entriesToJar) {
-        Path file = projectFilesystem.getPathForRelativePath(entry);
+        Path file = filesystem.getPathForRelativePath(entry);
         if (Files.isRegularFile(file)) {
           Preconditions.checkArgument(
               !file.equals(absoluteOutputPath),

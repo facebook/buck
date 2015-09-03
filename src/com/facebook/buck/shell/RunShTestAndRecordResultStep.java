@@ -34,17 +34,17 @@ import java.nio.file.Path;
 
 public class RunShTestAndRecordResultStep implements Step {
 
-  private Path workingDirectory;
-  private Path pathToShellScript;
+  private final ProjectFilesystem filesystem;
+  private final Path pathToShellScript;
   private final ImmutableList<String> args;
-  private Path pathToTestResultFile;
+  private final Path pathToTestResultFile;
 
   public RunShTestAndRecordResultStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Path pathToShellScript,
       ImmutableList<String> args,
       Path pathToTestResultFile) {
-    this.workingDirectory = workingDirectory;
+    this.filesystem = filesystem;
     this.pathToShellScript = pathToShellScript;
     this.args = args;
     this.pathToTestResultFile = pathToTestResultFile;
@@ -75,7 +75,7 @@ public class RunShTestAndRecordResultStep implements Step {
           /* stdout */ null,
           /* stderr */ null);
     } else {
-      ShellStep test = new ShellStep(workingDirectory) {
+      ShellStep test = new ShellStep(filesystem.getRootPath()) {
         @Override
         public String getShortName() {
           return pathToShellScript.toString();
@@ -123,7 +123,6 @@ public class RunShTestAndRecordResultStep implements Step {
     }
 
     ObjectMapper mapper = new ObjectMapper();
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try (OutputStream outputStream = filesystem.newFileOutputStream(pathToTestResultFile)) {
       mapper.writeValue(outputStream, summary);
     } catch (IOException e) {

@@ -42,7 +42,7 @@ public class XctoolRunTestsStepTest {
   public void xctoolCommandWithOnlyLogicTests() throws Exception {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     XctoolRunTestsStep step = new XctoolRunTestsStep(
-        projectFilesystem.getRootPath(),
+        projectFilesystem,
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
         Optional.<String>absent(),
@@ -70,7 +70,6 @@ public class XctoolRunTestsStepTest {
         ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setProcessExecutor(processExecutor)
-        .setProjectFilesystem(projectFilesystem)
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
@@ -82,7 +81,7 @@ public class XctoolRunTestsStepTest {
   public void xctoolCommandWithOnlyAppTests() throws Exception {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     XctoolRunTestsStep step = new XctoolRunTestsStep(
-        projectFilesystem.getRootPath(),
+        projectFilesystem,
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
         Optional.of("name=iPhone 5s"),
@@ -114,7 +113,6 @@ public class XctoolRunTestsStepTest {
         ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setProcessExecutor(processExecutor)
-        .setProjectFilesystem(projectFilesystem)
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
@@ -126,7 +124,7 @@ public class XctoolRunTestsStepTest {
   public void xctoolCommandWithAppAndLogicTests() throws Exception {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     XctoolRunTestsStep step = new XctoolRunTestsStep(
-        projectFilesystem.getRootPath(),
+        projectFilesystem,
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
         Optional.of("name=iPhone 5s,OS=8.2"),
@@ -161,7 +159,6 @@ public class XctoolRunTestsStepTest {
         ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setProcessExecutor(processExecutor)
-        .setProjectFilesystem(projectFilesystem)
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
@@ -173,7 +170,7 @@ public class XctoolRunTestsStepTest {
   public void xctoolCommandWhichReturnsExitCode1DoesNotFailStep() throws Exception {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     XctoolRunTestsStep step = new XctoolRunTestsStep(
-        projectFilesystem.getRootPath(),
+        projectFilesystem,
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
         Optional.<String>absent(),
@@ -201,7 +198,6 @@ public class XctoolRunTestsStepTest {
         ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setProcessExecutor(processExecutor)
-        .setProjectFilesystem(projectFilesystem)
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(
@@ -213,7 +209,7 @@ public class XctoolRunTestsStepTest {
   public void xctoolCommandWhichReturnsExitCode400FailsStep() throws Exception {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     XctoolRunTestsStep step = new XctoolRunTestsStep(
-        projectFilesystem.getRootPath(),
+        projectFilesystem,
         Paths.get("/path/to/xctool"),
         "iphonesimulator",
         Optional.<String>absent(),
@@ -241,7 +237,6 @@ public class XctoolRunTestsStepTest {
         ImmutableMap.of(xctoolParams, fakeXctoolSuccess));
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
         .setProcessExecutor(processExecutor)
-        .setProjectFilesystem(projectFilesystem)
         .setEnvironment(ImmutableMap.<String, String>of())
         .build();
     assertThat(

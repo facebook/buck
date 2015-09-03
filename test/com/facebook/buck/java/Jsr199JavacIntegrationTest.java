@@ -111,10 +111,10 @@ public class Jsr199JavacIntegrationTest {
   @Test
   public void testClassesFile() throws IOException, InterruptedException {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
-    ExecutionContext executionContext = createExecutionContext();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = javac.buildWithClasspath(
         executionContext,
-        executionContext.getProjectFilesystem(),
+        createProjectFilesystem(),
         PATH_RESOLVER,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
@@ -143,10 +143,10 @@ public class Jsr199JavacIntegrationTest {
 
     Jsr199Javac javac = createJavac(
         /* withSyntaxError */ false);
-    ExecutionContext executionContext = createExecutionContext();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = javac.buildWithClasspath(
         executionContext,
-        executionContext.getProjectFilesystem(),
+        createProjectFilesystem(),
         PATH_RESOLVER,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.<String>of(),
@@ -214,7 +214,7 @@ public class Jsr199JavacIntegrationTest {
     resolver.addToIndex(rule);
 
     Path fakeJavacJar = Paths.get("ae036e57-77a7-4356-a79c-0f85b1a3290d", "fakeJavac.jar");
-    ExecutionContext executionContext = createExecutionContext();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     MockClassLoader mockClassLoader = new MockClassLoader(
         ClassLoader.getSystemClassLoader(),
         ImmutableMap.<String, Class<?>>of(
@@ -234,7 +234,7 @@ public class Jsr199JavacIntegrationTest {
     try {
       javac.buildWithClasspath(
           executionContext,
-          executionContext.getProjectFilesystem(),
+          createProjectFilesystem(),
           PATH_RESOLVER,
           BuildTargetFactory.newInstance("//some:example"),
           ImmutableList.<String>of(),
@@ -281,9 +281,7 @@ public class Jsr199JavacIntegrationTest {
     return createJavac(withSyntaxError, Optional.<Path>absent());
   }
 
-  private ExecutionContext createExecutionContext() {
-    return TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRootPath()))
-        .build();
+  private ProjectFilesystem createProjectFilesystem() {
+    return new ProjectFilesystem(tmp.getRootPath());
   }
 }

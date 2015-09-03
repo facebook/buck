@@ -88,7 +88,6 @@ public class FilterResourcesStepTest {
     ProcessExecutor processExecutor = EasyMock.createMock(ProcessExecutor.class);
     EasyMock.expect(context.getProcessExecutor()).andReturn(processExecutor).anyTimes();
     EasyMock.expect(context.getVerbosity()).andReturn(Verbosity.SILENT).anyTimes();
-    EasyMock.expect(context.getProjectFilesystem()).andReturn(filesystem).anyTimes();
     EasyMock.replay(context);
 
     // Create a mock DrawableFinder, just creates one drawable/density/resource dir.
@@ -116,6 +115,7 @@ public class FilterResourcesStepTest {
     EasyMock.replay(scaler);
 
     FilterResourcesStep command = new FilterResourcesStep(
+        filesystem,
         inResDirToOutResDirMap,
         /* filterDrawables */ true,
         /* enableStringWhitelisting */ false,
@@ -276,6 +276,7 @@ public class FilterResourcesStepTest {
     EasyMock.replay(copier);
 
     FilterResourcesStep step = new FilterResourcesStep(
+        null,
         /* inResDirToOutResDirMap */ ImmutableBiMap.<Path, Path>of(),
         /* filterDrawables */ false,
         /* enableStringWhitelisting */ enableStringWhitelisting,

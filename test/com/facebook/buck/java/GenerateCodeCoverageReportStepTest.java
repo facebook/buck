@@ -17,7 +17,6 @@
 package com.facebook.buck.java;
 
 import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
@@ -55,13 +54,14 @@ public class GenerateCodeCoverageReportStepTest {
 
   private GenerateCodeCoverageReportStep step;
   private ExecutionContext context;
+  private ProjectFilesystem filesystem;
 
   @Before
   public void setUp() {
-    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get("."));
+    filesystem = new ProjectFilesystem(Paths.get("."));
 
     step = new GenerateCodeCoverageReportStep(
-        filesystem.getRootPath(),
+        filesystem,
         SOURCE_DIRECTORIES,
         CLASSES_DIRECTORIES,
         Paths.get(OUTPUT_DIRECTORY),
@@ -70,10 +70,6 @@ public class GenerateCodeCoverageReportStepTest {
 
     context = createMock(ExecutionContext.class);
 
-    expect(
-        context.getProjectFilesystem())
-        .andReturn(filesystem)
-        .anyTimes();
     replay(context);
   }
 
@@ -101,7 +97,7 @@ public class GenerateCodeCoverageReportStepTest {
   public void testSaveParametersToPropertyFile() throws IOException {
     byte[] actualOutput;
     try (ByteArrayOutputStream actualOutputStream = new ByteArrayOutputStream()) {
-      step.saveParametersToPropertyStream(context.getProjectFilesystem(), actualOutputStream);
+      step.saveParametersToPropertyStream(filesystem, actualOutputStream);
 
       actualOutput = actualOutputStream.toByteArray();
     }

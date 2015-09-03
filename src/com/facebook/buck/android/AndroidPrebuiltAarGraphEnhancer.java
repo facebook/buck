@@ -104,11 +104,15 @@ class AndroidPrebuiltAarGraphEnhancer {
         BuildContext context,
         BuildableContext buildableContext) {
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
-      steps.add(new MakeCleanDirectoryStep(unpackDirectory));
-      steps.add(new UnzipStep(getResolver().getPath(aarFile), unpackDirectory));
-      steps.add(new TouchStep(getProguardConfig()));
-      steps.add(new MkdirStep(getAssetsDirectory()));
-      steps.add(new MkdirStep(getNativeLibsDirectory()));
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), unpackDirectory));
+      steps.add(
+          new UnzipStep(
+              getProjectFilesystem(),
+              getResolver().getPath(aarFile),
+              unpackDirectory));
+      steps.add(new TouchStep(getProjectFilesystem(), getProguardConfig()));
+      steps.add(new MkdirStep(getProjectFilesystem(), getAssetsDirectory()));
+      steps.add(new MkdirStep(getProjectFilesystem(), getNativeLibsDirectory()));
 
       // We take the classes.jar file that is required to exist in an .aar and merge it with any
       // .jar files under libs/ into an "uber" jar. We do this for simplicity because we do not know
@@ -116,7 +120,7 @@ class AndroidPrebuiltAarGraphEnhancer {
       // that all of the .class files in the .aar get packaged. As it is implemented today, an
       // android_library that depends on an android_prebuilt_aar can compile against anything in the
       // .aar's classes.jar or libs/.
-      steps.add(new MkdirStep(uberClassesJar.getParent()));
+      steps.add(new MkdirStep(getProjectFilesystem(), uberClassesJar.getParent()));
       steps.add(new AbstractExecutionStep("create_uber_classes_jar") {
         @Override
         public int execute(ExecutionContext context) {
@@ -157,6 +161,7 @@ class AndroidPrebuiltAarGraphEnhancer {
             ImmutableSet<Path> entriesToJar = entriesToJarBuilder.build();
             try {
               JarDirectoryStepHelper.createJarFile(
+                  getProjectFilesystem(),
                   uberClassesJar,
                   entriesToJar,
                   /* mainClass */ null,

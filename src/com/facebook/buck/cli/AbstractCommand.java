@@ -201,7 +201,6 @@ public abstract class AbstractCommand implements Command {
 
   protected ExecutionContext createExecutionContext(CommandRunnerParams params) {
     return ExecutionContext.builder()
-        .setProjectFilesystem(params.getRepository().getFilesystem())
         .setConsole(params.getConsole())
         .setAndroidPlatformTargetSupplier(params.getAndroidPlatformTargetSupplier())
         .setEventBus(params.getBuckEventBus())

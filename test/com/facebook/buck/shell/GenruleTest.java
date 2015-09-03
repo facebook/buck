@@ -28,8 +28,6 @@ import com.facebook.buck.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
@@ -37,13 +35,13 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -55,21 +53,18 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,17 +72,7 @@ import java.util.List;
 
 public class GenruleTest {
 
-  private static final String BASE_PATH = getAbsolutePathFor("/opt/local/fbandroid");
-
-  private static final Function<Path, Path> ABSOLUTIFIER =
-      new Function<Path, Path>() {
-        @Override
-        public Path apply(Path input) {
-          return getAbsolutePathInBase(input.toString());
-        }
-      };
-
-  private ProjectFilesystem fakeFilesystem;
+  private ProjectFilesystem filesystem;
 
   private RuleKey generateRuleKey(
       RuleKeyBuilderFactory factory,
@@ -99,16 +84,7 @@ public class GenruleTest {
 
   @Before
   public void newFakeFilesystem() {
-    fakeFilesystem = EasyMock.createNiceMock(ProjectFilesystem.class);
-    EasyMock.expect(fakeFilesystem.getAbsolutifier())
-        .andReturn(ABSOLUTIFIER)
-        .times(0,  1);
-    EasyMock.replay(fakeFilesystem);
-  }
-
-  @After
-  public void verifyFakeFilesystem() {
-    EasyMock.verify(fakeFilesystem);
+    filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 
   @Test
@@ -132,11 +108,11 @@ public class GenruleTest {
 
     // From the Python object, create a GenruleBuildRuleFactory to create a Genrule.Builder
     // that builds a Genrule from the Python object.
-    BuildTargetParser parser = EasyMock.createNiceMock(BuildTargetParser.class);
-    EasyMock.expect(parser.parse(EasyMock.eq("//java/com/facebook/util:util"),
-        EasyMock.anyObject(BuildTargetPatternParser.class)))
-        .andStubReturn(BuildTargetFactory.newInstance("//java/com/facebook/util:util"));
-    EasyMock.replay(parser);
+//    BuildTargetParser parser = BuildTargetParser.INSTANCE;
+//    EasyMock.expect(parser.parse(EasyMock.eq("//java/com/facebook/util:util"),
+//        EasyMock.anyObject(BuildTargetPatternParser.class)))
+//        .andStubReturn(BuildTargetFactory.newInstance("//java/com/facebook/util:util"));
+//    EasyMock.replay(parser);
 
     BuildTarget buildTarget =
         BuildTarget.builder("//src/com/facebook/katana", "katana_manifest").build();
@@ -147,18 +123,18 @@ public class GenruleTest {
         .setSrcs(
             ImmutableList.<SourcePath>of(
                 new PathSourcePath(
-                    fakeFilesystem,
+                    filesystem,
                     Paths.get("src/com/facebook/katana/convert_to_katana.py")),
                 new PathSourcePath(
-                    fakeFilesystem,
+                    filesystem,
                     Paths.get("src/com/facebook/katana/AndroidManifest.xml"))))
-        .build(ruleResolver, fakeFilesystem);
+        .build(ruleResolver, filesystem);
 
     // Verify all of the observers of the Genrule.
     assertEquals(GEN_PATH.resolve("src/com/facebook/katana/AndroidManifest.xml"),
         genrule.getPathToOutput());
     assertEquals(
-        getAbsolutePathInBase(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString(),
+        filesystem.resolve(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString(),
         ((Genrule) genrule).getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
     ImmutableList<Path> inputsToCompareToOutputs = ImmutableList.of(
@@ -170,7 +146,8 @@ public class GenruleTest {
 
     // Verify that the shell commands that the genrule produces are correct.
     List<Step> steps = genrule.getBuildSteps(
-        buildContext, new FakeBuildableContext());
+        buildContext,
+        new FakeBuildableContext());
     assertEquals(7, steps.size());
 
     Step firstStep = steps.get(0);
@@ -183,16 +160,16 @@ public class GenruleTest {
             "rm",
             "-r",
             "-f",
-            GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"),
-        rmCommand.getShellCommand(executionContext));
+            "/opt/src/buck/" + GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"),
+        rmCommand.getShellCommand());
 
     Step secondStep = steps.get(1);
     assertTrue(secondStep instanceof MkdirStep);
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
-        Paths.get(GEN_DIR + "/src/com/facebook/katana"),
-        mkdirCommand.getPath(executionContext));
+        filesystem.resolve(GEN_DIR + "/src/com/facebook/katana"),
+        mkdirCommand.getPath());
 
     Step mkTmpDir = steps.get(2);
     assertTrue(mkTmpDir instanceof MakeCleanDirectoryStep);
@@ -228,8 +205,7 @@ public class GenruleTest {
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(ImmutableMap.<String, String>builder()
         .put("OUT",
-            getAbsolutePathInBase(
-                GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString())
+            filesystem.resolve(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString())
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
@@ -261,7 +237,7 @@ public class GenruleTest {
         .setBash("cat $DEPS > $OUT")
         .setOut("deps.txt")
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
-        .build(resolver, fakeFilesystem);
+        .build(resolver, filesystem);
 
     AbstractGenruleStep genruleStep = ((Genrule) genrule).createGenruleStep();
     ExecutionContext context = newEmptyExecutionContext(Platform.LINUX);
@@ -271,8 +247,8 @@ public class GenruleTest {
         "Make sure that the use of $DEPS pulls in $GEN_DIR, as well.",
         ImmutableMap.of(
             "DEPS", "$GEN_DIR/foo/bar.jar",
-            "GEN_DIR", getAbsolutePathInBase("buck-out/gen").toString(),
-            "OUT", getAbsolutePathInBase("buck-out/gen/foo/deps.txt").toString()),
+            "GEN_DIR", filesystem.resolve("buck-out/gen").toString(),
+            "OUT", filesystem.resolve("buck-out/gen/foo/deps.txt").toString()),
         environmentVariables);
 
     // Ensure that $GEN_DIR is declared before $DEPS.
@@ -492,11 +468,4 @@ public class GenruleTest {
     assertNotEquals(key1, key2);
   }
 
-  private static String getAbsolutePathFor(String path) {
-    return new File(path).getAbsolutePath();
-  }
-
-  private static Path getAbsolutePathInBase(String path) {
-    return Paths.get(BASE_PATH, path);
-  }
 }

@@ -38,7 +38,6 @@ public class YaccStepTest {
   public void yaccStepUsesCorrectCommand() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(projectFilesystem)
         .build();
 
     // Setup some dummy values for inputs to the CxxLinkStep
@@ -49,7 +48,7 @@ public class YaccStepTest {
 
     // Create our CxxLinkStep to test.
     YaccStep yaccStep = new YaccStep(
-        projectFilesystem.getRootPath(),
+        projectFilesystem,
         yaccPrefix,
         flags,
         outputPrefix,

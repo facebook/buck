@@ -53,11 +53,10 @@ public class ConcatStepTest {
       out.close();
     }
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(temp.getRoot().toPath()))
-        .build();
+    ProjectFilesystem filesystem = new ProjectFilesystem(temp.getRoot().toPath());
+    ExecutionContext context = TestExecutionContext.newInstance();
 
-    ConcatStep step = new ConcatStep(inputsBuilder.build(), dest.toPath());
+    ConcatStep step = new ConcatStep(filesystem, inputsBuilder.build(), dest.toPath());
     step.execute(context);
     BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(dest)));
     assertEquals(reader.readLine(), "foobarbaz");

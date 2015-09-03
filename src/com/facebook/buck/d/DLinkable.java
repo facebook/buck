@@ -59,7 +59,7 @@ abstract class DLinkable extends AbstractBuildRule {
       BuildableContext buildableContext) {
 
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(output.getParent()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
         new DCompileStep(
             getProjectFilesystem().getRootPath(),
             compiler.getCommandPrefix(getResolver()),

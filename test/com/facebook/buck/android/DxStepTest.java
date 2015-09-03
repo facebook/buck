@@ -21,9 +21,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.cli.VerbosityParser;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
@@ -71,10 +73,11 @@ public class DxStepTest extends EasyMockSupport {
   public void testDxCommandNoOptimizeNoJumbo() throws IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
-      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+      Function<Path, Path> absolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
-          context.getProjectFilesystem().getRootPath(),
+          filesystem,
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX,
           EnumSet.of(Option.NO_OPTIMIZE));
@@ -82,7 +85,7 @@ public class DxStepTest extends EasyMockSupport {
       String expected = String.format("%s --no-optimize --output %s %s",
           EXPECTED_DX_PREFIX,
           SAMPLE_OUTPUT_PATH,
-          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, absolutifier)));
       MoreAsserts.assertShellCommands(
           "--no-optimize should be present, but --force-jumbo should not.",
           ImmutableList.of(expected),
@@ -96,10 +99,11 @@ public class DxStepTest extends EasyMockSupport {
   public void testDxCommandOptimizeNoJumbo() throws IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
-      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
-          context.getProjectFilesystem().getRootPath(),
+          filesystem,
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX);
 
@@ -120,10 +124,11 @@ public class DxStepTest extends EasyMockSupport {
   public void testDxCommandNoOptimizeForceJumbo() throws IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
-      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
-          context.getProjectFilesystem().getRootPath(),
+          filesystem,
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX,
           EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
@@ -146,10 +151,11 @@ public class DxStepTest extends EasyMockSupport {
   public void testVerbose3AddsStatisticsFlag() throws IOException {
     // Context with --verbose 3.
     try (ExecutionContext context = createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
-      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
-          context.getProjectFilesystem().getRootPath(),
+          filesystem,
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX);
 
@@ -175,10 +181,11 @@ public class DxStepTest extends EasyMockSupport {
   public void testVerbose10AddsVerboseFlagToDx() throws IOException {
     // Context with --verbose 10.
     try (ExecutionContext context = createExecutionContext(10)) {
-      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
-          context.getProjectFilesystem().getRootPath(),
+          filesystem,
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX);
 
@@ -205,10 +212,11 @@ public class DxStepTest extends EasyMockSupport {
   public void testUseCustomDxOption() throws IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
-      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
-          context.getProjectFilesystem().getRootPath(),
+          filesystem,
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX,
           EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
@@ -236,10 +244,11 @@ public class DxStepTest extends EasyMockSupport {
   public void testUseCustomDxOptionWithNullSupplier() throws IOException {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
-      Function<Path, Path> pathAbsolutifier = context.getProjectFilesystem().getAbsolutifier();
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
-          context.getProjectFilesystem().getRootPath(),
+          filesystem,
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX,
           EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),

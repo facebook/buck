@@ -149,7 +149,6 @@ class CommandRunnerParams {
 
   protected ExecutionContext createExecutionContext() {
     return ExecutionContext.builder()
-        .setProjectFilesystem(repository.getFilesystem())
         .setConsole(console)
         .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
         .setEventBus(eventBus)

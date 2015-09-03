@@ -17,18 +17,12 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
-import com.facebook.buck.testutil.IdentityPathAbsolutifier;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class TestExecutionContext {
 
@@ -43,17 +37,6 @@ public class TestExecutionContext {
   public static ExecutionContext.Builder newBuilder() {
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
-        .setProjectFilesystem(
-            new ProjectFilesystem(Paths.get(".")) {
-              @Override
-              public Path resolve(Path path) {
-                return path;
-              }
-              @Override
-              public Function<Path, Path> getAbsolutifier() {
-                return IdentityPathAbsolutifier.getIdentityAbsolutifier();
-              }
-            })
         .setEventBus(BuckEventBusFactory.newInstance())
         .setPlatform(Platform.detect())
         .setEnvironment(ImmutableMap.copyOf(System.getenv()))

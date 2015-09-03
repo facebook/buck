@@ -112,7 +112,7 @@ public class CxxLink
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
-        new MkdirStep(output.getParent()),
+        new MkdirStep(getProjectFilesystem(), output.getParent()),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
             linker.getCommandPrefix(getResolver()),
@@ -121,7 +121,10 @@ public class CxxLink
             frameworkRoots,
             getLibrarySearchDirectories(),
             getLibraryNames()),
-        new FileScrubberStep(output, linker.getScrubbers(getProjectFilesystem().getRootPath())));
+        new FileScrubberStep(
+            getProjectFilesystem(),
+            output,
+            linker.getScrubbers(getProjectFilesystem().getRootPath())));
   }
 
   @Override

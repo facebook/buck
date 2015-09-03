@@ -59,10 +59,7 @@ public class ProvisioningProfileCopyStepTest {
     tempOutputDir = tmp.getRootPath();
     outputFile = tempOutputDir.resolve("embedded.mobileprovision");
     xcentFile = tempOutputDir.resolve("test.xcent");
-    executionContext = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    executionContext = TestExecutionContext.newInstance();
   }
 
   private static ProvisioningProfileMetadata makeTestMetadata(

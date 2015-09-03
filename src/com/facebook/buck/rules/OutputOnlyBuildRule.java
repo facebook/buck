@@ -53,8 +53,8 @@ public class OutputOnlyBuildRule extends AbstractBuildRule {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new MakeCleanDirectoryStep(output.getParent()));
-    steps.add(new SymlinkFileStep(input, output, false));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
+    steps.add(new SymlinkFileStep(getProjectFilesystem(), input, output, false));
 
     buildableContext.recordArtifact(output);
 

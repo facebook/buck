@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
@@ -33,6 +34,8 @@ import javax.annotation.Nullable;
  * Creates a JAR file from a collection of directories/ZIP/JAR files.
  */
 public class JarDirectoryStep implements Step {
+
+  private final ProjectFilesystem filesystem;
 
   /** Where to write the new JAR file. */
   private final Path pathToOutputFile;
@@ -53,11 +56,19 @@ public class JarDirectoryStep implements Step {
   private final ImmutableSet<Pattern> blacklist;
 
   public JarDirectoryStep(
+      ProjectFilesystem filesystem,
       Path pathToOutputFile,
       Set<Path> entriesToJar,
       @Nullable String mainClass,
       @Nullable Path manifestFile) {
-    this(pathToOutputFile, entriesToJar, mainClass, manifestFile, true, ImmutableSet.<String>of());
+    this(
+        filesystem,
+        pathToOutputFile,
+        entriesToJar,
+        mainClass,
+        manifestFile,
+        true,
+        ImmutableSet.<String>of());
   }
 
   /**
@@ -74,12 +85,15 @@ public class JarDirectoryStep implements Step {
    *     generated JAR.
    * @param manifestFile If specified, the path to the manifest file to use with this JAR.
    */
-  public JarDirectoryStep(Path pathToOutputFile,
-                          Set<Path> entriesToJar,
-                          @Nullable String mainClass,
-                          @Nullable Path manifestFile,
-                          boolean mergeManifests,
-                          Set<String> blacklist) {
+  public JarDirectoryStep(
+      ProjectFilesystem filesystem,
+      Path pathToOutputFile,
+      Set<Path> entriesToJar,
+      @Nullable String mainClass,
+      @Nullable Path manifestFile,
+      boolean mergeManifests,
+      Set<String> blacklist) {
+    this.filesystem = filesystem;
     this.pathToOutputFile = pathToOutputFile;
     this.entriesToJar = ImmutableSet.copyOf(entriesToJar);
     this.mainClass = mainClass;
@@ -122,6 +136,7 @@ public class JarDirectoryStep implements Step {
   public int execute(ExecutionContext context) {
     try {
       return JarDirectoryStepHelper.createJarFile(
+          filesystem,
           pathToOutputFile,
           entriesToJar,
           mainClass,

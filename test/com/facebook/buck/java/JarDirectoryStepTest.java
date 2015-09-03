@@ -68,13 +68,13 @@ public class JarDirectoryStepTest {
     Path first = createZip(zipup.resolve("a.zip"), "example.txt");
     Path second = createZip(zipup.resolve("b.zip"), "example.txt", "com/example/Main.class");
 
-    JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
+    JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(zipup),
+        Paths.get("output.jar"),
         ImmutableSet.of(first.getFileName(), second.getFileName()),
         "com.example.Main",
         /* manifest file */ null);
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(zipup))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context);
 
@@ -94,14 +94,15 @@ public class JarDirectoryStepTest {
 
     Path zip = createZip(zipup.resolve("a.zip"), "com/example/Main.class");
 
-    JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
+    JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(zipup),
+        Paths.get("output.jar"),
         ImmutableSet.of(zip.getFileName()),
         "com.example.MissingMain",
         /* manifest file */ null);
     TestConsole console = new TestConsole();
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setConsole(console)
-        .setProjectFilesystem(new ProjectFilesystem(zipup))
         .build();
 
     int returnCode = step.execute(context);
@@ -123,14 +124,14 @@ public class JarDirectoryStepTest {
         "dir/root2file.txt",
         "com/example/Main.class");
 
-    JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
+    JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(zipup),
+        Paths.get("output.jar"),
         ImmutableSet.of(first.getFileName(), second.getFileName()),
         "com.example.Main",
         /* manifest file */ null);
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(zipup))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context);
 
@@ -171,15 +172,14 @@ public class JarDirectoryStepTest {
 
     Path output = tmp.resolve("output.jar");
     JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(tmp),
         Paths.get("output.jar"),
         ImmutableSet.of(Paths.get("input.jar")),
         /* main class */ null,
         Paths.get("manifest"),
         /* merge manifest */ true,
         /* blacklist */ ImmutableSet.<String>of());
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context));
 
     try (Zip zip = new Zip(output, false)) {
@@ -199,13 +199,13 @@ public class JarDirectoryStepTest {
     Files.createDirectories(subdir);
     Files.write(subdir.resolve("a.txt"), "cake".getBytes());
 
-    JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
+    JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(zipup),
+        Paths.get("output.jar"),
         ImmutableSet.of(zipup),
         /* main class */ null,
         /* manifest file */ null);
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(zipup))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context);
 
@@ -256,16 +256,16 @@ public class JarDirectoryStepTest {
         "dir/file2.txt",
         "com/example/Main.class");
 
-    JarDirectoryStep step = new JarDirectoryStep(Paths.get("output.jar"),
+    JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(zipup),
+        Paths.get("output.jar"),
         ImmutableSet.of(first.getFileName()),
         "com.example.Main",
         /* manifest file */ null,
         /* merge manifests */ true,
         /* blacklist */ ImmutableSet.of(".*2.*"));
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(zipup))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context);
 
@@ -290,14 +290,12 @@ public class JarDirectoryStepTest {
     Path outputJar = folder.getRoot().resolve("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
+            new ProjectFilesystem(folder.getRoot()),
             outputJar,
             ImmutableSet.of(zipup),
             /* main class */ null,
             /* manifest file */ null);
-    ExecutionContext context =
-        TestExecutionContext.newBuilder()
-            .setProjectFilesystem(new ProjectFilesystem(folder.getRoot()))
-            .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
     int returnCode = step.execute(context);
     assertEquals(0, returnCode);
 
@@ -341,15 +339,14 @@ public class JarDirectoryStepTest {
     Path tmp = folder.newFolder();
     Path output = tmp.resolve("example.jar");
     JarDirectoryStep step = new JarDirectoryStep(
+        new ProjectFilesystem(tmp),
         output,
         ImmutableSortedSet.of(originalJar),
         /* main class */ null,
         manifestFile,
         mergeEntries,
         /* blacklist */ ImmutableSet.<String>of());
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp))
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 
     // Now verify that the created manifest matches the expected one.

@@ -30,18 +30,30 @@ import java.nio.file.Path;
 
 public class FindAndReplaceStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final Path input;
   private final Path output;
   private final Function<String, String> replacer;
 
-  public FindAndReplaceStep(Path input, Path output, Function<String, String> replacer) {
+  public FindAndReplaceStep(
+      ProjectFilesystem filesystem,
+      Path input,
+      Path output,
+      Function<String, String> replacer) {
+    this.filesystem = filesystem;
     this.input = input;
     this.output = output;
     this.replacer = replacer;
   }
 
-  public FindAndReplaceStep(Path input, Path output, final String pattern, final String replace) {
+  public FindAndReplaceStep(
+      ProjectFilesystem filesystem,
+      Path input,
+      Path output,
+      final String pattern,
+      final String replace) {
     this(
+        filesystem,
         input,
         output,
         new Function<String, String>() {
@@ -54,7 +66,6 @@ public class FindAndReplaceStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try (BufferedReader reader = new BufferedReader(
              new InputStreamReader(filesystem.newFileInputStream(input)));
          BufferedWriter writer = new BufferedWriter(

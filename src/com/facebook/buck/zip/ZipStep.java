@@ -59,6 +59,7 @@ public class ZipStep implements Step {
   public static final int DEFAULT_COMPRESSION_LEVEL = 6;
   public static final int MAX_COMPRESSION_LEVEL = 9;
 
+  private final ProjectFilesystem filesystem;
   private final Path pathToZipFile;
   private final ImmutableSet<Path> paths;
   private final boolean junkPaths;
@@ -83,6 +84,7 @@ public class ZipStep implements Step {
    * @param baseDir working directory for {@code zip} command.
    */
   public ZipStep(
+      ProjectFilesystem filesystem,
       Path pathToZipFile,
       Set<Path> paths,
       boolean junkPaths,
@@ -90,6 +92,7 @@ public class ZipStep implements Step {
       Path baseDir) {
     Preconditions.checkArgument(compressionLevel >= MIN_COMPRESSION_LEVEL &&
         compressionLevel <= MAX_COMPRESSION_LEVEL, "compressionLevel out of bounds.");
+    this.filesystem = filesystem;
     this.pathToZipFile = pathToZipFile;
     this.paths = ImmutableSet.copyOf(paths);
     this.junkPaths = junkPaths;
@@ -99,7 +102,6 @@ public class ZipStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    final ProjectFilesystem filesystem = context.getProjectFilesystem();
     if (filesystem.exists(pathToZipFile)) {
       context.postEvent(
           ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));

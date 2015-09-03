@@ -297,8 +297,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
 
     stepsBuilder.add(
-        new MakeCleanDirectoryStep(bundleRoot),
-        new MkdirStep(metadataPath),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), bundleRoot),
+        new MkdirStep(getProjectFilesystem(), metadataPath),
         // TODO(user): This is only appropriate for .app bundles.
         new WriteFileStep(
             getProjectFilesystem(),
@@ -306,17 +306,19 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
             metadataPath.resolve("PkgInfo"),
             /* executable */ false),
         new FindAndReplaceStep(
-          infoPlistInputPath,
-          infoPlistSubstitutionTempPath,
-          InfoPlistSubstitution.createVariableExpansionFunction(
-              withDefaults(
-                  infoPlistSubstitutions,
-                  ImmutableMap.of(
-                      "EXECUTABLE_NAME", binaryName,
-                      "PRODUCT_NAME", binaryName
-                  ))
-          )),
+            getProjectFilesystem(),
+            infoPlistInputPath,
+            infoPlistSubstitutionTempPath,
+            InfoPlistSubstitution.createVariableExpansionFunction(
+                withDefaults(
+                    infoPlistSubstitutions,
+                    ImmutableMap.of(
+                        "EXECUTABLE_NAME", binaryName,
+                        "PRODUCT_NAME", binaryName
+                    ))
+            )),
         new PlistProcessStep(
+            getProjectFilesystem(),
             infoPlistSubstitutionTempPath,
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(platformName, sdkName),
@@ -325,15 +327,18 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
     if (hasDebugSymbols) {
       stepsBuilder.add(
-          new MkdirStep(bundleRoot.resolve(this.destinations.getExecutablesPath())));
-      buildableContext.recordArtifact(dsymPath);
+          new MkdirStep(
+              getProjectFilesystem(),
+              bundleRoot.resolve(this.destinations.getExecutablesPath())));
+      Path bundleBinaryPath = bundleRoot.resolve(binaryPath);
       stepsBuilder.add(
           CopyStep.forFile(
+              getProjectFilesystem(),
               binary.get().getPathToOutput(),
               bundleBinaryPath));
       stepsBuilder.add(
           new DsymStep(
-              getProjectFilesystem().getRootPath(),
+              getProjectFilesystem(),
               dsymutil.getCommandPrefix(getResolver()),
               bundleBinaryPath,
               dsymPath));
@@ -349,23 +354,25 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
     Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
     for (SourcePath dir : resourceDirs) {
-      stepsBuilder.add(new MkdirStep(bundleDestinationPath));
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleDestinationPath));
       stepsBuilder.add(
           CopyStep.forDirectory(
+              getProjectFilesystem(),
               getResolver().getPath(dir),
               bundleDestinationPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
     for (SourcePath dir : dirsContainingResourceDirs) {
-      stepsBuilder.add(new MkdirStep(bundleDestinationPath));
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleDestinationPath));
       stepsBuilder.add(
           CopyStep.forDirectory(
+              getProjectFilesystem(),
               getResolver().getPath(dir),
               bundleDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
     for (SourcePath file : resourceFiles) {
-      stepsBuilder.add(new MkdirStep(bundleDestinationPath));
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleDestinationPath));
       Path resolvedFilePath = getResolver().getPath(file);
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
@@ -387,7 +394,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
         Path bundleVariantDestinationPath =
             bundleDestinationPath.resolve(variantDirectory.getFileName());
-        stepsBuilder.add(new MkdirStep(bundleVariantDestinationPath));
+        stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleVariantDestinationPath));
 
         Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
         addResourceProcessingSteps(variantFilePath, destinationPath, stepsBuilder);
@@ -398,6 +405,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Path bundleDir = assetCatalog.get().getOutputDir();
       stepsBuilder.add(
           CopyStep.forDirectory(
+              getProjectFilesystem(),
               bundleDir,
               bundleRoot,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
@@ -495,9 +503,10 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       ImmutableList.Builder<Step> stepsBuilder) {
     for (SourcePath sourcePath : extensionBundlePaths) {
       Path plugInsDestPath = bundleRoot.resolve(destinations.getPlugInsPath());
-      stepsBuilder.add(new MkdirStep(plugInsDestPath));
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), plugInsDestPath));
       stepsBuilder.add(
         CopyStep.forDirectory(
+            getProjectFilesystem(),
             getResolver().getPath(sourcePath),
             plugInsDestPath,
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
@@ -558,6 +567,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
         LOG.debug("Converting plist %s to binary plist %s", sourcePath, destinationPath);
         stepsBuilder.add(
             new PlistProcessStep(
+                getProjectFilesystem(),
                 sourcePath,
                 destinationPath,
                 ImmutableMap.<String, NSObject>of(),
@@ -571,13 +581,13 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
         LOG.debug("Compiling XIB %s to NIB %s", sourcePath, destinationPath);
         stepsBuilder.add(
             new IbtoolStep(
-                getProjectFilesystem().getRootPath(),
+                getProjectFilesystem(),
                 ibtool.getCommandPrefix(getResolver()),
                 sourcePath,
                 compiledNibPath));
         break;
       default:
-        stepsBuilder.add(CopyStep.forFile(sourcePath, destinationPath));
+        stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), sourcePath, destinationPath));
         break;
     }
   }

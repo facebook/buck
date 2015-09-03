@@ -44,14 +44,13 @@ public class SymCopyStepTest {
   @Before
   public void setUp() {
     projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
-    context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    context = TestExecutionContext.newInstance();
   }
 
   @Test
   public void testGetShortName() {
     SymCopyStep symCopyStep = new SymCopyStep(
+        projectFilesystem,
         ImmutableList.<Path>builder().add(Paths.get("here")).build(),
         Paths.get("there"));
     assertEquals("lns", symCopyStep.getShortName());
@@ -60,6 +59,7 @@ public class SymCopyStepTest {
   @Test
   public void testDescription() {
     SymCopyStep symCopyStep = new SymCopyStep(
+        projectFilesystem,
         ImmutableList.<Path>builder().add(Paths.get("here")).build(),
         Paths.get("there"));
     assertEquals("Symlink-Copy step", symCopyStep.getDescription(context));
@@ -88,6 +88,7 @@ public class SymCopyStepTest {
     Path destRoot = Paths.get("dest-root");
 
     SymCopyStep symCopyStep = new SymCopyStep(
+        projectFilesystem,
         ImmutableList.<Path>builder()
             .add(sourceRoot)
             .build(),

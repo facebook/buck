@@ -101,7 +101,7 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
       TestSelectorList testSelectorList,
       TestRule.TestReportingCallback testReportingCallback) {
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(getPathToTestOutputDirectory()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
         getRunTestStep());
   }
 

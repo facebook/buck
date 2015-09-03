@@ -107,7 +107,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
 
     Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
-        filesystem.getRootPath(),
+        filesystem,
         filesToDex,
         outputPath,
         dxOptions,
@@ -128,7 +128,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -4 --check=crc32 classes.dex.jar"),
         steps,
-        createMockedExecutionContext(filesystem));
+        createMockedExecutionContext());
 
     verifyAll();
   }
@@ -143,7 +143,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputPath = Paths.get("classes.dex.jar.xz");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
-        filesystem.getRootPath(),
+        filesystem,
         filesToDex,
         outputPath,
         dxOptions,
@@ -166,7 +166,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "xz -z -9 --check=crc32 classes.dex.jar"),
         steps,
-        createMockedExecutionContext(filesystem));
+        createMockedExecutionContext());
 
     verifyAll();
   }
@@ -180,7 +180,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputPath = Paths.get("classes.dex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
-        filesystem.getRootPath(),
+        filesystem,
         filesToDex,
         outputPath,
         dxOptions,
@@ -192,7 +192,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Paths.get("/usr/bin/dx") + " " + xmx +
             "--dex --output /opt/src/buck/classes.dex " +
             "/opt/src/buck/foo.dex.jar /opt/src/buck/bar.dex.jar)",
-        dxStep.getDescription(createMockedExecutionContext(filesystem)));
+        dxStep.getDescription(createMockedExecutionContext()));
     verifyAll();
   }
 
@@ -205,7 +205,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputPath = Paths.get("classes.dex.jar");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     Step dxStep = SmartDexingStep.createDxStepForDxPseudoRule(
-        filesystem.getRootPath(),
+        filesystem,
         filesToDex,
         outputPath,
         dxOptions,
@@ -217,7 +217,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         Paths.get("/usr/bin/dx") + " " + xmx + "--dex --output /opt/src/buck/classes.dex.jar " +
         "/opt/src/buck/foo.dex.jar /opt/src/buck/bar.dex.jar) && " +
         "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
-        dxStep.getDescription(createMockedExecutionContext(filesystem)));
+        dxStep.getDescription(createMockedExecutionContext()));
     verifyAll();
   }
 
@@ -230,14 +230,14 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
-        filesystem.getRootPath(),
+        filesystem,
         filesToDex,
         outputPath,
         dxOptions,
         Optional.<Integer>absent());
   }
 
-  private ExecutionContext createMockedExecutionContext(ProjectFilesystem filesystem)
+  private ExecutionContext createMockedExecutionContext()
       throws IOException {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     expect(androidPlatformTarget.getDxExecutable()).andStubReturn(Paths.get("/usr/bin/dx"));
@@ -245,7 +245,6 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     return TestExecutionContext.newBuilder()
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .setProjectFilesystem(filesystem)
         .build();
   }
 }

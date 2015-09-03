@@ -74,10 +74,10 @@ public class Lex extends AbstractBuildRule {
     buildableContext.recordArtifact(outputSource);
 
     return ImmutableList.of(
-        new MkdirStep(outputSource.getParent()),
-        new RmStep(outputSource, /* shouldForceDeletion */ true),
-        new MkdirStep(outputHeader.getParent()),
-        new RmStep(outputHeader, /* shouldForceDeletion */ true),
+        new MkdirStep(getProjectFilesystem(), outputSource.getParent()),
+        new RmStep(getProjectFilesystem(), outputSource, /* shouldForceDeletion */ true),
+        new MkdirStep(getProjectFilesystem(), outputHeader.getParent()),
+        new RmStep(getProjectFilesystem(), outputHeader, /* shouldForceDeletion */ true),
         new LexStep(
             getProjectFilesystem().getRootPath(),
             lex.getCommandPrefix(getResolver()),

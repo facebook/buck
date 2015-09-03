@@ -96,6 +96,7 @@ public class CompileStringsStep implements Step {
   static final Pattern R_DOT_TXT_STRING_RESOURCE_PATTERN = Pattern.compile(
       "^int (string|plurals|array) (\\w+) 0x([0-9a-f]+)$");
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableList<Path> stringFiles;
   private final Path rDotTxtDir;
   private final Map<String, String> regionSpecificToBaseLocaleMap;
@@ -114,9 +115,11 @@ public class CompileStringsStep implements Step {
    * @param pathBuilder Builds a path to store a .fbstr file at.
    */
   public CompileStringsStep(
+      ProjectFilesystem filesystem,
       ImmutableList<Path> stringFiles,
       Path rDotTxtDir,
       Function<String, Path> pathBuilder) {
+    this.filesystem = filesystem;
     this.stringFiles = stringFiles;
     this.rDotTxtDir = rDotTxtDir;
     this.pathBuilder = pathBuilder;
@@ -126,7 +129,6 @@ public class CompileStringsStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try {
       buildResourceNameToIdMap(filesystem, rDotTxtDir.resolve("R.txt"), resourceNameToIdMap);
     } catch (IOException e) {

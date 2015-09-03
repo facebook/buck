@@ -76,7 +76,7 @@ public class CxxCompileStepIntegrationTest {
 
     // Build an archive step.
     CxxPreprocessAndCompileStep step = new CxxPreprocessAndCompileStep(
-        filesystem.getRootPath(),
+        filesystem,
         CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
         output,
         depFile,
@@ -89,10 +89,7 @@ public class CxxCompileStepIntegrationTest {
         Optional.<Function<String, Iterable<String>>>absent());
 
     // Execute the archive step and verify it ran successfully.
-    ExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
-            .build();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestConsole console = (TestConsole) executionContext.getConsole();
     int exitCode = step.execute(executionContext);
     if (failure.isPresent()) {

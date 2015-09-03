@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
@@ -35,6 +36,8 @@ import java.nio.file.Path;
 public class ConcatStep implements Step {
 
   public static final String SHORT_NAME = "cat";
+
+  private final ProjectFilesystem filesystem;
   private final Supplier<ImmutableList<Path>> inputs;
   private final Path output;
 
@@ -43,7 +46,8 @@ public class ConcatStep implements Step {
    * @param inputs The files to be concatenated
    * @param outputPath The desired output path.
    */
-  public ConcatStep(ImmutableList<Path> inputs, Path outputPath) {
+  public ConcatStep(ProjectFilesystem filesystem, ImmutableList<Path> inputs, Path outputPath) {
+    this.filesystem = filesystem;
     this.inputs = Suppliers.ofInstance(inputs);
     output = outputPath;
   }
@@ -53,7 +57,11 @@ public class ConcatStep implements Step {
    * @param inputsBuilder The files to be concatenated, in builder form
    * @param outputPath The desired output path.
    */
-  public ConcatStep(final ImmutableList.Builder<Path> inputsBuilder, Path outputPath) {
+  public ConcatStep(
+      ProjectFilesystem filesystem,
+      final ImmutableList.Builder<Path> inputsBuilder,
+      Path outputPath) {
+    this.filesystem = filesystem;
     this.inputs = Suppliers.memoize(new Supplier<ImmutableList<Path>>() {
                                       @Override
                                       public ImmutableList<Path> get() {
@@ -67,10 +75,10 @@ public class ConcatStep implements Step {
   public int execute(ExecutionContext context) {
     ImmutableList<Path> list = inputs.get();
     try (
-        OutputStream out = context.getProjectFilesystem().newFileOutputStream(output);
+        OutputStream out = filesystem.newFileOutputStream(output);
     ) {
       for (Path p : list) {
-        context.getProjectFilesystem().copyToOutputStream(p, out);
+        filesystem.copyToOutputStream(p, out);
       }
       out.flush();
     } catch (IOException e) {

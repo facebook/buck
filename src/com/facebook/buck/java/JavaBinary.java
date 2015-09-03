@@ -115,7 +115,7 @@ public class JavaBinary extends AbstractBuildRule
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     Path outputDirectory = getOutputDirectory();
-    Step mkdir = new MkdirStep(outputDirectory);
+    Step mkdir = new MkdirStep(getProjectFilesystem(), outputDirectory);
     commands.add(mkdir);
 
     ImmutableSet<Path> includePaths;
@@ -123,11 +123,15 @@ public class JavaBinary extends AbstractBuildRule
       Path stagingRoot = outputDirectory.resolve("meta_inf_staging");
       Path stagingTarget = stagingRoot.resolve("META-INF");
 
-      MakeCleanDirectoryStep createStagingRoot = new MakeCleanDirectoryStep(stagingRoot);
+      MakeCleanDirectoryStep createStagingRoot = new MakeCleanDirectoryStep(
+          getProjectFilesystem(),
+          stagingRoot);
       commands.add(createStagingRoot);
 
       MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
-          metaInfDirectory, stagingTarget);
+          getProjectFilesystem(),
+          metaInfDirectory,
+          stagingTarget);
       commands.add(link);
 
       includePaths = ImmutableSet.<Path>builder()
@@ -141,6 +145,7 @@ public class JavaBinary extends AbstractBuildRule
     Path outputFile = getPathToOutput();
     Path manifestPath = manifestFile == null ? null : getResolver().getPath(manifestFile);
     Step jar = new JarDirectoryStep(
+        getProjectFilesystem(),
         outputFile,
         includePaths,
         mainClass,

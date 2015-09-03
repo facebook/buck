@@ -86,7 +86,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
 
-    stepsBuilder.add(new MakeCleanDirectoryStep(outputDir));
+    stepsBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
 
     ImmutableSortedSet<Path> absoluteAssetCatalogDirs =
         ImmutableSortedSet.copyOf(

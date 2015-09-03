@@ -16,6 +16,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -50,6 +51,7 @@ public class CopyResourcesStep implements Step {
               BuckConstant.GEN_DIR
           ) + ")/(.*)");
 
+  private final ProjectFilesystem filesystem;
   private final SourcePathResolver resolver;
   private final BuildTarget target;
   private final Collection<? extends SourcePath> resources;
@@ -57,11 +59,13 @@ public class CopyResourcesStep implements Step {
   private final JavaPackageFinder javaPackageFinder;
 
   public CopyResourcesStep(
+      ProjectFilesystem filesystem,
       SourcePathResolver resolver,
       BuildTarget target,
       Collection<? extends SourcePath> resources,
       Path outputDirectory,
       JavaPackageFinder javaPackageFinder) {
+    this.filesystem = filesystem;
     this.resolver = resolver;
     this.target = target;
     this.resources = resources;
@@ -141,7 +145,10 @@ public class CopyResourcesStep implements Step {
         }
       }
       Path target = outputDirectory.resolve(relativeSymlinkPath);
-      MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(pathToResource, target);
+      MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
+          filesystem,
+          pathToResource,
+          target);
       allSteps.add(link);
     }
     return allSteps.build();

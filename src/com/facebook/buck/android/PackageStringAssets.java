@@ -95,9 +95,9 @@ public class PackageStringAssets extends AbstractBuildRule
     // We need to generate a zip file with the following dir structure:
     // /assets/strings/*.fbstr
     Path pathToBaseDir = getPathToStringAssetsDir();
-    steps.add(new MakeCleanDirectoryStep(pathToBaseDir));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToBaseDir));
     Path pathToDirContainingAssetsDir = pathToBaseDir.resolve("string_assets");
-    steps.add(new MakeCleanDirectoryStep(pathToDirContainingAssetsDir));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToDirContainingAssetsDir));
     final Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
     Function<String, Path> assetPathBuilder = new Function<String, Path>() {
       @Override
@@ -107,25 +107,32 @@ public class PackageStringAssets extends AbstractBuildRule
     };
     Path pathToStringAssetsZip = getPathToStringAssetsZip();
     Path pathToAllLocalesStringAssetsZip = getPathToAllLocalesStringAssetsZip();
-    steps.add(new MakeCleanDirectoryStep(pathToStrings));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToStrings));
     steps.add(new CompileStringsStep(
+            getProjectFilesystem(),
             filteredResourcesProvider.getStringFiles(),
             aaptPackageResources.getPathToRDotTxtDir(),
             assetPathBuilder));
     steps.add(new ZipStep(
+            getProjectFilesystem(),
             pathToAllLocalesStringAssetsZip,
             ImmutableSet.<Path>of(),
             false,
             ZipStep.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));
     steps.add(new ZipStep(
+            getProjectFilesystem(),
             pathToStringAssetsZip,
             FluentIterable.from(locales).transform(assetPathBuilder).toSet(),
             false,
             ZipStep.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));
     steps.add(
-        new RecordFileSha1Step(pathToStringAssetsZip, STRING_ASSETS_ZIP_HASH, buildableContext));
+        new RecordFileSha1Step(
+            getProjectFilesystem(),
+            pathToStringAssetsZip,
+            STRING_ASSETS_ZIP_HASH,
+            buildableContext));
 
     buildableContext.recordArtifact(pathToAllLocalesStringAssetsZip);
     buildableContext.recordArtifact(pathToStringAssetsZip);

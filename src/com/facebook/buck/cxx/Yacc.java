@@ -76,11 +76,17 @@ public class Yacc extends AbstractBuildRule {
     buildableContext.recordArtifact(YaccStep.getSourceOutputPath(outputPrefix));
 
     return ImmutableList.of(
-        new MkdirStep(outputPrefix.getParent()),
-        new RmStep(getHeaderOutputPath(outputPrefix), /* shouldForceDeletion */ true),
-        new RmStep(getSourceOutputPath(outputPrefix), /* shouldForceDeletion */ true),
+        new MkdirStep(getProjectFilesystem(), outputPrefix.getParent()),
+        new RmStep(
+            getProjectFilesystem(),
+            getHeaderOutputPath(outputPrefix), /* force delete */
+            true),
+        new RmStep(
+            getProjectFilesystem(),
+            getSourceOutputPath(outputPrefix), /* shouldForceDeletion */
+            true),
         new YaccStep(
-            getProjectFilesystem().getRootPath(),
+            getProjectFilesystem(),
             yacc.getCommandPrefix(getResolver()),
             flags,
             outputPrefix,

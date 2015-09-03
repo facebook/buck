@@ -127,7 +127,7 @@ public abstract class Jsr199Javac implements Javac {
     try {
       compilationUnits = createCompilationUnits(
           fileManager,
-          context.getProjectFilesystem().getAbsolutifier(),
+          filesystem.getAbsolutifier(),
           javaSourceFilePaths);
     } catch (IOException e) {
       close(fileManager, compilationUnits);
@@ -140,7 +140,7 @@ public abstract class Jsr199Javac implements Javac {
       // for buck user to have a list of all .java files to be compiled
       // since we do not print them out to console in case of error
       try {
-        context.getProjectFilesystem().writeLinesToPath(
+        filesystem.writeLinesToPath(
             FluentIterable.from(javaSourceFilePaths)
                 .transform(Functions.toStringFunction())
                 .transform(ARGFILES_ESCAPER),
@@ -214,7 +214,7 @@ public abstract class Jsr199Javac implements Javac {
           Diagnostic.Kind kind = diagnostic.getKind();
           if (kind == Diagnostic.Kind.ERROR) {
             ++numErrors;
-            handleMissingSymbolError(invokingRule, diagnostic, context);
+            handleMissingSymbolError(invokingRule, diagnostic, context, filesystem);
           } else if (kind == Diagnostic.Kind.WARNING ||
               kind == Diagnostic.Kind.MANDATORY_WARNING) {
             ++numWarnings;
@@ -366,9 +366,10 @@ public abstract class Jsr199Javac implements Javac {
   private void handleMissingSymbolError(
       BuildTarget invokingRule,
       Diagnostic<? extends JavaFileObject> diagnostic,
-      ExecutionContext context) {
+      ExecutionContext context,
+      ProjectFilesystem filesystem) {
     JavacErrorParser javacErrorParser = new JavacErrorParser(
-        context.getProjectFilesystem(),
+        filesystem,
         context.getJavaPackageFinder());
     Optional<String> symbol = javacErrorParser.getMissingSymbolFromCompilerError(
         DiagnosticPrettyPrinter.format(diagnostic));

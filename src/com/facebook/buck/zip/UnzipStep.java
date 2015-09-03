@@ -28,17 +28,18 @@ import java.nio.file.Path;
 public class UnzipStep implements Step {
   private static final Logger LOG = Logger.get(UnzipStep.class);
 
+  private final ProjectFilesystem filesystem;
   private final Path zipFile;
   private final Path destinationDirectory;
 
-  public UnzipStep(Path zipFile, Path destinationDirectory) {
+  public UnzipStep(ProjectFilesystem filesystem, Path zipFile, Path destinationDirectory) {
+    this.filesystem = filesystem;
     this.zipFile = zipFile;
     this.destinationDirectory = destinationDirectory;
   }
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     Path zip = filesystem.getPathForRelativeExistingPath(zipFile).toAbsolutePath();
     Path out = filesystem.getPathForRelativeExistingPath(destinationDirectory).toAbsolutePath();
 
@@ -58,10 +59,9 @@ public class UnzipStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     return String.format(
         "unzip %s -d %s",
-        MorePaths.pathWithUnixSeparators(projectFilesystem.resolve(zipFile)),
-        MorePaths.pathWithUnixSeparators(projectFilesystem.resolve(destinationDirectory)));
+        MorePaths.pathWithUnixSeparators(filesystem.resolve(zipFile)),
+        MorePaths.pathWithUnixSeparators(filesystem.resolve(destinationDirectory)));
   }
 }

@@ -77,7 +77,7 @@ public class JUnitStepTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     JUnitStep junit = new JUnitStep(
-        filesystem.getRootPath(),
+        filesystem,
         classpathEntries,
         testClassNames,
         vmArgs,
@@ -97,7 +97,6 @@ public class JUnitStepTest {
         /* stdErrLogLevel */ Optional.<Level>absent());
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
-    EasyMock.expect(executionContext.getProjectFilesystem()).andReturn(filesystem).anyTimes();
     EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
     EasyMock.expect(executionContext.getDefaultTestTimeoutMillis()).andReturn(5000L);
     EasyMock.replay(executionContext);
@@ -160,7 +159,7 @@ public class JUnitStepTest {
     Path testRunnerClasspath = Paths.get("build/classes/junit");
 
     JUnitStep junit = new JUnitStep(
-        Paths.get("."),
+        FakeProjectFilesystem.createJavaOnlyFilesystem(),
         classpathEntries,
         testClassNames,
         vmArgs,
@@ -189,7 +188,7 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "java",
-            "-Djava.io.tmpdir=" + directoryForTemp,
+            "-Djava.io.tmpdir=/opt/src/buck/" + directoryForTemp,
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             buildIdArg,
             modulePathArg,
@@ -199,7 +198,7 @@ public class JUnitStepTest {
             "-verbose",
             "-classpath",
             Joiner.on(File.pathSeparator).join(
-                "@" + junit.getClassPathFile(),
+                "@/opt/src/buck/" + junit.getClassPathFile(),
                 Paths.get("build/classes/junit")),
             FileClassPathRunner.class.getName(),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,

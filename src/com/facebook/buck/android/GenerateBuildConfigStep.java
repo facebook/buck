@@ -30,6 +30,7 @@ import java.nio.file.Path;
 
 public class GenerateBuildConfigStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final BuildTarget source;
   private final String javaPackage;
   private final boolean useConstantExpressions;
@@ -37,11 +38,13 @@ public class GenerateBuildConfigStep implements Step {
   private final Path outBuildConfigPath;
 
   public GenerateBuildConfigStep(
+      ProjectFilesystem filesystem,
       BuildTarget source,
       String javaPackage,
       boolean useConstantExpressions,
       Supplier<BuildConfigFields> fields,
       Path outBuildConfigPath) {
+    this.filesystem = filesystem;
     this.source = source;
     this.javaPackage = javaPackage;
     this.useConstantExpressions = useConstantExpressions;
@@ -59,7 +62,6 @@ public class GenerateBuildConfigStep implements Step {
         javaPackage,
         useConstantExpressions,
         fields.get());
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try {
       filesystem.writeContentsToPath(java, outBuildConfigPath);
     } catch (IOException e) {

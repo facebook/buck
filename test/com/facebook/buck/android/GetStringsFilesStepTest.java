@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.testutil.MoreAsserts.assertIterablesEquals;
 import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -44,7 +43,6 @@ public class GetStringsFilesStepTest {
   private void setUpFakeFilesystem(Set<Path> files) {
     filesystem = new FakeProjectFilesystem(files);
     context = createMock(ExecutionContext.class);
-    expect(context.getProjectFilesystem()).andReturn(filesystem).anyTimes();
     replay(context);
   }
 
@@ -65,6 +63,7 @@ public class GetStringsFilesStepTest {
 
     ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
     GetStringsFilesStep step = new GetStringsFilesStep(
+        filesystem,
         ImmutableList.of(Paths.get("test3"), Paths.get("test"), Paths.get("test2")),
         stringFilesBuilder,
         ImmutableSet.<Path>of());
@@ -110,6 +109,7 @@ public class GetStringsFilesStepTest {
 
     ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
     GetStringsFilesStep step = new GetStringsFilesStep(
+        filesystem,
         ImmutableList.of(Paths.get("test3"), Paths.get("test"), Paths.get("whitelisted/path")),
         stringFilesBuilder,
         ImmutableSet.of(Paths.get("whitelisted")));

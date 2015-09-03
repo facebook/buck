@@ -207,8 +207,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
     Path tmpDirectory = getPathToTmpDirectory();
-    steps.add(new MakeCleanDirectoryStep(pathToTestOutput));
-    steps.add(new MakeCleanDirectoryStep(tmpDirectory));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDirectory));
 
     ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
         .addAll(getTransitiveClasspathEntries().values())
@@ -221,7 +221,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         executionContext.getTargetDeviceOptional());
 
     junit = new JUnitStep(
-        getProjectFilesystem().getRootPath(),
+        getProjectFilesystem(),
         classpathEntries,
         reorderedTestClasses,
         properVmArgs,

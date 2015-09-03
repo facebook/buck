@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.runner.FileClassPathRunner;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
@@ -74,6 +75,7 @@ public class JUnitStep extends ShellStep {
   private static final String STD_OUT_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdOutLogLevel";
   private static final String STD_ERR_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdErrLogLevel";
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableSet<Path> classpathEntries;
   private final Iterable<String> testClassNames;
   private final List<String> vmArgs;
@@ -117,7 +119,7 @@ public class JUnitStep extends ShellStep {
    * @param tmpDirectory directory tests can use for local file scratch space.
    */
   public JUnitStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Set<Path> classpathEntries,
       Iterable<String> testClassNames,
       List<String> vmArgs,
@@ -135,7 +137,7 @@ public class JUnitStep extends ShellStep {
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
     this(
-        workingDirectory,
+        filesystem,
         classpathEntries,
         testClassNames,
         vmArgs,
@@ -158,7 +160,7 @@ public class JUnitStep extends ShellStep {
 
   @VisibleForTesting
   JUnitStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Set<Path> classpathEntries,
       Iterable<String> testClassNames,
       List<String> vmArgs,
@@ -176,7 +178,8 @@ public class JUnitStep extends ShellStep {
       Optional<Long> testRuleTimeoutMs,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
-    super(workingDirectory);
+    super(filesystem.getRootPath());
+    this.filesystem = filesystem;
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
     this.testClassNames = Iterables.unmodifiableIterable(testClassNames);
     this.vmArgs = ImmutableList.copyOf(vmArgs);
@@ -208,7 +211,7 @@ public class JUnitStep extends ShellStep {
     args.add(
         String.format(
             "-Djava.io.tmpdir=%s",
-            context.getProjectFilesystem().resolve(tmpDirectory)));
+            filesystem.resolve(tmpDirectory)));
 
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
     // to find the test runner classes, so propagate these down via the relevant properties.
@@ -258,7 +261,7 @@ public class JUnitStep extends ShellStep {
     // Add the -classpath argument.
     args.add("-classpath").add(
         Joiner.on(File.pathSeparator).join(
-            "@" + context.getProjectFilesystem().resolve(getClassPathFile()),
+            "@" + filesystem.resolve(getClassPathFile()),
             testRunnerClasspath));
 
     args.add(FileClassPathRunner.class.getName());
@@ -306,7 +309,7 @@ public class JUnitStep extends ShellStep {
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return ImmutableMap.<String, String>builder()
-        .put("TMP", context.getProjectFilesystem().resolve(tmpDirectory).toString())
+        .put("TMP", filesystem.resolve(tmpDirectory).toString())
         .putAll(nativeLibsEnvironment)
         .build();
   }
@@ -323,7 +326,7 @@ public class JUnitStep extends ShellStep {
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
     try {
-      context.getProjectFilesystem().writeLinesToPath(
+      filesystem.writeLinesToPath(
           FluentIterable.from(classpathEntries)
               .transform(Functions.toStringFunction()),
           getClassPathFile());

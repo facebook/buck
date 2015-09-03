@@ -35,9 +35,7 @@ public class CxxLinkStepTest {
   @Test
   public void cxxLinkStepUsesCorrectCommand() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<String> linker = ImmutableList.of("linker");

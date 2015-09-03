@@ -16,6 +16,7 @@
 
 package com.facebook.buck.zip;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 
@@ -30,9 +31,11 @@ import java.util.zip.ZipEntry;
 
 public class ZipScrubberStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final Path zip;
 
-  public ZipScrubberStep(Path zip) {
+  public ZipScrubberStep(ProjectFilesystem filesystem, Path zip) {
+    this.filesystem = filesystem;
     this.zip = zip;
   }
 
@@ -54,7 +57,7 @@ public class ZipScrubberStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    Path zipPath = context.getProjectFilesystem().resolve(zip);
+    Path zipPath = filesystem.resolve(zip);
     try (FileChannel channel =
              FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());

@@ -21,7 +21,6 @@ import com.facebook.buck.android.NoAndroidSdkException;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.Ansi;
@@ -50,9 +49,6 @@ import javax.annotation.Nullable;
 @DeprecatedBuckStyleImmutable
 @SuppressWarnings("deprecation")
 public abstract class ExecutionContext implements Closeable {
-
-  @Value.Parameter
-  public abstract ProjectFilesystem getProjectFilesystem();
 
   @Value.Parameter
   public abstract Console getConsole();
@@ -182,7 +178,6 @@ public abstract class ExecutionContext implements Closeable {
 
   public static class Builder {
 
-    @Nullable private ProjectFilesystem projectFilesystem = null;
     @Nullable private Console console = null;
     private Supplier<AndroidPlatformTarget> androidPlatformTarget =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
@@ -208,7 +203,6 @@ public abstract class ExecutionContext implements Closeable {
 
     public ExecutionContext build() {
       return ImmutableExecutionContext.of(
-          Preconditions.checkNotNull(projectFilesystem),
           Preconditions.checkNotNull(console),
           androidPlatformTarget,
           targetDevice,
@@ -228,7 +222,6 @@ public abstract class ExecutionContext implements Closeable {
     }
 
     public Builder setExecutionContext(ExecutionContext executionContext) {
-      setProjectFilesystem(executionContext.getProjectFilesystem());
       setConsole(executionContext.getConsole());
       setAndroidPlatformTargetSupplier(executionContext.getAndroidPlatformTargetSupplier());
       setTargetDevice(executionContext.getTargetDeviceOptional());
@@ -243,11 +236,6 @@ public abstract class ExecutionContext implements Closeable {
       setConcurrencyLimit(executionContext.getConcurrencyLimit());
       setAdbOptions(executionContext.getAdbOptions());
       setTargetDeviceOptions(executionContext.getTargetDeviceOptions());
-      return this;
-    }
-
-    public Builder setProjectFilesystem(ProjectFilesystem projectFilesystem) {
-      this.projectFilesystem = projectFilesystem;
       return this;
     }
 

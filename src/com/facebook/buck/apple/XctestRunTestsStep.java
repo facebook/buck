@@ -41,16 +41,19 @@ public class XctestRunTestsStep implements Step {
 
   private static final Logger LOG = Logger.get(XctestRunTestsStep.class);
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableList<String> xctest;
   private final String testArgument; // -XCTest or -SenTest
   private final Path logicTestBundlePath;
   private final Path outputPath;
 
   public XctestRunTestsStep(
+      ProjectFilesystem filesystem,
       ImmutableList<String> xctest,
       String testArgument,
       Path logicTestBundlePath,
       Path outputPath) {
+    this.filesystem = filesystem;
     this.xctest = xctest;
     this.testArgument = testArgument;
     this.logicTestBundlePath = logicTestBundlePath;
@@ -64,8 +67,6 @@ public class XctestRunTestsStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
-
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(xctest);
     args.add(testArgument);

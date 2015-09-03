@@ -37,6 +37,7 @@ import java.util.Set;
 
 public class GenerateCodeCoverageReportStep extends ShellStep {
 
+  private final ProjectFilesystem filesystem;
   private final Set<String> sourceDirectories;
   private final Set<Path> classesDirectories;
   private final Path outputDirectory;
@@ -45,13 +46,15 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   private final Path propertyFile;
 
   public GenerateCodeCoverageReportStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       Set<String> sourceDirectories,
       Set<Path> classesDirectories,
       Path outputDirectory,
       CoverageReportFormat format,
       String title) {
-    super(workingDirectory);
+    super(filesystem.getRootPath());
+
+    this.filesystem = filesystem;
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
     this.classesDirectories = ImmutableSet.copyOf(classesDirectories);
     this.outputDirectory = outputDirectory;
@@ -68,7 +71,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
     try (OutputStream propertyFileStream = new FileOutputStream(propertyFile.toFile())){
-      saveParametersToPropertyStream(context.getProjectFilesystem(), propertyFileStream);
+      saveParametersToPropertyStream(filesystem, propertyFileStream);
     } catch (IOException e) {
       context.logError(e, "Cannot write coverage report generator params to file.");
       return 1;
@@ -109,7 +112,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     // Generate report from JaCoCo exec file using 'ReportGenerator.java'
 
     args.add("-jar", System.getProperty("buck.report_generator_jar"));
-    args.add(context.getProjectFilesystem().getAbsolutifier().apply(propertyFile).toString());
+    args.add(filesystem.getAbsolutifier().apply(propertyFile).toString());
 
     return args.build();
   }

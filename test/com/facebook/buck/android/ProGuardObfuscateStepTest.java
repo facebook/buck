@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -99,7 +100,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
-        cwd,
+        new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.<Path>absent(),
         "1024M",
         Paths.get("generated/proguard.txt"),
@@ -129,7 +130,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
       String expectedPath) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProGuardObfuscateStep.create(
-        cwd,
+        new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.<Path>absent(),
         "1024M",
         Paths.get("generated/proguard.txt"),

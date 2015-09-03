@@ -106,11 +106,13 @@ public class ShTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
       return ImmutableList.of();
     }
 
-    Step mkdirClean = new MakeCleanDirectoryStep(getPathToTestOutputDirectory());
+    Step mkdirClean = new MakeCleanDirectoryStep(
+        getProjectFilesystem(),
+        getPathToTestOutputDirectory());
 
     // Return a single command that runs an .sh file with no arguments.
     Step runTest = new RunShTestAndRecordResultStep(
-        getProjectFilesystem().getRootPath(),
+        getProjectFilesystem(),
         getResolver().getPath(test),
         args,
         getPathToTestOutputResult());

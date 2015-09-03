@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -38,12 +39,15 @@ import java.util.List;
  */
 public class DsymStep extends ShellStep {
 
+  private final ProjectFilesystem filesystem;
   private final ImmutableList<String> command;
   private final Path input;
   private final Path output;
 
-  public DsymStep(Path workingDirectory, List<String> command, Path input, Path output) {
-    super(workingDirectory);
+  public DsymStep(ProjectFilesystem filesystem, List<String> command, Path input, Path output) {
+    super(filesystem.getRootPath());
+
+    this.filesystem = filesystem;
     this.command = ImmutableList.copyOf(command);
     this.input = input;
     this.output = output;
@@ -55,8 +59,8 @@ public class DsymStep extends ShellStep {
 
     commandBuilder.addAll(command);
     commandBuilder.add(
-        "-o", context.getProjectFilesystem().resolve(output).toString(),
-        context.getProjectFilesystem().resolve(input).toString());
+        "-o", filesystem.resolve(output).toString(),
+        filesystem.resolve(input).toString());
 
     return commandBuilder.build();
   }

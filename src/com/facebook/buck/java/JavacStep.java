@@ -161,7 +161,7 @@ public class JavacStep implements Step {
       if (declaredDepsResult != 0 && suggestBuildRules.isPresent()) {
         ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
         ImmutableSet<String> suggestions = suggestBuildRules.get().suggest(
-            context.getProjectFilesystem(),
+            filesystem,
             failedImports);
 
         ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
@@ -235,8 +235,7 @@ public class JavacStep implements Step {
       Set<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
-    javacOptions.appendOptionsToList(builder, context.getProjectFilesystem().getAbsolutifier());
+    javacOptions.appendOptionsToList(builder, filesystem.getAbsolutifier());
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {

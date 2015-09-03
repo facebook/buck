@@ -87,7 +87,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
     buildableContext.recordArtifact(output);
 
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(output.getParent()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
         new StringTemplateStep(
             TEMPLATE,
             getProjectFilesystem(),
@@ -117,7 +117,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
                     .add("resources", resourceStrings);
               }
             }),
-        new MakeExecutableStep(output));
+        new MakeExecutableStep(getProjectFilesystem(), output));
   }
 
   @Override

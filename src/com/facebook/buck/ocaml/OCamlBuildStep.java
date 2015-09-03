@@ -244,7 +244,9 @@ public class OCamlBuildStep implements Step {
       ImmutableList<String> sortedInput,
       ImmutableList.Builder<String> linkerInputs
   ) throws IOException, InterruptedException {
-    MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(ocamlContext.getCompileOutputDir());
+    MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
+        filesystem,
+        ocamlContext.getCompileOutputDir());
     int mkDirExitCode = mkDir.execute(context);
     if (mkDirExitCode != 0) {
       return mkDirExitCode;
@@ -283,6 +285,7 @@ public class OCamlBuildStep implements Step {
       ImmutableList<String> sortedInput,
       ImmutableList.Builder<String> linkerInputs) throws IOException, InterruptedException {
     MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
+        filesystem,
         ocamlContext.getCompileBytecodeOutputDir());
     int mkDirExitCode = mkDir.execute(context);
     if (mkDirExitCode != 0) {
@@ -318,7 +321,9 @@ public class OCamlBuildStep implements Step {
 
   private int generateSources(ExecutionContext context, Path workingDirectory)
       throws IOException, InterruptedException {
-    MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(ocamlContext.getGeneratedSourceDir());
+    MakeCleanDirectoryStep mkDir = new MakeCleanDirectoryStep(
+        filesystem,
+        ocamlContext.getGeneratedSourceDir());
     int mkDirExitCode = mkDir.execute(context);
     if (mkDirExitCode != 0) {
       return mkDirExitCode;

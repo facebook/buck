@@ -112,9 +112,10 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule {
       TestSelectorList testSelectorList,
       TestRule.TestReportingCallback testReportingCallback) {
     return ImmutableList.of(
-        new MakeCleanDirectoryStep(getPathToTestOutputDirectory()),
-        new TouchStep(getPathToTestResults()),
+        new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToTestOutputDirectory()),
+        new TouchStep(getProjectFilesystem(), getPathToTestResults()),
         new CxxTestStep(
+            getProjectFilesystem(),
             getShellCommand(executionContext, getPathToTestResults()),
             env,
             getPathToTestExitCode(),

@@ -124,7 +124,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
       return ImmutableList.of(
           getProgramFailureSummary(
               "test program aborted before finishing",
-              context.getProjectFilesystem().readFileIfItExists(output).or("")));
+              getProjectFilesystem().readFileIfItExists(output).or("")));
     }
 
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();

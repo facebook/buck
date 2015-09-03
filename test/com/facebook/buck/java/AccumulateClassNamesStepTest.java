@@ -64,12 +64,12 @@ public class AccumulateClassNamesStepTest {
     }
 
     // Create the AccumulateClassNamesStep and execute it.
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     AccumulateClassNamesStep accumulateClassNamesStep = new AccumulateClassNamesStep(
-        Optional.of(Paths.get(name)), Paths.get("output.txt"));
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
-        .build();
+        filesystem,
+        Optional.of(Paths.get(name)),
+        Paths.get("output.txt"));
+    ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 
     String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), Charsets.UTF_8);
@@ -99,12 +99,12 @@ public class AccumulateClassNamesStepTest {
     tmp.newFile("dir/com/example/subpackage/Baz.class");
 
     // Create the AccumulateClassNamesStep and execute it.
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
     AccumulateClassNamesStep accumulateClassNamesStep = new AccumulateClassNamesStep(
-        Optional.of(Paths.get(name)), Paths.get("output.txt"));
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
-        .build();
+        filesystem,
+        Optional.of(Paths.get(name)),
+        Paths.get("output.txt"));
+    ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 
     String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), Charsets.UTF_8);

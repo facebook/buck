@@ -72,11 +72,11 @@ public class RemoteFile extends AbstractBuildRule {
     Path tempFile = BuildTargets.getScratchPath(
         getBuildTarget(), String.format("%%s/%s", output.getFileName()));
 
-    steps.add(new MakeCleanDirectoryStep(tempFile.getParent()));
-    steps.add(new DownloadStep(downloader, uri, sha1, tempFile));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tempFile.getParent()));
+    steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));
 
-    steps.add(new MakeCleanDirectoryStep(output.getParent()));
-    steps.add(CopyStep.forFile(tempFile, output));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
+    steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
 
     buildableContext.recordArtifact(output);
 

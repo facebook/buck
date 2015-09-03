@@ -42,14 +42,17 @@ public class GenerateManifestStep implements Step {
 
   private static final int BASE_SDK_LEVEL = 1;
 
-  private Path skeletonManifestPath;
-  private ImmutableSet<Path> libraryManifestPaths;
+  private final ProjectFilesystem filesystem;
+  private final Path skeletonManifestPath;
+  private final ImmutableSet<Path> libraryManifestPaths;
   private Path outManifestPath;
 
   public GenerateManifestStep(
+      ProjectFilesystem filesystem,
       Path skeletonManifestPath,
       ImmutableSet<Path> libraryManifestPaths,
       Path outManifestPath) {
+    this.filesystem = filesystem;
     this.skeletonManifestPath = skeletonManifestPath;
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
     this.outManifestPath = outManifestPath;
@@ -65,8 +68,6 @@ public class GenerateManifestStep implements Step {
     if (outManifestPath.getNameCount() == 0) {
       throw new HumanReadableException("Output Manifest filepath is missing");
     }
-
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
 
     outManifestPath = filesystem.resolve(outManifestPath);
     try {

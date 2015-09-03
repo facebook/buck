@@ -182,7 +182,7 @@ public class SplitZipStep implements Step {
   public int execute(ExecutionContext context) {
     try {
       Set<Path> inputJarPaths = FluentIterable.from(inputPathsToSplit)
-          .transform(context.getProjectFilesystem().getAbsolutifier())
+          .transform(filesystem.getAbsolutifier())
           .toSet();
       Supplier<ImmutableList<ClassNode>> classes =
           ClassNodeListSupplier.createMemoized(inputJarPaths);
@@ -191,11 +191,11 @@ public class SplitZipStep implements Step {
           proguardFullConfigFile,
           proguardMappingFile);
       Predicate<String> requiredInPrimaryZip =
-          createRequiredInPrimaryZipPredicate(context, translatorFactory, classes);
+          createRequiredInPrimaryZipPredicate(translatorFactory, classes);
       final ImmutableSet<String> wantedInPrimaryZip =
-          getWantedPrimaryDexEntries(context, translatorFactory, classes);
-      final ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(context, translatorFactory);
-      final ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(context, translatorFactory);
+          getWantedPrimaryDexEntries(translatorFactory, classes);
+      final ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
+      final ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(translatorFactory);
 
       ZipSplitterFactory zipSplitterFactory;
       if (dexSplitMode.useLinearAllocSplitDex()) {
@@ -207,9 +207,8 @@ public class SplitZipStep implements Step {
             ZIP_SIZE_HARD_LIMIT);
       }
 
-      ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
       outputFiles = zipSplitterFactory.newInstance(
-          projectFilesystem,
+          filesystem,
           inputJarPaths,
           primaryJarPath,
           secondaryJarDir,
@@ -219,7 +218,7 @@ public class SplitZipStep implements Step {
           secondaryTailSet,
           dexSplitMode.getDexSplitStrategy(),
           ZipSplitter.CanaryStrategy.INCLUDE_CANARIES,
-          projectFilesystem.getPathForRelativePath(pathToReportDir))
+          filesystem.getPathForRelativePath(pathToReportDir))
           .execute();
 
       try (BufferedWriter secondaryMetaInfoWriter = Files.newWriter(secondaryJarMetaPath.toFile(),
@@ -236,13 +235,12 @@ public class SplitZipStep implements Step {
 
   @VisibleForTesting
   Predicate<String> createRequiredInPrimaryZipPredicate(
-      ExecutionContext context,
       ProguardTranslatorFactory translatorFactory,
       Supplier<ImmutableList<ClassNode>> classesSupplier)
       throws IOException {
     final Function<String, String> deobfuscate = translatorFactory.createDeobfuscationFunction();
     final ImmutableSet<String> primaryDexClassNames =
-        getRequiredPrimaryDexClassNames(context, translatorFactory, classesSupplier);
+        getRequiredPrimaryDexClassNames(translatorFactory, classesSupplier);
     final ClassNameFilter primaryDexFilter =
         ClassNameFilter.fromConfiguration(dexSplitMode.getPrimaryDexPatterns());
 
@@ -276,7 +274,6 @@ public class SplitZipStep implements Step {
    * @return ImmutableSet of class internal names.
    */
   private ImmutableSet<String> getRequiredPrimaryDexClassNames(
-      ExecutionContext context,
       ProguardTranslatorFactory translatorFactory,
       Supplier<ImmutableList<ClassNode>> classesSupplier)
       throws IOException {
@@ -284,7 +281,7 @@ public class SplitZipStep implements Step {
 
     if (primaryDexClassesFile.isPresent()) {
       Iterable<String> classes = FluentIterable
-          .from(context.getProjectFilesystem().readLines(primaryDexClassesFile.get()))
+          .from(filesystem.readLines(primaryDexClassesFile.get()))
           .transform(STRING_TRIM)
           .filter(IS_NEITHER_EMPTY_NOR_COMMENT);
       builder.addAll(classes);
@@ -293,7 +290,7 @@ public class SplitZipStep implements Step {
     // If there is a scenario file but overflow is not allowed, then the scenario dependencies
     // are required, and therefore get added here.
     if (!dexSplitMode.isPrimaryDexScenarioOverflowAllowed() && primaryDexScenarioFile.isPresent()) {
-      addScenarioClasses(context, translatorFactory, classesSupplier, builder);
+      addScenarioClasses(translatorFactory, classesSupplier, builder);
     }
 
     return ImmutableSet.copyOf(builder.build());
@@ -305,14 +302,13 @@ public class SplitZipStep implements Step {
    * @return ImmutableSet of class internal names.
    */
   private ImmutableSet<String> getSecondaryHeadSet(
-      ExecutionContext context,
       ProguardTranslatorFactory translatorFactory)
       throws IOException {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (secondaryDexHeadClassesFile.isPresent()) {
       Iterable<String> classes = FluentIterable
-          .from(context.getProjectFilesystem().readLines(secondaryDexHeadClassesFile.get()))
+          .from(filesystem.readLines(secondaryDexHeadClassesFile.get()))
           .transform(STRING_TRIM)
           .filter(IS_NEITHER_EMPTY_NOR_COMMENT)
           .transform(translatorFactory.createObfuscationFunction());
@@ -328,14 +324,13 @@ public class SplitZipStep implements Step {
    * @return ImmutableSet of class internal names.
    */
   private ImmutableSet<String> getSecondaryTailSet(
-      ExecutionContext context,
       ProguardTranslatorFactory translatorFactory)
       throws IOException {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (secondaryDexTailClassesFile.isPresent()) {
       Iterable<String> classes = FluentIterable
-          .from(context.getProjectFilesystem().readLines(secondaryDexTailClassesFile.get()))
+          .from(filesystem.readLines(secondaryDexTailClassesFile.get()))
           .transform(STRING_TRIM)
           .filter(IS_NEITHER_EMPTY_NOR_COMMENT)
           .transform(translatorFactory.createObfuscationFunction());
@@ -353,7 +348,6 @@ public class SplitZipStep implements Step {
    * @return ImmutableList of zip file entry names.
    */
   private ImmutableSet<String> getWantedPrimaryDexEntries(
-      ExecutionContext context,
       ProguardTranslatorFactory translatorFactory,
       Supplier<ImmutableList<ClassNode>> classesSupplier)
       throws IOException {
@@ -362,7 +356,7 @@ public class SplitZipStep implements Step {
     // If there is a scenario file and overflow is allowed, then the scenario dependencies
     // are wanted but not required, and therefore get added here.
     if (dexSplitMode.isPrimaryDexScenarioOverflowAllowed() && primaryDexScenarioFile.isPresent()) {
-      addScenarioClasses(context, translatorFactory, classesSupplier, builder);
+      addScenarioClasses(translatorFactory, classesSupplier, builder);
     }
 
     return FluentIterable.from(builder.build())
@@ -377,14 +371,13 @@ public class SplitZipStep implements Step {
    * @throws IOException
    */
   private void addScenarioClasses(
-      ExecutionContext context,
       ProguardTranslatorFactory translatorFactory,
       Supplier<ImmutableList<ClassNode>> classesSupplier,
       ImmutableSet.Builder<String> builder)
       throws IOException {
 
     ImmutableList<Type> scenarioClasses = FluentIterable
-        .from(context.getProjectFilesystem().readLines(primaryDexScenarioFile.get()))
+        .from(filesystem.readLines(primaryDexScenarioFile.get()))
         .transform(STRING_TRIM)
         .filter(IS_NEITHER_EMPTY_NOR_COMMENT)
         .transform(translatorFactory.createObfuscationFunction())

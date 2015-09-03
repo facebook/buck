@@ -65,14 +65,14 @@ public class Archive extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
 
     return ImmutableList.of(
-        new MkdirStep(output.getParent()),
-        new RmStep(output, /* shouldForceDeletion */ true),
+        new MkdirStep(getProjectFilesystem(), output.getParent()),
+        new RmStep(getProjectFilesystem(), output, /* shouldForceDeletion */ true),
         new ArchiveStep(
             getProjectFilesystem().getRootPath(),
             archiver.getCommandPrefix(getResolver()),
             output,
             getResolver().getAllPaths(inputs)),
-        new FileScrubberStep(output, archiver.getScrubbers()));
+        new FileScrubberStep(getProjectFilesystem(), output, archiver.getScrubbers()));
   }
 
   @Override

@@ -68,10 +68,7 @@ public class MergeAndroidResourcesSourcesTest {
   @Before
   public void setUp() throws Exception {
     filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    context = TestExecutionContext
-        .newBuilder()
-        .setProjectFilesystem(filesystem)
-        .build();
+    context = TestExecutionContext.newInstance();
 
     tmp.newFolder("res_in_1");
     tmp.newFolder("res_in_1", "values");
@@ -104,7 +101,9 @@ public class MergeAndroidResourcesSourcesTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testRuleStepCreation() throws IOException, InterruptedException {
-    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder("//:output_folder").build();
+    BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder("//:output_folder")
+        .setProjectFilesystem(filesystem)
+        .build();
     ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
         new TestSourcePath("res_in_1"),
         new TestSourcePath("res_in_2"));
@@ -140,6 +139,7 @@ public class MergeAndroidResourcesSourcesTest {
     File outFolder = tmp.newFolder("out");
 
     MergeAndroidResourceSourcesStep step = new MergeAndroidResourceSourcesStep(
+        filesystem,
         ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")),
         outFolder.toPath()
     );

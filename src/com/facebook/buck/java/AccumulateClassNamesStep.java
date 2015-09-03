@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.classes.ClasspathTraversal;
 import com.facebook.buck.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.java.classes.FileLike;
@@ -57,6 +58,7 @@ public class AccumulateClassNamesStep implements Step {
   private static final Splitter CLASS_NAME_AND_HASH_SPLITTER = Splitter.on(
       CLASS_NAME_HASH_CODE_SEPARATOR);
 
+  private final ProjectFilesystem filesystem;
   private final Optional<Path> pathToJarOrClassesDirectory;
   private final Path whereClassNamesShouldBeWritten;
 
@@ -66,8 +68,11 @@ public class AccumulateClassNamesStep implements Step {
    * @param whereClassNamesShouldBeWritten Path to a file where an alphabetically sorted list of
    *     class files and corresponding SHA-1 hashes of their contents will be written.
    */
-  public AccumulateClassNamesStep(Optional<Path> pathToJarOrClassesDirectory,
+  public AccumulateClassNamesStep(
+      ProjectFilesystem filesystem,
+      Optional<Path> pathToJarOrClassesDirectory,
       Path whereClassNamesShouldBeWritten) {
+    this.filesystem = filesystem;
     this.pathToJarOrClassesDirectory = pathToJarOrClassesDirectory;
     this.whereClassNamesShouldBeWritten = whereClassNamesShouldBeWritten;
   }
@@ -78,7 +83,8 @@ public class AccumulateClassNamesStep implements Step {
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional = calculateClassHashes(
           context,
-          context.getProjectFilesystem().resolve(pathToJarOrClassesDirectory.get()));
+          filesystem,
+          filesystem.resolve(pathToJarOrClassesDirectory.get()));
       if (classNamesOptional.isPresent()) {
         classNames = classNamesOptional.get();
       } else {
@@ -89,14 +95,15 @@ public class AccumulateClassNamesStep implements Step {
     }
 
     try {
-      context.getProjectFilesystem().writeLinesToPath(
-          Iterables.transform(classNames.entrySet(),
+      filesystem.writeLinesToPath(
+          Iterables.transform(
+              classNames.entrySet(),
               new Function<Map.Entry<String, HashCode>, String>() {
-            @Override
-            public String apply(Entry<String, HashCode> entry) {
-              return entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue();
-            }
-          }),
+                @Override
+                public String apply(Entry<String, HashCode> entry) {
+                  return entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue();
+                }
+              }),
           whereClassNamesShouldBeWritten);
     } catch (IOException e) {
       context.getBuckEventBus().post(ThrowableConsoleEvent.create(e,
@@ -127,11 +134,11 @@ public class AccumulateClassNamesStep implements Step {
    * @return an Optional that will be absent if there was an error.
    */
   public static Optional<ImmutableSortedMap<String, HashCode>> calculateClassHashes(
-      ExecutionContext context, Path path) {
+      ExecutionContext context, ProjectFilesystem filesystem, Path path) {
     final ImmutableSortedMap.Builder<String, HashCode> classNamesBuilder =
         ImmutableSortedMap.naturalOrder();
     ClasspathTraversal traversal =
-        new ClasspathTraversal(Collections.singleton(path), context.getProjectFilesystem()) {
+        new ClasspathTraversal(Collections.singleton(path), filesystem) {
           @Override
           public void visit(final FileLike fileLike) throws IOException {
             // When traversing a JAR file, it may have resources or directory entries that do not

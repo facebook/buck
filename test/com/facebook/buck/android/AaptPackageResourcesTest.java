@@ -286,6 +286,7 @@ public class AaptPackageResourcesTest {
     assertEquals(4, observedCommands.size());
     assertEquals(
         new MakeCleanDirectoryStep(
+            filesystem,
             SCRATCH_PATH.resolve("facebook/base/__assets_apk#aapt_package__")),
         observedCommands.get(0));
 
@@ -293,14 +294,17 @@ public class AaptPackageResourcesTest {
     MoreAsserts.assertSetEquals(
         ImmutableSet.<Step>of(
             new MkdirAndSymlinkFileStep(
+                filesystem,
                 Paths.get("facebook/base/assets1/guava-10.0.1-fork.dex.1.jar"),
                 SCRATCH_PATH.resolve(
                     "facebook/base/__assets_apk#aapt_package__/guava-10.0.1-fork.dex.1.jar")),
             new MkdirAndSymlinkFileStep(
+                filesystem,
                 Paths.get("facebook/base/assets2/fonts/Theinhardt-Medium.otf"),
                 SCRATCH_PATH.resolve(
                     "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Medium.otf")),
             new MkdirAndSymlinkFileStep(
+                filesystem,
                 Paths.get("facebook/base/assets2/fonts/Theinhardt-Regular.otf"),
                 SCRATCH_PATH.resolve(
                     "facebook/base/__assets_apk#aapt_package__/fonts/Theinhardt-Regular.otf"))),

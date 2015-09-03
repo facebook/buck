@@ -89,11 +89,7 @@ public class CxxGtestTestTest {
         ImmutableSet.<BuildRule>of(),
         /* runTestSeparately */ false);
 
-    ExecutionContext context =
-        TestExecutionContext.newBuilder()
-            .setProjectFilesystem(
-                filesystem)
-            .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     for (String sample : samples) {
       Path exitCode = Paths.get("unused");

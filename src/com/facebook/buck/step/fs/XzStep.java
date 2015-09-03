@@ -46,6 +46,7 @@ public class XzStep implements Step {
 
   private static final Logger LOG = Logger.get(XzStep.class);
 
+  private final ProjectFilesystem filesystem;
   private final Path sourceFile;
   private final Path destinationFile;
   private final int compressionLevel;
@@ -65,11 +66,13 @@ public class XzStep implements Step {
    */
   @VisibleForTesting
   XzStep(
+      ProjectFilesystem filesystem,
       Path sourceFile,
       Path destinationFile,
       int compressionLevel,
       boolean keep,
       int check) {
+    this.filesystem = filesystem;
     this.sourceFile = sourceFile;
     this.destinationFile = destinationFile;
     Preconditions.checkArgument(compressionLevel >= LZMA2Options.PRESET_MIN &&
@@ -87,8 +90,8 @@ public class XzStep implements Step {
    *
    * @param sourceFile file to compress
    */
-  public XzStep(Path sourceFile) {
-    this(sourceFile, 4);
+  public XzStep(ProjectFilesystem filesystem, Path sourceFile) {
+    this(filesystem, sourceFile, 4);
   }
 
   /**
@@ -99,8 +102,8 @@ public class XzStep implements Step {
    * @param sourceFile file to compress
    * @param outputPath desired output path
    */
-  public XzStep(Path sourceFile, Path outputPath) {
-    this(sourceFile, outputPath, 4);
+  public XzStep(ProjectFilesystem filesystem, Path sourceFile, Path outputPath) {
+    this(filesystem, sourceFile, outputPath, 4);
   }
 
   /**
@@ -112,8 +115,12 @@ public class XzStep implements Step {
    * @param outputPath the desired output path.
    * @param compressionLevel level of compression (from 0-9)
    */
-  public XzStep(Path sourceFile, Path outputPath, int compressionLevel) {
-    this(sourceFile, outputPath, compressionLevel, /* keep */ false, XZ.CHECK_CRC32);
+  public XzStep(
+      ProjectFilesystem filesystem,
+      Path sourceFile,
+      Path outputPath,
+      int compressionLevel) {
+    this(filesystem, sourceFile, outputPath, compressionLevel, /* keep */ false, XZ.CHECK_CRC32);
   }
 
   /**
@@ -127,8 +134,9 @@ public class XzStep implements Step {
    * compression, but also need more time to compress and will need more RAM
    * to decompress.
    */
-  public XzStep(Path sourceFile, int compressionLevel) {
+  public XzStep(ProjectFilesystem filesystem, Path sourceFile, int compressionLevel) {
     this(
+        filesystem,
         sourceFile,
         Paths.get(sourceFile + ".xz"),
         compressionLevel,
@@ -138,7 +146,6 @@ public class XzStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try (
         InputStream in = filesystem.newFileInputStream(sourceFile);
         OutputStream out = filesystem.newFileOutputStream(destinationFile);
@@ -147,7 +154,7 @@ public class XzStep implements Step {
       ByteStreams.copy(in, xzOut);
       xzOut.finish();
       if (!keep) {
-        context.getProjectFilesystem().deleteFileAtPath(sourceFile);
+        filesystem.deleteFileAtPath(sourceFile);
       }
     } catch (IOException e) {
       LOG.error(e);

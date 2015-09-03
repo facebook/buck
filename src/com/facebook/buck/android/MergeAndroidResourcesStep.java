@@ -168,7 +168,8 @@ public class MergeAndroidResourcesStep implements Step {
         symbolsFileToRDotJavaPackage,
         uberRDotTxtIds,
         warnMissingResource,
-        context);
+        context,
+        filesystem);
 
     writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
     Set<String> emptyPackages = Sets.difference(
@@ -245,7 +246,8 @@ public class MergeAndroidResourcesStep implements Step {
       Map<Path, String> symbolsFileToRDotJavaPackage,
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds,
       boolean warnMissingResource,
-      ExecutionContext context) {
+      ExecutionContext context,
+      ProjectFilesystem filesystem) {
     // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
     // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
     // other values in styleable which can be enumerated integers starting at 0.
@@ -265,7 +267,7 @@ public class MergeAndroidResourcesStep implements Step {
       List<String> linesInSymbolsFile;
       try {
         linesInSymbolsFile =
-            FluentIterable.from(context.getProjectFilesystem().readLines(symbolsFile))
+            FluentIterable.from(filesystem.readLines(symbolsFile))
                 .filter(MoreStrings.NON_EMPTY)
                 .toList();
       } catch (IOException e) {

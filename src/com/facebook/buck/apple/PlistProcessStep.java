@@ -34,7 +34,7 @@ import java.nio.file.Path;
 public class PlistProcessStep implements Step {
 
   /** Controls what format the plist is output in. */
-  public static enum OutputFormat {
+  public enum OutputFormat {
     /** Output the XML plist format. */
     XML,
 
@@ -43,6 +43,7 @@ public class PlistProcessStep implements Step {
     ;
   }
 
+  private final ProjectFilesystem filesystem;
   private final Path input;
   private final Path output;
 
@@ -54,11 +55,13 @@ public class PlistProcessStep implements Step {
   private final OutputFormat outputFormat;
 
   public PlistProcessStep(
+      ProjectFilesystem filesystem,
       Path input,
       Path output,
       ImmutableMap<String, NSObject> additionalKeys,
       ImmutableMap<String, NSObject> overrideKeys,
       OutputFormat outputFormat) {
+    this.filesystem = filesystem;
     this.input = input;
     this.output = output;
     this.additionalKeys = additionalKeys;
@@ -68,7 +71,6 @@ public class PlistProcessStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    ProjectFilesystem filesystem = context.getProjectFilesystem();
     try (InputStream stream = filesystem.newFileInputStream(input);
          BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
       NSObject infoPlist;

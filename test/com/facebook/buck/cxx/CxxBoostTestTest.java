@@ -71,7 +71,9 @@ public class CxxBoostTestTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     CxxBoostTest test = new CxxBoostTest(
-        new FakeBuildRuleParamsBuilder(target).build(),
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
+            .build(),
         new SourcePathResolver(new BuildRuleResolver()),
         new CommandTool.Builder()
             .addArg(new TestSourcePath(""))
@@ -83,11 +85,7 @@ public class CxxBoostTestTest {
         ImmutableSet.<BuildRule>of(),
         /* runTestSeparately */ false);
 
-    ExecutionContext context =
-        TestExecutionContext.newBuilder()
-            .setProjectFilesystem(
-                new ProjectFilesystem(tmp.getRoot().toPath()))
-            .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     for (String sample : samples) {
       Path exitCode = Paths.get("unused");

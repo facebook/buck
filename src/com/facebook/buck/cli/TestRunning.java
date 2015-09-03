@@ -16,11 +16,12 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.java.JUnitStep.JACOCO_OUTPUT_DIR;
+
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.DefaultJavaPackageFinder;
 import com.facebook.buck.java.GenerateCodeCoverageReportStep;
-import com.facebook.buck.java.JUnitStep;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaTest;
 import com.facebook.buck.log.Logger;
@@ -135,8 +136,13 @@ public class TestRunning {
       rulesUnderTest = getRulesUnderTest(tests);
       if (!rulesUnderTest.isEmpty()) {
         try {
+          // We'll use the filesystem of the first rule under test. This will fail if there are any
+          // tests from a different repo, but it'll help us bootstrap ourselves to being able to
+          // support multiple repos
+          // TODO(user): Support tests in multiple repos
+          JavaLibrary library = rulesUnderTest.iterator().next();
           stepRunner.runStepForBuildTarget(
-              new MakeCleanDirectoryStep(JUnitStep.JACOCO_OUTPUT_DIR),
+              new MakeCleanDirectoryStep(library.getProjectFilesystem(), JACOCO_OUTPUT_DIR),
               Optional.<BuildTarget>absent());
         } catch (StepFailedException e) {
           params.getConsole().printBuildFailureWithoutStacktrace(e);
@@ -426,7 +432,7 @@ public class TestRunning {
                 rulesUnderTest,
                 defaultJavaPackageFinderOptional,
                 params.getRepository().getFilesystem(),
-                JUnitStep.JACOCO_OUTPUT_DIR,
+                JACOCO_OUTPUT_DIR,
                 options.getCoverageReportFormat(),
                 options.getCoverageReportTitle()),
             Optional.<BuildTarget>absent());
@@ -752,7 +758,7 @@ public class TestRunning {
     }
 
     return new GenerateCodeCoverageReportStep(
-        filesystem.getRootPath(),
+        filesystem,
         srcDirectories.build(),
         pathsToClasses.build(),
         outputDirectory,

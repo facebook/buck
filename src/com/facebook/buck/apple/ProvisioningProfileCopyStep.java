@@ -183,7 +183,7 @@ public class ProvisioningProfileCopyStep implements Step {
     final String bundleID;
     try {
       bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(
-          context.getProjectFilesystem().getInputStreamForRelativePath(infoPlist)
+          filesystem.getInputStreamForRelativePath(infoPlist)
       ).get();
     } catch (IOException e) {
       throw new HumanReadableException("Unable to get bundle ID from info.plist: " + infoPlist);
@@ -205,7 +205,7 @@ public class ProvisioningProfileCopyStep implements Step {
       try {
         String appID = ((NSArray) entitlementsPlistDict.get("keychain-access-groups"))
             .objectAtIndex(0).toString();
-        prefix = Optional.<String>of(ProvisioningProfileMetadata.splitAppID(appID).getFirst());
+        prefix = Optional.of(ProvisioningProfileMetadata.splitAppID(appID).getFirst());
       } catch (Exception e) {
         throw new HumanReadableException(
             "Malformed entitlement .plist (missing keychain-access-groups): " +
@@ -227,7 +227,7 @@ public class ProvisioningProfileCopyStep implements Step {
 
     // Copy the actual .mobileprovision.
     try {
-      context.getProjectFilesystem().copy(
+      filesystem.copy(
           provisioningProfileSource,
           provisioningProfileDestination,
           CopySourceMode.FILE);
@@ -239,6 +239,7 @@ public class ProvisioningProfileCopyStep implements Step {
     // Merge tne entitlements with the profile, and write out.
     if (entitlementsPlist.isPresent()) {
       return (new PlistProcessStep(
+          filesystem,
           entitlementsPlist.get(),
           signingEntitlementsTempPath,
           bestProfile.get().getEntitlements(),

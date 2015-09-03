@@ -47,9 +47,7 @@ public class HeaderMapStepTest {
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    ExecutionContext context = TestExecutionContext.newInstance();
 
     Path output = Paths.get("headers.hmap");
     ImmutableMap<Path, Path> entries = ImmutableMap.of(
@@ -57,7 +55,7 @@ public class HeaderMapStepTest {
         Paths.get("file2.h"), Paths.get("/other/absolute/path.h"),
         Paths.get("prefix/file1.h"), Paths.get("/some/absolute/path.h"));
 
-    HeaderMapStep step = new HeaderMapStep(output, entries);
+    HeaderMapStep step = new HeaderMapStep(projectFilesystem, output, entries);
 
     step.execute(context);
 

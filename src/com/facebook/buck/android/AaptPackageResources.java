@@ -204,7 +204,10 @@ public class AaptPackageResources extends AbstractBuildRule
     // Symlink the manifest to a path named AndroidManifest.xml. Do this before running any other
     // commands to ensure that it is available at the desired path.
     steps.add(
-        new MkdirAndSymlinkFileStep(getResolver().getPath(manifest), getAndroidManifestXml()));
+        new MkdirAndSymlinkFileStep(
+            getProjectFilesystem(),
+            getResolver().getPath(manifest),
+            getAndroidManifestXml()));
 
     // Copy the transitive closure of files in assets to a single directory, if any.
     // TODO(mbolin): Older versions of aapt did not support multiple -A flags, so we can probably
@@ -255,15 +258,15 @@ public class AaptPackageResources extends AbstractBuildRule
       assetsDirectory = Optional.of(getPathToAllAssetsDirectory());
     }
 
-    steps.add(new MkdirStep(getResourceApkPath().getParent()));
+    steps.add(new MkdirStep(getProjectFilesystem(), getResourceApkPath().getParent()));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
-    steps.add(new MakeCleanDirectoryStep(rDotTxtDir));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotTxtDir));
 
     Optional<Path> pathToGeneratedProguardConfig = Optional.absent();
     if (packageType.isBuildWithObfuscation()) {
       Path proguardConfigDir = getPathToGeneratedProguardConfigDir();
-      steps.add(new MakeCleanDirectoryStep(proguardConfigDir));
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), proguardConfigDir));
       pathToGeneratedProguardConfig = Optional.of(proguardConfigDir.resolve("proguard.txt"));
       buildableContext.recordArtifact(proguardConfigDir);
     }
@@ -290,25 +293,26 @@ public class AaptPackageResources extends AbstractBuildRule
 
     // If we had an empty res directory, we won't generate an R.txt file.  This ensures that it
     // always exists.
-    steps.add(new TouchStep(getPathToRDotTxtFile()));
+    steps.add(new TouchStep(getProjectFilesystem(), getPathToRDotTxtFile()));
 
     if (!filteredResourcesProvider.getResDirectories().isEmpty()) {
       generateAndCompileRDotJavaFiles(steps, buildableContext);
       if (rDotJavaNeedsDexing) {
         Path rDotJavaDexDir = getPathToRDotJavaDexFiles();
-        steps.add(new MakeCleanDirectoryStep(rDotJavaDexDir));
+        steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaDexDir));
         steps.add(
             new DxStep(
-                getProjectFilesystem().getRootPath(),
+                getProjectFilesystem(),
                 getPathToRDotJavaDex(),
                 Collections.singleton(getPathToCompiledRDotJavaFiles()),
                 DX_OPTIONS));
 
         // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
         // the output non-deterministic.  So use an additional scrubbing step to zero these out.
-        steps.add(new ZipScrubberStep(getPathToRDotJavaDex()));
+        steps.add(new ZipScrubberStep(getProjectFilesystem(), getPathToRDotJavaDex()));
 
         final EstimateLinearAllocStep estimateLinearAllocStep = new EstimateLinearAllocStep(
+            getProjectFilesystem(),
             getPathToCompiledRDotJavaFiles());
         steps.add(estimateLinearAllocStep);
 
@@ -338,10 +342,12 @@ public class AaptPackageResources extends AbstractBuildRule
     buildableContext.recordArtifact(getAndroidManifestXml());
     buildableContext.recordArtifact(getResourceApkPath());
 
-    steps.add(new RecordFileSha1Step(
-        getResourceApkPath(),
-        RESOURCE_PACKAGE_HASH_KEY,
-        buildableContext));
+    steps.add(
+        new RecordFileSha1Step(
+            getProjectFilesystem(),
+            getResourceApkPath(),
+            RESOURCE_PACKAGE_HASH_KEY,
+            buildableContext));
 
     return steps.build();
   }
@@ -351,7 +357,7 @@ public class AaptPackageResources extends AbstractBuildRule
       BuildableContext buildableContext) {
     // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
     Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
-    steps.add(new MakeCleanDirectoryStep(rDotJavaSrc));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrc));
 
     Path rDotTxtDir = getPathToRDotTxtDir();
     MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForUberRDotJava(
@@ -365,11 +371,12 @@ public class AaptPackageResources extends AbstractBuildRule
     if (shouldBuildStringSourceMap) {
       // Make sure we have an output directory
       Path outputDirPath = getPathForNativeStringInfoDirectory();
-      steps.add(new MakeCleanDirectoryStep(outputDirPath));
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirPath));
 
       // Add the step that parses R.txt and all the strings.xml files, and
       // produces a JSON with android resource id's and xml paths for each string resource.
       GenStringSourceMapStep genNativeStringInfo = new GenStringSourceMapStep(
+          getProjectFilesystem(),
           rDotTxtDir,
           filteredResourcesProvider.getResDirectories(),
           outputDirPath);
@@ -381,7 +388,7 @@ public class AaptPackageResources extends AbstractBuildRule
 
     // Create the path where the R.java files will be compiled.
     Path rDotJavaBin = getPathToCompiledRDotJavaFiles();
-    steps.add(new MakeCleanDirectoryStep(rDotJavaBin));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaBin));
 
     JavacStep javacStep = RDotJava.createJavacStepForUberRDotJavaFiles(
         ImmutableSet.copyOf(mergeStep.getRDotJavaFiles()),
@@ -393,8 +400,11 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(javacStep);
 
     Path rDotJavaClassesTxt = getPathToRDotJavaClassesTxt();
-    steps.add(new MakeCleanDirectoryStep(rDotJavaClassesTxt.getParent()));
-    steps.add(new AccumulateClassNamesStep(Optional.of(rDotJavaBin), rDotJavaClassesTxt));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaClassesTxt.getParent()));
+    steps.add(new AccumulateClassNamesStep(
+            getProjectFilesystem(),
+            Optional.of(rDotJavaBin),
+            rDotJavaClassesTxt));
 
     // Ensure the generated R.txt, R.java, and R.class files are also recorded.
     buildableContext.recordArtifact(rDotTxtDir);
@@ -436,7 +446,7 @@ public class AaptPackageResources extends AbstractBuildRule
     // Due to a limitation of aapt, only one assets directory can be specified, so if multiple are
     // specified in Buck, then all of the contents must be symlinked to a single directory.
     Path destination = getPathToAllAssetsDirectory();
-    steps.add(new MakeCleanDirectoryStep(destination));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), destination));
     final ImmutableMap.Builder<Path, Path> allAssets = ImmutableMap.builder();
 
     for (final Path assetsDirectory : assetsDirectories) {
@@ -456,9 +466,11 @@ public class AaptPackageResources extends AbstractBuildRule
     }
 
     for (Map.Entry<Path, Path> entry : allAssets.build().entrySet()) {
-      steps.add(new MkdirAndSymlinkFileStep(
-          entry.getValue(),
-          destination.resolve(entry.getKey())));
+      steps.add(
+          new MkdirAndSymlinkFileStep(
+              getProjectFilesystem(),
+              entry.getValue(),
+              destination.resolve(entry.getKey())));
     }
 
     return Optional.of(destination);

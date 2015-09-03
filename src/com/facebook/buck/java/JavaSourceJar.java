@@ -71,9 +71,9 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new MkdirStep(output.getParent()));
-    steps.add(new RmStep(output, /* force deletion */ true));
-    steps.add(new MakeCleanDirectoryStep(temp));
+    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
+    steps.add(new RmStep(getProjectFilesystem(), output, /* force deletion */ true));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
 
     Set<Path> seenPackages = Sets.newHashSet();
 
@@ -84,11 +84,17 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
       Path packageFolder = packageFinder.findJavaPackageFolder(source);
       Path packageDir = temp.resolve(packageFolder);
       if (seenPackages.add(packageDir)) {
-        steps.add(new MkdirStep(packageDir));
+        steps.add(new MkdirStep(getProjectFilesystem(), packageDir));
       }
-      steps.add(CopyStep.forFile(source, packageDir.resolve(source.getFileName())));
+      steps.add(
+          CopyStep.forFile(
+              getProjectFilesystem(),
+              source,
+              packageDir.resolve(source.getFileName())));
     }
-    steps.add(new ZipStep(
+    steps.add(
+        new ZipStep(
+            getProjectFilesystem(),
             output,
             ImmutableSet.<Path>of(),
             /* junk paths */ false,

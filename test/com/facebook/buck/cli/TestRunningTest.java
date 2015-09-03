@@ -578,9 +578,7 @@ public class TestRunningTest {
             separateTest2Target, new RuleKey("00"),
             separateTest3Target, new RuleKey("00")
         ));
-    ExecutionContext fakeExecutionContext = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new FakeProjectFilesystem())
-        .build();
+    ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
     int ret = TestRunning.runTests(
         commandRunnerParams,
@@ -795,9 +793,7 @@ public class TestRunningTest {
             .put(parallelTest2Target, new RuleKey("00"))
             .put(parallelTest3Target, new RuleKey("00"))
             .build());
-    ExecutionContext fakeExecutionContext = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new FakeProjectFilesystem())
-        .build();
+    ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
     int ret = TestRunning.runTests(
         commandRunnerParams,
@@ -923,9 +919,7 @@ public class TestRunningTest {
         ImmutableMap.of(
             failingTestTarget, new RuleKey("00")
         ));
-    ExecutionContext fakeExecutionContext = TestExecutionContext.newBuilder()
-        .setProjectFilesystem(new FakeProjectFilesystem())
-        .build();
+    ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
     DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
     int ret = TestRunning.runTests(
         commandRunnerParams,
