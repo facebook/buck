@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -28,6 +29,7 @@ import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -474,6 +476,32 @@ public class RuleKeyTest {
     RuleKey ruleKey2 = parentRule2.getRuleKey();
 
     assertNotEquals(ruleKey1, ruleKey2);
+  }
+
+  @Test
+  public void subclassWithNoopSetter() {
+    class NoopSetterRuleKeyBuilder extends RuleKeyBuilder {
+
+      public NoopSetterRuleKeyBuilder(SourcePathResolver pathResolver, FileHashCache hashCache) {
+        super(pathResolver, hashCache);
+      }
+
+      @Override
+      protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
+        return this;
+      }
+    }
+
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+
+    RuleKey nullRuleKey = new NoopSetterRuleKeyBuilder(pathResolver, hashCache)
+        .build();
+    RuleKey noopRuleKey = new NoopSetterRuleKeyBuilder(pathResolver, hashCache)
+        .setReflectively("key", new TestSourcePath("value"))
+        .build();
+
+    assertThat(noopRuleKey, is(equalTo(nullRuleKey)));
   }
 
   private static class TestRuleKeyAppendable implements RuleKeyAppendable {

@@ -43,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.Stack;
 
 import javax.annotation.Nullable;
 
@@ -56,6 +57,7 @@ public class RuleKeyBuilder {
   private final SourcePathResolver resolver;
   private final Hasher hasher;
   private final FileHashCache hashCache;
+  private Stack<String> keyStack;
 
   @Nullable
   private List<String> logElms;
@@ -66,33 +68,32 @@ public class RuleKeyBuilder {
     this.resolver = resolver;
     this.hasher = new AppendingHasher(Hashing.sha1(), /* numHashers */ 2);
     this.hashCache = hashCache;
+    this.keyStack = new Stack<>();
     if (logger.isVerboseEnabled()) {
       this.logElms = Lists.newArrayList();
     }
   }
 
   private RuleKeyBuilder feed(byte[] bytes) {
-    hasher.putBytes(bytes);
-    return this;
-  }
+    while (!keyStack.isEmpty()) {
+      String key = keyStack.pop();
+      if (logElms != null) {
+        logElms.add(String.format("key(%s):", key));
+      }
+      hasher.putBytes(key.getBytes());
+      hasher.putByte(SEPARATOR);
+    }
 
-  private RuleKeyBuilder separate() {
+    hasher.putBytes(bytes);
     hasher.putByte(SEPARATOR);
     return this;
-  }
-
-  private RuleKeyBuilder setKey(String sectionLabel) {
-    if (logElms != null) {
-      logElms.add(String.format(":key(%s):", sectionLabel));
-    }
-    return separate().feed(sectionLabel.getBytes()).separate();
   }
 
   protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
     // And now we need to figure out what this thing is.
     Optional<BuildRule> buildRule = resolver.getRule(sourcePath);
     if (buildRule.isPresent()) {
-      feed(sourcePath.toString().getBytes()).separate();
+      feed(sourcePath.toString().getBytes());
       return setSingleValue(buildRule.get());
     } else {
       Optional<Path> relativePath = resolver.getRelativePath(sourcePath);
@@ -145,53 +146,57 @@ public class RuleKeyBuilder {
       return setReflectively(key, o);
     }
 
-    setKey(key);
-
-    // Check to see if we're dealing with a collection of some description. Note
-    // java.nio.file.Path implements "Iterable", so we don't check for that.
-    if (val instanceof Collection) {
-      val = ((Collection<?>) val).iterator();
-      // Fall through to the Iterator handling
-    }
-
-    if (val instanceof Iterable && !(val instanceof Path)) {
-      val = ((Iterable<?>) val).iterator();
-      // Fall through to the Iterator handling
-    }
-
-    if (val instanceof Iterator) {
-      Iterator<?> iterator = (Iterator<?>) val;
-      while (iterator.hasNext()) {
-        setReflectively(key, iterator.next());
+    int oldSize = keyStack.size();
+    keyStack.push(key);
+    try {
+      // Check to see if we're dealing with a collection of some description. Note
+      // java.nio.file.Path implements "Iterable", so we don't check for that.
+      if (val instanceof Collection) {
+        val = ((Collection<?>) val).iterator();
+        // Fall through to the Iterator handling
       }
-      return separate();
-    }
 
-    if (val instanceof Map) {
-      if (!(val instanceof SortedMap | val instanceof ImmutableMap)) {
-        logger.info(
-            "Adding an unsorted map to the rule key (%s). " +
-                "Expect unstable ordering and caches misses: %s",
-            key,
-            val);
+      if (val instanceof Iterable && !(val instanceof Path)) {
+        val = ((Iterable<?>) val).iterator();
+        // Fall through to the Iterator handling
       }
-      feed("{".getBytes());
-      for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
-        setReflectively(key, entry.getKey());
-        feed(" -> ".getBytes());
-        setReflectively(key, entry.getValue());
-        separate();
+
+      if (val instanceof Iterator) {
+        Iterator<?> iterator = (Iterator<?>) val;
+        while (iterator.hasNext()) {
+          setReflectively(key, iterator.next());
+        }
+        return this;
       }
-      feed("}".getBytes());
-      return separate();
-    }
 
-    if (val instanceof Supplier) {
-      Object newVal = ((Supplier<?>) val).get();
-      return setReflectively(key, newVal);
-    }
+      if (val instanceof Map) {
+        if (!(val instanceof SortedMap | val instanceof ImmutableMap)) {
+          logger.info(
+              "Adding an unsorted map to the rule key (%s). " +
+                  "Expect unstable ordering and caches misses: %s",
+              key,
+              val);
+        }
+        feed("{".getBytes());
+        for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
+          setReflectively(key, entry.getKey());
+          feed(" -> ".getBytes());
+          setReflectively(key, entry.getValue());
+        }
+        return feed("}".getBytes());
+      }
 
-    return setSingleValue(val);
+      if (val instanceof Supplier) {
+        Object newVal = ((Supplier<?>) val).get();
+        return setReflectively(key, newVal);
+      }
+
+      return setSingleValue(val);
+    } finally {
+      while (keyStack.size() > oldSize) {
+        keyStack.pop();
+      }
+    }
   }
 
   // Paths get added as a combination of the file name and file hash. If the path is absolute
@@ -210,9 +215,9 @@ public class RuleKeyBuilder {
     if (path.isAbsolute()) {
       logger.warn(
           "Attempting to add absolute path to rule key. Only using file name: %s", path);
-      feed(path.getFileName().toString().getBytes()).separate();
+      feed(path.getFileName().toString().getBytes());
     } else {
-      feed(path.toString().getBytes()).separate();
+      feed(path.toString().getBytes());
     }
     feed(sha1.toString().getBytes());
     return this;
@@ -221,7 +226,7 @@ public class RuleKeyBuilder {
   protected RuleKeyBuilder setSingleValue(@Nullable Object val) {
 
     if (val == null) { // Null value first
-      return separate();
+      return feed(new byte[0]);
     } else if (val instanceof Boolean) {           // JRE types
       if (logElms != null) {
         logElms.add(String.format("boolean(\"%s\"):", (boolean) val ? "true" : "false"));
@@ -297,7 +302,7 @@ public class RuleKeyBuilder {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
     }
 
-    return separate();
+    return this;
   }
 
   public RuleKey build() {
