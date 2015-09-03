@@ -47,8 +47,6 @@ EXPORTED_RESOURCES = [
     Resource("path_to_asm_jar"),
     Resource("logging_config_file"),
     Resource("path_to_pathlib_py", basename='pathlib.py'),
-    Resource("path_to_compile_asset_catalogs_py"),
-    Resource("path_to_compile_asset_catalogs_build_phase_sh"),
     Resource("path_to_intellij_py"),
     Resource("path_to_pex"),
     Resource("path_to_python_test_main"),

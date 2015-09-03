@@ -162,17 +162,6 @@ public class ProjectGenerator {
       Option.CREATE_DIRECTORY_STRUCTURE,
       Option.USE_SHORT_NAMES_FOR_TARGETS);
 
-  public static final String PATH_TO_ASSET_CATALOG_COMPILER = System.getProperty(
-      "buck.path_to_compile_asset_catalogs_py",
-      "src/com/facebook/buck/apple/compile_asset_catalogs.py");
-  public static final String PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT = System.getProperty(
-      "buck.path_to_compile_asset_catalogs_build_phase_sh",
-      "src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh");
-  public static final String PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT =
-      System.getProperty(
-          "buck.path_override_for_asset_catalog_build_phase",
-          null);
-
   private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
       PosixFilePermissions.asFileAttribute(
           ImmutableSet.of(
@@ -211,7 +200,6 @@ public class ProjectGenerator {
   private final String projectName;
   private final ImmutableSet<BuildTarget> initialTargets;
   private final Path projectPath;
-  private final Path placedAssetCatalogBuildPhaseScript;
   private final PathRelativizer pathRelativizer;
 
   private final String buildFileName;
@@ -231,7 +219,6 @@ public class ProjectGenerator {
   // These fields are created/filled when creating the projects.
   private final PBXProject project;
   private final LoadingCache<TargetNode<?>, Optional<PBXTarget>> targetNodeToProjectTarget;
-  private boolean shouldPlaceAssetCatalogCompiler = false;
   private final ImmutableMultimap.Builder<TargetNode<?>, PBXTarget>
       targetNodeToGeneratedProjectTargetBuilder;
   private boolean projectGenerated;
@@ -299,9 +286,6 @@ public class ProjectGenerator {
         this.outputDirectory,
         projectFilesystem.getRootPath(),
         this.pathRelativizer.outputDirToRootRelative(Paths.get(".")));
-
-    this.placedAssetCatalogBuildPhaseScript =
-        BuckConstant.SCRATCH_PATH.resolve("xcode-scripts/compile_asset_catalogs_build_phase.sh");
 
     this.project = new PBXProject(projectName);
     this.headerSymlinkTrees = new ArrayList<>();
@@ -414,20 +398,6 @@ public class ProjectGenerator {
 
       writeProjectFile(project);
 
-      if (shouldPlaceAssetCatalogCompiler) {
-        Path placedAssetCatalogCompilerPath = projectFilesystem.getPathForRelativePath(
-            BuckConstant.SCRATCH_PATH.resolve(
-                "xcode-scripts/compile_asset_catalogs.py"));
-        LOG.debug("Ensuring asset catalog is copied to path [%s]", placedAssetCatalogCompilerPath);
-        projectFilesystem.createParentDirs(placedAssetCatalogCompilerPath);
-        projectFilesystem.createParentDirs(placedAssetCatalogBuildPhaseScript);
-        projectFilesystem.copyFile(
-            Paths.get(PATH_TO_ASSET_CATALOG_COMPILER),
-            placedAssetCatalogCompilerPath);
-        projectFilesystem.copyFile(
-            Paths.get(PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT),
-            placedAssetCatalogBuildPhaseScript);
-      }
       projectGenerated = true;
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
@@ -784,7 +754,6 @@ public class ProjectGenerator {
 
     if (!recursiveAssetCatalogs.isEmpty()) {
       mutator.setRecursiveAssetCatalogs(
-          getAndMarkAssetCatalogBuildScript(),
           recursiveAssetCatalogs);
     }
 
@@ -1081,7 +1050,6 @@ public class ProjectGenerator {
         .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
         .setRecursiveResources(AppleResources.collectRecursiveResources(targetGraph, tests))
         .setRecursiveAssetCatalogs(
-            getAndMarkAssetCatalogBuildScript(),
             AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, tests));
 
     ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
@@ -2021,22 +1989,6 @@ public class ProjectGenerator {
   private static boolean isFrameworkBundle(HasAppleBundleFields arg) {
     return arg.getExtension().isLeft() &&
         arg.getExtension().getLeft().equals(AppleBundleExtension.FRAMEWORK);
-  }
-
-  /**
-   * Retrieve the location of the asset catalog build script.
-   *
-   * If the file is provided by buck and needs to be copied, mark it as such in the project.
-   */
-  private Path getAndMarkAssetCatalogBuildScript() {
-    if (PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT != null) {
-      return Paths.get(PATH_OVERRIDE_FOR_ASSET_CATALOG_BUILD_PHASE_SCRIPT);
-    } else {
-      // In order for the script to run, it must be accessible by Xcode and
-      // deserves to be part of the generated output.
-      shouldPlaceAssetCatalogCompiler = true;
-      return placedAssetCatalogBuildPhaseScript;
-    }
   }
 
   private Path emptyFileWithExtension(String extension) {

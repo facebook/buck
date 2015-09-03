@@ -113,14 +113,6 @@ public class WorkspaceAndProjectGeneratorTest {
   public void setUp() throws IOException {
     projectFilesystem = new FakeProjectFilesystem(new SettableFakeClock(0, 0));
 
-    // Add support files needed by project generation to fake filesystem.
-    projectFilesystem.writeContentsToPath(
-        "",
-        Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT));
-    projectFilesystem.writeContentsToPath(
-        "",
-        Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_COMPILER));
-
     reactNativeBuckConfig = new ReactNativeBuckConfig(new FakeBuckConfig(projectFilesystem));
 
     setUpWorkspaceAndProjects();

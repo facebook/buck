@@ -87,10 +87,6 @@ RESOURCES = {
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
     "path_to_asm_jar": "third-party/java/asm/asm-debug-all-5.0.3.jar",
     "path_to_buck_py": "src/com/facebook/buck/parser/buck.py",
-    "path_to_compile_asset_catalogs_build_phase_sh": (
-        "src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh"),
-    "path_to_compile_asset_catalogs_py": (
-        "src/com/facebook/buck/apple/compile_asset_catalogs.py"),
     "path_to_intellij_py": "src/com/facebook/buck/command/intellij.py",
     "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
     "path_to_pex": "src/com/facebook/buck/python/pex.py",

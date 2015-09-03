@@ -48,34 +48,3 @@ java_immutables_library(
     'PUBLIC'
   ]
 )
-
-python_library(
-  name = 'asset_catalogs_compiler',
-  srcs = [
-    'compile_asset_catalogs.py',
-  ],
-)
-
-python_test(
-  name = 'asset_catalogs_test',
-  srcs = [
-    'compile_asset_catalogs_test.py',
-  ],
-  deps = [
-    ':asset_catalogs_compiler',
-  ],
-)
-
-export_file(
-  name = 'compile_asset_catalogs.py',
-  visibility = [
-    'PUBLIC'
-  ]
-)
-
-export_file(
-  name = 'compile_asset_catalogs_build_phase.sh',
-  visibility = [
-    'PUBLIC'
-  ]
-)

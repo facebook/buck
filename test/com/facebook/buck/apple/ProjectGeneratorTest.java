@@ -151,14 +151,6 @@ public class ProjectGeneratorTest {
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectFilesystem = fakeProjectFilesystem;
 
-    // Add support files needed by project generation to fake filesystem.
-    projectFilesystem.writeContentsToPath(
-        "",
-        Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_BUILD_PHASE_SCRIPT));
-    projectFilesystem.writeContentsToPath(
-        "",
-        Paths.get(ProjectGenerator.PATH_TO_ASSET_CATALOG_COMPILER));
-
     // Add files and directories used to test resources.
     projectFilesystem.createParentDirs(Paths.get("foodir", "foo.png"));
     projectFilesystem.writeContentsToPath(
@@ -759,7 +751,10 @@ public class ProjectGeneratorTest {
             "libsomething.a", Optional.<String>absent()));
 
     // this target should not have an asset catalog build phase
-    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(target));
+    assertTrue(
+        FluentIterable.from(target.getBuildPhases())
+            .filter(PBXResourcesBuildPhase.class)
+            .isEmpty());
   }
 
   @Test
@@ -1640,7 +1635,10 @@ public class ProjectGeneratorTest {
 
     // this test does not have a dependency on any asset catalogs, so verify no build phase for them
     // exists.
-    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(target));
+    assertTrue(
+        FluentIterable.from(target.getBuildPhases())
+            .filter(PBXResourcesBuildPhase.class)
+            .isEmpty());
   }
 
   @Test
@@ -2456,7 +2454,9 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(
         generatedProject,
         "//foo:bundle");
-    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(target));
+    assertHasSingletonResourcesPhaseWithEntries(
+        target,
+        "AssetCatalog.xcassets");
   }
 
   @Test
@@ -3192,29 +3192,33 @@ public class ProjectGeneratorTest {
     PBXTarget fooLibTarget = assertTargetExistsAndReturnTarget(
         project,
         "lib");
-    assertFalse(hasShellScriptPhaseToCompileAssetCatalogs(fooLibTarget));
+    assertTrue(
+        FluentIterable.from(fooLibTarget.getBuildPhases())
+            .filter(PBXResourcesBuildPhase.class)
+            .isEmpty());
     PBXGroup libResourcesGroup = mainGroup
         .getOrCreateChildGroupByName("lib")
         .getOrCreateChildGroupByName("Resources");
-    PBXFileReference assetCatalogFile = (PBXFileReference) Iterables.get(
-          libResourcesGroup.getChildren(), 0);
+    PBXFileReference assetCatalogFile = (PBXFileReference) libResourcesGroup.getChildren().get(0);
     assertEquals("AssetCatalog.xcassets", assetCatalogFile.getName());
 
     PBXTarget fooTestTarget = assertTargetExistsAndReturnTarget(
         project,
         "test");
-    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(fooTestTarget));
-    boolean hasAssetCatalog = false;
+    PBXResourcesBuildPhase resourcesBuildPhase = getSingletonPhaseByType(
+        fooTestTarget,
+        PBXResourcesBuildPhase.class);
+    assertThat(
+        resourcesBuildPhase.getFiles(),
+        hasSize(1));
+    assertThat(
+        assertFileRefIsRelativeAndResolvePath(resourcesBuildPhase.getFiles().get(0).getFileRef()),
+        equalTo(projectFilesystem.resolve("AssetCatalog.xcassets").toString()));
     PBXGroup testResourcesGroup = mainGroup
         .getOrCreateChildGroupByName("test")
         .getOrCreateChildGroupByName("Resources");
-    for (PBXReference reference : testResourcesGroup.getChildren()) {
-      if ("AssetCatalog.xcassets".equals(reference.getName())) {
-        hasAssetCatalog = true;
-        break;
-      }
-    }
-    assertFalse(hasAssetCatalog);
+    assetCatalogFile = (PBXFileReference) testResourcesGroup.getChildren().get(0);
+    assertEquals("AssetCatalog.xcassets", assetCatalogFile.getName());
   }
 
   @Test
@@ -3511,20 +3515,6 @@ public class ProjectGeneratorTest {
     assertHasConfigurations(target, config);
     return ProjectGeneratorTestUtils.getBuildSettings(
         projectFilesystem, buildTarget, target, config);
-  }
-
-  private boolean hasShellScriptPhaseToCompileAssetCatalogs(PBXTarget target) {
-    boolean found = false;
-    for (PBXBuildPhase phase : target.getBuildPhases()) {
-      if (phase.getClass().equals(PBXShellScriptBuildPhase.class)) {
-        PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) phase;
-        if (shellScriptBuildPhase.getShellScript().contains("compile_asset_catalogs")) {
-          found = true;
-        }
-      }
-    }
-
-    return found;
   }
 
   private Matcher<PBXTarget> targetWithName(String name) {

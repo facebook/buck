@@ -17,7 +17,6 @@
   <property name="javac-tracing.src.dir" value="com/facebook/buck/java/tracing" />
   <property name="javac-tracing.classes.dir" value="${build.dir}/javac-tracing/classes" />
   <property name="javac-tracing.jar" value="${build.dir}/javac-tracing/javac-tracing-compiler-plugin.jar" />
-  <property name="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${basedir}/src/com/facebook/buck/apple/compile_asset_catalogs_build_phase.sh" />
   <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/pex.py" />
   <property name="buck.path_to_python_test_main" value="${basedir}/src/com/facebook/buck/python/__test_main__.py" />
   <property name="buck.path_to_sh_binary_template" value="${basedir}/src/com/facebook/buck/shell/sh_binary_template" />
@@ -690,8 +689,6 @@
            forkmode="perBatch"
            haltonfailure="on"
            haltonerror="on">
-      <sysproperty key="buck.path_to_compile_asset_catalogs_py" value="${buck.path_to_compile_asset_catalogs_py}" />
-      <sysproperty key="buck.path_to_compile_asset_catalogs_build_phase_sh" value="${buck.path_to_compile_asset_catalogs_build_phase_sh}" />
       <sysproperty key="buck.path_to_pex" value="${buck.path_to_pex}" />
       <sysproperty key="buck.path_to_python_test_main" value="${buck.path_to_python_test_main}" />
       <sysproperty key="buck.logging_config_file" value="${buck.test_logging_config_file}" />
@@ -760,7 +757,7 @@
     <fail if="hasFailingTests" />
   </target>
 
-  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, asset-catalogs-py-test, pathlib-py-test, zip-munger-py-test" />
+  <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, pathlib-py-test, zip-munger-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
@@ -774,12 +771,6 @@
           <env key="PYTHONPATH" path="${pathlib.dir}" />
           <arg value="test/com/facebook/buck/cli/bootstrapper/class_loader_test.py" />
       </exec>
-  </target>
-
-  <target name="asset-catalogs-py-test" description="tests the asset catalogs compiler">
-    <exec executable="python" failonerror="true">
-      <arg value="src/com/facebook/buck/apple/compile_asset_catalogs_test.py" />
-    </exec>
   </target>
 
   <target name="pathlib-py-test" description="tests pathlib.py">

@@ -107,7 +107,6 @@ public class NewNativeTargetProjectMutator {
   private ImmutableSet<AppleResourceDescription.Arg> directResources = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs = ImmutableSet.of();
-  private Path assetCatalogBuildScript = Paths.get("");
   private Iterable<TargetNode<?>> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
   private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
@@ -224,14 +223,11 @@ public class NewNativeTargetProjectMutator {
   }
 
   /**
-   * @param assetCatalogBuildScript Path of the asset catalog build script relative to repo root.
    * @param recursiveAssetCatalogs List of asset catalog targets of targetNode and dependencies of
    *                               targetNode.
    */
   public NewNativeTargetProjectMutator setRecursiveAssetCatalogs(
-      Path assetCatalogBuildScript,
       Set<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs) {
-    this.assetCatalogBuildScript = assetCatalogBuildScript;
     this.recursiveAssetCatalogs = ImmutableSet.copyOf(recursiveAssetCatalogs);
     return this;
   }
@@ -258,8 +254,6 @@ public class NewNativeTargetProjectMutator {
     addFrameworksBuildPhase(project, target);
     addResourcesFileReference(targetGroup);
     addResourcesBuildPhase(target, targetGroup);
-    addAssetCatalogFileReference(targetGroup);
-    addAssetCatalogBuildPhase(target);
     target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
     addRunScriptBuildPhases(target, postBuildRunScriptPhases);
     addRawScriptBuildPhases(target);
@@ -448,18 +442,44 @@ public class NewNativeTargetProjectMutator {
   }
 
   private void addResourcesFileReference(PBXGroup targetGroup) {
+    ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
+
+    collectResourcePathsFromConstructorArgs(
+        directResources,
+        directAssetCatalogs,
+        resourceFiles,
+        resourceDirs,
+        variantResourceFiles);
+
     addResourcesFileReference(
         targetGroup,
-        directResources,
+        resourceFiles.build(),
+        resourceDirs.build(),
+        variantResourceFiles.build(),
         Functions.<Void>constant(null),
         Functions.<Void>constant(null));
   }
 
   private PBXBuildPhase addResourcesBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
+    ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
+
+    collectResourcePathsFromConstructorArgs(
+        recursiveResources,
+        recursiveAssetCatalogs,
+        resourceFiles,
+        resourceDirs,
+        variantResourceFiles);
+
     final PBXBuildPhase phase = new PBXResourcesBuildPhase();
     addResourcesFileReference(
         targetGroup,
-        recursiveResources,
+        resourceFiles.build(),
+        resourceDirs.build(),
+        variantResourceFiles.build(),
         new Function<PBXFileReference, Void>() {
           @Override
           public Void apply(PBXFileReference input) {
@@ -483,134 +503,81 @@ public class NewNativeTargetProjectMutator {
     return phase;
   }
 
+  void collectResourcePathsFromConstructorArgs(
+      Set<AppleResourceDescription.Arg> resourceArgs,
+      Set<AppleAssetCatalogDescription.Arg> assetCatalogArgs,
+      ImmutableSet.Builder<Path> resourceFilesBuilder,
+      ImmutableSet.Builder<Path> resourceDirsBuilder,
+      ImmutableSet.Builder<Path> variantResourceFilesBuilder) {
+    for (AppleResourceDescription.Arg arg : resourceArgs) {
+      resourceFilesBuilder.addAll(Iterables.transform(arg.files, sourcePathResolver));
+      resourceDirsBuilder.addAll(Iterables.transform(arg.dirs, sourcePathResolver));
+      variantResourceFilesBuilder.addAll(
+          Iterables.transform(arg.variants.get(), sourcePathResolver));
+    }
+
+    for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
+      resourceDirsBuilder.addAll(arg.dirs);
+    }
+  }
+
   private void addResourcesFileReference(
       PBXGroup targetGroup,
-      ImmutableSet<AppleResourceDescription.Arg> resources,
+      ImmutableSet<Path> resourceFiles,
+      ImmutableSet<Path> resourceDirs,
+      ImmutableSet<Path> variantResourceFiles,
       Function<? super PBXFileReference, Void> resourceCallback,
       Function<? super PBXVariantGroup, Void> variantGroupCallback) {
-    if (resources.isEmpty()) {
+    if (resourceFiles.isEmpty() && resourceDirs.isEmpty() && variantResourceFiles.isEmpty()) {
       return;
     }
 
     PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
-    for (AppleResourceDescription.Arg resource : resources) {
-      for (Path path : Iterables.transform(resource.files, sourcePathResolver)) {
-        PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(path),
-                Optional.<String>absent()));
-        resourceCallback.apply(fileReference);
+    for (Path path : resourceFiles) {
+      PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              pathRelativizer.outputDirToRootRelative(path),
+              Optional.<String>absent()));
+      resourceCallback.apply(fileReference);
+    }
+    for (Path path : resourceDirs) {
+      PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              pathRelativizer.outputDirToRootRelative(path),
+              Optional.of("folder")));
+      resourceCallback.apply(fileReference);
+    }
+
+    Map<String, PBXVariantGroup> variantGroups = Maps.newHashMap();
+    for (Path variantFilePath : variantResourceFiles) {
+      String lprojSuffix = ".lproj";
+      Path variantDirectory = variantFilePath.getParent();
+      if (variantDirectory == null || !variantDirectory.toString().endsWith(lprojSuffix)) {
+        throw new HumanReadableException(
+            "Variant files have to be in a directory with name ending in '.lproj', " +
+                "but '%s' is not.",
+            variantFilePath);
       }
-      for (Path path : Iterables.transform(resource.dirs, sourcePathResolver)) {
-        PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(path),
-                Optional.of("folder")));
-        resourceCallback.apply(fileReference);
+      String variantDirectoryName = variantDirectory.getFileName().toString();
+      String variantLocalization =
+          variantDirectoryName.substring(0, variantDirectoryName.length() - lprojSuffix.length());
+      String variantFileName = variantFilePath.getFileName().toString();
+      PBXVariantGroup variantGroup = variantGroups.get(variantFileName);
+      if (variantGroup == null) {
+        variantGroup = resourcesGroup.getOrCreateChildVariantGroupByName(variantFileName);
+        variantGroupCallback.apply(variantGroup);
+        variantGroups.put(variantFileName, variantGroup);
       }
-
-      Map<String, PBXVariantGroup> variantGroups = Maps.newHashMap();
-      for (SourcePath variantSourcePath : resource.variants.get()) {
-        String lprojSuffix = ".lproj";
-        Path variantFilePath = sourcePathResolver.apply(variantSourcePath);
-        Path variantDirectory = variantFilePath.getParent();
-        if (variantDirectory == null || !variantDirectory.toString().endsWith(lprojSuffix)) {
-          throw new HumanReadableException(
-              "Variant files have to be in a directory with name ending in '.lproj', " +
-                  "but '%s' is not.",
-              variantFilePath);
-        }
-        String variantDirectoryName = variantDirectory.getFileName().toString();
-        String variantLocalization =
-            variantDirectoryName.substring(0, variantDirectoryName.length() - lprojSuffix.length());
-        String variantFileName = variantFilePath.getFileName().toString();
-        PBXVariantGroup variantGroup = variantGroups.get(variantFileName);
-        if (variantGroup == null) {
-          variantGroup = resourcesGroup.getOrCreateChildVariantGroupByName(variantFileName);
-          variantGroupCallback.apply(variantGroup);
-          variantGroups.put(variantFileName, variantGroup);
-        }
-        SourceTreePath sourceTreePath = new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputPathToSourcePath(variantSourcePath),
-            Optional.<String>absent());
-        variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
-            variantLocalization,
-            sourceTreePath);
-      }
+      SourceTreePath sourceTreePath = new SourceTreePath(
+          PBXReference.SourceTree.SOURCE_ROOT,
+          pathRelativizer.outputDirToRootRelative(variantFilePath),
+          Optional.<String>absent());
+      variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
+          variantLocalization,
+          sourceTreePath);
     }
-  }
-
-  private void addAssetCatalogFileReference(PBXGroup targetGroup) {
-    if (directAssetCatalogs.isEmpty()) {
-      return;
-    }
-
-    // Asset catalogs go in the resources group also.
-    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
-
-    for (AppleAssetCatalogDescription.Arg assetCatalog : directAssetCatalogs) {
-      for (Path dir : assetCatalog.dirs) {
-        Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
-
-        resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativeToProjectRoot,
-                Optional.<String>absent()));
-
-        LOG.debug("Resolved asset catalog path %s, result %s", dir, pathRelativeToProjectRoot);
-      }
-    }
-  }
-
-  private void addAssetCatalogBuildPhase(PBXNativeTarget target) {
-    if (recursiveAssetCatalogs.isEmpty()) {
-      return;
-    }
-
-    ImmutableList.Builder<String> assetCatalogsBuilder = ImmutableList.builder();
-    for (AppleAssetCatalogDescription.Arg assetCatalog : recursiveAssetCatalogs) {
-      for (Path dir : assetCatalog.dirs) {
-        Path pathRelativeToProjectRoot = pathRelativizer.outputDirToRootRelative(dir);
-
-        LOG.debug("Resolved asset catalog path %s, result %s", dir, pathRelativeToProjectRoot);
-
-        String bundlePath = "$PROJECT_DIR/" + pathRelativeToProjectRoot.toString();
-        assetCatalogsBuilder.add(bundlePath);
-      }
-    }
-
-    ImmutableList<String> assetCatalogs = assetCatalogsBuilder.build();
-
-    // Map asset catalog paths to their shell script arguments relative to the project's root
-    Path buildScript = pathRelativizer.outputDirToRootRelative(assetCatalogBuildScript);
-    StringBuilder scriptBuilder = new StringBuilder("set -e\n");
-    scriptBuilder
-        .append("TMPDIR=`mktemp -d -t buckAssetCatalogs.XXXXXX`\n")
-        .append("trap \"rm -rf '${TMPDIR}'\" exit\n");
-    if (assetCatalogs.size() != 0) {
-      scriptBuilder
-          .append("COMMON_ARGS_FILE=\"${TMPDIR}\"/common_args\n")
-          .append("cat <<EOT >\"${COMMON_ARGS_FILE}\"\n");
-
-      Joiner.on('\n').appendTo(scriptBuilder, assetCatalogs);
-
-      scriptBuilder
-          .append("\n")
-          .append("EOT\n")
-          .append("\"${PROJECT_DIR}/\"")
-          .append(buildScript.toString())
-          .append(" @\"${COMMON_ARGS_FILE}\"\n");
-    }
-
-    PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();
-    target.getBuildPhases().add(phase);
-    phase.setShellPath("/bin/bash");
-    phase.setShellScript(scriptBuilder.toString());
-    LOG.debug("Added asset catalog build phase %s", phase);
   }
 
   private void addRunScriptBuildPhases(

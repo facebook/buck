@@ -30,10 +30,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
@@ -46,7 +43,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -66,7 +62,6 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -319,40 +314,13 @@ public class NewNativeTargetProjectMutatorTest {
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setRecursiveAssetCatalogs(
-        Paths.get("compile_asset_catalogs"),
         ImmutableSet.of(arg));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
-    assertTrue(hasShellScriptPhaseToCompileAssetCatalogs(result.target));
-  }
-
-  @Test
-  public void assetCatalogsBuildPhaseDoesNotExceedCommandLineLengthWithLotsOfXcassets()
-      throws NoSuchBuildTargetException {
-    ImmutableSet.Builder<AppleAssetCatalogDescription.Arg> assetsBuilder = ImmutableSet.builder();
-    for (int i = 0; i < 10000; i += 1) {
-      AppleAssetCatalogDescription.Arg arg = new AppleAssetCatalogDescription.Arg();
-      arg.dirs = ImmutableSortedSet.of(Paths.get(String.format("AssetCatalog%d.xcassets", i)));
-      assetsBuilder.add(arg);
-    }
-
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    mutator.setRecursiveAssetCatalogs(
-        Paths.get("compile_asset_catalogs"),
-        assetsBuilder.build());
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject);
-
-    PBXShellScriptBuildPhase assetCatalogBuildPhase = getAssetCatalogBuildPhase(
-        result.target.getBuildPhases());
-
-    for (String line : Splitter.on('\n').split(assetCatalogBuildPhase.getShellScript())) {
-      int lineLength = line.length();
-      assertThat(
-          "Line length of generated asset catalog build phase should not be super long",
-          lineLength,
-          lessThan(1024));
-    }
+    assertHasSingletonPhaseWithEntries(
+        result.target,
+        PBXResourcesBuildPhase.class,
+        ImmutableList.of("$SOURCE_ROOT/../AssetCatalog1.xcassets"));
   }
 
   @Test
@@ -460,34 +428,4 @@ public class NewNativeTargetProjectMutatorTest {
     return candidates.get(0);
   }
 
-  private PBXShellScriptBuildPhase getAssetCatalogBuildPhase(Iterable<PBXBuildPhase> buildPhases) {
-    PBXShellScriptBuildPhase assetCatalogBuildPhase = null;
-    for (PBXBuildPhase phase : buildPhases) {
-      if (phase.getClass().equals(PBXShellScriptBuildPhase.class)) {
-        PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) phase;
-        if (shellScriptBuildPhase.getShellScript().contains("compile_asset_catalogs")) {
-          assetCatalogBuildPhase = shellScriptBuildPhase;
-        }
-      }
-    }
-    assertNotNull(assetCatalogBuildPhase);
-    return assetCatalogBuildPhase;
-  }
-
-  private boolean hasShellScriptPhaseToCompileAssetCatalogs(PBXTarget target) {
-    PBXShellScriptBuildPhase assetCatalogBuildPhase = getAssetCatalogBuildPhase(
-        target.getBuildPhases());
-
-    boolean foundAssetCatalogCompileCommand = false;
-    String[] lines = assetCatalogBuildPhase.getShellScript().split("\\n");
-    for (String line : lines) {
-      if (line.contains("compile_asset_catalogs")) {
-        assertFalse(line.contains(" -b "));
-        assertFalse("should have only one invocation", foundAssetCatalogCompileCommand);
-        foundAssetCatalogCompileCommand = true;
-      }
-    }
-
-    return foundAssetCatalogCompileCommand;
-  }
 }
