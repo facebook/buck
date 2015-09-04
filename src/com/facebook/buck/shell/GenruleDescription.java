@@ -37,7 +37,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -77,20 +76,21 @@ public class GenruleDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       final A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    ImmutableList<SourcePath> srcs = args.srcs.get();
-    ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(params.getExtraDeps().get())
-        .addAll(pathResolver.filterBuildRuleInputs(srcs))
-        .build();
+    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     return new Genrule(
-        params
-            .copyWithExtraDeps(Suppliers.ofInstance(extraDeps))
-                // Attach any extra dependencies found from macro expansion.
-            .appendExtraDeps(findExtraDepsFromArgs(params.getBuildTarget(), resolver, args)),
+        params.appendExtraDeps(
+            new Supplier<ImmutableSortedSet<BuildRule>>() {
+              @Override
+              public ImmutableSortedSet<BuildRule> get() {
+                return ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
+                    // Attach any extra dependencies found from macro expansion.
+                    .addAll(findExtraDepsFromArgs(params.getBuildTarget(), resolver , args))
+                    .build();
+              }
+            }),
         pathResolver,
-        srcs,
+        args.srcs.get(),
         macroHandler.getExpander(
             params.getBuildTarget(),
             resolver,
