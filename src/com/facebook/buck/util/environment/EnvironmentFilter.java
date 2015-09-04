@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util.environment;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -56,6 +58,15 @@ public class EnvironmentFilter {
       "TMUX_PANE",        // Current tmux pane.
       "TERM_SESSION_ID"  // UUID added to environment by OS X.
   );
+
+  // Ignore the environment variables with these names when comparing environments.
+  private static final ImmutableSet<String> ENV_TO_IGNORE = ImmutableSet.of(
+      "NAILGUN_TTY_1",  // Nailgun stdout supports ANSI escape sequences.
+      "NAILGUN_TTY_2"   // Nailgun stderr supports ANSI escape sequences.
+  );
+
+  public static final Predicate<String> NOT_IGNORED_ENV_PREDICATE =
+      Predicates.not(Predicates.in(ENV_TO_IGNORE));
 
   // Utility class, do not instantiate.
   private EnvironmentFilter() { }

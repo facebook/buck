@@ -41,6 +41,7 @@ java_immutables_library(
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/rules:types',
+    '//src/com/facebook/buck/util/environment:env-filter',
     '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',

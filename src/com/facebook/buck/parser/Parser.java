@@ -54,6 +54,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -72,6 +73,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
@@ -994,6 +996,31 @@ public class Parser {
     }
 
     /**
+     * Checks if the cache should be invalidated to to differences in environment variables.
+     * Variables that are irrelevant for cache retention purposes are ignored.
+     *
+     * @param environment
+     * @return true if the cache should be invalidated, false otherwise.
+     */
+    private boolean shouldInvalidateCacheOnEnvironmentChange(
+        ImmutableMap<String, String> environment) {
+      if (cacheEnvironment == null) {
+        return true;
+      }
+      MapDifference<String, String> difference = Maps.difference(
+          Maps.filterKeys(cacheEnvironment, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE),
+          Maps.filterKeys(environment, EnvironmentFilter.NOT_IGNORED_ENV_PREDICATE));
+      if (!difference.areEqual()) {
+        LOG.warn(
+            "Environment variables changed (%s). Discarding cache to avoid effects on build. " +
+                "This will make builds very slow.",
+            difference);
+        return true;
+      }
+      return false;
+    }
+
+    /**
      * Invalidates the cached build rules if {@code environment} has changed since the last call.
      * If the cache is invalidated the new {@code environment} used to build the new cache is
      * stored.
@@ -1003,13 +1030,7 @@ public class Parser {
      */
     private synchronized boolean invalidateCacheOnEnvironmentChange(
         ImmutableMap<String, String> environment) {
-      if (!environment.equals(cacheEnvironment)) {
-        if (cacheEnvironment != null) {
-          LOG.warn(
-              "Environment variables changed (%s). Discarding cache to avoid effects on build. " +
-              "This will make builds very slow.",
-              Maps.difference(cacheEnvironment, environment));
-        }
+      if (shouldInvalidateCacheOnEnvironmentChange(environment)) {
         invalidateCache();
         this.cacheEnvironment = environment;
         return true;
