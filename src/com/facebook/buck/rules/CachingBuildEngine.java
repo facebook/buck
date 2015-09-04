@@ -62,6 +62,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -87,6 +88,9 @@ public class CachingBuildEngine implements BuildEngine {
 
   private final ConcurrentMap<BuildTarget, ListenableFuture<RuleKey>> ruleKeys =
       Maps.newConcurrentMap();
+
+  private final ConcurrentMap<BuildTarget, ListenableFuture<ImmutableSortedSet<BuildRule>>>
+      ruleDeps = Maps.newConcurrentMap();
 
   @Nullable
   private volatile Throwable firstFailure = null;
@@ -673,6 +677,58 @@ public class CachingBuildEngine implements BuildEngine {
     return result;
   }
 
+  public ListenableFuture<?> walkRule(
+      BuildRule rule,
+      final ConcurrentMap<BuildRule, Integer> seen) {
+    ListenableFuture<?> result = Futures.immediateFuture(null);
+    if (seen.putIfAbsent(rule, 0) == null) {
+      result =
+          Futures.transform(
+              getRuleDeps(rule),
+              new AsyncFunction<ImmutableSortedSet<BuildRule>, List<Object>>() {
+                @Override
+                public ListenableFuture<List<Object>> apply(
+                    @Nonnull ImmutableSortedSet<BuildRule> deps) {
+                  List<ListenableFuture<?>> results =
+                      Lists.newArrayListWithExpectedSize(deps.size());
+                  for (BuildRule dep : deps) {
+                    results.add(walkRule(dep, seen));
+                  }
+                  return Futures.allAsList(results);
+                }
+              });
+    }
+    return result;
+  }
+
+  @Override
+  public int getNumRulesToBuild(Iterable<BuildRule> rules) {
+    ConcurrentMap<BuildRule, Integer> seen = Maps.newConcurrentMap();
+    ListenableFuture<Void> result = Futures.immediateFuture(null);
+    for (BuildRule rule : rules) {
+      result = MoreFutures.chainExceptions(walkRule(rule, seen), result);
+    }
+    Futures.getUnchecked(result);
+    return seen.size();
+  }
+
+  private synchronized ListenableFuture<ImmutableSortedSet<BuildRule>> getRuleDeps(
+      final BuildRule rule) {
+    ListenableFuture<ImmutableSortedSet<BuildRule>> deps = ruleDeps.get(rule.getBuildTarget());
+    if (deps == null) {
+      deps =
+          service.submit(
+              new Callable<ImmutableSortedSet<BuildRule>>() {
+                @Override
+                public ImmutableSortedSet<BuildRule> call() throws Exception {
+                  return rule.getDeps();
+                }
+              });
+
+    }
+    return deps;
+  }
+
   private synchronized ListenableFuture<RuleKey> calculateRuleKey(
       final BuildRule rule,
       final BuildContext context) {
@@ -681,15 +737,25 @@ public class CachingBuildEngine implements BuildEngine {
 
       // Grab all the dependency rule key futures.  Since our rule key calculation depends on this
       // one, we need to wait for them to complete.
-      List<ListenableFuture<RuleKey>> depKeys =
-          Lists.newArrayListWithExpectedSize(rule.getDeps().size());
-      for (BuildRule dep : rule.getDeps()) {
-        depKeys.add(calculateRuleKey(dep, context));
-      }
+      ListenableFuture<List<RuleKey>> depKeys =
+          Futures.transform(
+              getRuleDeps(rule),
+              new AsyncFunction<ImmutableSortedSet<BuildRule>, List<RuleKey>>() {
+                @Override
+                public ListenableFuture<List<RuleKey>> apply(
+                    @Nonnull ImmutableSortedSet<BuildRule> deps) {
+                  List<ListenableFuture<RuleKey>> depKeys =
+                      Lists.newArrayListWithExpectedSize(rule.getDeps().size());
+                  for (BuildRule dep : deps) {
+                    depKeys.add(calculateRuleKey(dep, context));
+                  }
+                  return Futures.allAsList(depKeys);
+                }
+              });
 
       // Setup a future to calculate this rule key once the dependencies have been calculated.
       ruleKey = Futures.transform(
-          Futures.allAsList(depKeys),
+          depKeys,
           new Function<List<RuleKey>, RuleKey>() {
             @Override
             public RuleKey apply(List<RuleKey> input) {

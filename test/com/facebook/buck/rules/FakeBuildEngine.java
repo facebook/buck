@@ -61,4 +61,10 @@ public class FakeBuildEngine implements BuildEngine {
   public RuleKey getRuleKey(BuildTarget buildTarget) {
     return ruleKeys.get(buildTarget);
   }
+
+  @Override
+  public int getNumRulesToBuild(Iterable<BuildRule> rule) {
+    return 0;
+  }
+
 }

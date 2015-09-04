@@ -28,6 +28,11 @@ import java.util.concurrent.ExecutionException;
 public interface BuildEngine {
 
   /**
+   * Calculate the total number of transitive build rules processed from the given roots.
+   */
+  int getNumRulesToBuild(Iterable<BuildRule> rule);
+
+  /**
    * Build the given build rule and return a future to the build rule success.
    */
   ListenableFuture<BuildResult> build(BuildContext context, BuildRule rule);

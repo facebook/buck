@@ -55,9 +55,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -67,7 +65,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
@@ -210,7 +207,7 @@ public class Build implements Closeable {
             .toSet());
 
     // Calculate and post the number of rules that need to built.
-    int numRules = getNumRulesToBuild(targetsToBuild, actionGraph);
+    int numRules = buildEngine.getNumRulesToBuild(rulesToBuild);
     getExecutionContext().getBuckEventBus().post(
         BuildEvent.ruleCountCalculated(
             targetsToBuild,
@@ -335,40 +332,4 @@ public class Build implements Closeable {
     executionContext.close();
   }
 
-  private int getNumRulesToBuild(
-      Iterable<BuildTarget> buildTargets,
-      final ActionGraph actionGraph) {
-    Set<BuildRule> baseBuildRules = FluentIterable
-        .from(buildTargets)
-        .transform(new Function<HasBuildTarget, BuildRule>() {
-                     @Override
-                     public BuildRule apply(HasBuildTarget hasBuildTarget) {
-                       return Preconditions.checkNotNull(
-                           actionGraph.findBuildRuleByTarget(hasBuildTarget.getBuildTarget()));
-                     }
-                   })
-        .toSet();
-
-    Set<BuildRule> allBuildRules = Sets.newHashSet();
-    for (BuildRule rule : baseBuildRules) {
-      addTransitiveDepsForRule(rule, allBuildRules);
-    }
-    allBuildRules.addAll(baseBuildRules);
-    return allBuildRules.size();
-  }
-
-  private static void addTransitiveDepsForRule(
-      BuildRule buildRule,
-      Set<BuildRule> transitiveDeps) {
-    ImmutableSortedSet<BuildRule> deps = buildRule.getDeps();
-    if (deps.isEmpty()) {
-      return;
-    }
-    for (BuildRule dep : deps) {
-      if (!transitiveDeps.contains(dep)) {
-        transitiveDeps.add(dep);
-        addTransitiveDepsForRule(dep, transitiveDeps);
-      }
-    }
-  }
 }

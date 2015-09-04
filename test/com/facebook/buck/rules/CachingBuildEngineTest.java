@@ -45,6 +45,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -1948,6 +1949,40 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+  }
+
+  @Test
+  public void getNumRulesToBuild() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRule rule3 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule3"))
+            .setOut("out3")
+            .build(resolver);
+    BuildRule rule2 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule2"))
+            .setOut("out2")
+            .setDeps(ImmutableSortedSet.of(rule3.getBuildTarget()))
+            .build(resolver);
+    BuildRule rule1 =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule1"))
+            .setOut("out1")
+            .setDeps(ImmutableSortedSet.of(rule2.getBuildTarget()))
+            .build(resolver);
+
+    // Create the build engine.
+    CachingBuildEngine cachingBuildEngine =
+        new CachingBuildEngine(
+            MoreExecutors.newDirectExecutorService(),
+            new NullFileHashCache(),
+            CachingBuildEngine.BuildMode.SHALLOW,
+            CachingBuildEngine.DepFiles.ENABLED,
+            NOOP_RULE_KEY_FACTORY,
+            NOOP_RULE_KEY_FACTORY,
+            NOOP_RULE_KEY_FACTORY);
+
+    assertThat(
+        cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)),
+        equalTo(3));
   }
 
 
