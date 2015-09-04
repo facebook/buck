@@ -81,7 +81,6 @@ public class TestResults {
     this.hasAssumptionViolations = hasAssumptionViolations;
   }
 
-  @JsonIgnore
   public BuildTarget getBuildTarget() {
     return source;
   }
