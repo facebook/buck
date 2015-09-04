@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedSet;
@@ -443,6 +442,20 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testProjectWithColon() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project1",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "//modules/dep1:");
+    result.assertSuccess();
+  }
+
+  @Test
   public void testNonexistentTarget() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -450,12 +463,11 @@ public class ProjectIntegrationTest {
         temporaryFolder);
     workspace.setUp();
 
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("Target '//modules/dep1:nonexistent-target' does not exist.");
-
-    workspace.runBuckCommand(
+    ProcessResult result = workspace.runBuckCommand(
         "project",
         "//modules/dep1:nonexistent-target");
+    result.assertFailure("No rule found when resolving target " +
+        "//modules/dep1:nonexistent-target in build file //modules/dep1/BUCK");
   }
 
   @Test
@@ -466,12 +478,11 @@ public class ProjectIntegrationTest {
         temporaryFolder);
     workspace.setUp();
 
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("Target '//nonexistent/path:target' does not exist.");
-
-    workspace.runBuckCommand(
+    ProcessResult result = workspace.runBuckCommand(
         "project",
         "//nonexistent/path:target");
+    result.assertFailure("No build file at nonexistent/path/BUCK " +
+        "when resolving target //nonexistent/path:target.");
   }
 
   @Test
