@@ -1074,7 +1074,7 @@ public class AndroidBinary
       builder.setNativeLibsInfo(
           ExopackageInfo.NativeLibsInfo.of(
               copyNativeLibraries.getPathToMetadataTxt(),
-              copyNativeLibraries.getPathToNativeLibsDir()));
+              copyNativeLibraries.getPathToAllLibsDir()));
       shouldInstall = true;
     }
 

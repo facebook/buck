@@ -104,6 +104,14 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
 
   public Path getPathToNativeLibsAssetsDir() { return getBinPath().resolve("assetLibs"); }
 
+  /**
+   * Returns the path that is the immediate parent of {@link #getPathToNativeLibsAssetsDir()} and
+   * {@link #getPathToNativeLibsDir()}.
+   */
+  public Path getPathToAllLibsDir() {
+    return getBinPath();
+  }
+
   public Path getPathToMetadataTxt() {
     return getBinPath().resolve("metadata.txt");
   }
@@ -202,15 +210,9 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
             ProjectFilesystem filesystem = getProjectFilesystem();
             ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
             try {
-              for (Path nativeLib : filesystem.getFilesUnderPath(pathToNativeLibs)) {
+              for (Path nativeLib : filesystem.getFilesUnderPath(getPathToAllLibsDir())) {
                 String filesha1 = filesystem.computeSha1(nativeLib);
-                Path relativePath = pathToNativeLibs.relativize(nativeLib);
-                metadataLines.add(String.format("%s %s", relativePath.toString(), filesha1));
-              }
-
-              for (Path nativeLib : filesystem.getFilesUnderPath(pathToNativeLibsAssets)) {
-                String filesha1 = filesystem.computeSha1(nativeLib);
-                Path relativePath = pathToNativeLibsAssets.relativize(nativeLib);
+                Path relativePath = getPathToAllLibsDir().relativize(nativeLib);
                 metadataLines.add(String.format("%s %s", relativePath.toString(), filesha1));
               }
               filesystem.writeLinesToPath(metadataLines.build(), pathToMetadataTxt);
