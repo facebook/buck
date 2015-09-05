@@ -887,6 +887,7 @@ public class CxxDescriptionEnhancer {
             Optional.<String>absent(),
             output,
             objects.values(),
+            /* extraInputs */ ImmutableList.<SourcePath>of(),
             linkStyle,
             params.getDeps(),
             args.cxxRuntimeType,

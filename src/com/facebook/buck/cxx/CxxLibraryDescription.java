@@ -445,13 +445,14 @@ public class CxxLibraryDescription implements
         linkType,
         Optional.of(sharedLibrarySoname),
         sharedLibraryPath,
-        FluentIterable.from(objects.values())
-            .append(
-                FluentIterable.from(getExtraMacroBuildInputs(
-                        params.getBuildTarget(),
-                        ruleResolver,
-                        extraLdFlags))
-                    .transform(SourcePaths.getToBuildTargetSourcePath()))
+        objects.values(),
+        FluentIterable
+            .from(
+                getExtraMacroBuildInputs(
+                    params.getBuildTarget(),
+                    ruleResolver,
+                    extraLdFlags))
+            .transform(SourcePaths.getToBuildTargetSourcePath())
             .toList(),
         linkableDepType,
         params.getDeps(),

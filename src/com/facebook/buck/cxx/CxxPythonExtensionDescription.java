@@ -191,6 +191,7 @@ public class CxxPythonExtensionDescription implements
         Optional.of(extensionName),
         extensionPath,
         picObjects.values(),
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
         args.cxxRuntimeType,

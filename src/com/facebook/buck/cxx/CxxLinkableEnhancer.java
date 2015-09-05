@@ -57,6 +57,7 @@ public class CxxLinkableEnhancer {
       Optional<String> soname,
       Path output,
       Iterable<SourcePath> inputs,
+      Iterable<SourcePath> extraInputs,
       Linker.LinkableDepType depType,
       Iterable<? extends BuildRule> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -84,6 +85,7 @@ public class CxxLinkableEnhancer {
     ImmutableList<SourcePath> allInputs =
         ImmutableList.<SourcePath>builder()
             .addAll(inputs)
+            .addAll(extraInputs)
             .addAll(linkableInput.getInputs())
             .build();
 

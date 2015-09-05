@@ -1126,7 +1126,11 @@ public class CxxLibraryDescriptionTest {
     assertThat(pathResolver.filterBuildRuleInputs(lib.getInputs()), Matchers.hasItem(loc));
     assertThat(
         lib.getArgs(),
-        Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString())));
+        Matchers.hasItem(
+            String.format("-Wl,--version-script=%s", loc.getPathToOutput().toAbsolutePath())));
+    assertThat(
+        lib.getArgs(),
+        Matchers.not(Matchers.hasItem(loc.getPathToOutput().toAbsolutePath().toString())));
   }
 
   @Test

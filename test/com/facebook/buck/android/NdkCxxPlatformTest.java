@@ -172,6 +172,7 @@ public class NdkCxxPlatformTest {
           Optional.<String>absent(),
           Paths.get("output"),
           ImmutableList.<SourcePath>of(new TestSourcePath("input.o")),
+          /* extraInputs */ ImmutableList.<SourcePath>of(),
           Linker.LinkableDepType.SHARED,
           ImmutableList.<BuildRule>of(),
           Optional.<Linker.CxxRuntimeType>absent(),

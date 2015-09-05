@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -147,6 +148,7 @@ public class CxxLinkableEnhancerTest {
             new TestSourcePath("simple.o"),
             new BuildTargetSourcePath(genrule1.getBuildTarget()),
             new BuildTargetSourcePath(genrule2.getBuildTarget())),
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -158,6 +160,54 @@ public class CxxLinkableEnhancerTest {
     assertEquals(
         ImmutableSortedSet.<BuildRule>of(genrule1, genrule2),
         cxxLink.getDeps());
+  }
+
+
+  @Test
+  public void testThatExtraInpusDoNotContributeToArgs() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+
+    // Create a couple of genrules to generate inputs for an archive rule.
+    Genrule genrule = (Genrule) GenruleBuilder
+        .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
+        .setOut("foo/bar.o")
+        .build(resolver);
+
+    // Build the archive using a normal input the outputs of the genrules above.
+    CxxLink cxxLink = CxxLinkableEnhancer.createCxxLinkableBuildRule(
+        TargetGraph.EMPTY,
+        CXX_PLATFORM,
+        params,
+        new SourcePathResolver(resolver),
+        /* extraLdFlags */ ImmutableList.<String>of(),
+        target,
+        Linker.LinkType.EXECUTABLE,
+        Optional.<String>absent(),
+        DEFAULT_OUTPUT,
+        /* inputs */ ImmutableList.<SourcePath>of(),
+        /* extraInputs */ ImmutableList.<SourcePath>of(
+            new TestSourcePath("something"),
+            new BuildTargetSourcePath(genrule.getBuildTarget())),
+        Linker.LinkableDepType.STATIC,
+        EMPTY_DEPS,
+        Optional.<Linker.CxxRuntimeType>absent(),
+        Optional.<SourcePath>absent(),
+        ImmutableSet.<BuildRule>of());
+
+    // Verify that extra inputs did not get added to args.
+    assertThat(
+        cxxLink.getArgs(),
+        Matchers.not(hasItem("something")));
+
+    // But it should contain the deps from them and the inputs.
+    assertThat(
+        cxxLink.getDeps(),
+        hasItem(genrule));
+    assertThat(
+        cxxLink.getInputs(),
+        hasItem(new BuildTargetSourcePath(genrule.getBuildTarget())));
   }
 
   @Test
@@ -187,6 +237,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -236,6 +287,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -268,6 +320,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -288,6 +341,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -308,6 +362,7 @@ public class CxxLinkableEnhancerTest {
         Optional.of("soname"),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -353,6 +408,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -375,6 +431,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         DEFAULT_INPUTS,
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.SHARED,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -421,6 +478,7 @@ public class CxxLinkableEnhancerTest {
           Optional.<String>absent(),
           DEFAULT_OUTPUT,
           DEFAULT_INPUTS,
+          /* extraInputs */ ImmutableList.<SourcePath>of(),
           Linker.LinkableDepType.SHARED,
           ImmutableSortedSet.<BuildRule>of(),
           runtimeTypes.get(i),
@@ -489,6 +547,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(new TestSourcePath("simple.o")),
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -519,6 +578,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(new TestSourcePath("simple.o")),
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
@@ -539,6 +599,7 @@ public class CxxLinkableEnhancerTest {
         Optional.<String>absent(),
         DEFAULT_OUTPUT,
         ImmutableList.<SourcePath>of(new TestSourcePath("another.o")),
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),

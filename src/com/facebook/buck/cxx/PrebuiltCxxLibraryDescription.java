@@ -283,6 +283,7 @@ public class PrebuiltCxxLibraryDescription
         builtSharedLibraryPath,
         ImmutableList.<SourcePath>of(
             new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath)),
+        /* extraInputs */ ImmutableList.<SourcePath>of(),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
         Optional.<Linker.CxxRuntimeType>absent(),
