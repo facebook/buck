@@ -55,6 +55,7 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.NanosAdjustedClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultPropertyFinder;
 import com.facebook.buck.util.HumanReadableException;
@@ -71,6 +72,7 @@ import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.MultiProjectFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
@@ -177,6 +179,7 @@ public final class Main {
     private final Repository repository;
     private final Parser parser;
     private final DefaultFileHashCache hashCache;
+    private final DefaultFileHashCache buckOutHashCache;
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
     private final UUID watchmanQueryUUID;
@@ -186,7 +189,13 @@ public final class Main {
         ParserConfig.GlobHandler globHandler)
         throws IOException, InterruptedException {
       this.repository = repository;
-      this.hashCache = new DefaultFileHashCache(repository.getFilesystem());
+      this.hashCache = new WatchedFileHashCache(repository.getFilesystem());
+      this.buckOutHashCache =
+          new DefaultFileHashCache(
+              new ProjectFilesystem(
+                  repository.getFilesystem().getRootPath(),
+                  Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                  ImmutableSet.<Path>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
       this.parser = Parser.createBuildFileParser(
@@ -250,6 +259,10 @@ public final class Main {
 
     private DefaultFileHashCache getFileHashCache() {
       return hashCache;
+    }
+
+    private DefaultFileHashCache getBuckOutHashCache() {
+      return buckOutHashCache;
     }
 
     private void watchClient(final NGContext context) {
@@ -582,12 +595,18 @@ public final class Main {
         System.getProperties());
 
     ProjectFileHashCache repoHashCache;
+    ProjectFileHashCache buckOutHashCache;
     if (isDaemon) {
-      repoHashCache = getFileHashCacheFromDaemon(
-          rootRepository,
-          globHandler);
+      repoHashCache = getFileHashCacheFromDaemon(rootRepository, globHandler);
+      buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootRepository, globHandler);
     } else {
       repoHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
+      buckOutHashCache =
+          new DefaultFileHashCache(
+              new ProjectFilesystem(
+                  rootRepository.getFilesystem().getRootPath(),
+                  Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
+                  ImmutableSet.<Path>of()));
     }
 
     // Build up the hash cache, which is a collection of the stateful repo cache and some per-run
@@ -596,6 +615,7 @@ public final class Main {
         new MultiProjectFileHashCache(
             ImmutableList.of(
                 repoHashCache,
+                buckOutHashCache,
                 // A cache which caches hashes of repo-relative paths which may have been ignore by
                 // the main repo cache, and only serves to prevent rehashing the same file multiple
                 // times in a single run.
@@ -867,6 +887,14 @@ public final class Main {
       throws IOException, InterruptedException {
     Daemon daemon = getDaemon(repository, globHandler);
     return daemon.getFileHashCache();
+  }
+
+  private DefaultFileHashCache getBuckOutFileHashCacheFromDaemon(
+      Repository repository,
+      ParserConfig.GlobHandler globHandler)
+      throws IOException, InterruptedException {
+    Daemon daemon = getDaemon(repository, globHandler);
+    return daemon.getBuckOutHashCache();
   }
 
   private Optional<WebServer> getWebServerIfDaemon(

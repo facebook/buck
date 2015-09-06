@@ -124,7 +124,8 @@ public class ProjectFilesystem {
   private final Function<Path, Path> pathAbsolutifier;
   private final Function<Path, Path> pathRelativizer;
 
-  private final ImmutableSet<Path> ignorePaths;
+  private final Optional<ImmutableSet<Path>> whiteListedPaths;
+  private final ImmutableSet<Path> blackListedPaths;
 
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting
@@ -142,18 +143,38 @@ public class ProjectFilesystem {
    * a mock filesystem via EasyMock instead. Note that there are cases (such as integration tests)
    * where specifying {@code new File(".")} as the project root might be the appropriate thing.
    */
-  public ProjectFilesystem(Path projectRoot, ImmutableSet<Path> ignorePaths) {
-    this(projectRoot.getFileSystem(), projectRoot, ignorePaths);
+  public ProjectFilesystem(Path projectRoot, ImmutableSet<Path> blackListedPaths) {
+    this(
+        projectRoot.getFileSystem(),
+        projectRoot,
+        Optional.<ImmutableSet<Path>>absent(),
+        blackListedPaths);
+  }
+
+  public ProjectFilesystem(
+      Path projectRoot,
+      Optional<ImmutableSet<Path>> whiteListedPaths,
+      ImmutableSet<Path> blackListedPaths) {
+    this(
+        projectRoot.getFileSystem(),
+        projectRoot,
+        whiteListedPaths,
+        blackListedPaths);
   }
 
   public ProjectFilesystem(Path root, Config config) {
-    this(root.getFileSystem(), root, extractIgnorePaths(root, config));
+    this(
+        root.getFileSystem(),
+        root,
+        Optional.<ImmutableSet<Path>>absent(),
+        extractIgnorePaths(root, config));
   }
 
   protected ProjectFilesystem(
       FileSystem vfs,
       final Path projectRoot,
-      ImmutableSet<Path> ignorePaths) {
+      Optional<ImmutableSet<Path>> whiteListedPaths,
+      ImmutableSet<Path> blackListedPaths) {
     Preconditions.checkArgument(Files.isDirectory(projectRoot));
     Preconditions.checkState(vfs.equals(projectRoot.getFileSystem()));
     this.projectRoot = projectRoot.toAbsolutePath();
@@ -169,7 +190,15 @@ public class ProjectFilesystem {
         return projectRoot.relativize(input);
       }
     };
-    this.ignorePaths = MorePaths.filterForSubpaths(ignorePaths, this.projectRoot);
+    this.blackListedPaths = MorePaths.filterForSubpaths(blackListedPaths, this.projectRoot);
+    this.whiteListedPaths =
+        whiteListedPaths.transform(
+            new Function<ImmutableSet<Path>, ImmutableSet<Path>>() {
+              @Override
+              public ImmutableSet<Path> apply(ImmutableSet<Path> input) {
+                return MorePaths.filterForSubpaths(input, ProjectFilesystem.this.projectRoot);
+              }
+            });
     this.ignoreValidityOfPaths = false;
   }
 
@@ -242,7 +271,7 @@ public class ProjectFilesystem {
    *     relative to the {@link ProjectFilesystem#getRootPath()}.
    */
   public ImmutableSet<Path> getIgnorePaths() {
-    return ignorePaths;
+    return blackListedPaths;
   }
 
   /**
@@ -949,12 +978,34 @@ public class ProjectFilesystem {
     ProjectFilesystem that = (ProjectFilesystem) other;
 
     return Objects.equals(projectRoot, that.projectRoot) &&
-        Objects.equals(ignorePaths, that.ignorePaths);
+        Objects.equals(whiteListedPaths, that.whiteListedPaths) &&
+        Objects.equals(blackListedPaths, that.blackListedPaths);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(projectRoot, ignorePaths);
+    return Objects.hash(projectRoot, whiteListedPaths, blackListedPaths);
+  }
+
+  private boolean isWhiteListed(Path path) {
+    if (!whiteListedPaths.isPresent()) {
+      return true;
+    }
+    for (Path whiteListedPath : whiteListedPaths.get()) {
+      if (path.startsWith(whiteListedPath)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isBlackListed(Path path) {
+    for (Path blackListedPath : blackListedPaths) {
+      if (path.startsWith(blackListedPath)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -963,12 +1014,7 @@ public class ProjectFilesystem {
    */
   public boolean isIgnored(Path path) {
     Preconditions.checkArgument(!path.isAbsolute());
-    for (Path ignoredPath : getIgnorePaths()) {
-      if (path.startsWith(ignoredPath)) {
-        return true;
-      }
-    }
-    return false;
+    return !isWhiteListed(path) || isBlackListed(path);
   }
 
   public Path createTempFile(
@@ -987,4 +1033,5 @@ public class ProjectFilesystem {
       createNewFile(fileToTouch);
     }
   }
+
 }
