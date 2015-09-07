@@ -1059,6 +1059,7 @@ public class CxxLibraryDescription implements
         exportedLangPreprocessorFlags;
     public Optional<ImmutableList<String>> exportedLinkerFlags;
     public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<Boolean> forceStatic;
