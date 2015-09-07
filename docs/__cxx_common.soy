@@ -6,7 +6,8 @@
   {param name : 'srcs' /}
   {param default : '[]' /}
   {param desc}
-  The set of C, C++, or assembler source files to be preprocessed, compiled, and assembled by this
+  The set of C, C++, Objective-C, Objective-C++, or assembly source files
+  to be preprocessed, compiled, and assembled by this
   rule.  We determine which stages to run on each input source based on it's file extension. See the
   {sp}<a href="https://gcc.gnu.org/onlinedocs/gcc/Overall-Options.html">GCC documentation</a>{sp}
   for more detail on how file extensions are interpreted. Each element can be either a string
@@ -39,8 +40,8 @@
   {param name : 'headers' /}
   {param default : '[]' /}
   {param desc}
-  The set of header files that are made available for inclusion to the source files in the
-  target and all targets that transitively depend on it. These should be specified as either a list
+  The set of header files that are made available for inclusion to the source files in this
+  target. These should be specified as either a list
   of header files or a dictionary of header names to header files. The header name can contain
   forward slashes (<code>/</code>).  The headers can be included with <code>#include
   "$HEADER_NAMESPACE/$HEADER_NAME"</code> or <code>#include &lt;$HEADER_NAMESPACE/$HEADER_NAME&gt;
@@ -72,7 +73,8 @@
   {param name : 'header_namespace' /}
   {param default : 'name' /}
   {param desc}
-  A path prefix when including headers of this target. Defaults to the name of the target. Can
+  A path prefix when including headers of this target. Defaults to the path from the root of the
+  repository to the directory where this target is defined. Can
   contain forward slashes (<code>/</code>), but cannot start with one. See <code>headers</code> for
   more information.
   {/param}
