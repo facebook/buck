@@ -181,7 +181,8 @@ final class SerializableModule {
       this(url, isTestSource, false, packagePrefix);
     }
 
-    SourceFolder(String url, boolean isTestSource, boolean isResource, @Nullable String packagePrefix) {
+    SourceFolder(String url, boolean isTestSource, boolean isResource,
+        @Nullable String packagePrefix) {
       this.url = url;
       this.isTestSource = isTestSource;
       this.isResource = isResource;
