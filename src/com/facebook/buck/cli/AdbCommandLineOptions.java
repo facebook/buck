@@ -42,7 +42,10 @@ public class AdbCommandLineOptions {
   )
   private boolean multiInstallMode;
 
-  public AdbOptions getAdbOptions() {
+  public AdbOptions getAdbOptions(BuckConfig buckConfig) {
+    if (buckConfig.getMultiInstallMode()) {
+      multiInstallMode = true;
+    }
     return new AdbOptions(
         adbThreadCount,
         multiInstallMode);

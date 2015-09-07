@@ -88,8 +88,8 @@ public class UninstallCommand extends AbstractCommand {
     return uninstallOptions;
   }
 
-  public AdbOptions adbOptions() {
-    return adbOptions.getAdbOptions();
+  public AdbOptions adbOptions(BuckConfig buckConfig) {
+    return adbOptions.getAdbOptions(buckConfig);
   }
 
   public TargetDeviceOptions targetDeviceOptions() {
@@ -148,7 +148,7 @@ public class UninstallCommand extends AbstractCommand {
     // We need this in case adb isn't already running.
     try (ExecutionContext context = createExecutionContext(params)) {
       final AdbHelper adbHelper = new AdbHelper(
-          adbOptions(),
+          adbOptions(params.getBuckConfig()),
           targetDeviceOptions(),
           context,
           params.getConsole(),

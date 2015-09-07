@@ -138,8 +138,8 @@ public class InstallCommand extends BuildCommand {
   @Nullable
   private String activity = null;
 
-  public AdbOptions adbOptions() {
-    return adbOptions.getAdbOptions();
+  public AdbOptions adbOptions(BuckConfig buckConfig) {
+    return adbOptions.getAdbOptions(buckConfig);
   }
 
   public TargetDeviceOptions targetDeviceOptions() {
@@ -190,7 +190,7 @@ public class InstallCommand extends BuildCommand {
     if (buildRule instanceof InstallableApk) {
       ExecutionContext.Builder builder = ExecutionContext.builder()
           .setExecutionContext(build.getExecutionContext())
-          .setAdbOptions(Optional.<AdbOptions>of(adbOptions()))
+          .setAdbOptions(Optional.<AdbOptions>of(adbOptions(params.getBuckConfig())))
           .setTargetDeviceOptions(Optional.<TargetDeviceOptions>of(targetDeviceOptions()));
       return installApk(
           params,
