@@ -503,6 +503,36 @@ returns the union of each query.
   {/param}
 {/call}
 
+{call buck.param}
+  {param name: 'output-attributes <attributes>' /}
+  {param desc}
+  <p>
+  Outputs the results as a JSON dictionary
+  {sp}<code>build target -> attributes map</code>. The attributes map is a
+  dictionary mapping the specified attributes to their values for the build
+  target. If an attribute (e.g. <code>srcs</code>) is not defined for a build
+  target, it is not present in the output. Example:
+  </p>
+
+<p><pre class="prettyprint lang-py">
+{literal}
+$ buck query '//example/...' --output-attributes buck.type name srcs
+{
+  "//example/foo:bar" : {
+    "buck.type" : "cxx_library",
+    "name" : "foobar",
+    "srcs" : [ "example/foo/bar.cc", "example/foo/lib/lib.cc" ]
+  }
+  "//example/foo:main" : {
+    "buck.type" : "cxx_binary",
+    "name" : "main"
+  }
+}
+{/literal}
+</pre></p>
+
+  {/param}
+{/call}
 {/param}
 
 {param examples}
