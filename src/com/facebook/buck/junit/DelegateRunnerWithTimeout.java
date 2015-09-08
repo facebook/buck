@@ -23,7 +23,9 @@ import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * {@link Runner} that composes a {@link Runner} that enforces a default timeout when running a
@@ -82,36 +84,72 @@ class DelegateRunnerWithTimeout extends Runner {
     final DelegateRunNotifier wrapper = new DelegateRunNotifier(
         delegate, notifier, defaultTestTimeoutMillis);
 
+    if (wrapper.hasJunitTimeout(getDescription())) {
+      runWithoutBuckManagedTimeout(wrapper);
+    } else {
+      runWithBuckManagedTimeout(wrapper);
+    }
+  }
+
+  private void runWithBuckManagedTimeout(final DelegateRunNotifier wrapper) {
+    final Semaphore completionSemaphore = new Semaphore(1);
+    final AtomicBoolean testsCompleted = new AtomicBoolean(false);
+
+    // Acquire the one permit so later tryAcquire attempts lock
+    // until they either time out or this permit is released by
+    // DeletgateRunNotifier.onTestRunFinished()
+    try {
+      completionSemaphore.acquire();
+    } catch (InterruptedException e) {
+      // If the aquire is interrupted
+    }
+
     // We run the Runner in an Executor so that we can tear it down if we need to.
-    Future<?> future = executor.get().submit(new Runnable() {
-      @Override
-      public void run() {
-        delegate.run(wrapper);
-      }
-    });
+    executor.get().submit(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              delegate.run(wrapper);
+            } finally {
+              if (!wrapper.hasTestThatExceededTimeout()) {
+                testsCompleted.set(true);
+              }
+              completionSemaphore.release();
+            }
+          }
+        });
 
     // We poll the Executor to see if the Runner is complete. In the event that a test has exceeded
     // the default timeout, we cancel the Runner to protect against the case where the test hangs
     // forever.
     while (true) {
-      if (future.isDone()) {
+      if (testsCompleted.get()) {
         // Normal termination: hooray!
         return;
-      } else if (wrapper.hasTestThatExceededTimeout()) {
+      }
+
+      if (wrapper.hasTestThatExceededTimeout()) {
         // The test results that have been reported to the RunNotifier should still be output, but
         // there may be tests that did not have a chance to run. Unfortunately, we have no way to
         // tell the Runner to cancel only the runaway test.
         executor.get().shutdownNow();
         return;
-      } else {
-        // Tests are still running, so wait and try again.
-        try {
-          Thread.sleep(/* milliseconds */ 250L);
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
+      }
+
+      // Tests are still running, so wait and try again.
+      try {
+        if (completionSemaphore.tryAcquire(250L, TimeUnit.MILLISECONDS)) {
+          completionSemaphore.release();
         }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
       }
     }
+  }
+
+  private void runWithoutBuckManagedTimeout(final DelegateRunNotifier wrapper) {
+    delegate.run(wrapper);
   }
 
 }

@@ -60,12 +60,13 @@ class DelegateRunNotifier extends RunNotifier {
 
     // Because our fireTestRunFinished() does not seem to get invoked, we listen for the
     // delegate to fire a testRunFinished event so we can dispose of the timer.
-    delegate.addListener(new RunListener() {
-      @Override
-      public void testRunFinished(Result result) throws Exception {
-        onTestRunFinished();
-      }
-    });
+    delegate.addListener(
+        new RunListener() {
+          @Override
+          public void testRunFinished(Result result) throws Exception {
+            onTestRunFinished();
+          }
+        });
   }
 
   /** Performs any cleanup that we need to do as a result of the test run being complete. */
@@ -109,6 +110,7 @@ class DelegateRunNotifier extends RunNotifier {
   public void fireTestRunFinished(Result result) {
     // This method does not appear to be invoked. Presumably whoever has a reference to the original
     // delegate is invoking its fireTestRunFinished(Description) method directly.
+    timer.cancel();
     delegate.fireTestRunFinished(result);
   }
 
@@ -117,14 +119,7 @@ class DelegateRunNotifier extends RunNotifier {
     delegate.fireTestStarted(description);
 
     // Do not do apply the default timeout if the test has its own @Test(timeout).
-    Test testAnnotation = description.getAnnotation(Test.class);
-    if (testAnnotation != null && testAnnotation.timeout() > 0) {
-      return;
-    }
-
-    // Do not do apply the default timeout if the test has its own @Rule Timeout.
-    TestClass testClass = getTestClass(description);
-    if (BuckBlockJUnit4ClassRunner.hasTimeoutRule(testClass)) {
+    if (hasJunitTimeout(description)) {
       return;
     }
 
@@ -137,6 +132,8 @@ class DelegateRunNotifier extends RunNotifier {
           if (finishedTests.contains(description)) {
             return;
           }
+
+          hasTestThatExceededTimeout.set(true);
 
           // Should report the failure. The Exception is modeled after the one created by
           // org.junit.internal.runners.statements.FailOnTimeout#createTimeoutException(Thread).
@@ -151,12 +148,28 @@ class DelegateRunNotifier extends RunNotifier {
           }
 
           onTestRunFinished();
-          hasTestThatExceededTimeout.set(true);
         }
       }
     };
     timer.schedule(task, defaultTestTimeoutMillis);
   }
+
+  boolean hasJunitTimeout(Description description) {
+    // Do not do apply the default timeout if the test has its own @Test(timeout).
+    Test testAnnotation = description.getAnnotation(Test.class);
+    if (testAnnotation != null && testAnnotation.timeout() > 0) {
+      return true;
+    }
+
+    // Do not do apply the default timeout if the test has its own @Rule Timeout.
+    TestClass testClass = getTestClass(description);
+    if (BuckBlockJUnit4ClassRunner.hasTimeoutRule(testClass)) {
+      return true;
+    }
+
+    return false;
+  }
+
 
   private TestClass getTestClass(Description description) {
     if (runner instanceof ParentRunner) {
