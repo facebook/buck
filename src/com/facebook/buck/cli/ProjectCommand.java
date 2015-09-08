@@ -26,6 +26,7 @@ import com.facebook.buck.apple.ProjectGenerator;
 import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.java.JavaBuckConfig;
@@ -898,7 +899,8 @@ public class ProjectCommand extends BuildCommand {
     // case we still want to generate a workspace.
     return type == AppleBinaryDescription.TYPE ||
         type == AppleBundleDescription.TYPE ||
-        type == AppleLibraryDescription.TYPE;
+        type == AppleLibraryDescription.TYPE ||
+        type == CxxLibraryDescription.TYPE;
   }
 
   /**

@@ -66,7 +66,7 @@ public class AppleDescriptions {
   private AppleDescriptions() {}
 
   public static Path getPathToHeaderSymlinkTree(
-      TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
+      TargetNode<? extends CxxLibraryDescription.Arg> targetNode,
       HeaderVisibility headerVisibility) {
     return BuildTargets.getGenPath(
         targetNode.getBuildTarget().getUnflavoredBuildTarget(),
@@ -82,7 +82,7 @@ public class AppleDescriptions {
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPublicCxxHeaders(
       Function<SourcePath, Path> pathResolver,
       Path headerPathPrefix,
-      AppleNativeTargetDescriptionArg arg) {
+      CxxLibraryDescription.Arg arg) {
     // The exported headers in the populated cxx constructor arg will contain exported headers from
     // the apple constructor arg with the public include style.
     return AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
@@ -94,7 +94,7 @@ public class AppleDescriptions {
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPrivateCxxHeaders(
       Function<SourcePath, Path> pathResolver,
       Path headerPathPrefix,
-      AppleNativeTargetDescriptionArg arg) {
+      CxxLibraryDescription.Arg arg) {
     // The private headers will contain exported headers with the private include style and private
     // headers with both styles.
     return ImmutableSortedMap.<String, SourcePath>naturalOrder()

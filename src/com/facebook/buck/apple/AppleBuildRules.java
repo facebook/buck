@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
@@ -51,6 +52,7 @@ public final class AppleBuildRules {
   public static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TYPES =
       ImmutableSet.of(
           AppleLibraryDescription.TYPE,
+          CxxLibraryDescription.TYPE,
           AppleBinaryDescription.TYPE,
           AppleBundleDescription.TYPE,
           AppleTestDescription.TYPE);
@@ -180,7 +182,8 @@ public final class AppleBuildRules {
             if (node != targetNode) {
               switch (mode) {
                 case LINKING:
-                  if (node.getType().equals(AppleLibraryDescription.TYPE)) {
+                  if (node.getType().equals(AppleLibraryDescription.TYPE) ||
+                      node.getType().equals(CxxLibraryDescription.TYPE)) {
                     if (AppleLibraryDescription.isSharedLibraryTarget(node.getBuildTarget())) {
                       deps = exportedDeps;
                     } else {
@@ -248,9 +251,10 @@ public final class AppleBuildRules {
       ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder
   ) {
     directDepsBuilder.addAll(targetGraph.getAll(targetNode.getDeps()));
-    if (targetNode.getType() == AppleLibraryDescription.TYPE) {
-      AppleNativeTargetDescriptionArg arg =
-          (AppleNativeTargetDescriptionArg) targetNode.getConstructorArg();
+    if (targetNode.getType() == AppleLibraryDescription.TYPE ||
+        targetNode.getType() == CxxLibraryDescription.TYPE) {
+      CxxLibraryDescription.Arg arg =
+          (CxxLibraryDescription.Arg) targetNode.getConstructorArg();
       LOG.verbose("Exported deps of node %s: %s", targetNode, arg.exportedDeps.get());
       Iterable<TargetNode<?>> exportedNodes = targetGraph.getAll(arg.exportedDeps.get());
       directDepsBuilder.addAll(exportedNodes);

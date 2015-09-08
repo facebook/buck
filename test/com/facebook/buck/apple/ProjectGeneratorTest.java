@@ -60,6 +60,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxSource;
@@ -755,6 +756,39 @@ public class ProjectGeneratorTest {
         FluentIterable.from(target.getBuildPhases())
             .filter(PBXResourcesBuildPhase.class)
             .isEmpty());
+  }
+
+  @Test
+  public void testCxxLibraryRule() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+
+    TargetNode<?> cxxNode = new CxxLibraryBuilder(buildTarget)
+        .setSrcs(
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new TestSourcePath("foo.cpp"), ImmutableList.of("-foo")),
+                SourceWithFlags.of(new TestSourcePath("bar.cpp"))))
+        .setHeaders(
+            ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(cxxNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    assertThat(target.getProductType(), equalTo(ProductType.STATIC_LIBRARY));
+
+    assertHasConfigurations(target, "Debug", "Release", "Profile");
+    assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target, ImmutableMap.of(
+            "foo.cpp", Optional.of("-foo"),
+            "bar.cpp", Optional.<String>absent()));
   }
 
   @Test
