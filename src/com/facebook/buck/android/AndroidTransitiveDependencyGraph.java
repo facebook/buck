@@ -16,18 +16,14 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidTransitiveDependencyGraph {
-
 
   private final ImmutableSortedSet<BuildRule> rulesToTraverseForTransitiveDeps;
 
@@ -38,6 +34,7 @@ public class AndroidTransitiveDependencyGraph {
   AndroidTransitiveDependencyGraph(ImmutableSortedSet<BuildRule> deps) {
     this.rulesToTraverseForTransitiveDeps = deps;
   }
+
   public ImmutableSet<SourcePath> findManifestFiles() {
 
     final ImmutableSet.Builder<SourcePath> manifestFiles = ImmutableSet.builder();
@@ -45,22 +42,26 @@ public class AndroidTransitiveDependencyGraph {
     new AbstractBreadthFirstTraversal<BuildRule>(rulesToTraverseForTransitiveDeps) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        ImmutableSet<BuildRule> deps;
         if (rule instanceof AndroidResource) {
           AndroidResource androidRule = (AndroidResource) rule;
           SourcePath manifestFile = androidRule.getManifestFile();
           if (manifestFile != null) {
             manifestFiles.add(manifestFile);
           }
+          deps = androidRule.getDeclaredDeps();
         } else if (rule instanceof AndroidLibrary) {
           AndroidLibrary androidLibraryRule = (AndroidLibrary) rule;
           Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
+          deps = androidLibraryRule.getDepsForTransitiveClasspathEntries();
+        } else {
+          deps = ImmutableSet.of();
         }
-        return BuildRuleDependencyVisitors.maybeVisitAllDeps(
-            rule,
-            rule.getProperties().is(LIBRARY));
+        return deps;
       }
     }.start();
 
     return manifestFiles.build();
   }
+
 }
