@@ -20,11 +20,13 @@ import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinaryRuleBuilder;
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -42,6 +44,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -53,15 +56,18 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -466,6 +472,210 @@ public class GenruleTest {
 
     // Verify that just the difference in output name is enough to make the rule key different.
     assertNotEquals(key1, key2);
+  }
+
+  @Test
+  public void inputBasedRuleKeyLocationMacro() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    GenruleBuilder ruleBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setCmd("run $(location //:dep)")
+            .setOut("output");
+
+    // Create an initial input-based rule key
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRule dep =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("dep.out")
+            .setCmd("something")
+            .build(resolver);
+    filesystem.writeContentsToPath("something", dep.getPathToOutput());
+    BuildRule rule = ruleBuilder.build(resolver);
+    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+
+    // Change the genrule's command, which will change its normal rule key, but since we're keeping
+    // its output the same, the input-based rule key for the consuming rule will stay the same.
+    // This is because the input-based rule key for the consuming rule only cares about the contents
+    // of the output this rule produces.
+    resolver = new BuildRuleResolver();
+    GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+        .setOut("dep.out")
+        .setCmd("something else")
+        .build(resolver);
+    rule = ruleBuilder.build(resolver);
+    defaultRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
+    assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
+
+    // Make a change to the dep's output, which *should* affect the input-based rule key.
+    resolver = new BuildRuleResolver();
+    dep =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("dep.out")
+            .setCmd("something")
+            .build(resolver);
+    filesystem.writeContentsToPath("something else", dep.getPathToOutput());
+    rule = ruleBuilder.build(resolver);
+    inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
+  }
+
+  @Test
+  public void inputBasedRuleKeyExecutableMacro() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    GenruleBuilder ruleBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setCmd("run $(exe //:dep)")
+            .setOut("output");
+
+    // Create an initial input-based rule key
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRule dep =
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
+            .build(resolver, filesystem);
+    filesystem.writeContentsToPath("something", Paths.get("dep.exe"));
+    filesystem.writeContentsToPath("something", dep.getPathToOutput());
+    BuildRule rule = ruleBuilder.build(resolver);
+    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+
+    // Change the dep's resource list, which will change its normal rule key, but since we're
+    // keeping its output the same, the input-based rule key for the consuming rule will stay the
+    // same.  This is because the input-based rule key for the consuming rule only cares about the
+    // contents of the output this rule produces.
+    resolver = new BuildRuleResolver();
+    new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+        .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
+        .setResources(
+            ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, Paths.get("resource"))))
+        .build(resolver, filesystem);
+    filesystem.writeContentsToPath("res", Paths.get("resource"));
+    rule = ruleBuilder.build(resolver);
+    defaultRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
+    assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
+
+    // Make a change to the dep's output, which *should* affect the input-based rule key.
+    resolver = new BuildRuleResolver();
+    dep =
+        new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
+            .build(resolver, filesystem);
+    filesystem.writeContentsToPath("something else", dep.getPathToOutput());
+    rule = ruleBuilder.build(resolver);
+    inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
+  }
+
+  @Test
+  public void inputBasedRuleKeyClasspathMacro() throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    GenruleBuilder ruleBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setCmd("run $(classpath //:dep)")
+            .setOut("output");
+
+    // Create an initial input-based rule key
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    JavaLibrary dep =
+        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .addSrc(Paths.get("source.java"))
+            .build(resolver, filesystem);
+    filesystem.writeContentsToPath("something", Paths.get("source.java"));
+    filesystem.writeContentsToPath("something", dep.getPathToOutput());
+    BuildRule rule = ruleBuilder.build(resolver);
+    DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+
+    // Change the dep's resource root, which will change its normal rule key, but since we're
+    // keeping its output JAR the same, the input-based rule key for the consuming rule will stay
+    // the same.  This is because the input-based rule key for the consuming rule only cares about
+    // the contents of the output this rule produces.
+    resolver = new BuildRuleResolver();
+    JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
+        .addSrc(Paths.get("source.java"))
+        .setResourcesRoot(Paths.get("resource_root"))
+        .build(resolver, filesystem);
+    rule = ruleBuilder.build(resolver);
+    defaultRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
+    assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
+
+    // Make a change to the dep's output, which *should* affect the input-based rule key.
+    resolver = new BuildRuleResolver();
+    dep =
+        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .addSrc(Paths.get("source.java"))
+            .build(resolver, filesystem);
+    filesystem.writeContentsToPath("something else", dep.getPathToOutput());
+    rule = ruleBuilder.build(resolver);
+    inputBasedRuleKeyBuilderFactory =
+        new InputBasedRuleKeyBuilderFactory(
+            new DefaultFileHashCache(filesystem),
+            new SourcePathResolver(resolver));
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
   }
 
 }

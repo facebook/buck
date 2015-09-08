@@ -61,6 +61,11 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
     return this;
   }
 
+  public JavaLibraryBuilder setResourcesRoot(Path root) {
+    arg.resourcesRoot = Optional.of(root);
+    return this;
+  }
+
   public JavaLibraryBuilder addSrc(Path path) {
     arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
     return this;
