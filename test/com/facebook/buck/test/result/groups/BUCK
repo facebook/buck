@@ -22,7 +22,6 @@ java_test(
     'MockedMealTest.java',
     'VacationIntegrationTest.java',
   ],
-  source_under_test = ['//src/com/facebook/buck/test/result/groups:groups'],
   deps = [
     ':fixtures',
     '//third-party/java/easymock:easymock',

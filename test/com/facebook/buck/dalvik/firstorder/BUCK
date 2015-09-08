@@ -22,7 +22,4 @@ java_test(
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/asm:asm',
   ],
-  source_under_test = [
-    '//src/com/facebook/buck/dalvik/firstorder:firstorder',
-  ],
 )

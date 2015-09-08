@@ -12,7 +12,4 @@ java_test(
     '//test/com/facebook/buck/cli:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
-  source_under_test = [
-    '//src/com/facebook/buck/test:test',  
-  ],
 )

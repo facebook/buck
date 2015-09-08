@@ -1,9 +1,6 @@
 java_test(
   name = 'macros',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/rules/macros:macros',
-  ],
   deps = [
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',

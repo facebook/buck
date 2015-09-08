@@ -12,6 +12,9 @@ java_library(
     'ZipOutputStreams.java',
     'ZipWriteTest.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/zip:zip',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
@@ -24,6 +27,9 @@ java_library(
 java_library(
   name = 'unzip',
   srcs = [ 'Unzip.java' ],
+  tests = [
+    '//test/com/facebook/buck/zip:zip',
+  ],
   deps = [
     ':stream',
     '//src/com/facebook/buck/io:io',
@@ -37,6 +43,9 @@ java_library(
 java_library(
   name = 'steps',
   srcs = glob(['*Step.java']),
+  tests = [
+    '//test/com/facebook/buck/zip:zip',
+  ],
   deps = [
     ':stream',
     ':unzip',

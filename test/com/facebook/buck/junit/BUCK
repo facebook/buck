@@ -2,9 +2,6 @@ java_test(
   name = 'junit',
   srcs = glob(['*.java']),
   resources = glob(['testdata/**'], include_dotfiles=True),
-  source_under_test = [
-    '//src/com/facebook/buck/junit:junit',
-  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',

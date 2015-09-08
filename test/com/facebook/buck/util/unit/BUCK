@@ -1,9 +1,6 @@
 java_test(
   name = 'unit',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/util/unit:unit',
-  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/junit:junit',

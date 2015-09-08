@@ -1,11 +1,6 @@
 java_test(
   name = 'dalvik',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/dalvik:dalvik',
-    '//src/com/facebook/buck/dalvik:dalvik_stats_tool',
-    '//src/com/facebook/buck/dalvik:steps',
-  ],
   deps = [
     '//src/com/facebook/buck/dalvik:dalvik',
     '//src/com/facebook/buck/dalvik:dalvik_stats_tool',

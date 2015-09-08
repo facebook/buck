@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'cache',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/util/cache:cache',
+  ],
   deps = [
     '//src/com/facebook/buck/hashing:hashing',
     '//src/com/facebook/buck/io:io',

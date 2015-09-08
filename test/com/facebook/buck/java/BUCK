@@ -76,11 +76,6 @@ java_test(
   name = 'integration-slow',
   srcs = SLOW_INTEGRATION_TESTS,
   resources = glob(['testdata/**'], include_dotfiles=True),
-  source_under_test = [
-    '//src/com/facebook/buck/java:rules',
-    '//src/com/facebook/buck/java:steps',
-    '//src/com/facebook/buck/java:support',
-  ],
   run_test_separately = True,
   deps = [
     ':testutil',
@@ -95,11 +90,6 @@ java_test(
   name = 'java',
   srcs = glob(['*Test.java'], excludes = SLOW_INTEGRATION_TESTS),
   resources = glob(['testdata/**'], include_dotfiles=True),
-  source_under_test = [
-    '//src/com/facebook/buck/java:rules',
-    '//src/com/facebook/buck/java:steps',
-    '//src/com/facebook/buck/java:support',
-  ],
   deps = [
     ':testutil',
     '//src/com/facebook/buck/android:packageable',

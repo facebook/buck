@@ -95,9 +95,6 @@ java_test(
   # when the system is under load.
   run_test_separately = True,
   resources = glob(['testdata/**'], include_dotfiles=True),
-  source_under_test = [
-    '//src/com/facebook/buck/cli:cli',
-  ],
   deps = [
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/io:io',
@@ -117,9 +114,6 @@ java_test(
   name = 'cli',
   srcs = glob(STANDARD_TEST_SRCS, excludes=APPLE_INTEGRATION_TEST_SRCS),
   resources = glob(['testdata/**'], include_dotfiles=True),
-  source_under_test = [
-    '//src/com/facebook/buck/cli:cli',
-  ],
   deps = [
     ':FakeBuckConfig',
     ':testutil',

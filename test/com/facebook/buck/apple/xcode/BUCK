@@ -5,9 +5,6 @@ java_test(
     'ProjectIntegrationTest.java',
     'XcodeprojSerializerTest.java',
   ] + glob(['xcodeproj/*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/apple/xcode:xcode',
-  ],
   deps = [
     '//src/com/facebook/buck/apple/xcode:xcode',
     '//src/com/facebook/buck/util:exceptions',

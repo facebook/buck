@@ -1,6 +1,9 @@
 java_library(
   name = 'xcspec',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/apple/xcode/xcspec:xcspec',
+  ],
   deps = [
     '//third-party/java/jsr:jsr305',
     '//third-party/java/guava:guava',

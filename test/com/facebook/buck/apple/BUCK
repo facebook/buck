@@ -6,9 +6,6 @@ APPLE_TEST_INTEGRATION_TEST_SRCS = [
 java_test(
   name = 'apple',
   srcs = glob(['*Test.java'], excludes=APPLE_TEST_INTEGRATION_TEST_SRCS),
-  source_under_test = [
-    '//src/com/facebook/buck/apple:rules',
-  ],
   resources = glob(['testdata/**']),
   deps = [
     ':testutil',
@@ -70,9 +67,6 @@ java_test(
   name = 'apple_test_integration',
   run_test_separately = True,
   srcs = APPLE_TEST_INTEGRATION_TEST_SRCS,
-  source_under_test = [
-    '//src/com/facebook/buck/apple:rules',
-  ],
   resources = glob(['testdata/**']),
   deps = [
     ':testutil',

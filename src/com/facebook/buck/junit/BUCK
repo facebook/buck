@@ -22,6 +22,9 @@ java_library(
     'JUnitRunner.java',
     'SameThreadFailOnTimeout.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/junit:junit',
+  ],
   deps = [
     ':base',
     # IMPORTANT! This library limits itself to types that are available in both the JDK and Android

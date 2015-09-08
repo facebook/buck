@@ -1,6 +1,9 @@
 java_library(
   name = 'graph',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/graph:graph',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

@@ -89,6 +89,10 @@ java_immutables_library(
     'MavenPublishable.java',
     'TracingProcessorWrapper.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/java:integration-slow',
+    '//test/com/facebook/buck/java:java',
+  ],
   deps = [
     ':classhash',
     ':javac-internals',
@@ -157,6 +161,10 @@ java_library(
     'PrebuiltJar.java',
     'PrebuiltJarDescription.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/java:integration-slow',
+    '//test/com/facebook/buck/java:java',
+  ],
   resources = [
     'FatJar.java',
     'FatJarMain.java',
@@ -211,6 +219,10 @@ java_library(
     'JavacStep.java',
     'JUnitStep.java',
     'TestType.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/java:integration-slow',
+    '//test/com/facebook/buck/java:java',
   ],
   deps = [
     ':packagefinder',

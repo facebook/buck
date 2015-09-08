@@ -4,6 +4,9 @@ java_library(
   source = '6',
   target = '6',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/android/agent/util:util',
+  ],
   deps = [
     # Do not add other deps here.  The agent should remain very small.
   ],

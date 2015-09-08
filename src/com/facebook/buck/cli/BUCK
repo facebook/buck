@@ -87,6 +87,10 @@ java_library(
 java_immutables_library(
   name = 'cli',
   srcs = glob(['*.java'], excludes = EVENTS_SRCS + CONFIG_SRCS + RAW_CONFIG_SRCS),
+  tests = [
+    '//test/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/cli:cli-apple-integration',
+  ],
   deps = [
     ':config',
     ':events',

@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'model',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/model:model',
+  ],
   deps = [
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/io:io',

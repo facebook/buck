@@ -26,9 +26,6 @@ java_library(
 java_test(
   name = 'cxx',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/cxx:rules',
-  ],
   deps = [
     ':testutil',
     '//src/com/facebook/buck/android:packageable',

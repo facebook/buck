@@ -1,9 +1,6 @@
 java_test(
   name = 'command',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/command:command',
-  ],
   deps = [
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/command:command',

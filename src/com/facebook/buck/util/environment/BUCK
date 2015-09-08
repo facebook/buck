@@ -29,6 +29,9 @@ java_library(
 java_immutables_library(
   name = 'environment',
   srcs = glob(['*.java'], excludes = FILTER_SRCS + PLATFORM_SRCS),
+  tests = [
+    '//test/com/facebook/buck/util/environment:environment',
+  ],
   deps = [
     ':env-filter',
     ':platform',

@@ -1,9 +1,6 @@
 java_test(
   name = 'classes',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/java/classes:classes',
-  ],
   deps = [
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/io:io',

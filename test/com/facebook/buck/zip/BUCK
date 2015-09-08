@@ -25,9 +25,4 @@ java_test(
     '//third-party/java/junit:junit',
     '//third-party/java/commons-compress:commons-compress',
   ],
-  source_under_test = [
-    '//src/com/facebook/buck/zip:steps',
-    '//src/com/facebook/buck/zip:stream',
-    '//src/com/facebook/buck/zip:unzip',
-  ],
 )

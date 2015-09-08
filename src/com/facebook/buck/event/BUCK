@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'event',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/event:event',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson',

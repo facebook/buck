@@ -1,6 +1,9 @@
 java_library(
   name = 'js',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/js:js',
+  ],
   deps = [
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/android:rules',

@@ -28,9 +28,6 @@ java_library(
 java_test(
   name = 'step',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/step:step',
-  ],
   deps = [
     ':testutil',
     '//src/com/facebook/buck/event:event',

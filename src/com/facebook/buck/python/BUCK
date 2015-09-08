@@ -36,6 +36,9 @@ java_immutables_library(
 java_immutables_library(
   name = 'rules',
   srcs = glob(['*.java'], excludes=CONFIG_SRCS + SUPPORT_SRCS),
+  tests = [
+    '//test/com/facebook/buck/python:python',
+  ],
   resources = [
     'run_inplace.py.in',
   ],

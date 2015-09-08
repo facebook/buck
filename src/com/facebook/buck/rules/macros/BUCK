@@ -1,6 +1,9 @@
 java_library(
   name='macros',
   srcs=glob(['*.java']),
+  tests=[
+    '//test/com/facebook/buck/rules/macros:macros',
+  ],
   deps=[
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/io:io',

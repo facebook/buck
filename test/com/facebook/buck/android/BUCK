@@ -127,10 +127,4 @@ java_test(
     '//third-party/java/jackson:jackson-core',
     '//third-party/java/jackson:jackson-databind',
   ],
-  source_under_test = [
-    '//src/com/facebook/buck/android:exceptions',
-    '//src/com/facebook/buck/android:rules',
-    '//src/com/facebook/buck/android:split_dex',
-    '//src/com/facebook/buck/android:steps',
-  ],
 )

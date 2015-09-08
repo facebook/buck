@@ -10,8 +10,5 @@ java_test(
     '//src/com/facebook/buck/util:util',
     '//test/com/facebook/buck/testutil/integration:integration',
   ],
-  source_under_test = [
-    '//src/com/facebook/buck/android/agent/util:util',
-  ],
 )
 

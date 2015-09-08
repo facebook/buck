@@ -10,6 +10,9 @@ java_library(
     'ShTest.java',
     'ShTestDescription.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/shell:shell',
+  ],
   deps = [
     ':steps',
     '//src/com/facebook/buck/io:io',
@@ -50,6 +53,9 @@ java_library(
     'ShellStep.java',
     'SymlinkFilesIntoDirectoryStep.java',
     'Shell.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/shell:shell',
   ],
   deps = [
     '//src/com/facebook/buck/event:event',

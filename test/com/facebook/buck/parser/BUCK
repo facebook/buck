@@ -1,10 +1,6 @@
 java_test(
   name = 'parser',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/parser:parser',
-    '//src/com/facebook/buck/parser:rule_pattern',
-  ],
   resources = glob(['testdata/**'], include_dotfiles=True),
   deps = [
     '//src/com/facebook/buck/cli:cli',

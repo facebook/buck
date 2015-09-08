@@ -27,6 +27,9 @@ java_immutables_library(
     'Parser.java',
     'TargetNodeSpec.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/parser:parser',
+  ],
   deps = [
     ':config',
     ':rule_pattern',
@@ -63,6 +66,9 @@ java_library(
     'BuildTargetParseException.java',
     'BuildTargetPatternParser.java',
     'NoSuchBuildTargetException.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/parser:parser',
   ],
   deps = [
     '//third-party/java/guava:guava',

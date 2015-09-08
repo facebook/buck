@@ -1,9 +1,6 @@
 java_test(
   name = 'js',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/js:js',
-  ],
   deps = [
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/android:testutil',

@@ -1,9 +1,6 @@
 java_test(
   name = 'coercer',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/rules:build_rule',
-  ],
   deps = [
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/model:model',

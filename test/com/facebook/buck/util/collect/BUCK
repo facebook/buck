@@ -1,9 +1,6 @@
 java_test(
   name = 'collect',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/util/collect:collect',
-  ],
   deps = [
     '//third-party/java/junit:junit',
     '//src/com/facebook/buck/util/collect:collect',

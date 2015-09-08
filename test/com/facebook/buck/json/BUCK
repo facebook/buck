@@ -19,10 +19,6 @@ java_library(
 java_test(
   name = 'json',
   srcs = glob(STANDARD_TEST_SRCS),
-  source_under_test = [
-    '//src/com/facebook/buck/json:json',
-    '//src/com/facebook/buck/json:raw_parser',
-  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',

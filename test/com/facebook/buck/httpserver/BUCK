@@ -1,9 +1,6 @@
 java_test(
   name = 'httpserver',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/httpserver:httpserver',
-  ],
   resources = glob(['*.soy']),
   deps = [
     '//src/com/facebook/buck/httpserver:httpserver',

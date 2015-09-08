@@ -1,6 +1,9 @@
 java_library(
   name = 'bser',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/bser:bser',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

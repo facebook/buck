@@ -5,6 +5,9 @@ STANDARD_TEST_SRCS = [
 java_library(
   name = 'testutil',
   srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS),
+  tests = [
+    '//test/com/facebook/buck/testutil:test',
+  ],
   deps = [
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
@@ -35,9 +38,6 @@ java_library(
 java_test(
   name = 'test',
   srcs = glob(STANDARD_TEST_SRCS),
-  source_under_test = [
-    ':testutil',
-  ],
   deps = [
     ':testutil',
     '//src/com/facebook/buck/io:io',

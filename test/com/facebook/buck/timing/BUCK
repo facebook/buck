@@ -7,6 +7,9 @@ UTIL_SRCS = [
 java_library(
   name = 'testutil',
   srcs = UTIL_SRCS,
+  tests = [
+    '//test/com/facebook/buck/timing:timing',
+  ],
   exported_deps = [
     '//src/com/facebook/buck/timing:timing',
   ],
@@ -18,9 +21,6 @@ java_library(
 java_test(
   name = 'timing',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    ':testutil'
-  ],
   deps = [
     ':testutil',
     '//third-party/java/hamcrest:hamcrest',

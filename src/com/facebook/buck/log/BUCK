@@ -12,6 +12,9 @@ java_library(
 java_library(
   name = 'log',
   srcs = glob(['*.java'], excludes = [ 'Logger.java' ]),
+  tests = [
+    '//test/com/facebook/buck/log:log',
+  ],
   deps = [
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/util/concurrent:concurrent',
@@ -30,4 +33,5 @@ java_library(
     '//src/com/facebook/buck/rules:types',
     '//test/com/facebook/buck/log/...',
   ]
+,
 )

@@ -1,6 +1,9 @@
 java_library(
   name = 'aapt',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/android/aapt:aapt',
+  ],
   deps = [
     '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/event:event',

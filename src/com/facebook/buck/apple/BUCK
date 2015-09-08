@@ -3,6 +3,10 @@ java_immutables_library(
   srcs = glob([
     '*.java',
   ]),
+  tests = [
+    '//test/com/facebook/buck/apple:apple',
+    '//test/com/facebook/buck/apple:apple_test_integration',
+  ],
   resources = [
     'build-with-buck.st',
     'rn-package.st',
@@ -48,4 +52,5 @@ java_immutables_library(
   visibility = [
     'PUBLIC'
   ]
+,
 )

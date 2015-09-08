@@ -1,9 +1,6 @@
 java_test(
   name = 'ocaml',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/ocaml:rules',
-  ],
   deps = [
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',

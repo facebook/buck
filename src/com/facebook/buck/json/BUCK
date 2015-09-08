@@ -5,6 +5,9 @@ RAW_PARSER_SRCS = [
 java_library(
   name = 'raw_parser',
   srcs = RAW_PARSER_SRCS,
+  tests = [
+    '//test/com/facebook/buck/json:json',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
@@ -18,6 +21,9 @@ java_library(
 java_immutables_library(
   name = 'json',
   srcs = glob(['*.java'], excludes = RAW_PARSER_SRCS),
+  tests = [
+    '//test/com/facebook/buck/json:json',
+  ],
   resources = [
     "buck.py",
   ],

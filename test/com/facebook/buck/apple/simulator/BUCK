@@ -1,11 +1,8 @@
 java_test(
-    name = 'simulator',
-    srcs = glob(['*Test.java']),
-    resources = glob(['testdata/**']),
-    source_under_test = [
-        '//src/com/facebook/buck/apple/simulator:simulator',
-    ],
-    deps = [
+  name = 'simulator',
+  srcs = glob(['*Test.java']),
+  resources = glob(['testdata/**']),
+  deps = [
         '//src/com/facebook/buck/apple/simulator:simulator',
         '//src/com/facebook/buck/util:io',
         '//test/com/facebook/buck/testutil/integration:integration',

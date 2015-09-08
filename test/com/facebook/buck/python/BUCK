@@ -1,9 +1,6 @@
 java_test(
   name = 'python',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/python:rules',
-  ],
   deps = [
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',

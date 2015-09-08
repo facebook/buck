@@ -14,8 +14,4 @@ java_test(
     '//third-party/java/junit:junit',
     '//third-party/java/jdk:compiler-tree-api',
   ],
-  source_under_test = [
-    '//src/com/facebook/buck/java/tracing:compiler-plugin',
-    '//src/com/facebook/buck/java/tracing:tracing',
-  ],
 )

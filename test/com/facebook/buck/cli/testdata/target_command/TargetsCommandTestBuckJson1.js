@@ -24,6 +24,7 @@
   "source" : "6",
   "srcs" : [ ],
   "target" : "6",
+  "tests" : [ ],
   "visibility" : [ "PUBLIC" ]
 }
 ]

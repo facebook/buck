@@ -1,6 +1,9 @@
 java_library(
   name = 'rules',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/thrift:thrift',
+  ],
   deps = [
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/io:io',

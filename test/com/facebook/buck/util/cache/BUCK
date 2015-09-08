@@ -1,9 +1,6 @@
 java_test(
   name = 'cache',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/util/cache:cache',
-  ],
   deps = [
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/io:io',

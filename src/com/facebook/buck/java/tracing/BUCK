@@ -5,6 +5,9 @@ java_library(
     'JavacPhaseEventLogger.java',
     'TranslatingJavacPhaseTracer.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/java/tracing:tracing',
+  ],
   resources = [
     ':javac-tracing-compiler-plugin',
   ],
@@ -44,6 +47,9 @@ java_library(
   name = 'compiler-plugin',
   srcs = [
     'TracingTaskListener.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/java/tracing:tracing',
   ],
   provided_deps = [
     # Tools.jar is the compiler itself, and will already be present at runtime;

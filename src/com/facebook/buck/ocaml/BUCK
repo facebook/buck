@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'rules',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/ocaml:ocaml',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
@@ -27,4 +30,5 @@ java_immutables_library(
   visibility = [
     'PUBLIC'
   ]
+,
 )

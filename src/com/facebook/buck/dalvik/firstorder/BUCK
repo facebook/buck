@@ -1,6 +1,9 @@
 java_library(
   name = 'firstorder',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/dalvik/firstorder:firstorder',
+  ],
   deps = [
     '//third-party/java/asm:asm',
     '//third-party/java/guava:guava',

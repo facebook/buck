@@ -1,6 +1,9 @@
 java_library(
   name = 'classes',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/java/classes:classes',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

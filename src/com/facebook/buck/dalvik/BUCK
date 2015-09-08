@@ -3,6 +3,9 @@ java_library(
   srcs = [
     'DalvikStatsTool.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/dalvik:dalvik',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
@@ -37,6 +40,9 @@ java_library(
     'ZipSplitterFactory.java',
     'ZipSplitter.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/dalvik:dalvik',
+  ],
   deps = [
     ':dalvik_stats_tool',
     '//src/com/facebook/buck/io:io',
@@ -57,6 +63,9 @@ java_library(
   name = 'steps',
   srcs = [
     'EstimateLinearAllocStep.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/dalvik:dalvik',
   ],
   deps = [
     ':dalvik_stats_tool',

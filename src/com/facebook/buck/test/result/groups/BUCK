@@ -1,6 +1,9 @@
 java_library(
   name = 'groups',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/test/result/groups:groups',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//src/com/facebook/buck/model:model',

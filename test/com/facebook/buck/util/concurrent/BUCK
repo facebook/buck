@@ -1,9 +1,6 @@
 java_test(
   name = 'concurrent',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/util/concurrent:concurrent',
-  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/junit:junit',

@@ -1,9 +1,6 @@
 java_test(
   name = 'event',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/event:event',
-  ],
   deps = [
     ':testutil',
     '//third-party/java/guava:guava',

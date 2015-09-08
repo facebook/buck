@@ -1,6 +1,9 @@
 java_immutables_library(
   name = 'step',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/step:step',
+  ],
   deps = [
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:utils',

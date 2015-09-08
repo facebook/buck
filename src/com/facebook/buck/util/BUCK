@@ -4,6 +4,9 @@ CONSTANT_SRCS = [
 java_library(
   name = 'constants',
   srcs = CONSTANT_SRCS,
+  tests = [
+    '//test/com/facebook/buck/util:util',
+  ],
   visibility = [ 'PUBLIC' ],
   deps = [
     '//third-party/java/guava:guava',
@@ -20,6 +23,9 @@ EXCEPTION_SRCS = [
 java_library(
   name = 'exceptions',
   srcs = EXCEPTION_SRCS,
+  tests = [
+    '//test/com/facebook/buck/util:util',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
@@ -49,6 +55,9 @@ IO_SRCS = [
 java_immutables_library(
   name = 'io',
   srcs = IO_SRCS,
+  tests = [
+    '//test/com/facebook/buck/util:util',
+  ],
   deps = [
     ':constants',
     ':escaper',
@@ -112,6 +121,9 @@ java_immutables_library(
     includes = ['*.java'],
     excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS +
                WATCHMAN_WATCHER_SRCS),
+  tests = [
+    '//test/com/facebook/buck/util:util',
+  ],
   deps = [
     ':constants',
     ':exceptions',

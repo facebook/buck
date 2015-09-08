@@ -1,9 +1,6 @@
 java_test(
   name = 'hashing',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/hashing:hashing',
-  ],
   deps = [
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/timing:timing',

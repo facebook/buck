@@ -4,6 +4,9 @@ java_library(
     'Repository.java',
     'KnownBuildRuleTypes.java',
   ],
+  tests = [
+    '//test/com/facebook/buck/rules:rules',
+  ],
   deps = [
     ':build_rule',
     ':rules',
@@ -51,7 +54,8 @@ java_library(
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/parser:parser',
     '//test/...',
-  ])
+  ],
+)
 
 # Ideally, BuildRule.java would require only a handful of other source files
 # in order to compile it. Because BuildContext is referenced in the BuildRule
@@ -123,6 +127,10 @@ java_immutables_library(
     'TargetNodes.java',
     'Tool.java',
   ] + glob(["coercer/*.java"]),
+  tests = [
+    '//test/com/facebook/buck/rules/coercer:coercer',
+    '//test/com/facebook/buck/rules:rules',
+  ],
   deps = [
     '//src/com/facebook/buck/apple/xcode:xcode',
     '//src/com/facebook/buck/android:exceptions',
@@ -204,6 +212,9 @@ java_immutables_library(
     'TestRule.java',
     'TestRunEvent.java',
     'TestSummaryEvent.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/rules:rules',
   ],
   deps = [
     ':build_rule',

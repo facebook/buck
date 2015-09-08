@@ -4,6 +4,9 @@ EXCEPTION_SRCS = [
 java_library(
   name = 'exceptions',
   srcs = EXCEPTION_SRCS,
+  tests = [
+    '//test/com/facebook/buck/android:android',
+  ],
   deps = [
     '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/util:exceptions',
@@ -97,6 +100,9 @@ RULES_SRCS = [
 java_immutables_library(
   name = 'rules',
   srcs = RULES_SRCS,
+  tests = [
+    '//test/com/facebook/buck/android:android',
+  ],
   deps = [
     ':exceptions',
     ':helpers',
@@ -166,6 +172,9 @@ SPLIT_DEX_SRCS = [
 java_library(
   name = 'split_dex',
   srcs = SPLIT_DEX_SRCS,
+  tests = [
+    '//test/com/facebook/buck/android:android',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
@@ -238,6 +247,9 @@ java_immutables_library(
   srcs = glob(['*.java'],
               excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS +
 	                 UTILS_SRCS + HELPERS_SRCS),
+  tests = [
+    '//test/com/facebook/buck/android:android',
+  ],
   deps = [
     ':exceptions',
     ':split_dex',

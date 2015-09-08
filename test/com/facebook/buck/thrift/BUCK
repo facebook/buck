@@ -1,9 +1,6 @@
 java_test(
   name = 'thrift',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/thrift:rules',
-  ],
   deps = [
     '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/cli:config',

@@ -5,9 +5,6 @@ STANDARD_TEST_SRCS = [
 java_test(
   name = 'environment',
   srcs = glob(STANDARD_TEST_SRCS),
-  source_under_test = [
-    '//src/com/facebook/buck/util/environment:environment',
-  ],
   deps = [
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util/environment:env-filter',

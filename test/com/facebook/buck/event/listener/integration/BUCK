@@ -1,9 +1,6 @@
 java_test(
   name = 'integration',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/event/listener:listener',
-  ],
   deps = [
     '//src/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/json:testutil',

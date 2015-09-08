@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -321,7 +322,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg implements HasTests {
     public Optional<ImmutableSortedSet<SourcePath>> srcs;
     public Optional<ImmutableSortedSet<SourcePath>> resources;
     public Optional<String> source;
@@ -345,6 +346,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
     public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
 
     public AnnotationProcessingParams buildAnnotationProcessingParams(
         BuildTarget owner,
@@ -372,6 +375,11 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       builder.setProcessOnly(annotationProcessorOnly.or(Boolean.FALSE));
 
       return builder.build();
+    }
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getTests() {
+      return tests.get();
     }
   }
 }

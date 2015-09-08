@@ -4,10 +4,6 @@ java_test(
   name = 'shell',
   srcs = glob(['*Test.java']),
   resources = glob(['testdata/**'], include_dotfiles=True),
-  source_under_test = [
-    '//src/com/facebook/buck/shell:rules',
-    '//src/com/facebook/buck/shell:steps',
-  ],
   deps = [
     ':testutil',
     '//src/com/facebook/buck/android:utils',

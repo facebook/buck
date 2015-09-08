@@ -1,6 +1,9 @@
 java_library(
   name = 'selectors',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/test/selectors:selectors',
+  ],
   deps = [
     # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/junit/BUCK.
   ],

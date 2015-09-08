@@ -20,13 +20,6 @@ java_library(
 java_test(
   name = 'util',
   srcs = glob(STANDARD_TEST_SRCS),
-  source_under_test = [
-    '//src/com/facebook/buck/util:constants',
-    '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util:io',
-    '//src/com/facebook/buck/util:util',
-    '//src/com/facebook/buck/util/network:network',
-  ],
   deps = [
     ':testutil',
     '//src/com/facebook/buck/event:event',

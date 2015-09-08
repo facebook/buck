@@ -70,11 +70,6 @@ java_library(
 java_test(
   name = 'rules',
   srcs = glob(['*Test.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/rules:build_rule',
-    '//src/com/facebook/buck/rules:rules',
-    '//src/com/facebook/buck/rules:types',
-  ],
   deps = [
     ':testutil',
     '//src/com/facebook/buck/android:exceptions',

@@ -1,9 +1,6 @@
 java_test(
   name = 'graph',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/graph:graph',
-  ],
   deps = [
     '//src/com/facebook/buck/graph:graph',
     '//third-party/java/guava:guava',

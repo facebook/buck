@@ -10,7 +10,4 @@ java_test(
     '//third-party/java/guava:guava',
     '//third-party/java/junit:junit',
   ],
-  source_under_test = [
-    '//src/com/facebook/buck/java/abi:abi',
-  ]
 )

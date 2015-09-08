@@ -1,9 +1,6 @@
 java_test(
   name = 'headermap',
   srcs = glob(['*.java']),
-  source_under_test = [
-    '//src/com/facebook/buck/apple/clang:headermap',
-  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

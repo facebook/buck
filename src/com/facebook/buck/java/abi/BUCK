@@ -5,6 +5,9 @@ PROTOCOL_SRCS = [
 java_library(
   name = 'abi',
   srcs = glob(['*.java'], excludes = PROTOCOL_SRCS + ['ApiStubber.java']),
+  tests = [
+    '//test/com/facebook/buck/java/abi:abi',
+  ],
   deps = [
     '//src/com/facebook/buck/io:io',
     '//third-party/java/asm:asm',

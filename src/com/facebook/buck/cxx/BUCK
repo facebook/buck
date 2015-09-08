@@ -42,6 +42,9 @@ java_immutables_library(
 java_immutables_library(
   name = 'rules',
   srcs = glob(['*.java'], excludes=PLATFORM_SRCS),
+  tests = [
+    '//test/com/facebook/buck/cxx:cxx',
+  ],
   deps = [
     ':platform',
     '//src/com/facebook/buck/android:packageable',
@@ -80,4 +83,5 @@ java_immutables_library(
   visibility = [
     'PUBLIC'
   ]
+,
 )

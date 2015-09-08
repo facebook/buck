@@ -1,6 +1,10 @@
 java_library(
   name = 'network',
   srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/util/network:network',
+    '//test/com/facebook/buck/util:util',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-core',
