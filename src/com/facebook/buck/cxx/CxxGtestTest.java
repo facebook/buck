@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.w3c.dom.Document;
@@ -50,12 +49,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
@@ -65,6 +61,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
   private static final String NOTRUN = "notrun";
 
   private final Tool executable;
+  private final long maxTestOutputSize;
 
   public CxxGtestTest(
       BuildRuleParams params,
@@ -76,7 +73,8 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
-      boolean runTestSeparately) {
+      boolean runTestSeparately,
+      long maxTestOutputSize) {
     super(
         params,
         resolver,
@@ -88,6 +86,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
         sourceUnderTest,
         runTestSeparately);
     this.executable = executable;
+    this.maxTestOutputSize = maxTestOutputSize;
   }
 
   @Override
@@ -141,7 +140,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
     // It's possible the test output had invalid characters in it's output, so make sure to
     // ignore these as we parse the output lines.
     Optional<String> currentTest = Optional.absent();
-    Map<String, List<String>> stdout = Maps.newHashMap();
+    Map<String, ChunkAccumulator> stdout = Maps.newHashMap();
     CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
     decoder.onMalformedInput(CodingErrorAction.IGNORE);
     try (InputStream input = getProjectFilesystem().newFileInputStream(output);
@@ -152,11 +151,11 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
         if ((matcher = START.matcher(line.trim())).matches()) {
           String test = matcher.group(1);
           currentTest = Optional.of(test);
-          stdout.put(test, Lists.<String>newArrayList());
+          stdout.put(test, new ChunkAccumulator(Charsets.UTF_8, maxTestOutputSize));
         } else if (END.matcher(line.trim()).matches()) {
           currentTest = Optional.absent();
         } else if (currentTest.isPresent()) {
-          stdout.get(currentTest.get()).add(line);
+          stdout.get(currentTest.get()).append(line);
         }
       }
     }
@@ -169,9 +168,10 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
       String testName = attributes.getNamedItem("name").getNodeValue();
       String testFull = String.format("%s.%s", testCase, testName);
       Double time = Double.parseDouble(attributes.getNamedItem("time").getNodeValue()) * 1000;
+
+      // Prepare the result message and type
       ResultType type = ResultType.SUCCESS;
       String message = "";
-      @Nullable List<String> testStdout = stdout.get(testFull);
       if (testcase.getChildNodes().getLength() > 0) {
         Node failure = testcase.getChildNodes().item(1);
         type = ResultType.FAILURE;
@@ -179,8 +179,14 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
       } else if (attributes.getNamedItem("status").getNodeValue().equals(NOTRUN)) {
         type = ResultType.ASSUMPTION_VIOLATION;
         message = "DISABLED";
-        testStdout = Lists.newArrayList();
       }
+
+      // Prepare the tests stdout.
+      String testStdout = "";
+      if (stdout.containsKey(testFull)) {
+        testStdout = Joiner.on(System.lineSeparator()).join(stdout.get(testFull).getChunks());
+      }
+
       summariesBuilder.add(
           new TestResultSummary(
               testCase,
@@ -189,7 +195,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
               time.longValue(),
               message,
               "",
-              Joiner.on(System.lineSeparator()).join(testStdout),
+              testStdout,
               ""));
     }
 

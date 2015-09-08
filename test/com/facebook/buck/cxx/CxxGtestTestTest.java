@@ -66,6 +66,7 @@ public class CxxGtestTestTest {
 
     ImmutableList<String> samples =
         ImmutableList.of(
+            "big_output",
             "malformed_output",
             "malformed_results",
             "multisuite_success",
@@ -89,7 +90,8 @@ public class CxxGtestTestTest {
         ImmutableSet.<Label>of(),
         ImmutableSet.<String>of(),
         ImmutableSet.<BuildRule>of(),
-        /* runTestSeparately */ false);
+        /* runTestSeparately */ false,
+        /* maxTestOutputSize */ 100L);
 
     ExecutionContext context = TestExecutionContext.newInstance();
 

@@ -200,7 +200,8 @@ public class CxxTestDescription implements
             args.labels.get(),
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()),
-            args.runTestSeparately.or(false));
+            args.runTestSeparately.or(false),
+            cxxBuckConfig.getMaximumTestOutputSize());
         break;
       }
       case BOOST: {
