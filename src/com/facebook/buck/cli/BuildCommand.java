@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
@@ -132,6 +133,7 @@ public class BuildCommand extends AbstractCommand {
     this.arguments = arguments;
   }
 
+  private boolean isArtifactCacheDisabled = false;
 
   public boolean isCodeCoverageEnabled() {
     return false;
@@ -152,6 +154,13 @@ public class BuildCommand extends AbstractCommand {
     return mode;
   }
 
+  public void setArtifactCacheDisabled(boolean value) {
+    isArtifactCacheDisabled = value;
+  }
+
+  public boolean isArtifactCacheDisabled() {
+    return isArtifactCacheDisabled;
+  }
 
   public boolean isKeepGoing() {
     return keepGoing;
@@ -220,6 +229,9 @@ public class BuildCommand extends AbstractCommand {
   @SuppressWarnings("PMD.PrematureDeclaration")
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ArtifactCache artifactCache = getArtifactCache(params);
+    if (isArtifactCacheDisabled()) {
+      artifactCache = new NoopArtifactCache();
+    }
 
     if (getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");

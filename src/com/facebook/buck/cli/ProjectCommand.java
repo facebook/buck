@@ -588,6 +588,7 @@ public class ProjectCommand extends BuildCommand {
               params.getBuckConfig(),
               additionalInitialTargets);
 
+          buildCommand.setArtifactCacheDisabled(true);
 
           exitCode = buildCommand.runWithoutHelp(params);
           if (exitCode != 0) {
