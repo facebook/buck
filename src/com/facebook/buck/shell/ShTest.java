@@ -33,7 +33,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
-import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.test.TestRunningOptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -97,11 +97,9 @@ public class ShTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
   public ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
-      boolean isDryRun,
-      boolean isShufflingTests,
-      TestSelectorList testSelectorList,
+      TestRunningOptions options,
       TestRule.TestReportingCallback testReportingCallback) {
-    if (isDryRun) {
+    if (options.isDryRun()) {
       // Stop now if we are a dry-run: sh-tests have no concept of dry-run inside the test itself.
       return ImmutableList.of();
     }

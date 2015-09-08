@@ -35,9 +35,9 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
@@ -192,9 +192,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
   public ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
-      boolean isDryRun,
-      boolean isShufflingTests,
-      TestSelectorList testSelectorList,
+      TestRunningOptions options,
       TestRule.TestReportingCallback testReportingCallback) {
     // If no classes were generated, then this is probably a java_test() that declares a number of
     // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
@@ -205,7 +203,8 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
       return ImmutableList.of();
     }
 
-    Iterable<String> reorderedTestClasses = reorderClasses(testClassNames, isShufflingTests);
+    Iterable<String> reorderedTestClasses =
+        reorderClasses(testClassNames, options.isShufflingTests());
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -236,12 +235,13 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled(),
         executionContext.getBuckEventBus().getBuildId(),
-        testSelectorList,
-        isDryRun,
+        options.getTestSelectorList(),
+        options.isDryRun(),
         testType,
         testRuleTimeoutMs,
         stdOutLogLevel,
-        stdErrLogLevel
+        stdErrLogLevel,
+        options.getPathToJavaAgent()
     );
     steps.add(junit);
 

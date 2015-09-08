@@ -46,6 +46,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRuleEvent;
+import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.groups.TestResultsGrouper;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.BuckConstant;
@@ -262,9 +263,7 @@ public class TestRunning {
         List<Step> testSteps = test.runTests(
             buildContext,
             executionContext,
-            options.isDryRun(),
-            options.isShufflingTests(),
-            options.getTestSelectorList(),
+            options,
             testReportingCallback);
         if (!testSteps.isEmpty()) {
           stepsBuilder.addAll(testSteps);

@@ -32,7 +32,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
-import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.UnzipStep;
@@ -195,9 +195,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   public ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
-      boolean isDryRun,
-      boolean isShufflingTests,
-      TestSelectorList testSelectorList,
+      TestRunningOptions options,
       TestRule.TestReportingCallback testReportingCallback) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     Path resolvedTestBundleDirectory = getProjectFilesystem().resolve(

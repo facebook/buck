@@ -34,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
+import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Suppliers;
@@ -106,12 +107,15 @@ public class CxxTestTest {
 
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     ExecutionContext executionContext = TestExecutionContext.newInstance();
+    TestRunningOptions options =
+        TestRunningOptions.builder()
+            .setDryRun(false)
+            .setTestSelectorList(TestSelectorList.empty())
+            .build();
     ImmutableList<Step> actualSteps = cxxTest.runTests(
         buildContext,
         executionContext,
-        /* isDryRun */ false,
-        /* isShufflingTests */ false,
-        TestSelectorList.empty(),
+        options,
         FakeTestRule.NOOP_REPORTING_CALLBACK);
 
     CxxTestStep cxxTestStep =

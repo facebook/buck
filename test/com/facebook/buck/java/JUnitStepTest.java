@@ -94,7 +94,8 @@ public class JUnitStepTest {
         testRunnerClasspath,
         /* testRuleTimeoutMs*/ Optional.<Long>absent(),
         /* stdOutLogLevel */ Optional.<Level>absent(),
-        /* stdErrLogLevel */ Optional.<Level>absent());
+        /* stdErrLogLevel */ Optional.<Level>absent(),
+        /* pathToJavAgent */ Optional.<String>absent());
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
@@ -176,7 +177,8 @@ public class JUnitStepTest {
         testRunnerClasspath,
         /* testRuleTimeoutMs*/ Optional.<Long>absent(),
         /* stdOutLogLevel */ Optional.<Level>absent(),
-        /* stdErrLogLevel */ Optional.<Level>absent());
+        /* stdErrLogLevel */ Optional.<Level>absent(),
+        /* pathToJavaAgent */ Optional.<String> absent());
 
     TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext executionContext = TestExecutionContext.newBuilder()

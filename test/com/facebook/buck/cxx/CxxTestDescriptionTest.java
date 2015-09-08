@@ -32,6 +32,7 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -110,13 +111,17 @@ public class CxxTestDescriptionTest {
     CxxTest test = (CxxTest) builder
           .setEnv(ImmutableMap.of("TEST", "value $(location //:some_rule)"))
           .build(resolver);
+
+    TestRunningOptions options =
+        TestRunningOptions.builder()
+            .setDryRun(false)
+            .setTestSelectorList(TestSelectorList.empty())
+            .build();
     ImmutableList<Step> steps =
         test.runTests(
             FakeBuildContext.NOOP_CONTEXT,
             TestExecutionContext.newInstance(),
-            /* isDryRun */ false,
-            /* isShufflingTests */ false,
-            TestSelectorList.empty(),
+            options,
             TestRule.NOOP_REPORTING_CALLBACK);
     CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
     assertThat(
@@ -160,13 +165,17 @@ public class CxxTestDescriptionTest {
     CxxTest test = (CxxTest) builder
         .setArgs(ImmutableList.of("value $(location //:some_rule)"))
         .build(resolver);
+    TestRunningOptions testOptions =
+          TestRunningOptions.builder()
+          .setDryRun(false)
+          .setShufflingTests(false)
+          .setTestSelectorList(TestSelectorList.empty())
+          .build();
     ImmutableList<Step> steps =
         test.runTests(
             FakeBuildContext.NOOP_CONTEXT,
             TestExecutionContext.newInstance(),
-            /* isDryRun */ false,
-            /* isShufflingTests */ false,
-            TestSelectorList.empty(),
+            testOptions,
             TestRule.NOOP_REPORTING_CALLBACK);
     CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
     assertThat(

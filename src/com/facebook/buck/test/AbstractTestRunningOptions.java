@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.test;
 
-import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
@@ -73,6 +72,8 @@ abstract class AbstractTestRunningOptions {
   }
 
   public abstract Optional<String> getPathToXmlTestOutput();
+
+  public abstract Optional<String> getPathToJavaAgent();
 
   @Value.Default
   public CoverageReportFormat getCoverageReportFormat() {

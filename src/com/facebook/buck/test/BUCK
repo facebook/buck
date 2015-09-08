@@ -32,18 +32,20 @@ java_immutables_library(
 )
 
 # Sources for dealing with test results.
-java_library(
+java_immutables_library(
   name = 'test',
   srcs = glob(
     ['*.java'],
     excludes = REPORT_FORMAT_SRCS + CONFIG_SRCS
   ),
   deps = [
+    ':report-format',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/test/result/type:type',
+    '//src/com/facebook/buck/test/selectors:selectors',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//third-party/java/jackson:jackson-annotations',

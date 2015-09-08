@@ -173,6 +173,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     public Optional<Boolean> runTestSeparately;
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
+    public Optional<String> pathToJavaAgent;
     public Optional<Boolean> useCxxLibraries;
 
     @Override

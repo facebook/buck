@@ -22,7 +22,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -83,18 +83,14 @@ public interface TestRule extends HasBuildTarget {
    * @param buildContext Because this method may be run without
    *     {@link BuildEngine#build(BuildContext, BuildRule)} having been run, this is supplied in
    *     case any non-cacheable build work needs to be done.
-   * @param isShufflingTests Whether the test runner should randomly reorder tests at runtime.
+   * @param options The runtime testing options.
    * @param executionContext Provides context for creating {@link Step}s.
-   * @param testSelectorList Provides a way of selecting which tests to include or exclude
-   *     from a run.
    * @return the commands required to run the tests
    */
   ImmutableList<Step> runTests(
       BuildContext buildContext,
       ExecutionContext executionContext,
-      boolean isDryRun,
-      boolean isShufflingTests,
-      TestSelectorList testSelectorList,
+      TestRunningOptions options,
       TestReportingCallback testReportingCallback);
 
   Callable<TestResults> interpretTestResults(
