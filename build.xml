@@ -47,7 +47,7 @@
   <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
   <property name="pywatchman.install.dir" value="${build.dir}/pywatchman" />
 
-  <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.11.jar" />
+  <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.21.jar" />
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
   <property name="immutables.gensrc.test.dir" value="${build.dir}/immutables-tests" />
 
@@ -99,7 +99,7 @@
     <include name="guice/guice-multibindings-3.0.jar" />
     <include name="gson/gson-2.2.4.jar" />
     <include name="icu4j/icu4j-54.1.1.jar" />
-    <include name="immutables/value-2.0.11.jar" />
+    <include name="immutables/value-2.0.21.jar" />
     <include name="infer-annotations/infer-annotations-1.5.jar" />
     <include name="jacoco/org.jacoco.core-0.7.5.201505241946.jar" />
     <include name="jacoco/org.jacoco.report-0.7.5.201505241946.jar" />

@@ -1,4 +1,4 @@
 <factorypath>
     <factorypathentry kind="PLUGIN" id="org.eclipse.jst.ws.annotations.core" enabled="false" runInBatchMode="false"/>
-    <factorypathentry kind="WKSPJAR" id="/buck/third-party/java/immutables/value-2.0.11.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/buck/third-party/java/immutables/value-2.0.21.jar" enabled="true" runInBatchMode="false"/>
 </factorypath>

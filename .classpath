@@ -36,7 +36,7 @@
 	<classpathentry kind="lib" path="third-party/java/hamcrest/hamcrest-junit-2.0.0.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/hamcrest/java-hamcrest-2.0.0.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/icu4j/icu4j-54.1.1.jar"/>
-	<classpathentry kind="lib" path="third-party/java/immutables/value-2.0.11.jar"/>
+	<classpathentry kind="lib" path="third-party/java/immutables/value-2.0.21.jar"/>
 	<classpathentry kind="lib" path="third-party/java/infer-annotations/infer-annotations-1.5.jar"/>
 	<classpathentry kind="lib" path="third-party/java/ini4j/ini4j-0.5.2.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jackson/jackson-annotations-2.0.5.jar"/>

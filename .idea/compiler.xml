@@ -29,7 +29,7 @@
         <sourceTestOutputDir name="build-ij/immutables-test" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
-          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-2.0.11.jar" />
+          <entry name="$PROJECT_DIR$/third-party/java/immutables/value-2.0.21.jar" />
         </processorPath>
       </profile>
     </annotationProcessing>
