@@ -147,6 +147,7 @@ public class IjProjectWriter {
       try (OutputStream outputStream = projectFilesystem.newFileOutputStream(tempFile)) {
         outputStream.write(contents.render().getBytes());
       }
+      projectFilesystem.createParentDirs(path);
       projectFilesystem.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
       danglingTempFile = false;
     } finally {
