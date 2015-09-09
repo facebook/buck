@@ -228,7 +228,7 @@ public class BuildCommand extends AbstractCommand {
   @Override
   @SuppressWarnings("PMD.PrematureDeclaration")
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    ArtifactCache artifactCache = getArtifactCache(params);
+    ArtifactCache artifactCache = params.getArtifactCache();
     if (isArtifactCacheDisabled()) {
       artifactCache = new NoopArtifactCache();
     }

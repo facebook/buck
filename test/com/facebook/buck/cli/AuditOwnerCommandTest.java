@@ -201,7 +201,7 @@ public class AuditOwnerCommandTest {
         console,
         repository,
         androidDirectoryResolver,
-        new InstanceArtifactCacheFactory(artifactCache),
+        artifactCache,
         eventBus,
         buckConfig,
         Platform.detect(),

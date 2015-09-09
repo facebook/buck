@@ -21,12 +21,13 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.ProcessManager;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -38,7 +39,7 @@ import com.google.common.collect.ImmutableMap;
  */
 class CommandRunnerParams {
 
-  private final ArtifactCacheFactory artifactCacheFactory;
+  private final ArtifactCache artifactCache;
   private final Console console;
   private final ImmutableMap<String, String> environment;
   private final Parser parser;
@@ -58,7 +59,7 @@ class CommandRunnerParams {
       Console console,
       Repository repository,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
-      ArtifactCacheFactory artifactCacheFactory,
+      ArtifactCache artifactCache,
       BuckEventBus eventBus,
       Parser parser,
       Platform platform,
@@ -72,7 +73,7 @@ class CommandRunnerParams {
       FileHashCache fileHashCache) {
     this.console = console;
     this.repository = repository;
-    this.artifactCacheFactory = artifactCacheFactory;
+    this.artifactCache = artifactCache;
     this.eventBus = eventBus;
     this.parser = parser;
     this.platform = platform;
@@ -95,8 +96,8 @@ class CommandRunnerParams {
     return repository;
   }
 
-  public ArtifactCacheFactory getArtifactCacheFactory() {
-    return artifactCacheFactory;
+  public ArtifactCache getArtifactCache() {
+    return artifactCache;
   }
 
   public Parser getParser() {

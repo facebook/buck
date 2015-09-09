@@ -120,7 +120,7 @@ public class CleanCommandTest extends EasyMockSupport {
         new TestConsole(),
         repository,
         androidPlatformTargetSupplier,
-        new InstanceArtifactCacheFactory(createMock(ArtifactCache.class)),
+        createMock(ArtifactCache.class),
         BuckEventBusFactory.newInstance(),
         createMock(Parser.class),
         Platform.detect(),

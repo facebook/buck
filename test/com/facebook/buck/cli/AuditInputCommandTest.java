@@ -79,7 +79,7 @@ public class AuditInputCommandTest {
         console,
         repository,
         new FakeAndroidDirectoryResolver(),
-        new InstanceArtifactCacheFactory(artifactCache),
+        artifactCache,
         eventBus,
         new FakeBuckConfig(),
         Platform.detect(),

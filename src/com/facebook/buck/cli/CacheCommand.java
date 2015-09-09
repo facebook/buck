@@ -60,7 +60,7 @@ public class CacheCommand extends AbstractCommand {
       return 1;
     }
 
-    ArtifactCache cache = getArtifactCache(params);
+    ArtifactCache cache = params.getArtifactCache();
 
     Path tmpDir = Files.createTempDirectory("buck-cache-command");
     int exitCode = 0;

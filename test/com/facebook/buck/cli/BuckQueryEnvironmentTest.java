@@ -85,7 +85,7 @@ public class BuckQueryEnvironmentTest {
         console,
         repository,
         new FakeAndroidDirectoryResolver(),
-        new InstanceArtifactCacheFactory(new NoopArtifactCache()),
+        new NoopArtifactCache(),
         BuckEventBusFactory.newInstance(),
         new FakeBuckConfig(),
         Platform.detect(),

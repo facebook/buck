@@ -113,7 +113,7 @@ public class FetchCommand extends BuildCommand {
                  new DependencyFileRuleKeyBuilderFactory(
                      params.getFileHashCache(),
                      pathResolver)),
-             getArtifactCache(params),
+             params.getArtifactCache(),
              params.getConsole(),
              params.getBuckEventBus(),
              Optional.<TargetDevice>absent(),

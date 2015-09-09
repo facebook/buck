@@ -364,7 +364,7 @@ public class TestCommand extends BuildCommand {
           graph,
           params.getAndroidPlatformTargetSupplier(),
           cachingBuildEngine,
-          getArtifactCache(params),
+          params.getArtifactCache(),
           params.getConsole(),
           params.getBuckEventBus(),
           getTargetDeviceOptional(),

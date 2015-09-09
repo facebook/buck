@@ -129,7 +129,7 @@ public class TargetsCommandTest {
         console,
         repository,
         androidDirectoryResolver,
-        new InstanceArtifactCacheFactory(artifactCache),
+        artifactCache,
         eventBus,
         new FakeBuckConfig(),
         Platform.detect(),

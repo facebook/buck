@@ -25,6 +25,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
@@ -49,7 +50,7 @@ public class CommandRunnerParamsForTesting {
       Console console,
       Repository repository,
       AndroidDirectoryResolver androidDirectoryResolver,
-      ArtifactCacheFactory artifactCacheFactory,
+      ArtifactCache artifactCache,
       BuckEventBus eventBus,
       BuckConfig config,
       Platform platform,
@@ -65,7 +66,7 @@ public class CommandRunnerParamsForTesting {
             androidDirectoryResolver,
             new AndroidBuckConfig(new FakeBuckConfig(), platform),
             eventBus),
-        artifactCacheFactory,
+        artifactCache,
         eventBus,
         Parser.createBuildFileParser(
             repository,
@@ -88,8 +89,7 @@ public class CommandRunnerParamsForTesting {
   public static class Builder {
 
     private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    private ArtifactCacheFactory artifactCacheFactory = new InstanceArtifactCacheFactory(
-        new NoopArtifactCache());
+    private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
     private BuckConfig config = new FakeBuckConfig();
     private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
@@ -105,7 +105,7 @@ public class CommandRunnerParamsForTesting {
           console,
           new TestRepositoryBuilder().build(),
           androidDirectoryResolver,
-          artifactCacheFactory,
+          artifactCache,
           eventBus,
           config,
           platform,
@@ -125,8 +125,8 @@ public class CommandRunnerParamsForTesting {
       return this;
     }
 
-    public Builder setArtifactCacheFactory(ArtifactCacheFactory factory) {
-      this.artifactCacheFactory = factory;
+    public Builder setArtifactCache(ArtifactCache cache) {
+      this.artifactCache = cache;
       return this;
     }
 

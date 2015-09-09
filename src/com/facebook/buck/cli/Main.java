@@ -46,6 +46,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.test.TestConfig;
@@ -728,6 +729,8 @@ public final class Main {
               androidBuckConfig,
               buildEventBus);
 
+      ArtifactCache artifactCache = artifactCacheFactory.newInstance(buckConfig, false);
+
       // At this point, we have parsed options but haven't started running the command yet.  This is
       // a good opportunity to augment the event bus with our serialize-to-file event-listener.
       if (command.subcommand instanceof AbstractCommand) {
@@ -745,7 +748,7 @@ public final class Main {
               console,
               rootRepository,
               androidPlatformTargetSupplier,
-              artifactCacheFactory,
+              artifactCache,
               buildEventBus,
               parser,
               platform,

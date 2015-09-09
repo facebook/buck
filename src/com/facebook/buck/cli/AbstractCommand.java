@@ -22,7 +22,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
-import com.facebook.buck.rules.ArtifactCache;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
@@ -89,6 +88,9 @@ public abstract class AbstractCommand implements Command {
     }
     if (numThreads != null) {
       builder.put("build", "threads", String.valueOf(numThreads));
+    }
+    if (noCache) {
+      builder.put("cache", "mode", "");
     }
 
     return builder.build();
@@ -192,11 +194,6 @@ public abstract class AbstractCommand implements Command {
     }
 
     return buildTargets.build();
-  }
-
-  public ArtifactCache getArtifactCache(CommandRunnerParams params)
-      throws InterruptedException {
-    return params.getArtifactCacheFactory().newInstance(params.getBuckConfig(), isNoCache());
   }
 
   protected ExecutionContext createExecutionContext(CommandRunnerParams params) {
