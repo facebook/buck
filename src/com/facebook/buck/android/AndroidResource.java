@@ -23,7 +23,6 @@ import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -38,8 +37,7 @@ import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
@@ -53,7 +51,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -287,33 +284,15 @@ public class AndroidResource extends AbstractBuildRule
     // If the 'package' was not specified for this android_resource(), then attempt to parse it
     // from the AndroidManifest.xml.
     if (rDotJavaPackageArgument == null) {
-      steps.add(new AbstractExecutionStep("extract_android_package") {
-        @Override
-        public int execute(ExecutionContext context) {
-          Preconditions.checkNotNull(
-              manifestFile,
-              "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is " +
-                  "null. This should already be enforced by the constructor.");
-
-          AndroidManifestReader androidManifestReader;
-          try {
-            androidManifestReader = DefaultAndroidManifestReader.forPath(
-                getResolver().getPath(manifestFile),
-                getProjectFilesystem());
-          } catch (IOException e) {
-            context.logError(e, "Failed to create AndroidManifestReader for %s.", manifestFile);
-            return 1;
-          }
-
-          String rDotJavaPackageFromAndroidManifest = androidManifestReader.getPackage();
-
-          AndroidResource.this.rDotJavaPackage.set(rDotJavaPackageFromAndroidManifest);
-          buildableContext.addMetadata(
-              METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
-              rDotJavaPackageFromAndroidManifest);
-          return 0;
-        }
-      });
+      Preconditions.checkNotNull(
+          manifestFile,
+          "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is " +
+              "null. This should already be enforced by the constructor.");
+      steps.add(new ExtractFromAndroidManifestStep(
+          getResolver().getPath(manifestFile),
+          getProjectFilesystem(),
+          buildableContext,
+          METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE));
     }
 
     ImmutableSet<Path> pathsToSymbolsOfDeps = FluentIterable.from(getNonEmptyResourceDeps())
