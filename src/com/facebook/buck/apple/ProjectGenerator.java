@@ -1001,7 +1001,9 @@ public class ProjectGenerator {
     } else if (targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
       ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
       ImmutableMap<String, ImmutableMap<String, String>> defaultConfig =
-          getDefaultConfigForCxxLibraryTargetNode(appendedConfig);
+          CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
+              defaultCxxPlatform,
+              appendedConfig);
       configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
     } else {
       throw new HumanReadableException("config must be set for target node %@", targetNode);
@@ -1043,16 +1045,6 @@ public class ProjectGenerator {
     }
 
     return target;
-  }
-
-  private ImmutableMap<String, ImmutableMap<String, String>>
-  getDefaultConfigForCxxLibraryTargetNode(
-      ImmutableMap<String, String> appendedConfig) {
-    return new ImmutableMap.Builder<String, ImmutableMap<String, String>>()
-    .put("Debug", ImmutableMap.copyOf(appendedConfig))
-    .put("Profile", ImmutableMap.copyOf(appendedConfig))
-    .put("Release", ImmutableMap.copyOf(appendedConfig))
-        .build();
   }
 
   private void addCoreDataModelsIntoTarget(
