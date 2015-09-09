@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -57,6 +58,7 @@ public class AndroidPrebuiltAarDescription
   public static final BuildRuleType TYPE = BuildRuleType.of("android_prebuilt_aar");
 
   private static final Flavor AAR_PREBUILT_JAR_FLAVOR = ImmutableFlavor.of("aar_prebuilt_jar");
+  private static final Flavor AAR_UNZIP_FLAVOR = ImmutableFlavor.of("aar_unzip");
 
   private final JavacOptions javacOptions;
 
@@ -81,8 +83,7 @@ public class AndroidPrebuiltAarDescription
       BuildRuleResolver buildRuleResolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
-    UnzipAar unzipAar =
-        AndroidPrebuiltAarGraphEnhancer.enhance(params, args.aar, buildRuleResolver);
+    UnzipAar unzipAar = createUnzipAar(params, args.aar, buildRuleResolver);
 
     Iterable<PrebuiltJar> javaDeps = Iterables.concat(
         Iterables.filter(
@@ -126,6 +127,29 @@ public class AndroidPrebuiltAarDescription
         /* javacOptions */ javacOptions,
         /* exportedDeps */ javaDeps));
   }
+
+  /**
+   * Creates a build rule to unzip the prebuilt AAR and get the components needed for the
+   * AndroidPrebuiltAar, PrebuiltJar, and AndroidResource
+   */
+  private UnzipAar createUnzipAar(
+      BuildRuleParams originalBuildRuleParams,
+      SourcePath aarFile,
+      BuildRuleResolver ruleResolver) {
+    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+
+    UnflavoredBuildTarget originalBuildTarget =
+        originalBuildRuleParams.getBuildTarget().checkUnflavored();
+
+    BuildRuleParams unzipAarParams = originalBuildRuleParams.copyWithChanges(
+        BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_UNZIP_FLAVOR),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(ImmutableSortedSet.copyOf(
+            resolver.filterBuildRuleInputs(aarFile))));
+    UnzipAar unzipAar = new UnzipAar(unzipAarParams, resolver, aarFile);
+    return ruleResolver.addToIndex(unzipAar);
+  }
+
 
   private PrebuiltJar createPrebuiltJar(
       UnzipAar unzipAar,
