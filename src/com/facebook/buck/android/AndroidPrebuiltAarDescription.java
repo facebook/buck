@@ -39,8 +39,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
-
 /**
  * Description for a {@link BuildRule} that wraps an {@code .aar} file as an Android dependency.
  * <p>
@@ -106,13 +104,9 @@ public class AndroidPrebuiltAarDescription
             params,
             pathResolver,
             ImmutableSortedSet.<BuildRule>copyOf(javaDeps)));
-    AndroidResource androidResource = buildRuleResolver.addToIndex(
-        createAndroidResource(unzipAar, params, pathResolver));
     return buildRuleResolver.addToIndex(new AndroidPrebuiltAar(
         /* androidLibraryParams */ params.copyWithDeps(
-            /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(
-                    androidResource,
-                    prebuiltJar)),
+            /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(prebuiltJar)),
             /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar))),
         /* resolver */ pathResolver,
         /* proguardConfig */ new BuildTargetSourcePath(
@@ -122,7 +116,6 @@ public class AndroidPrebuiltAarDescription
             unzipAar.getBuildTarget(),
             unzipAar.getNativeLibsDirectory()),
         /* prebuiltJar */ prebuiltJar,
-        /* androidResource */ androidResource,
         /* unzipRule */ unzipAar,
         /* javacOptions */ javacOptions,
         /* exportedDeps */ javaDeps));
@@ -173,36 +166,6 @@ public class AndroidPrebuiltAarDescription
         /* javadocUrl */ Optional.<String>absent(),
         /* mavenCoords */ Optional.<String>absent());
 
-  }
-
-  private AndroidResource createAndroidResource(
-      UnzipAar unzipAar,
-      BuildRuleParams params,
-      SourcePathResolver resolver) {
-    BuildRuleParams buildRuleParams = params.copyWithChanges(
-        /* buildTarget */ BuildTargets.createFlavoredBuildTarget(
-            params.getBuildTarget().checkUnflavored(),
-            ImmutableFlavor.of("aar_android_resource")),
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)));
-
-    return new AndroidResource(
-        /* buildRuleParams */ buildRuleParams,
-        /* resolver */ resolver,
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* res */ new BuildTargetSourcePath(
-            unzipAar.getBuildTarget(),
-            unzipAar.getResDirectory()),
-        /* resSrcs */ ImmutableSortedSet.<Path>of(),
-        /* rDotJavaPackage */ null,
-        /* assets */ new BuildTargetSourcePath(
-            unzipAar.getBuildTarget(),
-            unzipAar.getAssetsDirectory()),
-        /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
-        /* manifestFile */ new BuildTargetSourcePath(
-            unzipAar.getBuildTarget(),
-            unzipAar.getAndroidManifest()),
-        /* hasWhitelistedStrings */ false);
   }
 
   @SuppressFieldNotInitialized

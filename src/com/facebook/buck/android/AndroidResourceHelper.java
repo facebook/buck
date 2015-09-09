@@ -21,7 +21,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import javax.annotation.Nullable;
 
@@ -41,18 +40,9 @@ public class AndroidResourceHelper {
           @Override
           @Nullable
           public BuildRule apply(BuildRule buildRule) {
-            if (buildRule instanceof AndroidResource) {
+            if (buildRule instanceof HasAndroidResourceDeps) {
               return buildRule;
-            } else if (buildRule instanceof AndroidLibrary &&
-                ((AndroidLibrary) buildRule).isPrebuiltAar()) {
-              // An AndroidLibrary that is created via graph enhancement from an
-              // android_prebuilt_aar() should always have exactly one dependency that is an
-              // AndroidResource.
-              return Iterables.getOnlyElement(
-                  FluentIterable.from(buildRule.getDeps())
-                      .filter(Predicates.instanceOf(AndroidResource.class))
-                      .toList());
-           }
+            }
            return null;
          }
         })

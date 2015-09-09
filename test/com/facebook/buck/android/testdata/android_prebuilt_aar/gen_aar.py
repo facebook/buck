@@ -43,6 +43,10 @@ if __name__ == "__main__":
   <string name='app_name'>Hello World</string>
 </resources>""")
 
+    # Write out R.txt
+    with open(os.path.join(tmp, "R.txt"), "w") as f:
+        f.write("int string app_name 0x7f030000")
+
     # Include some .class files in classes.jar because the .aar spec requires it
     with open(os.path.join(tmp, "Utils.java"), "w") as f:
         f.write("""package com.example;
