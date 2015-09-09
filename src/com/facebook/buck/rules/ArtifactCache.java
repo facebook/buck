@@ -19,10 +19,9 @@ package com.facebook.buck.rules;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.Closeable;
 import java.nio.file.Path;
 
-public interface ArtifactCache extends Closeable {
+public interface ArtifactCache extends AutoCloseable {
   /**
    * Fetch a cached artifact, keyed by ruleKey, save the artifact to path specified by output, and
    * return true on success.
@@ -53,4 +52,7 @@ public interface ArtifactCache extends Closeable {
    * @return whether this{@link ArtifactCache} supports storing artifacts.
    */
   boolean isStoreSupported();
+
+  @Override
+  void close();
 }

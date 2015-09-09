@@ -138,8 +138,6 @@ public final class Main {
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
-  private static final int ARTIFACT_CACHE_TIMEOUT_IN_SECONDS = 15;
-
   private static final TimeSpan DAEMON_SLAYER_TIMEOUT = new TimeSpan(2, TimeUnit.HOURS);
 
   private static final TimeSpan SUPER_CONSOLE_REFRESH_RATE =
@@ -627,7 +625,6 @@ public final class Main {
                 // multiple times in a single run.
                 new DefaultFileHashCache(new ProjectFilesystem(Paths.get("/")))));
 
-    @Nullable ArtifactCacheFactory artifactCacheFactory = null;
     Optional<WebServer> webServer = getWebServerIfDaemon(
         context,
         rootRepository,
@@ -654,8 +651,11 @@ public final class Main {
                  webServer);
          TempDirectoryCreator tempDirectoryCreator =
              new TempDirectoryCreator(testTempDirOverride);
-         BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
-      artifactCacheFactory = new LoggingArtifactCacheFactory(executionEnvironment, buildEventBus);
+         BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
+         ArtifactCache artifactCache = ArtifactCaches.newInstance(
+             buckConfig,
+             buildEventBus,
+             executionEnvironment.getWifiSsid())) {
 
       eventListeners = addEventListeners(buildEventBus,
           rootRepository.getFilesystem(),
@@ -729,8 +729,6 @@ public final class Main {
               androidBuckConfig,
               buildEventBus);
 
-      ArtifactCache artifactCache = artifactCacheFactory.newInstance(buckConfig, false);
-
       // At this point, we have parsed options but haven't started running the command yet.  This is
       // a good opportunity to augment the event bus with our serialize-to-file event-listener.
       if (command.subcommand instanceof AbstractCommand) {
@@ -764,7 +762,6 @@ public final class Main {
       buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
     } catch (Throwable t) {
       LOG.debug(t, "Failing build on exception.");
-      closeCreatedArtifactCaches(artifactCacheFactory); // Close cache before exit on exception.
       flushEventListeners(console, buildId, eventListeners);
       throw t;
     } finally {
@@ -776,7 +773,6 @@ public final class Main {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
-    closeCreatedArtifactCaches(artifactCacheFactory); // Wait for cache close after client exit.
     flushEventListeners(console, buildId, eventListeners);
     return exitCode;
   }
@@ -859,14 +855,6 @@ public final class Main {
       env = ImmutableMap.copyOf(System.getenv());
     }
     return EnvironmentFilter.filteredEnvironment(env, Platform.detect());
-  }
-
-  private static void closeCreatedArtifactCaches(
-      @Nullable ArtifactCacheFactory artifactCacheFactory)
-      throws InterruptedException {
-    if (null != artifactCacheFactory) {
-      artifactCacheFactory.closeCreatedArtifactCaches(ARTIFACT_CACHE_TIMEOUT_IN_SECONDS);
-    }
   }
 
   private Parser getParserFromDaemon(

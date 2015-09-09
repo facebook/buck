@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -92,7 +91,7 @@ public class MultiArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     // TODO(natthu): It's possible for this to be interrupted before it gets to call close() on all
     // the individual caches. This is acceptable for now since every ArtifactCache.close() is a
     // no-op.

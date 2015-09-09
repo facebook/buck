@@ -84,7 +84,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
   }
 
   public class Artifact {

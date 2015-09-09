@@ -19,7 +19,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -69,7 +68,7 @@ public class LoggingArtifactCacheDecorator {
       }
 
       @Override
-      public void close() throws IOException {
+      public void close() {
         delegate.close();
       }
     };

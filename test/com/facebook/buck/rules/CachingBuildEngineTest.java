@@ -2127,7 +2127,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
       throw new UnsupportedOperationException();
     }
   }
