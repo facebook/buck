@@ -44,6 +44,7 @@ IO_SRCS = [
   'DirtyPrintStreamDecorator.java',
   'InputStreamConsumer.java',
   'LineFetcher.java',
+  'LineIterating.java',
   'PkillProcessManager.java',
   'ProcessManager.java',
   'ProcessExecutor.java',
