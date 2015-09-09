@@ -170,6 +170,7 @@ java_immutables_library(
     '//third-party/java/jackson:jackson-datatype-jdk7',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/nailgun:nailgun',
+    '//third-party/java/okhttp:okhttp',
   ],
   provided_deps = [
     # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly

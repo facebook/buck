@@ -25,52 +25,50 @@ import java.nio.file.Path;
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
  * and finish of each event.
  */
-public class LoggingArtifactCacheDecorator {
+public class LoggingArtifactCacheDecorator implements ArtifactCache {
   private final BuckEventBus eventBus;
+  private final ArtifactCache delegate;
 
-  public LoggingArtifactCacheDecorator(BuckEventBus eventBus) {
+  public LoggingArtifactCacheDecorator(BuckEventBus eventBus, ArtifactCache delegate) {
     this.eventBus = eventBus;
+    this.delegate = delegate;
   }
 
-  public final ArtifactCache decorate(final ArtifactCache delegate) {
-    return new ArtifactCache() {
-      @Override
-      public CacheResult fetch(RuleKey ruleKey, Path output)
-          throws InterruptedException {
-        ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-            ArtifactCacheEvent.Operation.FETCH,
-            ImmutableSet.of(ruleKey));
-        eventBus.post(started);
-        CacheResult fetchResult = delegate.fetch(ruleKey, output);
-        eventBus.post(ArtifactCacheEvent.finished(
-                started,
-                fetchResult));
-        return fetchResult;
-      }
+  @Override
+  public CacheResult fetch(RuleKey ruleKey, Path output)
+      throws InterruptedException {
+    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
+        ArtifactCacheEvent.Operation.FETCH,
+        ImmutableSet.of(ruleKey));
+    eventBus.post(started);
+    CacheResult fetchResult = delegate.fetch(ruleKey, output);
+    eventBus.post(ArtifactCacheEvent.finished(
+            started,
+            fetchResult));
+    return fetchResult;
+  }
 
-      @Override
-      public void store(
-          ImmutableSet<RuleKey> ruleKeys,
-          ImmutableMap<String, String> metadata,
-          Path output)
-          throws InterruptedException {
-        ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-            ArtifactCacheEvent.Operation.STORE,
-            ruleKeys);
-        eventBus.post(started);
-        delegate.store(ruleKeys, metadata, output);
-        eventBus.post(ArtifactCacheEvent.finished(started));
-      }
+  @Override
+  public void store(
+      ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata,
+      Path output)
+      throws InterruptedException {
+    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
+        ArtifactCacheEvent.Operation.STORE,
+        ruleKeys);
+    eventBus.post(started);
+    delegate.store(ruleKeys, metadata, output);
+    eventBus.post(ArtifactCacheEvent.finished(started));
+  }
 
-      @Override
-      public boolean isStoreSupported() {
-        return delegate.isStoreSupported();
-      }
+  @Override
+  public boolean isStoreSupported() {
+    return delegate.isStoreSupported();
+  }
 
-      @Override
-      public void close() {
-        delegate.close();
-      }
-    };
+  @Override
+  public void close() {
+    delegate.close();
   }
 }

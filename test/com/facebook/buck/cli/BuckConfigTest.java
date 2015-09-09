@@ -24,7 +24,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -265,33 +264,6 @@ public class BuckConfigTest {
     assertEquals(
         ImmutableList.of("windows", "linux"),
         config.getDefaultRawExcludedLabelSelectors());
-  }
-
-  @Test
-  public void testWifiBlacklist() throws IOException {
-    BuckConfig config = createFromText(
-        "[cache]",
-        "dir = http",
-        "blacklisted_wifi_ssids = yolocoaster");
-    assertFalse(config.isWifiUsableForDistributedCache(Optional.of("yolocoaster")));
-    assertTrue(config.isWifiUsableForDistributedCache(Optional.of("swagtastic")));
-
-    config = createFromText(
-        "[cache]",
-        "dir = http");
-
-    assertTrue(config.isWifiUsableForDistributedCache(Optional.of("yolocoaster")));
-  }
-
-  @Test
-  public void testExpandUserHomeCacheDir() throws IOException {
-    BuckConfig config = createFromText(
-        "[cache]",
-        "dir = ~/cache_dir");
-    assertEquals(
-        "User home cache directory must be expanded.",
-        MorePaths.expandHomeDir(Paths.get("~/cache_dir")),
-        config.getCacheDir());
   }
 
   @Test

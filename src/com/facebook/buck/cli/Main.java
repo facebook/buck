@@ -631,6 +631,7 @@ public final class Main {
         globHandler);
 
     TestConfig testConfig = new TestConfig(buckConfig);
+    ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig, filesystem);
 
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
@@ -653,7 +654,7 @@ public final class Main {
              new TempDirectoryCreator(testTempDirOverride);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
          ArtifactCache artifactCache = ArtifactCaches.newInstance(
-             buckConfig,
+             cacheBuckConfig,
              buildEventBus,
              executionEnvironment.getWifiSsid())) {
 
@@ -952,6 +953,7 @@ public final class Main {
     }
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
       BuckEventBus buckEvents,
       ProjectFilesystem projectFilesystem,
@@ -985,6 +987,8 @@ public final class Main {
     }
 
     loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, config);
+    ArtifactCacheBuckConfig artifactCacheConfig =
+        new ArtifactCacheBuckConfig(config, projectFilesystem);
 
 
     Optional<URI> remoteLogUrl = config.getRemoteLogUrl();
@@ -1000,7 +1004,7 @@ public final class Main {
               RemoteLoggerFactory.create(remoteLogUrl.get(), objectMapper),
               BuildEnvironmentDescription.of(
                   executionEnvironment,
-                  config.getArtifactCacheModes(),
+                  artifactCacheConfig.getArtifactCacheModes(),
                   environmentExtraData)
           ));
     }

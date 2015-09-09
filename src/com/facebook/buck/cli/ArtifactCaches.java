@@ -30,14 +30,14 @@ public class ArtifactCaches {
   }
 
   public static ArtifactCache newInstance(
-      BuckConfig buckConfig,
+      ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
       Optional<String> wifiSsid) throws InterruptedException {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
-    ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(buckEventBus)
-        .decorate(
-            buckConfig.createArtifactCache(wifiSsid, buckEventBus));
+    ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(
+        buckEventBus,
+        buckConfig.createArtifactCache(wifiSsid, buckEventBus));
     buckEventBus.post(ArtifactCacheConnectEvent.finished(started));
     return artifactCache;
   }
