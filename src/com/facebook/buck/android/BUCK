@@ -92,6 +92,7 @@ RULES_SRCS = [
   'RobolectricTest.java',
   'RDotJava.java',
   'UnsortedAndroidResourceDeps.java',
+  'UnzipAar.java',
   # This and the InstrumentationStep would make more sense in the steps
   # library, but are added here to avoid circular dependencies.
   'ApkInstallStep.java',

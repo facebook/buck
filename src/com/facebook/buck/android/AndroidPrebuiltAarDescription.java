@@ -81,7 +81,7 @@ public class AndroidPrebuiltAarDescription
       BuildRuleResolver buildRuleResolver,
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
-    AndroidPrebuiltAarGraphEnhancer.UnzipAar unzipAar =
+    UnzipAar unzipAar =
         AndroidPrebuiltAarGraphEnhancer.enhance(params, args.aar, buildRuleResolver);
 
     Iterable<PrebuiltJar> javaDeps = Iterables.concat(
@@ -128,7 +128,7 @@ public class AndroidPrebuiltAarDescription
   }
 
   private PrebuiltJar createPrebuiltJar(
-      AndroidPrebuiltAarGraphEnhancer.UnzipAar unzipAar,
+      UnzipAar unzipAar,
       BuildRuleParams params,
       SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> deps) {
@@ -152,7 +152,7 @@ public class AndroidPrebuiltAarDescription
   }
 
   private AndroidResource createAndroidResource(
-      AndroidPrebuiltAarGraphEnhancer.UnzipAar unzipAar,
+      UnzipAar unzipAar,
       BuildRuleParams params,
       SourcePathResolver resolver) {
     BuildRuleParams buildRuleParams = params.copyWithChanges(
