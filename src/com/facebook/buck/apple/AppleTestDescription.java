@@ -324,7 +324,8 @@ public class AppleTestDescription implements
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),
         allValidCodeSignIdentities,
-        args.provisioningProfileSearchPath);
+        args.provisioningProfileSearchPath,
+        AppleBundle.DebugInfoFormat.NONE);
 
 
     Optional<BuildRule> xctoolZipBuildRule;

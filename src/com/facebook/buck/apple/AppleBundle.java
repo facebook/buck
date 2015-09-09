@@ -69,6 +69,19 @@ import java.util.Set;
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
 public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps, NativeTestable {
+
+  public enum DebugInfoFormat {
+    /**
+     * Produces a binary with the debug map stripped.
+     */
+    NONE,
+
+    /**
+     * Generate a .dSYM file from the binary and its constituent object files.
+     */
+    DSYM,
+  }
+
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private static final String CODE_SIGN_IDENTITY = "CODE_SIGN_IDENTITY";
@@ -124,6 +137,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   @AddToRuleKey
   private final Optional<CodeSignIdentity> codeSignIdentity;
 
+  @AddToRuleKey
+  private final DebugInfoFormat debugInfoFormat;
+
   private final ImmutableSet<SourcePath> extensionBundlePaths;
 
   private final Optional<AppleAssetCatalog> assetCatalog;
@@ -133,7 +149,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final Path binaryPath;
   private final Path bundleBinaryPath;
   private final Path dsymPath;
-  private final boolean hasDebugSymbols;
+  private final boolean hasBinary;
 
   AppleBundle(
       BuildRuleParams params,
@@ -155,7 +171,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Set<BuildTarget> tests,
       AppleSdk sdk,
       ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities,
-      Optional<SourcePath> provisioningProfileSearchPath) {
+      Optional<SourcePath> provisioningProfileSearchPath,
+      DebugInfoFormat debugInfoFormat) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
@@ -180,6 +197,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.tests = ImmutableSortedSet.copyOf(tests);
     this.platformName = sdk.getApplePlatform().getName();
     this.sdkName = sdk.getName();
+    this.debugInfoFormat = debugInfoFormat;
 
     // We need to resolve the possible set of profiles and code sign identity at construction time
     // because they form part of the rule key.
@@ -245,7 +263,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
         .getParent()
         .getParent()
         .resolve(bundleBinaryPath.getFileName().toString() + ".dSYM");
-    hasDebugSymbols = binary.isPresent() && binary.get().getPathToOutput() != null;
+    hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
   }
 
   public static String getBinaryName(BuildTarget buildTarget) {
@@ -325,7 +343,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
             getInfoPlistOverrideKeys(platformName),
             PlistProcessStep.OutputFormat.BINARY));
 
-    if (hasDebugSymbols) {
+    if (hasBinary) {
       stepsBuilder.add(
           new MkdirStep(
               getProjectFilesystem(),
@@ -336,12 +354,14 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               getProjectFilesystem(),
               binary.get().getPathToOutput(),
               bundleBinaryPath));
-      stepsBuilder.add(
-          new DsymStep(
-              getProjectFilesystem(),
-              dsymutil.getCommandPrefix(getResolver()),
-              bundleBinaryPath,
-              dsymPath));
+      if (debugInfoFormat == DebugInfoFormat.DSYM) {
+        stepsBuilder.add(
+            new DsymStep(
+                getProjectFilesystem(),
+                dsymutil.getCommandPrefix(getResolver()),
+                bundleBinaryPath,
+                dsymPath));
+      }
       stepsBuilder.add(
           new DefaultShellStep(
               getProjectFilesystem().getRootPath(),
@@ -464,7 +484,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    if (!hasDebugSymbols) {
+    if (!hasBinary || debugInfoFormat == DebugInfoFormat.NONE) {
       return ImmutableList.of();
     }
     return ImmutableList.<Step>of(

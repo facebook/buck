@@ -212,7 +212,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.getTests(),
         appleCxxPlatform.getAppleSdk(),
         allValidCodeSignIdentities,
-        args.provisioningProfileSearchPath);
+        args.provisioningProfileSearchPath,
+        AppleBundle.DebugInfoFormat.DSYM);
   }
 
   private <A extends Arg> BuildRule getFlavoredBinaryRule(
