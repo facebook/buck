@@ -74,9 +74,17 @@ public class AppleDescriptions {
   }
 
   public static Path getHeaderPathPrefix(
-      AppleNativeTargetDescriptionArg arg,
+      CxxLibraryDescription.Arg arg,
       BuildTarget buildTarget) {
-    return Paths.get(arg.headerPathPrefix.or(buildTarget.getShortName()));
+
+    Optional<String> prefix;
+    if (arg instanceof AppleNativeTargetDescriptionArg) {
+      prefix = ((AppleNativeTargetDescriptionArg) arg).headerPathPrefix;
+    } else {
+      prefix = arg.headerNamespace;
+    }
+
+    return Paths.get(prefix.or(buildTarget.getShortName()));
   }
 
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPublicCxxHeaders(

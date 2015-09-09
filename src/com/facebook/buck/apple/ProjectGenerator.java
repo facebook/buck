@@ -1019,27 +1019,28 @@ public class ProjectGenerator {
         defaultSettingsBuilder.build(),
         appendConfigsBuilder.build());
 
+    // -- phases
+    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(
+        arg,
+        targetNode.getBuildTarget());
+    createHeaderSymlinkTree(
+        sourcePathResolver,
+        AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
+            sourcePathResolver,
+            headerPathPrefix,
+            arg),
+        AppleDescriptions.getPathToHeaderSymlinkTree(targetNode,
+            HeaderVisibility.PUBLIC));
+    createHeaderSymlinkTree(
+        sourcePathResolver,
+        AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
+            sourcePathResolver,
+            headerPathPrefix,
+            arg),
+        AppleDescriptions.getPathToHeaderSymlinkTree(targetNode,
+            HeaderVisibility.PRIVATE));
+
     if (appleTargetNode.isPresent()) {
-      // -- phases
-      Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(
-          appleTargetNode.get().getConstructorArg(),
-          targetNode.getBuildTarget());
-      createHeaderSymlinkTree(
-          sourcePathResolver,
-          AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
-              sourcePathResolver,
-              headerPathPrefix,
-              arg),
-          AppleDescriptions.getPathToHeaderSymlinkTree(appleTargetNode.get(),
-              HeaderVisibility.PUBLIC));
-      createHeaderSymlinkTree(
-          sourcePathResolver,
-          AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
-              sourcePathResolver,
-              headerPathPrefix,
-              arg),
-          AppleDescriptions.getPathToHeaderSymlinkTree(appleTargetNode.get(),
-              HeaderVisibility.PRIVATE));
       // Use Core Data models from immediate dependencies only.
       addCoreDataModelsIntoTarget(appleTargetNode.get(), targetGroup);
     }
