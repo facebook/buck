@@ -27,10 +27,8 @@ import com.facebook.buck.util.hash.HasherInputStream;
 import com.facebook.buck.util.hash.HasherOutputStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
@@ -418,7 +416,7 @@ public class HttpArtifactCache implements ArtifactCache {
     buckEventBus.post(startedEvent);
     Finished.Builder finishedEventBuilder =
         HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-            .setRuleKeys(Iterables.transform(ruleKeys, Functions.toStringFunction()));
+            .setRuleKeys(ruleKeys);
 
     try {
       storeImpl(ruleKeys, metadata, output, finishedEventBuilder);
