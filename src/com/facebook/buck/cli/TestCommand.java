@@ -191,8 +191,8 @@ public class TestCommand extends BuildCommand {
     return targetDeviceOptions.getTargetDeviceOptional();
   }
 
-  public AdbOptions getAdbOptions() {
-    return adbOptions.getAdbOptions();
+  public AdbOptions getAdbOptions(BuckConfig buckConfig) {
+    return adbOptions.getAdbOptions(buckConfig);
   }
 
   public TargetDeviceOptions getTargetDeviceOptions() {
@@ -372,7 +372,7 @@ public class TestCommand extends BuildCommand {
           params.getEnvironment(),
           params.getObjectMapper(),
           params.getClock(),
-          Optional.of(getAdbOptions()),
+          Optional.of(getAdbOptions(params.getBuckConfig())),
           Optional.of(getTargetDeviceOptions()))) {
 
         // Build all of the test rules.

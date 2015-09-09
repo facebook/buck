@@ -18,16 +18,26 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.google.common.base.Joiner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+
 public class InstallCommandOptionsTest {
+
+  @Rule
+  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   private InstallCommand getCommand(String... args) throws CmdLineException {
     InstallCommand command = new InstallCommand();
@@ -35,8 +45,16 @@ public class InstallCommandOptionsTest {
     return command;
   }
 
-  private AdbOptions getAdbOptions(String...args) throws CmdLineException {
-    return getCommand(args).adbOptions();
+  private AdbOptions getAdbOptions(
+      boolean multiInstallModeConfig,
+      String...args) throws CmdLineException, IOException {
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[adb]",
+        "multi_install_mode = " + multiInstallModeConfig));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader);
+    return getCommand(args).adbOptions(config);
   }
 
   private TargetDeviceOptions getTargetDeviceOptions(String... args) throws CmdLineException {
@@ -134,32 +152,41 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testInstallCommandOptionsMultiInstallMode() throws CmdLineException {
+  public void testInstallCommandOptionsMultiInstallMode() throws CmdLineException, IOException {
     // Short form.
-    AdbOptions options = getAdbOptions(AdbCommandLineOptions.MULTI_INSTALL_MODE_SHORT_ARG);
+    AdbOptions options = getAdbOptions(false, AdbCommandLineOptions.MULTI_INSTALL_MODE_SHORT_ARG);
     assertTrue(options.isMultiInstallModeEnabled());
 
     // Long form.
-    options = getAdbOptions(AdbCommandLineOptions.MULTI_INSTALL_MODE_LONG_ARG);
+    options = getAdbOptions(false, AdbCommandLineOptions.MULTI_INSTALL_MODE_LONG_ARG);
     assertTrue(options.isMultiInstallModeEnabled());
 
     // Is off by default.
-    options = getAdbOptions();
+    options = getAdbOptions(false);
     assertFalse(options.isMultiInstallModeEnabled());
   }
 
   @Test
-  public void testInstallCommandOptionsAdbThreads() throws CmdLineException {
+  public void testInstallCommandOptionsAdbThreads() throws CmdLineException, IOException {
     // Short form.
-    AdbOptions options = getAdbOptions(AdbCommandLineOptions.ADB_THREADS_SHORT_ARG, "4");
+    AdbOptions options = getAdbOptions(false, AdbCommandLineOptions.ADB_THREADS_SHORT_ARG, "4");
     assertEquals(4, options.getAdbThreadCount());
 
     // Long form.
-    options = getAdbOptions(AdbCommandLineOptions.ADB_THREADS_LONG_ARG, "4");
+    options = getAdbOptions(false, AdbCommandLineOptions.ADB_THREADS_LONG_ARG, "4");
     assertEquals(4, options.getAdbThreadCount());
 
     // Is zero by default and overridden when creating the thread pool.
-    options = getAdbOptions();
+    options = getAdbOptions(false);
     assertEquals(0, options.getAdbThreadCount());
+  }
+
+  @Test
+  public void testMultiInstallModeFromBuckConfig() throws CmdLineException, IOException {
+    AdbOptions options = getAdbOptions(true);
+    assertTrue(options.isMultiInstallModeEnabled());
+
+    options = getAdbOptions(true, AdbCommandLineOptions.MULTI_INSTALL_MODE_SHORT_ARG);
+    assertTrue(options.isMultiInstallModeEnabled());
   }
 }

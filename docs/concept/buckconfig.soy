@@ -75,12 +75,16 @@ The following sections are recognized by Buck:
 
 {call .section}{param title: 'adb' /}{/call}
 
-This section controls adb restart behavior on errors.
+This section configures adb behavior.
 
 {literal}<pre class="prettyprint lang-ini">
 [adb]
   # This specifies a whether to restart adb on failure or not.
   adb_restart_on_failure = true
+
+  # This specifies whether multi-install mode is enabled or
+  # disabled by default.
+  multi_install_mode = false
 </pre>{/literal}
 
 

@@ -395,6 +395,10 @@ public class BuckConfig {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").or("true"));
   }
 
+  public boolean getMultiInstallMode() {
+    return getBooleanValue("adb", "multi_install_mode", false);
+  }
+
   public boolean getFlushEventsBeforeExit() {
     return getBooleanValue("daemon", "flush_events_before_exit", false);
   }
