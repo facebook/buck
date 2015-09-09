@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class AppleInfoPlistParsingTest {
     Optional<String> bundleID;
     try (InputStream in =
              getClass().getResourceAsStream("testdata/simple_application_bundle/Info.plist")) {
+      Preconditions.checkState(in != null);
       bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(in);
     }
 
@@ -48,6 +50,7 @@ public class AppleInfoPlistParsingTest {
     Optional<String> bundleID;
     try (InputStream in =
              getClass().getResourceAsStream("testdata/ios-project/version.plist")) {
+      Preconditions.checkState(in != null);
       bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(in);
     }
 
