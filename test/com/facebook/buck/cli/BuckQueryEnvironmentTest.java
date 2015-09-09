@@ -30,6 +30,8 @@ import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,6 +47,7 @@ import com.google.devtools.build.lib.query2.engine.QueryException;
 import com.google.devtools.build.lib.query2.engine.QueryExpression;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -53,6 +56,9 @@ import java.util.HashSet;
 import java.util.List;
 
 public class BuckQueryEnvironmentTest {
+
+  @Rule
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private TestConsole console;
   private BuckQueryEnvironment buckQueryEnvironment;
@@ -74,11 +80,13 @@ public class BuckQueryEnvironmentTest {
   @Before
   public void setUp() throws IOException, InterruptedException {
     console = new TestConsole();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "query_command",
+        tmp);
+    workspace.setUp();
     Repository repository = new TestRepositoryBuilder()
-        .setFilesystem(
-            new ProjectFilesystem(TestDataHelper.getTestDataScenario(
-                this,
-                "query_command")))
+        .setFilesystem(new ProjectFilesystem(workspace.getDestPath()))
         .build();
 
     params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(

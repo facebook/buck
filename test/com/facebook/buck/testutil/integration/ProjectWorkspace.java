@@ -69,6 +69,7 @@ import javax.annotation.Nullable;
  * When {@link #setUp()} is invoked, the project files are cloned from a directory of testdata into
  * a tmp directory according to the following rule:
  * <ul>
+ *   <li>Files with the {@code .fixture} extension will be copied and renamed without the extension.
  *   <li>Files with the {@code .expected} extension will not be copied.
  * </ul>
  * After {@link #setUp()} is invoked, the test should invoke Buck in that directory. As this is an
@@ -81,6 +82,7 @@ import javax.annotation.Nullable;
  */
 public class ProjectWorkspace {
 
+  private static final String FIXTURE_SUFFIX = "fixture";
   private static final String EXPECTED_SUFFIX = "expected";
 
   private static final String PATH_TO_BUILD_LOG = "buck-out/bin/build.log";
@@ -90,10 +92,15 @@ public class ProjectWorkspace {
     @Nullable
     public Path apply(Path path) {
       String fileName = path.getFileName().toString();
-      if (fileName.endsWith(EXPECTED_SUFFIX)) {
-        return null;
-      } else {
-        return path;
+      String extension = com.google.common.io.Files.getFileExtension(fileName);
+      switch (extension) {
+        case FIXTURE_SUFFIX:
+          return path.getParent().resolve(
+              com.google.common.io.Files.getNameWithoutExtension(fileName));
+        case EXPECTED_SUFFIX:
+          return null;
+        default:
+          return path;
       }
     }
   };
@@ -125,7 +132,7 @@ public class ProjectWorkspace {
 
 
   /**
-   * This will copy the template directory, renaming files named {@code BUCK.test} to {@code BUCK}
+   * This will copy the template directory, renaming files named {@code foo.fixture} to {@code foo}
    * in the process. Files whose names end in {@code .expected} will not be copied.
    */
   public ProjectWorkspace setUp() throws IOException {
@@ -375,6 +382,10 @@ public class ProjectWorkspace {
         stdout.getContentsAsString(Charsets.UTF_8),
         stderr.getContentsAsString(Charsets.UTF_8),
         capturedEventsListBuilder.build());
+  }
+
+  public Path getDestPath() {
+    return destPath;
   }
 
   public Path getPath(String pathRelativeToProjectRoot) {

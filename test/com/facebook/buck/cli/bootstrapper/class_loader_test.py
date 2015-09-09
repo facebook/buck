@@ -1,10 +1,34 @@
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 
 
 class ClassLoaderTest(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp()
+        template_test_data_directory = os.path.join(
+            'test',
+            'com',
+            'facebook',
+            'buck',
+            'cli',
+            'bootstrapper',
+            'testdata',
+            'old_guava')
+        self.test_data_directory = os.path.join(self.temp_dir, 'old_guava')
+        shutil.copytree(template_test_data_directory, self.test_data_directory)
+        for root, dirs, files in os.walk(self.test_data_directory):
+            for f in files:
+                filename, fileext = os.path.splitext(f)
+                if fileext == '.fixture':
+                    os.rename(os.path.join(root, f), os.path.join(root, filename))
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir)
+
     def test_should_not_pollute_classpath_when_processor_path_is_set(self):
         """
         Tests that annotation processors get their own class path, isolated from Buck's.
@@ -14,17 +38,6 @@ class ClassLoaderTest(unittest.TestCase):
         annotation processor causing it to fail to run and all heck breaking loose."""
         root_directory = os.getcwd()
         buck_path = os.path.join(root_directory, 'bin', 'buck')
-        test_data_directory = os.path.join(
-            root_directory,
-            'test',
-            'com',
-            'facebook',
-            'buck',
-            'cli',
-            'bootstrapper',
-            'testdata',
-            'old_guava')
-
         # Pass thru our environment, except disabling buckd so that we can be sure the right buck
         # is run.
         child_environment = dict(os.environ)
@@ -32,7 +45,7 @@ class ClassLoaderTest(unittest.TestCase):
 
         proc = subprocess.Popen(
             [buck_path, 'build', '//:example'],
-            cwd=test_data_directory,
+            cwd=self.test_data_directory,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=child_environment)
