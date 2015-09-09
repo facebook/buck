@@ -81,7 +81,6 @@ public class ArtifactCacheBuckConfigTest {
             reader,
             projectFilesystem,
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv())),
-        projectFilesystem);
+            ImmutableMap.copyOf(System.getenv())));
   }
 }
