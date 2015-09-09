@@ -544,6 +544,9 @@ def write_file_if_changed(path, content):
     else:
         needs_update = True
     if needs_update:
+        dirname = os.path.dirname(path)
+        if dirname:
+            mkdir_p(dirname)
         out = open(path, 'wb')
         out.write(content)
         MODIFIED_FILES.append(path)
