@@ -12,15 +12,18 @@
 
 {call buck.command}
 {param overview}
+<p>
 Builds and installs the APK for an <code>android_binary</code>
 {sp}target.
-
+</p>
 <p>
 Takes an <a
 href="{ROOT}rule/android_binary.html"><code>android_binary</code></a>,
-builds it, and install it by running <code>adb install -r
-&lt;path_to_the_APK></code>.
-
+an <a href="{ROOT}rule/apk_genrule.html"><code>apk_genrule</code></a> or
+an <a href="{ROOT}rule/android_instrumentation_apk.html"><code>
+android_instrumentation_apk</code></a>, builds it, and installs it by running
+{sp}<code>adb install &lt;path_to_the_APK></code>.
+</p>
 {/param}
 
 {param params}
@@ -39,6 +42,25 @@ builds it, and install it by running <code>adb install -r
   {param desc}
   Launch the <code>.apk</code> with the specified activity after
   installation.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: '-all' /}
+  {param alias: 'x' /}
+  {param nodash: true /}
+  {param desc}
+  Install APK on all connected devices and/or emulators
+  (multi-install mode).
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'adb-threads' /}
+  {param alias: 'T' /}
+  {param desc}
+  Number of threads to use for adb operations.  Defaults to
+  number of connected devices.
   {/param}
 {/call}
 
