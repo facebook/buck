@@ -29,7 +29,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -132,8 +131,7 @@ public class ProvisioningProfileCopyStep implements Step {
   // If multiple valid ones, find the one which matches the most specifically.  I.e.,
   // XXXXXXXXXX.com.example.* will match over XXXXXXXXXX.* for com.example.TestApp
   // TODO(user): Account for differences between development and distribution certificates.
-  @VisibleForTesting
-  static Optional<ProvisioningProfileMetadata> getBestProvisioningProfile(
+  public static Optional<ProvisioningProfileMetadata> getBestProvisioningProfile(
       ImmutableSet<ProvisioningProfileMetadata> profiles,
       String bundleID,
       Optional<String> provisioningProfileUUID,

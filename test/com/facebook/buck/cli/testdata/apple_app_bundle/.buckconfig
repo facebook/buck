@@ -1,2 +1,4 @@
 [cxx]
   default_platform = iphonesimulator-x86_64
+[apple]
+  device_helper_path = iOSConsole/iOSConsole

@@ -24,10 +24,10 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -43,10 +43,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class AppleBundleIntegrationTest {
-
-  private static final int numCodeSigningIdentities =
-      AppleConfig.createCodeSignIdentitiesSupplier(
-        new ProcessExecutor(new TestConsole())).get().size();
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -98,7 +94,7 @@ public class AppleBundleIntegrationTest {
   @Test
   public void simpleApplicationBundleWithCodeSigning() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(numCodeSigningIdentities > 0);
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -123,7 +119,7 @@ public class AppleBundleIntegrationTest {
   public void simpleApplicationBundleWithCodeSigningAndEntitlements()
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(numCodeSigningIdentities > 0);
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

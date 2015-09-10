@@ -17,9 +17,11 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import static org.hamcrest.Matchers.is;
 
+import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -28,11 +30,9 @@ import com.facebook.buck.util.environment.Platform;
 
 import java.io.IOException;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-@Ignore("t8238587: Should be able to use any simulator")
 public class InstallCommandIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -67,6 +67,26 @@ public class InstallCommandIntegrationTest {
         "install",
         "-r",
         "//:DemoApp");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void appleBundleInstallsInDevice() throws IOException, InterruptedException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsBuildAndInstallToDevice());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_app_bundle", tmp);
+    workspace.setUp();
+
+    assumeTrue(FakeAppleDeveloperEnvironment.hasDeviceCurrentlyConnected(workspace.getPath(
+                "iOSConsole/iOSConsole"
+            )));
+
+
+    ProcessResult result = workspace.runBuckCommand(
+        "install",
+        "//:DemoApp#iphoneos-arm64");
     result.assertSuccess();
   }
 }

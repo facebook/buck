@@ -1,0 +1,16 @@
+README for iOSConsole
+=====================
+
+This is a pre-compiled version of iOSConsole, as part of the
+SDMMobileDevice suite, used for end-to-end testing of installing
+bundles onto iOS devices.
+
+(We may eventually include this as source and build it with Xcode
+or Buck, but it would add a few minutes to every build.)
+
+Project URL: https://github.com/ryu2/SDMMobileDevice
+License: BSD
+Upstream Revision: f3b770e81881f89ddc48ea18f0e7c731d7d34484
+Built with Xcode 6.4 (6E35b)
+Built With: "iOSConsole" target in the Xcode IDE with project default settings.
+

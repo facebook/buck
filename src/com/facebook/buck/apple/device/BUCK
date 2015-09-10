@@ -1,0 +1,10 @@
+java_immutables_library(
+    name = 'device',
+    srcs = glob(['*.java']),
+    deps = [
+        '//src/com/facebook/buck/log:api',
+        '//src/com/facebook/buck/util:io',
+        '//third-party/java/guava:guava',
+    ],
+    visibility = ['PUBLIC'],
+)
