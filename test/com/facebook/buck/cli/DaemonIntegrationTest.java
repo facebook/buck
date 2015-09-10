@@ -581,7 +581,8 @@ public class DaemonIntegrationTest {
                 new FakeAndroidDirectoryResolver(
                     Optional.<Path>absent(),
                     Optional.<Path>absent(),
-                    Optional.of("something")))
+                    Optional.of("something"),
+                    Optional.<Path>absent()))
             .setFilesystem(filesystem)
             .build(),
         new FakeClock(0),
@@ -596,7 +597,8 @@ public class DaemonIntegrationTest {
                     new FakeAndroidDirectoryResolver(
                         Optional.<Path>absent(),
                         Optional.<Path>absent(),
-                        Optional.of("different")))
+                        Optional.of("different"),
+                        Optional.<Path>absent()))
                 .setFilesystem(filesystem)
                 .build(),
             new FakeClock(0),

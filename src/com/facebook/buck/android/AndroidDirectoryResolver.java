@@ -47,4 +47,11 @@ public interface AndroidDirectoryResolver {
    * @return The NDK version in use from the directory returned by {@link #findAndroidNdkDir()}.
    */
   Optional<String> getNdkVersion();
+
+  /**
+   * @return {@code Optional.absent()} if the Android SDK is not found or if it does not contain a
+   * maven repository, Otherwise an {@code Optional<Path>} pointing to the Android maven
+   * repository in the Android SDK.
+   */
+  Optional<Path> findMavenRepository();
 }

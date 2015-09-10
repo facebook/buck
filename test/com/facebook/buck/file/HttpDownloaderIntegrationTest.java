@@ -63,7 +63,9 @@ public class HttpDownloaderIntegrationTest {
 
   @Before
   public void createDownloader() throws IOException {
-    downloader = new HttpDownloader(Optional.<Proxy>absent(), ImmutableMap.<String, String>of());
+    downloader = new HttpDownloader(Optional.<Proxy>absent(),
+        Optional.<Path>absent(),
+        ImmutableMap.<String, String>of());
     outputDir = tmp.newFolder().toPath();
   }
 

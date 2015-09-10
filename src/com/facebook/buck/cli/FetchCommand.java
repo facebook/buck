@@ -140,7 +140,9 @@ public class FetchCommand extends BuildCommand {
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
     ImmutableMap<String, String> mavenRepositories = params.getBuckConfig().getMavenRepositories();
-    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), mavenRepositories);
+    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(),
+        params.getAndroidDirectoryResolver().findMavenRepository(),
+        mavenRepositories);
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(
         ImmutableSet.<Description<?>>of(description)

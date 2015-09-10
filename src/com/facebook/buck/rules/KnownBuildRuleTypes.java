@@ -381,7 +381,9 @@ public class KnownBuildRuleTypes {
     boolean downloadAtRuntimeOk = config.getBooleanValue("download", "in_build", false);
     Downloader downloader;
     if (downloadAtRuntimeOk) {
-      downloader = new HttpDownloader(Optional.<Proxy>absent(), mavenRepositories);
+      downloader = new HttpDownloader(Optional.<Proxy>absent(),
+          androidDirectoryResolver.findMavenRepository(),
+          mavenRepositories);
     } else {
       downloader = new ExplodingDownloader();
     }

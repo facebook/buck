@@ -19,7 +19,6 @@ package com.facebook.buck.file;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -93,11 +92,13 @@ public class MavenUrlDecoder {
           version,
           fileExtensionFor(type));
       URI generated = new URI(plainUri);
-      if ("https".equals(generated.getScheme()) || "http".equals(generated.getScheme())) {
+      if ("https".equals(generated.getScheme()) ||
+          "http".equals(generated.getScheme()) ||
+          "file".equals(generated.getScheme())) {
         return generated;
       }
       throw new HumanReadableException(
-          "Can only download maven artifacts over HTTP or HTTPS: %s", generated);
+          "Can only download maven artifacts over HTTP or HTTPS or a file: %s", generated);
     } catch (URISyntaxException e) {
       throw new HumanReadableException("Unable to parse URL: " + uri);
     }

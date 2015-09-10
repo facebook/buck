@@ -68,6 +68,7 @@ public class CommandRunnerParamsForTesting {
     return new CommandRunnerParams(
         console,
         repository,
+        androidDirectoryResolver,
         Main.createAndroidPlatformTargetSupplier(
             androidDirectoryResolver,
             new AndroidBuckConfig(new FakeBuckConfig(), platform),

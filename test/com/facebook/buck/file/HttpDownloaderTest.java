@@ -51,7 +51,9 @@ public class HttpDownloaderTest {
     EasyMock.replay(connection);
 
     Downloader downloader =
-        new HttpDownloader(Optional.<Proxy>absent(), ImmutableMap.<String, String>of()) {
+        new HttpDownloader(Optional.<Proxy>absent(),
+            Optional.<Path>absent(),
+            ImmutableMap.<String, String>of()) {
           @Override
           protected HttpURLConnection createConnection(URI uri) throws IOException {
             return connection;
@@ -71,8 +73,18 @@ public class HttpDownloaderTest {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void shouldThrowIfUrlIsNotHttpOrMaven() throws URISyntaxException, IOException {
     Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(),
+        Optional.<Path>absent(),
         ImmutableMap.<String, String>of());
 
     downloader.fetch(eventBus, new URI("example:foo/bar/baz"), neverUsed);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void shouldThrowIfAndroidAndNotConfigured() throws URISyntaxException, IOException {
+    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(),
+        Optional.<Path>absent(),
+        ImmutableMap.<String, String>of());
+
+    downloader.fetch(eventBus, new URI("android:foo/bar/baz"), neverUsed);
   }
 }

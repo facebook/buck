@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
@@ -44,6 +45,7 @@ class CommandRunnerParams {
   private final Parser parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
+  private final AndroidDirectoryResolver androidDirectoryResolver;
   private final Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier;
   private final Repository repository;
   private final JavaPackageFinder javaPackageFinder;
@@ -52,11 +54,12 @@ class CommandRunnerParams {
   private final Optional<ProcessManager> processManager;
   private final Optional<WebServer> webServer;
   private final BuckConfig buckConfig;
-  private final FileHashCache fileHashCache;
+  private final FileHashCache fileHashCache;;
 
   public CommandRunnerParams(
       Console console,
       Repository repository,
+      AndroidDirectoryResolver androidDirectoryResolver,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       ArtifactCacheFactory artifactCacheFactory,
       BuckEventBus eventBus,
@@ -77,6 +80,7 @@ class CommandRunnerParams {
     this.parser = parser;
     this.platform = platform;
     this.androidPlatformTargetSupplier = androidPlatformTargetSupplier;
+    this.androidDirectoryResolver = androidDirectoryResolver;
     this.environment = environment;
     this.javaPackageFinder = javaPackageFinder;
     this.objectMapper = objectMapper;
@@ -105,6 +109,10 @@ class CommandRunnerParams {
 
   public BuckEventBus getBuckEventBus() {
     return eventBus;
+  }
+
+  public AndroidDirectoryResolver getAndroidDirectoryResolver() {
+    return androidDirectoryResolver;
   }
 
   public Supplier<AndroidPlatformTarget> getAndroidPlatformTargetSupplier() {
