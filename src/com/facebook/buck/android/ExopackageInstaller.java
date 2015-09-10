@@ -698,10 +698,10 @@ public class ExopackageInstaller {
     ImmutableMap.Builder<String, Path> filteredLibraries = ImmutableMap.builder();
     for (Map.Entry<String, Path> entry : allLibraries.entries()) {
       Path relativePath = nativeLibsDir.relativize(entry.getValue());
-      // relativePath is of the form lib/x86/foo.so, or assetLibs/x86/foo.so etc.
+      // relativePath is of the form libs/x86/foo.so, or assetLibs/x86/foo.so etc.
       Preconditions.checkState(relativePath.getNameCount() == 3);
       Preconditions.checkState(
-          relativePath.getName(0).toString().equals("lib") ||
+          relativePath.getName(0).toString().equals("libs") ||
               relativePath.getName(0).toString().equals("assetLibs"));
       String libAbi = relativePath.getParent().getFileName().toString();
       String libName = relativePath.getFileName().toString();

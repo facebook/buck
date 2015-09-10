@@ -172,11 +172,11 @@ public class ExopackageInstallerTest {
   public void testFilterLibrariesForAbi() {
     Path libsDir = Paths.get("example");
     ImmutableMultimap<String, Path> allLibs = ImmutableMultimap.of(
-        Strings.repeat("a", 40), libsDir.resolve("lib/armeabi-v7a/libmy1.so"),
-        Strings.repeat("b", 40), libsDir.resolve("lib/armeabi-v7a/libmy2.so"),
-        Strings.repeat("c", 40), libsDir.resolve("lib/armeabi/libmy2.so"),
-        Strings.repeat("d", 40), libsDir.resolve("lib/armeabi/libmy3.so"),
-        Strings.repeat("e", 40), libsDir.resolve("lib/x86/libmy1.so"));
+        Strings.repeat("a", 40), libsDir.resolve("libs/armeabi-v7a/libmy1.so"),
+        Strings.repeat("b", 40), libsDir.resolve("libs/armeabi-v7a/libmy2.so"),
+        Strings.repeat("c", 40), libsDir.resolve("libs/armeabi/libmy2.so"),
+        Strings.repeat("d", 40), libsDir.resolve("libs/armeabi/libmy3.so"),
+        Strings.repeat("e", 40), libsDir.resolve("libs/x86/libmy1.so"));
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("a", 40), Strings.repeat("b", 40)),
