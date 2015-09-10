@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
@@ -50,7 +51,7 @@ public class HttpDownloaderTest {
     EasyMock.replay(connection);
 
     Downloader downloader =
-        new HttpDownloader(Optional.<Proxy>absent(), Optional.<String>absent()) {
+        new HttpDownloader(Optional.<Proxy>absent(), ImmutableMap.<String, String>of()) {
           @Override
           protected HttpURLConnection createConnection(URI uri) throws IOException {
             return connection;
@@ -69,7 +70,8 @@ public class HttpDownloaderTest {
   @Test(expected = HumanReadableException.class)
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void shouldThrowIfUrlIsNotHttpOrMaven() throws URISyntaxException, IOException {
-    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), Optional.<String>absent());
+    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(),
+        ImmutableMap.<String, String>of());
 
     downloader.fetch(eventBus, new URI("example:foo/bar/baz"), neverUsed);
   }

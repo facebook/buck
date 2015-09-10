@@ -18,9 +18,11 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -51,18 +53,15 @@ public class MavenUrlDecoder {
     // Utility class
   }
 
-  public static URI toHttpUrl(Optional<String> mavenRepo, URI uri) {
-    Preconditions.checkArgument("mvn".equals(uri.getScheme()), "URI must start with mvn: " + uri);
+  public static URI toHttpUrl(ImmutableMap<String, String> mavenRepos, URI uri) {
     Preconditions.checkArgument(
-        mavenRepo.isPresent(),
-        "You must specify the maven repo in the \"download->maven_repo\" section of your " +
+        !mavenRepos.isEmpty(),
+        "You must specify at least one maven repo in the \"repositories\" section of your " +
             ".buckconfig");
-
-    String repo = mavenRepo.get();
-
-    if (!repo.endsWith("/")) {
-      repo += "/";
-    }
+    Preconditions.checkArgument(mavenRepos.containsKey(uri.getScheme()),
+        String.format("URI must start with a maven repository configured in the \"repositories\" " +
+            "section of your .buckconfig\n" +
+            "Found %s, Allowed values are %s", uri, Joiner.on(", ").join(mavenRepos.keySet())));
 
     Matcher matcher = URL_PATTERN.matcher(uri.getSchemeSpecificPart());
 
@@ -72,7 +71,7 @@ public class MavenUrlDecoder {
 
     String host = matcher.group(2);
     if (Strings.isNullOrEmpty(host)) {
-      host = repo;
+      host = mavenRepos.get(uri.getScheme());
     }
     String group = matcher.group(3).replace('.', '/');
     String artifactId = matcher.group(4);

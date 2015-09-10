@@ -19,6 +19,7 @@ package com.facebook.buck.file;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -38,17 +39,17 @@ import java.util.concurrent.TimeUnit;
 public class HttpDownloader implements Downloader {
   public static final int PROGRESS_REPORT_EVERY_N_BYTES = 1000;
   private final Optional<Proxy> proxy;
-  private final Optional<String> mavenRepo;
+  private final ImmutableMap<String, String> mavenRepos;
 
-  public HttpDownloader(Optional<Proxy> proxy, Optional<String> mavenRepo) {
+  public HttpDownloader(Optional<Proxy> proxy, ImmutableMap<String, String> mavenRepos) {
     this.proxy = proxy;
-    this.mavenRepo = mavenRepo;
+    this.mavenRepos = mavenRepos;
   }
 
   @Override
   public void fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
-    if ("mvn".equals(uri.getScheme())) {
-      uri = MavenUrlDecoder.toHttpUrl(mavenRepo, uri);
+    if (mavenRepos.containsKey(uri.getScheme())) {
+      uri = MavenUrlDecoder.toHttpUrl(mavenRepos, uri);
     }
 
     DownloadEvent.Started started = DownloadEvent.started(uri);

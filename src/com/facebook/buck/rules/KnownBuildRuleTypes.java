@@ -377,11 +377,11 @@ public class KnownBuildRuleTypes {
     Optional<Long> testRuleTimeoutMs = config.getLong("test", "rule_timeout");
 
     // Default maven repo, if set
-    Optional<String> defaultMavenRepo = config.getValue("download", "maven_repo");
+    ImmutableMap<String, String> mavenRepositories = config.getMavenRepositories();
     boolean downloadAtRuntimeOk = config.getBooleanValue("download", "in_build", false);
     Downloader downloader;
     if (downloadAtRuntimeOk) {
-      downloader = new HttpDownloader(Optional.<Proxy>absent(), defaultMavenRepo);
+      downloader = new HttpDownloader(Optional.<Proxy>absent(), mavenRepositories);
     } else {
       downloader = new ExplodingDownloader();
     }

@@ -38,6 +38,7 @@ import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -138,8 +139,8 @@ public class FetchCommand extends BuildCommand {
   }
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
-    Optional<String> defaultMavenRepo = params.getBuckConfig().getValue("download", "maven_repo");
-    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), defaultMavenRepo);
+    ImmutableMap<String, String> mavenRepositories = params.getBuckConfig().getMavenRepositories();
+    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), mavenRepositories);
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(
         ImmutableSet.<Description<?>>of(description)
