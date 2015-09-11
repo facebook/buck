@@ -19,6 +19,7 @@ package com.facebook.buck.dalvik;
 import com.facebook.buck.java.classes.FileLike;
 import com.google.common.collect.MapMaker;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
@@ -46,8 +47,8 @@ class DalvikStatsCache {
       return stats;
     }
 
-    try {
-      stats = DalvikStatsTool.getEstimate(entry.getInput());
+    try (InputStream is = entry.getInput()) {
+      stats = DalvikStatsTool.getEstimate(is);
       cache.put(entry, stats);
       return stats;
     } catch (IOException e) {

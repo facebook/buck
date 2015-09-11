@@ -28,6 +28,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,8 +87,9 @@ public class Unzip {
 
           filesWritten.add(target);
           // Write file
-          try (OutputStream out = filesystem.newFileOutputStream(target)) {
-            ByteStreams.copy(zip.getInputStream(entry), out);
+          try (OutputStream out = filesystem.newFileOutputStream(target);
+               InputStream is = zip.getInputStream(entry)) {
+            ByteStreams.copy(is, out);
           }
 
           // TODO(simons): Implement what the comment below says we should do.

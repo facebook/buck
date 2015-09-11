@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -60,7 +61,9 @@ class ZipWalker implements Walker {
     if (!names.isEmpty()) {
       try (ZipFile zip = new ZipFile(zipFile.toFile())) {
         for (String name : names) {
-          onFile.visit(Paths.get(name), zip.getInputStream(zip.getEntry(name)));
+          try (InputStream is = zip.getInputStream(zip.getEntry(name))) {
+            onFile.visit(Paths.get(name), is);
+          }
         }
       }
     }

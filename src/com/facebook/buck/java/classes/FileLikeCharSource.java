@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.io.CharSource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
@@ -33,6 +34,13 @@ public class FileLikeCharSource extends CharSource {
 
   @Override
   public Reader openStream() throws IOException {
-    return new InputStreamReader(fileLike.getInput(), UTF_8);
+    final InputStream is = fileLike.getInput();
+    return new InputStreamReader(is, UTF_8) {
+      @Override
+      public void close() throws IOException {
+        super.close();
+        is.close();
+      }
+    };
   }
 }

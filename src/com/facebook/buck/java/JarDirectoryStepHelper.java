@@ -218,8 +218,9 @@ public class JarDirectoryStepHelper {
         }
 
         jar.putNextEntry(newEntry);
-        InputStream inputStream = zip.getInputStream(entry);
-        ByteStreams.copy(inputStream, jar);
+        try (InputStream inputStream = zip.getInputStream(entry)) {
+          ByteStreams.copy(inputStream, jar);
+        }
         jar.closeEntry();
       }
     } catch (ZipException e) {

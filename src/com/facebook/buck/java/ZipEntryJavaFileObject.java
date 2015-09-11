@@ -71,8 +71,9 @@ class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
       return contents;
     }
 
-    try (InputStream inputStream = zipFile.getInputStream(zipEntry)) {
-      contents = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+    try (InputStream inputStream = zipFile.getInputStream(zipEntry);
+         InputStreamReader isr = new InputStreamReader(inputStream, Charsets.UTF_8)) {
+      contents = CharStreams.toString(isr);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
