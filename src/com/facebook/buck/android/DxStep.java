@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -183,7 +184,8 @@ public class DxStep extends ShellStep {
 
     // The first arguments should be ".../dx --dex" ("...\dx.bat --dex on Windows).  Strip them off
     // because we bypass the dispatcher and go straight to the dexer.
-    Preconditions.checkState(argv.get(0).endsWith("/dx") || argv.get(0).endsWith("\\dx.bat"));
+    Preconditions.checkState(
+        argv.get(0).endsWith(File.separator + "dx") || argv.get(0).endsWith("\\dx.bat"));
     Preconditions.checkState(argv.get(1).equals("--dex"));
     ImmutableList<String> args = argv.subList(2, argv.size());
 
