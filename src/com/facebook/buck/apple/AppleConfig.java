@@ -160,7 +160,7 @@ public class AppleConfig {
         if (allValidIdentities.isEmpty()) {
           LOG.warn("No valid code signing identities found.  Device build/install won't work.");
         } else if (allValidIdentities.size() > 1) {
-          LOG.warn(
+          LOG.info(
               "More than 1 valid identity found.  This could potentially  cause the wrong one to" +
                   " be used unless explicitly specified via CODE_SIGN_IDENTITY.");
         }

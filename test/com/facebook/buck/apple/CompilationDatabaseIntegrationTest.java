@@ -216,8 +216,13 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-Wno-deprecated");
     commandArgs.add("-Wno-conversion");
 
+    commandArgs.add("-isysroot");
+    commandArgs.add(sdkRoot);
+
     commandArgs.add("-arch");
     commandArgs.add("x86_64");
+
+    commandArgs.add("'-mios-simulator-version-min=8.0'");
 
     for (String include : includes) {
       commandArgs.add("-I");

@@ -242,8 +242,16 @@ public class AppleBundleIntegrationTest {
         "-o",
         binaryPath.toString() + ".test.dSYM",
         binaryPath.toString());
-    assertThat(result.getStdout().isPresent(), is(true));
-    assertThat(result.getStdout().get(), containsString("warning: no debug symbols in executable"));
+
+    String dsymutilOutput = "";
+    if (result.getStderr().isPresent()) {
+      dsymutilOutput = result.getStderr().get();
+    }
+    if (dsymutilOutput.isEmpty()) {
+      assertThat(result.getStdout().isPresent(), is(true));
+      dsymutilOutput = result.getStdout().get();
+    }
+    assertThat(dsymutilOutput, containsString("warning: no debug symbols in executable"));
   }
 
   @Test

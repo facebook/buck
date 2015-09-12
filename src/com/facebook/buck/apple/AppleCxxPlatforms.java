@@ -118,9 +118,11 @@ public class AppleCxxPlatforms {
         break;
     }
 
+    // Some flags are common to both asm and C.
+    ImmutableList<String> asflags = cflagsBuilder.build();
+
     ImmutableList<String> ldflags =
         ImmutableList.copyOf(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
-    ImmutableList<String> asflags = ImmutableList.of("-arch", targetArchitecture);
 
     ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
     versionsBuilder.add(targetSdk.getVersion());

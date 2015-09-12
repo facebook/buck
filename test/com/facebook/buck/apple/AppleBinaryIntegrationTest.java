@@ -44,6 +44,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryBuildsSomething() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_builds_something", tmp);
     workspace.setUp();
