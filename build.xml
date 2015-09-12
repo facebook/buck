@@ -101,6 +101,7 @@
     <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="immutables/value-2.0.21.jar" />
     <include name="infer-annotations/infer-annotations-1.5.jar" />
+    <include name="nuprocess/nuprocess-1.0.4-SNAPSHOT.jar" />
     <include name="jacoco/org.jacoco.core-0.7.5.201505241946.jar" />
     <include name="jacoco/org.jacoco.report-0.7.5.201505241946.jar" />
     <include name="jetty/jetty-all-9.2.10.v20150310.jar" />
