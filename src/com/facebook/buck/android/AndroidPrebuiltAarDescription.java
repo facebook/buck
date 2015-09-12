@@ -84,14 +84,15 @@ public class AndroidPrebuiltAarDescription
     AndroidPrebuiltAarGraphEnhancer.UnzipAar unzipAar =
         AndroidPrebuiltAarGraphEnhancer.enhance(params, args.aar, buildRuleResolver);
 
+    Iterable<AndroidPrebuiltAar> aar_deps = Iterables.filter(
+        buildRuleResolver.getAllRules(args.deps.get()),
+        AndroidPrebuiltAar.class);
     Iterable<PrebuiltJar> javaDeps = Iterables.concat(
         Iterables.filter(
             buildRuleResolver.getAllRules(args.deps.get()),
             PrebuiltJar.class),
         Iterables.transform(
-            Iterables.filter(
-                buildRuleResolver.getAllRules(args.deps.get()),
-                AndroidPrebuiltAar.class),
+            aar_deps,
             new Function<AndroidPrebuiltAar, PrebuiltJar>() {
               @Override
               public PrebuiltJar apply(AndroidPrebuiltAar input) {
@@ -106,7 +107,7 @@ public class AndroidPrebuiltAarDescription
             pathResolver,
             ImmutableSortedSet.<BuildRule>copyOf(javaDeps)));
     AndroidResource androidResource = buildRuleResolver.addToIndex(
-        createAndroidResource(unzipAar, params, pathResolver));
+        createAndroidResource(unzipAar, params, pathResolver, aar_deps));
     return buildRuleResolver.addToIndex(new AndroidPrebuiltAar(
         /* androidLibraryParams */ params.copyWithDeps(
             /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(
@@ -154,18 +155,19 @@ public class AndroidPrebuiltAarDescription
   private AndroidResource createAndroidResource(
       AndroidPrebuiltAarGraphEnhancer.UnzipAar unzipAar,
       BuildRuleParams params,
-      SourcePathResolver resolver) {
+      SourcePathResolver resolver,
+      Iterable<AndroidPrebuiltAar> aar_deps) {
     BuildRuleParams buildRuleParams = params.copyWithChanges(
         /* buildTarget */ BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().checkUnflavored(),
             ImmutableFlavor.of("aar_android_resource")),
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>copyOf(aar_deps)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)));
 
     return new AndroidResource(
         /* buildRuleParams */ buildRuleParams,
         /* resolver */ resolver,
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* deps */ ImmutableSortedSet.<BuildRule>copyOf(aar_deps),
         /* res */ new BuildTargetSourcePath(
             unzipAar.getBuildTarget(),
             unzipAar.getResDirectory()),
