@@ -10,15 +10,21 @@
     {/param}
     {param content}
 
-{call buck.platformWarning /}
-
-Buck requires that the following tools are already installed:
+Buck requires that the following tools are already installed in order to get and build Buck:
 <ul>
-  <li>Oracle JDK 7
-  <li>Ant 1.8
-  <li>Python 2.6
-  <li>Git
-  <li>Android SDK
+  <li>
+    <a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html"
+      >Oracle JDK 7</a>
+  </li>
+  <li>
+    <a href="http://ant.apache.org/">Apache Ant 1.8 (or newer)</a>
+  </li>
+  <li>
+    <a href="https://www.python.org/downloads/">Python 2.6 or 2.7</a>
+  </li>
+  <li>
+    <a href="http://git-scm.com/download">Git</a>
+  </li>
 </ul>
 
 Once you have the above tools installed, you can install Buck as follows:
@@ -33,78 +39,48 @@ usage:
   buck command --help
   buck command [command-options]
 available commands:
-  audit      lists the inputs for the specified target
-  build      builds the specified target
-  clean      deletes any generated files
-  install    builds and installs an APK
-  project    generates project configuration files for an IDE
-  query      provides facilities to query information about the target nodes graph
-  targets    prints the list of buildable targets
-  test       builds and runs the tests for the specified target
-  uninstall  uninstalls an APK
+  audit       lists the inputs for the specified target
+  build       builds the specified target
+  clean       deletes any generated files
+  fetch       downloads remote resources to your local machine
+  install     builds and installs an application
+  project     generates project configuration files for an IDE
+  query       provides facilities to query information about the target nodes graph
+  quickstart  generates a default project directory
+  server      query and control the http server
+  targets     prints the list of buildable targets
+  test        builds and runs the tests for the specified target
+  uninstall   uninstalls an APK
 options:
  --help         : Shows this screen and exits.
  --version (-V) : Show version number.
 {/literal}</pre>
 
-Because you will likely be running <code>./bin/buck</code> often, you should
-add it to your <code>$PATH</code> so that you can simply
-run <code>buck</code> from the command line. One of the easiest ways to do this
-is to create a symlink to Buck from a directory that is likely already on
-your <code>$PATH</code>, such as <code>/usr/bin/</code>:
-
-<pre>sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck</pre>
-
-To verify that this worked, run <code>which buck</code> to confirm
-that it maps to <code>/usr/bin/buck</code>.
+<p>
+  Because you will likely be running <code>./bin/buck</code> often, you should add it to your path
+  so that you can simply run <code>buck</code> from the command line.
+</p>
 
 <h2 id="install-watchman">Installing Watchman</h2>
 
-If you have <code>watchman</code> available, Buck will use <a href="{ROOT}command/buckd.html">a
-daemon</a> which will prevent Buck from parsing all of your <code>BUCK</code> files every time and
-cache some other things as well.  You'll want to follow the
-<a href="https://facebook.github.io/watchman/docs/install.html">installation instructions</a> for
-{sp}<code>watchman</code>.
+<p>
+  If you have <code>watchman</code> available, Buck will use <a href="{ROOT}command/buckd.html">a
+  daemon</a> which will prevent Buck from parsing all of your
+  {sp}{call buck.concept_link}{param page: 'build_file' /}{param name: 'build files' /}{/call} every
+  time and cache some other things as well.  You'll want to follow the
+  {sp}<a href="https://facebook.github.io/watchman/docs/install.html">installation instructions</a>
+  {sp}for <code>watchman</code>.  It is strongly recommended that you install Watchman.
+</p>
 
-<h2 id="locate-android-sdk">Tell Buck where to find your Android SDK and NDK</h2>
+<h2 id="locate-android-sdk">Android SDK and NDK</h2>
 
-Assuming you are using Buck to build Android code, you need to tell Buck where to find your Android
-SDK (and Android NDK, if you are building native code). You have two options:
-
-<h3>Create a local.properties File</h3>
-
-The preferred option is to create a <code>local.properties</code> file in the root of your project.
-It should define <code>sdk.dir</code> to identify the path to your Android SDK
-and <code>ndk.dir</code> to identify the path to your Android NDK.
-Be sure to specify an absolute path.
-
-// This is not actually Python code, but lang-py results in the desired effect.
-<pre class="prettyprint lang-py">
-sdk.dir=/home/username/android-sdk-linux<br>
-{\n}
-# This is necessary only if you are building native code<br>
-# using build rules such as ndk_library().<br>
-ndk.dir=/home/username/android-ndk-r8b
-</pre>
-
-<h3>Define environment variables</h3>
-
-If Buck cannot find the necessary paths in a <code>local.properties</code> file, then it will fall
-back on environment variables. The location of the Android SDK can be specified by either an
-{sp}<code>ANDROID_SDK</code> or <code>ANDROID_HOME</code> environment variable. (If both are
-specified, then <code>ANDROID_SDK</code> takes precedence.)
-The location of the Android NDK can be specified by an <code>ANDROID_NDK</code> environment
-variable.
-
-<pre>
-export ANDROID_SDK=/home/username/android-sdk-linux<br>
-export ANDROID_HOME=/home/username/android-sdk-linux<br>
-export ANDROID_NDK=/home/username/android-ndk-r8b
-</pre>
-
-If you choose to go this route, you likely want to add these definitions to your
-{sp}<code>~/.bash_profile</code> on OS X or <code>~/.bashrc</code> on Linux.
-
+<p>
+  If you plan to use Buck to build Android code, you will need to tell Buck where to find our SDK
+  and NDK.  Buck will look at the value of the <code>ANDROID_HOME</code> environment variable to
+  locate the SDK files on your system.  Buck will look at <code>ANDROID_NDK</code> to find a
+  specific version of the NDK, and <code>ANDROID_NDK_REPOSITORY</code> to find an appropriate NDK
+  from a directory containing multiple NDK versions.
+</p>
     {/param}
   {/call}
 {/template}
