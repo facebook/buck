@@ -88,11 +88,28 @@ public class QueryCommand extends AbstractCommand {
     Set<QueryEnvironment.Setting> settings = new HashSet<>();
     BuckQueryEnvironment env = new BuckQueryEnvironment(params, settings, getEnableProfiling());
 
-    String queryFormat = arguments.remove(0);
-    if (queryFormat.contains("%s")) {
-      return runMultipleQuery(params, env, queryFormat, arguments, shouldGenerateJsonOutput());
-    } else {
-      return runSingleQuery(params, env, queryFormat);
+    try {
+      String queryFormat = arguments.remove(0);
+      if (queryFormat.contains("%s")) {
+        return runMultipleQuery(params, env, queryFormat, arguments, shouldGenerateJsonOutput());
+      } else {
+        return runSingleQuery(params, env, queryFormat);
+      }
+    } catch (RuntimeException e) {
+      if (e.getCause() instanceof IOException) {
+        throw (IOException) e.getCause();
+      }
+      if (e.getCause() instanceof QueryException) {
+        params.getConsole().printBuildFailureWithoutStacktrace(e);
+        return 1;
+      }
+      throw e;
+    } catch (QueryException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        throw (InterruptedException) e.getCause();
+      }
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      return 1;
     }
   }
 
@@ -106,57 +123,41 @@ public class QueryCommand extends AbstractCommand {
       String queryFormat,
       List<String> inputsFormattedAsBuildTargets,
       boolean generateJsonOutput)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
       params.getConsole().printBuildFailure(
           "Specify one or more input targets after the query expression format");
       return 1;
     }
 
-    try {
-      TreeMultimap<String, QueryTarget> queryResultMap = TreeMultimap.create();
+    TreeMultimap<String, QueryTarget> queryResultMap = TreeMultimap.create();
 
-      for (String input : inputsFormattedAsBuildTargets) {
-        String query = queryFormat.replace("%s", input);
-        Set<QueryTarget> queryResult = env.evaluateQuery(query);
-        queryResultMap.putAll(input, queryResult);
-      }
+    for (String input : inputsFormattedAsBuildTargets) {
+      String query = queryFormat.replace("%s", input);
+      Set<QueryTarget> queryResult = env.evaluateQuery(query);
+      queryResultMap.putAll(input, queryResult);
+    }
 
-      LOG.debug("Printing out the following targets: " + queryResultMap);
-      if (generateJsonOutput) {
-        CommandHelper.printJSON(params, queryResultMap);
-      } else {
-        CommandHelper.printToConsole(params, queryResultMap);
-      }
-    } catch (QueryException e) {
-      if (e.getCause() instanceof InterruptedException) {
-        throw (InterruptedException) e.getCause();
-      }
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
-      return 1;
+    LOG.debug("Printing out the following targets: " + queryResultMap);
+    if (generateJsonOutput) {
+      CommandHelper.printJSON(params, queryResultMap);
+    } else {
+      CommandHelper.printToConsole(params, queryResultMap);
     }
     return 0;
   }
 
   int runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
-      throws IOException, InterruptedException {
-    try {
-      Set<QueryTarget> queryResult = env.evaluateQuery(query);
+      throws IOException, InterruptedException, QueryException {
+    Set<QueryTarget> queryResult = env.evaluateQuery(query);
 
-      LOG.debug("Printing out the following targets: " + queryResult);
-      if (shouldOutputAttributes()) {
-        collectAndPrintAttributes(params, env, queryResult);
-      } else if (shouldGenerateJsonOutput()) {
-        CommandHelper.printJSON(params, queryResult);
-      } else {
-        CommandHelper.printToConsole(params, queryResult);
-      }
-    } catch (QueryException e) {
-      if (e.getCause() instanceof InterruptedException) {
-        throw (InterruptedException) e.getCause();
-      }
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
-      return 1;
+    LOG.debug("Printing out the following targets: " + queryResult);
+    if (shouldOutputAttributes()) {
+      collectAndPrintAttributes(params, env, queryResult);
+    } else if (shouldGenerateJsonOutput()) {
+      CommandHelper.printJSON(params, queryResult);
+    } else {
+      CommandHelper.printToConsole(params, queryResult);
     }
     return 0;
   }
@@ -165,7 +166,7 @@ public class QueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult)
-      throws InterruptedException, IOException {
+      throws InterruptedException, IOException, QueryException {
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     SortedMap<String, SortedMap<String, Object>> result = Maps.newTreeMap();
     for (QueryTarget target : queryResult) {

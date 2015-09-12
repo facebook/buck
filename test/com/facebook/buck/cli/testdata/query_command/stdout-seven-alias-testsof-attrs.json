@@ -1,0 +1,10 @@
+{
+  "//example/app:seven-tests" : {
+    "buck.type" : "apple_test",
+    "name" : "seven-tests"
+  },
+  "//other:eight-tests" : {
+    "buck.type" : "apple_test",
+    "name" : "eight-tests"
+  }
+}

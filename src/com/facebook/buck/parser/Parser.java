@@ -416,6 +416,37 @@ public class Parser {
         enableProfiling).getSecond();
   }
 
+  /**
+   * Finds the target node associated with the given build target.
+   * Parses the BUCK file associated with the build target if it was not parsed before (thus not
+   * being cached).
+   *
+   * @return the target node associated with the given build target
+   */
+  public TargetNode<?> getOrLoadTargetNode(
+      BuildTarget buildTarget,
+      BuckEventBus eventBus,
+      Console console,
+      ImmutableMap<String, String> environment,
+      boolean enableProfiling)
+      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+    Path buildFilePath;
+    try {
+      buildFilePath = repository.getAbsolutePathToBuildFile(buildTarget);
+    } catch (Repository.MissingBuildFileException e) {
+      throw new HumanReadableException(e);
+    }
+    if (!state.isParsed(buildFilePath)) {
+      ProjectBuildFileParser buildFileParser = createBuildFileParser(
+          console,
+          environment,
+          eventBus);
+      buildFileParser.setEnableProfiling(enableProfiling);
+      parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFilePath));
+    }
+    return Preconditions.checkNotNull(getTargetNode(buildTarget));
+  }
+
   @Nullable
   public synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget)
       throws IOException, InterruptedException {

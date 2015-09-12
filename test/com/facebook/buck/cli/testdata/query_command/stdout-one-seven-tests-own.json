@@ -3,6 +3,7 @@
     "//example:one-tests"
   ],
   "example/app/7.txt": [
-    "//example/app:seven-tests"
+    "//example/app:seven-tests",
+    "//other:eight-tests"
   ]
 }

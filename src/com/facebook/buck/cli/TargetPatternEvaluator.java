@@ -69,8 +69,10 @@ public class TargetPatternEvaluator {
       return targets;
     }
     // Check if this is an alias.
-    targets = resolveAlias(pattern);
-    if (targets == null) {
+    BuildTarget alias = params.getBuckConfig().getBuildTargetForAlias(pattern).getFirst();
+    if (alias != null) {
+      targets = resolveBuildTargetPattern(alias.getFullyQualifiedName());
+    } else {
       // Check if the pattern corresponds to a build target or a path.
       if (pattern.startsWith("//") || pattern.startsWith(":") || pattern.startsWith("@")) {
         targets = resolveBuildTargetPattern(pattern);
@@ -80,14 +82,6 @@ public class TargetPatternEvaluator {
     }
     resolvedTargets.put(pattern, targets);
     return targets;
-  }
-
-  ImmutableSet<QueryTarget> resolveAlias(String pattern) {
-    BuildTarget buildTarget = params.getBuckConfig().getBuildTargetForAlias(pattern).getFirst();
-    if (buildTarget != null) {
-      return ImmutableSet.of((QueryTarget) QueryBuildTarget.of(buildTarget));
-    }
-    return null;
   }
 
   ImmutableSet<QueryTarget> resolveFilePattern(String pattern) throws IOException {

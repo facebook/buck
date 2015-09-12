@@ -17,8 +17,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.Argument;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.ArgumentType;
@@ -39,6 +38,10 @@ import java.util.Set;
  * <pre>expr ::= TESTSOF '(' expr ')'</pre>
  */
 public class QueryTestsOfFunction implements QueryFunction {
+
+  private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
+      ImmutableList.of(ArgumentType.EXPRESSION);
+
   public QueryTestsOfFunction() {
   }
 
@@ -53,8 +56,8 @@ public class QueryTestsOfFunction implements QueryFunction {
   }
 
   @Override
-  public List<ArgumentType> getArgumentTypes() {
-    return Lists.newArrayList(ArgumentType.EXPRESSION);
+  public ImmutableList<ArgumentType> getArgumentTypes() {
+    return ARGUMENT_TYPES;
   }
 
   @SuppressWarnings("unchecked")
@@ -68,11 +71,9 @@ public class QueryTestsOfFunction implements QueryFunction {
     }
     BuckQueryEnvironment buckEnv = (BuckQueryEnvironment) env;
     Set<T> targets = args.get(0).getExpression().eval(env);
-    env.buildTransitiveClosure(expression, targets, Integer.MAX_VALUE);
-
     Set<T> tests = new LinkedHashSet<>();
     for (T target : targets) {
-      TargetNode<?> node = Preconditions.checkNotNull(buckEnv.getNode((QueryTarget) target));
+      TargetNode<?> node = buckEnv.getNode((QueryTarget) target);
       tests.addAll(
           (Collection<T>) buckEnv.getTargetsFromBuildTargetsContainer(
               TargetNodes.getTestTargetsForNode(node)));

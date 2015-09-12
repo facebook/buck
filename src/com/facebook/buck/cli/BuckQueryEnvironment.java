@@ -128,12 +128,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   public ImmutableSet<QueryTarget> getTargetsMatchingPattern(QueryExpression owner, String pattern)
       throws QueryException {
     try {
-      ImmutableSet<QueryTarget> targets = targetPatternEvaluator.resolveTargetPattern(pattern);
-
-      // Update the target nodes graph to include the resolved build targets.
-      // This should be done incrementally but the TargetGraph is immutable.
-      updateTargetGraph(targets);
-      return targets;
+      return targetPatternEvaluator.resolveTargetPattern(pattern);
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error in resolving targets matching " + pattern);
     } catch (InterruptedException e) {
@@ -149,10 +144,18 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return target;
   }
 
-  @Nullable
-  TargetNode<?> getNode(QueryTarget target) {
+  TargetNode<?> getNode(QueryTarget target) throws QueryException, InterruptedException {
     Preconditions.checkState(target instanceof QueryBuildTarget);
-    return graph.get(((QueryBuildTarget) target).getBuildTarget());
+    try {
+      return params.getParser().getOrLoadTargetNode(
+          ((QueryBuildTarget) target).getBuildTarget(),
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
+          enableProfiling);
+    } catch (BuildTargetException | BuildFileParseException | IOException e) {
+      throw new QueryException("Error getting target node for " + target + "\n" + e.getMessage());
+    }
   }
 
   private QueryTarget getOrCreateQueryBuildTarget(BuildTarget buildTarget) {
@@ -185,12 +188,15 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   @Override
   public Collection<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) {
     Set<QueryTarget> result = new LinkedHashSet<>();
-    for (QueryTarget target : targets) {
-      Preconditions.checkState(target instanceof AbstractQueryBuildTarget);
-      TargetNode<?> node = getNode(target);
-      if (node != null) {
+    try {
+      for (QueryTarget target : targets) {
+        Preconditions.checkState(target instanceof AbstractQueryBuildTarget);
+        TargetNode<?> node = getNode(target);
         result.addAll(getTargetsFromBuildTargetsContainer(graph.getOutgoingNodesFor(node)));
       }
+    } catch (QueryException | InterruptedException e) {
+      // Can't add exceptions to inherited method signature from Bazel.
+      throw new RuntimeException(e);
     }
     return result;
   }
@@ -198,11 +204,14 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   @Override
   public Collection<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) {
     Set<QueryTarget> result = new LinkedHashSet<>();
-    for (QueryTarget target : targets) {
-      TargetNode<?> node = getNode(target);
-      if (node != null) {
+    try {
+      for (QueryTarget target : targets) {
+        TargetNode<?> node = getNode(target);
         result.addAll(getTargetsFromBuildTargetsContainer(graph.getIncomingNodesFor(node)));
       }
+    } catch (QueryException | InterruptedException e) {
+      // Can't add exceptions to inherited method signature from Bazel.
+      throw new RuntimeException(e);
     }
     return result;
   }
@@ -210,8 +219,13 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   @Override
   public ImmutableSet<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) {
     Set<TargetNode<?>> nodes = new LinkedHashSet<>();
-    for (QueryTarget target : targets) {
-      nodes.add(Preconditions.checkNotNull(getNode(target)));
+    try {
+      for (QueryTarget target : targets) {
+        nodes.add(getNode(target));
+      }
+    } catch (QueryException | InterruptedException e) {
+      // Can't add exceptions to inherited method signature from Bazel.
+      throw new RuntimeException(e);
     }
     // Reusing the existing getSubgraph() for simplicity. It builds the graph when we only need the
     // nodes. The impact of creating the edges in terms of time and space should be minimal.
@@ -299,14 +313,13 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     );
   }
 
-  public String getTargetKind(QueryTarget target) {
-    return Preconditions.checkNotNull(getNode(target)).getType().getName();
+  public String getTargetKind(QueryTarget target) throws QueryException, InterruptedException {
+    return getNode(target).getType().getName();
   }
 
   public ImmutableSet<QueryTarget> getAttributeValue(QueryTarget target, String attribute)
-      throws QueryException {
+      throws QueryException, InterruptedException {
     Preconditions.checkState(target instanceof AbstractQueryBuildTarget);
-    return QueryTargetAccessor.getAttributeValue(
-        Preconditions.checkNotNull(getNode(target)), attribute);
+    return QueryTargetAccessor.getAttributeValue(getNode(target), attribute);
   }
 }

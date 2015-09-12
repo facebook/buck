@@ -445,4 +445,21 @@ public class QueryCommandIntegrationTest {
         is(equalTo(parseJSON(workspace.getFileContents("stdout-name-deps-multi-attr-out.json")))));
   }
 
+  @Test
+  public void testResolveAliasOutputAttributes() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "testsof(app)",
+        "--output-attributes",
+        "name",
+        "buck.type");
+    result.assertSuccess();
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-seven-alias-testsof-attrs.json")))));
+  }
 }

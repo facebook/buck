@@ -20,6 +20,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
+import com.google.devtools.build.lib.query2.engine.QueryException;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -95,14 +96,22 @@ public class AuditDependenciesCommand extends AbstractCommand {
     Set<QueryEnvironment.Setting> settings = new HashSet<>();
     BuckQueryEnvironment env = new BuckQueryEnvironment(params, settings, getEnableProfiling());
 
-    return QueryCommand.runMultipleQuery(
-        params,
-        env,
-        QueryCommand.getAuditDependenciesQueryFormat(
-            shouldShowTransitiveDependencies(),
-            shouldIncludeTests()),
-        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
-        shouldGenerateJsonOutput());
+    try {
+      return QueryCommand.runMultipleQuery(
+          params,
+          env,
+          QueryCommand.getAuditDependenciesQueryFormat(
+              shouldShowTransitiveDependencies(),
+              shouldIncludeTests()),
+          getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
+          shouldGenerateJsonOutput());
+    } catch (QueryException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        throw (InterruptedException) e.getCause();
+      }
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      return 1;
+    }
   }
 
   @Override

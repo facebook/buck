@@ -1,0 +1,2 @@
+[alias]
+    app = //example/app:seven

@@ -19,7 +19,6 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.Argument;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.ArgumentType;
@@ -37,6 +36,9 @@ import java.util.List;
  */
 public class QueryOwnerFunction implements QueryFunction {
 
+  private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
+      ImmutableList.of(ArgumentType.WORD);
+
   public QueryOwnerFunction() {
   }
 
@@ -51,8 +53,8 @@ public class QueryOwnerFunction implements QueryFunction {
   }
 
   @Override
-  public List<ArgumentType> getArgumentTypes() {
-    return Lists.newArrayList(ArgumentType.WORD);
+  public ImmutableList<ArgumentType> getArgumentTypes() {
+    return ARGUMENT_TYPES;
   }
 
   @SuppressWarnings("unchecked")

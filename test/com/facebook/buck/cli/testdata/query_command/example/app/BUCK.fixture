@@ -2,7 +2,10 @@ apple_library(
   name = 'seven',
   srcs = [ '7.txt' ],
   deps = [ ],
-  tests = [ ':seven-tests' ],
+  tests = [
+    ':seven-tests',
+    '//other:eight-tests'
+  ],
 )
 
 apple_test(

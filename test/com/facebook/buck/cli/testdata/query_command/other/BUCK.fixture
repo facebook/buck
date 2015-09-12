@@ -1,0 +1,10 @@
+apple_test(
+  name = 'eight-tests',
+  srcs = [ '8-test.txt' ],
+  deps = [ ],
+  visibility = [
+      'PUBLIC',
+  ],
+  extension = 'xctest',
+  info_plist = 'Test.plist',
+)
