@@ -6,40 +6,47 @@
     {param ishome: true /}
     {param title: 'A fast build tool' /}
     {param description}
-        Buck is a build system for Android that encourages the creation of
-        small, reusable modules consisting of code and resources.
+        Buck is a build system developed and used by Facebook.  It encourages the creation of small,
+        reusable modules consisting of code and resources, and supports a variety of languages.
     {/param}
     {param content}
-Buck is a build system for Android that encourages the creation of
-small, reusable modules consisting of code and resources. Because Android
-applications are predominantly written in Java, Buck also functions as a
-Java build system. <a href="{ROOT}concept/what_makes_buck_so_fast.html">Learn more</a> about
-the strategies Buck uses to build Java code so quickly.
 
-<h2>Features</h2>
+<p>
+  Buck is a build system developed and used by Facebook.  It encourage the creation of small,
+  reusable modules consisting of code and resources, and supports a variety of languages on many
+  platforms.
+</p>
 
-Buck can help you do the following:
+<h2>Why Buck?</h2>
+
+Buck can help you and your team in many ways:
 
 <ul>
-  <li>Speed up your Android builds. Buck builds independent artifacts in
-      parallel to take advantage of multiple cores. Further, it reduces incremental
-      build times by keeping track of unchanged modules so that the minimal set
-      of modules is rebuilt.
-  <li>Introduce ad-hoc build steps for building artifacts that are not
-      supported out-of-the-box using the standard Ant build scripts for Android.
-  <li>Keep the logic for generating build rules in the build system instead of
-      requiring a separate system to generate build files.
-  <li>Generate code-coverage metrics for your unit tests.
-  <li>Generate an IntelliJ project based on your build rules. This makes
-      Buck ideal for both local development builds in an IDE as well as
-      headless builds on a continuous integration machine.
-  <li>Make sense of your build dependencies.
-  <li>Understand what is going on under the hood when building an APK.
+  <li>
+    <strong>Speed up your builds.</strong>  Buck builds independent artifacts in parallel to take
+    advantage of multiple cores on your machine.  Further, it reduces incremental build times by
+    keeping track of unchanged modules so that the minimal set of modules is rebuilt.
+  </li>
+  <li>
+    <strong>Add reproducibility to your builds.</strong>  Buck only uses the declared inputs, which
+    means everybody gets the same results.
+  </li>
+  <li>
+    <strong>Get correct incremental builds.</strong>  Buck looks at the contents of your inputs, not
+    their timestamps to figure out what needs to be built.  As a result, incremental builds should
+    always be correct, so there's no need to perform a clean build.
+  </li>
+  <li>
+    <strong>Understand your dependencies.</strong>  With
+    {sp}{call buck.cmd_link}{param name: 'query' /}{/call}, you can better understand your
+    dependencies and what is required to build your product.
+  </li>
+  <li>
+    <strong>Integrate with your IDE.</strong>  With
+    {sp}{call buck.cmd_link}{param name: 'project' /}{/call}, your project can be better understood
+    by your IDE, making you and your team more productive.
+  </li>
 </ul>
-
-Speed is the primary focus for Buck. At Facebook, we found Buck to be more
-than twice as fast as Ant, and we are continuing to make it even faster.
-
 
 <h2>How Buck Works</h2>
 
