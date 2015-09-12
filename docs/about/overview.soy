@@ -1,0 +1,53 @@
+{namespace buck.overview}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Overview' /}
+    {param description}
+        A simple overview of Buck.
+    {/param}
+    {param content}
+
+<h2>How Buck Works</h2>
+
+Buck has three primary concepts:
+
+<ul>
+  <li>
+    A {call buck.concept_link}{param name: 'build rule' /}{param page: 'build_rule' /}{/call} is a
+    procedure for producing an output file from a set of input files.
+  </li>
+  <li>
+    A {call buck.concept_link}{param name: 'build target' /}{param page: 'build_target' /}{/call} is
+    a string identifier for a build rule.  It can be thought of as a "URI" within a project using
+    Buck.
+  </li>
+  <li>
+    A {call buck.concept_link}{param name: 'build file' /}{param page: 'build_file' /}{/call} that
+    defines one or more build rules.  In Make, this would be a <code>Makefile</code>, but in Buck,
+    these files are named <code>BUCK</code>.  A project using Buck is expected to have many
+    <code>BUCK</code> files.
+  </li>
+</ul>
+
+<p>
+  Every build rule can have zero or more dependencies associated with it, or <code>deps</code>.
+  These dependencies form a directed graph, which Buck requires to be acyclic.  When building the
+  output of a build rule, all of the rule's transitive dependencies are built first.  This means
+  that the graph is built in a "bottom-up" fashion.  A build rule knows only who it depends on, not
+  what depends on it, which makes the build graph easier to reason about.  This helps Buck identify
+  independent subgraphs that can be built in parallel, as well as determine the minimal set of build
+  rules that need to be rebuilt.
+</p>
+
+<p>
+  Buck is designed for building multiple deliverables from a single repository (a monorepo) rather
+  than across multiple repositories.  It has been Facebook's experience that maintaining
+  dependencies in the same repository makes it easier to ensure that all developers have the correct
+  version of all of the code, and simplifies the process of making atomic commits.
+</p>
+
+    {/param}
+  {/call}
+{/template}

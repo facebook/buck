@@ -48,48 +48,6 @@ Buck can help you and your team in many ways:
   </li>
 </ul>
 
-<h2>How Buck Works</h2>
-
-Buck has three primary concepts:
-
-<ul>
-  <li>A <strong>build rule</strong> is a procedure for producing an
-      output file from a set of input files.
-  <li>A <strong>build target</strong> is a string identifier for a build rule.
-      It can be thought of as a "URI" within a project using Buck.
-  <li>A <strong>build file</strong> that defines one or more build rules.
-      In Make, this would be a <code>Makefile</code>, but in Buck, these
-      files are named <code>BUCK</code>. A project using Buck is expected to have
-      many <code>BUCK</code> files.
-</ul>
-
-Every build rule can have zero or more dependencies associated with it,
-or <code>deps</code>. These dependencies form a directed graph, which
-Buck requires to be acyclic.
-
-<p>
-
-When building the output of a build rule, all of the rule's transitive dependencies
-are built first. This means that the graph is built in a "bottom-up" fashion.
-A build rule knows only who it depends on, not what depends on it, which makes the
-build graph easier to reason about. This helps Buck identify independent
-subgraphs that can be built in parallel, as well as determine the minimal set of
-build rules that need to be rebuilt.
-
-<h2>Is Buck for Me?</h2>
-
-Buck is designed for building multiple deliverables from a single repository
-rather than across multiple repositories. It has been our experience that
-maintaining dependencies in the same repository makes it easier to ensure
-that all developers have the correct version of all of the code, and simplifies
-the process of making atomic commits.
-
-<p>
-
-If you build multiple applications, or even if you ship one application but
-use several sample applications for development, then Buck is definitely for you.
-Give the <a href="{ROOT}setup/quick_start.html">Quick Start</a> a try and see how
-Buck can help you organize your Android project and build it faster than ever before.
     {/param}
   {/call}
 {/template}
