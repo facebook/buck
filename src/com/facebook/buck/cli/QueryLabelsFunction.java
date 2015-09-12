@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,7 +72,7 @@ public class QueryLabelsFunction implements QueryFunction {
     }
     BuckQueryEnvironment buckEnv = (BuckQueryEnvironment) env;
     Set<T> inputs = args.get(1).getExpression().eval(env);
-    String label = args.get(0).getWord();
+    String label = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
     ImmutableSortedSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
     for (T input : inputs) {
       builder.addAll(buckEnv.getAttributeValue((QueryTarget) input, label));

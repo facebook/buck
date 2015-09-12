@@ -46,6 +46,7 @@ apple_library(
 )
 
 apple_library(
+  exported_headers = [ "header.h" ],
   name = 'six',
   srcs = [ '6.txt' ],
   tests = [ ':six-tests' ],

@@ -402,11 +402,12 @@ public class QueryCommandIntegrationTest {
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "query",
-        "labels('tests', '//example:four') + labels('srcs', '//example:five') - '//example:six'");
+        "labels('tests', '//example:four') + labels('srcs', '//example:five') " +
+            "+ labels('exported_headers', '//example:six') - '//example:six'");
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-one-five-except-six-sources-tests"))));
+        is(equalTo(workspace.getFileContents("stdout-one-five-except-six-src-test-exp-header"))));
   }
 
   @Test
