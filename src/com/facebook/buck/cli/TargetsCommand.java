@@ -48,7 +48,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -65,7 +64,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -470,7 +468,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetNode<?> targetNode = valueIterator.next();
 
       SortedMap<String, Object> sortedTargetRule =
-          getBuildTargetRules(params, parserConfig, targetNode);
+          CommandHelper.getBuildTargetRules(params, parserConfig, targetNode);
       if (sortedTargetRule == null) {
         params.getConsole().printErrorText(
             "unable to find rule for target " +
@@ -494,51 +492,6 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     params.getConsole().getStdOut().println("]");
-  }
-
-  static SortedMap<String, Object> getBuildTargetRules(
-      CommandRunnerParams params,
-      ParserConfig parserConfig,
-      TargetNode<?> targetNode)
-      throws BuildFileParseException, InterruptedException, IOException {
-    BuildTarget buildTarget = targetNode.getBuildTarget();
-    List<Map<String, Object>> rules;
-    try {
-      Path buildFile = params.getRepository().getAbsolutePathToBuildFile(buildTarget);
-      rules = params.getParser().parseBuildFile(
-          buildFile,
-          parserConfig,
-          params.getEnvironment(),
-          params.getConsole(),
-          params.getBuckEventBus());
-    } catch (BuildTargetException e) {
-      return null;
-    }
-
-    // Find the build rule information that corresponds to this build buildTarget.
-    Map<String, Object> targetRule = null;
-    for (Map<String, Object> rule : rules) {
-      String name = (String) Preconditions.checkNotNull(rule.get("name"));
-      if (name.equals(buildTarget.getShortName())) {
-        targetRule = rule;
-        break;
-      }
-    }
-
-    if (targetRule == null) {
-      return null;
-    }
-
-    targetRule.put(
-        "buck.direct_dependencies",
-        ImmutableList.copyOf((Iterables.transform(targetNode.getDeps(),
-            Functions.toStringFunction()))));
-
-    // Sort the rule items, both so we have a stable order for unit tests and
-    // to improve readability of the output.
-    SortedMap<String, Object> sortedTargetRule = Maps.newTreeMap();
-    sortedTargetRule.putAll(targetRule);
-    return sortedTargetRule;
   }
 
   @VisibleForTesting

@@ -176,7 +176,7 @@ public class QueryCommand extends AbstractCommand {
       TargetNode<?> node = env.getNode(target);
       try {
         SortedMap<String, Object> sortedTargetRule =
-            TargetsCommand.getBuildTargetRules(params, parserConfig, node);
+            CommandHelper.getBuildTargetRules(params, parserConfig, node);
         if (sortedTargetRule == null) {
           params.getConsole().printErrorText(
               "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());

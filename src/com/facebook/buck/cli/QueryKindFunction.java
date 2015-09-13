@@ -54,7 +54,7 @@ public class QueryKindFunction implements QueryFunction {
   }
 
   @Override
-  public List<ArgumentType> getArgumentTypes() {
+  public ImmutableList<ArgumentType> getArgumentTypes() {
     return ARGUMENT_TYPES;
   }
 
