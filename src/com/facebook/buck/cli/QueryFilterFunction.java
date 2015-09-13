@@ -16,33 +16,32 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.Argument;
 import com.google.devtools.build.lib.query2.engine.QueryEnvironment.ArgumentType;
-import com.google.devtools.build.lib.query2.engine.QueryException;
 import com.google.devtools.build.lib.query2.engine.QueryExpression;
 
 import java.util.List;
 
 /**
- * A kind(pattern, argument) filter expression, which computes the subset
- * of nodes in 'argument' whose kind matches the unanchored regex 'pattern'.
+ * A filter(pattern, argument) expression, evaluates its argument and filters
+ * the resulting targets by applying the given regular expression pattern to
+ * the targets' names.
  *
- * <pre>expr ::= KIND '(' WORD ',' expr ')'</pre>
+ * <pre>expr ::= FILTER '(' WORD ',' expr ')'</pre>
  */
-public class QueryKindFunction extends QueryRegexFilterFunction {
+public class QueryFilterFunction extends QueryRegexFilterFunction {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
 
-  QueryKindFunction() {
+  QueryFilterFunction() {
   }
 
   @Override
   public String getName() {
-    return "kind";
+    return "filter";
   }
 
   @Override
@@ -66,10 +65,7 @@ public class QueryKindFunction extends QueryRegexFilterFunction {
   }
 
   @Override
-  protected <T> String getStringToFilter(QueryEnvironment<T> env, List<Argument> args, T target)
-      throws QueryException, InterruptedException {
-    Preconditions.checkState(env instanceof BuckQueryEnvironment && target instanceof QueryTarget);
-    BuckQueryEnvironment buckEnv = (BuckQueryEnvironment) env;
-    return buckEnv.getTargetKind((QueryTarget) target);
+  protected <T> String getStringToFilter(QueryEnvironment<T> env, List<Argument> args, T target) {
+    return target.toString();
   }
 }

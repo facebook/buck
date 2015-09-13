@@ -306,6 +306,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return ImmutableList.of(
         DEFAULT_QUERY_FUNCTIONS.get(9),   // "deps"
         DEFAULT_QUERY_FUNCTIONS.get(10),  // "rdeps"
+        new QueryFilterFunction(),
         new QueryKindFunction(),
         new QueryLabelsFunction(),
         new QueryOwnerFunction(),

@@ -55,6 +55,7 @@ a few extensions.
         <li><a href="#deps"><code>deps</code></a></li>
         <li><a href="#set-operations"><code>except</code></a></li>
         <li><a href="#set-operations"><code>intersect</code></a></li>
+        <li><a href="#filter"><code>filter</code></a></li>
         <li><a href="#kind"><code>kind</code></a></li>
         <li><a href="#labels"><code>labels</code></a></li>
         <li><a href="#owner"><code>owner</code></a></li>
@@ -138,6 +139,12 @@ expr ::= word
        | expr - expr
        | deps(expr)
        | deps(expr, depth)
+       | filter(word, expr)
+       | kind(word, expr)
+       | labels(word, expr)
+       | owner(word)
+       | rdeps(expr, expr)
+       | rdeps(expr, expr, depth)
        | set(word *)
        | testsof(expr)
 {/literal}
@@ -313,6 +320,34 @@ dependencies.
 
 
 {call .section}
+{param anchor: 'filter' /}
+{param title: 'Filter targets by name: filter'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= filter(word, expr)
+{/literal}
+</pre></p>
+
+<p>
+The <code>filter(pattern, expression)</code> operator evaluates the given
+{sp}<code>expression</code> and filters the targets whose name matches the
+given regular expression <code>pattern</code>.
+For example, <code>filter('library', deps('//foo:bar'))</code> will filter
+the targets in the transitive closure of <code>//foo:bar</code> that contain
+{sp}<code>library</code> in their name.
+</p>
+
+<p>
+Another example is <code>filter('.*\.java$', labels(srcs, /&#x2F;foo:bar))</code>
+{sp}which filters the <code>java</code> files used to build
+{sp}<code>//foo:bar</code>. Quotation of the pattern is often required to make
+sure regular expressions, e.g. <code>.*xpto</code>, are parsed correctly.
+</p>
+
+
+{call .section}
 {param anchor: 'kind' /}
 {param title: 'Filter targets by rule type: kind'/}
 {/call}
@@ -324,9 +359,9 @@ expr ::= kind(word, expr)
 </pre></p>
 
 <p>
-The <code>kind(p, e)</code> operator evaluates the given expression
-{sp}<code>e</code> and filters the targets whose rule type matches the
-given pattern <code>p</code>.
+The <code>kind(pattern, expression)</code> operator evaluates the given
+{sp}<code>expression</code> and filters the targets whose rule type matches the
+given <code>pattern</code>.
 For example, <code>kind('java_library', deps('//foo:bar'))</code> will filter
 all <code>java_library</code> targets in the transitive dependencies
 of <code>//foo:bar</code>.

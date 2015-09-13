@@ -462,4 +462,18 @@ public class QueryCommandIntegrationTest {
         parseJSON(result.getStdout()),
         is(equalTo(parseJSON(workspace.getFileContents("stdout-seven-alias-testsof-attrs.json")))));
   }
+
+  @Test
+  public void testFilterFour() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "filter('four', '//example/...')");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalTo(workspace.getFileContents("stdout-filter-four"))));
+  }
+
 }
