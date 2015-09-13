@@ -96,8 +96,8 @@ public class QueryCommand extends AbstractCommand {
         return runSingleQuery(params, env, queryFormat);
       }
     } catch (RuntimeException e) {
-      if (e.getCause() instanceof IOException) {
-        throw (IOException) e.getCause();
+      if (e.getCause() instanceof InterruptedException) {
+        throw (InterruptedException) e.getCause();
       }
       if (e.getCause() instanceof QueryException) {
         params.getConsole().printBuildFailureWithoutStacktrace(e);
