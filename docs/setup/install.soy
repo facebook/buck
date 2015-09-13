@@ -10,7 +10,29 @@
     {/param}
     {param content}
 
-Buck requires that the following tools are already installed in order to get and build Buck:
+There are two ways to install Buck:
+
+<p />
+<ol>
+<h2 id="os-x-install"><li>Install with Homebrew</li></h2>
+
+To install Buck on OS X, use <a href="http://brew.sh/">Homebrew</a> (first
+make sure <a href="https://developer.apple.com/xcode/download/">Xcode<a> and
+the <a href="https://developer.apple.com/downloads/">Command Line Tools</a> are installed
+and up to date):
+
+<p />
+
+{literal}<pre>
+brew update
+brew tap facebook/fb
+brew install --HEAD buck
+</pre>
+{/literal}
+
+<h2 id="manual-build"><li>Manual Build</li></h2>
+
+To manually build Buck, download and install the following prerequisites:
 <ul>
   <li>
     <a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html"
@@ -24,6 +46,9 @@ Buck requires that the following tools are already installed in order to get and
   </li>
   <li>
     <a href="http://git-scm.com/download">Git</a>
+  </li>
+  <li>
+    A working C compiler (<code>gcc</code> or <code>clang</code>). Not currently required on Windows.
   </li>
 </ul>
 
@@ -60,6 +85,7 @@ options:
   Because you will likely be running <code>./bin/buck</code> often, you should add it to your path
   so that you can simply run <code>buck</code> from the command line.
 </p>
+</ol>
 
 <h2 id="install-watchman">Installing Watchman</h2>
 
