@@ -3,11 +3,7 @@
     ; are folders that contain Java code.
     src_roots = src, test
 [alias]
-    buck = //programs:buck
-    buck-win = //programs:buck-no-nailgun
-    buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
-    hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
-    maven-importer = //src/com/facebook/buck/maven:resolver
+    ideabuck = //:ideabuck
 [buildfile]
     includes = //DEFS
 [download]
@@ -44,7 +40,6 @@
       test/com/facebook/buck/test/labels/testdata, \
       test/com/facebook/buck/test/result/groups/testdata, \
       test/com/facebook/buck/thrift/testdata, \
-      src/com/facebook/buck/intellij/plugin, \
 
     ; Common temp file patterns:
     ; .*\.swp$ (vim)

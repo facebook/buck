@@ -1,0 +1,37 @@
+java_library(
+  name = 'ideabuck-lib',
+  srcs = glob([
+    'src/**/*.java',
+    'gen/**/*.java',
+    'src/icons/*.java',
+  ]),
+  source = '1.6',
+  target = '1.6',
+  provided_deps = [
+    '//third-party/java/intellij:intellij-plugin-sdk',
+  ],
+  deps = [
+    '//third-party/java/guava:guava',
+  ],
+)
+
+java_library(
+  name = 'resources',
+  srcs = [],
+  resources = glob([
+      '**/*.png',
+  ]),
+  resources_root = 'resources/',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_binary(
+  name = 'ideabuck',
+  meta_inf_directory = 'META-INF',
+  deps = [
+    ':ideabuck-lib',
+    ':resources',
+  ],
+)

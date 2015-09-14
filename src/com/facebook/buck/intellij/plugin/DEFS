@@ -1,0 +1,106 @@
+# This is a quick hack to make it so that all Java rules build using Java 7.
+# TODO(mbolin): Find a less hacky way to do this, likely something in .buckconfig.
+
+original_java_library = java_library
+def java_library(
+    name,
+    source='7',
+    target='7',
+    **kwargs
+    ):
+  original_java_library(
+    name,
+    source=source,
+    target=target,
+    **kwargs
+    )
+
+def java_immutables_library(
+    name,
+    source='7',
+    target='7',
+    **kwargs
+    ):
+    deps = kwargs.get('deps', [])
+    needed_deps = [
+      '//src/com/facebook/buck/util/immutables:immutables',
+      '//third-party/java/immutables:processor',
+      '//third-party/java/guava:guava',
+      '//third-party/java/jsr:jsr305',
+    ]
+    for dep in needed_deps:
+      if not dep in deps:
+        deps.append(dep)
+    annotation_processors = kwargs.get('annotation_processors', [])
+    if not 'org.immutables.value.internal.$processor$.$Processor' in annotation_processors:
+      annotation_processors.append('org.immutables.value.internal.$processor$.$Processor')
+    annotation_processor_deps = kwargs.get('annotation_processor_deps', [])
+    if not '//third-party/java/immutables:processor' in annotation_processor_deps:
+      annotation_processor_deps.append('//third-party/java/immutables:processor')
+    keys_to_remove = ['deps', 'annotation_processors', 'annotation_processor_deps']
+    args = {}
+    for k in kwargs:
+      if not k in keys_to_remove:
+        args[k] = kwargs[k]
+    return java_library(
+      name,
+      source=source,
+      target=target,
+      deps=deps,
+      annotation_processors=annotation_processors,
+      annotation_processor_deps=annotation_processor_deps,
+      **args)
+
+original_java_test = java_test
+def java_test(
+    name,
+    source='7',
+    target='7',
+    deps=[],
+    vm_args=[],
+    **kwargs
+    ):
+  original_java_test(
+    name,
+    source=source,
+    target=target,
+    deps=deps + [
+      # When actually running Buck, the launcher script loads the bootstrapper, 
+      # and the bootstrapper loads the rest of Buck. For unit tests, which don't 
+      # run Buck, we have to add a direct dependency on the bootstrapper in case
+      # they exercise code that uses it.
+      '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',
+    ],
+    vm_args=[
+      # Add -XX:-UseSplitVerifier by default to work around:
+      # http://arihantwin.blogspot.com/2012/08/getting-error-illegal-local-variable.html
+      '-XX:-UseSplitVerifier',
+
+      # Add -Dsun.zip.disableMemoryMapping=true to work around a JDK issue
+      # related to modifying JAR/ZIP files that have been loaded into memory:
+      #
+      # http://bugs.sun.com/view_bug.do?bug_id=7129299
+      #
+      # This has been observed to cause a problem in integration tests such as
+      # CachedTestIntegrationTest where `buck build //:test` is run repeatedly
+      # such that a corresponding `test.jar` file is overwritten several times.
+      # The CompiledClassFileFinder in JavaTestRule creates a java.util.zip.ZipFile
+      # to enumerate the zip entries in order to find the set of .class files
+      # in `test.jar`. This interleaving of reads and writes appears to match
+      # the conditions to trigger the issue reported on bugs.sun.com.
+      #
+      # Currently, we do not set this flag in bin/buck_common, as Buck does not
+      # normally modify the contents of buck-out after they are loaded into
+      # memory. However, we may need to use this flag when running buckd where
+      # references to zip files may be long-lived.
+      #
+      # Finally, note that when you specify this flag,
+      # `System.getProperty("sun.zip.disableMemoryMapping")` will return `null`
+      # even though you have specified the flag correctly. Apparently sun.misc.VM
+      # (http://www.docjar.com/html/api/sun/misc/VM.java.html) saves the property
+      # internally, but removes it from the set of system properties that are
+      # publicly accessible.
+      '-Dsun.zip.disableMemoryMapping=true',
+    ] + vm_args,
+    **kwargs
+  )

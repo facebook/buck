@@ -1,0 +1,8 @@
+This directory contains various packages from IntelliJ Plugin SDK.
+You will need to manually copy the following files, from the %IntelliJ Install Dir%/lib/:
+
+- annotations.jar
+- extensions.jar
+- idea.jar
+- openapi.jar
+- util.jar

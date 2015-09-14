@@ -1,0 +1,42 @@
+java_library(
+  name='intellij-plugin-sdk',
+  exported_deps = [
+    ':annotations',
+    ':extensions',
+    ':openapi',
+    ':util',
+    ':idea',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+prebuilt_jar(
+  name='annotations',
+  binary_jar='annotations.jar',
+)
+
+prebuilt_jar(
+  name='extensions',
+  binary_jar='extensions.jar',
+)
+
+prebuilt_jar(
+  name='openapi',
+  binary_jar='openapi.jar',
+)
+
+prebuilt_jar(
+  name='util',
+  binary_jar='util.jar',
+)
+
+prebuilt_jar(
+  name='idea',
+  binary_jar='idea.jar',
+)
+
+project_config(
+  src_target = ':intellij-plugin-sdk'
+)

@@ -4,7 +4,13 @@
 # IntelliJ build
 /build-ij/
 /build-ij/plugin/out
-src/com/facebook/buck/intellij/plugin/Buck.zip
+src/com/facebook/buck/intellij/plugin/*.zip
+
+# IntelliJ Plugin
+src/com/facebook/buck/intellij/plugin/buck-out
+src/com/facebook/buck/intellij/plugin/buck-cache
+src/com/facebook/buck/intellij/plugin/.buckd/
+src/com/facebook/buck/intellij/plugin/third-party/*.iml
 
 # Buck
 /buck-out
