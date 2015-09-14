@@ -20,8 +20,6 @@ import com.google.common.base.Function;
 
 import java.io.IOException;
 
-import javax.annotation.Nullable;
-
 public class Dot<T> {
 
   private final DirectedAcyclicGraph<T> graph;
@@ -56,12 +54,6 @@ public class Dot<T> {
             throw new RuntimeException(e);
           }
         }
-      }
-
-      @Override
-      @Nullable
-      public Object getResult() {
-        return null;
       }
     }.traverse();
 

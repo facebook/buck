@@ -82,5 +82,4 @@ public abstract class AbstractBottomUpTraversal<T, V> {
 
   public abstract void visit(T node);
 
-  public abstract V getResult();
 }

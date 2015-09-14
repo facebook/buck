@@ -157,12 +157,6 @@ public class AuditInputCommand extends AbstractCommand {
             node.getBuildTarget().getFullyQualifiedName(),
             ImmutableSortedSet.copyOf(targetInputs));
       }
-
-      @Override
-      public Void getResult() {
-        return null;
-      }
-
     }.traverse();
 
     params.getObjectMapper().writeValue(
@@ -208,12 +202,6 @@ public class AuditInputCommand extends AbstractCommand {
           params.getConsole().getStdOut().println(input);
         }
       }
-
-      @Override
-      public Void getResult() {
-        return null;
-      }
-
     }.traverse();
 
     return 0;

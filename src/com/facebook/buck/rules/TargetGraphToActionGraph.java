@@ -101,15 +101,9 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
               ruleResolver.addToIndex(rule);
             }
           }
-
-          @Override
-          public ActionGraph getResult() {
-            return new ActionGraph(ruleResolver.getBuildRules());
-          }
-
         };
     bottomUpTraversal.traverse();
-    ActionGraph result = bottomUpTraversal.getResult();
+    ActionGraph result = new ActionGraph(ruleResolver.getBuildRules());
     eventBus.post(ActionGraphEvent.finished(started));
     return result;
   }

@@ -56,23 +56,16 @@ public class AbstractBottomUpTraversalTest {
     DirectedAcyclicGraph<String> immutableGraph =
         new DefaultDirectedAcyclicGraph<String>(mutableGraph);
 
+    final List<String> visitedNodes = Lists.newLinkedList();
     AbstractBottomUpTraversal<String, List<String>> traversal =
         new AbstractBottomUpTraversal<String, List<String>>(immutableGraph) {
-
-      private final List<String> visitedNodes = Lists.newLinkedList();
 
       @Override
       public void visit(String node) {
         visitedNodes.add(node);
       }
-
-      @Override
-      public List<String> getResult() {
-        return visitedNodes;
-      }
     };
     traversal.traverse();
-    List<String> visitedNodes = traversal.getResult();
 
     assertEquals("F", visitedNodes.get(0));
     assertEquals(ImmutableSet.of("D", "E"), ImmutableSet.copyOf(visitedNodes.subList(1, 3)));
@@ -107,24 +100,18 @@ public class AbstractBottomUpTraversalTest {
 
     DirectedAcyclicGraph<String> immutableGraph =
         new DefaultDirectedAcyclicGraph<String>(mutableGraph);
+
+    final List<String> visitedNodes = Lists.newLinkedList();
     AbstractBottomUpTraversal<String, List<String>> traversal =
         new AbstractBottomUpTraversal<String, List<String>>(immutableGraph) {
-
-      private final List<String> visitedNodes = Lists.newLinkedList();
 
       @Override
       public void visit(String node) {
         visitedNodes.add(node);
       }
-
-      @Override
-      public List<String> getResult() {
-        return visitedNodes;
-      }
     };
     traversal.traverse();
 
-    List<String> visitedNodes = traversal.getResult();
     assertEquals("Z and A have no depdencies, so they should be visited first.",
         ImmutableSet.of("Z", "A"),
         ImmutableSet.copyOf(visitedNodes.subList(0, 2)));
