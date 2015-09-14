@@ -79,11 +79,21 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     this.targetPatternEvaluator = new TargetPatternEvaluator(params, enableProfiling);
   }
 
-  public CommandRunnerParams getParams() { return params; }
+  public CommandRunnerParams getParams() {
+    return params;
+  }
 
-  public ParserConfig getParserConfig() { return parserConfig; }
+  public ParserConfig getParserConfig() {
+    return parserConfig;
+  }
 
-  public BuildFileTree getBuildFileTree() { return buildFileTree; }
+  public BuildFileTree getBuildFileTree() {
+    return buildFileTree;
+  }
+
+  public TargetGraph getTargetGraph() {
+    return graph;
+  }
 
   /**
    * Evaluate the specified query expression in this environment.
@@ -176,8 +186,18 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return builder.build();
   }
 
+  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Iterable<QueryTarget> input)
+      throws QueryException, InterruptedException {
+    ImmutableSet.Builder<TargetNode<?>> builder = ImmutableSet.builder();
+    for (QueryTarget target : input) {
+      Preconditions.checkState(target instanceof QueryBuildTarget);
+      builder.add(getNode(target));
+    }
+    return builder.build();
+  }
+
   /** Given a set of target nodes, returns the build targets. */
-  private static Set<BuildTarget> getTargetsFromNodes(ImmutableSet<TargetNode<?>> input) {
+  private static Set<BuildTarget> getTargetsFromNodes(Iterable<TargetNode<?>> input) {
     Set<BuildTarget> result = new LinkedHashSet<>();
     for (TargetNode<?> node : input) {
       result.add(node.getBuildTarget());
@@ -306,6 +326,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return ImmutableList.of(
         DEFAULT_QUERY_FUNCTIONS.get(9),   // "deps"
         DEFAULT_QUERY_FUNCTIONS.get(10),  // "rdeps"
+        new QueryAllPathsFunction(),
         new QueryFilterFunction(),
         new QueryKindFunction(),
         new QueryLabelsFunction(),
