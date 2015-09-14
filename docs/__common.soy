@@ -189,6 +189,15 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'd_library',
             'd_test',
         ],
+        'ios': [
+            'apple_asset_catalog',
+            'apple_binary',
+            'apple_bundle',
+            'apple_library',
+            'apple_package',
+            'apple_resource',
+            'apple_test',
+        ],
         'java': [
             'cxx_library',
             'java_binary',
@@ -255,6 +264,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {call .platformBuildRuleLink}
         {param platform: 'D' /}
         {param rules: $platformRulesMap['d'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'iOS' /}
+        {param rules: $platformRulesMap['ios'] /}
     {/call}
     {call .platformBuildRuleLink}
         {param platform: 'Java' /}
