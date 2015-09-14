@@ -21,36 +21,24 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.macros.ClasspathMacroExpander;
-import com.facebook.buck.rules.macros.ExecutableMacroExpander;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class ApkGenruleDescription implements Description<ApkGenruleDescription.Arg> {
+import java.nio.file.Path;
+
+public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("apk_genrule");
-
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
-              "classpath", new ClasspathMacroExpander(),
-              "exe", new ExecutableMacroExpander(),
-              "location", new LocationMacroExpander()));
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -63,12 +51,20 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
   }
 
   @Override
-  public <A extends Arg> ApkGenrule createBuildRule(
-      final TargetGraph targetGraph,
-      final BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      final A args) {
-    BuildRule installableApk = resolver.getRule(args.apk);
+  protected <A extends ApkGenruleDescription.Arg> BuildRule createBuildRule(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args,
+      ImmutableList<SourcePath> srcs,
+      Function<String, String> macroExpander,
+      Optional<String> cmd,
+      Optional<String> bash,
+      Optional<String> cmdExe,
+      String out,
+      Function<Path, Path> relativeToAbsolutePathFunction,
+      Supplier<ImmutableList<Object>> macroRuleKeyAppendables) {
+
+    final BuildRule installableApk = resolver.getRule(args.apk);
     if (!(installableApk instanceof InstallableApk)) {
       throw new HumanReadableException("The 'apk' argument of %s, %s, must correspond to an " +
           "installable rule, such as android_binary() or apk_genrule().",
@@ -76,81 +72,33 @@ public class ApkGenruleDescription implements Description<ApkGenruleDescription.
           args.apk.getFullyQualifiedName());
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    ImmutableList<SourcePath> srcs = args.srcs.get();
-    ImmutableSortedSet<BuildRule> extraDeps =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(pathResolver.filterBuildRuleInputs(srcs))
-        .add(installableApk)
-        .build();
+    final Supplier<ImmutableSortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
 
     return new ApkGenrule(
-        params
-            .copyWithExtraDeps(Suppliers.ofInstance(extraDeps))
-                // Attach any extra dependencies found from macro expansion.
-            .appendExtraDeps(findExtraDepsFromArgs(params.getBuildTarget(), resolver, args)),
-        pathResolver,
+        params.copyWithExtraDeps(
+            Suppliers.memoize(
+                new Supplier<ImmutableSortedSet<BuildRule>>() {
+                  @Override
+                  public ImmutableSortedSet<BuildRule> get() {
+                    return ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(originalExtraDeps.get())
+                        .add(installableApk)
+                        .build();
+                  }
+                })),
+        new SourcePathResolver(resolver),
         srcs,
-        MACRO_HANDLER.getExpander(
-            params.getBuildTarget(),
-            resolver,
-            params.getProjectFilesystem()),
-        args.cmd,
-        args.bash,
-        args.cmdExe,
-        params.getProjectFilesystem().getAbsolutifier(),
-        new Supplier<ImmutableList<Object>>() {
-          @Override
-          public ImmutableList<Object> get() {
-            return findRuleKeyAppendables(params.getBuildTarget(), resolver, args);
-          }
-        },
+        macroExpander,
+        cmd,
+        bash,
+        cmdExe,
+        relativeToAbsolutePathFunction,
+        macroRuleKeyAppendables,
         (InstallableApk) installableApk);
   }
 
-  private ImmutableList<Object> findRuleKeyAppendables(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      Arg arg) {
-    ImmutableList.Builder<Object> deps = ImmutableList.builder();
-    try {
-      for (String val :
-          Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(MACRO_HANDLER.extractRuleKeyAppendables(target, resolver, val));
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-    return deps.build();
-  }
-
-  private ImmutableList<BuildRule> findExtraDepsFromArgs(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      Arg arg) {
-    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    try {
-      for (String val :
-            Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(MACRO_HANDLER.extractAdditionalBuildTimeDeps(target, resolver, val));
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-    return deps.build();
-  }
-
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg extends AbstractGenruleDescription.Arg {
     public BuildTarget apk;
-
-    public String out;
-    public Optional<String> bash;
-    public Optional<String> cmd;
-    public Optional<String> cmdExe;
-    public Optional<ImmutableList<SourcePath>> srcs;
-
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

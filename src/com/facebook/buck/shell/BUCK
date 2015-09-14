@@ -1,6 +1,7 @@
 java_library(
   name = 'rules',
   srcs = [
+    'AbstractGenruleDescription.java',
     'ExportFile.java',
     'ExportFileDescription.java',
     'Genrule.java',

@@ -17,48 +17,22 @@
 package com.facebook.buck.shell;
 
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.macros.ClasspathMacroExpander;
-import com.facebook.buck.rules.macros.ExecutableMacroExpander;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
 
-public class GenruleDescription
-    implements
-    Description<GenruleDescription.Arg>,
-    ImplicitDepsInferringDescription<GenruleDescription.Arg> {
+public class GenruleDescription extends AbstractGenruleDescription<AbstractGenruleDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("genrule");
-
-  private final MacroHandler macroHandler;
-
-  public GenruleDescription() {
-    this.macroHandler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of(
-            "classpath", new ClasspathMacroExpander(),
-            "exe", new ExecutableMacroExpander(),
-            "location", new LocationMacroExpander()));
-  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -71,111 +45,29 @@ public class GenruleDescription
   }
 
   @Override
-  public <A extends Arg> Genrule createBuildRule(
-      final TargetGraph targetGraph,
+  protected <A extends Arg> BuildRule createBuildRule(
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
-      final A args) {
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      A args,
+      ImmutableList<SourcePath> srcs,
+      Function<String, String> macroExpander,
+      Optional<String> cmd,
+      Optional<String> bash,
+      Optional<String> cmdExe,
+      String out,
+      final Function<Path, Path> relativeToAbsolutePathFunction,
+      Supplier<ImmutableList<Object>> macroRuleKeyAppendables) {
     return new Genrule(
-        params.appendExtraDeps(
-            new Supplier<ImmutableSortedSet<BuildRule>>() {
-              @Override
-              public ImmutableSortedSet<BuildRule> get() {
-                return ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
-                    // Attach any extra dependencies found from macro expansion.
-                    .addAll(findExtraDepsFromArgs(params.getBuildTarget(), resolver , args))
-                    .build();
-              }
-            }),
-        pathResolver,
-        args.srcs.get(),
-        macroHandler.getExpander(
-            params.getBuildTarget(),
-            resolver,
-            params.getProjectFilesystem()),
-        args.cmd,
-        args.bash,
-        args.cmdExe,
-        args.out,
-        params.getProjectFilesystem().getAbsolutifier(),
-        new Supplier<ImmutableList<Object>>() {
-          @Override
-          public ImmutableList<Object> get() {
-            return findRuleKeyAppendables(params.getBuildTarget(), resolver, args);
-          }
-        });
+        params,
+        new SourcePathResolver(resolver),
+        srcs,
+        macroExpander,
+        cmd,
+        bash,
+        cmdExe,
+        out,
+        relativeToAbsolutePathFunction,
+        macroRuleKeyAppendables);
   }
 
-  private ImmutableList<Object> findRuleKeyAppendables(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      Arg arg) {
-    ImmutableList.Builder<Object> deps = ImmutableList.builder();
-    try {
-      for (String val :
-          Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(macroHandler.extractRuleKeyAppendables(target, resolver, val));
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-    return deps.build();
-  }
-
-  private ImmutableList<BuildRule> findExtraDepsFromArgs(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      Arg arg) {
-    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    try {
-      for (String val :
-          Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(macroHandler.extractAdditionalBuildTimeDeps(target, resolver, val));
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-    return deps.build();
-  }
-
-  @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
-      BuildTarget buildTarget,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    if (constructorArg.bash.isPresent()) {
-      addDepsFromParam(buildTarget, constructorArg.bash.get(), targets);
-    }
-    if (constructorArg.cmd.isPresent()) {
-      addDepsFromParam(buildTarget, constructorArg.cmd.get(), targets);
-    }
-    if (constructorArg.cmdExe.isPresent()) {
-      addDepsFromParam(buildTarget, constructorArg.cmdExe.get(), targets);
-    }
-    return targets.build();
-  }
-
-  private void addDepsFromParam(
-      BuildTarget target,
-      String paramValue,
-      ImmutableSet.Builder<BuildTarget> targets) {
-    try {
-      targets.addAll(macroHandler.extractParseTimeDeps(target, paramValue));
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-  }
-
-  @SuppressFieldNotInitialized
-  public class Arg {
-    public String out;
-    public Optional<String> bash;
-    public Optional<String> cmd;
-    public Optional<String> cmdExe;
-    public Optional<ImmutableList<SourcePath>> srcs;
-
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-  }
 }
