@@ -31,9 +31,9 @@ a single <code>buck query</code> call suffices by combining
 the <code>deps</code> and <code>testsof</code> operators.
 </p>
 
-<p><pre>
-buck query "testsof(deps(/&#x2F;java/com/example/app:amazing))"
-</pre></p>
+<p><pre>{literal}
+buck query "testsof(deps(//java/com/example/app:amazing))"
+{/literal}</pre></p>
 
 <h2>Query Language</h2>
 
@@ -52,6 +52,7 @@ a few extensions.
     Keywords are the reserved words of the language. The complete set of
     keywords is:
     <ul style="line-height:0.5em">
+        <li><a href="#allpaths"><code>allpaths</code></a></li>
         <li><a href="#deps"><code>deps</code></a></li>
         <li><a href="#set-operations"><code>except</code></a></li>
         <li><a href="#set-operations"><code>intersect</code></a></li>
@@ -179,9 +180,9 @@ expr ::= word
 <p>
 Aliases defined in <a href="{ROOT}concept/buck_config.html">.buckconfig</a> can
 be used in queries. The aliases will be resolved to the corresponding build
-targets. Suppose there is an alias <code>app = /&#x2F;apps/myapp:app</code>,
-then <code>app</code> can be used instead <code>//apps/myapp:app</code> in
-query expressions.
+targets. Suppose there is an alias <code>{literal}app = //apps/myapp:app
+{/literal}</code>, then <code>app</code> can be used
+instead <code>//apps/myapp:app</code> in query expressions.
 </p>
 
 <p><code>buck query</code> can also be used to resolve aliases. e.g.
@@ -190,7 +191,7 @@ query expressions.
 <p><pre>
 {literal}
 $ buck query app
-/&#x2F;apps/myapp:app
+//apps/myapp:app
 {/literal}
 </pre></p>
 
@@ -286,6 +287,47 @@ query on a list of targets, <code>set()</code> is a way of grouping this
 list in the query. Remember to quote the targets to make sure they are
 parsed correctly.
 </p>
+
+
+{call .section}
+{param anchor: 'allpaths' /}
+{param title: 'All dependency paths: allpaths'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= allpaths(expr, expr)
+{/literal}
+</pre></p>
+
+<p>
+The <code>allpaths(from, to)</code> operator evaluates to the graph formed by
+paths between the sets <code>from</code> and <code>to</code>, following the
+dependencies between nodes. For example, the value of
+{sp}<code>{literal}allpaths(//foo:bar, //foo/bar/lib:baz){/literal}</code> is
+the dependency graph rooted at the single target node <code>//foo:bar</code>,
+including all target nodes that depend on <code>//foo/bar/lib:baz</code>.
+</p>
+
+<p>
+The arguments can be expressions.<br/>
+<code>{literal}
+allpaths(kind(java_library, '//...'), '//foo:bar')
+{/literal}</code> shows all the paths between any <code>java_library</code> in
+the repository and the target <code>//foo:bar</code>.
+</p>
+
+<p>
+This operator is meant to be used together with the <code>--dot</code>
+{sp}parameter to generate an image. Sample usage:
+</p>
+
+<p><pre>
+{literal}
+buck query "allpaths(//foo:bar, //foo/bar/lib:baz)" --dot > result.dot
+dot -Tpng result.dot -o image.png
+{/literal}
+</pre></p>
 
 
 {call .section}
@@ -456,8 +498,8 @@ set <code>u</code> (the <i>universe</i>).
 <p>
 The <code>rdeps</code> operator accepts an optional third argument, which is
 an integer literal specifying an upper bound on the depth of the search.
-So <code>rdeps(/&#x2F;foo:bar, /&#x2F;example:baz, 1)</code> evaluates to the
-targets in the transitive closure of <code>//foo:bar</code> that depend
+So <code>{literal}rdeps(//foo:bar, //example:baz, 1){/literal}</code> evaluates
+to the targets in the transitive closure of <code>//foo:bar</code> that depend
 directly on <code>//example:baz</code>. If the depth parameter is omitted,
 the search is unbounded.
 </p>
@@ -653,8 +695,8 @@ Lists all the targets in the repository.
 
 <p>
 Resolve multiple aliases. Suppose there is an alias
-{sp}<code>app = /&#x2F;apps/myapp:app</code> and another
-{sp}<code>lib = /&#x2F;libraries/mylib:lib</code>.
+{sp}<code>{literal}app = //apps/myapp:app{/literal}</code> and another
+{sp}<code>{literal}lib = //libraries/mylib:lib{/literal}</code>.
 <p>
 
 <p>
@@ -671,7 +713,7 @@ Resolve multiple aliases. Suppose there is an alias
 
 
 Lists all of the rules that the <code>one</code> library directly depends on
-<pre>buck query "deps(/&#x2F;examples:one, 1)"</pre>
+<pre>buck query "deps(//examples:one, 1)"</pre>
 <pre>
 {literal}
 //examples:one
@@ -682,7 +724,7 @@ Lists all of the rules that the <code>one</code> library directly depends on
 
 Lists the JSON representation of the transitive closure of the rules that
 the <code>one</code> library depends on
-<pre>buck query "deps(/&#x2F;examples:one)"</pre>
+<pre>buck query "deps(//examples:one)"</pre>
 <pre class="prettyprint lang-js">
 {literal}
 [
@@ -697,7 +739,9 @@ the <code>one</code> library depends on
 
 Outputs a JSON representation of the tests associated with the{sp}
 <code>one</code> and <code>three</code> libraries.
-<pre>buck query --json "testsof(deps('%s'))" /&#x2F;examples:one /&#x2F;examples:three</pre>
+<pre>{literal}
+buck query --json "testsof(deps('%s'))" //examples:one //examples:three
+{/literal}</pre>
 <pre class="prettyprint lang-js">
 {literal}
 {

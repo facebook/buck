@@ -1,0 +1,9 @@
+digraph result_graph {
+  "//example:five" -> "//example:six";
+  "//example:four" -> "//example:six";
+  "//example:one" -> "//example:three";
+  "//example:one" -> "//example:two";
+  "//example:three" -> "//example:five";
+  "//example:three" -> "//example:four";
+  "//example:two" -> "//example:four";
+}

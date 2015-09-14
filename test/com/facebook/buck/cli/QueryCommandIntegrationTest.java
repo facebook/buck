@@ -493,4 +493,20 @@ public class QueryCommandIntegrationTest {
         is(equalTo(parseJSON(workspace.getFileContents("stdout-allpaths-one-four.json")))));
   }
 
+  @Test
+  public void testAllPathsDepsOneToFiveSix() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "--dot",
+        "allpaths(deps(//example:one, 1), set(//example:five //example:six))");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalTo(workspace.getFileContents("stdout-allpaths-deps-one-to-five-six.dot"))));
+  }
+
 }

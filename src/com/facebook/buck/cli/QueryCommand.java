@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.graph.Dot;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.ParserConfig;
@@ -47,6 +48,17 @@ public class QueryCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(QueryCommand.class);
 
+  /**
+   * Example usage:
+   * <pre>
+   * buck query "allpaths('//path/to:target', '//path/to:other')" --dot > /tmp/graph.dot
+   * dot -Tpng /tmp/graph.dot -o /tmp/graph.png
+   * </pre>
+   */
+  @Option(name = "--dot",
+      usage = "Print result as Dot graph")
+  private boolean generateDotOutput;
+
   @Option(name = "--json",
       usage = "Output in JSON format")
   private boolean generateJsonOutput;
@@ -59,6 +71,10 @@ public class QueryCommand extends AbstractCommand {
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
+  }
+
+  public boolean shouldGenerateDotOutput() {
+    return generateDotOutput;
   }
 
   public boolean shouldOutputAttributes() {
@@ -154,12 +170,32 @@ public class QueryCommand extends AbstractCommand {
     LOG.debug("Printing out the following targets: " + queryResult);
     if (shouldOutputAttributes()) {
       collectAndPrintAttributes(params, env, queryResult);
+    } else if (shouldGenerateDotOutput()) {
+      printDotOutput(params, env, queryResult);
     } else if (shouldGenerateJsonOutput()) {
       CommandHelper.printJSON(params, queryResult);
     } else {
       CommandHelper.printToConsole(params, queryResult);
     }
     return 0;
+  }
+
+  private void printDotOutput(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult)
+      throws IOException, QueryException, InterruptedException {
+    Dot.writeSubgraphOutput(
+        env.getTargetGraph(),
+        "result_graph",
+        env.getNodesFromQueryTargets(queryResult),
+        new Function<TargetNode<?>, String>() {
+          @Override
+          public String apply(TargetNode<?> targetNode) {
+            return "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"";
+          }
+        },
+        params.getConsole().getStdOut());
   }
 
   private void collectAndPrintAttributes(
