@@ -1,0 +1,107 @@
+{namespace buck.apple_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'apple_test()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that generates an Apple test.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+An <code>apple_test()</code> rule contains Objective-C/C++ code which can be built and used to test
+code contained in other rules. The tests can be executed by running <code>buck test</code>.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'extension' /}
+  {param desc}
+  The extension of the generated test bundle. For example <code>'octest'</code> for tests using the
+  OCUnit framework or <code>'xctest'</code> for tests using the XCTest framework.
+  {/param}
+{/call}
+
+{call apple_common.info_plist_arg /}
+
+{call apple_common.info_plist_substitutions_arg /}
+
+{call buck.arg}
+  {param name: 'test_host_app' /}
+  {param default: 'None' /}
+  {param desc}
+  A <a href="{ROOT}concept/build_target.html">build target</a> identifying
+  an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a> that builds an
+  application bundle. Output of the specified rule will be used as a test host of this test.
+  Since symbols that are defined in the test host application and its dependencies will not be
+  linked into the test binary, to make those symbols accessible to the test target they need
+  to be specified as a dependency of this target and <code>['-undefined', 'dynamic_lookup']
+  </code> needs to be added to this target's <code>linker_flags</code> (this will suppress undefined
+  reference errors during compilation, but if the symbols do not exist, it might result in runtime
+  crashes).
+  {/param}
+{/call}
+
+{call cxx_common.srcs_arg}
+  {param sample_file_name : 'foo/bar.m' /}
+{/call}
+
+{call apple_common.headers_arg /}
+
+{call apple_common.header_path_prefix_arg /}
+
+{call apple_common.frameworks_arg /}
+
+{call cxx_common.preprocessor_flags_arg /}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call cxx_common.link_style /}
+
+{call buck.test_label_arg /}
+
+{call apple_common.provisioning_profile_search_path_arg /}
+
+{call buck.visibility_arg /}
+
+{/param} // args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+apple_test(
+  name = 'MyTest',
+  info_plist = 'MyTest-Info.plist',
+  preprocessor_flags = ['-fobjc-arc'],
+  srcs = [
+    'MyTest.m',
+  ],
+  deps = [
+    ':MyLibrary',
+  ],
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+  ],
+)
+</pre>{/literal}
+{/param} // examples
+{/call} // buck.rule
+
+    {/param}
+  {/call}
+{/template}

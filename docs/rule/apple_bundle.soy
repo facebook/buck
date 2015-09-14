@@ -1,0 +1,77 @@
+{namespace buck.apple_bundle}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'apple_bundle()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that generates an Apple bundle.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+An <code>apple_bundle()</code> rule takes an Apple binary and all of the resources and asset
+catalogs in the rule's transitive dependencies and generates a bundle containing all of those files.
+Optionally the generated bundle can also be signed using specified provisioning profiles.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'extension' /}
+  {param desc}
+  The extension of the generated bundle. For example <code>'app'</code> for an application bundle
+  or <code>'appex'</code> for an application extension bundle.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'binary' /}
+  {param desc}
+  A <a href="{ROOT}concept/build_target.html">build target</a> identifying
+  an <a href="{ROOT}rule/apple_binary.html"><code>apple_binary()</code> rule</a> or
+  an <a href="{ROOT}rule/apple_library.html"><code>apple_library()</code> rule</a> whose output will
+  be used as the main executable binary of the generated bundle. The required rule type depends
+  on the value in the <code>extension</code> attribute. For example, application bundles expect
+  a binary (e.g. <code>'//Apps/MyApp:MyApp'</code>), application extension bundles expect a shared
+  library (e.g. <code>'//Libraries/MyLibrary:MyLibrary#shared'</code>).
+  {/param}
+{/call}
+
+{call apple_common.info_plist_arg /}
+
+{call apple_common.info_plist_substitutions_arg /}
+
+{call apple_common.provisioning_profile_search_path_arg /}
+
+{call buck.tests_arg /}
+
+{call buck.visibility_arg /}
+
+{/param} // args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+apple_bundle(
+  name = 'AppBundle',
+  binary = ':MyBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+)
+</pre>{/literal}
+{/param} // examples
+{/call} // buck.rule
+
+    {/param}
+  {/call}
+{/template}
