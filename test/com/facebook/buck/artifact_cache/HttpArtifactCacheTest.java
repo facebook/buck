@@ -76,7 +76,11 @@ public class HttpArtifactCacheTest {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream();
          DataOutputStream dataOut = new DataOutputStream(out)) {
       byte[] rawMetadata =
-          HttpArtifactCache.createMetadataHeader(ruleKeys, metadata, source, HASH_FUNCTION);
+          HttpArtifactCacheBinaryProtocol.createMetadataHeader(
+              ruleKeys,
+              metadata,
+              source,
+              HASH_FUNCTION);
       dataOut.writeInt(rawMetadata.length);
       dataOut.write(rawMetadata);
       dataOut.write(data.getBytes(Charsets.UTF_8));
@@ -317,9 +321,10 @@ public class HttpArtifactCacheTest {
             byte[] expectedData;
             try (ByteArrayOutputStream out = new ByteArrayOutputStream();
                  DataOutputStream dataOut = new DataOutputStream(out)) {
-              dataOut.write(HttpArtifactCache.createKeysHeader(ImmutableSet.of(ruleKey)));
+              dataOut.write(
+                  HttpArtifactCacheBinaryProtocol.createKeysHeader(ImmutableSet.of(ruleKey)));
               byte[] metadata =
-                  HttpArtifactCache.createMetadataHeader(
+                  HttpArtifactCacheBinaryProtocol.createMetadataHeader(
                       ImmutableSet.of(ruleKey),
                       ImmutableMap.<String, String>of(),
                       ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
