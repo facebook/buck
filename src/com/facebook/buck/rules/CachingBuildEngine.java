@@ -725,10 +725,15 @@ public class CachingBuildEngine implements BuildEngine {
               new Callable<ImmutableSortedSet<BuildRule>>() {
                 @Override
                 public ImmutableSortedSet<BuildRule> call() throws Exception {
-                  return rule.getDeps();
+                  ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+                  deps.addAll(rule.getDeps());
+                  if (rule instanceof HasRuntimeDeps) {
+                    deps.addAll(((HasRuntimeDeps) rule).getRuntimeDeps());
+                  }
+                  return deps.build();
                 }
               });
-
+      ruleDeps.put(rule.getBuildTarget(), deps);
     }
     return deps;
   }
