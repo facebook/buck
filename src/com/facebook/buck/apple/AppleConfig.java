@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ProcessExecutor;
@@ -217,7 +218,8 @@ public class AppleConfig {
   }
 
   public Optional<Path> getXctoolPath() {
-    return getOptionalPath("apple", "xctool_path");
+    Path xctool = getOptionalPath("apple", "xctool_path").or(Paths.get("xctool"));
+    return new ExecutableFinder().getOptionalExecutable(xctool, delegate.getEnvironment());
   }
 
   public Optional<BuildTarget> getXctoolZipTarget() {
