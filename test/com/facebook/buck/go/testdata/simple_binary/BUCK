@@ -1,0 +1,6 @@
+go_binary(
+  name = "xyzzy",
+  srcs = [
+    "main.go",
+  ],
+)

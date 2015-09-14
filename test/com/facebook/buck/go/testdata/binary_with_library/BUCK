@@ -1,0 +1,27 @@
+go_binary(
+  name = "hello",
+  srcs = [
+    "main.go",
+  ],
+  deps = [
+    "//messenger:messenger",
+  ],
+)
+
+go_binary(
+  name = "illegal_dep",
+  srcs = [
+    "main.go",
+  ],
+  deps = [
+    ":python_dep",
+    "//messenger:messenger",
+  ],
+)
+
+python_library(
+  name = "python_dep",
+  srcs = [
+    "empty.py"
+  ]
+)

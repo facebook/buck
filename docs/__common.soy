@@ -195,6 +195,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'csharp_library',
             'prebuilt_dotnet_library',
         ],
+        'go': [
+            'go_binary',
+            'go_library',
+        ],
         'ios': [
             'apple_asset_catalog',
             'apple_binary',
@@ -272,6 +276,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {call .platformBuildRuleLink}
         {param platform: 'D' /}
         {param rules: $platformRulesMap['d'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Go' /}
+        {param rules: $platformRulesMap['go'] /}
     {/call}
     {call .platformBuildRuleLink}
         {param platform: 'iOS' /}

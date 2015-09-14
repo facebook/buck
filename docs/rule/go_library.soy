@@ -1,0 +1,65 @@
+{namespace go_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'go_library()' /}
+    {param prettify: true /}
+    {param description}
+      A go_library() rule builds a Go linkable archive.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+<p>
+  A go_library() rule builds a native library from the supplied set of Go source files
+  and dependencies.
+</p>
+<p>
+  {call go_common.supported_language_version /}
+</p>
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call go_common.srcs_arg /}
+
+{call go_common.package_name_arg /}
+
+{call go_common.deps_arg /}
+
+{call go_common.compiler_flags_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{call go_common.more_examples /}
+
+{literal}<pre class="prettyprint lang-py">
+go_library(
+  name='greeting',
+  srcs=[
+    'greeting.go',
+  ],
+  deps=[
+    ':join',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
