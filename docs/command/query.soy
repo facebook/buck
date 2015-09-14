@@ -53,6 +53,7 @@ a few extensions.
     keywords is:
     <ul style="line-height:0.5em">
         <li><a href="#allpaths"><code>allpaths</code></a></li>
+        <li><a href="#attrfilter"><code>attrfilter</code></a></li>
         <li><a href="#deps"><code>deps</code></a></li>
         <li><a href="#set-operations"><code>except</code></a></li>
         <li><a href="#set-operations"><code>intersect</code></a></li>
@@ -328,6 +329,37 @@ buck query "allpaths(//foo:bar, //foo/bar/lib:baz)" --dot > result.dot
 dot -Tpng result.dot -o image.png
 {/literal}
 </pre></p>
+
+
+{call .section}
+{param anchor: 'attrfilter' /}
+{param title: 'Rule attribute filtering: attrfilter'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= attrfilter(word, word, expr)
+{/literal}
+</pre></p>
+
+<p>
+The <code>attrfilter(attribute, value, expression)</code> operator evaluates
+the given <code>expression</code> and filters the resulting build targets
+whose <code>attribute</code> contain the given <code>value</code>.
+</p>
+
+<p>
+If the attribute is just a value, say <code>name</code>, it is compared to the
+given <code>value</code>. If it's a list, the target is filtered if the
+given <code>value</code> is contained in the list. If it's a dictionary,
+the <code>value</code> is searched both in the keys and values of the
+dictionary.
+</p>
+
+<p>
+For example, <code>attrfilter(deps, '//foo:bar', '//...')</code> filters the
+build targets in the repository that depend on <code>'//foo:bar'</code>.
+</p>
 
 
 {call .section}

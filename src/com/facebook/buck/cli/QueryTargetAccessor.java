@@ -23,6 +23,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.query2.engine.QueryException;
@@ -36,7 +37,7 @@ public class QueryTargetAccessor {
 
   private QueryTargetAccessor() { }
 
-  public static <T> ImmutableSet<QueryTarget> getAttributeValue(
+  public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
       TargetNode<T> node,
       String attribute)
       throws QueryException {
@@ -54,6 +55,36 @@ public class QueryTargetAccessor {
                 builder.add(extractSourcePath((SourcePath) value));
               } else if (value instanceof HasBuildTarget) {
                 builder.add(extractBuildTargetContainer((HasBuildTarget) value));
+              }
+            }
+          },
+          node.getConstructorArg()
+      );
+      return builder.build();
+    } catch (NoSuchFieldException e) {
+      // Ignore if the field does not exist in this rule.
+      return ImmutableSet.of();
+    }
+  }
+
+  /**
+   * Filters the objects in the given attribute that satisfy the given predicate.
+   */
+  public static <T> ImmutableSet<Object> filterAttributeContents(
+      TargetNode<T> node,
+      String attribute,
+      final Predicate<Object> predicate)
+      throws QueryException {
+    try {
+      final ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
+      Field field = node.getConstructorArg().getClass().getField(attribute);
+      ParamInfo<T> info = new ParamInfo<>(typeCoercerFactory, field);
+      info.traverse(
+          new ParamInfo.Traversal() {
+            @Override
+            public void traverse(Object value) {
+              if (predicate.apply(value)) {
+                builder.add(value);
               }
             }
           },

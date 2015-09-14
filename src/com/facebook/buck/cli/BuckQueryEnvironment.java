@@ -27,6 +27,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -327,6 +328,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
         DEFAULT_QUERY_FUNCTIONS.get(9),   // "deps"
         DEFAULT_QUERY_FUNCTIONS.get(10),  // "rdeps"
         new QueryAllPathsFunction(),
+        new QueryAttrFilterFunction(),
         new QueryFilterFunction(),
         new QueryKindFunction(),
         new QueryLabelsFunction(),
@@ -339,9 +341,20 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return getNode(target).getType().getName();
   }
 
-  public ImmutableSet<QueryTarget> getAttributeValue(QueryTarget target, String attribute)
+  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
       throws QueryException, InterruptedException {
-    Preconditions.checkState(target instanceof AbstractQueryBuildTarget);
-    return QueryTargetAccessor.getAttributeValue(getNode(target), attribute);
+    Preconditions.checkState(target instanceof QueryBuildTarget);
+    return QueryTargetAccessor.getTargetsInAttribute(getNode(target), attribute);
   }
+
+  public ImmutableSet<Object> filterAttributeContents(
+      QueryTarget target,
+      String attribute,
+      final Predicate<Object> predicate)
+      throws QueryException, InterruptedException {
+    Preconditions.checkState(target instanceof QueryBuildTarget);
+    return QueryTargetAccessor.filterAttributeContents(
+        Preconditions.checkNotNull(getNode(target)), attribute, predicate);
+  }
+
 }

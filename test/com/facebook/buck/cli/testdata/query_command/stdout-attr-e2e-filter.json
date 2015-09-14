@@ -1,0 +1,10 @@
+{
+  "//example:four-application-tests" : {
+    "buck.type" : "apple_test",
+    "srcs" : [ "4-application-test.txt" ]
+  },
+  "//example:six-tests" : {
+    "buck.type" : "apple_test",
+    "srcs" : [ "6-test.txt" ]
+  }
+}

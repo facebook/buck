@@ -72,6 +72,7 @@ apple_test(
   name = 'four-application-tests',
   extension = 'xctest',
   info_plist = 'Test.plist',
+  labels = [ 'e2e' ],
   srcs = [ '4-application-test.txt' ],
   deps = [
     ':four',
@@ -83,6 +84,7 @@ apple_test(
   name = 'six-tests',
   extension = 'xctest',
   info_plist = 'Test.plist',
+  labels = [ 'e2e', 'other' ],
   srcs = [ '6-test.txt' ],
   deps = [ ':six' ],
 )

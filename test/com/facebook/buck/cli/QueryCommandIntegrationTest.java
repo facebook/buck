@@ -509,4 +509,35 @@ public class QueryCommandIntegrationTest {
         is(equalTo(workspace.getFileContents("stdout-allpaths-deps-one-to-five-six.dot"))));
   }
 
+  @Test
+  public void testFilterAttrTests() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "attrfilter(tests, '//example:four-tests', '//example/...')");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalTo("//example:four\n")));
+  }
+
+  @Test
+  public void testFilterAttrOutputAttributesTests() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "attrfilter(labels, 'e2e', '//example/...')",
+        "--output-attributes",
+        "buck.type",
+        "srcs");
+    result.assertSuccess();
+    assertThat(
+        parseJSON(result.getStdout()),
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-attr-e2e-filter.json")))));
+  }
+
 }
