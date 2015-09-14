@@ -1,0 +1,47 @@
+apple_resource(
+  name = 'BuckDemoAppResources',
+  files = glob(['*.png']),
+  dirs = [],
+)
+
+apple_bundle(
+  name = 'BuckDemoApp',
+  binary = ':BuckDemoAppBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+  tests = [':BuckDemoAppTest'],
+)
+
+apple_binary(
+  name = 'BuckDemoAppBinary',
+  deps = [':BuckDemoAppResources'],
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = glob([
+    '*.h',
+  ]),
+  srcs = glob([
+    '*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+)
+
+apple_package(
+  name = 'BuckDemoAppPackage',
+  bundle = ':BuckDemoApp',
+)
+
+apple_test(
+  name = 'BuckDemoAppTest',
+  extension = 'xctest',
+  test_host_app = ':BuckDemoApp',
+  srcs = ['tests/BuckDemoAppTest.m'],
+  info_plist = 'tests/Test.plist',
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+  ],
+)

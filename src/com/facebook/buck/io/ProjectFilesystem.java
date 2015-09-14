@@ -856,6 +856,7 @@ public class ProjectFilesystem {
 
   public void createSymLink(Path symLink, Path realFile, boolean force)
       throws IOException {
+    symLink = resolve(symLink);
     if (force) {
       Files.deleteIfExists(symLink);
     }

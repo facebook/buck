@@ -55,6 +55,7 @@ EXPORTED_RESOURCES = [
     Resource("report_generator_jar"),
     Resource("path_to_static_content"),
     Resource("path_to_pex", executable=True),
+    Resource("quickstart_ios_origin_dir"),
     Resource("quickstart_origin_dir"),
     Resource("dx"),
     Resource("android_agent_path"),

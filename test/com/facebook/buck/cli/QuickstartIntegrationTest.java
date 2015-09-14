@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -24,6 +26,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 
 import org.junit.Rule;
@@ -106,4 +109,55 @@ public class QuickstartIntegrationTest {
     Path buckOut = destinationWorkspace.getPath("buck-out");
     assertTrue("`buck build` should create a buck-out directory.", Files.isDirectory(buckOut));
   }
+
+  @Test
+  public void testQuickstartCreatesIosProject() throws CmdLineException, IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    ProjectWorkspace quickstartWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "empty_project", quickstartDirectory);
+    quickstartWorkspace.setUp();
+
+    ProcessResult result = quickstartWorkspace.runBuckCommand(
+        "quickstart",
+        "--type",
+        "ios",
+        "--dest-dir",
+        destDir.getRoot().toAbsolutePath().toString()).assertSuccess();
+
+    ProjectWorkspace destinationWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "quickstart_expected_ios_project",
+        destDir);
+    destinationWorkspace.setUp();
+    destinationWorkspace.verify(); // Verifies the project was generated as expected.
+
+    Path readme = destDir.getRoot().resolve("README.md");
+    assertTrue("`buck quickstart` should create a README file.", Files.isRegularFile(readme));
+    assertEquals(
+        "`buck quickstart` should output the contents of the README file to standard output.",
+        new String(Files.readAllBytes(readme), StandardCharsets.UTF_8),
+        result.getStdout());
+
+    // We can't test building if the user does not have an Android SDK. First, test targets, since
+    // it does not have that dependency.
+    result = destinationWorkspace.runBuckCommand("targets").assertSuccess();
+
+    assertEquals(
+        "`buck targets` should display a list of targets.",
+        Joiner.on('\n').join(
+            "//ios:BuckDemoApp",
+            "//ios:BuckDemoAppBinary",
+            "//ios:BuckDemoAppPackage",
+            "//ios:BuckDemoAppResources",
+            "//ios:BuckDemoAppTest") + "\n",
+        result.getStdout());
+
+    destinationWorkspace.runBuckCommand("build", "demo_app_ios").assertSuccess();
+
+    Path buckOut = destinationWorkspace.getPath("buck-out");
+    assertTrue("`buck build` should create a buck-out directory.", Files.isDirectory(buckOut));
+
+    destinationWorkspace.runBuckCommand("project", "demo_app_ios").assertSuccess();
+  }
+
 }

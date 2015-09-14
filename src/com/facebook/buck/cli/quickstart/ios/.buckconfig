@@ -1,0 +1,19 @@
+[cache]
+  mode = dir
+
+[cxx]
+  default_platform = iphonesimulator-x86_64
+  cflags = -g -std=c11
+  cxxflags = -g -std=c++14
+  combined_preprocess_and_compile = true
+
+[alias]
+  demo_app_ios = //ios:BuckDemoApp
+
+[project]
+  ide = xcode
+  ignore = .buckd, \
+           .hg, \
+           .git, \
+           buck-cache, \
+           buck-out, \

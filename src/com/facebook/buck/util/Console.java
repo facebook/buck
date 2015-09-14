@@ -31,7 +31,8 @@ public class Console {
   private final DirtyPrintStreamDecorator stdErr;
   private final Ansi ansi;
 
-  public Console(Verbosity verbosity,
+  public Console(
+      Verbosity verbosity,
       PrintStream stdOut,
       PrintStream stdErr,
       Ansi ansi) {
