@@ -383,7 +383,6 @@ public class AppleTestDescription implements
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
-    public Optional<String> resourcePrefixDir;
     public Optional<SourcePath> provisioningProfileSearchPath;
 
     public Optional<ImmutableMap<String, String>> destinationSpecifier;
