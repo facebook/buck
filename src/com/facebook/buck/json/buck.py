@@ -11,7 +11,7 @@ import functools
 import imp
 import inspect
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath, PurePath
 import optparse
 import os
 import os.path
@@ -163,7 +163,7 @@ class memoized(object):
 
 
 @provide_for_build
-def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
+def glob(includes, excludes=[], include_dotfiles=False, build_env=None, search_base=None):
     assert build_env.type == BuildContextType.BUILD_FILE, (
         "Cannot use `glob()` at the top-level of an included file.")
     # Ensure the user passes lists of strings rather than just a string.
@@ -195,7 +195,9 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
             build_env.watchman_client = None
 
     if results is None:
-        search_base = Path(build_env.dirname)
+        if search_base is None:
+            search_base = Path(build_env.dirname)
+
         results = glob_internal(
             includes,
             excludes,
@@ -210,6 +212,65 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None):
             include_dotfiles=include_dotfiles)
 
     return results
+
+
+def merge_maps(*header_maps):
+    result = {}
+    for header_map in header_maps:
+        for key in header_map:
+            if key in result and result[key] != header_map[key]:
+                assert False, 'Conflicting header files in header search paths. ' + \
+                              '"%s" maps to both "%s" and "%s".' \
+                              % (key, result[key], header_map[key])
+
+            result[key] = header_map[key]
+
+    return result
+
+
+def single_subdir_glob(dirpath, glob_pattern, excludes=[], prefix=None, build_env=None,
+                       search_base=None):
+    results = {}
+    files = glob([os.path.join(dirpath, glob_pattern)],
+                 excludes=excludes,
+                 build_env=build_env,
+                 search_base=search_base)
+    for f in files:
+        if dirpath:
+            key = f[len(dirpath) + 1:]
+        else:
+            key = f
+        if prefix:
+            # `f` is a string, but we need to create correct platform-specific Path.
+            # Using Path straight away won't work because it will use host's class, which is Posix
+            # on OS X. For the same reason we can't use os.path.join.
+            # Here we try to understand if we're running Windows test, then use WindowsPath
+            # to build up the key with prefix, allowing test to pass.
+            cls = PureWindowsPath if "\\" in f else PurePath
+            key = str(cls(prefix) / cls(key))
+        results[key] = f
+
+    return results
+
+
+@provide_for_build
+def subdir_glob(glob_specs, excludes=[], prefix=None, build_env=None, search_base=None):
+    """
+    Given a list of tuples, the form of (relative-sub-directory, glob-pattern),
+    return a dict of sub-directory relative paths to full paths.  Useful for
+    defining header maps for C/C++ libraries which should be relative the given
+    sub-directory.
+
+    If prefix is not None, prepends it it to each key in the dictionary.
+    """
+
+    results = []
+
+    for dirpath, glob_pattern in glob_specs:
+        results.append(
+            single_subdir_glob(dirpath, glob_pattern, excludes, prefix, build_env, search_base))
+
+    return merge_maps(*results)
 
 
 def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root):

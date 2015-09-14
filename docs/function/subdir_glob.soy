@@ -1,0 +1,95 @@
+{namespace buck.subdir_glob}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'subdir_glob()' /}
+    {param prettify: true /}
+    {param description}
+      The subdir_glob() function is useful for defining header maps for C/C++ libraries which 
+      should be relative the given sub-directory.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+	<p>The <code>subdir_glob()</code> function is useful for defining header maps for C/C++ libraries 
+	which should be relative the given sub-directory. Given a list of tuples, the form of 
+	(relative-sub-directory, glob-pattern), return a dict of sub-directory relative paths to full 
+	paths.</p>
+	<p>Please refer to <code>{call buck.fn_glob /}</code> for explanations and examples of the pattern. </p>
+{/param}
+
+{param args}
+
+{call buck.functionArg}
+  {param name : 'glob_specs' /}
+  {param desc}
+  The array of tuples in form of (relative-sub-directory, glob-pattern inside relative-sub-directory).
+  {/param}
+{/call}
+
+{call buck.functionArg}
+  {param name : 'excludes' /}
+  {param default : '[]' /}
+  {param desc}
+  A list of patterns to identify files that should be removed from the set
+  specified by the first argument.
+  {/param}
+{/call}
+
+{call buck.functionArg}
+  {param name : 'Prefix' /}
+  {param default : 'None' /}
+  {param desc}
+  If is not <code>None</code>, prepends it to each key in the dictionary.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+
+Given this <code>exported_headers</code> description:
+
+{literal}<pre class="prettyprint lang-py">
+exported_headers = subdir_glob([
+    ("lib/source", "video/**/*.h"),
+    ("lib/source", "audio/**/*.h"),
+  ], 
+  excludes = [
+    "lib/source/video/codecs/*.h",
+  ], 
+  prefix = "MediaLib/")
+</pre>{/literal}
+
+It will map the following on disk directory structure below to the following includes:
+
+{literal}<pre class="prettyprint lang-cpp">
+lib/
+  source/
+    video/
+      converter/
+        converter.h   ->   #include "MediaLib/video/converter/converter.h"
+      player/
+        player.h      ->   #include "MediaLib/video/player/player.h"
+      codecs/
+        codec1.h      ->   not includable - defined in `excludes`
+        codec2.h      ->   not includable - defined in `excludes`
+    audio/
+      codecs/
+        codec1.h      ->   #include "MediaLib/audio/codecs/codec1.h"
+        codec2.h      ->   #include "MediaLib/audio/codecs/codec2.h"
+      player/
+        player.h      ->   #include "MediaLib/audio/player/player.h"
+    internal/
+      otherheader.h   ->   not includable
+</pre>{/literal}
+
+{/param}
+
+{/call} // buck.rule
+    {/param} // content
+  {/call}
+{/template}

@@ -1,4 +1,5 @@
 from buck import format_watchman_query_params, glob_internal, LazyBuildEnvPartial
+from buck import subdir_glob, BuildFileContext
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import os
 import shutil
@@ -103,6 +104,44 @@ class TestBuckPlatformBase(object):
                 include_dotfiles=False,
                 search_base=search_base))
 
+    def test_subdir_glob(self):
+        build_env = BuildFileContext(None, None, None, None, None, None, None, None)
+        search_base = self.fake_path(
+            'foo',
+            glob_results={
+                'lib/bar/*.h': ['lib/bar/A.h', 'lib/bar/B.h'],
+                'lib/baz/*.h': ['lib/baz/C.h', 'lib/baz/D.h'],
+            })
+        self.assertGlobMatches(
+            {
+                'bar/B.h': 'lib/bar/B.h',
+                'bar/A.h': 'lib/bar/A.h',
+                'baz/D.h': 'lib/baz/D.h',
+                'baz/C.h': 'lib/baz/C.h',
+            },
+            subdir_glob([
+                ('lib', 'bar/*.h'),
+                ('lib', 'baz/*.h')],
+                build_env=build_env,
+                search_base=search_base))
+
+    def test_subdir_glob_with_prefix(self):
+        build_env = BuildFileContext(None, None, None, None, None, None, None, None)
+        search_base = self.fake_path(
+            'foo',
+            glob_results={
+                'lib/bar/*.h': ['lib/bar/A.h', 'lib/bar/B.h'],
+            })
+        self.assertGlobMatches(
+            {
+                'Prefix/bar/B.h': 'lib/bar/B.h',
+                'Prefix/bar/A.h': 'lib/bar/A.h',
+            },
+            subdir_glob([('lib', 'bar/*.h')],
+                        prefix='Prefix',
+                        build_env=build_env,
+                        search_base=search_base))
+
     def test_glob_excludes_relative(self):
         search_base = self.fake_path(
             'foo',
@@ -187,9 +226,15 @@ class TestBuckWindows(TestBuckPlatformBase, unittest.TestCase):
 
     def assertGlobMatches(self, expected, actual):
         # Fix the path separator to make test writing easier
-        fixed_expected = []
-        for path in expected:
-            fixed_expected.append(path.replace('/', '\\'))
+        fixed_expected = None
+        if isinstance(expected, list):
+            fixed_expected = []
+            for path in expected:
+                fixed_expected.append(path.replace('/', '\\'))
+        else:
+            fixed_expected = {}
+            for key, value in expected.items():
+                fixed_expected.update({key.replace('/', '\\'): value.replace('/', '\\')})
         self.assertEqual(fixed_expected, actual)
 
 
