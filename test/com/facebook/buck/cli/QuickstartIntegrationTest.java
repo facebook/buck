@@ -37,9 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-/**
- * Integration test for the {@code buck quickstart} command.
- */
 public class QuickstartIntegrationTest {
 
   @Rule

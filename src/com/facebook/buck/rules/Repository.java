@@ -87,11 +87,6 @@ public class Repository {
     return config;
   }
 
-  // TODO(jacko): This is a hack to avoid breaking the build. Get rid of it.
-  public AndroidDirectoryResolver getAndroidDirectoryResolver() {
-    return directoryResolver;
-  }
-
   public String getBuildFileName() {
     return buildFileName;
   }

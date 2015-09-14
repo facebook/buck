@@ -174,6 +174,10 @@ public class AndroidPlatformTarget {
     return androidDirectoryResolver.findAndroidNdkDir();
   }
 
+  public Optional<Path> getSdkDirectory() {
+    return androidDirectoryResolver.findAndroidSdkDirSafe();
+  }
+
   /**
    * @param platformId for the platform, such as "Google Inc.:Google APIs:16"
    */
@@ -209,7 +213,7 @@ public class AndroidPlatformTarget {
         .get();
   }
 
-  private static interface Factory {
+  private interface Factory {
     public AndroidPlatformTarget newInstance(
         AndroidDirectoryResolver androidDirectoryResolver,
         String apiLevel,

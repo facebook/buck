@@ -747,7 +747,7 @@ public final class Main {
       }
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
           createAndroidPlatformTargetSupplier(
-              rootRepository.getAndroidDirectoryResolver(),
+              androidDirectoryResolver,
               androidBuckConfig,
               buildEventBus);
 

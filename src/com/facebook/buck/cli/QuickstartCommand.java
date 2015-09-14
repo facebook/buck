@@ -16,11 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
@@ -75,11 +76,17 @@ public class QuickstartCommand extends AbstractCommand {
     return destDir;
   }
 
-  public String getAndroidSdkDir(AndroidDirectoryResolver androidDirectoryResolver) {
+  public String getAndroidSdkDir(Supplier<AndroidPlatformTarget> platformTargetSupplier) {
     if (androidSdkDir == null) {
-      Optional<Path> androidSdkDir = androidDirectoryResolver.findAndroidSdkDirSafe();
-      this.androidSdkDir = androidSdkDir.isPresent() ?
-          androidSdkDir.get().toAbsolutePath().toString() : "";
+      try {
+        Optional<Path> possibleSdkDir = platformTargetSupplier.get().getSdkDirectory();
+
+        this.androidSdkDir = possibleSdkDir.isPresent() ?
+            possibleSdkDir.get().toAbsolutePath().toString() :
+            "";
+      } catch (HumanReadableException e) {
+        this.androidSdkDir = "";
+      }
     }
 
     return androidSdkDir;
@@ -121,7 +128,7 @@ public class QuickstartCommand extends AbstractCommand {
       return 1;
     }
 
-    String sdkLocation = getAndroidSdkDir(params.getRepository().getAndroidDirectoryResolver());
+    String sdkLocation = getAndroidSdkDir(params.getAndroidPlatformTargetSupplier());
     if (sdkLocation.isEmpty()) {
       sdkLocation = promptForPath(params, "Enter your Android SDK's location: ");
     }
