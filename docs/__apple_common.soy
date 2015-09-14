@@ -1,0 +1,72 @@
+{namespace apple_common}
+
+/***/
+{template .headers_arg}
+{call buck.arg}
+  {param name : 'headers' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of header files that are made available for inclusion to the source files in this
+  target. These should be specified as either a list of header files or a dictionary of header names
+  to header files. The header names can contain forward slashes (<code>/</code>). If a list of
+  header files is specified, the headers can be imported
+  with <code>#import "$HEADER_PATH_PREFIX/$HEADER_NAME"</code> or <code>#import
+  "$HEADER_NAME"</code>, where <code>$HEADER_PATH_PREFIX</code> is the value of
+  the target's <code>header_path_prefix</code> attribute, and <code>$HEADER_NAME</code> is
+  the filename of the header file. If a dictionary is specified, each header can be imported
+  with <code>#import "$HEADER_NAME"</code>, where <code>$HEADER_NAME</code> is the key
+  corresponding to this file. In this case, the <code>header_path_prefix</code> attribute is
+  ignored.  In either case, quotes in the import statements can be replaced with angle brackets.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_headers_arg}
+{call buck.arg}
+  {param name : 'exported_headers' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of header files that are made available for inclusion to the source files in this
+  target and all targets that transitively depend on this one. These should be specified as
+  either a list of header files or a dictionary of header names
+  to header files. The header names can contain forward slashes (<code>/</code>). If a list of
+  header files is specified, the headers can be imported
+  with <code>#import "$HEADER_PATH_PREFIX/$HEADER_NAME"</code> or, if a header file that belongs to
+  the same rule is being imported, with <code>#import
+  "$HEADER_NAME"</code>, where <code>$HEADER_PATH_PREFIX</code> is the value of
+  the target's <code>header_path_prefix</code> attribute, and <code>$HEADER_NAME</code> is
+  the filename of the header file. If a dictionary is specified, each header can be imported
+  with <code>#import "$HEADER_NAME"</code>, where <code>$HEADER_NAME</code> is the key
+  corresponding to this file. In this case, the <code>header_path_prefix</code> attribute is
+  ignored. In either case, quotes in the import statements can be replaced with angle brackets.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .header_path_prefix_arg}
+{call buck.arg}
+  {param name : 'header_path_prefix' /}
+  {param default : 'name' /}
+  {param desc}
+  A path prefix when including headers of this target. Defaults to the short name of the target. Can
+  contain forward slashes (<code>/</code>), but cannot start with one. See <code>headers</code> for
+  more information.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .frameworks_arg}
+{call buck.arg}
+  {param name : 'frameworks' /}
+  {param default : '[]' /}
+  {param desc}
+  A list of system frameworks that the code in this target uses. Each entry should be a path
+  starting with <code>$SDKROOT</code> or <code>$PLATFORM_DIR</code> to denote that the rest of the
+  path is relative to the root of the SDK used for the build or to the platform toolchain
+  directory.
+  {/param}
+{/call}
+{/template}

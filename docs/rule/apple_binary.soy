@@ -1,0 +1,93 @@
+{namespace apple_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'apple_binary()' /}
+    {param prettify: true /}
+    {param description}
+      An apple_binary() rule builds a native Mac OSX or iOS executable.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+An <code>apple_binary()</code> rule builds a native executable from the supplied set of
+Objective-C/C++ source files and dependencies and is similar to
+a <a href="{ROOT}rule/cxx_binary.html"><code>cxx_binary()</code> rule</a> with which it shares many
+attributes. In addition to those common
+attributes, <code>apple_binary()</code> has a few more that are specific to binaries intended to
+be built using the Apple toolchain. Please also note that the way header files are
+imported differs between <code>apple_binary()</code> and <code>cxx_binary()</code> to better
+accommodate existing conventions (see the documentation
+of the <code>headers</code> and <code>exported_headers</code> attributes for more details).
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call cxx_common.srcs_arg}
+  {param sample_file_name : 'foo/bar.m' /}
+{/call}
+
+{call apple_common.headers_arg /}
+
+{call apple_common.exported_headers_arg /}
+
+{call apple_common.header_path_prefix_arg /}
+
+{call apple_common.frameworks_arg /}
+
+{call cxx_common.preprocessor_flags_arg /}
+
+{call cxx_common.exported_preprocessor_flags_arg /}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call cxx_common.exported_linker_flags_arg /}
+
+{call cxx_common.link_style /}
+
+{call buck.tests_arg /}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+apple_binary(
+  name = 'MyBinary',
+  deps = [
+    ':MyLibrary',
+    '//Libraries:AnotherLibrary',
+  ],
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = [
+    'MyHeader.h',
+  ],
+  srcs = [
+    'MySource.m',
+  ],
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

@@ -72,16 +72,7 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.platform_preprocessor_flags_arg /}
 
-{call buck.arg}
-  {param name : 'exported_preprocessor_flags' /}
-  {param default : '[]' /}
-  {param desc}
-  Just as <code>preprocessor_flags</code>, flags to use when preprocessing any of the above sources
-  (which require preprocessing). However, unlike <code>preprocessor_flags</code>, these preprocessor
-  flags are also used by rules that transitively depend on this rule when preprocessing their own
-  sources.
-  {/param}
-{/call}
+{call cxx_common.exported_preprocessor_flags_arg /}
 
 {call buck.arg}
   {param name : 'exported_platform_preprocessor_flags' /}
@@ -103,15 +94,7 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.platform_linker_flags_arg /}
 
-{call cxx_common.link_style /}
-
-{call buck.arg}
-  {param name : 'exported_linker_flags' /}
-  {param default : '[]' /}
-  {param desc}
-  Linker flags to add to this library and to libraries that depend on this library.
-  {/param}
-{/call}
+{call cxx_common.exported_linker_flags_arg /}
 
 {call buck.arg}
   {param name : 'exported_platform_linker_flags' /}
@@ -124,6 +107,8 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
   See <code>exported_linker_flags</code> for more information.
   {/param}
 {/call}
+
+{call cxx_common.link_style /}
 
 {call buck.arg}
   {param name : 'supported_platforms_regex' /}

@@ -1,6 +1,8 @@
 {namespace cxx_common}
 
-/***/
+/**
+ * @param? sample_file_name File name to use in samples. If null, defaults to 'foo/bar.c'.
+ */
 {template .srcs_arg}
 {call buck.arg}
   {param name : 'srcs' /}
@@ -11,8 +13,9 @@
   rule.  We determine which stages to run on each input source based on it's file extension. See the
   {sp}<a href="https://gcc.gnu.org/onlinedocs/gcc/Overall-Options.html">GCC documentation</a>{sp}
   for more detail on how file extensions are interpreted. Each element can be either a string
-  specifying a source file (e.g. <code>'foo/bar.c'</code>) or a tuple of a string specifying a
-  source file and a list of compilation flags (e.g. <code>('foo/bar.c', ['-Wall', '-Werror'])
+  specifying a source file (e.g. <code>'{$sample_file_name ?: 'foo/bar.c'}'</code>) or a tuple of
+  a string specifying a source file and a list of compilation flags
+  (e.g. <code>('{$sample_file_name ?: 'foo/bar.c'}', ['-Wall', '-Werror'])
   </code>). In the latter case the specified flags will be used in addition to the rule's other
   flags when preprocessing and compiling that file (if applicable).
   {/param}
@@ -93,6 +96,20 @@
 {/template}
 
 /***/
+{template .exported_preprocessor_flags_arg}
+{call buck.arg}
+  {param name : 'exported_preprocessor_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Just as <code>preprocessor_flags</code>, flags to use when preprocessing any of the above sources
+  (which require preprocessing). However, unlike <code>preprocessor_flags</code>, these preprocessor
+  flags are also used by rules that transitively depend on this rule when preprocessing their own
+  sources.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .platform_preprocessor_flags_arg}
 {call buck.arg}
   {param name : 'platform_preprocessor_flags' /}
@@ -153,6 +170,17 @@
   element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
   name is matched, and the second element is a list of flags to use when this target is involved in
   a link operation. See <code>linker_flags</code> for more information.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_linker_flags_arg}
+{call buck.arg}
+  {param name : 'exported_linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  Linker flags to add to this library and to libraries that depend on this library.
   {/param}
 {/call}
 {/template}
