@@ -34,7 +34,8 @@ public final class TargetGraphTestParsing {
     ImmutableSet<BuildTarget> explicitTestTargets;
     explicitTestTargets = TargetGraphAndTargets.getExplicitTestTargets(
         targets,
-        original);
+        original,
+        true);
     Iterable<BuildTarget> targetsWithTests =
         Sets.union(targets, explicitTestTargets);
 

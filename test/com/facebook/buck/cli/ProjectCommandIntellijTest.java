@@ -153,7 +153,8 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.<BuildTarget>of(),
-        /* withTests = */ false);
+        /* withTests = */ false,
+        /* withDependenciesTests = */ false);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
@@ -175,7 +176,8 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.<BuildTarget>of(),
-        /* withTests = */ true);
+        /* withTests = */ true,
+        /* withDependenciesTests = */ true);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
@@ -200,7 +202,8 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.of(fooProjectNode.getBuildTarget()),
-        /* withTests = */ false);
+        /* withTests = */ false,
+        /* withDependenciesTests = */ false);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
@@ -220,7 +223,8 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.of(fooProjectNode.getBuildTarget()),
-        /* withTests = */ true);
+        /* withTests = */ true,
+        /* withDependenciesTests = */ true);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
@@ -244,7 +248,8 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.of(bazProjectNode.getBuildTarget()),
-        /* withTests = */ false);
+        /* withTests = */ false,
+        /* withDependenciesTests = */ false);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(
@@ -262,7 +267,8 @@ public class ProjectCommandIntellijTest {
         targetGraph,
         ProjectCommand.Ide.INTELLIJ,
         ImmutableSet.of(bazProjectNode.getBuildTarget()),
-        /* withTests = */ true);
+        /* withTests = */ true,
+        /* withDependenciesTests = */ true);
 
     assertEquals(
         ImmutableSortedSet.<TargetNode<?>>of(

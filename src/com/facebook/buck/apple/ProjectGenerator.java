@@ -145,8 +145,11 @@ public class ProjectGenerator {
     /** Generate read-only project files */
     GENERATE_READ_ONLY_FILES,
 
-    /** Include tests in the scheme */
+    /** Include tests that test root targets in the scheme */
     INCLUDE_TESTS,
+
+    /** Include dependencies tests in the scheme */
+    INCLUDE_DEPENDENCIES_TESTS,
     ;
   }
 

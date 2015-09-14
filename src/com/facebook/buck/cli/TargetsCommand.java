@@ -629,7 +629,8 @@ public class TargetsCommand extends AbstractCommand {
       ImmutableSet<BuildTarget> explicitTestTargets;
       explicitTestTargets = TargetGraphAndTargets.getExplicitTestTargets(
           matchingBuildTargets,
-          projectGraph);
+          projectGraph,
+          true);
       LOG.debug("Got explicit test targets: %s", explicitTestTargets);
       matchingBuildTargetsWithTests =
           Sets.union(matchingBuildTargets, explicitTestTargets);

@@ -56,13 +56,19 @@ public class TargetGraphAndTargets {
   /**
    * @param buildTargets The set of targets for which we would like to find tests
    * @param projectGraph A TargetGraph containing all nodes and their tests.
+   * @param shouldIncludeDependenciesTests Should or not include tests
+   * that test dependencies
    * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
    */
   public static ImmutableSet<BuildTarget> getExplicitTestTargets(
       ImmutableSet<BuildTarget> buildTargets,
-      TargetGraph projectGraph) {
+      TargetGraph projectGraph,
+      boolean shouldIncludeDependenciesTests) {
     ImmutableSet<TargetNode<?>> projectRoots = checkAndGetTargetNodes(buildTargets, projectGraph);
-    return getExplicitTestTargets(projectGraph.getSubgraph(projectRoots).getNodes());
+    if (shouldIncludeDependenciesTests) {
+      return getExplicitTestTargets(projectGraph.getSubgraph(projectRoots).getNodes());
+    }
+    return getExplicitTestTargets(projectRoots);
   }
 
   /**
@@ -83,7 +89,7 @@ public class TargetGraphAndTargets {
         .toSet();
   }
 
-  private static ImmutableSet<TargetNode<?>> checkAndGetTargetNodes(
+  public static ImmutableSet<TargetNode<?>> checkAndGetTargetNodes(
       ImmutableSet<BuildTarget> buildTargets,
       TargetGraph projectGraph) {
     ImmutableSet.Builder<TargetNode<?>> targetNodesBuilder = ImmutableSet.builder();
@@ -98,10 +104,12 @@ public class TargetGraphAndTargets {
   }
 
   public static TargetGraphAndTargets create(
-      ImmutableSet<BuildTarget> graphRoots,
+      final ImmutableSet<BuildTarget> graphRoots,
+      final ImmutableSet<BuildTarget> graphRootsWithoutWorkspaces,
       TargetGraph projectGraph,
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
+      final boolean isWithDependenciesTests,
       ImmutableSet<BuildTarget> explicitTests) {
     // Get the roots of the main graph. This contains all the targets in the project slice, or all
     // the valid project roots if a project slice is not specified.
@@ -128,7 +136,8 @@ public class TargetGraphAndTargets {
 
           for (BuildTarget buildTargetUnderTest : sourceUnderTest) {
             if (targetGraph.get(buildTargetUnderTest) != null) {
-              return true;
+              return isWithDependenciesTests ||
+                  graphRootsWithoutWorkspaces.contains(buildTargetUnderTest);
             }
           }
 

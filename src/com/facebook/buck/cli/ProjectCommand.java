@@ -168,6 +168,12 @@ public class ProjectCommand extends BuildCommand {
   private boolean withoutTests = false;
 
   @Option(
+      name = "--without-dependencies-tests",
+      usage = "When generating a project slice, includes tests that test code in main target, " +
+          "but exclude tests that test dependencies")
+  private boolean withoutDependenciesTests = false;
+
+  @Option(
       name = "--combine-test-bundles",
       usage = "Combine multiple ios/osx test targets into the same bundle if they have identical " +
           "settings")
@@ -289,6 +295,10 @@ public class ProjectCommand extends BuildCommand {
     return !withoutTests;
   }
 
+  public boolean isWithDependenciesTests() {
+    return !withoutDependenciesTests;
+  }
+
   private List<String> getInitialTargets(BuckConfig buckConfig) {
     Optional<String> initialTargets = buckConfig.getValue("project", "initial_targets");
     return initialTargets.isPresent()
@@ -396,6 +406,7 @@ public class ProjectCommand extends BuildCommand {
         projectGraphParser,
         projectPredicates.getAssociatedProjectPredicate(),
         isWithTests(),
+        isWithDependenciesTests(),
         getIde(params.getBuckConfig()),
         params.getRepository().getFilesystem().getIgnorePaths(),
         isExperimentalIntelliJProjectGenerationEnabled());
@@ -649,15 +660,46 @@ public class ProjectCommand extends BuildCommand {
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet)
       throws IOException, InterruptedException {
-    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
-    if (getReadOnly(params.getBuckConfig())) {
-      optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
+    int exitCode = 0;
+    ImmutableSet<ProjectGenerator.Option> options = buildWorkspaceGeneratorOptions(
+        getReadOnly(params.getBuckConfig()),
+        isWithTests(),
+        isWithDependenciesTests(),
+        getCombinedProject()
+    );
+    ImmutableSet<BuildTarget> requiredBuildTargets = generateWorkspacesForTargets(
+        params,
+        targetGraphAndTargets,
+        passedInTargetsSet,
+        options,
+        super.getOptions(),
+        new HashMap<Path, ProjectGenerator>(),
+        getCombinedProject(),
+        buildWithBuck,
+        getCombineTestBundles());
+    if (!requiredBuildTargets.isEmpty()) {
+      BuildCommand buildCommand = new BuildCommand();
+      buildCommand.setArguments(
+          FluentIterable.from(requiredBuildTargets)
+              .transform(Functions.toStringFunction())
+              .toList());
+      exitCode = buildCommand.runWithoutHelp(params);
     }
-    if (isWithTests()) {
-      optionsBuilder.add(ProjectGenerator.Option.INCLUDE_TESTS);
-    }
+    return exitCode;
+  }
 
-    boolean combinedProject = getCombinedProject();
+  @VisibleForTesting
+  static ImmutableSet<BuildTarget> generateWorkspacesForTargets(
+      final CommandRunnerParams params,
+      final TargetGraphAndTargets targetGraphAndTargets,
+      ImmutableSet<BuildTarget> passedInTargetsSet,
+      ImmutableSet<ProjectGenerator.Option> options,
+      ImmutableList<String> buildWithBuckFlags,
+      Map<Path, ProjectGenerator> projectGenerators,
+      boolean combinedProject,
+      boolean buildWithBuck,
+      boolean combineTestBundles)
+      throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
       targets = FluentIterable
@@ -667,15 +709,10 @@ public class ProjectCommand extends BuildCommand {
     } else {
       targets = passedInTargetsSet;
     }
-    if (combinedProject) {
-      optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS);
-    } else {
-      optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
-    }
+
     LOG.debug("Generating workspace for config targets %s", targets);
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
-    ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = getCombineTestBundles()
+    ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = combineTestBundles
         ? AppleBuildRules.filterGroupableTests(testTargetNodes)
         : ImmutableSet.<TargetNode<AppleTestDescription.Arg>>of();
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
@@ -701,10 +738,10 @@ public class ProjectCommand extends BuildCommand {
           targetGraphAndTargets.getTargetGraph(),
           workspaceArgs,
           inputTarget,
-          optionsBuilder.build(),
+          options,
           combinedProject,
           buildWithBuck,
-          super.getOptions(),
+          buildWithBuckFlags,
           !(new AppleConfig(params.getBuckConfig()).getXcodeDisableParallelizeBuild()),
           new ExecutableFinder(),
           params.getEnvironment(),
@@ -740,17 +777,30 @@ public class ProjectCommand extends BuildCommand {
       requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
     }
 
-    int exitCode = 0;
-    ImmutableSet<BuildTarget> requiredBuildTargets = requiredBuildTargetsBuilder.build();
-    if (!requiredBuildTargets.isEmpty()) {
-      BuildCommand buildCommand = new BuildCommand();
-      buildCommand.setArguments(
-          FluentIterable.from(requiredBuildTargets)
-              .transform(Functions.toStringFunction())
-              .toList());
-      exitCode = buildCommand.runWithoutHelp(params);
+    return requiredBuildTargetsBuilder.build();
+  }
+
+  public static ImmutableSet<ProjectGenerator.Option> buildWorkspaceGeneratorOptions(
+      boolean isReadonly,
+      boolean isWithTests,
+      boolean isWithDependenciesTests,
+      boolean isProjectsCombined) {
+    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
+    if (isReadonly) {
+      optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
     }
-    return exitCode;
+    if (isWithTests) {
+      optionsBuilder.add(ProjectGenerator.Option.INCLUDE_TESTS);
+    }
+    if (isWithDependenciesTests) {
+      optionsBuilder.add(ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS);
+    }
+    if (isProjectsCombined) {
+      optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS);
+    } else {
+      optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
+    }
+    return optionsBuilder.build();
   }
 
   @SuppressWarnings(value = "unchecked")
@@ -861,6 +911,7 @@ public class ProjectCommand extends BuildCommand {
       ProjectGraphParser projectGraphParser,
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
+      boolean isWithDependenciesTests,
       ProjectCommand.Ide ide,
       ImmutableSet<Path> ignoreDirs,
       boolean experimentalProjectGenerationEnabled
@@ -869,11 +920,14 @@ public class ProjectCommand extends BuildCommand {
 
     TargetGraph resultProjectGraph;
     ImmutableSet<BuildTarget> explicitTestTargets;
+    ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
+        replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
 
     if (isWithTests) {
       explicitTestTargets = TargetGraphAndTargets.getExplicitTestTargets(
-          graphRoots,
-          projectGraph);
+          graphRootsOrSourceTargets,
+          projectGraph,
+          isWithDependenciesTests);
       resultProjectGraph =
           projectGraphParser.buildTargetGraphForTargetNodeSpecs(
               getTargetNodeSpecsForIde(
@@ -888,13 +942,38 @@ public class ProjectCommand extends BuildCommand {
 
     return TargetGraphAndTargets.create(
         graphRoots,
+        graphRootsOrSourceTargets,
         resultProjectGraph,
         associatedProjectPredicate,
         isWithTests,
+        isWithDependenciesTests,
         explicitTestTargets);
   }
 
-  private boolean canGenerateImplicitWorkspaceForType(BuildRuleType type) {
+  public static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(
+      ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
+    ImmutableSet<TargetNode<?>> targetNodes =
+        TargetGraphAndTargets.checkAndGetTargetNodes(buildTargets, projectGraph);
+    ImmutableSet.Builder<BuildTarget> resultBuilder = ImmutableSet.builder();
+    for (TargetNode<?> node : targetNodes) {
+      BuildRuleType type = node.getType();
+      if (type == XcodeWorkspaceConfigDescription.TYPE) {
+        TargetNode<XcodeWorkspaceConfigDescription.Arg> castedWorkspaceNode =
+            castToXcodeWorkspaceTargetNode(node);
+        Optional<BuildTarget> srcTarget = castedWorkspaceNode.getConstructorArg().srcTarget;
+        if (srcTarget.isPresent()) {
+          resultBuilder.add(srcTarget.get());
+        } else {
+          resultBuilder.add(node.getBuildTarget());
+        }
+      } else {
+        resultBuilder.add(node.getBuildTarget());
+      }
+    }
+    return resultBuilder.build();
+  }
+
+  private static boolean canGenerateImplicitWorkspaceForType(BuildRuleType type) {
     // We weren't given a workspace target, but we may have been given something that could
     // still turn into a workspace (for example, a library or an actual app rule). If that's the
     // case we still want to generate a workspace.
@@ -909,7 +988,7 @@ public class ProjectCommand extends BuildCommand {
    * @return Workspace Args that describe a generic Xcode workspace containing `src_target` and its
    * tests
    */
-  private XcodeWorkspaceConfigDescription.Arg createImplicitWorkspaceArgs(
+  private static XcodeWorkspaceConfigDescription.Arg createImplicitWorkspaceArgs(
       TargetNode<?> sourceTargetNode) {
     XcodeWorkspaceConfigDescription.Arg workspaceArgs = new XcodeWorkspaceConfigDescription.Arg();
     workspaceArgs.srcTarget = Optional.of(sourceTargetNode.getBuildTarget());

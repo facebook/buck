@@ -19,6 +19,8 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -41,6 +43,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Types;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -97,16 +100,38 @@ public final class ProjectGeneratorTestUtils {
     return arg;
   }
 
-  static PBXTarget assertTargetExistsAndReturnTarget(
+  public static PBXTarget assertTargetExistsAndReturnTarget(
       PBXProject generatedProject,
       String name) {
+    PBXTarget target = getTargetByName(generatedProject, name);
+    assertNotNull("No generated target with name: " + name, target);
+    return target;
+  }
+
+  private static PBXTarget getTargetByName(
+      PBXProject generatedProject,
+      String name) {
+    Preconditions.checkNotNull(name);
     for (PBXTarget target : generatedProject.getTargets()) {
       if (target.getName().equals(name)) {
         return target;
       }
     }
-    fail("No generated target with name: " + name);
     return null;
+  }
+
+  public static void assertTargetExists(
+      ProjectGenerator generator,
+      String name) {
+    assertNotNull("No generated target with name: " + name,
+        getTargetByName(generator.getGeneratedProject(), name));
+  }
+
+  public static void assertTargetDoesNotExists(
+      ProjectGenerator generator,
+      String name) {
+    assertNull("There is generated target with name: " + name,
+        getTargetByName(generator.getGeneratedProject(), name));
   }
 
   public static void assertHasSingletonFrameworksPhaseWithFrameworkEntries(

@@ -42,6 +42,7 @@ java_library(
     ':FakeBuckConfig',
     '//src/com/facebook/buck/android:rules',
     '//src/com/facebook/buck/android:utils',
+    '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/artifact_cache:artifact_cache',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/cli:config',
