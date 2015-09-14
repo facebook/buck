@@ -1,0 +1,59 @@
+{namespace buck.apple_asset_catalog}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'apple_asset_catalog()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to bundle Apple asset catalogs.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+An <code>apple_asset_catalog()</code> rule contains resources stored in Apple asset catalog
+directories. This rule does not have any output on its own and can be built only as a dependency
+(either direct or transitive) of an <a href="{ROOT}rule/apple_bundle.html">
+<code>apple_bundle()</code> rule</a>, in which case all <code>apple_asset_catalog()</code> rules
+that the bundle rule depends on are merged and placed into the final output bundle together.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'dirs' /}
+  {param default : '[]' /}
+  {param desc}
+  Set of paths of Apple asset catalogs contained by this rule. All paths have to end with the <code>
+  .xcassets</code> extension and be compatible with the asset catalog format used by Xcode.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+apple_asset_catalog(
+  name = 'MyAssetCatalog',
+  dirs = [
+    'MyResources.xcassets',
+  ],
+)
+</pre>{/literal}
+{/param} // examples
+{/call} // buck.rule
+
+    {/param}
+  {/call}
+{/template}

@@ -1,0 +1,78 @@
+{namespace buck.apple_resource}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'apple_resource()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to bundle resource directories, files and file variants.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+An <code>apple_resource()</code> rule contains sets of resource directories, files and file variants
+that can be bundled in an application bundle. This rule does not have any output on its own and can
+be built only as a dependency (either direct or transitive) of
+an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a>.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'dirs' /}
+  {param desc}
+  Set of paths of resource directories that should be placed in an application bundle.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'files' /}
+  {param desc}
+  Set of paths of resource files that should be placed in an application bundle.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'variants' /}
+  {param default : '[]' /}
+  {param desc}
+  Set of paths of resource file variants that should be placed in an application bundle. The files
+  mentioned here should be placed in a directory named <code>$VARIANT_NAME.lproj</code>,
+  where <code>$VARIANT_NAME</code> is the name of the variant
+  (e.g. <code>Base</code>, <code>en</code>). This argument makes it possible to use different
+  resource files based on the active locale.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+apple_resource(
+  name = 'Images',
+  files = glob([
+    '*.png',
+  ]),
+  dirs = [
+    'PrettyImages',
+  ],
+)
+</pre>{/literal}
+{/param} // examples
+{/call} // buck.rule
+
+    {/param}
+  {/call}
+{/template}
