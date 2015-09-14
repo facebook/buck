@@ -54,9 +54,11 @@ public class EnvironmentFilter {
       "SSH_CLIENT",       // Same.
       "SSH_CONNECTION",   // Same.
       "SSH_TTY",          // Same.
+      "TERM_SESSION_ID",  // UUID added to environment by OS X.
       "TMUX",             // tmux session management variable.
       "TMUX_PANE",        // Current tmux pane.
-      "TERM_SESSION_ID"  // UUID added to environment by OS X.
+      "XPC_FLAGS",        // More OS X cruft.
+      "XPC_SERVICE_NAME"  // Same.
   );
 
   // Ignore the environment variables with these names when comparing environments.
