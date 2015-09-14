@@ -81,6 +81,8 @@ java_library(
     '//src/com/facebook/buck/rust:rust',
     '//src/com/facebook/buck/test:config',
     '//src/com/facebook/buck/thrift:rules',
+    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
+    '//src/com/facebook/buck/util/versioncontrol:impl',
     '//test/com/facebook/buck/...',
   ]
 )
@@ -163,6 +165,8 @@ java_immutables_library(
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util/network:network',
     '//src/com/facebook/buck/timing:timing',
+    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
+    '//src/com/facebook/buck/util/versioncontrol:impl',
     '//third-party/java/aether:aether-api',
     '//third-party/java/args4j:args4j',
     '//third-party/java/bazel:query-engine',

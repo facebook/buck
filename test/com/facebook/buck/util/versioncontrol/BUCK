@@ -1,0 +1,45 @@
+HG_TEST_INTEGRATION_TEST_SRCS = [
+  'HgCmdLineInterfaceIntegrationTest.java',
+]
+
+STANDARD_TEST_SRCS = [
+  '**/*Test.java',
+]
+
+java_test(
+  name='hg_cmd_line_interface_integration',
+  srcs= HG_TEST_INTEGRATION_TEST_SRCS,
+  resources = glob(['testdata/**']),
+  run_test_separately = True,
+  deps=[
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
+    '//src/com/facebook/buck/util/versioncontrol:impl',
+    '//src/com/facebook/buck/zip:unzip',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+    '//third-party/java/hamcrest:hamcrest',
+  ],
+)
+
+java_test(
+  name='versioncontrol',
+  srcs = glob(STANDARD_TEST_SRCS, excludes=HG_TEST_INTEGRATION_TEST_SRCS),
+  deps=[
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+    '//third-party/java/easymock:easymock',
+    '//third-party/java/hamcrest:hamcrest',
+  ],
+)

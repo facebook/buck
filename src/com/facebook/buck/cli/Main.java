@@ -76,6 +76,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.MultiProjectFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
+import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
@@ -83,6 +84,9 @@ import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.RemoteLoggerFactory;
+import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
+import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 import com.google.common.annotations.VisibleForTesting;
@@ -117,6 +121,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -150,6 +155,7 @@ public final class Main {
    */
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
       "buck.path_to_static_content", "webserver/static");
+  private static final int VC_STATS_TIMEOUT_SECONDS = 2;
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
@@ -634,6 +640,9 @@ public final class Main {
     TestConfig testConfig = new TestConfig(buckConfig);
     ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
+    ExecutorService vcStatsExecutorService = MoreExecutors.newSingleThreadExecutor("VC Stats");
+    VersionControlStatsGenerator vcStatsGenerator = null;
+
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
     // be the last resource, so that it is closed first and can deliver its queued events to the
     // other resources before they are closed.
@@ -671,6 +680,21 @@ public final class Main {
           consoleListener,
           rootRepository.getKnownBuildRuleTypes(),
           clientEnvironment);
+
+      VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
+
+      if (vcBuckConfig.shouldGenerateStatistics()) {
+        vcStatsGenerator = new VersionControlStatsGenerator(
+            vcStatsExecutorService,
+            new DefaultVersionControlCmdLineInterfaceFactory(
+                rootRepository.getFilesystem().getRootPath(),
+                processExecutor,
+                vcBuckConfig),
+            buildEventBus
+        );
+
+        vcStatsGenerator.generateStatsAsync();
+      }
 
       ImmutableList<String> remainingArgs = args.length > 1
           ? ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length))
@@ -765,6 +789,7 @@ public final class Main {
       buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
     } catch (Throwable t) {
       LOG.debug(t, "Failing build on exception.");
+      closeVcStatsGenerator(vcStatsExecutorService, vcStatsGenerator);
       flushEventListeners(console, buildId, eventListeners);
       throw t;
     } finally {
@@ -776,8 +801,27 @@ public final class Main {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
+    closeVcStatsGenerator(vcStatsExecutorService, vcStatsGenerator);
     flushEventListeners(console, buildId, eventListeners);
     return exitCode;
+  }
+
+  private static void closeVcStatsGenerator(
+      ExecutorService vcStatsExecutorService,
+      @Nullable VersionControlStatsGenerator vcStatsGenerator) throws InterruptedException {
+    if (vcStatsGenerator == null) {
+      return;
+    }
+
+    vcStatsExecutorService.shutdown();
+    vcStatsExecutorService.awaitTermination(VC_STATS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    if (!vcStatsExecutorService.isShutdown()) {
+      LOG.warn(
+          "VC stats generator is still running after shutdown request and " +
+              VC_STATS_TIMEOUT_SECONDS + " second timeout." +
+              "Shutting down forcefully..");
+      vcStatsExecutorService.shutdownNow();
+    }
   }
 
   @VisibleForTesting

@@ -1,0 +1,55 @@
+PUBLIC_SRCS = [
+  'VersionControlBuckConfig.java',
+  'VersionControlCmdLineInterface.java',
+  'VersionControlCmdLineInterfaceFactory.java',
+  'VersionControlCommandFailedException.java',
+  'VersionControlStats.java',
+  'VersionControlStatsEvent.java',
+  'VersionControlStatsGenerator.java',
+]
+
+java_immutables_library (
+  name = 'versioncontrol',
+  srcs = PUBLIC_SRCS,
+  tests = [
+    '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
+    '//test/com/facebook/buck/util/versioncontrol:hg_cmd_line_interface_integration',
+  ],
+  deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util:io',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+java_immutables_library (
+  name = 'impl',
+  srcs = glob(['*.java'], excludes = PUBLIC_SRCS),
+  tests = [
+    '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
+    '//test/com/facebook/buck/util/versioncontrol:hg_cmd_line_interface_integration',
+  ],
+  deps = [
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/util:exceptions',
+    '//src/com/facebook/buck/util:util',
+    '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
+  ],
+  visibility = [
+   '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
+   '//src/com/facebook/buck/cli:cli',
+   '//test/com/facebook/buck/util/versioncontrol/...',
+  ],
+)

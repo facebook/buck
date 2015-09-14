@@ -32,6 +32,7 @@ java_test(
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util/network:network',
+    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
     '//test/com/facebook/buck/event:testutil',
     '//test/com/facebook/buck/java:testutil',
     '//test/com/facebook/buck/json:testutil',

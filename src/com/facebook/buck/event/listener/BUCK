@@ -35,6 +35,7 @@ java_immutables_library(
     '//src/com/facebook/buck/util/environment:environment',
     '//src/com/facebook/buck/util/environment:platform',
     '//src/com/facebook/buck/util/network:network',
+    '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-annotations',
     '//third-party/java/jackson:jackson-core',
