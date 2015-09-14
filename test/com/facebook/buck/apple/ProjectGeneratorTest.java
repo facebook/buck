@@ -107,6 +107,7 @@ import com.google.common.io.ByteStreams;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -3158,6 +3159,40 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testConfiglessAppleTargetGetsDefaultBuildConfigurations() throws IOException {
+    BuildTarget buildTarget = BuildTarget.builder("//foo", "lib").build();
+    TargetNode<?> node = AppleLibraryBuilder
+        .createBuilder(buildTarget)
+        .setSrcs(
+            Optional.of(
+                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo.mm")))))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(node));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
+
+    assertHasConfigurations(target, "Debug", "Release", "Profile");
+
+    ImmutableMap<String, String> debugSettings = ProjectGeneratorTestUtils.getBuildSettings(
+        projectFilesystem, buildTarget, target, "Debug");
+    assertThat(debugSettings.size(), Matchers.greaterThan(0));
+
+    ImmutableMap<String, String> profileSettings = ProjectGeneratorTestUtils.getBuildSettings(
+        projectFilesystem, buildTarget, target, "Profile");
+    assertThat(debugSettings, Matchers.equalTo(profileSettings));
+
+    ImmutableMap<String, String> releaseSettings = ProjectGeneratorTestUtils.getBuildSettings(
+        projectFilesystem, buildTarget, target, "Release");
+    assertThat(debugSettings, Matchers.equalTo(releaseSettings));
+  }
+
+  @Test
   public void unsupportedLangPreprocessorFlagsThrows() throws IOException {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -3553,7 +3588,7 @@ public class ProjectGeneratorTest {
 
   private Matcher<PBXTarget> targetWithName(String name) {
     return new FeatureMatcher<PBXTarget, String>(
-        org.hamcrest.Matchers.equalTo(name),
+        Matchers.equalTo(name),
         "target with name",
         "name") {
       @Override

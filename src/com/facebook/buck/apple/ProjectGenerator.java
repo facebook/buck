@@ -471,17 +471,9 @@ public class ProjectGenerator {
 
     shellScriptBuildPhase.setShellScript(template.render());
 
-    ImmutableMap<String, ImmutableMap<String, String>> configs;
-
     TargetNode<CxxLibraryDescription.Arg> node = getAppleNativeNode(targetGraph, targetNode).get();
-    Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTarget =
-        node.castArg(AppleNativeTargetDescriptionArg.class);
-    if (appleTarget.isPresent()) {
-      configs = appleTarget.get().getConstructorArg().configs.get();
-    } else {
-      // TODO(beefon): add default config generation
-      configs = ImmutableMap.<String, ImmutableMap<String, String>>of();
-    }
+    ImmutableMap<String, ImmutableMap<String, String>> configs =
+        getXcodeBuildConfigurationsForTargetNode(node, ImmutableMap.<String, String>of()).get();
 
     XCConfigurationList configurationList = new XCConfigurationList();
     PBXGroup group = project
@@ -994,20 +986,12 @@ public class ProjectGenerator {
           Joiner.on(' ').join(allCxxFlags));
     }
 
+    ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
 
-    Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs = Optional.absent();
-    if (appleTargetNode.isPresent()) {
-      configs = appleTargetNode.get().getConstructorArg().configs;
-    } else if (targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
-      ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
-      ImmutableMap<String, ImmutableMap<String, String>> defaultConfig =
-          CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-              defaultCxxPlatform,
-              appendedConfig);
-      configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
-    } else {
-      throw new HumanReadableException("config must be set for target node %@", targetNode);
-    }
+    Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
+        getXcodeBuildConfigurationsForTargetNode(
+            targetNode,
+            appendedConfig);
 
     PBXNativeTarget target = targetBuilderResult.target;
     setTargetBuildConfigurations(
@@ -1017,7 +1001,7 @@ public class ProjectGenerator {
         configs.get(),
         extraSettingsBuilder.build(),
         defaultSettingsBuilder.build(),
-        appendConfigsBuilder.build());
+        appendedConfig);
 
     // -- phases
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(
@@ -1046,6 +1030,28 @@ public class ProjectGenerator {
     }
 
     return target;
+  }
+
+  private Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>>
+  getXcodeBuildConfigurationsForTargetNode(
+      TargetNode<? extends CxxLibraryDescription.Arg> targetNode,
+      ImmutableMap<String, String> appendedConfig) {
+    Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
+        targetNode.castArg(AppleNativeTargetDescriptionArg.class);
+    Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs = Optional.absent();
+    if (appleTargetNode.isPresent()) {
+      configs = appleTargetNode.get().getConstructorArg().configs;
+    }
+    if (!configs.isPresent() ||
+        (configs.isPresent() && configs.get().isEmpty()) ||
+        targetNode.getType().equals(CxxLibraryDescription.TYPE)) {
+      ImmutableMap<String, ImmutableMap<String, String>> defaultConfig =
+          CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
+              defaultCxxPlatform,
+              appendedConfig);
+      configs = Optional.of(ImmutableSortedMap.copyOf(defaultConfig));
+    }
+    return configs;
   }
 
   private void addCoreDataModelsIntoTarget(

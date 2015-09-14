@@ -22,6 +22,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -64,7 +65,7 @@ public class CxxPlatformXcodeConfigGenerator {
     setLanguageStandardValue(configBuilder, notProcessedCxxFlags, notProcessedAppendedConfig);
     setCxxLibraryValue(notProcessedCxxFlags, notProcessedAppendedConfig, configBuilder);
     setOtherCplusplusFlagsValue(configBuilder, notProcessedCxxFlags, notProcessedAppendedConfig);
-    configBuilder.putAll(notProcessedAppendedConfig);
+    setFlagsFromNotProcessedAppendedConfig(configBuilder, notProcessedAppendedConfig);
 
     ImmutableMap<String, String> config = configBuilder.build();
     return new ImmutableMap.Builder<String, ImmutableMap<String, String>>()
@@ -74,10 +75,25 @@ public class CxxPlatformXcodeConfigGenerator {
         .build();
   }
 
+  private static void setFlagsFromNotProcessedAppendedConfig(
+      ImmutableMap.Builder<String, String> configBuilder,
+      Map<String, String> notProcessedAppendedConfig) {
+    for (Map.Entry<String, String> entry:
+        ImmutableSet.<Map.Entry<String, String>>copyOf(notProcessedAppendedConfig.entrySet())) {
+      if (entry.getValue().length() > 0) {
+        configBuilder.put(entry);
+      }
+      notProcessedAppendedConfig.remove(entry.getKey());
+    }
+  }
+
   private static void setOtherCplusplusFlagsValue(
       ImmutableMap.Builder<String, String> configBuilder,
       List<String> notProcessedCxxFlags,
       Map<String, String> notProcessedAppendedConfig) {
+    if (notProcessedCxxFlags.isEmpty()) {
+      return;
+    }
     String otherCplusplusFlagsValue = getOtherCplusplusFlags(
         notProcessedAppendedConfig,
         notProcessedCxxFlags);
