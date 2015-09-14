@@ -14,7 +14,7 @@
 
 This is a quick start guide for getting up and running with Buck.
 To make it easy to get started, Buck provides a command, {call buck.cmd_quickstart /},
-which creates a simple Android project that is configured to be built with Buck
+which creates a simple project that is configured to be built with Buck
 out of the box.
 <p>
 If you are uncomfortable using a command to generate a project for you,
@@ -24,120 +24,40 @@ The contents and purpose of each file needed to bootstrap the project are explai
 
 <h2>Step 1: Install Buck</h2>
 
-As these are the "Quick Start" instructions, we assume that you already have tools
-such as Ant and the Android SDK installed on your machine. If you are not sure,
-then you may want to follow the more detailed instructions for installing Buck in{sp}
-<a href="install.html">Downloading and Installing Buck</a>.
+As these are the "Quick Start" instructions, we assume that you already have Buck up and running. If
+you don't, please follow the instructions in <a href="install.html">Downloading and Installing Buck</a>.
 
-<p>
+<h2>Step 2: Create an empty project</h2>
 
-Run the following commands to checkout Buck from GitHub, build it, and add it to your <code>$PATH</code>:
-{call buck.installationInstructions}{param withAlias : true /}{/call}
-
-While there, you may also want to set up <a href="{ROOT}command/buckd.html"><code>buckd</code></a>:
-
-<pre>sudo ln -s ${lb}PWD{rb}/bin/buckd /usr/bin/buckd</pre>
-
-<em>Currently, there is no way to download a precompiled binary for Buck.</em>
-
-<h2>Step 2: Run "buck quickstart"</h2>
-
-Now that you have Buck installed on your machine,
-let's use it to build a sample Android application.
-
-<p>
-
-We should start our project in an empty directory,
+We should start our project in an empty directory, with an empty <a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>,
 so create a new directory, navigate to it, and run:
 
 {literal}<pre>
-touch .buckconfig && buck quickstart
+mkdir my-project && cd my-project && touch .buckconfig
 </pre>{/literal}
 
-You will get prompted for the directory where you would like to create the project,
-as well as the location of your Android SDK. Assuming you would like to create the
-project in the current directory and your Android SDK is installed
-at <code>~/android-sdk-macosx</code>, then you would respond to the prompts as follows:
+<h2>Step 3: Fill in the empty project with a template</h2>
 
-<pre>
-Enter the directory where you would like to create the project: .<br>
-Enter your Android SDK's location: ~/android-sdk-macosx
-</pre>
+Now you can use {call buck.cmd_quickstart /} to load a template into your project. There are two
+templates: an Android template and an iOS template.
 
-Alternatively, you could specify these arguments via flags to avoid the prompts:
+Load the Android template into the current directory by running
 
-<pre>
-buck quickstart --dest-dir . --android-sdk ~/android-sdk-macosx
-</pre>
-
-If the command succeeds, then you should see the following output:
-
-{literal}<pre style="font-size:80%">
-Thanks for installing Buck!
-
-In this quickstart project, the file apps/myapp/BUCK defines the build rules.
-
-At this point, you should move into the project directory and try running:
-
-    buck build //apps/myapp:app
-
-or:
-
-    buck build app
-
-See .buckconfig for a full list of aliases.
-
-If you have an Android device connected to your computer, you can also try:
-
-    buck install app
-
-This information is located in the file README.md if you need to access it
-later.
+{literal}<pre>
+buck quickstart --type android --dest-dir .
 </pre>{/literal}
 
-<h2>Step 3: Build and Install Your App</h2>
+or load the iOS template by running
 
-As explained in the instructions that were printed to the console, you can
-run the following to build your application:
+{literal}<pre>
+buck quickstart --type ios --dest-dir .
+</pre>{/literal}
 
-<pre>buck build app</pre>
+You may be prompted for additional information.
 
-Or if you have an Android emulator running or a device connected via a
-USB cable (you can verify this by running <code>adb devices</code>),
-then you can install and start up the app by running:
-
-<pre>buck install app</pre>
-
-The name <code>app</code> is an alias for the <a href="{ROOT}concept/build_target.html">build
-target</a> that identifies the <a href="{ROOT}concept/build_rule.html">build
-rule</a> that is responsible for building your app. You can change this mapping in the{sp}
-<a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> file that was created in
-the root of your project directory.
-
-<h2>Step 4: Modifying the App</h2>
-
-Now that you know how to run Buck to build an APK, you are probably interested in modifying
-the boilerplate code to build the app of your dreams. Java code goes under the <code>java/</code> directory,
-and it is recommended that the directory structure match the package structure, as is the convention in Java.
-
-<p>
-
-By comparison, Android resources should go under the <code>res/</code> directory. Just as you can have
-multiple Java packages in the <code>java/</code> directory, you are encouraged to declare
-multiple {call buck.android_resource /} rules under the <code>res/</code> directory. This makes it easier
-to create a mapping between directories of Android resources and the Java code that requires them.
-
-<p>
-
-Now you should have everything that you need to get started! You will likely want to come back to
-start exploring more of Buck's documentation as your app becomes more complex and you want to leverage
-more of the sophisticated features of Buck.
-
-<p>
-
-<em>Currently, the IntelliJ project generated by running {call buck.cmd_project /} does not import
-cleanly into IntelliJ. We are working to get <a href="http://stackoverflow.com/questions/19326675/how-do-i-fix-or-debug-error-android-packager-app-cannot-create-new-key-or-k">
-answers to our questions</a> to help debug this.</em>
+If the command succeeds, you will see some output explaining how to build and run the app in the
+template. If you wish to read the message again, just check the <code>README.md</code> file in your
+project directory.
 
 </div> // close overview
 
