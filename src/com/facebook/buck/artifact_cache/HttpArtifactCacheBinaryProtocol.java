@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 
@@ -46,19 +47,20 @@ import java.util.Map;
  */
 public class HttpArtifactCacheBinaryProtocol {
 
+  private static final HashFunction HASH_FUNCTION = Hashing.crc32();
+
   private HttpArtifactCacheBinaryProtocol() {
     // Utility class, don't instantiate.
   }
 
   public static FetchResponseReadResult readFetchResponse(
       InputStream byteStream,
-      HashFunction hashFunction,
       OutputStream payloadSink) throws IOException {
     FetchResponseReadResult.Builder result = FetchResponseReadResult.builder();
 
     // Create a hasher to be used to generate a hash of the metadata and input.  We'll use
     // this to compare against the embedded checksum.
-    Hasher hasher = hashFunction.newHasher();
+    Hasher hasher = HASH_FUNCTION.newHasher();
 
     // Open the input stream from the server and start processing data.
     try (DataInputStream input = new DataInputStream(byteStream)) {
@@ -94,14 +96,14 @@ public class HttpArtifactCacheBinaryProtocol {
 
         // Next, read in the embedded expected checksum, which should be the last byte in
         // the metadata header.
-        byte[] hashCodeBytes = new byte[hashFunction.bits() / Byte.SIZE];
+        byte[] hashCodeBytes = new byte[HASH_FUNCTION.bits() / Byte.SIZE];
         ByteStreams.readFully(rawMetadataIn, hashCodeBytes);
         result.setExpectedHashCode(HashCode.fromBytes(hashCodeBytes));
       }
 
       // The remaining data is the payload, which we write to the created file, and also include
       // in our verification checksum.
-      Hasher artifactOnlyHasher = hashFunction.newHasher();
+      Hasher artifactOnlyHasher = HASH_FUNCTION.newHasher();
       try (InputStream payload = new HasherInputStream(artifactOnlyHasher,
           new HasherInputStream(hasher, byteStream))) {
         result.setResponseSizeBytes(ByteStreams.copy(payload, payloadSink));
@@ -116,7 +118,6 @@ public class HttpArtifactCacheBinaryProtocol {
 
   public static class StoreRequest {
     private final ByteSource payloadSource;
-    private final HashFunction hashFunction;
     private final byte[] rawKeys;
     private final byte[] rawMetadata;
     private final long contentLength;
@@ -124,16 +125,13 @@ public class HttpArtifactCacheBinaryProtocol {
     public StoreRequest(
         ImmutableSet<RuleKey> ruleKeys,
         ImmutableMap<String, String> metadata,
-        HashFunction hashFunction,
         ByteSource payloadSource) throws IOException {
       this.payloadSource = payloadSource;
-      this.hashFunction = hashFunction;
       this.rawKeys = createKeysHeader(ruleKeys);
       this.rawMetadata = createMetadataHeader(
           ruleKeys,
           metadata,
-          payloadSource,
-          hashFunction);
+          payloadSource);
       this.contentLength =
           rawKeys.length +
           Integer.SIZE / Byte.SIZE +
@@ -151,7 +149,7 @@ public class HttpArtifactCacheBinaryProtocol {
         dataOutputStream.write(rawKeys);
         dataOutputStream.writeInt(rawMetadata.length);
         dataOutputStream.write(rawMetadata);
-        Hasher hasher = hashFunction.newHasher();
+        Hasher hasher = HASH_FUNCTION.newHasher();
         try (InputStream is = new HasherInputStream(hasher, payloadSource.openBufferedStream())) {
           result.setArtifactSizeBytes(ByteStreams.copy(is, dataOutputStream));
           result.setArtifactContentHashCode(hasher.hash());
@@ -177,12 +175,10 @@ public class HttpArtifactCacheBinaryProtocol {
   static byte[] createMetadataHeader(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
-      ByteSource data,
-      HashFunction hashFunction)
-      throws IOException {
+      ByteSource data) throws IOException {
 
     ByteArrayOutputStream rawOut = new ByteArrayOutputStream();
-    Hasher hasher = hashFunction.newHasher();
+    Hasher hasher = HASH_FUNCTION.newHasher();
     try (DataOutputStream out = new DataOutputStream(new HasherOutputStream(hasher, rawOut))) {
 
       // Write the rule keys to the raw metadata, including them in the end-to-end checksum.

@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashFunction;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.squareup.okhttp.MediaType;
@@ -65,7 +64,6 @@ public class HttpArtifactCache implements ArtifactCache {
   private final boolean doStore;
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
-  private final HashFunction hashFunction;
 
   private final Set<String> seenErrors = Sets.newConcurrentHashSet();
 
@@ -76,8 +74,7 @@ public class HttpArtifactCache implements ArtifactCache {
       URL url,
       boolean doStore,
       ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus,
-      HashFunction hashFunction) {
+      BuckEventBus buckEventBus) {
     this.name = name;
     this.fetchClient = fetchClient;
     this.storeClient = storeClient;
@@ -85,7 +82,6 @@ public class HttpArtifactCache implements ArtifactCache {
     this.doStore = doStore;
     this.projectFilesystem = projectFilesystem;
     this.buckEventBus = buckEventBus;
-    this.hashFunction = hashFunction;
   }
 
   protected Response fetchCall(Request request) throws IOException {
@@ -145,7 +141,6 @@ public class HttpArtifactCache implements ArtifactCache {
       try (OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
         fetchedData = HttpArtifactCacheBinaryProtocol.readFetchResponse(
             response.body().byteStream(),
-            hashFunction,
             tempFileOutputStream);
       }
 
@@ -191,9 +186,10 @@ public class HttpArtifactCache implements ArtifactCache {
 
     try {
       CacheResult result = fetchImpl(ruleKey, output, eventBuilder);
-      buckEventBus.post(eventBuilder
-          .setFetchResult(result.toString())
-          .build());
+      buckEventBus.post(
+          eventBuilder
+              .setFetchResult(result.toString())
+              .build());
       return result;
     } catch (IOException e) {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
@@ -225,7 +221,6 @@ public class HttpArtifactCache implements ArtifactCache {
         new HttpArtifactCacheBinaryProtocol.StoreRequest(
             ruleKeys,
             metadata,
-            hashFunction,
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {

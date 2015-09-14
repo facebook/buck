@@ -21,7 +21,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.Hashing;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
@@ -163,7 +162,6 @@ public class ArtifactCaches {
         url,
         doStore,
         projectFilesystem,
-        buckEventBus,
-        Hashing.crc32());
+        buckEventBus);
   }
 }

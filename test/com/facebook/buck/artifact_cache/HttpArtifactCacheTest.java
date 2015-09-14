@@ -33,8 +33,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Protocol;
@@ -63,7 +61,6 @@ public class HttpArtifactCacheTest {
 
   private static final BuckEventBus BUCK_EVENT_BUS =
       new BuckEventBus(new IncrementingFakeClock(), new BuildId());
-  private static final HashFunction HASH_FUNCTION = Hashing.crc32();
   private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
 
   private ResponseBody createResponseBody(
@@ -79,8 +76,7 @@ public class HttpArtifactCacheTest {
           HttpArtifactCacheBinaryProtocol.createMetadataHeader(
               ruleKeys,
               metadata,
-              source,
-              HASH_FUNCTION);
+              source);
       dataOut.writeInt(rawMetadata.length);
       dataOut.write(rawMetadata);
       dataOut.write(data.getBytes(Charsets.UTF_8));
@@ -104,8 +100,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
@@ -138,8 +133,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
@@ -173,8 +167,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             assertEquals(new URL(url, "artifacts/key/" + ruleKey.toString()), request.url());
@@ -207,8 +200,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
@@ -243,8 +235,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
@@ -278,8 +269,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             throw new IOException();
@@ -308,8 +298,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response storeCall(Request request) throws IOException {
             hasCalled.set(true);
@@ -327,8 +316,7 @@ public class HttpArtifactCacheTest {
                   HttpArtifactCacheBinaryProtocol.createMetadataHeader(
                       ImmutableSet.of(ruleKey),
                       ImmutableMap.<String, String>of(),
-                      ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
-                      HASH_FUNCTION);
+                      ByteSource.wrap(data.getBytes(Charsets.UTF_8)));
               dataOut.writeInt(metadata.length);
               dataOut.write(metadata);
               dataOut.write(data.getBytes(Charsets.UTF_8));
@@ -366,8 +354,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response storeCall(Request request) throws IOException {
             throw new IOException();
@@ -398,8 +385,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response storeCall(Request request) throws IOException {
             Buffer buf = new Buffer();
@@ -443,8 +429,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()
@@ -482,8 +467,7 @@ public class HttpArtifactCacheTest {
             new URL("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
-            BUCK_EVENT_BUS,
-            HASH_FUNCTION) {
+            BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
             return new Response.Builder()

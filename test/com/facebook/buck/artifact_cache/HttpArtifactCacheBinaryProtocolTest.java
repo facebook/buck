@@ -23,8 +23,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteSource;
 
@@ -38,7 +36,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class HttpArtifactCacheBinaryProtocolTest {
-  private static final HashFunction HASH_FUNCTION = Hashing.crc32();
 
   @Test
   public void testCreateMetadataHeader() throws IOException {
@@ -50,8 +47,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
         HttpArtifactCacheBinaryProtocol.createMetadataHeader(
             ImmutableSet.of(ruleKey),
             ImmutableMap.of("key", "value"),
-            ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
-            HASH_FUNCTION);
+            ByteSource.wrap(data.getBytes(Charsets.UTF_8)));
     assertThat(metadata, Matchers.equalTo(BaseEncoding.base64().decode(base64EncodedData)));
   }
 
@@ -82,8 +78,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
           HttpArtifactCacheBinaryProtocol.createMetadataHeader(
               ImmutableSet.of(ruleKey),
               ImmutableMap.<String, String>of(),
-              ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
-              HASH_FUNCTION);
+              ByteSource.wrap(data.getBytes(Charsets.UTF_8)));
       dataOut.writeInt(metadata.length);
       dataOut.write(metadata);
       dataOut.write(data.getBytes(Charsets.UTF_8));
@@ -96,7 +91,6 @@ public class HttpArtifactCacheBinaryProtocolTest {
              new ByteArrayInputStream(expectedData)) {
       FetchResponseReadResult result = HttpArtifactCacheBinaryProtocol.readFetchResponse(
           inputStream,
-          HASH_FUNCTION,
           outputStream);
       assertThat(result.getRuleKeys(), Matchers.contains(ruleKey));
       assertThat(outputStream.toByteArray(), Matchers.equalTo(data.getBytes()));
@@ -120,7 +114,6 @@ public class HttpArtifactCacheBinaryProtocolTest {
         new HttpArtifactCacheBinaryProtocol.StoreRequest(
             ImmutableSet.of(ruleKey, ruleKey2),
             ImmutableMap.of("key", "value"),
-            HASH_FUNCTION,
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
