@@ -1073,12 +1073,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
         equalTo(Optional.of(rule.getRuleKey())));
 
-    // Verify that the artifact is re-cached correctly under the main rule key.
+    // Verify that the artifact is *not* re-cached under the main rule key.
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     assertThat(
         cache.fetch(rule.getRuleKey(), fetchedArtifact).getType(),
-        equalTo(CacheResult.Type.HIT));
-    new ZipInspector(fetchedArtifact).assertFileExists(output.toString());
+        equalTo(CacheResult.Type.MISS));
   }
 
   @Test

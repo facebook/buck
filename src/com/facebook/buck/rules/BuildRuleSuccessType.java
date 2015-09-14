@@ -53,7 +53,8 @@ public enum BuildRuleSuccessType {
 
   /** Computed input-based {@link RuleKey} matches the one on disk. */
   MATCHING_INPUT_BASED_RULE_KEY(
-      Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
+      // TODO(#8364892): We should re-upload to the cache under the main rule key once local
+      // caching performance is better and we don't hurt the incremental workflow as much.
       Property.SHOULD_UPDATE_METADATA_ON_DISK
   ),
 
