@@ -31,6 +31,7 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -55,13 +56,12 @@ public class Repository {
       ProjectFilesystem filesystem,
       Watchman watchman,
       BuckConfig config,
-      KnownBuildRuleTypes knownBuildRuleTypes,
-      AndroidDirectoryResolver directoryResolver) {
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      AndroidDirectoryResolver directoryResolver) throws IOException, InterruptedException {
 
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
-    this.knownBuildRuleTypes = knownBuildRuleTypes;
     this.directoryResolver = directoryResolver;
 
     ParserConfig parserConfig = new ParserConfig(config);
@@ -71,6 +71,8 @@ public class Repository {
 
     PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
+
+    this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config);
   }
 
   public ProjectFilesystem getFilesystem() {

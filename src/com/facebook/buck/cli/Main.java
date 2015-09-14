@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.android.NoAndroidSdkException;
+import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.event.BuckEventBus;
@@ -35,7 +36,6 @@ import com.facebook.buck.event.listener.RemoteLogUploaderEventListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.TempDirectoryCreator;
 import com.facebook.buck.io.Watchman;
@@ -47,9 +47,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -533,7 +532,6 @@ public final class Main {
 
     ProcessExecutor processExecutor = new ProcessExecutor(console);
 
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig, new ExecutableFinder());
     Optional<Path> testTempDirOverride = getTestTempDirOverride(
         buckConfig,
         clientEnvironment,
@@ -542,14 +540,6 @@ public final class Main {
       // We'll create this directory a little later using TempDirectoryCreator.
       LOG.debug("Using test temp dir override %s", testTempDirOverride.get());
     }
-    KnownBuildRuleTypes buildRuleTypes =
-        KnownBuildRuleTypes.createInstance(
-            buckConfig,
-            processExecutor,
-            androidDirectoryResolver,
-            pythonBuckConfig.getPythonEnvironment(
-                processExecutor),
-            testTempDirOverride);
 
     ParserConfig parserConfig = new ParserConfig(buckConfig);
     Watchman watchman;
@@ -577,11 +567,16 @@ public final class Main {
       globHandler = ParserConfig.GlobHandler.PYTHON;
     }
 
+    KnownBuildRuleTypesFactory factory = new KnownBuildRuleTypesFactory(
+        processExecutor,
+        androidDirectoryResolver,
+        testTempDirOverride);
+
     Repository rootRepository = new Repository(
         filesystem,
         watchman,
         buckConfig,
-        buildRuleTypes,
+        factory,
         androidDirectoryResolver);
 
     int exitCode;

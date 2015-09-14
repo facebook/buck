@@ -3,6 +3,7 @@ java_library(
   srcs = [
     'Repository.java',
     'KnownBuildRuleTypes.java',
+    'KnownBuildRuleTypesFactory.java',
   ],
   tests = [
     '//test/com/facebook/buck/rules:rules',

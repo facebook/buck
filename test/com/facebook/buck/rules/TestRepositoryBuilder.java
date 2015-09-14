@@ -25,14 +25,17 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
 public class TestRepositoryBuilder {
   private ProjectFilesystem filesystem;
-  private KnownBuildRuleTypes buildRuleTypes;
   private BuckConfig buckConfig;
   private AndroidDirectoryResolver androidDirectoryResolver;
   @Nullable
@@ -40,7 +43,6 @@ public class TestRepositoryBuilder {
 
   public TestRepositoryBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
-    buildRuleTypes = DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(filesystem);
     buckConfig = new FakeBuckConfig();
     androidDirectoryResolver = new FakeAndroidDirectoryResolver();
   }
@@ -65,13 +67,20 @@ public class TestRepositoryBuilder {
     return this;
   }
 
-  public Repository build() {
+  public Repository build() throws IOException, InterruptedException {
+    ProcessExecutor executor = new ProcessExecutor(new TestConsole());
+
+    KnownBuildRuleTypesFactory typesFactory = new KnownBuildRuleTypesFactory(
+        executor,
+        androidDirectoryResolver,
+        Optional.<Path>absent());
+
     if (parserFactory == null) {
       return new Repository(
           filesystem,
           NULL_WATCHMAN,
           buckConfig,
-          buildRuleTypes,
+          typesFactory,
           androidDirectoryResolver);
     }
 
@@ -79,7 +88,7 @@ public class TestRepositoryBuilder {
         filesystem,
         NULL_WATCHMAN,
         buckConfig,
-        buildRuleTypes,
+        typesFactory,
         androidDirectoryResolver) {
       @Override
       public ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
