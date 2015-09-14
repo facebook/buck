@@ -325,14 +325,14 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   @Override
   public Iterable<QueryFunction> getFunctions() {
     return ImmutableList.of(
-        DEFAULT_QUERY_FUNCTIONS.get(9),   // "deps"
-        DEFAULT_QUERY_FUNCTIONS.get(10),  // "rdeps"
         new QueryAllPathsFunction(),
         new QueryAttrFilterFunction(),
+        new QueryDepsFunction(),
         new QueryFilterFunction(),
         new QueryKindFunction(),
         new QueryLabelsFunction(),
         new QueryOwnerFunction(),
+        new QueryRdepsFunction(),
         new QueryTestsOfFunction()
     );
   }
