@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
@@ -42,7 +41,6 @@ import java.util.regex.Pattern;
  */
 public class Repository {
 
-  private final Optional<String> name;
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
@@ -54,14 +52,12 @@ public class Repository {
   private final ImmutableSet<Pattern> tempFilePatterns;
 
   public Repository(
-      Optional<String> name,
       ProjectFilesystem filesystem,
       Watchman watchman,
       BuckConfig config,
       KnownBuildRuleTypes knownBuildRuleTypes,
       AndroidDirectoryResolver directoryResolver) {
 
-    this.name = name;
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
@@ -75,10 +71,6 @@ public class Repository {
 
     PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
-  }
-
-  public Optional<String> getName() {
-    return name;
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -122,10 +114,8 @@ public class Repository {
   public Path getAbsolutePathToBuildFile(BuildTarget target)
       throws MissingBuildFileException {
     Preconditions.checkArgument(
-        target.getRepository().equals(getName()),
-        "Target %s is not from this repository %s.",
-        target,
-        getName());
+        !target.getRepository().isPresent(),
+        "Target %s is not from this repository.", target);
     Path relativePath = target.getBasePath().resolve(
         new ParserConfig(getBuckConfig()).getBuildFileName());
     if (!getFilesystem().isFile(relativePath)) {

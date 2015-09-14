@@ -572,7 +572,6 @@ public final class Main {
     }
 
     Repository rootRepository = new Repository(
-        Optional.<String>absent(),
         filesystem,
         watchman,
         buckConfig,
