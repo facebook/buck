@@ -8,10 +8,12 @@ java_test(
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util:exceptions',
     '//test/com/facebook/buck/io:testutil',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jsr:jsr305',
     '//third-party/java/junit:junit',
   ],
 )

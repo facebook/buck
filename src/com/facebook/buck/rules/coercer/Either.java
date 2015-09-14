@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 import java.util.Objects;
@@ -78,5 +79,14 @@ public final class Either<LEFT, RIGHT> {
 
   public static <LEFT, RIGHT> Either<LEFT, RIGHT> ofRight(RIGHT value) {
     return new Either<>(null, value);
+  }
+
+  public <X> X transform(
+      Function<LEFT, X> lhsTransformer,
+      Function<RIGHT, X> rhsTransformer) {
+    if (isLeft()) {
+      return lhsTransformer.apply(getLeft());
+    }
+    return rhsTransformer.apply(getRight());
   }
 }
