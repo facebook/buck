@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -28,7 +29,7 @@ public interface ArtifactCache extends AutoCloseable {
    *
    * @param ruleKey cache fetch key
    * @param output path to store artifact to
-   * @return whether it was a {@link AbstractCacheResult.Type#MISS} (indicating a failure) or some
+   * @return whether it was a {@link CacheResultType#MISS} (indicating a failure) or some
    *     type of hit.
    */
   CacheResult fetch(RuleKey ruleKey, Path output) throws InterruptedException;

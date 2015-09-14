@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 

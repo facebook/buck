@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSet;
 

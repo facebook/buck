@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,25 +30,25 @@ abstract class AbstractCacheResult {
 
   private static final CacheResult SKIP_RESULT =
       CacheResult.of(
-          Type.SKIP,
+          CacheResultType.SKIP,
           Optional.<String>absent(),
           Optional.<String>absent(),
           Optional.<ImmutableMap<String, String>>absent());
   private static final CacheResult MISS_RESULT =
       CacheResult.of(
-          Type.MISS,
+          CacheResultType.MISS,
           Optional.<String>absent(),
           Optional.<String>absent(),
           Optional.<ImmutableMap<String, String>>absent());
   private static final CacheResult LOCAL_KEY_UNCHANGED_HIT_RESULT =
       CacheResult.of(
-          Type.LOCAL_KEY_UNCHANGED_HIT,
+          CacheResultType.LOCAL_KEY_UNCHANGED_HIT,
           Optional.<String>absent(),
           Optional.<String>absent(),
           Optional.<ImmutableMap<String, String>>absent());
 
   @Value.Parameter
-  @JsonProperty("type") public abstract Type getType();
+  @JsonProperty("type") public abstract CacheResultType getType();
 
   @Value.Parameter
   @JsonProperty("cacheSource") protected abstract Optional<String> cacheSource();
@@ -60,17 +60,18 @@ abstract class AbstractCacheResult {
   @JsonProperty("metadata") protected abstract Optional<ImmutableMap<String, String>> metadata();
 
   public String getCacheSource() {
-    Preconditions.checkState(getType() == Type.HIT || getType() == Type.ERROR);
+    Preconditions.checkState(
+        getType() == CacheResultType.HIT || getType() == CacheResultType.ERROR);
     return cacheSource().get();
   }
 
   public String getCacheError() {
-    Preconditions.checkState(getType() == Type.ERROR);
+    Preconditions.checkState(getType() == CacheResultType.ERROR);
     return cacheError().get();
   }
 
   public ImmutableMap<String, String> getMetadata() {
-    Preconditions.checkState(getType() == Type.HIT);
+    Preconditions.checkState(getType() == CacheResultType.HIT);
     return metadata().get();
   }
 
@@ -84,7 +85,7 @@ abstract class AbstractCacheResult {
 
   public static CacheResult hit(String cacheSource, ImmutableMap<String, String> metadata) {
     return CacheResult.of(
-        Type.HIT,
+        CacheResultType.HIT,
         Optional.of(cacheSource),
         Optional.<String>absent(),
         Optional.of(metadata));
@@ -96,7 +97,7 @@ abstract class AbstractCacheResult {
 
   public static CacheResult error(String cacheSource, String cacheError) {
     return CacheResult.of(
-        Type.ERROR,
+        CacheResultType.ERROR,
         Optional.of(cacheSource),
         Optional.of(cacheError),
         Optional.<ImmutableMap<String, String>>absent());
@@ -119,7 +120,7 @@ abstract class AbstractCacheResult {
    *     This is mainly available for backwards compatibility for when this class was an enum.
    */
   public static CacheResult valueOf(String val) {
-    for (Type type : Type.values()) {
+    for (CacheResultType type : CacheResultType.values()) {
       if (val.endsWith(type.name())) {
         String rest = val.substring(0, val.length() - type.name().length());
         return CacheResult.of(
@@ -127,7 +128,7 @@ abstract class AbstractCacheResult {
             rest.isEmpty() ?
                 Optional.<String>absent() :
                 Optional.of(rest.substring(0, rest.length() - 1).toLowerCase()),
-            type == Type.ERROR ?
+            type == CacheResultType.ERROR ?
                 Optional.of("") :
                 Optional.<String>absent(),
             Optional.<ImmutableMap<String, String>>absent());
@@ -143,40 +144,8 @@ abstract class AbstractCacheResult {
 
   @Value.Check
   protected void check() {
-    Preconditions.checkState(
-        cacheSource().isPresent() || (getType() != Type.HIT && getType() != Type.ERROR));
-    Preconditions.checkState(cacheError().isPresent() || getType() != Type.ERROR);
+    Preconditions.checkState(cacheSource().isPresent() ||
+            (getType() != CacheResultType.HIT && getType() != CacheResultType.ERROR));
+    Preconditions.checkState(cacheError().isPresent() || getType() != CacheResultType.ERROR);
   }
-
-  public enum Type {
-
-    /** Artifact was successfully fetched from cache */
-    HIT(/* success */ true),
-
-    /** Artifact was missing from cache */
-    MISS(/* success */ false),
-
-    /** An error occurred when fetching artifact from cache*/
-    ERROR(/* success */ false),
-
-    /** Artifact cache not queried because some of the dependencies were re-built. */
-    SKIP(/* success */ false),
-
-    /** Artifact cache not queried because the local cache key was unchanged. */
-    LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
-
-    ;
-
-    private boolean success;
-
-    Type(boolean success) {
-      this.success = success;
-    }
-
-    public boolean isSuccess() {
-      return success;
-    }
-
-  }
-
 }

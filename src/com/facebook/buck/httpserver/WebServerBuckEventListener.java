@@ -20,7 +20,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.rules.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.IndividualTestEvent;

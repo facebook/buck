@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.artifact_cache.CacheResult;
+
 import javax.annotation.Nullable;
 
 /**

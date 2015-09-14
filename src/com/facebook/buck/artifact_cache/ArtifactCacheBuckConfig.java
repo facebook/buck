@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Function;

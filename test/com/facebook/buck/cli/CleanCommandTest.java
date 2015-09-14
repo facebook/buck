@@ -27,7 +27,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.ArtifactCache;
+import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.TestConsole;

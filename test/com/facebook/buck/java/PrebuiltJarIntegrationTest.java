@@ -22,12 +22,12 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.CacheResult;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -60,12 +60,12 @@ public class PrebuiltJarIntegrationTest {
     result.assertSuccess();
 
     BuildRuleEvent.Finished finished = getRuleFinished(result.getCapturedEvents());
-    assertEquals(CacheResult.Type.MISS, finished.getCacheResult().getType());
+    assertEquals(CacheResultType.MISS, finished.getCacheResult().getType());
 
     result = workspace.runBuckBuild("//:jar");
     result.assertSuccess();
     finished = getRuleFinished(result.getCapturedEvents());
-    assertEquals(CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT, finished.getCacheResult().getType());
+    assertEquals(CacheResultType.LOCAL_KEY_UNCHANGED_HIT, finished.getCacheResult().getType());
 
     // We expect the binary jar to have a different hash to the stub jar.
     Path binaryJar = workspace.getPath("junit.jar");

@@ -1,0 +1,85 @@
+java_immutables_library(
+  name = 'artifact_cache',
+  srcs = [
+    'AbstractCacheResult.java',
+    'ArtifactCache.java',
+    'ArtifactCacheEvent.java',
+    'ArtifactCacheConnectEvent.java',
+    'CacheResultType.java',
+    'NoopArtifactCache.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/artifact_cache:artifact_cache',
+  ],
+  deps = [
+    '//src/com/facebook/buck/rules:rule_key',
+    '//src/com/facebook/buck/event:event',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jackson:jackson-annotations',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_immutables_library(
+  name = 'impl',
+  srcs = [
+    'DirArtifactCache.java',
+    'HttpArtifactCache.java',
+    'LoggingArtifactCacheDecorator.java',
+    'MultiArtifactCache.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/artifact_cache:artifact_cache',
+  ],
+  deps = [
+    ':artifact_cache',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/rules:rules',
+    '//src/com/facebook/buck/rules:rule_key',
+    '//src/com/facebook/buck/util/collect:collect',
+    '//src/com/facebook/buck/util/hash:hash',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/okhttp:okhttp',
+    '//third-party/java/okio:okio',
+  ],
+  exported_deps = [
+    ':artifact_cache',
+  ],
+  visibility = [
+    '//test/com/facebook/buck/artifact_cache/...',
+  ],
+)
+
+java_library(
+  name = 'config',
+  srcs = [
+    'ArtifactCacheBuckConfig.java',
+    'ArtifactCaches.java',
+  ],
+  tests = [
+    '//test/com/facebook/buck/artifact_cache:artifact_cache',
+  ],
+  deps = [
+    ':artifact_cache',
+    ':impl',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/util/unit:unit',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
+    '//third-party/java/okhttp:okhttp',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/cli:cli',
+    '//test/com/facebook/buck/artifact_cache/...',
+    '//test/com/facebook/buck/cli/...',
+  ]
+)
+

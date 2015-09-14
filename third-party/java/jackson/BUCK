@@ -20,6 +20,7 @@ prebuilt_jar(
   name = 'jackson-annotations',
   binary_jar = 'jackson-annotations-2.0.5.jar',
   visibility = [
+    '//src/com/facebook/buck/artifact_cache:artifact_cache',
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/model:model',

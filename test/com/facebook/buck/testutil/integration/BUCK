@@ -4,6 +4,7 @@ java_library(
   deps = [
     '//src/com/facebook/buck/apple:rules',
     '//src/com/facebook/buck/apple/device:device',
+    '//src/com/facebook/buck/artifact_cache:artifact_cache',
     '//src/com/facebook/buck/cli:cli',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',

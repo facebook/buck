@@ -14,31 +14,29 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URL;
 import java.nio.file.Paths;
 
 public class ArtifactCacheBuckConfigTest {
-
-  @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   @Test
   public void testWifiBlacklist() throws IOException {
@@ -63,6 +61,76 @@ public class ArtifactCacheBuckConfigTest {
   }
 
   @Test
+  public void testMode() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "mode = http");
+    assertThat(
+        config.getArtifactCacheModes(),
+        Matchers.contains(ArtifactCacheBuckConfig.ArtifactCacheMode.http));
+
+    config = createFromText(
+        "[cache]",
+        "mode = dir");
+    assertThat(
+        config.getArtifactCacheModes(),
+        Matchers.contains(ArtifactCacheBuckConfig.ArtifactCacheMode.dir));
+
+    config = createFromText(
+        "[cache]",
+        "mode = dir, http");
+    assertThat(
+        config.getArtifactCacheModes(),
+        Matchers.containsInAnyOrder(
+            ArtifactCacheBuckConfig.ArtifactCacheMode.dir,
+            ArtifactCacheBuckConfig.ArtifactCacheMode.http));
+  }
+
+  @Test
+  public void testHttpCacheSettings() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "http_timeout_seconds = 42",
+        "http_url = http://test.host:1234",
+        "http_mode = readwrite");
+
+    assertThat(config.getHttpCacheTimeoutSeconds(), Matchers.is(42));
+    assertThat(config.getHttpCacheUrl(), Matchers.equalTo(new URL("http://test.host:1234")));
+    assertThat(config.getHttpCacheReadMode(), Matchers.is(true));
+  }
+
+  @Test
+  public void testDirCacheSettings() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "dir = cache_dir",
+        "dir_mode = readonly",
+        "dir_max_size = 1022B");
+
+    assertThat(config.getCacheDir(), Matchers.equalTo(Paths.get("cache_dir").toAbsolutePath()));
+    assertThat(config.getDirCacheReadMode(), Matchers.is(false));
+    assertThat(config.getCacheDirMaxSizeBytes(), Matchers.equalTo(Optional.of(1022L)));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testMalformedHttpUrl() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "http_url = notaurl");
+
+    config.getHttpCacheUrl();
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testMalformedMode() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "dir_mode = notamode");
+
+    config.getDirCacheReadMode();
+  }
+
+  @Test
   public void testExpandUserHomeCacheDir() throws IOException {
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",
@@ -73,7 +141,7 @@ public class ArtifactCacheBuckConfigTest {
         Matchers.equalTo(MorePaths.expandHomeDir(Paths.get("~/cache_dir"))));
   }
 
-  private ArtifactCacheBuckConfig createFromText(String... lines) throws IOException {
+  public static ArtifactCacheBuckConfig createFromText(String... lines) throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     StringReader reader = new StringReader(Joiner.on('\n').join(lines));
     return new ArtifactCacheBuckConfig(
@@ -83,4 +151,5 @@ public class ArtifactCacheBuckConfigTest {
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv())));
   }
+
 }

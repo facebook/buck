@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,19 +14,29 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
-public class NoopArtifactCache implements ArtifactCache {
+import javax.annotation.Nullable;
+
+public class DummyArtifactCache extends NoopArtifactCache {
+
+  @Nullable
+  public RuleKey storeKey;
+
+  public void reset() {
+    storeKey = null;
+  }
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, Path output) {
-    // Do nothing.
-    return CacheResult.miss();
+    return ruleKey.equals(storeKey) ? CacheResult.hit("cache") : CacheResult.miss();
   }
 
   @Override
@@ -34,17 +44,12 @@ public class NoopArtifactCache implements ArtifactCache {
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
       Path output) {
-    // Do nothing.
+    storeKey = Iterables.getFirst(ruleKeys, null);
   }
 
-  /** @return {@code false}: storing artifacts is never supported by this class. */
   @Override
   public boolean isStoreSupported() {
-    return false;
+    return true;
   }
 
-  @Override
-  public void close() {
-    // Nothing to complete - do nothing.
-  }
 }

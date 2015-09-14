@@ -79,7 +79,6 @@ java_immutables_library(
   srcs = [
     'AbstractBuildRule.java',
     'AbstractBuildRuleType.java',
-    'AbstractCacheResult.java',
     'AbstractExopackageInfo.java',
     'AbstractLabel.java',
     'AbstractSha1HashCode.java',
@@ -87,8 +86,6 @@ java_immutables_library(
     'ActionGraph.java',
     'ActionGraphEvent.java',
     'AddToRuleKey.java',
-    'ArtifactCache.java',
-    'ArtifactCacheEvent.java',
     'BinaryBuildRule.java',
     'BuckPyFunction.java',
     'BuildableContext.java',
@@ -149,6 +146,7 @@ java_immutables_library(
     '//src/com/facebook/buck/apple/xcode:xcode',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:utils',
+    '//src/com/facebook/buck/artifact_cache:artifact_cache',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/hashing:hashing',
@@ -202,24 +200,29 @@ java_immutables_library(
   ],
 )
 
+java_library(
+  name = 'build_event',
+  srcs = [
+    'BuildEvent.java',
+  ],
+  deps = [
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/model:model',
+    '//third-party/java/guava:guava',
+  ],
+)
+
 java_immutables_library(
   name = 'rules',
   srcs = [
-    'ArtifactCacheConnectEvent.java',
     'AssociatedTargetNodePredicate.java',
-    'BuildEvent.java',
     'BuildOutputInitializer.java',
     'BuildRuleEvent.java',
     'CachingBuildEngine.java',
     'DefaultBuildableContext.java',
-    'DirArtifactCache.java',
-    'HttpArtifactCache.java',
     'IndividualTestEvent.java',
     'InitializableFromDisk.java',
     'InstallableApk.java',
-    'LoggingArtifactCacheDecorator.java',
-    'MultiArtifactCache.java',
-    'NoopArtifactCache.java',
     'NoopBuildRule.java',
     'OutputOnlyBuildRule.java',
     'ProjectConfig.java',
@@ -235,8 +238,10 @@ java_immutables_library(
   ],
   deps = [
     ':build_rule',
+    ':build_event',
     '//src/com/facebook/buck/android:exceptions',
     '//src/com/facebook/buck/android:steps',
+    '//src/com/facebook/buck/artifact_cache:artifact_cache',
     '//src/com/facebook/buck/cli:events',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
@@ -271,6 +276,9 @@ java_immutables_library(
     '//third-party/java/jsr:jsr305',
     '//third-party/java/okhttp:okhttp',
     '//third-party/java/okio:okio',
+  ],
+  exported_deps = [
+    ':build_event',
   ],
   visibility = ['PUBLIC'],
 )

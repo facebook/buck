@@ -28,6 +28,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -930,7 +935,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
     assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
-    assertThat(result.getCacheResult().getType(), equalTo(CacheResult.Type.ERROR));
+    assertThat(result.getCacheResult().getType(), equalTo(CacheResultType.ERROR));
   }
 
   @Test
@@ -1077,7 +1082,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     assertThat(
         cache.fetch(rule.getRuleKey(), fetchedArtifact).getType(),
-        equalTo(CacheResult.Type.MISS));
+        equalTo(CacheResultType.MISS));
   }
 
   @Test
@@ -1175,7 +1180,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     Path fetchedArtifact = tmp.newFile("fetched_artifact.zip").toPath();
     assertThat(
         cache.fetch(rule.getRuleKey(), fetchedArtifact).getType(),
-        equalTo(CacheResult.Type.HIT));
+        equalTo(CacheResultType.HIT));
     assertEquals(
         new ZipInspector(artifact).getZipFileEntries(),
         new ZipInspector(fetchedArtifact).getZipFileEntries());
@@ -1262,7 +1267,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CacheResult cacheResult = cache.fetch(rule.getRuleKey(), fetchedArtifact);
     assertThat(
         cacheResult.getType(),
-        equalTo(CacheResult.Type.HIT));
+        equalTo(CacheResultType.HIT));
     assertThat(
         cacheResult.getMetadata().get(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY),
         equalTo(depFileRuleKey.toString()));
@@ -1844,7 +1849,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     CacheResult cacheResult = cache.fetch(rule.getRuleKey(), fetchedArtifact);
     assertThat(
         cacheResult.getType(),
-        equalTo(CacheResult.Type.HIT));
+        equalTo(CacheResultType.HIT));
     assertThat(
         cacheResult.getMetadata().get(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY),
         equalTo(abiRuleKey.get().toString()));

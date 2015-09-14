@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.HttpArtifactCacheEvent;
 import com.facebook.buck.event.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Charsets;
@@ -115,7 +116,7 @@ public class HttpArtifactCacheTest {
         cache.fetch(
             new RuleKey("00000000000000000000000000000000"),
             Paths.get("output/file"));
-    assertEquals(result.getType(), CacheResult.Type.MISS);
+    assertEquals(result.getType(), CacheResultType.MISS);
     cache.close();
   }
 
@@ -151,7 +152,7 @@ public class HttpArtifactCacheTest {
           }
         };
     CacheResult result = cache.fetch(ruleKey, output);
-    assertEquals(result.cacheError().or(""), CacheResult.Type.HIT, result.getType());
+    assertEquals(result.cacheError().or(""), CacheResultType.HIT, result.getType());
     assertEquals(Optional.of(data), filesystem.readFileIfItExists(output));
     cache.close();
   }
@@ -221,7 +222,7 @@ public class HttpArtifactCacheTest {
         };
     Path output = Paths.get("output/file");
     CacheResult result = cache.fetch(ruleKey, output);
-    assertEquals(CacheResult.Type.ERROR, result.getType());
+    assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     cache.close();
   }
@@ -257,7 +258,7 @@ public class HttpArtifactCacheTest {
         };
     Path output = Paths.get("output/file");
     CacheResult result = cache.fetch(ruleKey, output);
-    assertEquals(CacheResult.Type.ERROR, result.getType());
+    assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     cache.close();
   }
@@ -282,7 +283,7 @@ public class HttpArtifactCacheTest {
         };
     Path output = Paths.get("output/file");
     CacheResult result = cache.fetch(new RuleKey("00000000000000000000000000000000"), output);
-    assertEquals(CacheResult.Type.ERROR, result.getType());
+    assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     cache.close();
   }
@@ -456,7 +457,7 @@ public class HttpArtifactCacheTest {
         };
     Path output = Paths.get("output/file");
     CacheResult result = cache.fetch(ruleKey, output);
-    assertEquals(CacheResult.Type.ERROR, result.getType());
+    assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.<String>absent(), filesystem.readFileIfItExists(output));
     cache.close();
   }
@@ -494,7 +495,7 @@ public class HttpArtifactCacheTest {
           }
         };
     CacheResult result = cache.fetch(ruleKey, output);
-    assertEquals(CacheResult.Type.HIT, result.getType());
+    assertEquals(CacheResultType.HIT, result.getType());
     assertEquals(metadata, result.getMetadata());
     cache.close();
   }

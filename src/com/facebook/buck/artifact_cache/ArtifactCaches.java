@@ -13,17 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.cli;
+package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.ArtifactCache;
-import com.facebook.buck.rules.ArtifactCacheConnectEvent;
-import com.facebook.buck.rules.DirArtifactCache;
-import com.facebook.buck.rules.HttpArtifactCache;
-import com.facebook.buck.rules.LoggingArtifactCacheDecorator;
-import com.facebook.buck.rules.MultiArtifactCache;
-import com.facebook.buck.rules.NoopArtifactCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;

@@ -7,6 +7,7 @@ java_test(
   deps = [
     ':testutil',
     '//src/com/facebook/buck/android:utils',
+    '//src/com/facebook/buck/artifact_cache:artifact_cache',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',

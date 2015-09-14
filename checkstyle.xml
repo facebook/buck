@@ -107,7 +107,7 @@ page at http://checkstyle.sourceforge.net/config.html -->
       <!-- Here the default checkstyle rule restricts package name parts to
         seven characters, this is not in line with common practice at Google.
       -->
-      <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+      <property name="format" value="^[a-z]+(\.[a-z_][a-z_0-9]*)*$"/>
       <property name="severity" value="warning"/>
     </module>
 

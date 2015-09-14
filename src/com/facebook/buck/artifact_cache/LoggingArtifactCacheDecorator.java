@@ -13,9 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules;
+package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.rules.RuleKey;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -70,5 +72,10 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache {
   @Override
   public void close() {
     delegate.close();
+  }
+
+  @VisibleForTesting
+  ArtifactCache getDelegate() {
+    return delegate;
   }
 }

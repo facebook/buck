@@ -16,15 +16,16 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
-import com.facebook.buck.rules.CacheResult;
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
@@ -520,11 +521,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     accumulatedRuleTime.remove(finished.getBuildRule().getBuildTarget());
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
       CacheResult cacheResult = finished.getCacheResult();
-      if (cacheResult.getType() != CacheResult.Type.LOCAL_KEY_UNCHANGED_HIT) {
+      if (cacheResult.getType() != CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
         updated.incrementAndGet();
-        if (cacheResult.getType() == CacheResult.Type.HIT) {
+        if (cacheResult.getType() == CacheResultType.HIT) {
           cacheHits.incrementAndGet();
-        } else if (cacheResult.getType() == CacheResult.Type.ERROR) {
+        } else if (cacheResult.getType() == CacheResultType.ERROR) {
           cacheErrors.incrementAndGet();
         }
       }
