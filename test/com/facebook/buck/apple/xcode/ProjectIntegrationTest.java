@@ -22,12 +22,16 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 
+import static org.junit.Assert.assertThat;
+
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class ProjectIntegrationTest {
 
@@ -278,5 +282,27 @@ public class ProjectIntegrationTest {
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//app:GenResource");
+  }
+
+  @Test
+  public void testGeneratingWorkspaceForXcodeWithoutSettingIde() throws IOException {
+    // .buckconfig has no ide set, so buck should correctly guess that
+    // apple_stuff requires Xcode workspace
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "generating_workspace_for_xcode_without_setting_ide",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "//App:TestAppBinary");
+    result.assertSuccess();
+
+    String workspacePathString = temporaryFolder.getRootPath().toString();
+    workspacePathString += "/App/TestAppBinary.xcworkspace";
+    Path workspacePath = temporaryFolder.getRootPath().resolve(workspacePathString);
+
+    assertThat(Files.exists(workspacePath), Matchers.equalTo(true));
   }
 }

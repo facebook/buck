@@ -83,7 +83,8 @@ public class NumThreadsIntegrationTest {
 
     String newBuckProject = Joiner.on('\n').join(
         "[project]",
-        "  initial_targets = //:noop");
+        "  initial_targets = //:noop",
+        "  ide = intellij");
     Files.write(workspace.getPath(".buckconfig"), newBuckProject.getBytes(UTF_8));
     int numThreads = (int) (Runtime.getRuntime().availableProcessors() * 1.25);
     ProcessResult buildResult2 = workspace.runBuckCommand("project", "--verbose", "10");

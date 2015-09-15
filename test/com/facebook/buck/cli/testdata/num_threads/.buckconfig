@@ -5,3 +5,4 @@
   threads = 7
 [project]
   initial_targets = //:noop
+  ide = intellij
