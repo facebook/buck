@@ -139,6 +139,8 @@ expr ::= word
        | expr + expr
        | expr except expr
        | expr - expr
+       | allpaths(expr, expr)
+       | attrfilter(word, word, expr)
        | deps(expr)
        | deps(expr, depth)
        | filter(word, expr)
