@@ -355,6 +355,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               binary.get().getPathToOutput(),
               bundleBinaryPath));
       if (debugInfoFormat == DebugInfoFormat.DSYM) {
+        buildableContext.recordArtifact(dsymPath);
         stepsBuilder.add(
             new DsymStep(
                 getProjectFilesystem(),
