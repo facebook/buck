@@ -1,0 +1,66 @@
+{namespace prebuilt_dotnet_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_dotnet_library()' /}
+    {param prettify: true /}
+    {param description}
+      A prebuilt_dotnet_library() rule is used to include prebuilt .Net assembles.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>prebuilt_dotnet_library()</code> rule is used to include
+prebuilt .Net assembles into your .Net code.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'assembly' /}
+  {param desc}
+  The path to the DLL that this rule provides.
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_dotnet_library(
+  name = 'log4net',
+  assembly = 'log4net.dll',
+)
+
+csharp_library(
+  name = 'example',
+  srcs = [
+    'Hello.cs',
+  ],
+  framework_ver = 'net46',
+  deps = [
+    ':log4net',
+    'System.dll',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

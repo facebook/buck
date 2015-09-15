@@ -43,8 +43,8 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.AppleCxxPlatforms;
-import com.facebook.buck.apple.ApplePackageDescription;
 import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.ApplePackageDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleSdk;
 import com.facebook.buck.apple.AppleSdkDiscovery;
@@ -72,6 +72,8 @@ import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
 import com.facebook.buck.d.DTestDescription;
+import com.facebook.buck.dotnet.CSharpLibraryDescription;
+import com.facebook.buck.dotnet.PrebuiltDotNetLibraryDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.HttpDownloader;
@@ -474,6 +476,7 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentitiesSupplier.get()));
     builder.register(new CoreDataModelDescription());
+    builder.register(new CSharpLibraryDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
     builder.register(new CxxPythonExtensionDescription(cxxBuckConfig, cxxPlatforms));
@@ -500,6 +503,7 @@ public class KnownBuildRuleTypes {
     builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
     builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
     builder.register(new PrebuiltCxxLibraryDescription(cxxPlatforms));
+    builder.register(new PrebuiltDotNetLibraryDescription());
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
     builder.register(new PrebuiltOCamlLibraryDescription());

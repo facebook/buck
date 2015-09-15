@@ -189,6 +189,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'd_library',
             'd_test',
         ],
+        'dotnet': [
+            'csharp_library',
+            'prebuilt_dotnet_library',
+        ],
         'ios': [
             'apple_asset_catalog',
             'apple_binary',
@@ -280,6 +284,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {call .platformBuildRuleLink}
         {param platform: 'Rust' /}
         {param rules: $platformRulesMap['rust'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: '.Net' /}
+        {param rules: $platformRulesMap['dotnet'] /}
     {/call}
   </ul>
   <h3>Functions</h3>

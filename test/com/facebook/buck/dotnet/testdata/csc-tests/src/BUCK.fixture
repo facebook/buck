@@ -1,0 +1,42 @@
+csharp_library(
+  name = 'simple',
+  srcs = ['Hello.cs'],
+  framework_ver = 'net45',
+  deps = [
+    'System.dll',
+  ],
+)
+
+csharp_library(
+  name = 'embed',
+  srcs = ['Hello.cs'],
+  framework_ver = 'net45',
+  resources = {
+    'world.txt': 'greeting.txt',
+  },
+  deps = [
+    'System.dll',
+  ],
+)
+
+csharp_library(
+  name = 'prebuilt',
+  srcs = ['Hello.cs'],
+  framework_ver = 'net45',
+  deps = [
+    '//lib:log4net',
+    'System.dll',
+  ],
+)
+
+csharp_library(
+  name = 'dependent',
+  srcs = [ 'Hello2.cs' ],
+  framework_ver = 'net45',
+  deps = [
+    ':simple',
+    ':prebuilt',
+    'System.dll',
+  ],
+)
+

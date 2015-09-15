@@ -1,0 +1,111 @@
+{namespace csharp_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'csharp_library()' /}
+    {param prettify: true /}
+    {param description}
+      A csharp_library() rule builds a C# library for .Net.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+<p>
+  A csharp_library() rule builds a .Net library from the supplied set of C# source files
+  and dependencies by invoking csc.
+</p>
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'dll_name' /}
+  {param default: 'The name of the target appended with .dll' /}
+  {param desc}
+  The output name of the dll. This allows you to specify the name of
+  the dll exactly. When this is not set, the dll will be named after
+  the short name of the target.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param desc}
+  The collection of source files to compile.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources' /}
+  {param desc}
+  Resources that should be embedded within the built DLL. The format
+  is the name of the resource once mapped into the DLL as the key, and
+  the value being the resource that should be merged. This allows
+  non-unique keys to be identified quickly.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'framework_ver' /}
+  {param desc}
+  The version of the .Net framework that this library targets. This is
+  one of 'net35', 'net40', 'net45' and 'net46'.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default: [] /}
+  {param desc}
+  The set of targets or system-provided assemblies to rely on. Any
+  values that are targets must be either csharp_library or <a
+  href="{ROOT}rule/prebuilt_dotnet_library.html"><code>prebuilt_dotnet_library</code></a>
+  {sp} instances.
+  {/param}
+{/call}
+
+{/param} // close args
+
+{param examples}
+
+{call rust_common.more_examples /}
+
+{literal}<pre class="prettyprint lang-py">
+csharp_library(
+  name = 'simple',
+  dll_name = 'Cake.dll',
+  framework_ver = 'net46',
+  srcs = [
+    'Hello.cs',
+  ],
+  resources = {
+    'greeting.txt': '//some:target',
+  },
+  deps=[
+    ':other',
+    'System.dll',
+  ],
+)
+
+prebuilt_dotnet_library(
+  name = 'other',
+  assembly = 'other-1.0.dll',
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

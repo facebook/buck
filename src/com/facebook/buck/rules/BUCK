@@ -18,6 +18,7 @@ java_library(
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/d:d',
+    '//src/com/facebook/buck/dotnet:dotnet',
     '//src/com/facebook/buck/file:downloader',
     '//src/com/facebook/buck/file:file',
     '//src/com/facebook/buck/gwt:gwt',

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
@@ -274,7 +275,7 @@ public class RuleKeyBuilder {
         logElms.add(String.format("string(\"%s\"):", val));
       }
       feed(((String) val).getBytes());
-    } else if (val instanceof BuildRule) {
+    } else if (val instanceof BuildRule) {                       // Buck types
       return setBuildRule((BuildRule) val);
     } else if (val instanceof BuildRuleType) {
       if (logElms != null) {
@@ -291,6 +292,13 @@ public class RuleKeyBuilder {
         logElms.add(String.format("target(%s):", val));
       }
       feed(((HasBuildTarget) val).getBuildTarget().getFullyQualifiedName().getBytes());
+    } else if (val instanceof Either) {
+      Either<?, ?> either = (Either<?, ?>) val;
+      if (either.isLeft()) {
+        setSingleValue(either.getLeft());
+      } else {
+        setSingleValue(either.getRight());
+      }
     } else if (val instanceof SourcePath) {
       return setSourcePath((SourcePath) val);
     } else if (val instanceof SourceRoot) {

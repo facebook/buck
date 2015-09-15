@@ -1,0 +1,23 @@
+java_test(
+  name = 'dotnet',
+  srcs = glob(['*.java'], excludes = ['DotNetAssumptions.java']),
+  deps = [
+    ':testutil',
+    '//src/com/facebook/buck/dotnet:dotnet',
+    '//src/com/facebook/buck/util:exceptions',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jimfs:jimfs',
+    '//third-party/java/junit:junit',
+  ],
+)
+
+java_library(
+  name = 'testutil',
+  srcs = ['DotNetAssumptions.java'],
+  deps = [
+    '//src/com/facebook/buck/io:io',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+  ],
+)
