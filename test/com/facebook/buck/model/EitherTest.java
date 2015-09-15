@@ -14,12 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.model;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.base.Function;
 
 import org.junit.Test;

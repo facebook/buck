@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.model;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
