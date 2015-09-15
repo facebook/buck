@@ -56,8 +56,8 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
@@ -137,10 +137,11 @@ public class GenruleTest {
         .build(ruleResolver, filesystem);
 
     // Verify all of the observers of the Genrule.
-    assertEquals(GEN_PATH.resolve("src/com/facebook/katana/AndroidManifest.xml"),
+    assertEquals(GEN_PATH.resolve("src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         genrule.getPathToOutput());
     assertEquals(
-        filesystem.resolve(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString(),
+        filesystem.resolve(
+            GEN_DIR + "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml").toString(),
         ((Genrule) genrule).getAbsoluteOutputFilePath());
     BuildContext buildContext = null; // unused since there are no deps
     ImmutableList<Path> inputsToCompareToOutputs = ImmutableList.of(
@@ -166,7 +167,8 @@ public class GenruleTest {
             "rm",
             "-r",
             "-f",
-            "/opt/src/buck/" + GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml"),
+            "/opt/src/buck/" + GEN_DIR +
+            "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml"),
         rmCommand.getShellCommand());
 
     Step secondStep = steps.get(1);
@@ -174,7 +176,7 @@ public class GenruleTest {
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
     assertEquals(
         "Second command should make sure the output directory exists.",
-        filesystem.resolve(GEN_DIR + "/src/com/facebook/katana"),
+        filesystem.resolve(GEN_DIR + "/src/com/facebook/katana/katana_manifest"),
         mkdirCommand.getPath());
 
     Step mkTmpDir = steps.get(2);
@@ -211,7 +213,9 @@ public class GenruleTest {
     assertEquals("genrule", genruleCommand.getShortName());
     assertEquals(ImmutableMap.<String, String>builder()
         .put("OUT",
-            filesystem.resolve(GEN_DIR + "/src/com/facebook/katana/AndroidManifest.xml").toString())
+            filesystem.resolve(
+                GEN_DIR + "/src/com/facebook/katana/katana_manifest/AndroidManifest.xml")
+                .toString())
         .build(),
         genruleCommand.getEnvironmentVariables(executionContext));
     assertEquals(
@@ -254,7 +258,7 @@ public class GenruleTest {
         ImmutableMap.of(
             "DEPS", "$GEN_DIR/foo/bar.jar",
             "GEN_DIR", filesystem.resolve("buck-out/gen").toString(),
-            "OUT", filesystem.resolve("buck-out/gen/foo/deps.txt").toString()),
+            "OUT", filesystem.resolve("buck-out/gen/foo/baz/deps.txt").toString()),
         environmentVariables);
 
     // Ensure that $GEN_DIR is declared before $DEPS.

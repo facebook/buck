@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -155,10 +156,8 @@ public class AndroidBinaryIntegrationTest {
 
   @Test
   public void testPreprocessorForcesReDex() throws IOException {
-    String output;
-
-    workspace.runBuckCommand("build", "//java/com/preprocess:disassemble").assertSuccess();
-    output = workspace.getFileContents("buck-out/gen/java/com/preprocess/content.txt");
+    Path outputFile = workspace.buildAndReturnOutput("//java/com/preprocess:disassemble");
+    String output = new String(Files.readAllBytes(outputFile), UTF_8);
     assertThat(output, containsString("content=2"));
 
     workspace.replaceFileContents(
@@ -166,8 +165,8 @@ public class AndroidBinaryIntegrationTest {
         "content=2",
         "content=3");
 
-    workspace.runBuckCommand("build", "//java/com/preprocess:disassemble").assertSuccess();
-    output = workspace.getFileContents("buck-out/gen/java/com/preprocess/content.txt");
+    outputFile = workspace.buildAndReturnOutput("//java/com/preprocess:disassemble");
+    output = new String(Files.readAllBytes(outputFile), UTF_8);
     assertThat(output, containsString("content=3"));
   }
 

@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="library_libs_generated">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/buck-out/gen/libs/generated.jar!/" />
+      <root url="jar://$PROJECT_DIR$/buck-out/gen/libs/generated_jar/generated.jar!/" />
     </CLASSES>
   </library>
 </component>

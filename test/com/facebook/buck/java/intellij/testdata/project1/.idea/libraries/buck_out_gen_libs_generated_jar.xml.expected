@@ -5,7 +5,7 @@
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/buck-out/gen/libs/generated-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/buck-out/gen/libs/generated_source_jar/generated-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

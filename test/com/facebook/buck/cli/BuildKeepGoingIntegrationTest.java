@@ -41,6 +41,7 @@ import java.nio.file.Path;
  */
 public class BuildKeepGoingIntegrationTest {
 
+  private static final String GENRULE_OUTPUT = "buck-out/gen/rule_with_output/rule_with_output.txt";
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
@@ -54,7 +55,7 @@ public class BuildKeepGoingIntegrationTest {
 
     ProcessResult result = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY buck-out/gen/rule_with_output.txt\n" +
+        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT + "\n" +
         "OK   //:rule_without_output BUILT_LOCALLY\n";
     assertThat(result.getStderr(), containsString(expectedReport));
   }
@@ -69,12 +70,11 @@ public class BuildKeepGoingIntegrationTest {
         "//:rule_with_output",
         "//:failing_rule")
         .assertFailure();
-    String pathToOutputFile = "buck-out/gen/rule_with_output.txt";
     String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY " + pathToOutputFile + "\n" +
+        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT + "\n" +
         "FAIL //:failing_rule\n";
     assertThat(result.getStderr(), containsString(expectedReport));
-    Path outputFile = workspace.getPath(pathToOutputFile);
+    Path outputFile = workspace.getPath(GENRULE_OUTPUT);
     assertTrue(Files.exists(outputFile));
   }
 
@@ -85,13 +85,13 @@ public class BuildKeepGoingIntegrationTest {
 
     ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport1 =
-        "OK   //:rule_with_output BUILT_LOCALLY buck-out/gen/rule_with_output.txt\n" +
+        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT + "\n" +
         "OK   //:rule_without_output BUILT_LOCALLY\n";
     assertThat(result1.getStderr(), containsString(expectedReport1));
 
     ProcessResult result2 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport2 =
-        "OK   //:rule_with_output MATCHING_RULE_KEY buck-out/gen/rule_with_output.txt\n" +
+        "OK   //:rule_with_output MATCHING_RULE_KEY " + GENRULE_OUTPUT + "\n" +
         "OK   //:rule_without_output MATCHING_RULE_KEY\n";
     assertThat(result2.getStderr(), containsString(expectedReport2));
 
@@ -99,7 +99,7 @@ public class BuildKeepGoingIntegrationTest {
 
     ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport3 =
-        "OK   //:rule_with_output FETCHED_FROM_CACHE buck-out/gen/rule_with_output.txt\n" +
+        "OK   //:rule_with_output FETCHED_FROM_CACHE " + GENRULE_OUTPUT + "\n" +
         "OK   //:rule_without_output FETCHED_FROM_CACHE\n";
     assertThat(result3.getStderr(), containsString(expectedReport3));
   }
@@ -127,7 +127,7 @@ public class BuildKeepGoingIntegrationTest {
         "    \"//:rule_with_output\" : {",
         "      \"success\" : true,",
         "      \"type\" : \"BUILT_LOCALLY\",",
-        "      \"output\" : \"buck-out/gen/rule_with_output.txt\"",
+        "      \"output\" : \"" + GENRULE_OUTPUT + "\"",
         "    },",
         "    \"//:failing_rule\" : {",
         "      \"success\" : false",

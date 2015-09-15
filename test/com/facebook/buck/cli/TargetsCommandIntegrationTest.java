@@ -67,7 +67,7 @@ public class TargetsCommandIntegrationTest {
         "--show-output",
         "//:test");
     result.assertSuccess();
-    assertEquals("//:test buck-out/gen/test-output\n", result.getStdout());
+    assertEquals("//:test buck-out/gen/test/test-output\n", result.getStdout());
   }
 
   @Test
@@ -97,7 +97,7 @@ public class TargetsCommandIntegrationTest {
         "//:test");
     result.assertSuccess();
     assertEquals(
-        "//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2 buck-out/gen/test-output\n",
+        "//:test 12c109cdbab186fbb8fdd785853d8bcb4538aed2 buck-out/gen/test/test-output\n",
         result.getStdout());
   }
 

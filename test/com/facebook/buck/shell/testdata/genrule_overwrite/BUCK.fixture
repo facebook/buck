@@ -1,0 +1,18 @@
+genrule(
+  name = 'genrule-one',
+  out = 'output.txt',
+  bash = 'echo "one" > $OUT',
+  srcs = [
+    'input-file.txt',
+  ],
+)
+
+genrule(
+  name = 'genrule-two',
+  out = 'output.txt',
+  bash = 'echo "two" > $OUT',
+  srcs = [
+    'input-file.txt',
+  ],
+)
+

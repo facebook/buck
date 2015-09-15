@@ -21,6 +21,7 @@ import static com.facebook.buck.util.BuckConstant.GEN_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -35,7 +36,6 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -142,7 +142,9 @@ public class ApkGenruleTest {
     // Verify all of the observers of the Genrule.
     String expectedApkOutput =
         MorePathsForTests.rootRelativePath(
-            "/opt/src/buck/" + GEN_DIR + "/src/com/facebook/sign_fb4a.apk").toString();
+            "/opt/src/buck/" +
+            GEN_DIR +
+            "/src/com/facebook/sign_fb4a/sign_fb4a.apk").toString();
     assertEquals(expectedApkOutput,
         apkGenrule.getAbsoluteOutputFilePath());
     assertEquals(
@@ -188,7 +190,7 @@ public class ApkGenruleTest {
     Step secondStep = steps.get(1);
     assertTrue(secondStep instanceof MkdirStep);
     MkdirStep mkdirCommand = (MkdirStep) secondStep;
-    Path mkdirDir = projectFilesystem.resolve(GEN_DIR + "/src/com/facebook");
+    Path mkdirDir = projectFilesystem.resolve(GEN_DIR + "/src/com/facebook/sign_fb4a");
     assertEquals(
         "Second command should make sure the output directory exists.",
         mkdirDir,

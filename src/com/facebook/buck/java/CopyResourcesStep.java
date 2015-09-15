@@ -18,6 +18,8 @@ package com.facebook.buck.java;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasOutputName;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -27,6 +29,7 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -110,8 +113,21 @@ public class CopyResourcesStep implements Step {
       //
       // Therefore, some path-wrangling is required to produce the correct string.
 
-      final Path pathToResource = resolver.getPath(rawResource);
-      String resource = MorePaths.pathWithUnixSeparators(pathToResource);
+
+      Optional<BuildRule> underlyingRule = resolver.getRule(rawResource);
+      Path pathToResource = resolver.getPath(rawResource);
+
+      String resource = null;
+
+      if (underlyingRule.orNull() instanceof HasOutputName) {
+        resource = MorePaths.pathWithUnixSeparators(
+            underlyingRule.get().getBuildTarget().getBasePath().resolve(
+                ((HasOutputName) underlyingRule.get()).getOutputName()));
+      }
+      if (resource == null) {
+        resource = MorePaths.pathWithUnixSeparators(pathToResource);
+      }
+
       Matcher matcher;
       if ((matcher = GENERATED_FILE_PATTERN.matcher(resource)).matches()) {
         resource = matcher.group(1);

@@ -55,11 +55,9 @@ public class ShBinaryRuleIntegrationTest {
         this, "sh_binary_trivial", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//:run_example", "-v", "2");
-    buildResult.assertSuccess();
+    Path outputFile = workspace.buildAndReturnOutput("//:run_example");
 
     // Verify contents of example_out.txt
-    Path outputFile = workspace.getPath("buck-out/gen/example_out.txt");
     String output = new String(Files.readAllBytes(outputFile), US_ASCII);
     assertEquals("arg1\narg2\n", output);
   }
@@ -107,11 +105,9 @@ public class ShBinaryRuleIntegrationTest {
         this, "sh_binary_with_resources", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//app:create_output_using_node");
-    buildResult.assertSuccess();
+    Path outputFile = workspace.buildAndReturnOutput("//app:create_output_using_node");
 
     // Verify contents of output.txt
-    Path outputFile = workspace.getPath("buck-out/gen/app/output.txt");
     List<String> lines = Files.readAllLines(outputFile, US_ASCII);
     ExecutionEnvironment executionEnvironment =
         new DefaultExecutionEnvironment(

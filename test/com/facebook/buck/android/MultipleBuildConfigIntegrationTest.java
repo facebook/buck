@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
@@ -27,6 +28,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class MultipleBuildConfigIntegrationTest {
@@ -43,10 +46,10 @@ public class MultipleBuildConfigIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "android_project", tmp);
     workspace.setUp();
-    workspace.runBuckCommand("build", "//java/com/buildconfigs:extract-classes-dex")
-        .assertSuccess();
 
-    String smali = workspace.getFileContents("buck-out/gen/java/com/buildconfigs/smali-files.txt");
+    Path outputFile = workspace.buildAndReturnOutput("//java/com/buildconfigs:extract-classes-dex");
+    String smali = new String(Files.readAllBytes(outputFile), UTF_8);
+
     assertThat(
         smali,
         containsString(Paths.get("com/example/config1/BuildConfig.smali").toString()));

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
@@ -28,6 +29,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class AarWithLibsIntegrationTest {
 
@@ -43,9 +46,8 @@ public class AarWithLibsIntegrationTest {
 
     // More importantly, the content of the libs/ should end up in the .apk of an android_binary()
     // that transitively includes //:aar, but this is easier to test.
-    workspace.runBuckCommand("build", "//java/com/example/aar:extract-classes-dex").assertSuccess();
-
-    String smali = workspace.getFileContents("buck-out/gen/java/com/example/aar/smali-files.txt");
+    Path output = workspace.buildAndReturnOutput("//java/com/example/aar:extract-classes-dex");
+    String smali = new String(Files.readAllBytes(output), UTF_8);
 
     String primaryClass = MorePaths.pathWithPlatformSeparators("com/example/PrimaryClass.smali");
     String dependency = MorePaths.pathWithPlatformSeparators(

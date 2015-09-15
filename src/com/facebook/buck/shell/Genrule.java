@@ -165,9 +165,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
 
     this.out = out;
     BuildTarget target = params.getBuildTarget();
-    this.pathToOutDirectory = Paths.get(
-        BuckConstant.GEN_DIR,
-        target.getBasePathWithSlash());
+    this.pathToOutDirectory = BuckConstant.GEN_PATH
+        .resolve(target.getBasePath())
+        .resolve(target.getShortName());
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(
