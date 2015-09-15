@@ -1,0 +1,15 @@
+zip_file(
+  name = 'ziptastic',
+  srcs = glob(['**/*'], excludes = ['BUCK']),
+)
+
+export_file(
+  name = 'source-jar',
+  src = 'source-1.0-sources.jar',
+  out = 'source-1.0-sources.jar',
+)
+
+zip_file(
+  name = 'unrolled',
+  srcs = [ ':source-jar' ],
+)

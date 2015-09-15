@@ -1,0 +1,115 @@
+		{namespace zip_file}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'zip_file()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to create a zip file as its output.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+  A <code>zip_file()</code> allows builds to create basic zip files in
+  a platform-agnostic way.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'out' /}
+  {param default: 'name.zip' /}
+  {param desc}
+  The name of the zip file that should be generated. This allows
+  builds to use a meaningful target name coupled with a meaningful zip
+  file name. The default value takes the rule's <code>name</code> and
+  appends <code>.zip</code>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param desc}
+  The set of files to include in the zip. If any of these are source
+  zips (indicated by a file name ending in <code>-sources.jar</code>
+  or <code>.src.zip</code>) the contents of the source zip will be
+  added to the generated zip, rather than the source zip itself. This
+  provides a mechanism to roll up multiple source zips into a single
+  unit.
+  <p>
+   
+  Each <code>src</code> will be added to the zip as follows:
+  <ul> 
+  <li>If the <code>src</code> is the output of another rule, the output
+      will be included using just the output's file name.
+  <li>If the <code>src</code> is a file relative to the rule's
+      declaration, it will be included in the zip with its relative file
+      name.
+  <li>If the <code>src</code> is a source zip, the contents of the
+      source zip will be added to the generated zip.
+  </ul>
+
+  {/param}
+{/call}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+<p>
+  This example will create a simple zip file.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+zip_file(
+  # The output will be "example.zip"
+  name = 'example',
+  srcs = 
+    # These files will be found in the zip under "dir/"
+    glob(['dir/**/*']) +
+    [
+      # Imagine this generates the output 
+      # "buck-out/gen/foo/hello.txt". This output will 
+      # be found in the zip at "hello.txt"
+      '//some/other:target',
+  
+      # Whereas the contents of this zip will be added
+      # to the generated zip.
+      'amazing-library-1.0-sources.zip',
+    ],
+)
+</pre>{/literal}
+
+If you were to examine the generated zip, the contents would look
+something like (assuming the output of
+"<code>//some/other:target</code>" was a file who's path ended with
+<code>hello.txt</code>, the "<code>dir</code>" glob found two files,
+and "<code>amazing-library-1.0-sources.zip</code>" contained two Java
+source files):
+
+{literal}<pre>
+dir/file1.txt
+dir/subdir/file2.txt
+hello.txt
+com/example/amazinglibrary/Source1.java
+com/example/amazinglibrary/Source2.java
+</pre>{/literal}
+
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

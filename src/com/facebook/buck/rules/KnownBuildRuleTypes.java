@@ -120,6 +120,7 @@ import com.facebook.buck.thrift.ThriftPythonEnhancer;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.zip.ZipDescription;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -546,6 +547,7 @@ public class KnownBuildRuleTypes {
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());
     builder.register(new XcodeWorkspaceConfigDescription());
+    builder.register(new ZipDescription());
 
     builder.setCxxPlatforms(cxxPlatforms);
     builder.setDefaultCxxPlatform(defaultCxxPlatform);

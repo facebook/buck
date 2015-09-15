@@ -48,6 +48,7 @@ java_library(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
+    '//src/com/facebook/buck/zip:rules',
     '//third-party/java/aosp:aosp',
     '//third-party/java/guava:guava',
     '//third-party/java/jsr:jsr305',

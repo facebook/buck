@@ -70,6 +70,30 @@ java_library(
   ],
 )
 
+java_library(
+  name = 'rules',
+  srcs = [
+    'SrcZipAwareFileBundler.java',
+    'Zip.java',
+    'ZipDescription.java',
+  ],
+  deps = [
+    ':steps',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//src/com/facebook/buck/step/fs:fs',
+    '//src/com/facebook/buck/step:step',
+    '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/rules:types',
+    '//test/com/facebook/buck/zip:zip',
+  ],
+)
+
 java_binary(
   name = 'zip-write-test',
   main_class = 'com.facebook.buck.zip.ZipWriteTest',
