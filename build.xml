@@ -421,8 +421,22 @@
     </sequential>
   </macrodef>
 
+  <target name="package-resources">
+    <mkdir dir="${classes.dir}/com/facebook/buck/cli/quickstart/android"/>
+    <zip basedir="src/com/facebook/buck/cli/quickstart/android"
+         destfile="${classes.dir}/com/facebook/buck/cli/quickstart/android/android-template.zip"
+         excludes="BUCK"
+         defaultexcludes="no"/>
+
+    <mkdir dir="${classes.dir}/com/facebook/buck/cli/quickstart/ios"/>
+    <zip basedir="src/com/facebook/buck/cli/quickstart/ios"
+         destfile="${classes.dir}/com/facebook/buck/cli/quickstart/ios/ios-template.zip"
+         excludes="BUCK"
+         defaultexcludes="no"/>
+  </target>
+
   <target name="compile"
-          depends="compile-testrunner, bootstrapper, tracing-api, dx, generate-immutables"
+          depends="compile-testrunner, bootstrapper, package-resources, tracing-api, dx, generate-immutables"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 

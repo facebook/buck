@@ -24,6 +24,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -44,8 +45,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -62,17 +66,13 @@ public class QuickstartCommand extends AbstractCommand {
     IOS,
   }
 
-  private static final ImmutableMap<Type, Path> PATHS_TO_QUICKSTART_DIR = ImmutableMap.of(
-      Type.ANDROID,
-      Paths.get(
-          System.getProperty(
-              "buck.quickstart_origin_dir",
-              new File("src/com/facebook/buck/cli/quickstart/android").getAbsolutePath())),
-      Type.IOS,
-      Paths.get(
-          System.getProperty(
-              "buck.quickstart_ios_origin_dir",
-              new File("src/com/facebook/buck/cli/quickstart/ios").getAbsolutePath())));
+  private static final ImmutableMap<Type, PackagedResource> PATHS_TO_QUICKSTART_DIR =
+      ImmutableMap.of(
+          Type.ANDROID,
+          new PackagedResource(QuickstartCommand.class, "quickstart/android/android-template.zip"),
+
+          Type.IOS,
+          new PackagedResource(QuickstartCommand.class, "quickstart/ios/ios-template.zip"));
 
   @Option(name = "--dest-dir", usage = "Destination project directory")
   private String destDir = "";
@@ -152,7 +152,10 @@ public class QuickstartCommand extends AbstractCommand {
       return 1;
     }
 
-    Path origin = Preconditions.checkNotNull(PATHS_TO_QUICKSTART_DIR.get(type));
+    PackagedResource resource = Preconditions.checkNotNull(PATHS_TO_QUICKSTART_DIR.get(type));
+    Path origin = resource.get();
+
+    final Path destination = Paths.get(projectDir);
 
     switch (type) {
       case ANDROID: {
@@ -171,7 +174,6 @@ public class QuickstartCommand extends AbstractCommand {
 
         sdkLocation = sdkLocationFile.getAbsoluteFile().toString();
 
-        Path destination = Paths.get(projectDir);
         MoreFiles.copyRecursively(origin, destination);
 
         // Specify the default Android target so everyone on the project builds against the same
@@ -203,7 +205,6 @@ public class QuickstartCommand extends AbstractCommand {
               "Could not find any Apple SDK, check your Xcode installation.");
         }
 
-        Path destination = Paths.get(projectDir);
         MoreFiles.copyRecursively(origin, destination);
 
         File buckConfig = new File(projectDir + "/.buckconfig");
@@ -212,6 +213,19 @@ public class QuickstartCommand extends AbstractCommand {
         break;
       }
     }
+
+    java.nio.file.Files.walkFileTree(destination, new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(
+              Path file, BasicFileAttributes attrs) throws IOException {
+            if ("BUCK.tmpl".equals(file.getFileName().toString())) {
+              Path actualBuck = file.getParent().resolve("BUCK");
+              java.nio.file.Files.copy(file, actualBuck);
+              java.nio.file.Files.delete(file);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
 
     params.getConsole().getStdOut().print(
         Files.toString(origin.resolve("README.md").toFile(), StandardCharsets.UTF_8));

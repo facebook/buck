@@ -40,6 +40,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
+/**
+ * Note: because we use {@link com.facebook.buck.util.PackagedResource}, which expects zips to be
+ * created by the build system, you may need to run this test through ant or buck, rather than
+ * directly in IntelliJ.
+ */
 public class QuickstartIntegrationTest {
 
   @Rule

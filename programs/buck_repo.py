@@ -94,8 +94,6 @@ RESOURCES = {
     "path_to_python_test_main": "src/com/facebook/buck/python/__test_main__.py",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "path_to_static_content": "webserver/static",
-    "quickstart_ios_origin_dir": "src/com/facebook/buck/cli/quickstart/ios",
-    "quickstart_origin_dir": "src/com/facebook/buck/cli/quickstart/android",
     "report_generator_jar": "build/report-generator.jar",
     "testrunner_classes": "build/testrunner/classes",
 }

@@ -58,8 +58,6 @@ BUCK_CORE_RESOURCES = {
     # entire directories into a PEX file, so for now, we aren't pulling in
     # the following resources.
     #':path_to_static_content',
-    #':quickstart_ios_origin_dir',
-    #':quickstart_origin_dir',
 }
 
 BUCK_WITH_NAILGUN_RESOURCES = {
