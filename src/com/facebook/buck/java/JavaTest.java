@@ -86,7 +86,7 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
 
   private final ImmutableSet<String> contacts;
 
-  @AddToRuleKey
+  @AddToRuleKey(stringify = true)
   private ImmutableSet<BuildRule> sourceUnderTest;
 
   private final ImmutableSet<Path> additionalClasspathEntries;
