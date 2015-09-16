@@ -28,6 +28,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.keys.AbiRule;
+import com.facebook.buck.rules.keys.AbiRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -108,6 +111,29 @@ public class CachingBuildEngine implements BuildEngine {
   private final RuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
 
   public CachingBuildEngine(
+      ListeningExecutorService service,
+      FileHashCache fileHashCache,
+      BuildMode buildMode,
+      DepFiles depFiles,
+      SourcePathResolver pathResolver) {
+    this(
+        service,
+        fileHashCache,
+        buildMode,
+        depFiles,
+        new InputBasedRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver),
+        new AbiRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver),
+        new DependencyFileRuleKeyBuilderFactory(
+            fileHashCache,
+            pathResolver));
+  }
+
+  @VisibleForTesting
+  CachingBuildEngine(
       ListeningExecutorService service,
       FileHashCache fileHashCache,
       BuildMode buildMode,
