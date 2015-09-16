@@ -37,34 +37,9 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.platform_headers_arg /}
 
-{call buck.arg}
-  {param name : 'exported_headers' /}
-  {param default : '[]' /}
-  {param desc}
-  The set of header files that are made available for inclusion to the source files in the
-  target and all targets that transitively depend on it. These should be specified as either a list
-  of header files or a dictionary of header names to header files. The headers can be included
-  with <code>#include "$HEADER_NAMESPACE/$HEADER_NAME"</code> or <code>#include
-  &lt;$HEADER_NAMESPACE/$HEADER_NAME&gt;</code>, where <code>$HEADER_NAMESPACE</code> is the value
-  of the target's <code>header_namespace</code> attribute, and <code>$HEADER_NAME</code> is the
-  header name if specified, and the filename of the header file otherwise. Note that the header name
-  can contain forward slashes (<code>/</code>). See <code>header_namespace</code> for more
-  information.
-  {/param}
-{/call}
+{call cxx_common.exported_headers_arg /}
 
-{call buck.arg}
-  {param name : 'platform_exported_headers' /}
-  {param default : '[]' /}
-  {param desc}
-  Platform specific header files. These should be specified as a list of pairs where the first
-  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
-  name is matched, and the second element is either a list of header files or a dictionary of
-  header names to header files that will be made available for inclusion to the source files in the
-  target and all targets that transitively depend on it if the platform matches the regex.
-  See <code>headers</code> for more information.
-  {/param}
-{/call}
+{call cxx_common.platform_exported_headers_arg /}
 
 {call cxx_common.header_namespace_arg /}
 
@@ -74,17 +49,7 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.exported_preprocessor_flags_arg /}
 
-{call buck.arg}
-  {param name : 'exported_platform_preprocessor_flags' /}
-  {param default : '[]' /}
-  {param desc}
-  Platform specific exported preprocessor flags. These should be specified as a list of pairs where
-  the first element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the
-  platform name is matched, and the second element is a list of flags to use when preprocessing the
-  source files in the target and all targets that transitively depend on it if the platform matches
-  the regex. See <code>exported_preprocessor_flags</code> for more information.
-  {/param}
-{/call}
+{call cxx_common.exported_platform_preprocessor_flags_arg /}
 
 {call cxx_common.compiler_flags_arg /}
 

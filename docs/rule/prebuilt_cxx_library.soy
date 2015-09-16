@@ -1,0 +1,120 @@
+{namespace prebuilt_cxx_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'prebuilt_cxx_library()' /}
+    {param prettify: true /}
+    {param description}
+      A prebuilt_cxx_library() rule represents a set of native libraies and C/C++ header files.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>prebuilt_cxx_library()</code> rule represents a set of native libraries and C/C++ header
+files and provides various flags to control how they are linked and exported.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'header_only' /}
+  {param default: 'False' /}
+  {param desc}
+    Indicates if this library only consists of headers or not.  If this is set to
+    {sp}<code>True</code>, Buck will not link this library into any library that depends on it.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'lib_name' /}
+  {{param default: '{name}' /}}
+  {param desc}
+    The name of the library.  If your library file was named <code>libmylib.a</code>, this should
+    be <code>mylib</code>.  This defaults to the <code>name</code> of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'lib_dir' /}
+  {param default: 'lib' /}
+  {param desc}
+    The directory the library <code>lib_name</code> can be found.  This can use the
+    <code>$(platform)</code> macro to specify platform-dependent versions of the library.
+  {/param}
+{/call}
+
+{call cxx_common.exported_headers_arg /}
+
+{call cxx_common.platform_exported_headers_arg /}
+
+{call cxx_common.header_namespace_arg /}
+
+{call cxx_common.exported_preprocessor_flags_arg /}
+
+{call cxx_common.exported_platform_preprocessor_flags_arg /}
+
+{call cxx_common.exported_linker_flags_arg /}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+
+<p>
+  A prebuilt library containing only headers that other libraries may need.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_cxx_library(
+  name = 'stdutil',
+  exported_headers = glob(['*.h']),
+)
+</pre>{/literal}
+
+<p>
+  A prebuilt library for multiple platforms.  The directory tree for an Android and iOS build is
+  laid out below it.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_cxx_library(
+  name = 'mylib',
+  lib_dir = 'lib/$(platform)',
+  exported_headers = [
+    'mylib.h',
+  ],
+)
+</pre>
+<pre class="prettyprint lang-sh">
+lib/
+  android-arm/
+    libmylib.a
+  android-armv7/
+    libmylib.a
+  android-x86/
+    libmylib.a
+  iphonesimulator-x86_64/
+    libmylib.a
+  iphoneos-i386/
+    libmylib.a
+  iphoneos-arm64/
+    libmylib.a
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
