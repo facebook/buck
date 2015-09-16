@@ -5,8 +5,10 @@ java_library(
     '//test/com/facebook/buck/thrift:thrift',
   ],
   deps = [
+    '//src/com/facebook/buck/android:packageable',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java:config',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:steps',
