@@ -53,7 +53,7 @@ public class DefaultFileHashCacheTest {
         HashCode.fromInt(42),
         HashCodeAndFileType.Type.FILE);
     cache.loadingCache.put(path, value);
-    assertTrue("Cache should contain path", cache.contains(path));
+    assertTrue("Cache should contain path", cache.willGet(path));
   }
 
   @Test
@@ -77,9 +77,9 @@ public class DefaultFileHashCacheTest {
         HashCode.fromInt(42),
         HashCodeAndFileType.Type.FILE);
     cache.loadingCache.put(path, value);
-    assertTrue("Cache should contain path", cache.contains(path));
+    assertTrue("Cache should contain path", cache.willGet(path));
     cache.invalidate(path);
-    assertFalse("Cache should not contain pain", cache.contains(path));
+    assertFalse("Cache should not contain pain", cache.willGet(path));
   }
 
   @Test
@@ -87,9 +87,9 @@ public class DefaultFileHashCacheTest {
     DefaultFileHashCache cache =
         new DefaultFileHashCache(new FakeProjectFilesystem());
     Path path = new File("SomeClass.java").toPath();
-    assertFalse("Cache should not contain pain", cache.contains(path));
+    assertFalse("Cache should not contain pain", cache.willGet(path));
     cache.invalidate(path);
-    assertFalse("Cache should not contain pain", cache.contains(path));
+    assertFalse("Cache should not contain pain", cache.willGet(path));
   }
 
   @Test
@@ -107,17 +107,17 @@ public class DefaultFileHashCacheTest {
     Path path1 = Paths.get("path1");
     filesystem.writeContentsToPath("contenst1", path1);
     cache.get(path1);
-    assertTrue(cache.contains(path1));
+    assertTrue(cache.willGet(path1));
 
     Path path2 = Paths.get("path2");
     filesystem.writeContentsToPath("contenst2", path2);
     cache.get(path2);
-    assertTrue(cache.contains(path2));
+    assertTrue(cache.willGet(path2));
 
     // Verify that `invalidateAll` clears everything from the cache.
+    assertFalse(cache.loadingCache.asMap().isEmpty());
     cache.invalidateAll();
-    assertFalse(cache.contains(path1));
-    assertFalse(cache.contains(path2));
-  }
 
+    assertTrue(cache.loadingCache.asMap().isEmpty());
+  }
 }

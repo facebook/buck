@@ -20,6 +20,7 @@ import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HashCodeAndFileType;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -33,6 +34,7 @@ import com.google.common.io.ByteSource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
@@ -87,8 +89,14 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public boolean contains(Path path) {
-    return loadingCache.getIfPresent(path) != null;
+  public boolean willGet(Path path) {
+    Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
+    if (!relativePath.isPresent()) {
+      return false;
+    }
+    return loadingCache.getIfPresent(relativePath.get()) != null ||
+        (projectFilesystem.exists(relativePath.get()) &&
+        !projectFilesystem.isIgnored(relativePath.get()));
   }
 
   @Override
@@ -106,7 +114,14 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
    */
   @Override
   public HashCode get(Path path) throws IOException {
-    Preconditions.checkState(!path.isAbsolute());
+    if (path.isAbsolute()) {
+      Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
+      if (!relativePath.isPresent()) {
+        throw new NoSuchFileException("Failed to find path in hash cache: " + path);
+      }
+      path = relativePath.get();
+    }
+
     Preconditions.checkState(!projectFilesystem.isIgnored(path));
     HashCode sha1;
     try {

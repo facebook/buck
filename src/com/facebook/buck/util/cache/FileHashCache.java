@@ -27,7 +27,7 @@ import java.nio.file.Path;
  */
 public interface FileHashCache {
 
-  boolean contains(Path path);
+  boolean willGet(Path path);
 
   void invalidate(Path path);
 

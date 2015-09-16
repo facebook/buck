@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -26,29 +25,30 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
-public class MultiProjectFileHashCache implements FileHashCache {
+/**
+ * Presents a list of {@link FileHashCache}s as a single cache, implementing a Chain of
+ * Responsibility to find items in the cache.
+ */
+public class StackedFileHashCache implements FileHashCache {
 
-  private final ImmutableList<? extends ProjectFileHashCache> projectCaches;
+  private final ImmutableList<? extends FileHashCache> caches;
 
-  public MultiProjectFileHashCache(ImmutableList<? extends ProjectFileHashCache> projectCaches) {
-    this.projectCaches = projectCaches;
+  public StackedFileHashCache(ImmutableList<? extends FileHashCache> caches) {
+    this.caches = caches;
   }
 
   private Optional<Pair<FileHashCache, Path>> lookup(Path path) {
-    for (ProjectFileHashCache cache : projectCaches) {
-      ProjectFilesystem filesystem = cache.getFilesystem();
-      Optional<Path> relativePath = filesystem.getPathRelativeToProjectRoot(path);
-      if (relativePath.isPresent() && !filesystem.isIgnored(relativePath.get())) {
-        return Optional.of(new Pair<FileHashCache, Path>(cache, relativePath.get()));
+    for (FileHashCache cache : caches) {
+      if (cache.willGet(path)) {
+        return Optional.of(new Pair<>(cache, path));
       }
     }
     return Optional.absent();
   }
 
   @Override
-  public boolean contains(Path path) {
-    Optional<Pair<FileHashCache, Path>> found = lookup(path);
-    return found.isPresent() && found.get().getFirst().contains(found.get().getSecond());
+  public boolean willGet(Path path) {
+    return lookup(path).isPresent();
   }
 
   @Override
@@ -61,7 +61,7 @@ public class MultiProjectFileHashCache implements FileHashCache {
 
   @Override
   public void invalidateAll() {
-    for (ProjectFileHashCache cache : projectCaches) {
+    for (FileHashCache cache : caches) {
       cache.invalidateAll();
     }
   }

@@ -26,7 +26,7 @@ import java.nio.file.Path;
 public class NullFileHashCache implements FileHashCache {
 
   @Override
-  public boolean contains(Path path) {
+  public boolean willGet(Path path) {
     return false;
   }
 

@@ -33,7 +33,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class MultiProjectFileHashCacheTest {
+public class StackedFileHashCacheTest {
 
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
@@ -46,14 +46,16 @@ public class MultiProjectFileHashCacheTest {
 
   @Test
   public void usesFirstCache() throws IOException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
     Path path = Paths.get("world.txt");
-    Path fullPath = tmp.getRootPath().resolve(path);
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     filesystem.touch(path);
+
+    Path fullPath = filesystem.resolve(path);
     DefaultFileHashCache innerCache = new DefaultFileHashCache(filesystem);
-    MultiProjectFileHashCache cache = new MultiProjectFileHashCache(ImmutableList.of(innerCache));
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     cache.get(fullPath);
-    assertTrue(innerCache.contains(path));
+    assertTrue(innerCache.willGet(path));
   }
 
   @Test
@@ -69,13 +71,13 @@ public class MultiProjectFileHashCacheTest {
     DefaultFileHashCache innerCache2 = new DefaultFileHashCache(filesystem2);
     filesystem2.touch(path);
 
-    MultiProjectFileHashCache cache =
-        new MultiProjectFileHashCache(
+    StackedFileHashCache cache =
+        new StackedFileHashCache(
             ImmutableList.of(
                 innerCache,
                 innerCache2));
     cache.get(fullPath);
-    assertTrue(innerCache2.contains(path));
+    assertTrue(innerCache2.willGet(path));
   }
 
   @Test
@@ -83,7 +85,7 @@ public class MultiProjectFileHashCacheTest {
     Path fullPath = Paths.get("some/path");
     ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache innerCache = new DefaultFileHashCache(filesystem);
-    MultiProjectFileHashCache cache = new MultiProjectFileHashCache(ImmutableList.of(innerCache));
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
     cache.get(fullPath);
   }
@@ -95,7 +97,7 @@ public class MultiProjectFileHashCacheTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath(), ImmutableSet.of(path));
     filesystem.touch(path);
     DefaultFileHashCache innerCache = new DefaultFileHashCache(filesystem);
-    MultiProjectFileHashCache cache = new MultiProjectFileHashCache(ImmutableList.of(innerCache));
+    StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
     cache.get(fullPath);
   }

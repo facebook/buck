@@ -47,7 +47,7 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   @Override
-  public boolean contains(Path path) {
+  public boolean willGet(Path path) {
     return pathsToHashes.containsKey(path);
   }
 

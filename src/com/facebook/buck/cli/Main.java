@@ -72,7 +72,7 @@ import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.MultiProjectFileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreExecutors;
@@ -613,7 +613,7 @@ public final class Main {
     // Build up the hash cache, which is a collection of the stateful repo cache and some per-run
     // caches.
     FileHashCache fileHashCache =
-        new MultiProjectFileHashCache(
+        new StackedFileHashCache(
             ImmutableList.of(
                 repoHashCache,
                 buckOutHashCache,

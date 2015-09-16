@@ -57,7 +57,7 @@ public class WatchedFileHashCacheTest {
         HashCodeAndFileType.Type.FILE);
     cache.loadingCache.put(path, value);
     cache.onFileSystemChange(createOverflowEvent());
-    assertFalse("Cache should not contain path", cache.contains(path));
+    assertFalse("Cache should not contain path", cache.willGet(path));
   }
 
   @Test
@@ -70,7 +70,7 @@ public class WatchedFileHashCacheTest {
         HashCodeAndFileType.Type.FILE);
     cache.loadingCache.put(path, value);
     cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_CREATE));
-    assertFalse("Cache should not contain path", cache.contains(path));
+    assertFalse("Cache should not contain path", cache.willGet(path));
   }
 
   @Test
@@ -83,7 +83,7 @@ public class WatchedFileHashCacheTest {
         HashCodeAndFileType.Type.FILE);
     cache.loadingCache.put(path, value);
     cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_MODIFY));
-    assertFalse("Cache should not contain path", cache.contains(path));
+    assertFalse("Cache should not contain path", cache.willGet(path));
   }
 
   @Test
@@ -96,7 +96,7 @@ public class WatchedFileHashCacheTest {
         HashCodeAndFileType.Type.FILE);
     cache.loadingCache.put(path, value);
     cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_DELETE));
-    assertFalse("Cache should not contain path", cache.contains(path));
+    assertFalse("Cache should not contain path", cache.willGet(path));
   }
 
   @Test
@@ -133,7 +133,7 @@ public class WatchedFileHashCacheTest {
         createPathEvent(
             dir.resolve("blech"),
             StandardWatchEventKinds.ENTRY_CREATE));
-    assertFalse("Cache should not contain path", cache.contains(dir));
+    assertFalse("Cache should not contain path", cache.willGet(dir));
   }
 
 }

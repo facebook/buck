@@ -549,7 +549,7 @@ public class RuleKeyTest {
     FileHashCache fileHashCache =
         new FileHashCache() {
           @Override
-          public boolean contains(Path path) {
+          public boolean willGet(Path path) {
             return true;
           }
 

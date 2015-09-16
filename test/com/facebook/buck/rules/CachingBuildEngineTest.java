@@ -1550,7 +1550,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     filesystem.mkdirs(output.getParent());
     filesystem.writeContentsToPath("something", output);
     HashCode originalHashCode = fileHashCache.get(output);
-    assertTrue(fileHashCache.contains(output));
+    assertTrue(fileHashCache.willGet(output));
 
     // Create a simple rule which just writes something new to the output file.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
