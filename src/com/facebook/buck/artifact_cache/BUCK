@@ -26,6 +26,7 @@ java_immutables_library(
   name = 'impl',
   srcs = [
     'DirArtifactCache.java',
+    'FullyReadOnCloseInputStream.java',
     'HttpArtifactCache.java',
     'HttpArtifactCacheBinaryProtocol.java',
     'LoggingArtifactCacheDecorator.java',
