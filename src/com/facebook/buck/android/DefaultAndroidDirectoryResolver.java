@@ -127,7 +127,8 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   private Optional<Path> getNdkPathFromNdkDir() {
     Optional<Path> path = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(
         "ndk.dir",
-        "ANDROID_NDK");
+        "ANDROID_NDK",
+        "NDK_HOME");
 
     if (path.isPresent()) {
       Path ndkPath = path.get();

@@ -60,6 +60,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -332,9 +333,13 @@ public class GenruleTest {
   }
 
   @Test
-  public void testShouldIncludeDxInEnvironmentIfPresent() {
+  public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
+    Path sdkDir = Paths.get("/opt/users/android_sdk");
+    Path ndkDir = Paths.get("/opt/users/android_ndk");
+    EasyMock.expect(android.getSdkDirectory()).andStubReturn(Optional.of(sdkDir));
+    EasyMock.expect(android.getNdkDirectory()).andStubReturn(Optional.of(ndkDir));
     EasyMock.expect(android.getDxExecutable()).andStubReturn(Paths.get("."));
     EasyMock.expect(android.getZipalignExecutable()).andStubReturn(Paths.get("zipalign"));
     EasyMock.replay(android);
@@ -356,6 +361,8 @@ public class GenruleTest {
 
     assertEquals(Paths.get(".").toString(), env.get("DX"));
     assertEquals(Paths.get("zipalign").toString(), env.get("ZIPALIGN"));
+    assertEquals(sdkDir.toString(), env.get("ANDROID_HOME"));
+    assertEquals(ndkDir.toString(), env.get("NDK_HOME"));
 
     EasyMock.verify(android);
   }
