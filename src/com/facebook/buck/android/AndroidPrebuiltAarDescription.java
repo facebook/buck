@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.CalculateAbi;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
@@ -98,12 +99,30 @@ public class AndroidPrebuiltAarDescription
               }
             }));
 
+    BuildTarget abiJarTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(CalculateAbi.FLAVOR)
+            .build();
+    SourcePath abiJar = new BuildTargetSourcePath(abiJarTarget);
+    buildRuleResolver.addToIndex(
+        CalculateAbi.of(
+            BuildTarget.builder(params.getBuildTarget())
+                .addFlavors(CalculateAbi.FLAVOR)
+                .build(),
+            pathResolver,
+            params,
+            new BuildTargetSourcePath(
+                unzipAar.getBuildTarget(),
+                unzipAar.getPathToClassesJar())));
+
     PrebuiltJar prebuiltJar = buildRuleResolver.addToIndex(
         createPrebuiltJar(
             unzipAar,
             params,
             pathResolver,
+            abiJar,
             ImmutableSortedSet.<BuildRule>copyOf(javaDeps)));
+
     return buildRuleResolver.addToIndex(new AndroidPrebuiltAar(
         /* androidLibraryParams */ params.copyWithDeps(
             /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(prebuiltJar)),
@@ -118,7 +137,8 @@ public class AndroidPrebuiltAarDescription
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
         /* javacOptions */ javacOptions,
-        /* exportedDeps */ javaDeps));
+        /* exportedDeps */ javaDeps,
+        abiJar));
   }
 
   /**
@@ -148,6 +168,7 @@ public class AndroidPrebuiltAarDescription
       UnzipAar unzipAar,
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePath abiJar,
       ImmutableSortedSet<BuildRule> deps) {
     BuildRuleParams buildRuleParams = params.copyWithChanges(
         /* buildTarget */ BuildTargets.createFlavoredBuildTarget(
@@ -161,6 +182,7 @@ public class AndroidPrebuiltAarDescription
         /* binaryJar */ new BuildTargetSourcePath(
             unzipAar.getBuildTarget(),
             unzipAar.getPathToClassesJar()),
+        abiJar,
         /* sourceJar */ Optional.<SourcePath>absent(),
         /* gwtJar */ Optional.<SourcePath>absent(),
         /* javadocUrl */ Optional.<String>absent(),

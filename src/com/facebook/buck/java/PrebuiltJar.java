@@ -62,6 +62,7 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @AddToRuleKey
   private final SourcePath binaryJar;
+  private final SourcePath abiJar;
   private final Path copiedBinaryJar;
   @AddToRuleKey
   private final Optional<SourcePath> sourceJar;
@@ -72,7 +73,7 @@ public class PrebuiltJar extends AbstractBuildRule
   private final Optional<String> javadocUrl;
   @AddToRuleKey
   private final Optional<String> mavenCoords;
-  private final Path abiJar;
+  private final Path internalAbiJar;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       transitiveClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
@@ -86,18 +87,20 @@ public class PrebuiltJar extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath binaryJar,
+      SourcePath abiJar,
       Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl,
       Optional<String> mavenCoords) {
     super(params, resolver);
     this.binaryJar = binaryJar;
+    this.abiJar = abiJar;
     this.sourceJar = sourceJar;
     this.gwtJar = gwtJar;
     this.javadocUrl = javadocUrl;
     this.mavenCoords = mavenCoords;
 
-    this.abiJar = BuildTargets.getGenPath(getBuildTarget(), "%s-abi.jar");
+    this.internalAbiJar = BuildTargets.getGenPath(getBuildTarget(), "%s-abi.jar");
 
     transitiveClasspathEntriesSupplier =
         Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
@@ -157,6 +160,11 @@ public class PrebuiltJar extends AbstractBuildRule
   @Override
   public Sha1HashCode getAbiKey() {
     return buildOutputInitializer.getBuildOutput().getAbiKey();
+  }
+
+  @Override
+  public Optional<SourcePath> getAbiJar() {
+    return Optional.of(abiJar);
   }
 
   @Override
@@ -232,10 +240,14 @@ public class PrebuiltJar extends AbstractBuildRule
     buildableContext.recordArtifact(copiedBinaryJar);
 
     // Create a step to compute the ABI key.
-    steps.add(new MkdirStep(getProjectFilesystem(), abiJar.getParent()));
-    steps.add(new RmStep(getProjectFilesystem(), abiJar, true));
+    steps.add(new MkdirStep(getProjectFilesystem(), internalAbiJar.getParent()));
+    steps.add(new RmStep(getProjectFilesystem(), internalAbiJar, true));
     steps.add(
-        new CalculateAbiStep(buildableContext, getProjectFilesystem(), resolvedBinaryJar, abiJar));
+        new CalculateAbiStep(
+            buildableContext,
+            getProjectFilesystem(),
+            resolvedBinaryJar,
+            internalAbiJar));
 
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
 

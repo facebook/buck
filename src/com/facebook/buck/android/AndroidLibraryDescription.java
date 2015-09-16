@@ -18,10 +18,12 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
 import com.facebook.buck.java.AnnotationProcessingParams;
+import com.facebook.buck.java.CalculateAbi;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaSourceJar;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
@@ -29,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -120,33 +123,51 @@ public class AndroidLibraryDescription
             params.getExtraDeps());
       }
 
+      BuildTarget abiJarTarget =
+          BuildTarget.builder(params.getBuildTarget())
+              .addFlavors(CalculateAbi.FLAVOR)
+              .build();
+
       ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
-      return new AndroidLibrary(
-          params.appendExtraDeps(
-              Iterables.concat(
-                  BuildRules.getExportedRules(
+      AndroidLibrary library =
+          resolver.addToIndex(
+              new AndroidLibrary(
+                  params.appendExtraDeps(
                       Iterables.concat(
-                          params.getDeclaredDeps().get(),
-                          exportedDeps,
-                          resolver.getAllRules(args.providedDeps.get()))),
-                  pathResolver.filterBuildRuleInputs(
-                      javacOptions.getInputs(pathResolver)))),
-          pathResolver,
-          args.srcs.get(),
-          JavaLibraryDescription.validateResources(
+                          BuildRules.getExportedRules(
+                              Iterables.concat(
+                                  params.getDeclaredDeps().get(),
+                                  exportedDeps,
+                                  resolver.getAllRules(args.providedDeps.get()))),
+                          pathResolver.filterBuildRuleInputs(
+                              javacOptions.getInputs(pathResolver)))),
+                  pathResolver,
+                  args.srcs.get(),
+                  JavaLibraryDescription.validateResources(
+                      pathResolver,
+                      args,
+                      params.getProjectFilesystem()),
+                  args.proguardConfig.transform(
+                      SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                  args.postprocessClassesCommands.get(),
+                  exportedDeps,
+                  resolver.getAllRules(args.providedDeps.get()),
+                  new BuildTargetSourcePath(abiJarTarget),
+                  additionalClasspathEntries,
+                  javacOptions,
+                  args.resourcesRoot,
+                  args.mavenCoords,
+                  args.manifest,
+                  /* isPrebuiltAar */ false));
+
+      resolver.addToIndex(
+          CalculateAbi.of(
+              abiJarTarget,
               pathResolver,
-              args,
-              params.getProjectFilesystem()),
-          args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
-          args.postprocessClassesCommands.get(),
-          exportedDeps,
-          resolver.getAllRules(args.providedDeps.get()),
-          additionalClasspathEntries,
-          javacOptions,
-          args.resourcesRoot,
-          args.mavenCoords,
-          args.manifest,
-          /* isPrebuiltAar */ false);
+              params,
+              new BuildTargetSourcePath(library.getBuildTarget())));
+
+      return library;
     }
   }
 

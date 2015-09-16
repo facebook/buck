@@ -139,28 +139,44 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     javacOptionsBuilder.setAnnotationProcessingParams(annotationParams);
     JavacOptions javacOptions = javacOptionsBuilder.build();
 
+    BuildTarget abiJarTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(CalculateAbi.FLAVOR)
+            .build();
+
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
-    DefaultJavaLibrary defaultJavaLibrary = new DefaultJavaLibrary(
-        params.appendExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
+    DefaultJavaLibrary defaultJavaLibrary =
+        resolver.addToIndex(
+            new DefaultJavaLibrary(
+                params.appendExtraDeps(
                     Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        exportedDeps,
-                        resolver.getAllRules(args.providedDeps.get()))),
-                pathResolver.filterBuildRuleInputs(
-                    javacOptions.getInputs(pathResolver)))),
-        pathResolver,
-        args.srcs.get(),
-        validateResources(pathResolver, args, params.getProjectFilesystem()),
-        args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
-        args.postprocessClassesCommands.get(),
-        exportedDeps,
-        resolver.getAllRules(args.providedDeps.get()),
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        javacOptions,
-        args.resourcesRoot,
-        args.mavenCoords);
+                        BuildRules.getExportedRules(
+                            Iterables.concat(
+                                params.getDeclaredDeps().get(),
+                                exportedDeps,
+                                resolver.getAllRules(args.providedDeps.get()))),
+                        pathResolver.filterBuildRuleInputs(
+                            javacOptions.getInputs(pathResolver)))),
+                pathResolver,
+                args.srcs.get(),
+                validateResources(pathResolver, args, params.getProjectFilesystem()),
+                args.proguardConfig.transform(
+                    SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                args.postprocessClassesCommands.get(),
+                exportedDeps,
+                resolver.getAllRules(args.providedDeps.get()),
+                new BuildTargetSourcePath(abiJarTarget),
+                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                javacOptions,
+                args.resourcesRoot,
+                args.mavenCoords));
+
+    resolver.addToIndex(
+        CalculateAbi.of(
+            abiJarTarget,
+            pathResolver,
+            params,
+            new BuildTargetSourcePath(defaultJavaLibrary.getBuildTarget())));
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;

@@ -47,6 +47,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       BuildRuleParams params,
       SourcePathResolver resolver,
       JavacOptions javacOptions,
+      SourcePath abiJar,
       AndroidBuildConfig androidBuildConfig) {
     super(
         params,
@@ -58,6 +59,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* postprocessClassesCommands */ ImmutableList.<String>of(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        abiJar,
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions,
         /* resourcesRoot */ Optional.<Path>absent(),

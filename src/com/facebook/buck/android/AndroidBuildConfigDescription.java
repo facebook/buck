@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.java.CalculateAbi;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -24,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -143,17 +145,34 @@ public class AndroidBuildConfigDescription
         useConstantExpressions);
     ruleResolver.addToIndex(androidBuildConfig);
 
+    BuildTarget abiJarTarget =
+      BuildTarget.builder(params.getBuildTarget())
+          .addFlavors(CalculateAbi.FLAVOR)
+          .build();
+
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     BuildRuleParams javaLibraryParams = params.copyWithChanges(
         params.getBuildTarget(),
         /* declaredDeps */ Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>of(androidBuildConfig)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    return new AndroidBuildConfigJavaLibrary(
-        javaLibraryParams,
-        pathResolver,
-        javacOptions,
-        androidBuildConfig);
+    AndroidBuildConfigJavaLibrary library =
+        ruleResolver.addToIndex(
+            new AndroidBuildConfigJavaLibrary(
+                javaLibraryParams,
+                pathResolver,
+                javacOptions,
+                new BuildTargetSourcePath(abiJarTarget),
+                androidBuildConfig));
+
+    ruleResolver.addToIndex(
+        CalculateAbi.of(
+            abiJarTarget,
+            pathResolver,
+            params,
+            new BuildTargetSourcePath(library.getBuildTarget())));
+
+    return library;
   }
 
   @SuppressFieldNotInitialized

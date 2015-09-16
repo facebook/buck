@@ -19,14 +19,17 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer.ResourceDependencyMode;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.java.AnnotationProcessingParams;
+import com.facebook.buck.java.CalculateAbi;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.JavaTestDescription;
 import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -122,39 +125,57 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    return new RobolectricTest(
-        params.appendExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
+    BuildTarget abiJarTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(CalculateAbi.FLAVOR)
+            .build();
+
+    RobolectricTest test =
+        resolver.addToIndex(
+            new RobolectricTest(
+                params.appendExtraDeps(
                     Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps.get()))),
-                pathResolver.filterBuildRuleInputs(
-                    javacOptions.getInputs(pathResolver)))),
-        pathResolver,
-        args.srcs.get(),
-        JavaLibraryDescription.validateResources(
+                        BuildRules.getExportedRules(
+                            Iterables.concat(
+                                params.getDeclaredDeps().get(),
+                                resolver.getAllRules(args.providedDeps.get()))),
+                        pathResolver.filterBuildRuleInputs(
+                            javacOptions.getInputs(pathResolver)))),
+                pathResolver,
+                args.srcs.get(),
+                JavaLibraryDescription.validateResources(
+                    pathResolver,
+                    args, params.getProjectFilesystem()),
+                args.labels.get(),
+                args.contacts.get(),
+                args.proguardConfig.transform(
+                    SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                new BuildTargetSourcePath(abiJarTarget),
+                additionalClasspathEntries,
+                javacOptions,
+                vmArgs,
+                cxxLibraryEnhancement.nativeLibsEnvironment,
+                JavaTestDescription.validateAndGetSourcesUnderTest(
+                    args.sourceUnderTest.get(),
+                    params.getBuildTarget(),
+                    resolver),
+                args.resourcesRoot,
+                args.mavenCoords,
+                dummyRDotJava,
+                testRuleTimeoutMs,
+                args.getRunTestSeparately(),
+                args.stdOutLogLevel,
+                args.stdErrLogLevel,
+                testTempDirOverride));
+
+    resolver.addToIndex(
+        CalculateAbi.of(
+            abiJarTarget,
             pathResolver,
-            args, params.getProjectFilesystem()),
-        args.labels.get(),
-        args.contacts.get(),
-        args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
-        additionalClasspathEntries,
-        javacOptions,
-        vmArgs,
-        cxxLibraryEnhancement.nativeLibsEnvironment,
-        JavaTestDescription.validateAndGetSourcesUnderTest(
-            args.sourceUnderTest.get(),
-            params.getBuildTarget(),
-            resolver),
-        args.resourcesRoot,
-        args.mavenCoords,
-        dummyRDotJava,
-        testRuleTimeoutMs,
-        args.getRunTestSeparately(),
-        args.stdOutLogLevel,
-        args.stdErrLogLevel,
-        testTempDirOverride);
+            params,
+            new BuildTargetSourcePath(test.getBuildTarget())));
+
+    return test;
   }
 
   @SuppressFieldNotInitialized

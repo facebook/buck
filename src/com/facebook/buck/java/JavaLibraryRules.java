@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
@@ -115,4 +116,16 @@ public class JavaLibraryRules {
 
     return libraries.build();
   }
+
+  public static ImmutableSortedSet<SourcePath> getAbiInputs(Iterable<? extends BuildRule> inputs) {
+    ImmutableSortedSet.Builder<SourcePath> abiRules =
+        ImmutableSortedSet.naturalOrder();
+    for (BuildRule dep : inputs) {
+      if (dep instanceof HasJavaAbi) {
+        abiRules.addAll(((HasJavaAbi) dep).getAbiJar().asSet());
+      }
+    }
+    return abiRules.build();
+  }
+
 }

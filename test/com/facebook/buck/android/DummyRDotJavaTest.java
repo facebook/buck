@@ -85,6 +85,7 @@ public class DummyRDotJavaTest {
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2),
+        new TestSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -132,6 +133,7 @@ public class DummyRDotJavaTest {
             .build(),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSet.<HasAndroidResourceDeps>of(),
+        new TestSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS);
     assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
@@ -143,6 +145,7 @@ public class DummyRDotJavaTest {
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule")).build(),
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSet.<HasAndroidResourceDeps>of(),
+        new TestSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS);
 
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();

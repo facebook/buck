@@ -61,6 +61,7 @@ public class PrebuiltJarTest {
     junitJarRule = new PrebuiltJar(
         buildRuleParams,
         new SourcePathResolver(new BuildRuleResolver()),
+        new TestSourcePath("abi.jar"),
         new PathSourcePath(filesystem, PATH_TO_JUNIT_JAR),
         Optional.<SourcePath>of(new TestSourcePath("lib/junit-4.11-sources.jar")),
         /* gwtJar */ Optional.<SourcePath>absent(),

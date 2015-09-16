@@ -18,6 +18,8 @@ package com.facebook.buck.java;
 
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Optional;
 
 public interface HasJavaAbi extends HasBuildTarget {
 
@@ -28,5 +30,11 @@ public interface HasJavaAbi extends HasBuildTarget {
    * Because the ABI is computed as part of the build process, this rule cannot be invoked until
    * after this rule is built.
    */
-  public Sha1HashCode getAbiKey();
+  Sha1HashCode getAbiKey();
+
+  /**
+   * @return the {@link SourcePath} representing the ABI Jar for this rule.
+   */
+  Optional<SourcePath> getAbiJar();
+
 }

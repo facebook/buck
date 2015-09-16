@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -46,8 +47,6 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 /**
  * Buildable that takes in a list of {@link HasAndroidResourceDeps} and for each of these rules,
  * first creates an {@code R.java} file using {@link MergeAndroidResourcesStep} and compiles it to
@@ -58,6 +57,7 @@ public class DummyRDotJava extends AbstractBuildRule
     implements AbiRule, HasJavaAbi, InitializableFromDisk<DummyRDotJava.BuildOutput> {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
+  private final SourcePath abiJar;
   @AddToRuleKey
   private final JavacOptions javacOptions;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -66,11 +66,13 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       Set<HasAndroidResourceDeps> androidResourceDeps,
+      SourcePath abiJar,
       JavacOptions javacOptions) {
     super(params, resolver);
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+    this.abiJar = abiJar;
     this.javacOptions = javacOptions;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
@@ -158,10 +160,9 @@ public class DummyRDotJava extends AbstractBuildRule
     return BuildTargets.getGenPath(buildTarget, "__%s_dummyrdotjava_abi__");
   }
 
-  @Nullable
   @Override
   public Path getPathToOutput() {
-    return null;
+    return getRDotJavaBinFolder();
   }
 
   public Path getRDotJavaBinFolder() {
@@ -196,6 +197,11 @@ public class DummyRDotJava extends AbstractBuildRule
   @Override
   public Sha1HashCode getAbiKey() {
     return buildOutputInitializer.getBuildOutput().rDotTxtSha1;
+  }
+
+  @Override
+  public Optional<SourcePath> getAbiJar() {
+    return Optional.of(abiJar);
   }
 
   public static class BuildOutput {

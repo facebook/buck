@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.Label;
@@ -105,40 +106,57 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    return new JavaTest(
-        params.appendExtraDeps(
-            Iterables.concat(
-                BuildRules.getExportedRules(
+    BuildTarget abiJarTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(CalculateAbi.FLAVOR)
+            .build();
+
+    JavaTest test =
+        resolver.addToIndex(
+            new JavaTest(
+                params.appendExtraDeps(
                     Iterables.concat(
-                        params.getDeclaredDeps().get(),
-                        resolver.getAllRules(args.providedDeps.get()))),
-                pathResolver.filterBuildRuleInputs(
-                    javacOptions.getInputs(pathResolver)))),
-        pathResolver,
-        args.srcs.get(),
-        JavaLibraryDescription.validateResources(
+                        BuildRules.getExportedRules(
+                            Iterables.concat(
+                                params.getDeclaredDeps().get(),
+                                resolver.getAllRules(args.providedDeps.get()))),
+                        pathResolver.filterBuildRuleInputs(
+                            javacOptions.getInputs(pathResolver)))),
+                pathResolver,
+                args.srcs.get(),
+                JavaLibraryDescription.validateResources(
+                    pathResolver,
+                    args, params.getProjectFilesystem()),
+                args.labels.get(),
+                args.contacts.get(),
+                args.proguardConfig.transform(
+                    SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                new BuildTargetSourcePath(abiJarTarget),
+                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                args.testType.or(TestType.JUNIT),
+                javacOptions,
+                args.vmArgs.get(),
+                cxxLibraryEnhancement.nativeLibsEnvironment,
+                validateAndGetSourcesUnderTest(
+                    args.sourceUnderTest.get(),
+                    params.getBuildTarget(),
+                    resolver),
+                args.resourcesRoot,
+                args.mavenCoords,
+                testRuleTimeoutMs,
+                args.getRunTestSeparately(),
+                args.stdOutLogLevel,
+                args.stdErrLogLevel,
+                testTempDirOverride));
+
+    resolver.addToIndex(
+        CalculateAbi.of(
+            abiJarTarget,
             pathResolver,
-            args, params.getProjectFilesystem()),
-        args.labels.get(),
-        args.contacts.get(),
-        args.proguardConfig.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())),
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        args.testType.or(TestType.JUNIT),
-        javacOptions,
-        args.vmArgs.get(),
-        cxxLibraryEnhancement.nativeLibsEnvironment,
-        validateAndGetSourcesUnderTest(
-            args.sourceUnderTest.get(),
-            params.getBuildTarget(),
-            resolver),
-        args.resourcesRoot,
-        args.mavenCoords,
-        testRuleTimeoutMs,
-        args.getRunTestSeparately(),
-        args.stdOutLogLevel,
-        args.stdErrLogLevel,
-        testTempDirOverride
-    );
+            params,
+            new BuildTargetSourcePath(test.getBuildTarget())));
+
+    return test;
   }
 
   public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FlavorableDescription;
@@ -78,10 +79,24 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    BuildTarget abiJarTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(CalculateAbi.FLAVOR)
+            .build();
+    resolver.addToIndex(
+        CalculateAbi.of(
+            abiJarTarget,
+            pathResolver,
+            params,
+            args.binaryJar));
+
     return new PrebuiltJar(
         params,
-        new SourcePathResolver(resolver),
+        pathResolver,
         args.binaryJar,
+        new BuildTargetSourcePath(abiJarTarget),
         args.sourceJar,
         args.gwtJar,
         args.javadocUrl,

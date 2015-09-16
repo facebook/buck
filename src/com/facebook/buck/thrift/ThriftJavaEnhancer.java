@@ -16,6 +16,7 @@
 
 package com.facebook.buck.thrift;
 
+import com.facebook.buck.java.CalculateAbi;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.JavacOptions;
@@ -27,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -99,7 +101,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
       ThriftConstructorArg args,
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Pack all the generated sources into a single source zip that we'll pass to the
     // java rule below.
@@ -138,21 +140,39 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 .addAll(pathResolver.filterBuildRuleInputs(templateOptions.getInputs(pathResolver)))
                 .build()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    return new DefaultJavaLibrary(
-        javaParams,
-        pathResolver,
-        FluentIterable.from(sourceZips)
-            .transform(SourcePaths.getToBuildTargetSourcePath())
-            .toSortedSet(Ordering.natural()),
-        /* resources */ ImmutableSet.<SourcePath>of(),
-        /* proguardConfig */ Optional.<SourcePath>absent(),
-        /* postprocessClassesCommands */ ImmutableList.<String>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        templateOptions,
-        /* resourcesRoot */ Optional.<Path>absent(),
-        /* mavenCoords */ Optional.<String>absent());
+
+    BuildTarget abiJarTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(CalculateAbi.FLAVOR)
+            .build();
+
+    DefaultJavaLibrary library =
+        resolver.addToIndex(
+            new DefaultJavaLibrary(
+                javaParams,
+                pathResolver,
+                FluentIterable.from(sourceZips)
+                    .transform(SourcePaths.getToBuildTargetSourcePath())
+                    .toSortedSet(Ordering.natural()),
+                /* resources */ ImmutableSet.<SourcePath>of(),
+                /* proguardConfig */ Optional.<SourcePath>absent(),
+                /* postprocessClassesCommands */ ImmutableList.<String>of(),
+                /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* abiJar */ new BuildTargetSourcePath(abiJarTarget),
+                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                templateOptions,
+                /* resourcesRoot */ Optional.<Path>absent(),
+                /* mavenCoords */ Optional.<String>absent()));
+
+    resolver.addToIndex(
+        CalculateAbi.of(
+            abiJarTarget,
+            pathResolver,
+            params,
+            new BuildTargetSourcePath(library.getBuildTarget())));
+
+    return library;
   }
 
   private ImmutableSet<BuildTarget> getImplicitDeps() {

@@ -128,6 +128,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public Optional<SourcePath> getAbiJar() {
+    return Optional.absent();
+  }
+
+  @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     throw new UnsupportedOperationException();
   }

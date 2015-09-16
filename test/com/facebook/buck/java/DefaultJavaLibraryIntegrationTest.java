@@ -27,11 +27,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.abi.AbiWriterProtocol;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.DefaultOnDiskBuildInfo;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -97,15 +92,6 @@ public class DefaultJavaLibraryIntegrationTest {
     assertEquals("There should be two entries (a zip and metadata) in the build cache.",
         2,
         buildCache.toFile().listFiles().length);
-
-    // Verify the ABI key entry in the build cache.
-    OnDiskBuildInfo onDiskBuildInfo =
-        new DefaultOnDiskBuildInfo(
-            BuildTargetFactory.newInstance("//:no_srcs"),
-            new ProjectFilesystem(tmp.getRootPath()));
-    assertEquals(
-        AbiWriterProtocol.EMPTY_ABI_KEY,
-        onDiskBuildInfo.getValue("ABI_KEY").get());
 
     // Run `buck clean`.
     ProcessResult cleanResult = workspace.runBuckCommand("clean");
@@ -261,12 +247,10 @@ public class DefaultJavaLibraryIntegrationTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     String utilRuleKey = getContents("buck-out/bin/.util/metadata/RULE_KEY");
-    String utilAbiRuleKey = getContents("buck-out/bin/.util/metadata/ABI_RULE_KEY");
-    String utilAbi = getContents("buck-out/bin/.util/metadata/ABI_KEY");
+    String utilAbiRuleKey = getContents("buck-out/bin/.util/metadata/INPUT_BASED_RULE_KEY");
 
     String bizRuleKey = getContents("buck-out/bin/.biz/metadata/RULE_KEY");
-    String bizAbiRuleKey = getContents("buck-out/bin/.biz/metadata/ABI_RULE_KEY");
-    String bizAbi = getContents("buck-out/bin/.biz/metadata/ABI_KEY");
+    String bizAbiRuleKey = getContents("buck-out/bin/.biz/metadata/INPUT_BASED_RULE_KEY");
 
     long utilJarSize = Files.size(workspace.getPath("buck-out/gen/lib__util__output/util.jar"));
     FileTime bizJarLastModified = Files.getLastModifiedTime(
@@ -285,12 +269,10 @@ public class DefaultJavaLibraryIntegrationTest {
 
     assertThat(utilRuleKey, not(equalTo(getContents("buck-out/bin/.util/metadata/RULE_KEY"))));
     assertThat(utilAbiRuleKey,
-        not(equalTo(getContents("buck-out/bin/.util/metadata/ABI_RULE_KEY"))));
-    assertEquals(utilAbi, getContents("buck-out/bin/.util/metadata/ABI_KEY"));
+        not(equalTo(getContents("buck-out/bin/.util/metadata/INPUT_BASED_RULE_KEY"))));
 
     assertThat(bizRuleKey, not(equalTo(getContents("buck-out/bin/.biz/metadata/RULE_KEY"))));
-    assertEquals(bizAbiRuleKey, getContents("buck-out/bin/.biz/metadata/ABI_RULE_KEY"));
-    assertEquals(bizAbi, getContents("buck-out/bin/.biz/metadata/ABI_KEY"));
+    assertEquals(bizAbiRuleKey, getContents("buck-out/bin/.biz/metadata/INPUT_BASED_RULE_KEY"));
 
     assertThat(
         "util.jar should have been rewritten, so its file size should have changed.",
@@ -305,7 +287,7 @@ public class DefaultJavaLibraryIntegrationTest {
 
     // TODO(mbolin): This last scenario that is being tested would be better as a unit test.
     // Run `buck build` one last time. This ensures that a dependency java_library() rule (:util)
-    // that is built via BuildRuleSuccess.Type.MATCHING_ABI_RULE_KEY does not
+    // that is built via BuildRuleSuccess.Type.MATCHING_INPUT_BASED_RULE_KEY does not
     // explode when its dependent rule (:biz) invokes the dependency's getAbiKey() method as part of
     // its own getAbiKeyForDeps().
     ProcessResult buildResult3 = workspace.runBuckCommand("build", "//:biz");
@@ -372,7 +354,7 @@ public class DefaultJavaLibraryIntegrationTest {
     workspace.resetBuildLogFile();
 
     workspace.runBuckBuild("//:binary").assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally("//:library");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:binary");
   }
 
   @Test

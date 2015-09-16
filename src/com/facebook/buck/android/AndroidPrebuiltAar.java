@@ -48,7 +48,8 @@ public class AndroidPrebuiltAar
       PrebuiltJar prebuiltJar,
       UnzipAar unzipAar,
       JavacOptions javacOptions,
-      Iterable<PrebuiltJar> exportedDeps) {
+      Iterable<PrebuiltJar> exportedDeps,
+      SourcePath abiJar) {
     super(
         androidLibraryParams,
         resolver,
@@ -61,6 +62,7 @@ public class AndroidPrebuiltAar
             .addAll(exportedDeps)
             .build(),
         /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        abiJar,
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions,
         /* resourcesRoot */ Optional.<Path>absent(),

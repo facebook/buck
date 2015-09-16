@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.java.AnnotationProcessingParams;
+import com.facebook.buck.java.CalculateAbi;
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -24,6 +25,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -35,7 +37,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidLibraryGraphEnhancer {
 
-  public static enum ResourceDependencyMode {
+  public enum ResourceDependencyMode {
     FIRST_ORDER,
     TRANSITIVE,
   }
@@ -121,12 +123,26 @@ public class AndroidLibraryGraphEnhancer {
         Suppliers.ofInstance(actualDeps.build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
+    BuildTarget abiJarTarget =
+        BuildTarget.builder(dummyRDotJavaParams.getBuildTarget())
+            .addFlavors(CalculateAbi.FLAVOR)
+            .build();
+
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,
         pathResolver,
         androidResourceDeps,
+        new BuildTargetSourcePath(abiJarTarget),
         javacOptions);
     ruleResolver.addToIndex(dummyRDotJava);
+
+    ruleResolver.addToIndex(
+        CalculateAbi.of(
+            abiJarTarget,
+            pathResolver,
+            dummyRDotJavaParams,
+            new BuildTargetSourcePath(dummyRDotJavaBuildTarget)));
+
     return Optional.of(dummyRDotJava);
   }
 

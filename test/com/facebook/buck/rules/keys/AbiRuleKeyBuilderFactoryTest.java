@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -56,9 +55,7 @@ public class AbiRuleKeyBuilderFactoryTest {
         new FakeFileHashCache(
             ImmutableMap.of(depOutput, HashCode.fromInt(0)));
 
-    BuildRule rule = JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"))
-        .addDep(dep.getBuildTarget())
-        .build(resolver);
+    BuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver, dep);
 
     dep.setRuleKey(new RuleKey("aaaa"));
     RuleKey inputKey1 =

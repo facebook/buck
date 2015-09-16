@@ -66,14 +66,17 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
     return this;
   }
 
-  public JavaLibraryBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
+  public JavaLibraryBuilder addSrc(SourcePath path) {
+    arg.srcs = amend(arg.srcs, path);
     return this;
   }
 
+  public JavaLibraryBuilder addSrc(Path path) {
+    return addSrc(new PathSourcePath(new FakeProjectFilesystem(), path));
+  }
+
   public JavaLibraryBuilder addSrcTarget(BuildTarget target) {
-    arg.srcs = amend(arg.srcs, new BuildTargetSourcePath(target));
-    return this;
+    return addSrc(new BuildTargetSourcePath(target));
   }
 
   public JavaLibraryBuilder setProguardConfig(Path proguardConfig) {
