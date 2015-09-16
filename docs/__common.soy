@@ -483,7 +483,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 
 /**
  * @param overview HTML description of the command.
- * @param params HTML documentation for each param of the command.
+ * @param? params HTML documentation for each param of the command.
  *     Should be created using multiple applications of the {buck.param}
  *     template.
  * @param? examples HTML documentation that shows examples of the build
@@ -492,10 +492,12 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {template .command}
 {$overview|noAutoescape}
 
-<h2>Parameters</h2>
-<ul class="{css arglist}">
-  {$params|noAutoescape}
-</ul>
+{if $params}
+  <h2>Parameters</h2>
+  <ul class="{css arglist}">
+    {$params|noAutoescape}
+  </ul>
+{/if}
 
 {if $examples}
   <h2>Examples</h2>
@@ -648,8 +650,21 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .build_file}
+{call .concept_link}{param page: 'build_file' /}{param name: 'build file' /}{/call}
+{/template}
+
+/***/
 {template .build_target}
 {call .concept_link}{param page: 'build_target' /}{param name: 'build target' /}{/call}
+{/template}
+
+/***/
+{template .build_target_pattern}
+  {call .concept_link}
+    {param page: 'build_target_pattern' /}
+    {param name: 'build target pattern' /}
+  {/call}
 {/template}
 
 /**
