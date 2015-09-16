@@ -181,6 +181,8 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), getBinPath()));
+
     final Path pathToNativeLibs = getPathToNativeLibsDir();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToNativeLibs));
 
