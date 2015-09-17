@@ -78,6 +78,7 @@ public class TestRepositoryBuilder {
     if (parserFactory == null) {
       return new Repository(
           filesystem,
+          new TestConsole(),
           NULL_WATCHMAN,
           buckConfig,
           typesFactory,
@@ -86,6 +87,7 @@ public class TestRepositoryBuilder {
 
     return new Repository(
         filesystem,
+        new TestConsole(),
         NULL_WATCHMAN,
         buckConfig,
         typesFactory,

@@ -574,6 +574,7 @@ public final class Main {
 
     Repository rootRepository = new Repository(
         filesystem,
+        console,
         watchman,
         buckConfig,
         factory,

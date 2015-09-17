@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -267,7 +266,8 @@ public class BuckConfig {
       checkPathExists(
           value.get(),
           String.format("Overridden %s:%s path not found: ", section, field));
-      return Optional.<SourcePath>of(new PathSourcePath(projectFilesystem, Paths.get(value.get())));
+      return Optional.<SourcePath>of(
+          new PathSourcePath(projectFilesystem, getPathFromVfs(value.get())));
     }
   }
 
@@ -307,7 +307,7 @@ public class BuckConfig {
       checkPathExists(
           value.get(),
           String.format("Overridden %s:%s path not found: ", section, field));
-      return Optional.<Tool>of(new HashedFileTool(Paths.get(value.get())));
+      return Optional.<Tool>of(new HashedFileTool(getPathFromVfs(value.get())));
     }
   }
 
@@ -553,6 +553,10 @@ public class BuckConfig {
     return environment;
   }
 
+  public Platform getPlatform() {
+    return platform;
+  }
+
   public String[] getEnv(String propertyName, String separator) {
     String value = getEnvironment().get(propertyName);
     if (value == null) {
@@ -616,12 +620,22 @@ public class BuckConfig {
             checkPathExists(
                 pathString.get(),
                 String.format("Overridden %s:%s path not found: ", sectionName, name)) :
-            Optional.of(Paths.get(pathString.get())) :
+            Optional.of(getPathFromVfs(pathString.get())) :
         Optional.<Path>absent();
   }
 
+  /**
+   * Return a {@link Path} from the underlying {@link java.nio.file.FileSystem} implementation. This
+   * allows to safely call {@link Path#resolve(Path)} and similar calls without exceptions caused by
+   * mis-matched underlying filesystem implementations causing grief. This is particularly useful
+   * for those times where we're using (eg) JimFs for our testing.
+   */
+  private Path getPathFromVfs(String path, String... extra) {
+    return projectFilesystem.getRootPath().getFileSystem().getPath(path, extra);
+  }
+
   public Optional<Path> checkPathExists(String pathString, String errorMsg) {
-    Path path = Paths.get(pathString);
+    Path path = getPathFromVfs(pathString);
     if (projectFilesystem.exists(path)) {
       return Optional.of(projectFilesystem.getPathForRelativePath(path));
     }

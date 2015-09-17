@@ -96,4 +96,12 @@ public class FakeBuckConfig extends BuckConfig {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
   }
+
+  public FakeBuckConfig(ProjectFilesystem filesystem, String... iniFileLines) throws IOException {
+    super(
+        new Config(Inis.read(new StringReader(Joiner.on("\n").join(Arrays.asList(iniFileLines))))),
+        filesystem,
+        Platform.detect(),
+        ImmutableMap.copyOf(System.getenv()));
+  }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
@@ -28,12 +29,21 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 /**
@@ -42,6 +52,7 @@ import java.util.regex.Pattern;
  */
 public class Repository {
 
+  private final LoadingCache<String, Repository> repos;
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
@@ -54,10 +65,11 @@ public class Repository {
 
   public Repository(
       ProjectFilesystem filesystem,
-      Watchman watchman,
+      final Console console,
+      final Watchman watchman,
       BuckConfig config,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      AndroidDirectoryResolver directoryResolver) throws IOException, InterruptedException {
+      final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      final AndroidDirectoryResolver directoryResolver) throws IOException, InterruptedException {
 
     this.filesystem = filesystem;
     this.watchman = watchman;
@@ -73,6 +85,47 @@ public class Repository {
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
 
     this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config);
+
+    this.repos = CacheBuilder.newBuilder().build(
+        new CacheLoader<String, Repository>() {
+          @Override
+          public Repository load(String repoName) throws Exception {
+            Optional<Path> root = getBuckConfig().getPath("repositories", repoName, false);
+            if (!root.isPresent()) {
+              throw new HumanReadableException(
+                  "Unable to find repository named '%s' in repo rooted at %s",
+                  repoName,
+                  getFilesystem().getRootPath());
+            }
+
+            // TODO(simons): Get the overrides from the parent config
+            ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of();
+            Config config = Config.createDefaultConfig(
+                root.get(),
+                sections);
+            ProjectFilesystem repoFilesystem = new ProjectFilesystem(root.get(), config);
+
+            Repository parent = Repository.this;
+            BuckConfig parentConfig = parent.getBuckConfig();
+
+            BuckConfig buckConfig = new BuckConfig(
+                config,
+                repoFilesystem,
+                parentConfig.getPlatform(),
+                parentConfig.getEnvironment());
+
+            Watchman.build(root.get(), parentConfig.getEnvironment(), console);
+
+            return new Repository(
+                repoFilesystem,
+                console,
+                watchman,
+                buckConfig,
+                knownBuildRuleTypesFactory,
+                directoryResolver);
+          }
+        }
+    );
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -95,6 +148,21 @@ public class Repository {
     return enforceBuckPackageBoundaries;
   }
 
+  public Repository getRepository(Optional<String> repoName) {
+    if (!repoName.isPresent()) {
+      return this;
+    }
+
+    try {
+      return repos.get(repoName.get());
+    } catch (UncheckedExecutionException | ExecutionException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof HumanReadableException) {
+        throw (HumanReadableException) cause;
+      }
+      throw new RuntimeException(e);
+    }
+  }
 
   public Description<?> getDescription(BuildRuleType type) {
     return getKnownBuildRuleTypes().getDescription(type);
