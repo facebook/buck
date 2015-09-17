@@ -50,7 +50,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -100,7 +100,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
             BUCK_EVENT_BUS) {
@@ -142,7 +142,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {
@@ -175,20 +175,22 @@ public class HttpArtifactCacheTest {
 
   @Test
   public void testFetchUrl() throws Exception {
-    final URL url = new URL("http://localhost:8080");
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    final String expectedUri =
+        "http://localhost:8080/artifacts/key/00000000000000000000000000000000";
+
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
             BUCK_EVENT_BUS) {
           @Override
           protected Response fetchCall(Request request) throws IOException {
-            assertEquals(new URL(url, "artifacts/key/" + ruleKey.toString()), request.url());
+            assertEquals(expectedUri, request.uri().toString());
             return new Response.Builder()
                 .request(request)
                 .protocol(Protocol.HTTP_1_1)
@@ -216,7 +218,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {
@@ -258,7 +260,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {
@@ -298,7 +300,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {
@@ -327,7 +329,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {
@@ -374,7 +376,7 @@ public class HttpArtifactCacheTest {
   }
 
   @Test(expected = IOException.class)
-  public void testStoreIOException() throws IOException {
+  public void testStoreIOException() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path output = Paths.get("output/file");
     filesystem.writeContentsToPath("data", output);
@@ -383,7 +385,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {
@@ -414,7 +416,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {
@@ -458,7 +460,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {
@@ -496,7 +498,7 @@ public class HttpArtifactCacheTest {
             "http",
             null,
             null,
-            new URL("http://localhost:8080"),
+            new URI("http://localhost:8080"),
             /* doStore */ true,
             filesystem,
             BUCK_EVENT_BUS) {

@@ -33,7 +33,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Paths;
 
 public class ArtifactCacheBuckConfigTest {
@@ -87,7 +87,7 @@ public class ArtifactCacheBuckConfigTest {
   }
 
   @Test
-  public void testHttpCacheSettings() throws IOException {
+  public void testHttpCacheSettings() throws Exception {
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",
         "http_timeout_seconds = 42",
@@ -95,7 +95,7 @@ public class ArtifactCacheBuckConfigTest {
         "http_mode = readwrite");
 
     assertThat(config.getHttpCacheTimeoutSeconds(), Matchers.is(42));
-    assertThat(config.getHttpCacheUrl(), Matchers.equalTo(new URL("http://test.host:1234")));
+    assertThat(config.getHttpCacheUrl(), Matchers.equalTo(new URI("http://test.host:1234")));
     assertThat(config.getHttpCacheReadMode(), Matchers.is(true));
   }
 

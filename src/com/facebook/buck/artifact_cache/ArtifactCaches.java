@@ -27,7 +27,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
@@ -121,7 +121,7 @@ public class ArtifactCaches {
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem) {
-    URL url = buckConfig.getHttpCacheUrl();
+    URI uri = buckConfig.getHttpCacheUrl();
     int timeoutSeconds = buckConfig.getHttpCacheTimeoutSeconds();
     boolean doStore = buckConfig.getHttpCacheReadMode();
     final String host = buckConfig.getHostToReportToRemoteCacheServer();
@@ -159,7 +159,7 @@ public class ArtifactCaches {
         "http",
         fetchClient,
         client,
-        url,
+        uri,
         doStore,
         projectFilesystem,
         buckEventBus);

@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,10 +55,13 @@ public class ArtifactCacheBuckConfig {
             .or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS));
   }
 
-  public URL getHttpCacheUrl() {
+  public URI getHttpCacheUrl() {
     try {
-      return new URL(buckConfig.getValue("cache", "http_url").or(DEFAULT_HTTP_URL));
-    } catch (MalformedURLException e) {
+      // URL has stricter parsing rules than URI, so we want to use that constructor to surface
+      // the error message early. Passing around a URL is problematic as it hits DNS from the
+      // equals method, which is why the (new URL(...).toURI()) call instead of just URI.create.
+      return new URL(buckConfig.getValue("cache", "http_url").or(DEFAULT_HTTP_URL)).toURI();
+    } catch (URISyntaxException|MalformedURLException e) {
       throw new HumanReadableException(e, "Malformed [cache]http_url: %s", e.getMessage());
     }
   }
