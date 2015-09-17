@@ -30,6 +30,7 @@ import java.io.InputStream;
 public class FullyReadOnCloseInputStream extends FilterInputStream {
 
   private static final Logger LOGGER = Logger.get(FullyReadOnCloseInputStream.class);
+  private boolean closed = false;
 
   public FullyReadOnCloseInputStream(InputStream in) {
     super(in);
@@ -37,10 +38,13 @@ public class FullyReadOnCloseInputStream extends FilterInputStream {
 
   @Override
   public void close() throws IOException {
-    try {
-      ByteStreams.copy(in, ByteStreams.nullOutputStream());
-    } catch (IOException e) {
-      LOGGER.info(e, "Exception when attempting to fully read the stream.");
+    if (!closed) {
+      closed = true;
+      try {
+        ByteStreams.copy(in, ByteStreams.nullOutputStream());
+      } catch (IOException e) {
+        LOGGER.info(e, "Exception when attempting to fully read the stream.");
+      }
     }
     super.close();
   }
