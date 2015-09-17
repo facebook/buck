@@ -60,6 +60,7 @@ The following sections are recognized by Buck:
     'cache',
     'color',
     'cxx',
+    'download',
     'java',
     'httpserver',
     'log',
@@ -290,6 +291,37 @@ Specify the following to disable colorized output:
   ui = false
 </pre>{/literal}
 
+{call .section}{param title: 'download' /}{/call}
+This section configures downloading from the network.
+
+
+<p>
+  By default when fetching remote files from the network Buck will
+  try directly connecting. However if you are behind a firewall this
+  might not work. So you can specify a proxy to use when downloading
+  from http or https servers.
+</p>
+<p>
+  Valid types for proxy_type are HTTP and SOCKS but it defaults to HTTP
+  if unset. These values correspond to{sp}
+  <a href="http://docs.oracle.com/javase/8/docs/api/java/net/Proxy.Type.html">Java's Proxy.Type</a>
+</p>
+{literal}<pre class="prettyprint lang-ini">
+[download]
+    proxy_host=proxy.example.com
+    proxy_port=8080
+    proxy_type=HTTP
+</pre>{/literal}
+
+<p>
+  If a remote file's url starts with mvn: it that file (usually a jar)
+  is supposed to come from a maven repo. You can specify the repo to
+  download from.
+</p>
+{literal}<pre class="prettyprint lang-ini">
+[download]
+    maven_repo = https://repo1.maven.org/maven2
+</pre>{/literal}
 
 {call .section}{param title: 'cxx' /}{param status: 'UNFROZEN' /}{/call}
 

@@ -129,8 +129,11 @@ public class FetchCommand extends BuildCommand {
   }
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
-    Optional<String> defaultMavenRepo = params.getBuckConfig().getValue("download", "maven_repo");
-    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), defaultMavenRepo);
+    DownloadConfig downloadConfig = new DownloadConfig(params.getBuckConfig());
+    Optional<String> defaultMavenRepo = downloadConfig.getMavenRepo();
+    Optional<Proxy> proxy = downloadConfig.getProxy();
+
+    Downloader downloader = new HttpDownloader(proxy, defaultMavenRepo);
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(
         ImmutableSet.<Description<?>>of(description)

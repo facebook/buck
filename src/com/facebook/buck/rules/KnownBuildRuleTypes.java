@@ -58,6 +58,7 @@ import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.DownloadConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -383,11 +384,13 @@ public class KnownBuildRuleTypes {
     Optional<Long> testRuleTimeoutMs = config.getLong("test", "rule_timeout");
 
     // Default maven repo, if set
-    Optional<String> defaultMavenRepo = config.getValue("download", "maven_repo");
-    boolean downloadAtRuntimeOk = config.getBooleanValue("download", "in_build", false);
+    DownloadConfig downloadConfig = new DownloadConfig(config);
+    Optional<String> defaultMavenRepo = downloadConfig.getMavenRepo();
+    Optional<Proxy> proxy = downloadConfig.getProxy();
+    boolean downloadAtRuntimeOk = downloadConfig.isDownloadAtRuntimeOk();
     Downloader downloader;
     if (downloadAtRuntimeOk) {
-      downloader = new HttpDownloader(Optional.<Proxy>absent(), defaultMavenRepo);
+      downloader = new HttpDownloader(proxy, defaultMavenRepo);
     } else {
       downloader = new ExplodingDownloader();
     }
