@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
@@ -32,7 +33,7 @@ public class MavenUrlDecoderTest {
   @Test
   public void parseMvnUrlWithDefaultDomain() throws URISyntaxException {
     URI seen = MavenUrlDecoder.toHttpUrl(
-        Optional.of("http://foo.bar"),
+        ImmutableMap.of("mvn", "http://foo.bar"),
         new URI("mvn:org.seleniumhq.selenium:selenium-java:jar:2.42.2"));
 
     URI expected = new URI(
@@ -42,9 +43,23 @@ public class MavenUrlDecoderTest {
   }
 
   @Test
+  public void parseMvnUrlWithMultipleDomains() throws URISyntaxException {
+    URI seen = MavenUrlDecoder.toHttpUrl(
+        ImmutableMap.of(
+            "mvn", "http://foo.bar",
+            "jcentral", "http://bar.raz"),
+        new URI("jcentral:org.seleniumhq.selenium:selenium-java:jar:2.42.2"));
+
+    URI expected = new URI(
+        "http://bar.raz/org/seleniumhq/selenium/selenium-java/2.42.2/selenium-java-2.42.2.jar");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
   public void parseMvnUrlWithDefaultDomainAndAarType() throws URISyntaxException {
     URI seen = MavenUrlDecoder.toHttpUrl(
-        Optional.of("http://foo.bar"),
+        ImmutableMap.of("mvn", "http://foo.bar"),
         new URI("mvn:org.jdeferred:jdeferred-android-aar:aar:1.2.4"));
 
     URI expected = new URI(
@@ -56,7 +71,7 @@ public class MavenUrlDecoderTest {
   @Test
   public void parseMvnUrlWithCustomDomain() throws URISyntaxException {
     URI seen = MavenUrlDecoder.toHttpUrl(
-        Optional.of("http://foo.bar"),
+        ImmutableMap.of("mvn", "http://foo.bar"),
         new URI("mvn:http://custom.org/:org.seleniumhq.selenium:selenium-java:jar:2.42.2"));
 
     URI expected = new URI(
@@ -68,16 +83,16 @@ public class MavenUrlDecoderTest {
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void optionalServerUrlMustBeHttpOrHttps() throws URISyntaxException {
-    Optional<String> repo = Optional.of("http://foo.bar");
+    ImmutableMap<String, String> repos = ImmutableMap.of("mvn", "http://foo.bar");
     MavenUrlDecoder.toHttpUrl(
-        repo,
+        repos,
         new URI("mvn:http://example.org/:org.seleniumhq.selenium:selenium-java:jar:2.42.2"));
     MavenUrlDecoder.toHttpUrl(
-        repo,
+        repos,
         new URI("mvn:https://example.org/:org.seleniumhq.selenium:selenium-java:jar:2.42.2"));
     try {
       MavenUrlDecoder.toHttpUrl(
-          repo,
+          repos,
           new URI("mvn:mvn://custom.org/:org.seleniumhq.selenium:selenium-java:jar:2.42.2"));
       fail();
     } catch (HumanReadableException expected) {
@@ -89,10 +104,10 @@ public class MavenUrlDecoderTest {
   public void shouldAddSlashesToMavenRepoUriIfOneIsMissing() throws URISyntaxException {
     String validUri = "mvn:junit:junit:jar:4.12";
     URI slashless = MavenUrlDecoder.toHttpUrl(
-        Optional.of("http://www.example.com"),
+        ImmutableMap.of("mvn", "http://www.example.com"),
         new URI(validUri));
     URI withslash = MavenUrlDecoder.toHttpUrl(
-        Optional.of("http://www.example.com/"),
+        ImmutableMap.of("mvn", "http://www.example.com"),
         new URI(validUri));
 
     assertEquals(withslash, slashless);
@@ -100,6 +115,7 @@ public class MavenUrlDecoderTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void shouldRefuseToParseNonMavenUri() throws URISyntaxException {
-    MavenUrlDecoder.toHttpUrl(Optional.<String>absent(), new URI("http://www.example.com/"));
+    MavenUrlDecoder.toHttpUrl(ImmutableMap.<String, String>of(),
+        new URI("http://www.example.com/"));
   }
 }

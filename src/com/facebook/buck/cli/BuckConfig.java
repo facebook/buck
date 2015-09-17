@@ -511,6 +511,10 @@ public class BuckConfig {
     return sampleRate;
  }
 
+  public ImmutableMap<String, String> getMavenRepositories() {
+    return getEntriesForSection("maven_repositories");
+  }
+
   public Optional<String> getValue(String sectionName, String propertyName) {
     return config.getValue(sectionName, propertyName);
   }

@@ -25,21 +25,25 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   private final Optional<Path> androidSdkDir;
   private final Optional<Path> androidNdkDir;
   private final Optional<String> ndkVersion;
+  private final Optional<Path> androidMavenRepository;
 
   public FakeAndroidDirectoryResolver() {
     this(
         /* androidSdkDir */ Optional.<Path>absent(),
         /* androidNdkDir */ Optional.<Path>absent(),
-        /* ndkVersion */ Optional.<String>absent());
+        /* ndkVersion */ Optional.<String>absent(),
+        /* androidMavenRepository */ Optional.<Path>absent());
   }
 
   public FakeAndroidDirectoryResolver(
       Optional<Path> androidSdkDir,
       Optional<Path> androidNdkDir,
-      Optional<String> ndkVersion) {
+      Optional<String> ndkVersion,
+      Optional<Path> androidMavenRepository) {
     this.androidSdkDir = Preconditions.checkNotNull(androidSdkDir);
     this.androidNdkDir = Preconditions.checkNotNull(androidNdkDir);
     this.ndkVersion = Preconditions.checkNotNull(ndkVersion);
+    this.androidMavenRepository = Preconditions.checkNotNull(androidMavenRepository);
   }
 
   @Override
@@ -64,6 +68,11 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   }
 
   @Override
+  public Optional<Path> findMavenRepository() {
+    return androidMavenRepository;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -77,12 +86,13 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
     return
         Objects.equals(androidNdkDir, that.androidNdkDir) &&
         Objects.equals(androidSdkDir, that.androidSdkDir) &&
-        Objects.equals(ndkVersion, that.ndkVersion);
+        Objects.equals(ndkVersion, that.ndkVersion) &&
+        Objects.equals(androidMavenRepository, that.androidMavenRepository);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(androidNdkDir, androidSdkDir, ndkVersion);
+    return Objects.hash(androidNdkDir, androidSdkDir, ndkVersion, androidMavenRepository);
   }
 
 }

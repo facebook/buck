@@ -543,7 +543,8 @@ public class DaemonIntegrationTest {
                 new FakeAndroidDirectoryResolver(
                     Optional.<Path>absent(),
                     Optional.<Path>absent(),
-                    Optional.of("something")))
+                    Optional.of("something"),
+                    Optional.<Path>absent()))
             .setFilesystem(filesystem)
             .build(),
         ParserConfig.GlobHandler.PYTHON);
@@ -556,7 +557,8 @@ public class DaemonIntegrationTest {
                     new FakeAndroidDirectoryResolver(
                         Optional.<Path>absent(),
                         Optional.<Path>absent(),
-                        Optional.of("different")))
+                        Optional.of("different"),
+                        Optional.<Path>absent()))
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON));

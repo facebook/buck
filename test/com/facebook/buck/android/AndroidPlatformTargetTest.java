@@ -55,7 +55,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
         .createFromDefaultDirectoryStructure(
@@ -103,7 +104,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromOldUpgradePath = new File(buildToolsDir, "17.0.0");
@@ -152,7 +154,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromFreshDownload = new File(buildToolsDir, "android-4.2.2");
@@ -200,7 +203,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
@@ -236,7 +240,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
 
@@ -282,7 +287,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     new File(buildToolsDir, "android-4.2.2").mkdir();
@@ -320,7 +326,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     File optionalLibsDir = new File(androidSdkDir, "platforms/android-23/optional");
     optionalLibsDir.mkdirs();
     Files.touch(new File(optionalLibsDir, "httpclient.jar"));
@@ -363,7 +370,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     try {
       AndroidPlatformTarget.getTargetForId(
           platformId,
@@ -390,7 +398,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     new File(buildToolsDir, "android-4.2.2").mkdir();
@@ -437,7 +446,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             /* androidNdkDir */ Optional.<Path>absent(),
-            /* ndkVersion */ Optional.<String>absent());
+            /* ndkVersion */ Optional.<String>absent(),
+            /* androidManifest */ Optional.<Path>absent());
     File buildToolsDir = new File(androidSdkDir, "build-tools");
     buildToolsDir.mkdir();
     File buildToolsDirFromOldUpgradePath = new File(buildToolsDir, "17.0.0");

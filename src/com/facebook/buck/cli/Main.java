@@ -768,6 +768,7 @@ public final class Main {
           new CommandRunnerParams(
               console,
               rootRepository,
+              androidDirectoryResolver,
               androidPlatformTargetSupplier,
               artifactCache,
               buildEventBus,

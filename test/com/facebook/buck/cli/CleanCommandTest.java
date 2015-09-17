@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.newCapture;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -119,6 +120,7 @@ public class CleanCommandTest extends EasyMockSupport {
     return new CommandRunnerParams(
         new TestConsole(),
         repository,
+        new FakeAndroidDirectoryResolver(),
         androidPlatformTargetSupplier,
         createMock(ArtifactCache.class),
         BuckEventBusFactory.newInstance(),

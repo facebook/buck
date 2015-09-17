@@ -19,6 +19,8 @@ package com.facebook.buck.file;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -30,6 +32,7 @@ import java.net.Proxy;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,44 +40,63 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpDownloader implements Downloader {
   public static final int PROGRESS_REPORT_EVERY_N_BYTES = 1000;
-  private final Optional<Proxy> proxy;
-  private final Optional<String> mavenRepo;
+  public static final String ANDROID_PREFIX = "android";
 
-  public HttpDownloader(Optional<Proxy> proxy, Optional<String> mavenRepo) {
+  private final Optional<Proxy> proxy;
+  private final Optional<Path> androidMavenRepository;
+  private final ImmutableMap<String, String> mavenRepos;
+
+  public HttpDownloader(Optional<Proxy> proxy,
+      Optional<Path> androidMavenRepository,
+      ImmutableMap<String, String> mavenRepos) {
     this.proxy = proxy;
-    this.mavenRepo = mavenRepo;
+    this.androidMavenRepository = androidMavenRepository;
+    this.mavenRepos = mavenRepos;
   }
 
   @Override
   public void fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
-    if ("mvn".equals(uri.getScheme())) {
-      uri = MavenUrlDecoder.toHttpUrl(mavenRepo, uri);
+    if (mavenRepos.containsKey(uri.getScheme())) {
+      uri = MavenUrlDecoder.toHttpUrl(mavenRepos, uri);
+    } else if (ANDROID_PREFIX.equals(uri.getScheme())) {
+      Preconditions.checkState(androidMavenRepository.isPresent(),
+          "No Android Maven repository is present.  Ensure your Android SDK is configured and " +
+              "you've installed the 'Extras' required");
+      uri = MavenUrlDecoder.toHttpUrl(ImmutableMap.of(
+          ANDROID_PREFIX,
+          String.format("file://%s", androidMavenRepository.get().toAbsolutePath().toString())
+      ), uri);
     }
+
 
     DownloadEvent.Started started = DownloadEvent.started(uri);
     eventBus.post(started);
 
     try {
-      HttpURLConnection connection = createConnection(uri);
-      if (HttpURLConnection.HTTP_OK != connection.getResponseCode()) {
-        throw new HumanReadableException(
-            "Unable to download %s: %s", uri, connection.getResponseMessage());
-      }
-      long contentLength = connection.getContentLengthLong();
-      try (InputStream is = new BufferedInputStream(connection.getInputStream());
-           OutputStream os = new BufferedOutputStream(Files.newOutputStream(output))) {
-        long read = 0;
+      if ("file".equals(uri.getScheme())) {
+        Files.copy(Paths.get(uri.getRawPath()), output);
+      } else {
+        HttpURLConnection connection = createConnection(uri);
+        if (HttpURLConnection.HTTP_OK != connection.getResponseCode()) {
+          throw new HumanReadableException(
+              "Unable to download %s: %s", uri, connection.getResponseMessage());
+        }
+        long contentLength = connection.getContentLengthLong();
+        try (InputStream is = new BufferedInputStream(connection.getInputStream());
+             OutputStream os = new BufferedOutputStream(Files.newOutputStream(output))) {
+          long read = 0;
 
-        while (true) {
-          int r = is.read();
-          read++;
-          if (r == -1) {
-            break;
+          while (true) {
+            int r = is.read();
+            read++;
+            if (r == -1) {
+              break;
+            }
+            if (read % PROGRESS_REPORT_EVERY_N_BYTES == 0) {
+              eventBus.post(new DownloadProgressEvent(uri, contentLength, read));
+            }
+            os.write(r);
           }
-          if (read % PROGRESS_REPORT_EVERY_N_BYTES == 0) {
-            eventBus.post(new DownloadProgressEvent(uri, contentLength, read));
-          }
-          os.write(r);
         }
       }
     } finally {

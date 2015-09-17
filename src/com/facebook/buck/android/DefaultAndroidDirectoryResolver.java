@@ -97,6 +97,19 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
     return findNdkVersionFromPath(ndkPath.get());
   }
 
+  @Override
+  public Optional<Path> findMavenRepository() {
+    Optional<Path> androidSdkDir = findAndroidSdkDirSafe();
+    if (androidSdkDir.isPresent()) {
+      Path mavenRepository = androidSdkDir.get().resolve("extras/google/m2repository");
+      if (mavenRepository.toFile().isDirectory()) {
+        return Optional.of(mavenRepository);
+      }
+    }
+    return Optional.absent();
+  }
+
+
   private Optional<String> findNdkVersionFromPath(Path ndkPath) {
     Path releaseVersion =  ndkPath.resolve("RELEASE.TXT");
     Optional<String> contents = projectFilesystem.readFirstLineFromFile(releaseVersion);
