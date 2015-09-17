@@ -69,6 +69,7 @@
 
 <ul>
   <li><a href="#intellij">IntelliJ</a></li>
+  <li><a href="#xcode">Xcode</a></li>
 </ul>
 
 <h3 id="intellij">IntelliJ</h3>
@@ -97,6 +98,43 @@
     <code>.idea/modules.xml</code>, which lists all of the IntelliJ modules in the project.
   </li>
 </ul>
+
+<h3 id="xcode">Xcode</h3>
+
+<p>
+  This command processes each {call buck.apple_binary /}, {call buck.apple_bundle /}, and
+  {sp}{call buck.apple_library /} specified, and uses them to generate
+  the files and directories that Xcode needs.  The generated folders include:
+</p>
+
+<ul>
+  <li>
+    For each {call buck.build_target /}, an <code>*.xcworkspace</code> directory that represents the
+    {sp}<a href="https://developer.apple.com/library/ios/featuredarticles/XcodeConcepts/Concept-Workspace.html">
+    workspace</a> and contains one or more
+    {sp}<a href="https://developer.apple.com/library/ios/featuredarticles/XcodeConcepts/Concept-Schemes.html">
+    schemes</a>.
+  </li>
+  <li>
+    For each {call buck.build_target /} and its dependencies, an <code>*.xcodeproj</code> directory
+    that represents the
+    {sp}<a href="https://developer.apple.com/library/ios/featuredarticles/XcodeConcepts/Concept-Projects.html">
+    project</a>.  These generated projects are only buildable within the generated workspace.
+  </li>
+</ul>
+
+<h4>Parameters</h4>
+
+<ul class="{css arglist}">
+{call buck.param}
+  {param name: 'combined-project' /}
+  {param desc}
+    Indicates that Buck should build a single monoproject for all {call buck.build_target /}s
+    specified.
+  {/param}
+{/call}
+</ul>
+
 {/param}
 
 {/call}
