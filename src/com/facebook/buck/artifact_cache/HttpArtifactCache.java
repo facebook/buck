@@ -35,6 +35,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -100,59 +101,63 @@ public class HttpArtifactCache implements ArtifactCache {
     Response response = fetchCall(request);
     eventBuilder.setResponseSizeBytes(response.body().contentLength());
 
-    if (response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
-      LOGGER.info("fetch(%s, %s): cache miss", url, ruleKey);
-      return CacheResult.miss();
+    try (DataInputStream input =
+             new DataInputStream(new FullyReadOnCloseInputStream(response.body().byteStream()))) {
+
+      if (response.code() == HttpURLConnection.HTTP_NOT_FOUND) {
+        LOGGER.info("fetch(%s, %s): cache miss", url, ruleKey);
+        return CacheResult.miss();
+      }
+
+      if (response.code() != HttpURLConnection.HTTP_OK) {
+        String msg = String.format("unexpected response: %d", response.code());
+        reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
+        eventBuilder.setErrorMessage(msg);
+        return CacheResult.error(name, msg);
+      }
+
+      // Setup a temporary file, which sits next to the destination, to write to and
+      // make sure all parent dirs exist.
+      projectFilesystem.createParentDirs(file);
+      Path temp = projectFilesystem.createTempFile(
+          file.getParent(),
+          file.getFileName().toString(),
+          ".tmp");
+
+      FetchResponseReadResult fetchedData;
+      try (OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
+        fetchedData = HttpArtifactCacheBinaryProtocol.readFetchResponse(
+            input,
+            tempFileOutputStream);
+      }
+
+      eventBuilder.setResponseSizeBytes(fetchedData.getResponseSizeBytes());
+      eventBuilder.setArtifactContentHash(fetchedData.getArtifactOnlyHashCode().toString());
+
+      // Verify that we were one of the rule keys that stored this artifact.
+      if (!fetchedData.getRuleKeys().contains(ruleKey)) {
+        String msg = "incorrect key name";
+        reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
+        eventBuilder.setErrorMessage(msg);
+        return CacheResult.error(name, msg);
+      }
+
+      // Now form the checksum on the file we got and compare it to the checksum form the
+      // the HTTP header.  If it's incorrect, log this and return a miss.
+      if (!fetchedData.getExpectedHashCode().equals(fetchedData.getActualHashCode())) {
+        String msg = "artifact had invalid checksum";
+        reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
+        projectFilesystem.deleteFileAtPath(temp);
+        eventBuilder.setErrorMessage(msg);
+        return CacheResult.error(name, msg);
+      }
+
+      // Finally, move the temp file into it's final place.
+      projectFilesystem.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+
+      LOGGER.info("fetch(%s, %s): cache hit", url, ruleKey);
+      return CacheResult.hit(name, fetchedData.getMetadata());
     }
-
-    if (response.code() != HttpURLConnection.HTTP_OK) {
-      String msg = String.format("unexpected response: %d", response.code());
-      reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
-      eventBuilder.setErrorMessage(msg);
-      return CacheResult.error(name, msg);
-    }
-
-    // Setup a temporary file, which sits next to the destination, to write to and
-    // make sure all parent dirs exist.
-    projectFilesystem.createParentDirs(file);
-    Path temp = projectFilesystem.createTempFile(
-        file.getParent(),
-        file.getFileName().toString(),
-        ".tmp");
-
-    FetchResponseReadResult fetchedData;
-    try (OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
-      fetchedData = HttpArtifactCacheBinaryProtocol.readFetchResponse(
-          new FullyReadOnCloseInputStream(response.body().byteStream()),
-          tempFileOutputStream);
-    }
-
-    eventBuilder.setResponseSizeBytes(fetchedData.getResponseSizeBytes());
-    eventBuilder.setArtifactContentHash(fetchedData.getArtifactOnlyHashCode().toString());
-
-    // Verify that we were one of the rule keys that stored this artifact.
-    if (!fetchedData.getRuleKeys().contains(ruleKey)) {
-      String msg = "incorrect key name";
-      reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
-      eventBuilder.setErrorMessage(msg);
-      return CacheResult.error(name, msg);
-    }
-
-    // Now form the checksum on the file we got and compare it to the checksum form the
-    // the HTTP header.  If it's incorrect, log this and return a miss.
-    if (!fetchedData.getExpectedHashCode().equals(fetchedData.getActualHashCode())) {
-      String msg = "artifact had invalid checksum";
-      reportFailure("fetch(%s, %s): %s", url, ruleKey, msg);
-      projectFilesystem.deleteFileAtPath(temp);
-      eventBuilder.setErrorMessage(msg);
-      return CacheResult.error(name, msg);
-    }
-
-    // Finally, move the temp file into it's final place.
-    projectFilesystem.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
-
-    LOGGER.info("fetch(%s, %s): cache hit", url, ruleKey);
-    return CacheResult.hit(name, fetchedData.getMetadata());
   }
 
   @Override

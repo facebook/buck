@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,8 +88,9 @@ public class HttpArtifactCacheBinaryProtocolTest {
     assertThat(expectedData, Matchers.equalTo(BaseEncoding.base64().decode(base64EncodedData)));
 
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-         ByteArrayInputStream inputStream =
-             new ByteArrayInputStream(expectedData)) {
+         DataInputStream inputStream =
+             new DataInputStream(
+                 new ByteArrayInputStream(expectedData))) {
       FetchResponseReadResult result = HttpArtifactCacheBinaryProtocol.readFetchResponse(
           inputStream,
           outputStream);

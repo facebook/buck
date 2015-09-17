@@ -54,7 +54,7 @@ public class HttpArtifactCacheBinaryProtocol {
   }
 
   public static FetchResponseReadResult readFetchResponse(
-      InputStream byteStream,
+      DataInputStream input,
       OutputStream payloadSink) throws IOException {
     FetchResponseReadResult.Builder result = FetchResponseReadResult.builder();
 
@@ -62,56 +62,52 @@ public class HttpArtifactCacheBinaryProtocol {
     // this to compare against the embedded checksum.
     Hasher hasher = HASH_FUNCTION.newHasher();
 
-    // Open the input stream from the server and start processing data.
-    try (DataInputStream input = new DataInputStream(byteStream)) {
+    // Read the size of a the metadata, and use that to build a input stream to read and
+    // process the rest of it.
+    int metadataSize = input.readInt();
+    byte[] rawMetadata = new byte[metadataSize];
+    ByteStreams.readFully(input, rawMetadata);
+    try (InputStream rawMetadataIn = new ByteArrayInputStream(rawMetadata)) {
 
-      // Read the size of a the metadata, and use that to build a input stream to read and
-      // process the rest of it.
-      int metadataSize = input.readInt();
-      byte[] rawMetadata = new byte[metadataSize];
-      ByteStreams.readFully(input, rawMetadata);
-      try (InputStream rawMetadataIn = new ByteArrayInputStream(rawMetadata)) {
+      // The first part of the metadata needs to be included in the hash.
+      try (DataInputStream metadataIn =
+               new DataInputStream(new HasherInputStream(hasher, rawMetadataIn))) {
 
-        // The first part of the metadata needs to be included in the hash.
-        try (DataInputStream metadataIn =
-                 new DataInputStream(new HasherInputStream(hasher, rawMetadataIn))) {
-
-          // Read in the rule keys that stored this artifact, and add them to the hash we're
-          // building up.
-          int size = metadataIn.readInt();
-          for (int i = 0; i < size; i++) {
-            result.addRuleKeys(new RuleKey(metadataIn.readUTF()));
-          }
-
-          // Read in the actual metadata map, and add it the hash.
-          size = metadataIn.readInt();
-          for (int i = 0; i < size; i++) {
-            String key = metadataIn.readUTF();
-            int valSize = metadataIn.readInt();
-            byte[] val = new byte[valSize];
-            ByteStreams.readFully(metadataIn, val);
-            result.putMetadata(key, new String(val, Charsets.UTF_8));
-          }
+        // Read in the rule keys that stored this artifact, and add them to the hash we're
+        // building up.
+        int size = metadataIn.readInt();
+        for (int i = 0; i < size; i++) {
+          result.addRuleKeys(new RuleKey(metadataIn.readUTF()));
         }
 
-        // Next, read in the embedded expected checksum, which should be the last byte in
-        // the metadata header.
-        byte[] hashCodeBytes = new byte[HASH_FUNCTION.bits() / Byte.SIZE];
-        ByteStreams.readFully(rawMetadataIn, hashCodeBytes);
-        result.setExpectedHashCode(HashCode.fromBytes(hashCodeBytes));
+        // Read in the actual metadata map, and add it the hash.
+        size = metadataIn.readInt();
+        for (int i = 0; i < size; i++) {
+          String key = metadataIn.readUTF();
+          int valSize = metadataIn.readInt();
+          byte[] val = new byte[valSize];
+          ByteStreams.readFully(metadataIn, val);
+          result.putMetadata(key, new String(val, Charsets.UTF_8));
+        }
       }
 
-      // The remaining data is the payload, which we write to the created file, and also include
-      // in our verification checksum.
-      Hasher artifactOnlyHasher = HASH_FUNCTION.newHasher();
-      try (InputStream payload = new HasherInputStream(artifactOnlyHasher,
-          new HasherInputStream(hasher, byteStream))) {
-        result.setResponseSizeBytes(ByteStreams.copy(payload, payloadSink));
-        result.setArtifactOnlyHashCode(artifactOnlyHasher.hash());
-      }
-
-      result.setActualHashCode(hasher.hash());
+      // Next, read in the embedded expected checksum, which should be the last byte in
+      // the metadata header.
+      byte[] hashCodeBytes = new byte[HASH_FUNCTION.bits() / Byte.SIZE];
+      ByteStreams.readFully(rawMetadataIn, hashCodeBytes);
+      result.setExpectedHashCode(HashCode.fromBytes(hashCodeBytes));
     }
+
+    // The remaining data is the payload, which we write to the created file, and also include
+    // in our verification checksum.
+    Hasher artifactOnlyHasher = HASH_FUNCTION.newHasher();
+    try (InputStream payload = new HasherInputStream(artifactOnlyHasher,
+        new HasherInputStream(hasher, input))) {
+      result.setResponseSizeBytes(ByteStreams.copy(payload, payloadSink));
+      result.setArtifactOnlyHashCode(artifactOnlyHasher.hash());
+    }
+
+    result.setActualHashCode(hasher.hash());
 
     return result.build();
   }
