@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -111,7 +112,8 @@ public class AuditOwnerCommandTest {
           arg,
           params,
           ImmutableSet.<BuildTarget>of(),
-          ImmutableSet.<BuildTargetPattern>of());
+          ImmutableSet.<BuildTargetPattern>of(),
+          UNALIASED);
     } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw new RuntimeException(e);
     }

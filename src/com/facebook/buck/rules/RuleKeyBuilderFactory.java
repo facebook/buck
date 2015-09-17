@@ -18,5 +18,5 @@ package com.facebook.buck.rules;
 
 public interface RuleKeyBuilderFactory {
 
-  public RuleKeyBuilder newInstance(BuildRule buildRule);
+  RuleKeyBuilder newInstance(BuildRule buildRule);
 }

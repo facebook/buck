@@ -1275,7 +1275,8 @@ public class Parser {
                 constructorArg,
                 factoryParams,
                 declaredDeps.build(),
-                visibilityPatterns.build());
+                visibilityPatterns.build(),
+                targetRepo.getRepositoryAliases());
           }
         } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
           throw new HumanReadableException(e);

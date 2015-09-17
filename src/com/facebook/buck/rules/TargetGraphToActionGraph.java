@@ -18,13 +18,21 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -35,10 +43,12 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
   private final BuckEventBus eventBus;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   private final FileHashCache fileHashCache;
+  private volatile int hashOfTargetGraph;
+
   @Nullable
   private volatile ActionGraph actionGraph;
-  private volatile int hashOfTargetGraph;
-  private final BuildRuleResolver ruleResolver = new BuildRuleResolver();
+  @Nullable
+  private volatile ImmutableMap<ProjectFilesystem, BuildRuleResolver> ruleResolvers;
 
   public TargetGraphToActionGraph(
       BuckEventBus eventBus,
@@ -68,23 +78,30 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    final RuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
-        fileHashCache,
-        pathResolver);
+    final LoadingCache<ProjectFilesystem, RepoSpecificData> mappedRepos =
+        CacheBuilder.newBuilder().build(
+            new CacheLoader<ProjectFilesystem, RepoSpecificData>() {
+              @Override
+              public RepoSpecificData load(ProjectFilesystem filesystem) {
+                return new RepoSpecificData(fileHashCache);
+              }
+            });
 
     AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
 
           @Override
           public void visit(TargetNode<?> node) {
+            ProjectFilesystem filesystem = node.getRuleFactoryParams().getProjectFilesystem();
+            RepoSpecificData data = mappedRepos.getUnchecked(filesystem);
+
             BuildRule rule;
             try {
               rule = buildRuleGenerator.transform(
                   targetGraph,
-                  ruleResolver,
+                  data.ruleResolver,
                   node,
-                  ruleKeyBuilderFactory);
+                  data.ruleKeyBuilderFactory);
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }
@@ -94,22 +111,43 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
             // build the same build rule. The returned rule may have a different name from the
             // target node.
             Optional<BuildRule> existingRule =
-                ruleResolver.getRuleOptional(rule.getBuildTarget());
+                data.ruleResolver.getRuleOptional(rule.getBuildTarget());
             Preconditions.checkState(
                 !existingRule.isPresent() || existingRule.get().equals(rule));
             if (!existingRule.isPresent()) {
-              ruleResolver.addToIndex(rule);
+              data.ruleResolver.addToIndex(rule);
             }
           }
         };
     bottomUpTraversal.traverse();
-    ActionGraph result = new ActionGraph(ruleResolver.getBuildRules());
+
+    ImmutableMap.Builder<ProjectFilesystem, BuildRuleResolver> resolvers = ImmutableMap.builder();
+    ImmutableSet.Builder<BuildRule> allRules = ImmutableSet.builder();
+    for (Map.Entry<ProjectFilesystem, RepoSpecificData> entry : mappedRepos.asMap().entrySet()) {
+      BuildRuleResolver ruleResolver = entry.getValue().ruleResolver;
+      resolvers.put(entry.getKey(), ruleResolver);
+      allRules.addAll(ruleResolver.getBuildRules());
+    }
+
+    ruleResolvers = resolvers.build();
+    ActionGraph result = new ActionGraph(allRules.build());
     eventBus.post(ActionGraphEvent.finished(started));
     return result;
   }
 
-  public BuildRuleResolver getRuleResolver() {
-    return ruleResolver;
+  public ImmutableMap<ProjectFilesystem, BuildRuleResolver> getRuleResolvers() {
+    return Preconditions.checkNotNull(ruleResolvers);
+  }
+
+  private static class RepoSpecificData {
+    public BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    public RuleKeyBuilderFactory ruleKeyBuilderFactory;
+
+    public RepoSpecificData(FileHashCache fileHashCache) {
+      this.ruleResolver = new BuildRuleResolver();
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+      this.ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    }
   }
 
 }

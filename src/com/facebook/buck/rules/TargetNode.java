@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -25,6 +26,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,6 +44,7 @@ import java.nio.file.Path;
 public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget {
 
   private final BuildRuleFactoryParams ruleFactoryParams;
+  private final Function<Optional<String>, ProjectFilesystem> repoFilesystemResolver;
   private final Description<T> description;
 
   private final T constructorArg;
@@ -57,11 +60,13 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       T constructorArg,
       BuildRuleFactoryParams params,
       ImmutableSet<BuildTarget> declaredDeps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns)
+      ImmutableSet<BuildTargetPattern> visibilityPatterns,
+      Function<Optional<String>, ProjectFilesystem> repoFilesystemResolver)
       throws NoSuchBuildTargetException, InvalidSourcePathInputException {
     this.description = description;
     this.constructorArg = constructorArg;
     this.ruleFactoryParams = params;
+    this.repoFilesystemResolver = repoFilesystemResolver;
 
     final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     final ImmutableSortedSet.Builder<BuildTarget> extraDeps = ImmutableSortedSet.naturalOrder();
@@ -285,7 +290,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
           constructorArg,
           ruleFactoryParams,
           declaredDeps,
-          visibilityPatterns);
+          visibilityPatterns,
+          repoFilesystemResolver);
     } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }
@@ -303,7 +309,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
           constructorArg,
           ruleFactoryParams,
           declaredDeps,
-          visibilityPatterns);
+          visibilityPatterns,
+          repoFilesystemResolver);
     } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
       // This is extremely unlikely to happen --- we've already created a TargetNode with these
       // values before.

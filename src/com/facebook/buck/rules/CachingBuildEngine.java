@@ -36,7 +36,9 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
@@ -47,6 +49,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -106,30 +109,27 @@ public class CachingBuildEngine implements BuildEngine {
   private final FileHashCache fileHashCache;
   private final BuildMode buildMode;
   private final DepFiles depFiles;
-  private final RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
-  private final RuleKeyBuilderFactory abiRuleKeyBuilderFactory;
-  private final RuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
+
+  private final Map<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
 
   public CachingBuildEngine(
       ListeningExecutorService service,
       FileHashCache fileHashCache,
       BuildMode buildMode,
       DepFiles depFiles,
-      SourcePathResolver pathResolver) {
-    this(
-        service,
-        fileHashCache,
-        buildMode,
-        depFiles,
-        new InputBasedRuleKeyBuilderFactory(
-            fileHashCache,
-            pathResolver),
-        new AbiRuleKeyBuilderFactory(
-            fileHashCache,
-            pathResolver),
-        new DependencyFileRuleKeyBuilderFactory(
-            fileHashCache,
-            pathResolver));
+      ImmutableMap<ProjectFilesystem, BuildRuleResolver> pathResolver) {
+    this.service = service;
+    this.fileHashCache = fileHashCache;
+    this.buildMode = buildMode;
+    this.depFiles = depFiles;
+
+    ImmutableMap.Builder<ProjectFilesystem, RuleKeyFactories> factories = ImmutableMap.builder();
+    for (Map.Entry<ProjectFilesystem, BuildRuleResolver> entry : pathResolver.entrySet()) {
+      factories.put(
+          entry.getKey(),
+          RuleKeyFactories.build(fileHashCache, entry.getKey(), entry.getValue()));
+    }
+    this.ruleKeyFactories = factories.build();
   }
 
   @VisibleForTesting
@@ -138,6 +138,7 @@ public class CachingBuildEngine implements BuildEngine {
       FileHashCache fileHashCache,
       BuildMode buildMode,
       DepFiles depFiles,
+      ProjectFilesystem filesystem,
       RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
       RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
       RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
@@ -145,9 +146,13 @@ public class CachingBuildEngine implements BuildEngine {
     this.fileHashCache = fileHashCache;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
-    this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;
-    this.abiRuleKeyBuilderFactory = abiRuleKeyBuilderFactory;
-    this.depFileRuleKeyBuilderFactory = depFileRuleKeyBuilderFactory;
+
+    this.ruleKeyFactories = ImmutableMap.of(
+        filesystem,
+        new RuleKeyFactories(
+            inputBasedRuleKeyBuilderFactory,
+            abiRuleKeyBuilderFactory,
+            depFileRuleKeyBuilderFactory));
   }
 
   @VisibleForTesting
@@ -276,11 +281,16 @@ public class CachingBuildEngine implements BuildEngine {
               }
             }
 
+            RuleKeyFactories repoData = CachingBuildEngine.this.ruleKeyFactories.get(
+                rule.getProjectFilesystem());
+            Preconditions.checkNotNull(repoData);
+
             // Input-based rule keys.
             if (rule instanceof SupportsInputBasedRuleKey) {
 
               // Calculate the input-based rule key and record it in the metadata.
-              RuleKey inputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+              RuleKey inputRuleKey =
+                  repoData.inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
                   inputRuleKey.toString());
@@ -337,7 +347,7 @@ public class CachingBuildEngine implements BuildEngine {
             // rebuilt, which is slow. Fortunately, we limit the effects of this when building Java
             // code when checking the ABI of deps instead of the RuleKey for deps.
             if (rule instanceof AbiRule) {
-              RuleKey abiRuleKey = abiRuleKeyBuilderFactory.newInstance(rule).build();
+              RuleKey abiRuleKey = repoData.abiRuleKeyBuilderFactory.newInstance(rule).build();
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY,
                   abiRuleKey.toString());
@@ -1024,11 +1034,14 @@ public class CachingBuildEngine implements BuildEngine {
       return Optional.absent();
     }
 
+    RuleKeyFactories repoData = this.ruleKeyFactories.get(rule.getProjectFilesystem());
+    Preconditions.checkNotNull(repoData);
+
     // Add in the inputs explicitly listed in the dep file.  If any inputs are no longer on disk,
     // this means something changed and a dep-file based rule key can't be calculated.
     ImmutableList<Path> inputs =
         FluentIterable.from(depFile.get()).transform(MorePaths.TO_PATH).toList();
-    RuleKeyBuilder builder = depFileRuleKeyBuilderFactory.newInstance(rule);
+    RuleKeyBuilder builder = repoData.depFileRuleKeyBuilderFactory.newInstance(rule);
     for (Path input : inputs) {
       try {
         builder.setPath(input);
@@ -1078,4 +1091,44 @@ public class CachingBuildEngine implements BuildEngine {
     DISABLED,
   }
 
+  @VisibleForTesting
+  static class RuleKeyFactories {
+    public final RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory;
+    public final RuleKeyBuilderFactory abiRuleKeyBuilderFactory;
+    public final RuleKeyBuilderFactory depFileRuleKeyBuilderFactory;
+
+    public static RuleKeyFactories build(
+        FileHashCache sharedHashCache,
+        ProjectFilesystem filesystem,
+        BuildRuleResolver ruleResolver) {
+
+      ImmutableList.Builder<FileHashCache> caches = ImmutableList.builder();
+      caches.add(sharedHashCache);
+      caches.add(new DefaultFileHashCache(filesystem));
+
+      StackedFileHashCache fileHashCache = new StackedFileHashCache(caches.build());
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
+      return new RuleKeyFactories(
+          new InputBasedRuleKeyBuilderFactory(
+              fileHashCache,
+              pathResolver),
+          new AbiRuleKeyBuilderFactory(
+              fileHashCache,
+              pathResolver),
+          new DependencyFileRuleKeyBuilderFactory(
+              fileHashCache,
+              pathResolver));
+    }
+
+    @VisibleForTesting
+    RuleKeyFactories(
+        RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
+        RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
+        RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
+      this.inputBasedRuleKeyBuilderFactory = inputBasedRuleKeyBuilderFactory;
+      this.abiRuleKeyBuilderFactory = abiRuleKeyBuilderFactory;
+      this.depFileRuleKeyBuilderFactory = depFileRuleKeyBuilderFactory;
+    }
+  }
 }

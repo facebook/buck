@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -83,7 +84,8 @@ public class GenruleDescriptionTest {
         constructorArg,
         params,
         declaredDeps.build(),
-        visibilityPatterns.build());
+        visibilityPatterns.build(),
+        UNALIASED);
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of(

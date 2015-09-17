@@ -31,6 +31,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -62,6 +63,7 @@ public class Repository {
   private final String buildFileName;
   private final boolean enforceBuckPackageBoundaries;
   private final ImmutableSet<Pattern> tempFilePatterns;
+  private final Function<Optional<String>, ProjectFilesystem> repoFilesystemAliases;
 
   public Repository(
       ProjectFilesystem filesystem,
@@ -126,6 +128,13 @@ public class Repository {
           }
         }
     );
+
+    this.repoFilesystemAliases = new Function<Optional<String>, ProjectFilesystem>() {
+      @Override
+      public ProjectFilesystem apply(Optional<String> repoName) {
+        return getRepository(repoName).getFilesystem();
+      }
+    };
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -224,6 +233,10 @@ public class Repository {
 
   public Iterable<Pattern> getTempFilePatterns() {
     return tempFilePatterns;
+  }
+
+  public Function<Optional<String>, ProjectFilesystem> getRepositoryAliases() {
+    return repoFilesystemAliases;
   }
 
   @SuppressWarnings("serial")

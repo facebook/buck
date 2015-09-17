@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -239,6 +240,7 @@ public class TargetNodeVisibilityTest {
         arg,
         params,
         ImmutableSet.<BuildTarget>of(),
-        visibilityPatterns);
+        visibilityPatterns,
+        UNALIASED);
   }
 }

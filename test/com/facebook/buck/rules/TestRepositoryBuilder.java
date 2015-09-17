@@ -26,7 +26,9 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.io.IOException;
@@ -35,6 +37,14 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public class TestRepositoryBuilder {
+  public static final Function<Optional<String>, ProjectFilesystem> UNALIASED =
+      new Function<Optional<String>, ProjectFilesystem>() {
+        @Override
+        public ProjectFilesystem apply(Optional<String> input) {
+          throw new HumanReadableException("Cannot load repo: " + input);
+        }
+      };
+
   private ProjectFilesystem filesystem;
   private BuckConfig buckConfig;
   private AndroidDirectoryResolver androidDirectoryResolver;

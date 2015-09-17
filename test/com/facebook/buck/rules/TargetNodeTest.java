@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -60,7 +61,8 @@ public class TargetNodeTest {
                 "sourcePaths", ImmutableSortedSet.of())),
         buildRuleFactoryParams,
         ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSet.<BuildTargetPattern>of(),
+        UNALIASED);
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -96,7 +98,8 @@ public class TargetNodeTest {
                 "source", "AnotherClass.java")),
         buildRuleFactoryParams,
         depsTargets,
-        ImmutableSet.<BuildTargetPattern>of());
+        ImmutableSet.<BuildTargetPattern>of(),
+        UNALIASED);
 
     assertThat(
         targetNode.getInputs(),

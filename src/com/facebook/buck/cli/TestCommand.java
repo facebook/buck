@@ -29,7 +29,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -339,15 +338,13 @@ public class TestCommand extends BuildCommand {
 
     try (CommandThreadManager pool =
              new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()))) {
-      SourcePathResolver pathResolver =
-          new SourcePathResolver(targetGraphToActionGraph.getRuleResolver());
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               pool.getExecutor(),
               params.getFileHashCache(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getBuildDepFiles(),
-              pathResolver);
+              targetGraphToActionGraph.getRuleResolvers());
       try (Build build = createBuild(
           params.getBuckConfig(),
           graph,

@@ -35,15 +35,15 @@ import javax.annotation.Nullable;
 public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget, HasDependencies {
 
   @Override
-  public BuildTarget getBuildTarget();
+  BuildTarget getBuildTarget();
 
   @JsonProperty("name")
-  public String getFullyQualifiedName();
+  String getFullyQualifiedName();
 
   @JsonProperty("type")
-  public String getType();
+  String getType();
 
-  public BuildableProperties getProperties();
+  BuildableProperties getProperties();
 
   /**
    * @return the set of rules that must be built before this rule. Normally, this matches the value
@@ -56,23 +56,23 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget, HasDep
    *     custom getter provided by the build rule.
    */
   @Override
-  public ImmutableSortedSet<BuildRule> getDeps();
+  ImmutableSortedSet<BuildRule> getDeps();
 
   /**
    * @return key based on the BuildRule's state, including the transitive closure of its
    *     dependencies' keys.
    */
-  public RuleKey getRuleKey();
+  RuleKey getRuleKey();
 
   /** @return the same value as {@link #getFullyQualifiedName()} */
   @Override
-  public String toString();
+  String toString();
 
-  public ImmutableList<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext);
+  ImmutableList<Step> getBuildSteps(BuildContext context, BuildableContext buildableContext);
 
   @Nullable
-  public Path getPathToOutput();
+  Path getPathToOutput();
 
-  public ProjectFilesystem getProjectFilesystem();
+  ProjectFilesystem getProjectFilesystem();
 
 }

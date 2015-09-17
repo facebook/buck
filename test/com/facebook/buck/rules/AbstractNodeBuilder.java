@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -79,7 +81,8 @@ public abstract class AbstractNodeBuilder<A> {
           arg,
           factoryParams,
           getDepsFromArg(),
-          ImmutableSet.<BuildTargetPattern>of());
+          ImmutableSet.<BuildTargetPattern>of(),
+          UNALIASED);
     } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw Throwables.propagate(e);
     }

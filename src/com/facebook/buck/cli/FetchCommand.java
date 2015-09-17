@@ -29,7 +29,6 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.step.AdbOptions;
@@ -89,7 +88,6 @@ public class FetchCommand extends BuildCommand {
     }
 
     int exitCode;
-    SourcePathResolver pathResolver = new SourcePathResolver(transformer.getRuleResolver());
     try (CommandThreadManager pool =
              new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()));
          Build build = createBuild(
@@ -101,7 +99,7 @@ public class FetchCommand extends BuildCommand {
                  params.getFileHashCache(),
                  getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
                  params.getBuckConfig().getBuildDepFiles(),
-                 pathResolver),
+                 transformer.getRuleResolvers()),
              params.getArtifactCache(),
              params.getConsole(),
              params.getBuckEventBus(),

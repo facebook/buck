@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -35,7 +36,6 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.step.AdbOptions;
@@ -265,7 +265,7 @@ public class BuildCommand extends AbstractCommand {
 
     // Parse the build files to create a ActionGraph.
     ActionGraph actionGraph;
-    BuildRuleResolver resolver;
+    ImmutableMap<ProjectFilesystem, BuildRuleResolver> resolvers;
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
@@ -285,7 +285,7 @@ public class BuildCommand extends AbstractCommand {
               new BuildTargetNodeToBuildRuleTransformer(),
               params.getFileHashCache());
       actionGraph = targetGraphToActionGraph.apply(result.getSecond());
-      resolver = targetGraphToActionGraph.getRuleResolver();
+      resolvers = targetGraphToActionGraph.getRuleResolvers();
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
@@ -306,7 +306,6 @@ public class BuildCommand extends AbstractCommand {
       buildTargets = ImmutableSet.of(explicitTarget);
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     try (CommandThreadManager pool = new CommandThreadManager(
         "Build",
         getConcurrencyLimit(params.getBuckConfig()));
@@ -319,7 +318,7 @@ public class BuildCommand extends AbstractCommand {
                  params.getFileHashCache(),
                  getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
                  params.getBuckConfig().getBuildDepFiles(),
-                 pathResolver),
+                 resolvers),
              artifactCache,
              params.getConsole(),
              params.getBuckEventBus(),
