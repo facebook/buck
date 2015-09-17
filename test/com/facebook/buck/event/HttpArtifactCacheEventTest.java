@@ -42,12 +42,12 @@ public class HttpArtifactCacheEventTest {
 
   @Test
   public void jsonRepresentationContainsAllRuleKeysWithTransform() throws IOException {
-    Iterable<String> ruleKeysAsStrings = Iterables.transform(
+    Iterable<RuleKey> ruleKeysInATransform = Iterables.transform(
         TEST_RULE_KEYS,
-        Functions.toStringFunction());
+        Functions.<RuleKey>identity());
 
     HttpArtifactCacheEvent.Finished finishedEvent = createBuilder()
-        .setRuleKeys(ruleKeysAsStrings)
+        .setRuleKeys(ruleKeysInATransform)
         .build();
     configureEvent(finishedEvent);
     String json = JSON_CONVERTER.writeValueAsString(finishedEvent);

@@ -167,7 +167,7 @@ public class HttpArtifactCache implements ArtifactCache {
     Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent();
     buckEventBus.post(startedEvent);
     Finished.Builder eventBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-        .setRuleKeys(Lists.newArrayList(ruleKey.toString()));
+        .setRuleKeys(Lists.newArrayList(ruleKey));
 
     try {
       CacheResult result = fetchImpl(ruleKey, output, eventBuilder);
