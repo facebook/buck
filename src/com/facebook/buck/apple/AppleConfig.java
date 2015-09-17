@@ -238,6 +238,10 @@ public class AppleConfig {
     return getOptionalPath("apple", "device_helper_path");
   }
 
+  public Optional<BuildTarget> getAppleDeviceHelperTarget() {
+    return delegate.getBuildTarget("apple", "device_helper_target");
+  }
+
   private Optional<Path> getOptionalPath(String sectionName, String propertyName) {
     Optional<String> pathString = delegate.getValue(sectionName, propertyName);
     if (pathString.isPresent()) {

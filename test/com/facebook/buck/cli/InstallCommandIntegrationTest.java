@@ -76,12 +76,34 @@ public class InstallCommandIntegrationTest {
   }
 
   @Test
-  public void appleBundleInstallsInDevice() throws IOException, InterruptedException {
+  public void appleBundleInstallsInDeviceWithHelperAsPath() throws IOException,
+      InterruptedException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(FakeAppleDeveloperEnvironment.supportsBuildAndInstallToDevice());
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_app_bundle", tmp);
+    workspace.setUp();
+
+    assumeTrue(FakeAppleDeveloperEnvironment.hasDeviceCurrentlyConnected(workspace.getPath(
+                "iOSConsole/iOSConsole"
+            )));
+
+
+    ProcessResult result = workspace.runBuckCommand(
+        "install",
+        "//:DemoApp#iphoneos-arm64");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void appleBundleInstallsInDeviceWithHelperAsTarget() throws IOException,
+      InterruptedException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsBuildAndInstallToDevice());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "apple_app_bundle_with_device_helper_as_target", tmp);
     workspace.setUp();
 
     assumeTrue(FakeAppleDeveloperEnvironment.hasDeviceCurrentlyConnected(workspace.getPath(

@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.apple.AppleBundle;
+import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
 import com.facebook.buck.apple.ApplePlatform;
@@ -34,10 +35,17 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.js.ReactNativeFlavors;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
@@ -179,8 +187,42 @@ public class InstallCommand extends BuildCommand {
       return 1;
     }
 
+    // TODO(user): Cache argument parsing.
+    Optional<String> helperTarget = Optional.absent();
+    try {
+      TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
+          params.getBuckConfig(),
+          params.getRepository().getFilesystem().getIgnorePaths(),
+          getArguments()).get(0);
+
+      BuildTarget target = params.getParser().resolveTargetSpec(
+          spec,
+          new ParserConfig(params.getBuckConfig()),
+          params.getBuckEventBus(),
+          params.getConsole(),
+          params.getEnvironment(),
+          getEnableProfiling()).iterator().next();
+      TargetNode<?> node = params.getParser().getTargetNode(target);
+      if (node != null &&
+          node.getDescription().getBuildRuleType().equals(AppleBundleDescription.TYPE)) {
+        for (Flavor flavor : node.getBuildTarget().getFlavors()) {
+          if (ApplePlatform.needsInstallHelper(flavor.getName())) {
+            AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+
+            Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
+            if (deviceHelperTarget.isPresent()) {
+              helperTarget = Optional.of(deviceHelperTarget.get().toString());
+            }
+          }
+        }
+      }
+    } catch (BuildTargetException | BuildFileParseException e) {
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      return 1;
+    }
+
     // Build the specified target.
-    int exitCode = super.runWithoutHelp(params);
+    int exitCode = super.run(params, helperTarget);
     if (exitCode != 0) {
       return exitCode;
     }
@@ -283,17 +325,38 @@ public class InstallCommand extends BuildCommand {
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
 
     final Path helperPath;
-    Optional<Path> helperOverridePath = appleConfig.getAppleDeviceHelperPath();
-    if (helperOverridePath.isPresent()) {
-      helperPath = projectFilesystem.resolve(helperOverridePath.get());
+    Optional<BuildTarget> helperTarget = appleConfig.getAppleDeviceHelperTarget();
+    if (helperTarget.isPresent()) {
+      Build build = super.getBuild();
+      ActionGraph graph = build.getActionGraph();
+      BuildRule buildRule = graph.findBuildRuleByTarget(helperTarget.get());
+      if (buildRule == null) {
+        params.getConsole().printBuildFailure(
+            String.format(
+                "Cannot install %s (could not resolve build rule for device helper target %s)",
+                appleBundle.getFullyQualifiedName(), helperTarget.get().getBaseName()));
+        return FAILURE;
+      }
+      Path buildRuleOutputPath = buildRule.getPathToOutput();
+      if (buildRuleOutputPath == null) {
+        params.getConsole().printBuildFailure(
+            String.format(
+                "Cannot install %s (device helper target %s does not specify an output)",
+                appleBundle.getFullyQualifiedName(), helperTarget.get().getBaseName()));
+        return FAILURE;
+      }
+      helperPath = projectFilesystem.resolve(buildRuleOutputPath);
     } else {
-      // TODO(user): Allow device helper to be specified as a build target like
-      // xctool_zip_target
-      params.getConsole().printBuildFailure(
-          String.format(
-              "Cannot install %s (could not find path to device install helper tool)",
-              appleBundle.getFullyQualifiedName()));
-      return FAILURE;
+      Optional<Path> helperOverridePath = appleConfig.getAppleDeviceHelperPath();
+      if (helperOverridePath.isPresent()) {
+        helperPath = projectFilesystem.resolve(helperOverridePath.get());
+      } else {
+        params.getConsole().printBuildFailure(
+            String.format(
+                "Cannot install %s (could not find path to device install helper tool)",
+                appleBundle.getFullyQualifiedName()));
+        return FAILURE;
+      }
     }
 
     AppleDeviceHelper helper = new AppleDeviceHelper(processExecutor, helperPath);

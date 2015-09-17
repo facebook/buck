@@ -39,7 +39,11 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   public abstract String getName();
 
   public static boolean needsCodeSign(String name) {
-    return name.equals(Name.IPHONEOS) || name.equals(Name.WATCHOS);
+    return name.startsWith(Name.IPHONEOS) || name.startsWith(Name.WATCHOS);
+  }
+
+  public static boolean needsInstallHelper(String name) {
+    return name.startsWith(Name.IPHONEOS);
   }
 
   @Override

@@ -225,6 +225,11 @@ public class BuildCommand extends AbstractCommand {
   @Override
   @SuppressWarnings("PMD.PrematureDeclaration")
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    return run(params, Optional.<String>absent());
+  }
+
+  protected int run(CommandRunnerParams params, Optional<String> additionalTarget)
+      throws IOException, InterruptedException {
     ArtifactCache artifactCache = params.getArtifactCache();
     if (isArtifactCacheDisabled()) {
       artifactCache = new NoopArtifactCache();
@@ -242,6 +247,10 @@ public class BuildCommand extends AbstractCommand {
                 Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10))));
       }
       return 1;
+    }
+
+    if (additionalTarget.isPresent()) {
+      arguments.add(additionalTarget.get());
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.
