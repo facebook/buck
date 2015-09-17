@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -119,7 +120,7 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
         .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(ImmutableFlavor.of("header-symlink-tree"))
+        .addFlavors(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)
         .build();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
@@ -154,7 +155,7 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
         .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(ImmutableFlavor.of("exported-header-symlink-tree"))
+        .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
         .build();
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",

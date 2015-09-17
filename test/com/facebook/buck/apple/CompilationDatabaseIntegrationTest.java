@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.cxx.CxxCompilationDatabaseEntry;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -84,10 +85,14 @@ public class CompilationDatabaseIntegrationTest {
 
     ImmutableSet<String> frameworks = ImmutableSet.of(
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString());
-    String pathToPrivateHeaders = "buck-out/gen/Libraries/EXExample/" +
-        "EXExample#header-symlink-tree,iphonesimulator-x86_64.hmap";
-    String pathToPublicHeaders = "buck-out/gen/Libraries/EXExample/" +
-        "EXExample#exported-header-symlink-tree,iphonesimulator-x86_64.hmap";
+    String pathToPrivateHeaders =
+        String.format(
+            "buck-out/gen/Libraries/EXExample/EXExample#iphonesimulator-x86_64,%s.hmap",
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
+    String pathToPublicHeaders =
+        String.format(
+            "buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,
@@ -138,10 +143,14 @@ public class CompilationDatabaseIntegrationTest {
     ImmutableSet<String> frameworks = ImmutableSet.of(
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
         Paths.get("/System/Library/Frameworks/UIKit.framework").getParent().toString());
-    String pathToPrivateHeaders = "buck-out/gen/Apps/Weather/" +
-        "Weather#header-symlink-tree,iphonesimulator-x86_64.hmap";
-    String pathToPublicHeaders = "buck-out/gen/Libraries/" +
-        "EXExample/EXExample#exported-header-symlink-tree,iphonesimulator-x86_64.hmap";
+    String pathToPrivateHeaders =
+        String.format(
+            "buck-out/gen/Apps/Weather/Weather#iphonesimulator-x86_64,%s.hmap",
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
+    String pathToPublicHeaders =
+        String.format(
+            "buck-out/gen/Libraries/EXExample/EXExample#%s,iphonesimulator-x86_64.hmap",
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     Iterable<String> includes = ImmutableList.of(
         pathToPrivateHeaders,
         pathToPublicHeaders,

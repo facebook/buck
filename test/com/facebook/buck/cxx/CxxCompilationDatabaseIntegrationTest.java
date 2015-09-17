@@ -77,15 +77,21 @@ public class CxxCompilationDatabaseIntegrationTest {
         tmp.getRootPath().relativize(compilationDatabase));
 
     String binaryHeaderSymlinkTreeFolder =
-        "buck-out/gen/binary_with_dep#default,header-symlink-tree";
+        String.format(
+            "buck-out/gen/binary_with_dep#default,%s",
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     String binaryExportedHeaderSymlinkTreeFoler =
-        "buck-out/gen/library_with_header#default,exported-header-symlink-tree";
+        String.format(
+            "buck-out/gen/library_with_header#default,%s",
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
     assertTrue(Files.exists(tmp.getRootPath().resolve(binaryHeaderSymlinkTreeFolder)));
     assertTrue(Files.exists(tmp.getRootPath().resolve(binaryExportedHeaderSymlinkTreeFoler)));
 
     String libraryExportedHeaderSymlinkTreeFoler =
-        "buck-out/gen/library_with_header#default,exported-header-symlink-tree";
+        String.format(
+            "buck-out/gen/library_with_header#default,%s",
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
     // Verify that symlink folders for headers are created and header file is linked.
     assertTrue(Files.exists(tmp.getRootPath().resolve(libraryExportedHeaderSymlinkTreeFoler)));
@@ -127,9 +133,14 @@ public class CxxCompilationDatabaseIntegrationTest {
             "buck-out/gen/__library_with_header#compilation-database,default.json"),
         tmp.getRootPath().relativize(compilationDatabase));
 
-    String headerSymlinkTreeFolder = "buck-out/gen/library_with_header#default,header-symlink-tree";
+    String headerSymlinkTreeFolder =
+        String.format(
+            "buck-out/gen/library_with_header#default,%s",
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     String exportedHeaderSymlinkTreeFoler =
-        "buck-out/gen/library_with_header#default,exported-header-symlink-tree";
+        String.format(
+            "buck-out/gen/library_with_header#default,%s",
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
 
     // Verify that symlink folders for headers are created.
     assertTrue(Files.exists(tmp.getRootPath().resolve(headerSymlinkTreeFolder)));
