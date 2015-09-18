@@ -142,14 +142,23 @@ public class ListeningProcessExecutor {
     /**
      * Closes the stdin of the process. Call this if the process expects stdin
      * to be closed before it writes to stdout.
+     *
+     * If {@code force} is {@code true}, then pending writes to stdin are
+     * discarded. Otherwise, waits for pending writes to flush, then closes
+     * stdin.
      */
-    void closeStdin();
+    void closeStdin(boolean force);
 
     /**
      * Returns {@code true} if the process has any data queued to write to stdin,
      * {@code false} otherwise.
      */
     boolean hasPendingWrites();
+
+    /**
+     * Returns {@code true} if the process is running, {@code false} otherwise.
+     */
+    boolean isRunning();
   }
 
   private static class LaunchedProcessImpl implements LaunchedProcess {
@@ -170,13 +179,18 @@ public class ListeningProcessExecutor {
     }
 
     @Override
-    public void closeStdin() {
-      nuProcess.closeStdin();
+    public void closeStdin(boolean force) {
+      nuProcess.closeStdin(force);
     }
 
     @Override
     public boolean hasPendingWrites() {
       return nuProcess.hasPendingWrites();
+    }
+
+    @Override
+    public boolean isRunning() {
+      return nuProcess.isRunning();
     }
   }
 

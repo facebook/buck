@@ -35,6 +35,7 @@ java_library(
 
 
 IO_SRCS = [
+  'AbstractCharsetProcessListener.java',
   'AbstractProcessExecutorParams.java',
   'Ansi.java',
   'AnsiEnvironmentChecking.java',
@@ -45,6 +46,8 @@ IO_SRCS = [
   'InputStreamConsumer.java',
   'LineFetcher.java',
   'LineIterating.java',
+  'ListeningCharsetEncoder.java',
+  'ListeningCharsetDecoder.java',
   'ListeningProcessExecutor.java',
   'PkillProcessManager.java',
   'ProcessManager.java',

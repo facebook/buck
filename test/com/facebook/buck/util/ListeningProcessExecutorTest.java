@@ -95,7 +95,7 @@ public class ListeningProcessExecutorTest {
     @Override
     public boolean onStdinReady(ByteBuffer buffer) {
       if (!bufferToWrite.hasRemaining()) {
-        process.closeStdin();
+        process.closeStdin(true);
         return false;
       }
 
