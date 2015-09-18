@@ -17,6 +17,7 @@
 package com.facebook.buck.timing;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Fake implementation of {@link Clock} which returns the last time
@@ -33,6 +34,11 @@ public class SettableFakeClock implements Clock {
 
   public void setCurrentTimeMillis(long millis) {
     currentTimeMillis.set(millis);
+  }
+
+  public void advanceTimeNanos(long nanos) {
+    this.nanoTime.addAndGet(nanos);
+    this.currentTimeMillis.addAndGet(TimeUnit.NANOSECONDS.toMillis(nanos));
   }
 
   @Override

@@ -24,12 +24,12 @@ import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.ProcessListeners.CapturingListener;
+import com.facebook.buck.util.ProcessListeners.StdinWritingListener;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,78 +42,6 @@ public class ListeningProcessExecutorTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
-
-  private class CapturingListener implements ListeningProcessExecutor.ProcessListener {
-    protected ListeningProcessExecutor.LaunchedProcess process;
-    public ByteArrayOutputStream capturedStdout = new ByteArrayOutputStream();
-    public ByteArrayOutputStream capturedStderr = new ByteArrayOutputStream();
-
-    @Override
-    public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
-      this.process = process;
-    }
-
-    @Override
-    public void onExit(int exitCode) {
-    }
-
-    @Override
-    public void onStdout(ByteBuffer buffer, boolean closed) {
-      writeBufferToStream(buffer, capturedStdout);
-    }
-
-    @Override
-    public void onStderr(ByteBuffer buffer, boolean closed) {
-      writeBufferToStream(buffer, capturedStderr);
-    }
-
-    private final void writeBufferToStream(ByteBuffer buffer, ByteArrayOutputStream stream) {
-      if (buffer.hasArray()) {
-        stream.write(buffer.array(), buffer.position(), buffer.remaining());
-        buffer.position(buffer.limit());
-      } else {
-        byte[] bufferBytes = new byte[buffer.remaining()];
-        // This updates buffer.position().
-        buffer.get(bufferBytes);
-        stream.write(bufferBytes, 0, bufferBytes.length);
-      }
-    }
-
-    @Override
-    public boolean onStdinReady(ByteBuffer buffer) {
-      return false;
-    }
-  }
-
-  private class StdinWritingListener extends CapturingListener {
-    private final ByteBuffer bufferToWrite;
-
-    public StdinWritingListener(String string) {
-      bufferToWrite = ByteBuffer.wrap(string.getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Override
-    public boolean onStdinReady(ByteBuffer buffer) {
-      if (!bufferToWrite.hasRemaining()) {
-        process.closeStdin(true);
-        return false;
-      }
-
-      if (buffer.remaining() >= bufferToWrite.remaining()) {
-        // All our data fits in the buffer.
-        buffer.put(bufferToWrite);
-      } else {
-        // Not all our data fits in the buffer. Copy as much as we can,
-        // then indicate we have more data to write.
-        ByteBuffer subBuffer = bufferToWrite.slice();
-        subBuffer.limit(buffer.remaining());
-        buffer.put(subBuffer);
-        bufferToWrite.position(bufferToWrite.position() + subBuffer.limit());
-      }
-      buffer.flip();
-      return true;
-    }
-  }
 
   @Test
   public void echoTextReceivedOnStdout() throws Exception {
