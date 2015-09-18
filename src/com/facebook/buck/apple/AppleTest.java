@@ -71,6 +71,9 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   private final Optional<BuildRule> xctoolZipRule;
 
   @AddToRuleKey
+  private Optional<Long> xctoolStutterTimeout;
+
+  @AddToRuleKey
   private final Tool xctest;
 
   @AddToRuleKey
@@ -131,6 +134,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   AppleTest(
       Optional<Path> xctoolPath,
       Optional<BuildRule> xctoolZipRule,
+      Optional<Long> xctoolStutterTimeout,
       Tool xctest,
       Optional<Tool> otest,
       Boolean useXctest,
@@ -148,6 +152,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     super(params, resolver);
     this.xctoolPath = xctoolPath;
     this.xctoolZipRule = xctoolZipRule;
+    this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.useXctest = useXctest;
     this.xctest = xctest;
     this.otest = otest;
@@ -270,6 +275,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
           new XctoolRunTestsStep(
               getProjectFilesystem(),
               xctoolBinaryPath,
+              xctoolStutterTimeout,
               platformName,
               destinationSpecifierArg,
               logicTestPathsBuilder.build(),

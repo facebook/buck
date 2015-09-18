@@ -230,6 +230,10 @@ public class AppleConfig {
     return delegate.getValue("apple", "xctool_default_destination_specifier");
   }
 
+  public Optional<Long> getXctoolStutterTimeoutMs() {
+    return delegate.getLong("apple", "xctool_stutter_timeout");
+  }
+
   public boolean getXcodeDisableParallelizeBuild() {
     return delegate.getBooleanValue("apple", "xcode_disable_parallelize_build", false);
   }

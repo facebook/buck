@@ -44,6 +44,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         projectFilesystem,
         Paths.get("/path/to/xctool"),
+        Optional.<Long>absent(),
         "iphonesimulator",
         Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
@@ -83,6 +84,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         projectFilesystem,
         Paths.get("/path/to/xctool"),
+        Optional.<Long>absent(),
         "iphonesimulator",
         Optional.of("name=iPhone 5s"),
         ImmutableSet.<Path>of(),
@@ -126,6 +128,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         projectFilesystem,
         Paths.get("/path/to/xctool"),
+        Optional.<Long>absent(),
         "iphonesimulator",
         Optional.of("name=iPhone 5s,OS=8.2"),
         ImmutableSet.of(
@@ -172,6 +175,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         projectFilesystem,
         Paths.get("/path/to/xctool"),
+        Optional.<Long>absent(),
         "iphonesimulator",
         Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
@@ -211,6 +215,7 @@ public class XctoolRunTestsStepTest {
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         projectFilesystem,
         Paths.get("/path/to/xctool"),
+        Optional.<Long>absent(),
         "iphonesimulator",
         Optional.<String>absent(),
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),

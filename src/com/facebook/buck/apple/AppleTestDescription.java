@@ -339,6 +339,7 @@ public class AppleTestDescription implements
     return new AppleTest(
         appleConfig.getXctoolPath(),
         xctoolZipBuildRule,
+        appleConfig.getXctoolStutterTimeoutMs(),
         appleCxxPlatform.getXctest(),
         appleCxxPlatform.getOtest(),
         appleConfig.getXctestPlatformNames().contains(platformName),

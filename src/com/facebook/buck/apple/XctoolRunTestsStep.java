@@ -38,6 +38,11 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Runs {@code xctool} on one or more logic tests and/or application
@@ -48,6 +53,10 @@ import java.util.Map;
  */
 public class XctoolRunTestsStep implements Step {
 
+  private static final Semaphore stutterLock = new Semaphore(1);
+  private static final ScheduledExecutorService stutterTimeoutExecutorService =
+      Executors.newSingleThreadScheduledExecutor();
+
   private final ProjectFilesystem filesystem;
 
   public interface StdoutReadingCallback {
@@ -57,12 +66,14 @@ public class XctoolRunTestsStep implements Step {
   private static final Logger LOG = Logger.get(XctoolRunTestsStep.class);
 
   private final ImmutableList<String> command;
+  private final Optional<Long> xctoolStutterTimeout;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
 
   public XctoolRunTestsStep(
       ProjectFilesystem filesystem,
       Path xctoolPath,
+      Optional<Long> xctoolStutterTimeout,
       String sdkName,
       Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
@@ -97,6 +108,7 @@ public class XctoolRunTestsStep implements Step {
         destinationSpecifier,
         logicTestBundlePaths,
         appTestBundleToHostAppPaths);
+    this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
   }
@@ -114,46 +126,54 @@ public class XctoolRunTestsStep implements Step {
         .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
         .build();
 
+    // Only launch one instance of xctool at the time
+    final AtomicBoolean stutterLockIsNotified = new AtomicBoolean(false);
     try {
       LOG.debug("Running command: %s", processExecutorParams);
 
-      // Start the process.
-      ProcessExecutor.LaunchedProcess launchedProcess =
-          context.getProcessExecutor().launchProcess(processExecutorParams);
+      try {
+        acquireStutterLock(stutterLockIsNotified);
 
-      int exitCode;
-      try (OutputStream outputStream = filesystem.newFileOutputStream(
-               outputPath);
-           TeeInputStream stdoutWrapperStream = new TeeInputStream(
-               launchedProcess.getInputStream(), outputStream)) {
-        if (stdoutReadingCallback.isPresent()) {
-          // The caller is responsible for reading all the data, which TeeInputStream will
-          // copy to outputStream.
-          stdoutReadingCallback.get().readStdout(stdoutWrapperStream);
-        } else {
-          // Nobody's going to read from stdoutWrapperStream, so close it and copy
-          // the process's stdout to outputPath directly.
-          stdoutWrapperStream.close();
-          ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+        // Start the process.
+        ProcessExecutor.LaunchedProcess launchedProcess =
+            context.getProcessExecutor().launchProcess(processExecutorParams);
+
+        int exitCode;
+        try (OutputStream outputStream = filesystem.newFileOutputStream(
+            outputPath);
+             TeeInputStream stdoutWrapperStream = new TeeInputStream(
+                 launchedProcess.getInputStream(), outputStream)) {
+          if (stdoutReadingCallback.isPresent()) {
+            // The caller is responsible for reading all the data, which TeeInputStream will
+            // copy to outputStream.
+            stdoutReadingCallback.get().readStdout(stdoutWrapperStream);
+          } else {
+            // Nobody's going to read from stdoutWrapperStream, so close it and copy
+            // the process's stdout to outputPath directly.
+            stdoutWrapperStream.close();
+            ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+          }
+          exitCode = waitForProcessAndGetExitCode(context.getProcessExecutor(), launchedProcess);
+          LOG.debug("Finished running command, exit code %d", exitCode);
+        } finally {
+          context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
+          context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
         }
-        exitCode = waitForProcessAndGetExitCode(context.getProcessExecutor(), launchedProcess);
-        LOG.debug("Finished running command, exit code %d", exitCode);
-      } finally {
-        context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
-        context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
+
+        if (exitCode != 0) {
+          LOG.warn("%s exited with error %d", command, exitCode);
+        }
+
+        return exitCode;
+
+      } catch (Exception e) {
+        LOG.error(e, "Exception while running %s", command);
+        MoreThrowables.propagateIfInterrupt(e);
+        context.getConsole().printBuildFailureWithStacktrace(e);
+        return 1;
       }
-
-      if (exitCode != 0) {
-        LOG.warn("%s exited with error %d", command, exitCode);
-      }
-
-      return exitCode;
-
-    } catch (Exception e) {
-      LOG.error(e, "Exception while running %s", command);
-      MoreThrowables.propagateIfInterrupt(e);
-      context.getConsole().printBuildFailureWithStacktrace(e);
-      return 1;
+    } finally {
+      releaseStutterLock(stutterLockIsNotified);
     }
   }
 
@@ -207,6 +227,37 @@ public class XctoolRunTestsStep implements Step {
     } else {
       // Some unknown failure.
       return processExitCode;
+    }
+  }
+
+  private void acquireStutterLock(final AtomicBoolean stutterLockIsNotified)
+      throws InterruptedException {
+    if (!xctoolStutterTimeout.isPresent()) {
+      return;
+    }
+    try {
+      stutterLock.acquire();
+    } catch (Exception e) {
+      releaseStutterLock(stutterLockIsNotified);
+      throw e;
+    }
+    stutterTimeoutExecutorService.schedule(
+        new Runnable() {
+          @Override
+          public void run() {
+            releaseStutterLock(stutterLockIsNotified);
+          }
+        },
+        xctoolStutterTimeout.get(),
+        TimeUnit.MILLISECONDS);
+  }
+
+  private void releaseStutterLock(AtomicBoolean stutterLockIsNotified) {
+    if (!xctoolStutterTimeout.isPresent()) {
+      return;
+    }
+    if (!stutterLockIsNotified.getAndSet(true)) {
+      stutterLock.release();
     }
   }
 }
