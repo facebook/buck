@@ -48,6 +48,8 @@ import java.util.Map;
 public class HttpArtifactCacheBinaryProtocol {
 
   private static final HashFunction HASH_FUNCTION = Hashing.crc32();
+  // 64MB should be enough for everyone.
+  private static final long MAX_METADATA_HEADER_SIZE = 64 * 1024 * 1024;
 
   private HttpArtifactCacheBinaryProtocol() {
     // Utility class, don't instantiate.
@@ -56,15 +58,18 @@ public class HttpArtifactCacheBinaryProtocol {
   public static FetchResponseReadResult readFetchResponse(
       DataInputStream input,
       OutputStream payloadSink) throws IOException {
-    FetchResponseReadResult.Builder result = FetchResponseReadResult.builder();
-
-    // Create a hasher to be used to generate a hash of the metadata and input.  We'll use
-    // this to compare against the embedded checksum.
-    Hasher hasher = HASH_FUNCTION.newHasher();
-
     // Read the size of a the metadata, and use that to build a input stream to read and
     // process the rest of it.
     int metadataSize = input.readInt();
+    if (metadataSize > MAX_METADATA_HEADER_SIZE) {
+      throw new IOException(
+          String.format("Metadata header size of %d is too big.", metadataSize));
+    }
+
+    FetchResponseReadResult.Builder result = FetchResponseReadResult.builder();
+    // Create a hasher to be used to generate a hash of the metadata and input.  We'll use
+    // this to compare against the embedded checksum.
+    Hasher hasher = HASH_FUNCTION.newHasher();
     byte[] rawMetadata = new byte[metadataSize];
     ByteStreams.readFully(input, rawMetadata);
     try (InputStream rawMetadataIn = new ByteArrayInputStream(rawMetadata)) {
@@ -190,6 +195,9 @@ public class HttpArtifactCacheBinaryProtocol {
         byte[] val = ent.getValue().getBytes(Charsets.UTF_8);
         out.writeInt(val.length);
         out.write(val);
+        if (out.size() > MAX_METADATA_HEADER_SIZE) {
+          throw new IOException("Metadata header too big.");
+        }
       }
     }
 
@@ -200,7 +208,11 @@ public class HttpArtifactCacheBinaryProtocol {
     rawOut.write(hasher.hash().asBytes());
 
     // Finally, base64 encode the raw bytes to make usable in a HTTP header.
-    return rawOut.toByteArray();
+    byte[] bytes = rawOut.toByteArray();
+    if (bytes.length > MAX_METADATA_HEADER_SIZE) {
+      throw new IOException("Metadata header too big.");
+    }
+    return bytes;
   }
 
   @Value.Immutable
