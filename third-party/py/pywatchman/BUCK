@@ -1,0 +1,17 @@
+python_library(
+  name = 'pywatchman',
+  base_module = '',
+  srcs = glob(['pywatchman/*.py']),
+  visibility = ['PUBLIC'],
+)
+
+# Since we can't package directories into our main Buck PEX, produce a ZIP with
+# the various bits of pywatchman we need. We leave out bser.c since building
+# multiple copies for multiple python runtimes is an exercise left to the reader.
+zip_file(
+  name = 'pywatchman-archive',
+  srcs = glob(['pywatchman/*.py']),
+  visibility = [
+    'PUBLIC',
+  ],
+)

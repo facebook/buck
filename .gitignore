@@ -61,6 +61,7 @@ src/com/facebook/buck/intellij/plugin/.idea/copyright/profiles_settings.xml
 # From building pywatchman with Ant.
 /third-party/py/pywatchman/build/
 /third-party/py/pywatchman/pywatchman.egg-info/
+/third-party/py/pywatchman/dist/
 
 # OS X
 .DS_Store

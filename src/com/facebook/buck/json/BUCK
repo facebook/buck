@@ -58,6 +58,7 @@ python_library(
   ],
   deps = [
     '//third-party/py/pathlib:pathlib',
+    '//third-party/py/pywatchman:pywatchman',
   ],
 )
 

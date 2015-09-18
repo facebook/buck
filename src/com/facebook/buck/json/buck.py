@@ -704,26 +704,20 @@ def main():
     output_format = 'JSON'
     output_encode = lambda val: json.dumps(val, sort_keys=True)
     if options.use_watchman_glob:
+        import pywatchman
+        client_args = {}
+        if options.watchman_query_timeout_ms is not None:
+            # pywatchman expects a timeout as a nonnegative floating-point
+            # value in seconds.
+            client_args['timeout'] = max(0.0, options.watchman_query_timeout_ms / 1000.0)
+        watchman_client = pywatchman.client(**client_args)
+        watchman_error = pywatchman.WatchmanError
         try:
-            # pywatchman may not be built, so fall back to non-watchman
-            # in that case.
-            import pywatchman
-            client_args = {}
-            if options.watchman_query_timeout_ms is not None:
-                # pywatchman expects a timeout as a nonnegative floating-point
-                # value in seconds.
-                client_args['timeout'] = max(0.0, options.watchman_query_timeout_ms / 1000.0)
-            watchman_client = pywatchman.client(**client_args)
-            watchman_error = pywatchman.WatchmanError
-            output_format = 'BSER'
-            output_encode = lambda val: pywatchman.bser.dumps(val)
+            import pywatchman.bser as bser
         except ImportError, e:
-            # TODO(agallagher): Restore this when the PEX builds pywatchman.
-            # print >> sys.stderr, \
-            #     'Could not import pywatchman (sys.path {}): {}'.format(
-            #         sys.path,
-            #         repr(e))
-            pass
+            import pywatchman.pybser as bser
+        output_format = 'BSER'
+        output_encode = lambda val: bser.dumps(val)
 
     buildFileProcessor = BuildFileProcessor(
         project_root,

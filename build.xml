@@ -191,7 +191,10 @@
       <!-- Work around broken python installs which can't find libpython.so. -->
       <env key="LIBRARY_PATH" value="${python.prefix}/lib" />
       <env key="CFLAGS" value="-Wno-unused-const-variable" />
+      <!-- Work around error "/path does NOT support .pth files" -->
+      <env key="PYTHONPATH" value="${pywatchman.install.dir}" />
       <arg value="setup.py" />
+      <arg value="-q" />
       <arg value="install" />
       <arg value="--install-lib=${pywatchman.install.dir}" />
     </exec>
