@@ -7,6 +7,7 @@ java_library(
   deps = [
     ':executable-finder',
     '//src/com/facebook/buck/log:api',
+    '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',

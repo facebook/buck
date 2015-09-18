@@ -17,25 +17,22 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.SimpleProcessListener;
 import com.facebook.buck.util.VersionStringComparator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -55,6 +52,9 @@ public class Watchman {
 
   private static final String WATCHMAN_DIRNAME_MIN_VERSION = "3.1";
   private static final String WATCHMAN_WILDMATCH_GLOB_MIN_VERSION = "3.6.0";
+  private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
+  // Match default timeout of hgwatchman.
+  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
 
   private static final VersionStringComparator VERSION_COMPARATOR = new VersionStringComparator();
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -73,36 +73,34 @@ public class Watchman {
   public static Watchman build(
       Path rootPath,
       ImmutableMap<String, String> env,
-      Console console)
+      Console console,
+      Clock clock)
       throws InterruptedException {
-    // We have to create our own process executor, since the one from Main may well have ansi
-    // enabled, causing some commands to output escape codes.
-    try (
-        PrintStream stdout = new CapturingPrintStream();
-        PrintStream stderr = new CapturingPrintStream()) {
-      ProcessExecutor executor = new ProcessExecutor(
-          new Console(
-              Verbosity.SILENT,
-              stdout,
-              stderr,
-              Ansi.withoutTty()));
-
-      return build(executor, rootPath, env, new ExecutableFinder(), console);
-    }
+    return build(
+        new ListeningProcessExecutor(),
+        rootPath,
+        env,
+        new ExecutableFinder(),
+        console,
+        clock);
   }
 
   @VisibleForTesting
+  @SuppressWarnings("PMD.PrematureDeclaration")
   static Watchman build(
-      ProcessExecutor executor,
+      ListeningProcessExecutor executor,
       Path rootPath,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
-      Console console) throws InterruptedException {
+      Console console,
+      Clock clock) throws InterruptedException {
     try {
       String watchman = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath().toString();
       Optional<Map<String, String>> result;
 
-      result = execute(executor, watchman, "version");
+      long remainingTimeNanos = TIMEOUT_NANOS;
+      long startTimeNanos = clock.nanoTime();
+      result = execute(executor, console, clock, remainingTimeNanos, watchman, "version");
 
       if (!result.isPresent()) {
         return NULL_WATCHMAN;
@@ -116,18 +114,34 @@ public class Watchman {
 
       ImmutableSet<Capability> capabilities = deriveCapabilities(rawVersion.get());
 
-      // We write to the raw stream since it's not the end of the world if this gets overwritten,
-      // and if we don't we freeze the super console.
-      console.getStdErr().getRawStream().format("Adding watchman root: %s\n", rootPath);
-      LOG.info("Adding watchman root: %s", rootPath);
+      Path absoluteRootPath = rootPath.toAbsolutePath();
+      LOG.info("Adding watchman root: %s", absoluteRootPath);
 
-      long start = System.currentTimeMillis();
+      long watchStartTimeNanos = clock.nanoTime();
+      remainingTimeNanos -= (watchStartTimeNanos - startTimeNanos);
       if (capabilities.contains(Capability.SUPPORTS_PROJECT_WATCH)) {
-        result = execute(executor, watchman, "watch-project", rootPath.toAbsolutePath().toString());
+        result = execute(
+            executor,
+            console,
+            clock,
+            remainingTimeNanos,
+            watchman,
+            "watch-project",
+            absoluteRootPath.toString());
       } else {
-        result = execute(executor, watchman, "watch", rootPath.toAbsolutePath().toString());
+        result = execute(
+            executor,
+            console,
+            clock,
+            remainingTimeNanos,
+            watchman,
+            "watch",
+            absoluteRootPath.toString());
       }
-      LOG.info("Took %d ms to add root %s", (System.currentTimeMillis() - start), rootPath);
+      LOG.info(
+          "Took %d ms to add root %s",
+          TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - watchStartTimeNanos),
+          absoluteRootPath);
 
       if (!result.isPresent()) {
         return NULL_WATCHMAN;
@@ -180,22 +194,57 @@ public class Watchman {
   }
 
   private static Optional<Map<String, String>> execute(
-      ProcessExecutor executor,
+      ListeningProcessExecutor executor,
+      Console console,
+      Clock clock,
+      long timeoutNanos,
       String... args)
       throws InterruptedException, IOException {
-    ProcessExecutor.Result process = executor.launchAndExecute(
+    SimpleProcessListener listener = new SimpleProcessListener();
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(
         ProcessExecutorParams.ofCommand(args),
-        ImmutableSet.<ProcessExecutor.Option>of(),
-        /* stdin */ Optional.<String>absent(),
-        // Some watchman operations can take a long time. Set overly generous timeout.
-        /* timeOutMs */ Optional.of(TimeUnit.MINUTES.toMillis(5)),
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
-    if (process.getExitCode() != 0) {
-      LOG.error("Error %d executing %s", process.getExitCode(), Joiner.on(" ").join(args));
+        listener);
+
+    long startTimeNanos = clock.nanoTime();
+    int exitCode = executor.waitForProcess(
+        process,
+        Math.min(timeoutNanos, POLL_TIME_NANOS),
+        TimeUnit.NANOSECONDS);
+    if (exitCode == Integer.MIN_VALUE) {
+      // Let the user know we're still here waiting for Watchman, then wait the
+      // rest of the timeout period.
+      long remainingNanos = timeoutNanos - (clock.nanoTime() - startTimeNanos);
+      if (remainingNanos > 0) {
+        console.getStdErr().getRawStream().format(
+            "Waiting for Watchman command [%s]...\n",
+            Joiner.on(" ").join(args));
+        exitCode = executor.waitForProcess(
+            process,
+            remainingNanos,
+            TimeUnit.NANOSECONDS);
+      }
+    }
+    LOG.debug(
+        "Waited %d ms for Watchman command %s, exit code %d",
+        TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - startTimeNanos),
+        Joiner.on(" ").join(args),
+        exitCode);
+    if (exitCode == Integer.MIN_VALUE) {
+      LOG.warn(
+          "Watchman did not respond within %d ms, disabling.",
+          TimeUnit.NANOSECONDS.toMillis(TIMEOUT_NANOS));
+      console.getStdErr().getRawStream().format(
+          "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.\n",
+          TimeUnit.NANOSECONDS.toMillis(TIMEOUT_NANOS),
+          Joiner.on(" ").join(args));
+      return Optional.absent();
+    }
+    if (exitCode != 0) {
+      LOG.error("Error %d executing %s", exitCode, Joiner.on(" ").join(args));
       return Optional.absent();
     }
 
-    String stdout = process.getStdout().or("{}");
+    String stdout = listener.getStdout();
     LOG.debug("stdout of command: " + stdout);
 
     Map<String, String> output = OBJECT_MAPPER.readValue(

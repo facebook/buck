@@ -12,6 +12,7 @@ java_test(
     '//test/com/facebook/buck/cli:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/testutil:testutil',
+    '//test/com/facebook/buck/timing:testutil',
     '//test/com/facebook/buck/util:testutil',
     '//third-party/java/commons-compress:commons-compress',
     '//third-party/java/guava:guava',

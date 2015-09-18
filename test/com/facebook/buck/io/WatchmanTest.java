@@ -19,18 +19,18 @@ package com.facebook.buck.io;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.FakeListeningProcessExecutor;
+import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 
 import org.junit.Test;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class WatchmanTest {
 
@@ -41,30 +41,40 @@ public class WatchmanTest {
 
   @Test
   public void shouldReturnEmptyWatchmanIfVersionCheckFails() throws InterruptedException {
-    Map<ProcessExecutorParams, FakeProcess> processMap = new HashMap<>();
-    processMap.put(
-        ProcessExecutorParams.ofCommand(exe, "version"),
-        new FakeProcess(1));
-    ProcessExecutor executor = new FakeProcessExecutor(processMap);
+    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
+        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "version"),
+                FakeListeningProcessState.ofExit(1))
+            .build(),
+        clock);
 
-    Watchman watchman = Watchman.build(executor, Paths.get(root), env, finder, new TestConsole());
+    Watchman watchman = Watchman.build(
+        executor, Paths.get(root), env, finder, new TestConsole(), clock);
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
 
   @Test
   public void shouldNotUseWatchProjectIfNotAvailable() throws InterruptedException {
-    Map<ProcessExecutorParams, FakeProcess> processMap = new HashMap<>();
-    processMap.put(
-        ProcessExecutorParams.ofCommand(exe, "version"),
-        new FakeProcess(0, "{\"version\":\"3.0.0\"}", ""));
-    processMap.put(
-        ProcessExecutorParams.ofCommand(exe, "watch", root),
-        new FakeProcess(0, "{\"version\":\"3.0.0\",\"watch\":\"" + root + "\"}", ""));
+    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
+        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "version"),
+                FakeListeningProcessState.ofStdout("{\"version\":\"3.0.0\"}"),
+                FakeListeningProcessState.ofExit(0))
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "watch", root),
+                FakeListeningProcessState.ofStdout(
+                    "{\"version\":\"3.0.0\",\"watch\":\"" + root + "\"}"),
+                FakeListeningProcessState.ofExit(0))
+            .build(),
+        clock);
 
-    ProcessExecutor executor = new FakeProcessExecutor(processMap);
-
-    Watchman watchman = Watchman.build(executor, Paths.get(root), env, finder, new TestConsole());
+    Watchman watchman = Watchman.build(
+        executor, Paths.get(root), env, finder, new TestConsole(), clock);
 
     assertEquals("3.0.0", watchman.getVersion().get());
     assertEquals(root, watchman.getWatchRoot().get());
@@ -73,19 +83,66 @@ public class WatchmanTest {
 
   @Test
   public void successfulExecutionPopulatesAWatchmanInstance() throws InterruptedException {
-    Map<ProcessExecutorParams, FakeProcess> processMap = new HashMap<>();
-    processMap.put(
-        ProcessExecutorParams.ofCommand(exe, "version"),
-        new FakeProcess(0, "{\"version\":\"3.4.0\"}", ""));
-    processMap.put(
-        ProcessExecutorParams.ofCommand(exe, "watch-project", root),
-        new FakeProcess(0, "{\"version\":\"3.4.0\",\"watch\":\"" + root + "\"}", ""));
-
-    ProcessExecutor executor = new FakeProcessExecutor(processMap);
-    Watchman watchman = Watchman.build(executor, Paths.get(root), env, finder, new TestConsole());
+    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
+        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "version"),
+                FakeListeningProcessState.ofStdout("{\"version\":\"3.4.0\"}"),
+                FakeListeningProcessState.ofExit(0))
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "watch-project", root),
+                FakeListeningProcessState.ofStdout(
+                    "{\"version\":\"3.4.0\",\"watch\":\"" + root + "\"}"),
+                FakeListeningProcessState.ofExit(0))
+            .build(),
+        clock);
+    Watchman watchman = Watchman.build(
+        executor, Paths.get(root), env, finder, new TestConsole(), clock);
 
     assertEquals("3.4.0", watchman.getVersion().get());
     assertEquals(root, watchman.getWatchRoot().get());
     assertEquals(Optional.absent(), watchman.getProjectPrefix());
+  }
+
+  @Test
+  public void watchmanVersionTakingThirtySecondsReturnsEmpty() throws InterruptedException {
+    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
+        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "version"),
+                FakeListeningProcessState.ofWaitNanos(TimeUnit.SECONDS.toNanos(30)),
+                FakeListeningProcessState.ofStdout("{\"version\":\"3.4.0\"}"),
+                FakeListeningProcessState.ofExit(0))
+            .build(),
+        clock);
+    Watchman watchman = Watchman.build(
+        executor, Paths.get(root), env, finder, new TestConsole(), clock);
+
+    assertEquals(Watchman.NULL_WATCHMAN, watchman);
+  }
+
+  @Test
+  public void watchmanWatchProjectTakingThirtySecondsReturnsEmpty() throws InterruptedException {
+    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
+        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "version"),
+                FakeListeningProcessState.ofStdout("{\"version\":\"3.4.0\"}"),
+                FakeListeningProcessState.ofExit(0))
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "watch-project", root),
+                FakeListeningProcessState.ofWaitNanos(TimeUnit.SECONDS.toNanos(30)),
+                FakeListeningProcessState.ofStdout(
+                    "{\"version\":\"3.4.0\",\"watch\":\"" + root + "\"}"),
+                FakeListeningProcessState.ofExit(0))
+            .build(),
+        clock);
+    Watchman watchman = Watchman.build(
+        executor, Paths.get(root), env, finder, new TestConsole(), clock);
+
+    assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
 }

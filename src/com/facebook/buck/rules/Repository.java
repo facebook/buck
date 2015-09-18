@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -71,7 +72,8 @@ public class Repository {
       final Watchman watchman,
       BuckConfig config,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final AndroidDirectoryResolver directoryResolver) throws IOException, InterruptedException {
+      final AndroidDirectoryResolver directoryResolver,
+      final Clock clock) throws IOException, InterruptedException {
 
     this.filesystem = filesystem;
     this.watchman = watchman;
@@ -116,7 +118,7 @@ public class Repository {
                 parentConfig.getPlatform(),
                 parentConfig.getEnvironment());
 
-            Watchman.build(root.get(), parentConfig.getEnvironment(), console);
+            Watchman.build(root.get(), parentConfig.getEnvironment(), console, clock);
 
             return new Repository(
                 repoFilesystem,
@@ -124,7 +126,8 @@ public class Repository {
                 watchman,
                 buckConfig,
                 knownBuildRuleTypesFactory,
-                directoryResolver);
+                directoryResolver,
+                clock);
           }
         }
     );

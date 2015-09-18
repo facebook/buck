@@ -24,6 +24,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.HumanReadableException;
@@ -92,7 +93,8 @@ public class TestRepositoryBuilder {
           NULL_WATCHMAN,
           buckConfig,
           typesFactory,
-          androidDirectoryResolver);
+          androidDirectoryResolver,
+          new FakeClock(0));
     }
 
     return new Repository(
@@ -101,7 +103,8 @@ public class TestRepositoryBuilder {
         NULL_WATCHMAN,
         buckConfig,
         typesFactory,
-        androidDirectoryResolver) {
+        androidDirectoryResolver,
+        new FakeClock(0)) {
       @Override
       public ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
         return parserFactory;

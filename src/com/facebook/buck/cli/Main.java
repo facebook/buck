@@ -541,11 +541,20 @@ public final class Main {
       LOG.debug("Using test temp dir override %s", testTempDirOverride.get());
     }
 
+    Clock clock;
+    if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
+      long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
+      LOG.verbose("Using nanos epoch: %d", nanosEpoch);
+      clock = new NanosAdjustedClock(nanosEpoch);
+    } else {
+      clock = new DefaultClock();
+    }
+
     ParserConfig parserConfig = new ParserConfig(buckConfig);
     Watchman watchman;
     ParserConfig.GlobHandler globHandler;
     if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
-      watchman = Watchman.build(projectRoot, clientEnvironment, console);
+      watchman = Watchman.build(projectRoot, clientEnvironment, console, clock);
       if (parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
           watchman.hasWildmatchGlob()) {
         globHandler = ParserConfig.GlobHandler.WATCHMAN;
@@ -578,18 +587,11 @@ public final class Main {
         watchman,
         buckConfig,
         factory,
-        androidDirectoryResolver);
+        androidDirectoryResolver,
+        clock);
 
     int exitCode;
     ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
-    Clock clock;
-    if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {
-      long nanosEpoch = Long.parseLong(BUCKD_LAUNCH_TIME_NANOS.get(), 10);
-      LOG.verbose("Using nanos epoch: %d", nanosEpoch);
-      clock = new NanosAdjustedClock(nanosEpoch);
-    } else {
-      clock = new DefaultClock();
-    }
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
         processExecutor,
         clientEnvironment,
@@ -705,7 +707,7 @@ public final class Main {
       // Create or get Parser and invalidate cached command parameters.
       Parser parser = null;
 
-      if (isDaemon) {
+      if (isDaemon && watchman != Watchman.NULL_WATCHMAN) {
         try {
           Daemon daemon = getDaemon(rootRepository, globHandler);
           WatchmanWatcher watchmanWatcher = new WatchmanWatcher(

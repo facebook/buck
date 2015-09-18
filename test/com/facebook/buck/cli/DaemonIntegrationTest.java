@@ -42,6 +42,7 @@ import com.facebook.buck.testutil.integration.DelegatingInputStream;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
@@ -96,7 +97,8 @@ public class DaemonIntegrationTest {
     // In case root_restrict_files is enabled in /etc/watchmanconfig, assume
     // this is one of the entries so it doesn't give up.
     tmp.newFolder(".git");
-    Watchman watchman = Watchman.build(tmp.getRootPath(), getWatchmanEnv(), new TestConsole());
+    Watchman watchman = Watchman.build(
+        tmp.getRootPath(), getWatchmanEnv(), new TestConsole(), new FakeClock(0));
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
