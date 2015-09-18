@@ -617,6 +617,7 @@ returns the union of each query.
 {call buck.param}
   {param name: 'output-attributes <attributes>' /}
   {param desc}
+  <div id="output-attributes">
   <p>
   Outputs the results as a JSON dictionary
   {sp}<code>build target -> attributes map</code>. The attributes map is a
@@ -640,7 +641,7 @@ $ buck query '//example/...' --output-attributes buck.type name srcs
   }
 }
 {/literal}
-</pre></p>
+</pre></p></div>
 
   {/param}
 {/call}

@@ -1,0 +1,143 @@
+{namespace buck.query_cheat_sheet}
+
+/**
+ * @param id attribute for this blob of HTML so users can link to an individual FAQ. We should make
+ *     an effort to keep these identifiers stable to avoid breaking links. Therefore, when choosing
+ *     an id, try to make it generic enough so that it is forward-compatible.
+ * @param question Question.
+ * @param shortAnswer Try to keep this to a one-liner.
+ * @param? longAnswer This portion of the answer can include more detail.
+ */
+{template .faq}
+<div class="{css faq}" id="{$id|id}">
+  <div class="{css faq_q}">Q: {$question}</div>
+  <div class="{css faq_a}">
+    {$shortAnswer|noAutoescape}
+    {if $longAnswer}
+    <p>{$longAnswer|noAutoescape}
+    {/if}
+  <p></div>
+</div>
+{/template}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Buck query - Cheat Sheet' /}
+    {param prettify: true /}
+    {param description}
+      Most common use cases of buck query.
+    {/param}
+    {param content}
+
+<p>
+<ul style="line-height:0.5em">
+  <li>
+    <a href="#find-existing-targets">
+    Q: How do I find the existing targets in a package?</a>
+  </li>
+  <li>
+    <a href="#output-target-attributes">
+    Q: How do I get the content in the attributes of the targets resulting
+    from a query?</a>
+  </li>
+  <li>
+    <a href="#find-dependencies">
+    Q: How do I find the dependencies of a target?</a>
+  </li>
+</ul>
+</p>
+
+<hr><br/>
+
+{call .faq}
+  {param id: 'find-existing-targets' /}
+  {param question}
+  How do I find the existing targets in a package?
+  {/param}
+  {param shortAnswer}
+    <p><pre class="prettyprint lang-js">
+    {literal}buck query "//path/to/dir/..."{/literal}
+    </pre></p>
+  {/param}
+  {param longAnswer}
+<p>
+  <code>buck query</code> supports <a href=
+  "{ROOT}concept/build_target_pattern.html">build target patterns</a>. By
+  specifying just a build target pattern, the output will be the evaluation
+  of this pattern, showing the build targets that match it.
+</p>
+  {/param}
+{/call}
+
+
+{call .faq}
+  {param id: 'output-target-attributes' /}
+  {param question}
+  How do I get the content in the attributes of the targets resulting from a query?
+  {/param}
+  {param shortAnswer}
+    <p><pre class="prettyprint lang-js">
+    {literal}buck query "deps(//foo:bar)" --output-attributes 'name' 'exportedHeaders'{/literal}
+    </pre></p>
+  {/param}
+  {param longAnswer}
+<p>
+  The <code>--output-attributes</code> flag changes the output format. Instead
+  of outputting the names of the targets that match the query expression,
+  the output is composed by the specified attributes. See the
+  {sp}<a href="{ROOT}command/query.html#output-attributes">buck query page</a>
+  {sp}for more details. Example:
+</p>
+<p>
+<pre class="prettyprint lang-js">
+{literal}
+{
+  "//foo/bar/lib:lib" : {
+    "exportedHeaders" : [ "App/util.h" ],
+    "name" : "lib"
+  },
+  "//foo/bar:app" : {
+    "exportedHeaders" : [ "App/lib.h" ],
+    "name" : "app"
+  }
+}
+{/literal}
+</pre>
+</p>
+  {/param}
+{/call}
+
+
+{call .faq}
+  {param id: 'find-dependencies' /}
+  {param question}
+  How do I find the dependencies of a target?
+  {/param}
+  {param shortAnswer}
+    <p><pre class="prettyprint lang-js">
+{literal}
+buck query "deps('//foo:bar')"
+buck query "deps('//foo:bar', 1)"
+buck query "deps(set('//foo:bar' '//foo:lib' '//foo/baz:util'))"
+{/literal}
+    </pre></p>
+  {/param}
+  {param longAnswer}
+<p>
+  The <a href="{ROOT}command/query.html#deps">deps</a> operator finds the
+  dependencies of the given targets. The first argument represents the targets
+  we are interested in. This can be a single target, a set of targets or
+  a <a href="{ROOT}concept/build_target_pattern.html">build target patterns</a>.
+</p>
+<p>
+  The optional second argument is the depth of the search for dependencies
+  from the given targets. If absent, the output will be all the transitive
+  dependencies, whereas <code>1</code> gives only the direct dependencies.
+</p>
+  {/param}
+{/call}
+
+    {/param}
+  {/call}
+{/template}
