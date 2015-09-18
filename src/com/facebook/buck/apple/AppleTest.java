@@ -94,6 +94,9 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<Label> labels;
 
+  @AddToRuleKey
+  private final boolean runTestSeparately;
+
   private final Path xctoolUnzipDirectory;
   private final Path testOutputPath;
 
@@ -140,7 +143,8 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       Optional<AppleBundle> testHostApp,
       String testBundleExtension,
       ImmutableSet<String> contacts,
-      ImmutableSet<Label> labels) {
+      ImmutableSet<Label> labels,
+      boolean runTestSeparately) {
     super(params, resolver);
     this.xctoolPath = xctoolPath;
     this.xctoolZipRule = xctoolZipRule;
@@ -154,19 +158,13 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     this.testHostApp = testHostApp;
     this.contacts = contacts;
     this.labels = labels;
+    this.runTestSeparately = runTestSeparately;
     this.testBundleExtension = testBundleExtension;
     this.xctoolUnzipDirectory = BuildTargets.getScratchPath(
         params.getBuildTarget(),
         "__xctool_%s__");
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.xctoolStdoutReader = Optional.absent();
-  }
-
-  /**
-   * Returns the test bundle to run.
-   */
-  public BuildRule getTestBundle() {
-    return testBundle;
   }
 
   @Override
@@ -362,7 +360,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     // Tests which run in the simulator must run separately from all other tests;
     // there's a 20 second timeout hard-coded in the iOS Simulator SpringBoard which
     // is hit any time the host is overloaded.
-    return testHostApp.isPresent();
+    return runTestSeparately || testHostApp.isPresent();
   }
 
   // This test rule just executes the test bundle, so we need it available locally.

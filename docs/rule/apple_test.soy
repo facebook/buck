@@ -44,7 +44,8 @@ code contained in other rules. The tests can be executed by running <code>buck t
   {param desc}
   A <a href="{ROOT}concept/build_target.html">build target</a> identifying
   an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a> that builds an
-  application bundle. Output of the specified rule will be used as a test host of this test.
+  application bundle. Output of the specified rule will be used as a test host of this test. This
+  implies <code>run_test_separately</code>.
   Since symbols that are defined in the test host application and its dependencies will not be
   linked into the test binary, to make those symbols accessible to the test target they need
   to be specified as a dependency of this target and <code>['-undefined', 'dynamic_lookup']
@@ -71,6 +72,8 @@ code contained in other rules. The tests can be executed by running <code>buck t
 {call cxx_common.linker_flags_arg /}
 
 {call cxx_common.link_style /}
+
+{call buck.run_test_separately_arg /}
 
 {call buck.test_label_arg /}
 

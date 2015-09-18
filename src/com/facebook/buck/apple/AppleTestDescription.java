@@ -353,7 +353,8 @@ public class AppleTestDescription implements
         testHostApp,
         extension,
         args.contacts.get(),
-        args.labels.get());
+        args.labels.get(),
+        args.getRunTestSeparately());
   }
 
   @Override
@@ -376,6 +377,7 @@ public class AppleTestDescription implements
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<Boolean> canGroup;
+    public Optional<Boolean> runTestSeparately;
     public Optional<BuildTarget> testHostApp;
 
     // Bundle related fields.
@@ -404,6 +406,10 @@ public class AppleTestDescription implements
 
     public boolean canGroup() {
       return canGroup.or(false);
+    }
+
+    public boolean getRunTestSeparately() {
+      return runTestSeparately.or(false);
     }
   }
 }
