@@ -546,7 +546,7 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenWatchmanProducesAWarningThenOverflowEventGenerated()
+  public void whenWatchmanProducesAWarningThenOverflowEventNotGenerated()
       throws IOException, InterruptedException {
     String watchmanOutput = Joiner.on('\n').join(
         "{\"files\": [",
@@ -554,9 +554,7 @@ public class WatchmanWatcherTest {
         "\"warning\": \"message\"",
         "}",
         "]}");
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
     EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
     replay(eventBus);
     WatchmanWatcher watcher = createWatcher(
         eventBus,
@@ -567,9 +565,6 @@ public class WatchmanWatcherTest {
         10000 /* timeout */);
     watcher.postEvents(new BuckEventBus(new FakeClock(0), new BuildId()));
     verify(eventBus);
-    assertEquals("Should be overflow event.",
-        StandardWatchEventKinds.OVERFLOW,
-        eventCapture.getValue().kind());
   }
   @Test
   public void whenWatchmanProducesAWarningThenConsoleEventGenerated()

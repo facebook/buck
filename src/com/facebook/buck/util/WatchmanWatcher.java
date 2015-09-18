@@ -317,10 +317,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
                 String message = jsonParser.nextTextValue();
                 buckEventBus.post(
                     ConsoleEvent.warning("Watchman has produced a warning: %s", message));
-
-                LOG.warn("Watchman has produced a warning! Assuming the worst and posting an " +
-                        "overflow event to flush the caches: %s", message);
-                postWatchEvent(createOverflowEvent());
+                LOG.warn("Watchman has produced a warning: %s", message);
                 break;
             }
             break;
