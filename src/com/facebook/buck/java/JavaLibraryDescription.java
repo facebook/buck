@@ -169,7 +169,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 javacOptions,
                 args.resourcesRoot,
-                args.mavenCoords));
+                args.mavenCoords,
+                args.tests.get()));
 
     resolver.addToIndex(
         CalculateAbi.of(

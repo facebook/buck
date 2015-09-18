@@ -158,7 +158,8 @@ public class AndroidLibraryDescription
                   args.resourcesRoot,
                   args.mavenCoords,
                   args.manifest,
-                  /* isPrebuiltAar */ false));
+                  /* isPrebuiltAar */ false,
+                  args.tests.get()));
 
       resolver.addToIndex(
           CalculateAbi.of(

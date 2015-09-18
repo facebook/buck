@@ -27,6 +27,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -102,7 +103,7 @@ import javax.annotation.Nullable;
 public class DefaultJavaLibrary extends AbstractBuildRule
     implements JavaLibrary, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable,
-    SupportsInputBasedRuleKey {
+    SupportsInputBasedRuleKey, HasTests {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
@@ -137,12 +138,18 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final Supplier<ImmutableSortedSet<SourcePath>> abiClasspath;
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
+  private final ImmutableSortedSet<BuildTarget> tests;
 
 
   // TODO(jacko): This really should be final, but we need to refactor how we get the
   // AndroidPlatformTarget first before it can be.
   @AddToRuleKey
   private JavacOptions javacOptions;
+
+  @Override
+  public ImmutableSortedSet<BuildTarget> getTests() {
+    return tests;
+  }
 
   /**
    * Function for opening a JAR and returning all symbols that can be referenced from inside of that
@@ -193,7 +200,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot,
-      Optional<String> mavenCoords) {
+      Optional<String> mavenCoords,
+      ImmutableSortedSet<BuildTarget> tests) {
     this(
         params,
         resolver,
@@ -214,7 +222,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         additionalClasspathEntries,
         javacOptions,
         resourcesRoot,
-        mavenCoords);
+        mavenCoords,
+        tests);
   }
 
   private DefaultJavaLibrary(
@@ -231,7 +240,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
       Optional<Path> resourcesRoot,
-      Optional<String> mavenCoords) {
+      Optional<String> mavenCoords,
+      ImmutableSortedSet<BuildTarget> tests) {
     super(
         params.appendExtraDeps(
             new Supplier<Iterable<? extends BuildRule>>() {
@@ -263,6 +273,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.javacOptions = javacOptions;
     this.resourcesRoot = resourcesRoot;
     this.mavenCoords = mavenCoords;
+    this.tests = tests;
 
     this.abiJar = abiJar;
     this.abiClasspath = abiClasspath;

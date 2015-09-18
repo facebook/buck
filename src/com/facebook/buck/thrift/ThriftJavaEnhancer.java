@@ -163,7 +163,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
                 templateOptions,
                 /* resourcesRoot */ Optional.<Path>absent(),
-                /* mavenCoords */ Optional.<String>absent()));
+                /* mavenCoords */ Optional.<String>absent(),
+                /* tests */ ImmutableSortedSet.<BuildTarget>of()));
 
     resolver.addToIndex(
         CalculateAbi.of(

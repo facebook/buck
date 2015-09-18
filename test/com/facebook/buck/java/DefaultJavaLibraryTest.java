@@ -1186,7 +1186,8 @@ public class DefaultJavaLibraryTest {
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         DEFAULT_JAVAC_OPTIONS,
         /* resourcesRoot */ Optional.<Path>absent(),
-        /* mavenCoords */ Optional.<String>absent()) {
+        /* mavenCoords */ Optional.<String>absent(),
+        /* tests */ ImmutableSortedSet.<BuildTarget>of()) {
       @Override
       public Sha1HashCode getAbiKey() {
         if (partialAbiHash == null) {
@@ -1598,7 +1599,8 @@ public class DefaultJavaLibraryTest {
           /* resourcesRoot */ Optional.<Path>absent(),
           /* mavenCoords */ Optional.<String>absent(),
           /* manifestFile */ Optional.<SourcePath>absent(),
-          /* isPrebuiltAar */ false);
+          /* isPrebuiltAar */ false,
+          /* tests */ ImmutableSortedSet.<BuildTarget>of());
     }
 
     private JavacStep lastJavacCommand(Iterable<Step> commands) {

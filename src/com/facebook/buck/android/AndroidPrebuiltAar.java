@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.java.PrebuiltJar;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -69,7 +70,8 @@ public class AndroidPrebuiltAar
         /* mavenCoords */ Optional.<String>absent(),
         Optional.<SourcePath>of(
             new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
-        /* isPrebuiltAar */ true);
+        /* isPrebuiltAar */ true,
+        /* tests */ ImmutableSortedSet.<BuildTarget>of());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
