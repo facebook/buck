@@ -21,6 +21,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ExternalTestRunnerRule;
+import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -52,7 +54,9 @@ import java.util.concurrent.Callable;
  * script returns a non-zero error code, the test is considered a failure.
  */
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class ShTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
+public class ShTest
+    extends NoopBuildRule
+    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
   @AddToRuleKey
   private final SourcePath test;
@@ -189,4 +193,17 @@ public class ShTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
   public boolean supportsStreamingTests() {
     return false;
   }
+
+  @Override
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec() {
+    return ExternalTestRunnerTestSpec.builder()
+        .setTarget(getBuildTarget().toString())
+        .setType("custom")
+        .addCommand(getResolver().getResolvedPath(test).toString())
+        .addAllCommand(args)
+        .addAllLabels(getLabels())
+        .addAllContacts(getContacts())
+        .build();
+  }
+
 }

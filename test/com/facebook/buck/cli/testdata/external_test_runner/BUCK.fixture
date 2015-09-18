@@ -1,0 +1,9 @@
+sh_test(
+  name = 'pass',
+  test = 'pass.sh',
+)
+
+sh_test(
+  name = 'fail',
+  test = 'fail.sh',
+)

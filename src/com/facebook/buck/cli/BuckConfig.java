@@ -44,6 +44,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -645,4 +646,13 @@ public class BuckConfig {
   public ImmutableSet<String> getSections() {
     return config.getSectionToEntries().keySet();
   }
+
+  public Optional<ImmutableList<String>> getExternalTestRunner() {
+    Optional<String> value = getValue("test", "external_runner");
+    if (!value.isPresent()) {
+      return Optional.absent();
+    }
+    return Optional.of(ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get())));
+  }
+
 }

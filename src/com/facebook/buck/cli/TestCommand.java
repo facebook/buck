@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -26,9 +27,12 @@ import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -41,25 +45,36 @@ import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -224,6 +239,129 @@ public class TestCommand extends BuildCommand {
     return buckConfig.getNumThreads();
   }
 
+  private int runTestsInternal(
+      CommandRunnerParams params,
+      BuildEngine buildEngine,
+      Build build,
+      Iterable<TestRule> testRules)
+      throws InterruptedException, IOException {
+    ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
+        getNumTestThreads(params.getBuckConfig()),
+        params.getBuckConfig().getLoadLimit());
+    try (CommandThreadManager testPool =
+             new CommandThreadManager("Test-Run", concurrencyLimit)) {
+      TestRunningOptions options = TestRunningOptions.builder()
+          .setUsingOneTimeOutputDirectories(isUsingOneTimeOutput)
+          .setCodeCoverageEnabled(isCodeCoverageEnabled)
+          .setRunAllTests(isRunAllTests())
+          .setTestSelectorList(testSelectorOptions.getTestSelectorList())
+          .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
+          .setIgnoreFailingDependencies(isIgnoreFailingDependencies)
+          .setResultsCacheEnabled(isResultsCacheEnabled(params.getBuckConfig()))
+          .setDryRun(isDryRun)
+          .setShufflingTests(isShufflingTests)
+          .setPathToXmlTestOutput(Optional.fromNullable(pathToXmlTestOutput))
+          .setPathToJavaAgent(Optional.fromNullable(pathToJavaAgent))
+          .setCoverageReportFormat(coverageReportFormat)
+          .setCoverageReportTitle(coverageReportTitle)
+          .build();
+      return TestRunning.runTests(
+          params,
+          testRules,
+          Preconditions.checkNotNull(build.getBuildContext()),
+          build.getExecutionContext(),
+          options,
+          testPool.getExecutor(),
+          buildEngine,
+          new DefaultStepRunner(build.getExecutionContext()));
+    } catch (ExecutionException e) {
+      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      return 1;
+    }
+  }
+
+  private int runTestsExternal(
+      final CommandRunnerParams params,
+      BuildEngine buildEngine,
+      Iterable<String> command,
+      Iterable<TestRule> testRules)
+      throws InterruptedException, IOException {
+
+    // Walk the test rules and serialize their external specs to files to be passed to the
+    // external test runner.
+    List<String> infoFileArgs = Lists.newArrayList();
+    for (TestRule testRule : testRules) {
+      if (!(testRule instanceof ExternalTestRunnerRule)) {
+        params.getBuckEventBus().post(
+            ConsoleEvent.severe(
+                String.format(
+                    "Test %s does not support external test running",
+                    testRule.getBuildTarget())));
+        return 1;
+      }
+      RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
+      Path infoFile =
+          testRule.getPathToTestOutputDirectory()
+              .resolve(String.format("external_runner.%s.json", ruleKey));
+      if (!Files.exists(infoFile) || !isResultsCacheEnabled(params.getBuckConfig())) {
+        Files.createDirectories(infoFile.getParent());
+        ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
+        params.getObjectMapper().writeValue(infoFile.toFile(), rule.getExternalTestRunnerSpec());
+      }
+      infoFileArgs.add(infoFile.toString());
+    }
+
+    // Launch and run the external test runner, forwarding it's stdout/stderr to the console.
+    // We wait for it to complete then returns its error code.
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .addAllCommand(command)
+            .addAllCommand(infoFileArgs)
+            .build();
+    final WritableByteChannel stdout = Channels.newChannel(params.getConsole().getStdOut());
+    final WritableByteChannel stderr = Channels.newChannel(params.getConsole().getStdErr());
+    ListeningProcessExecutor.ProcessListener processListener =
+        new ListeningProcessExecutor.ProcessListener() {
+
+          @Override
+          public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
+          }
+
+          @Override
+          public void onExit(int exitCode) {
+          }
+
+          @Override
+          public void onStdout(ByteBuffer buffer, boolean closed) {
+            try {
+              stdout.write(buffer);
+            } catch (IOException e) {
+              throw Throwables.propagate(e);
+            }
+          }
+
+          @Override
+          public void onStderr(ByteBuffer buffer, boolean closed) {
+            try {
+              stderr.write(buffer);
+            } catch (IOException e) {
+              throw Throwables.propagate(e);
+            }
+          }
+
+          @Override
+          public boolean onStdinReady(ByteBuffer buffer) {
+            buffer.flip();
+            return false;
+          }
+
+        };
+    ListeningProcessExecutor.LaunchedProcess process =
+        processExecutor.launchProcess(processExecutorParams, processListener);
+    return processExecutor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.DAYS);
+  }
+
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     LOG.debug("Running with arguments %s", getArguments());
@@ -381,39 +519,12 @@ public class TestCommand extends BuildCommand {
         }
 
         // Once all of the rules are built, then run the tests.
-        ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
-            getNumTestThreads(params.getBuckConfig()),
-            params.getBuckConfig().getLoadLimit());
-        try (CommandThreadManager testPool =
-                 new CommandThreadManager("Test-Run", concurrencyLimit)) {
-          TestRunningOptions options = TestRunningOptions.builder()
-              .setUsingOneTimeOutputDirectories(isUsingOneTimeOutput)
-              .setCodeCoverageEnabled(isCodeCoverageEnabled)
-              .setRunAllTests(isRunAllTests())
-              .setTestSelectorList(testSelectorOptions.getTestSelectorList())
-              .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
-              .setIgnoreFailingDependencies(isIgnoreFailingDependencies)
-              .setResultsCacheEnabled(isResultsCacheEnabled(params.getBuckConfig()))
-              .setDryRun(isDryRun)
-              .setShufflingTests(isShufflingTests)
-              .setPathToXmlTestOutput(Optional.fromNullable(pathToXmlTestOutput))
-              .setPathToJavaAgent(Optional.fromNullable(pathToJavaAgent))
-              .setCoverageReportFormat(coverageReportFormat)
-              .setCoverageReportTitle(coverageReportTitle)
-              .build();
-          return TestRunning.runTests(
-              params,
-              testRules,
-              Preconditions.checkNotNull(build.getBuildContext()),
-              build.getExecutionContext(),
-              options,
-              testPool.getExecutor(),
-              cachingBuildEngine,
-              new DefaultStepRunner(build.getExecutionContext()));
-        } catch (ExecutionException e) {
-          params.getConsole().printBuildFailureWithoutStacktrace(e);
-          return 1;
+        Optional<ImmutableList<String>> externalTestRunner =
+            params.getBuckConfig().getExternalTestRunner();
+        if (externalTestRunner.isPresent()) {
+          return runTestsExternal(params, cachingBuildEngine, externalTestRunner.get(), testRules);
         }
+        return runTestsInternal(params, cachingBuildEngine, build, testRules);
       }
     }
   }

@@ -730,10 +730,48 @@ The value given is in milliseconds.
 
 {literal}<pre class="prettyprint lang-ini">
 [test]
+
   # This specifies a maximum timeout of 5 minutes (300000
   # milliseconds) per test. A JUnit test can override this
   # via its `@Test` annotation.
   timeout = 300000
+
+  # Specify an external test runner command to use instead of Buck's built-in
+  # test runner.  The external test runner is invoked by Buck after it has
+  # built all the test rules, passing the test runner an argument for each test
+  # rule which identifies the path to a JSON test info file with information
+  # about the test.
+  #
+  # The JSON test info files have the following format:
+  #
+  # {
+  #
+  #   # The build target of the test rule.
+  #   "target": "//some:target",
+  #
+  #   # A string describing the type of the test.
+  #   "type": "gtest",
+  #
+  #   # The command the test runner should invoke
+  #   "command": ["buck-out/gen/some/rule/rule"],
+  #
+  #   # Environment variables which should be defined by the test runner.
+  #   "env":  {"VAR": "VALUE"},
+  #
+  #   # The labels passed into the test rule's definition.
+  #   "labels": ["flaky"],
+  #
+  #   # The contacts passed into the test rule's definition.
+  #   "contacts": ["bobloblaw"]
+  #
+  # }
+  #
+  # The "type" strings will be one of:
+  # - "custom": This describes a test without any structuted output, and which
+  #       only uses its return code to signal success or failure.
+
+  external_runner = command args...
+
 </pre>{/literal}
 
 {call .section}{param title: 'thrift' /}{/call}
