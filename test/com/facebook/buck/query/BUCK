@@ -1,0 +1,32 @@
+STANDARD_TEST_SRCS = [
+  '**/*Test.java',
+]
+
+java_library(
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes = STANDARD_TEST_SRCS),
+  deps = [
+    '//src/com/facebook/buck/query:query',
+    '//third-party/java/guava:guava',
+  ],
+)
+
+java_test(
+  name = 'query',
+  srcs = glob(STANDARD_TEST_SRCS),
+  deps = [
+    ':testutil',
+    '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/rules:types',
+    '//test/com/facebook/buck/rules:testutil',
+    '//src/com/facebook/buck/query:query',
+    '//test/com/facebook/buck/cli:testutil',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//test/com/facebook/buck/testutil:testutil',
+    '//third-party/java/guava:guava',
+    '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jsr:jsr305',
+    '//third-party/java/junit:junit',
+  ],
+)

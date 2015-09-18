@@ -1,0 +1,17 @@
+java_immutables_library(
+  name = 'query',
+  srcs = glob(['*.java']),
+  tests = [
+    '//test/com/facebook/buck/query:query',
+  ],
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/util/immutables:immutables',
+    '//src/com/facebook/buck/util:util',
+    '//third-party/java/guava:guava',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = [
+      'PUBLIC',
+  ],
+)

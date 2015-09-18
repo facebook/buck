@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryFileTarget;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;

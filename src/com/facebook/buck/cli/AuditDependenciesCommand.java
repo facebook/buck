@@ -16,19 +16,16 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.query.QueryException;
 import com.facebook.buck.event.ConsoleEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
-import com.google.devtools.build.lib.query2.engine.QueryException;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class AuditDependenciesCommand extends AbstractCommand {
 
@@ -92,10 +89,8 @@ public class AuditDependenciesCommand extends AbstractCommand {
               shouldIncludeTests(),
               shouldGenerateJsonOutput())));
     }
-    // We're not using any of Bazel's settings.
-    Set<QueryEnvironment.Setting> settings = new HashSet<>();
-    BuckQueryEnvironment env = new BuckQueryEnvironment(params, settings, getEnableProfiling());
 
+    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableProfiling());
     try {
       return QueryCommand.runMultipleQuery(
           params,

@@ -32,8 +32,6 @@
   <property name="test.debug_port" value="8787" />
   <property name="lint.outputpath" value="${build.dir}/lint.output" />
 
-  <property name="bazel.src.dir" value="third-party/java/bazel/src" />
-
   <property name="dx.base.dir" value="${basedir}/third-party/java/dx" />
   <property name="dx.src.dir" value="${dx.base.dir}/src" />
   <property name="dx.test.dir" value="${dx.base.dir}/tests" />
@@ -442,19 +440,6 @@
 
     <!-- Copy in scripts we need at run time when using an unpacked buck -->
     <copy file="src/com/facebook/buck/json/buck.py" todir="${classes.dir}/com/facebook/buck/json"/>
-
-    <!--
-     Compile code from Bazel using the default compiler.
-     Using ecj spits out too many warnings that are not our responsibility to fix.
-   -->
-    <javac destdir="${classes.dir}"
-           classpathref="classpath"
-           debug="on"
-           deprecation="on"
-           includeAntRuntime="no"
-    >
-      <src path="${bazel.src.dir}" />
-    </javac>
 
     <!--
       Compile code from AOSP using the default compiler.

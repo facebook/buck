@@ -21,12 +21,15 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.rules.Repository;
 import com.facebook.buck.rules.TestRepositoryBuilder;
 import com.facebook.buck.testutil.TestConsole;
@@ -39,39 +42,19 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.query2.engine.FunctionExpression;
-import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
-import com.google.devtools.build.lib.query2.engine.QueryEnvironment.Argument;
-import com.google.devtools.build.lib.query2.engine.QueryEnvironment.QueryFunction;
-import com.google.devtools.build.lib.query2.engine.QueryException;
-import com.google.devtools.build.lib.query2.engine.QueryExpression;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
 public class BuckQueryEnvironmentTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
-  private TestConsole console;
   private BuckQueryEnvironment buckQueryEnvironment;
-  private CommandRunnerParams params;
-  private ObjectMapper objectMapper = new ObjectMapper();
-
-  // Create a dummy QueryExpression to be used when calling functions that require a
-  // QueryExpression as the 'caller'.
-  private QueryExpression createDummyQueryExpression() {
-    QueryFunction function = new QueryKindFunction();
-    List<Argument> arguments = new ArrayList<>();
-    return new FunctionExpression(function, arguments);
-  }
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
     return QueryBuildTarget.of(BuildTarget.builder(baseName, shortName).build());
@@ -79,7 +62,6 @@ public class BuckQueryEnvironmentTest {
 
   @Before
   public void setUp() throws IOException, InterruptedException {
-    console = new TestConsole();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "query_command",
@@ -89,7 +71,8 @@ public class BuckQueryEnvironmentTest {
         .setFilesystem(new ProjectFilesystem(workspace.getDestPath()))
         .build();
 
-    params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+    TestConsole console = new TestConsole();
+    CommandRunnerParams params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
         repository,
         new FakeAndroidDirectoryResolver(),
@@ -99,34 +82,28 @@ public class BuckQueryEnvironmentTest {
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
-        objectMapper,
+        new ObjectMapper(),
         Optional.<WebServer>absent());
 
-    buckQueryEnvironment = new BuckQueryEnvironment(
-        params,
-        /* settings */ new HashSet<QueryEnvironment.Setting>(),
-        /* enableProfiling */ false);
+    buckQueryEnvironment = new BuckQueryEnvironment(params, /* enableProfiling */ false);
   }
 
   @Test
-  public void testResolveSingleTargets() throws QueryException {
+  public void testResolveSingleTargets() throws QueryException, InterruptedException {
     ImmutableSet<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
-    QueryExpression expr = createDummyQueryExpression();
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern(expr, "//example:six");
+    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six");
     expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example", "six"));
     assertThat(targets, is(equalTo(expectedTargets)));
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern(expr, "//example/app:seven");
+    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven");
     expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example/app", "seven"));
     assertThat(targets, is(equalTo(expectedTargets)));
   }
 
   @Test
-  public void testResolveTargetPattern() throws QueryException {
-    ImmutableSet<QueryTarget> targets;
-    QueryExpression expr = createDummyQueryExpression();
+  public void testResolveTargetPattern() throws QueryException, InterruptedException {
     ImmutableSet<QueryTarget> expectedTargets = ImmutableSortedSet.of(
         createQueryBuildTarget("//example", "one"),
         createQueryBuildTarget("//example", "two"),
@@ -139,7 +116,8 @@ public class BuckQueryEnvironmentTest {
         createQueryBuildTarget("//example", "four-tests"),
         createQueryBuildTarget("//example", "four-application-tests"),
         createQueryBuildTarget("//example", "six-tests"));
-    targets = buckQueryEnvironment.getTargetsMatchingPattern(expr, "//example:");
-    assertThat(targets, is(equalTo(expectedTargets)));
+    assertThat(
+        buckQueryEnvironment.getTargetsMatchingPattern("//example:"),
+        is(equalTo(expectedTargets)));
   }
 }

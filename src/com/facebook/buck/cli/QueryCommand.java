@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
@@ -31,15 +34,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultimap;
-import com.google.devtools.build.lib.query2.engine.QueryEnvironment;
-import com.google.devtools.build.lib.query2.engine.QueryException;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
@@ -100,10 +100,7 @@ public class QueryCommand extends AbstractCommand {
       return 1;
     }
 
-    // We're not using any of Bazel's settings.
-    Set<QueryEnvironment.Setting> settings = new HashSet<>();
-    BuckQueryEnvironment env = new BuckQueryEnvironment(params, settings, getEnableProfiling());
-
+    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableProfiling());
     try {
       String queryFormat = arguments.remove(0);
       if (queryFormat.contains("%s")) {
@@ -111,19 +108,7 @@ public class QueryCommand extends AbstractCommand {
       } else {
         return runSingleQuery(params, env, queryFormat);
       }
-    } catch (RuntimeException e) {
-      if (e.getCause() instanceof InterruptedException) {
-        throw (InterruptedException) e.getCause();
-      }
-      if (e.getCause() instanceof QueryException) {
-        params.getConsole().printBuildFailureWithoutStacktrace(e);
-        return 1;
-      }
-      throw e;
     } catch (QueryException e) {
-      if (e.getCause() instanceof InterruptedException) {
-        throw (InterruptedException) e.getCause();
-      }
       params.getConsole().printBuildFailureWithoutStacktrace(e);
       return 1;
     }

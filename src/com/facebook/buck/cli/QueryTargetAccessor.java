@@ -16,6 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryFileTarget;
+import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.query.QueryException;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ParamInfo;
@@ -23,10 +27,10 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.query2.engine.QueryException;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -97,17 +101,13 @@ public class QueryTargetAccessor {
     }
   }
 
-  public static QueryTarget queryTargetFromSourcePath(SourcePath sourcePath) {
+  public static QueryTarget extractSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
       return QueryFileTarget.of(((PathSourcePath) sourcePath).getRelativePath());
     } else if (sourcePath instanceof BuildTargetSourcePath) {
       return QueryBuildTarget.of(((BuildTargetSourcePath) sourcePath).getTarget());
     }
-    return null;
-  }
-
-  public static QueryTarget extractSourcePath(SourcePath sourcePath) {
-    return queryTargetFromSourcePath(sourcePath);
+    throw new HumanReadableException("Unsupported source path type: %s", sourcePath.getClass());
   }
 
   public static QueryTarget extractBuildTargetContainer(HasBuildTarget buildTargetContainer) {
