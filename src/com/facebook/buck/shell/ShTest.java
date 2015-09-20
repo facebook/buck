@@ -195,7 +195,9 @@ public class ShTest
   }
 
   @Override
-  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec() {
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget().toString())
         .setType("custom")

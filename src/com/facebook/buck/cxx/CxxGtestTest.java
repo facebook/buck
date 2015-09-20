@@ -18,12 +18,15 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ExternalTestRunnerRule;
+import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Charsets;
@@ -54,7 +57,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
+public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
 
   private static final Pattern START = Pattern.compile("^\\[\\s*RUN\\s*\\] (.*)$");
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
@@ -209,6 +212,21 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(super.getRuntimeDeps())
         .addAll(executable.getDeps(getResolver()))
+        .build();
+  }
+
+  @Override
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions) {
+    return ExternalTestRunnerTestSpec.builder()
+        .setTarget(getBuildTarget().toString())
+        .setType("gtest")
+        .addAllCommand(executable.getCommandPrefix(getResolver()))
+        .addAllCommand(getArgs().get())
+        .putAllEnv(getEnv().get())
+        .addAllLabels(getLabels())
+        .addAllContacts(getContacts())
         .build();
   }
 

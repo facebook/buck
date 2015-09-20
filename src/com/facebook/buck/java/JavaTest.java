@@ -24,6 +24,8 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ExternalTestRunnerRule;
+import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -73,7 +75,9 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntimeDeps {
+public class JavaTest
+    extends DefaultJavaLibrary
+    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
   @AddToRuleKey
   private final ImmutableList<String> vmArgs;
@@ -188,34 +192,13 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
     return ImmutableSet.of();
   }
 
-  /**
-   * Runs the tests specified by the "srcs" of this class. If this rule transitively depends on
-   * other {@code java_test()} rules, then they will be run separately.
-   */
-  @Override
-  public ImmutableList<Step> runTests(
-      BuildContext buildContext,
+  private JUnitStep getJUnitStep(
       ExecutionContext executionContext,
-      TestRunningOptions options,
-      TestRule.TestReportingCallback testReportingCallback) {
-    // If no classes were generated, then this is probably a java_test() that declares a number of
-    // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
-    // empty list of commands.
-    Set<String> testClassNames = getClassNamesForSources();
-    LOG.debug("Testing these classes: %s", testClassNames.toString());
-    if (testClassNames.isEmpty()) {
-      return ImmutableList.of();
-    }
+      TestRunningOptions options) {
 
+    Set<String> testClassNames = getClassNamesForSources();
     Iterable<String> reorderedTestClasses =
         reorderClasses(testClassNames, options.isShufflingTests());
-
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
-    Path pathToTestOutput = getPathToTestOutputDirectory();
-    Path tmpDirectory = getPathToTmpDirectory();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDirectory));
 
     ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
         .addAll(getTransitiveClasspathEntries().values())
@@ -227,15 +210,15 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         this.vmArgs,
         executionContext.getTargetDeviceOptional());
 
-    junit = new JUnitStep(
+    return new JUnitStep(
         getProjectFilesystem(),
         classpathEntries,
         reorderedTestClasses,
         properVmArgs,
         nativeLibsEnvironment,
-        pathToTestOutput,
+        getPathToTestOutputDirectory(),
         getBuildTarget().getBasePath(),
-        tmpDirectory,
+        getPathToTmpDirectory(),
         executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled(),
         executionContext.getBuckEventBus().getBuildId(),
@@ -245,10 +228,36 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
         testRuleTimeoutMs,
         stdOutLogLevel,
         stdErrLogLevel,
-        options.getPathToJavaAgent()
-    );
-    steps.add(junit);
+        options.getPathToJavaAgent());
+  }
 
+  /**
+   * Runs the tests specified by the "srcs" of this class. If this rule transitively depends on
+   * other {@code java_test()} rules, then they will be run separately.
+   */
+  @Override
+  public ImmutableList<Step> runTests(
+      BuildContext buildContext,
+      ExecutionContext executionContext,
+      TestRunningOptions options,
+      TestRule.TestReportingCallback testReportingCallback) {
+
+    // If no classes were generated, then this is probably a java_test() that declares a number of
+    // other java_test() rules as deps, functioning as a test suite. In this case, simply return an
+    // empty list of commands.
+    Set<String> testClassNames = getClassNamesForSources();
+    LOG.debug("Testing these classes: %s", testClassNames.toString());
+    if (testClassNames.isEmpty()) {
+      return ImmutableList.of();
+    }
+
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    Path pathToTestOutput = getPathToTestOutputDirectory();
+    Path tmpDirectory = getPathToTmpDirectory();
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDirectory));
+    junit = getJUnitStep(executionContext, options);
+    steps.add(junit);
     return steps.build();
   }
 
@@ -576,4 +585,20 @@ public class JavaTest extends DefaultJavaLibrary implements TestRule, HasRuntime
   public boolean supportsStreamingTests() {
     return false;
   }
+
+  @Override
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext,
+      TestRunningOptions options) {
+    JUnitStep jUnitStep = getJUnitStep(executionContext, options);
+    return ExternalTestRunnerTestSpec.builder()
+        .setTarget(getBuildTarget().toString())
+        .setType("junit")
+        .setCommand(jUnitStep.getShellCommandInternal(executionContext))
+        .setEnv(jUnitStep.getEnvironmentVariables(executionContext))
+        .setLabels(getLabels())
+        .setContacts(getContacts())
+        .build();
+  }
+
 }

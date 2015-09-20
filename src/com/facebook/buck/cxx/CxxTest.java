@@ -210,4 +210,12 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
     return additionalDeps.get();
   }
 
+  protected Supplier<ImmutableMap<String, String>> getEnv() {
+    return env;
+  }
+
+  protected Supplier<ImmutableList<String>> getArgs() {
+    return args;
+  }
+
 }

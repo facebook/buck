@@ -16,9 +16,14 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.test.TestRunningOptions;
+
 /**
  * A interface describing {@link TestRule}s which support being run by an external test runner.
  */
 public interface ExternalTestRunnerRule {
-  ExternalTestRunnerTestSpec getExternalTestRunnerSpec();
+  ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions);
 }

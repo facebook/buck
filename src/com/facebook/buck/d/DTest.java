@@ -22,6 +22,8 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.ExternalTestRunnerRule;
+import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -49,7 +51,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class DTest extends DLinkable implements TestRule {
+public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule {
   private ImmutableSortedSet<String> contacts;
   private ImmutableSortedSet<Label> labels;
   private ImmutableSet<BuildRule> sourceUnderTest;
@@ -228,4 +230,18 @@ public class DTest extends DLinkable implements TestRule {
   public boolean supportsStreamingTests() {
     return false;
   }
+
+  @Override
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions) {
+    return ExternalTestRunnerTestSpec.builder()
+        .setTarget(getBuildTarget().toString())
+        .setType("dunit")
+        .setCommand(getShellCommand())
+        .setLabels(getLabels())
+        .setContacts(getContacts())
+        .build();
+  }
+
 }

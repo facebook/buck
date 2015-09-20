@@ -20,6 +20,8 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ExternalTestRunnerRule;
+import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -46,7 +48,9 @@ import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
+public class PythonTest
+    extends NoopBuildRule
+    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
   private final PythonBinary binary;
   private final ImmutableSortedSet<BuildRule> additionalDeps;
@@ -188,6 +192,19 @@ public class PythonTest extends NoopBuildRule implements TestRule, HasRuntimeDep
   @VisibleForTesting
   protected PythonBinary getBinary() {
     return binary;
+  }
+
+  @Override
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions) {
+    return ExternalTestRunnerTestSpec.builder()
+        .setTarget(getBuildTarget().toString())
+        .setType("pyunit")
+        .addAllCommand(binary.getExecutableCommand().getCommandPrefix(getResolver()))
+        .addAllLabels(getLabels())
+        .addAllContacts(getContacts())
+        .build();
   }
 
 }

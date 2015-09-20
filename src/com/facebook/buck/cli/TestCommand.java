@@ -239,6 +239,24 @@ public class TestCommand extends BuildCommand {
     return buckConfig.getNumThreads();
   }
 
+  private TestRunningOptions getTestRunningOptions(CommandRunnerParams params) {
+    return TestRunningOptions.builder()
+        .setUsingOneTimeOutputDirectories(isUsingOneTimeOutput)
+        .setCodeCoverageEnabled(isCodeCoverageEnabled)
+        .setRunAllTests(isRunAllTests())
+        .setTestSelectorList(testSelectorOptions.getTestSelectorList())
+        .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
+        .setIgnoreFailingDependencies(isIgnoreFailingDependencies)
+        .setResultsCacheEnabled(isResultsCacheEnabled(params.getBuckConfig()))
+        .setDryRun(isDryRun)
+        .setShufflingTests(isShufflingTests)
+        .setPathToXmlTestOutput(Optional.fromNullable(pathToXmlTestOutput))
+        .setPathToJavaAgent(Optional.fromNullable(pathToJavaAgent))
+        .setCoverageReportFormat(coverageReportFormat)
+        .setCoverageReportTitle(coverageReportTitle)
+        .build();
+  }
+
   private int runTestsInternal(
       CommandRunnerParams params,
       BuildEngine buildEngine,
@@ -250,27 +268,12 @@ public class TestCommand extends BuildCommand {
         params.getBuckConfig().getLoadLimit());
     try (CommandThreadManager testPool =
              new CommandThreadManager("Test-Run", concurrencyLimit)) {
-      TestRunningOptions options = TestRunningOptions.builder()
-          .setUsingOneTimeOutputDirectories(isUsingOneTimeOutput)
-          .setCodeCoverageEnabled(isCodeCoverageEnabled)
-          .setRunAllTests(isRunAllTests())
-          .setTestSelectorList(testSelectorOptions.getTestSelectorList())
-          .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
-          .setIgnoreFailingDependencies(isIgnoreFailingDependencies)
-          .setResultsCacheEnabled(isResultsCacheEnabled(params.getBuckConfig()))
-          .setDryRun(isDryRun)
-          .setShufflingTests(isShufflingTests)
-          .setPathToXmlTestOutput(Optional.fromNullable(pathToXmlTestOutput))
-          .setPathToJavaAgent(Optional.fromNullable(pathToJavaAgent))
-          .setCoverageReportFormat(coverageReportFormat)
-          .setCoverageReportTitle(coverageReportTitle)
-          .build();
       return TestRunning.runTests(
           params,
           testRules,
           Preconditions.checkNotNull(build.getBuildContext()),
           build.getExecutionContext(),
-          options,
+          getTestRunningOptions(params),
           testPool.getExecutor(),
           buildEngine,
           new DefaultStepRunner(build.getExecutionContext()));
@@ -283,6 +286,7 @@ public class TestCommand extends BuildCommand {
   private int runTestsExternal(
       final CommandRunnerParams params,
       BuildEngine buildEngine,
+      Build build,
       Iterable<String> command,
       Iterable<TestRule> testRules)
       throws InterruptedException, IOException {
@@ -306,7 +310,11 @@ public class TestCommand extends BuildCommand {
       if (!Files.exists(infoFile) || !isResultsCacheEnabled(params.getBuckConfig())) {
         Files.createDirectories(infoFile.getParent());
         ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
-        params.getObjectMapper().writeValue(infoFile.toFile(), rule.getExternalTestRunnerSpec());
+        params.getObjectMapper().writeValue(
+            infoFile.toFile(),
+            rule.getExternalTestRunnerSpec(
+                build.getExecutionContext(),
+                getTestRunningOptions(params)));
       }
       infoFileArgs.add(infoFile.toString());
     }
@@ -522,7 +530,12 @@ public class TestCommand extends BuildCommand {
         Optional<ImmutableList<String>> externalTestRunner =
             params.getBuckConfig().getExternalTestRunner();
         if (externalTestRunner.isPresent()) {
-          return runTestsExternal(params, cachingBuildEngine, externalTestRunner.get(), testRules);
+          return runTestsExternal(
+              params,
+              cachingBuildEngine,
+              build,
+              externalTestRunner.get(),
+              testRules);
         }
         return runTestsInternal(params, cachingBuildEngine, build, testRules);
       }
