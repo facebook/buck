@@ -34,7 +34,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -45,7 +44,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 /**
@@ -64,7 +62,7 @@ public class Repository {
   private final String buildFileName;
   private final boolean enforceBuckPackageBoundaries;
   private final ImmutableSet<Pattern> tempFilePatterns;
-  private final Function<Optional<String>, ProjectFilesystem> repoFilesystemAliases;
+  private CellFilesystemResolver cellFilesystemResolver;
 
   public Repository(
       ProjectFilesystem filesystem,
@@ -132,12 +130,15 @@ public class Repository {
         }
     );
 
-    this.repoFilesystemAliases = new Function<Optional<String>, ProjectFilesystem>() {
-      @Override
-      public ProjectFilesystem apply(Optional<String> repoName) {
-        return getRepository(repoName).getFilesystem();
-      }
-    };
+    Function<Optional<String>, ProjectFilesystem> repoFilesystemAliases =
+        new Function<Optional<String>, ProjectFilesystem>() {
+          @Override
+          public ProjectFilesystem apply(Optional<String> repoName) {
+            return getRepository(repoName).getFilesystem();
+          }
+        };
+    this.cellFilesystemResolver =
+        new CellFilesystemResolver(getFilesystem(), repoFilesystemAliases);
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -166,13 +167,13 @@ public class Repository {
     }
 
     try {
-      return repos.get(repoName.get());
-    } catch (UncheckedExecutionException | ExecutionException e) {
+      return repos.getUnchecked(repoName.get());
+    } catch (UncheckedExecutionException e) {
       Throwable cause = e.getCause();
       if (cause instanceof HumanReadableException) {
         throw (HumanReadableException) cause;
       }
-      throw new RuntimeException(e);
+      throw e;
     }
   }
 
@@ -190,15 +191,14 @@ public class Repository {
 
   public Path getAbsolutePathToBuildFile(BuildTarget target)
       throws MissingBuildFileException {
-    Preconditions.checkArgument(
-        !target.getRepository().isPresent(),
-        "Target %s is not from this repository.", target);
+    Repository targetRepo = getRepository(target.getRepository());
+
     Path relativePath = target.getBasePath().resolve(
-        new ParserConfig(getBuckConfig()).getBuildFileName());
+        new ParserConfig(targetRepo.getBuckConfig()).getBuildFileName());
     if (!getFilesystem().isFile(relativePath)) {
-      throw new MissingBuildFileException(target, getBuckConfig());
+      throw new MissingBuildFileException(target, targetRepo.getBuckConfig());
     }
-    return getFilesystem().resolve(relativePath);
+    return targetRepo.getFilesystem().resolve(relativePath);
   }
 
   public ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
@@ -238,8 +238,8 @@ public class Repository {
     return tempFilePatterns;
   }
 
-  public Function<Optional<String>, ProjectFilesystem> getRepositoryAliases() {
-    return repoFilesystemAliases;
+  public CellFilesystemResolver getRepositoryAliases() {
+    return cellFilesystemResolver;
   }
 
   @SuppressWarnings("serial")

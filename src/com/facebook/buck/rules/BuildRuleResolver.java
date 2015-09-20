@@ -21,6 +21,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -117,6 +118,8 @@ public class BuildRuleResolver {
    */
   @VisibleForTesting
   public <T extends BuildRule> T addToIndex(T buildRule) {
+    Preconditions.checkArgument(!buildRule.getBuildTarget().getRepository().isPresent());
+
     BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
     // Yuck! This is here to make it possible for a rule to depend on a flavor of itself but it
     // would be much much better if we just got rid of the BuildRuleResolver entirely.

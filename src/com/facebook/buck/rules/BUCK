@@ -109,6 +109,7 @@ java_immutables_library(
     'BuildRuleStatus.java',
     'BuildRuleSuccessType.java',
     'BuildTargetSourcePath.java',
+    'CellFilesystemResolver.java',
     'CommandTool.java',
     'ConstructorArgMarshaller.java',
     'ConstructorArgMarshalException.java',

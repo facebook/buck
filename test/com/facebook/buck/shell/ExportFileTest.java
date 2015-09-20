@@ -122,7 +122,7 @@ public class ExportFileTest {
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     ExportFile exportFile = (ExportFile) ExportFileBuilder.newExportFileBuilder(target)
-        .setSrc(new TestSourcePath("chips"))
+        .setSrc(new PathSourcePath(projectFilesystem, Paths.get("chips")))
         .setOut("fish")
         .build(new BuildRuleResolver(), projectFilesystem);
 

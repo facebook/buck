@@ -589,14 +589,7 @@ public class Parser {
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
-    if (buildTarget.getRepository().isPresent()) {
-      throw new HumanReadableException(
-          "Buck does not currently support multiple repositories: %d\n%s",
-          buildTarget,
-          getDefinedFilepathMessage(buildTarget));
-    }
-    Repository targetRepo = repository;
-    Path buildFile = targetRepo.getAbsolutePathToBuildFile(buildTarget);
+    Path buildFile = repository.getAbsolutePathToBuildFile(buildTarget);
     if (isCached(buildFile, parserConfig.getDefaultIncludes(), environment)) {
       throw new HumanReadableException(
           "The build file that should contain %s has already been parsed (%s), " +
@@ -1182,15 +1175,9 @@ public class Parser {
         return toReturn;
       }
 
-      if (buildTarget.getRepository().isPresent()) {
-        throw new HumanReadableException(
-            "Buck does not currently support multiple repos: %d",
-            buildTarget);
-      }
-      Repository targetRepo = repository;
       Path buildFilePath;
       try {
-        buildFilePath = targetRepo.getAbsolutePathToBuildFile(buildTarget);
+        buildFilePath = repository.getAbsolutePathToBuildFile(buildTarget);
       } catch (Repository.MissingBuildFileException e) {
         throw new HumanReadableException(e);
       }
@@ -1244,11 +1231,12 @@ public class Parser {
 
         this.pathsToBuildTargets.put(buildFilePath, buildTarget);
 
+        Repository targetRepo = Parser.this.repository.getRepository(buildTarget.getRepository());
         BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
             targetRepo.getFilesystem(),
             // Although we store the rule by its unflavoured name, when we construct it, we need the
             // flavour.
-            buildTarget,
+            buildTarget.withoutRepository(),
             buildFileTreeCache.get(),
             targetRepo.isEnforcingBuckPackageBoundaries());
         Object constructorArg = description.createUnpopulatedConstructorArg();

@@ -16,13 +16,12 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
-
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
@@ -82,7 +81,17 @@ public abstract class AbstractNodeBuilder<A> {
           factoryParams,
           getDepsFromArg(),
           ImmutableSet.<BuildTargetPattern>of(),
-          UNALIASED);
+          new CellFilesystemResolver(
+              factoryParams.getProjectFilesystem(),
+              new Function<Optional<String>, ProjectFilesystem>() {
+                @Override
+                public ProjectFilesystem apply(Optional<String> input) {
+                  if (input.isPresent()) {
+                    throw new RuntimeException("No cross repo tests to be created this way");
+                  }
+                  return factoryParams.getProjectFilesystem();
+                }
+              }));
     } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw Throwables.propagate(e);
     }

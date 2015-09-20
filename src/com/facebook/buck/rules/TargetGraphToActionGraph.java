@@ -20,19 +20,24 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -43,12 +48,12 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
   private final BuckEventBus eventBus;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   private final FileHashCache fileHashCache;
+  private final LoadingCache<ProjectFilesystem, BuildRuleResolver> ruleResolvers;
   private volatile int hashOfTargetGraph;
 
   @Nullable
   private volatile ActionGraph actionGraph;
-  @Nullable
-  private volatile ImmutableMap<ProjectFilesystem, BuildRuleResolver> ruleResolvers;
+
 
   public TargetGraphToActionGraph(
       BuckEventBus eventBus,
@@ -57,6 +62,15 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     this.eventBus = eventBus;
     this.buildRuleGenerator = buildRuleGenerator;
     this.fileHashCache = fileHashCache;
+
+    this.ruleResolvers = CacheBuilder.newBuilder().build(
+        new CacheLoader<ProjectFilesystem, BuildRuleResolver>() {
+          @Override
+          public BuildRuleResolver load(ProjectFilesystem key) throws Exception {
+            return new BuildRuleResolver();
+          }
+        }
+    );
   }
 
   @Override
@@ -78,30 +92,44 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
-    final LoadingCache<ProjectFilesystem, RepoSpecificData> mappedRepos =
-        CacheBuilder.newBuilder().build(
-            new CacheLoader<ProjectFilesystem, RepoSpecificData>() {
-              @Override
-              public RepoSpecificData load(ProjectFilesystem filesystem) {
-                return new RepoSpecificData(fileHashCache);
-              }
-            });
+    // I think this could be a little more verbose, but I'm not quite sure how.
+    final LoadingCache<CellFilesystemResolver, Pair<BuildRuleResolver, RuleKeyBuilderFactory>>
+        cellSpecificData = CacheBuilder.newBuilder().build(
+        new CacheLoader<CellFilesystemResolver, Pair<BuildRuleResolver, RuleKeyBuilderFactory>>() {
+          @Override
+          public Pair<BuildRuleResolver, RuleKeyBuilderFactory> load(
+              CellFilesystemResolver cellNameResolver) throws Exception {
+            BuildRuleResolver ruleResolver = new BuildRuleResolverView(cellNameResolver);
+
+            StackedFileHashCache cellHashCache = new StackedFileHashCache(
+                ImmutableList.of(
+                    fileHashCache,
+                    new DefaultFileHashCache(cellNameResolver.getFilesystem())));
+
+            RuleKeyBuilderFactory factory = new DefaultRuleKeyBuilderFactory(
+                cellHashCache,
+                new SourcePathResolver(ruleResolver));
+
+            return new Pair<>(ruleResolver, factory);
+          }
+        }
+    );
 
     AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
 
           @Override
           public void visit(TargetNode<?> node) {
-            ProjectFilesystem filesystem = node.getRuleFactoryParams().getProjectFilesystem();
-            RepoSpecificData data = mappedRepos.getUnchecked(filesystem);
+            Pair<BuildRuleResolver, RuleKeyBuilderFactory> data =
+                cellSpecificData.getUnchecked(node.getCellFilesystemResolver());
 
             BuildRule rule;
             try {
               rule = buildRuleGenerator.transform(
                   targetGraph,
-                  data.ruleResolver,
+                  data.getFirst(),
                   node,
-                  data.ruleKeyBuilderFactory);
+                  data.getSecond());
             } catch (NoSuchBuildTargetException e) {
               throw new HumanReadableException(e);
             }
@@ -110,44 +138,83 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
             // if we create a new build rule during graph enhancement, and the user asks to
             // build the same build rule. The returned rule may have a different name from the
             // target node.
+            BuildRuleResolver ruleResolver = data.getFirst();
             Optional<BuildRule> existingRule =
-                data.ruleResolver.getRuleOptional(rule.getBuildTarget());
+                ruleResolver.getRuleOptional(rule.getBuildTarget());
             Preconditions.checkState(
                 !existingRule.isPresent() || existingRule.get().equals(rule));
             if (!existingRule.isPresent()) {
-              data.ruleResolver.addToIndex(rule);
+              ruleResolver.addToIndex(rule);
             }
           }
         };
     bottomUpTraversal.traverse();
 
-    ImmutableMap.Builder<ProjectFilesystem, BuildRuleResolver> resolvers = ImmutableMap.builder();
     ImmutableSet.Builder<BuildRule> allRules = ImmutableSet.builder();
-    for (Map.Entry<ProjectFilesystem, RepoSpecificData> entry : mappedRepos.asMap().entrySet()) {
-      BuildRuleResolver ruleResolver = entry.getValue().ruleResolver;
-      resolvers.put(entry.getKey(), ruleResolver);
-      allRules.addAll(ruleResolver.getBuildRules());
+    for (BuildRuleResolver resolver : ruleResolvers.asMap().values()) {
+      allRules.addAll(resolver.getBuildRules());
     }
 
-    ruleResolvers = resolvers.build();
     ActionGraph result = new ActionGraph(allRules.build());
     eventBus.post(ActionGraphEvent.finished(started));
     return result;
   }
 
   public ImmutableMap<ProjectFilesystem, BuildRuleResolver> getRuleResolvers() {
-    return Preconditions.checkNotNull(ruleResolvers);
+    Preconditions.checkNotNull(ruleResolvers);
+    return ImmutableMap.copyOf(ruleResolvers.asMap());
   }
 
-  private static class RepoSpecificData {
-    public BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    public RuleKeyBuilderFactory ruleKeyBuilderFactory;
+  private class BuildRuleResolverView extends BuildRuleResolver {
+    private final CellFilesystemResolver nameResolver;
 
-    public RepoSpecificData(FileHashCache fileHashCache) {
-      this.ruleResolver = new BuildRuleResolver();
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-      this.ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(fileHashCache, pathResolver);
+    public BuildRuleResolverView(CellFilesystemResolver nameResolver) {
+      this.nameResolver = nameResolver;
+    }
+
+    @Override
+    public <T extends BuildRule> T addToIndex(T buildRule) {
+      ProjectFilesystem filesystem = buildRule.getProjectFilesystem();
+      BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
+      return toUse.addToIndex(buildRule);
+    }
+
+    @Override
+    public BuildRule getRule(BuildTarget target) {
+      ProjectFilesystem filesystem = nameResolver.apply(target.getRepository());
+      BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
+
+      BuildTarget withoutCell = target.withoutRepository();
+      return toUse.getRule(withoutCell);
+    }
+
+    @Override
+    public Iterable<BuildRule> getBuildRules() {
+      return FluentIterable.from(ruleResolvers.asMap().values())
+          .transformAndConcat(
+              new Function<BuildRuleResolver, Iterable<BuildRule>>() {
+                @Override
+                public Iterable<BuildRule> apply(BuildRuleResolver input) {
+                  return input.getBuildRules();
+                }
+              });
+    }
+
+    @Override
+    public Optional<BuildRule> getRuleOptional(BuildTarget target) {
+      ProjectFilesystem filesystem = nameResolver.apply(target.getRepository());
+      BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
+
+      return toUse.getRuleOptional(target.withoutRepository());
+    }
+
+    @Override
+    public <T extends BuildRule> Optional<T> getRuleOptionalWithType(
+        BuildTarget target, Class<T> cls) {
+      ProjectFilesystem filesystem = nameResolver.apply(target.getRepository());
+      BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
+
+      return toUse.getRuleOptionalWithType(target, cls);
     }
   }
-
 }

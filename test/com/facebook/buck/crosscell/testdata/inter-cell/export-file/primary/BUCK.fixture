@@ -1,0 +1,5 @@
+export_file(
+  name = 'exported-file',
+  src = '@secondary//:hello',
+)
+

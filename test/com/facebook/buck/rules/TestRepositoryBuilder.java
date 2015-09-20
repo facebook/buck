@@ -38,13 +38,14 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public class TestRepositoryBuilder {
-  public static final Function<Optional<String>, ProjectFilesystem> UNALIASED =
+  public static final CellFilesystemResolver UNALIASED = new CellFilesystemResolver(
+      null,
       new Function<Optional<String>, ProjectFilesystem>() {
         @Override
         public ProjectFilesystem apply(Optional<String> input) {
           throw new HumanReadableException("Cannot load repo: " + input);
         }
-      };
+      });
 
   private ProjectFilesystem filesystem;
   private BuckConfig buckConfig;

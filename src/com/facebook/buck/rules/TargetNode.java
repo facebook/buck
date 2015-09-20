@@ -26,7 +26,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,7 +43,7 @@ import java.nio.file.Path;
 public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget {
 
   private final BuildRuleFactoryParams ruleFactoryParams;
-  private final Function<Optional<String>, ProjectFilesystem> repoFilesystemResolver;
+  private final CellFilesystemResolver cellFilesystemResolver;
   private final Description<T> description;
 
   private final T constructorArg;
@@ -61,12 +60,12 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       BuildRuleFactoryParams params,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns,
-      Function<Optional<String>, ProjectFilesystem> repoFilesystemResolver)
+      CellFilesystemResolver cellFilesystemResolver)
       throws NoSuchBuildTargetException, InvalidSourcePathInputException {
     this.description = description;
     this.constructorArg = constructorArg;
     this.ruleFactoryParams = params;
-    this.repoFilesystemResolver = repoFilesystemResolver;
+    this.cellFilesystemResolver = cellFilesystemResolver;
 
     final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
     final ImmutableSortedSet.Builder<BuildTarget> extraDeps = ImmutableSortedSet.naturalOrder();
@@ -103,6 +102,10 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
 
     this.declaredDeps = declaredDeps;
     this.visibilityPatterns = visibilityPatterns;
+  }
+
+  public ProjectFilesystem getRepositoryFilesystem(Optional<String> repoName) {
+    return cellFilesystemResolver.apply(repoName);
   }
 
   public Description<T> getDescription() {
@@ -291,7 +294,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
           ruleFactoryParams,
           declaredDeps,
           visibilityPatterns,
-          repoFilesystemResolver);
+          cellFilesystemResolver);
     } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }
@@ -310,12 +313,16 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
           ruleFactoryParams,
           declaredDeps,
           visibilityPatterns,
-          repoFilesystemResolver);
+          cellFilesystemResolver);
     } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
       // This is extremely unlikely to happen --- we've already created a TargetNode with these
       // values before.
       throw new RuntimeException(e);
     }
+  }
+
+  public CellFilesystemResolver getCellFilesystemResolver() {
+    return cellFilesystemResolver;
   }
 
   @SuppressWarnings("serial")

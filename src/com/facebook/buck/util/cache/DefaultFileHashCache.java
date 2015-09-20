@@ -35,6 +35,7 @@ import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
@@ -76,7 +77,11 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         new ByteSource() {
           @Override
           public InputStream openStream() throws IOException {
-            return projectFilesystem.newFileInputStream(path);
+            if (!path.isAbsolute()) {
+              return projectFilesystem.newFileInputStream(path);
+            } else {
+              return Files.newInputStream(path);
+            }
           }
         };
     return source.hash(Hashing.sha1());

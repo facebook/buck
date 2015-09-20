@@ -181,4 +181,10 @@ abstract class AbstractBuildTarget
     return builder.build();
   }
 
+  public BuildTarget withoutRepository() {
+    return BuildTarget.builder(getBaseName(), getShortName())
+        .addAllFlavors(getFlavors())
+        .build();
+
+  }
 }

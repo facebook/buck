@@ -1,0 +1,10 @@
+java_test(
+  name = 'crosscell',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//test/com/facebook/buck/testutil/integration:integration',
+    '//third-party/java/ini4j:ini4j',
+    '//third-party/java/junit:junit',
+  ],
+)
