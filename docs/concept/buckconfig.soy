@@ -61,6 +61,7 @@ The following sections are recognized by Buck:
     'color',
     'cxx',
     'download',
+    'go',
     'java',
     'httpserver',
     'log',
@@ -412,6 +413,20 @@ target. So to build with [cxx#example] rather than [cxx] use
 
 {literal}<pre class="prettyprint">
 $ buck build app#example
+</pre>{/literal}
+
+{call .section}{param title: 'go' /}{/call}
+
+This section defines the go <code>compiler</code> and <code>linker</code> used by go.
+
+{literal}<pre class="prettyprint lang-ini">
+[go]
+  # The path to the go compiler/linker that Buck should use to compile Go files.
+  compiler = /usr/local/libexec/go/pkg/tool/darwin_amd64/compile
+  linker = /usr/local/libexec/go/pkg/tool/darwin_amd64/link
+
+  # The path to the go tool (which is used to discover the go compiler/linker by default).
+  tool = /usr/local/bin/go
 </pre>{/literal}
 
 {call .section}{param title: 'java' /}{/call}
