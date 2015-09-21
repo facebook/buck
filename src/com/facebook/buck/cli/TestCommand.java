@@ -29,6 +29,7 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.Label;
@@ -305,8 +306,9 @@ public class TestCommand extends BuildCommand {
       }
       RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
       Path infoFile =
-          testRule.getPathToTestOutputDirectory()
-              .resolve(String.format("external_runner.%s.json", ruleKey));
+          ((BuildRule) testRule).getProjectFilesystem().resolve(
+              testRule.getPathToTestOutputDirectory()
+                  .resolve(String.format("external_runner.%s.json", ruleKey)));
       if (!Files.exists(infoFile) || !isResultsCacheEnabled(params.getBuckConfig())) {
         Files.createDirectories(infoFile.getParent());
         ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
