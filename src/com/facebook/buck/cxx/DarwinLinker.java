@@ -76,6 +76,11 @@ public class DarwinLinker implements Linker {
   }
 
   @Override
+  public String libOrigin() {
+    return "@loader_path";
+  }
+
+  @Override
   public String searchPathEnvVar() {
     return "DYLD_LIBRARY_PATH";
   }

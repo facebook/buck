@@ -74,6 +74,11 @@ public class GnuLinker implements Linker {
   }
 
   @Override
+  public String libOrigin() {
+    return "$ORIGIN";
+  }
+
+  @Override
   public String searchPathEnvVar() {
     return "LD_LIBRARY_PATH";
   }
