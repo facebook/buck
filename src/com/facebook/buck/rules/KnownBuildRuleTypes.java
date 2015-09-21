@@ -77,8 +77,8 @@ import com.facebook.buck.dotnet.CSharpLibraryDescription;
 import com.facebook.buck.dotnet.PrebuiltDotNetLibraryDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
-import com.facebook.buck.file.HttpDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
+import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -134,7 +134,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
-import java.net.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -383,15 +382,16 @@ public class KnownBuildRuleTypes {
     // Look up the timeout to apply to entire test rules.
     Optional<Long> testRuleTimeoutMs = config.getLong("test", "rule_timeout");
 
-    // Default maven repo, if set
-    DownloadConfig downloadConfig = new DownloadConfig(config);
-    Optional<String> defaultMavenRepo = downloadConfig.getMavenRepo();
-    Optional<Proxy> proxy = downloadConfig.getProxy();
-    boolean downloadAtRuntimeOk = downloadConfig.isDownloadAtRuntimeOk();
+
+    // Prepare the downloader if we're allowing mid-build downloads
     Downloader downloader;
-    if (downloadAtRuntimeOk) {
-      downloader = new HttpDownloader(proxy, defaultMavenRepo);
+    DownloadConfig downloadConfig = new DownloadConfig(config);
+    if (downloadConfig.isDownloadAtRuntimeOk()) {
+      downloader = StackedDownloader.createFromConfig(
+          config,
+          androidDirectoryResolver.findAndroidSdkDirSafe());
     } else {
+      // Or just set one that blows up
       downloader = new ExplodingDownloader();
     }
 

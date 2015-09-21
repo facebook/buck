@@ -70,6 +70,7 @@ java_library(
     '//src/com/facebook/buck/command:command',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/d:d',
+    '//src/com/facebook/buck/file:downloader',
     '//src/com/facebook/buck/java:autodeps',
     '//src/com/facebook/buck/java:config',
     '//src/com/facebook/buck/java/intellij:intellij',

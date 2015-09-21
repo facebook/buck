@@ -38,17 +38,15 @@ import java.util.concurrent.TimeUnit;
 public class HttpDownloader implements Downloader {
   public static final int PROGRESS_REPORT_EVERY_N_BYTES = 1000;
   private final Optional<Proxy> proxy;
-  private final Optional<String> mavenRepo;
 
-  public HttpDownloader(Optional<Proxy> proxy, Optional<String> mavenRepo) {
+  public HttpDownloader(Optional<Proxy> proxy) {
     this.proxy = proxy;
-    this.mavenRepo = mavenRepo;
   }
 
   @Override
-  public void fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
-    if ("mvn".equals(uri.getScheme())) {
-      uri = MavenUrlDecoder.toHttpUrl(mavenRepo, uri);
+  public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
+    if (!("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()))) {
+      return false;
     }
 
     DownloadEvent.Started started = DownloadEvent.started(uri);
@@ -77,17 +75,14 @@ public class HttpDownloader implements Downloader {
           os.write(r);
         }
       }
+
+      return true;
     } finally {
       eventBus.post(DownloadEvent.finished(started));
     }
   }
 
   protected HttpURLConnection createConnection(URI uri) throws IOException {
-    if (!("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))) {
-      throw new HumanReadableException(
-          "Cowardly refusing to download with unknown scheme: %s", uri);
-    }
-
     HttpURLConnection connection;
     if (proxy.isPresent()) {
       connection = (HttpURLConnection) uri.toURL().openConnection(proxy.get());

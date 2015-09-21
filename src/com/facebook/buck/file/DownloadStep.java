@@ -58,7 +58,11 @@ public class DownloadStep implements Step {
     BuckEventBus eventBus = context.getBuckEventBus();
     try {
       Path resolved = filesystem.resolve(output);
-      downloader.fetch(eventBus, url, resolved);
+      boolean success = downloader.fetch(eventBus, url, resolved);
+
+      if (!success) {
+        return reportFailedDownload(eventBus);
+      }
 
       HashCode readHash = Files.asByteSource(resolved.toFile()).hash(Hashing.sha1());
       if (!sha1.equals(readHash)) {
@@ -71,14 +75,18 @@ public class DownloadStep implements Step {
         return -1;
       }
     } catch (IOException e) {
-      eventBus.post(ConsoleEvent.severe("Unable to download: %s", url));
-      return -1;
+      return reportFailedDownload(eventBus);
     } catch (HumanReadableException e) {
       eventBus.post(ConsoleEvent.severe(e.getHumanReadableErrorMessage(), e));
       return -1;
     }
 
     return 0;
+  }
+
+  private int reportFailedDownload(BuckEventBus eventBus) {
+    eventBus.post(ConsoleEvent.severe("Unable to download: %s", url));
+    return -1;
   }
 
   @Override

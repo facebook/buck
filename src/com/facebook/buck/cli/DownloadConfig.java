@@ -18,6 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -48,6 +50,18 @@ public class DownloadConfig {
 
   public Optional<String> getMavenRepo() {
     return delegate.getValue("download", "maven_repo");
+  }
+
+  public ImmutableSet<String> getAllMavenRepos() {
+    ImmutableSortedSet.Builder<String> repos = ImmutableSortedSet.naturalOrder();
+    repos.addAll(delegate.getEntriesForSection("maven_repositories").values());
+
+    Optional<String> defaultRepo = getMavenRepo();
+    if (defaultRepo.isPresent()) {
+      repos.add(defaultRepo.get());
+    }
+
+    return repos.build();
   }
 
   public boolean isDownloadAtRuntimeOk() {

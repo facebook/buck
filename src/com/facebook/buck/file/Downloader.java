@@ -23,5 +23,14 @@ import java.net.URI;
 import java.nio.file.Path;
 
 public interface Downloader {
-  void fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException;
+
+  /**
+   * Download the given URL and, upon a successful download, place it in {@code output}. Note that
+   * if a {@code Downloader} can't handle the {@link URI#scheme} then {@code false} will be
+   * returned.
+   *
+   * @return Whether or not the download succeeded.
+   * @throws IOException Should an exception be thrown when downloading.
+   */
+  boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException;
 }

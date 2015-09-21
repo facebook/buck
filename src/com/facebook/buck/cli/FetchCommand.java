@@ -16,10 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.file.Downloader;
-import com.facebook.buck.file.HttpDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
+import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -34,11 +35,12 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.DefaultPropertyFinder;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.net.Proxy;
+import java.nio.file.Path;
 
 public class FetchCommand extends BuildCommand {
 
@@ -129,11 +131,14 @@ public class FetchCommand extends BuildCommand {
   }
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
-    DownloadConfig downloadConfig = new DownloadConfig(params.getBuckConfig());
-    Optional<String> defaultMavenRepo = downloadConfig.getMavenRepo();
-    Optional<Proxy> proxy = downloadConfig.getProxy();
+    DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
+        params.getRepository().getFilesystem(),
+        Optional.<String>absent(),
+        new DefaultPropertyFinder(params.getRepository().getFilesystem(), params.getEnvironment()));
 
-    Downloader downloader = new HttpDownloader(proxy, defaultMavenRepo);
+    Optional<Path> sdkDir = resolver.findAndroidSdkDirSafe();
+
+    Downloader downloader = StackedDownloader.createFromConfig(params.getBuckConfig(), sdkDir);
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(
         ImmutableSet.<Description<?>>of(description)

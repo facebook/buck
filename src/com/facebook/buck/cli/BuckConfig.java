@@ -478,7 +478,7 @@ public class BuckConfig {
     }
 
     if (path.isAbsolute()) {
-      return path;
+      return getPathFromVfs(path);
     }
 
     Path expandedPath = MorePaths.expandHomeDir(path);
@@ -633,6 +633,10 @@ public class BuckConfig {
    */
   private Path getPathFromVfs(String path, String... extra) {
     return projectFilesystem.getRootPath().getFileSystem().getPath(path, extra);
+  }
+
+  private Path getPathFromVfs(Path path) {
+    return projectFilesystem.getRootPath().getFileSystem().getPath(path.toString());
   }
 
   public Optional<Path> checkPathExists(String pathString, String errorMsg) {

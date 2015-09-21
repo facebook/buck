@@ -64,6 +64,7 @@ The following sections are recognized by Buck:
     'java',
     'httpserver',
     'log',
+    'mavenrepos',
     'ndk',
     'project',
     'python',
@@ -532,6 +533,19 @@ change without warning between Buck versions.</p>
 </pre>{/literal}
 
 <p>Will casue only 10% of Buck invocations to stream logs to <code>remote_log_url</code>.</p>
+
+{call .section}{param title: 'maven_repositories' /}{/call}
+
+This section defines the set of maven repositories that Buck can use
+when attempting to resolve maven artifacts. It takes the form of key
+value pairs of a short name for the repo and the URL. The URL may
+either be an HTTP(S) URL, or point to a directory on your local disk.
+
+{literal}<pre class="prettyprint lang-ini">
+[maven_repositories]
+  central = https://repo1.maven.org/maven2
+  m2 = ~/.m2/repository
+</pre>{literal}
 
 {call .section}{param title: 'ndk' /}{/call}
 

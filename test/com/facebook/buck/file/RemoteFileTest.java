@@ -110,10 +110,11 @@ public class RemoteFileTest {
     if (downloader == null) {
       downloader = new Downloader() {
         @Override
-        public void fetch(
+        public boolean fetch(
             BuckEventBus eventBus, URI uri, Path output) throws IOException {
           Files.createDirectories(output.getParent());
           Files.write(output, bytes);
+          return true;
         }
       };
     }

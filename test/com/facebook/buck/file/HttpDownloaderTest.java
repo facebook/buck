@@ -17,6 +17,7 @@
 package com.facebook.buck.file;
 
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -50,7 +51,7 @@ public class HttpDownloaderTest {
     EasyMock.replay(connection);
 
     Downloader downloader =
-        new HttpDownloader(Optional.<Proxy>absent(), Optional.<String>absent()) {
+        new HttpDownloader(Optional.<Proxy>absent()) {
           @Override
           protected HttpURLConnection createConnection(URI uri) throws IOException {
             return connection;
@@ -66,11 +67,12 @@ public class HttpDownloaderTest {
     EasyMock.verify(connection);
   }
 
-  @Test(expected = HumanReadableException.class)
-  @SuppressWarnings("PMD.EmptyCatchBlock")
-  public void shouldThrowIfUrlIsNotHttpOrMaven() throws URISyntaxException, IOException {
-    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent(), Optional.<String>absent());
+  @Test
+  public void shouldReturnFalseIfUrlIsNotHttp() throws URISyntaxException, IOException {
+    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent());
 
-    downloader.fetch(eventBus, new URI("example:foo/bar/baz"), neverUsed);
+    boolean result = downloader.fetch(eventBus, new URI("mvn:foo/bar/baz"), neverUsed);
+
+    assertFalse(result);
   }
 }

@@ -17,16 +17,31 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Optional;
 
 import java.io.IOException;
+import java.net.Proxy;
 import java.net.URI;
 import java.nio.file.Path;
 
-public class ExplodingDownloader implements Downloader {
+public class RemoteMavenDownloader implements Downloader {
+
+  private final HttpDownloader downloader;
+  private final Optional<String> mavenRepo;
+
+  public RemoteMavenDownloader(Optional<Proxy> proxy, String mavenRepo) {
+    this.mavenRepo = Optional.of(mavenRepo);
+    this.downloader = new HttpDownloader(proxy);
+  }
+
   @Override
   public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
-    throw new HumanReadableException(
-        "Downloading files at runtime is disabled, please run 'buck fetch' before your build");
+    if (!"mvn".equals(uri.getScheme())) {
+      return false;
+    }
+
+    URI httpUri = MavenUrlDecoder.toHttpUrl(mavenRepo, uri);
+
+    return downloader.fetch(eventBus, httpUri, output);
   }
 }

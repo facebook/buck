@@ -7,11 +7,16 @@ java_library(
     'ExplodingDownloader.java',
     'HttpDownloader.java',
     'MavenUrlDecoder.java',
+    'OnDiskMavenDownloader.java',
+    'RemoteMavenDownloader.java',
+    'StackedDownloader.java',
   ],
   deps = [
-    '//third-party/java/guava:guava',
+    '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/util:exceptions',
+    '//third-party/java/guava:guava',
   ],
   visibility = [ 'PUBLIC' ],
 )
