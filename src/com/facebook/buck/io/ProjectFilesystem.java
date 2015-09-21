@@ -172,12 +172,12 @@ public class ProjectFilesystem {
 
   protected ProjectFilesystem(
       FileSystem vfs,
-      final Path projectRoot,
+      Path root,
       Optional<ImmutableSet<Path>> whiteListedPaths,
       ImmutableSet<Path> blackListedPaths) {
-    Preconditions.checkArgument(Files.isDirectory(projectRoot));
-    Preconditions.checkState(vfs.equals(projectRoot.getFileSystem()));
-    this.projectRoot = projectRoot.toAbsolutePath();
+    Preconditions.checkArgument(Files.isDirectory(root));
+    Preconditions.checkState(vfs.equals(root.getFileSystem()));
+    this.projectRoot = root.toAbsolutePath();
     this.pathAbsolutifier = new Function<Path, Path>() {
       @Override
       public Path apply(Path path) {
@@ -190,7 +190,7 @@ public class ProjectFilesystem {
         return projectRoot.relativize(input);
       }
     };
-    this.blackListedPaths = MorePaths.filterForSubpaths(blackListedPaths, this.projectRoot);
+    this.blackListedPaths = MorePaths.filterForSubpaths(blackListedPaths, projectRoot);
     this.whiteListedPaths =
         whiteListedPaths.transform(
             new Function<ImmutableSet<Path>, ImmutableSet<Path>>() {
