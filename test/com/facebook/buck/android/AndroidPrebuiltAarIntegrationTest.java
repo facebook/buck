@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -67,5 +70,19 @@ public class AndroidPrebuiltAarIntegrationTest {
   @Test
   public void testAndroidPrebuiltAarInDepsIsExported() throws IOException {
     workspace.runBuckBuild("//android_prebuilt_aar-dep:lib").assertSuccess();
+  }
+
+  @Test
+  public void testPrebuiltRDotTxtContainsTransitiveDependencies() throws IOException {
+    workspace.runBuckBuild("//third-party/design-library:design-library").assertSuccess();
+
+    String appCompatResource = "TextAppearance_AppCompat_Body2";
+
+    String rDotTxt = workspace.getFileContents("buck-out/bin/third-party/design-library/" +
+        "__unpack_design-library#aar_unzip__/R.txt");
+    assertThat(
+        "R.txt contains transitive dependencies",
+        rDotTxt,
+        containsString(appCompatResource));
   }
 }

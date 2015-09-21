@@ -1,0 +1,14 @@
+android_prebuilt_aar(
+  name = 'design-library',
+  aar = 'design-22.2.1.aar',
+  deps = [
+    ':appcompat',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+android_prebuilt_aar(
+  name = 'appcompat',
+  aar = 'appcompat-v7-22.2.0.aar',
+  visibility = ['PUBLIC'],
+)
