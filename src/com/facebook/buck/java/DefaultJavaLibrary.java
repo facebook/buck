@@ -529,7 +529,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    * {@link com.facebook.buck.util.BuckConstant#SCRATCH_DIR}.
    */
   @Override
-  public final ImmutableList<Step> getBuildSteps(
+  public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();

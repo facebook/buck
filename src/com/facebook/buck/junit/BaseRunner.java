@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -136,8 +137,13 @@ public abstract class BaseRunner {
     if (isDryRun) {
       testSelectorSuffix += ".dry_run";
     }
-    File outputFile = new File(outputDirectory, testClassName + testSelectorSuffix + ".xml");
-    OutputStream output = new BufferedOutputStream(new FileOutputStream(outputFile));
+    OutputStream output;
+    if (outputDirectory != null) {
+      File outputFile = new File(outputDirectory, testClassName + testSelectorSuffix + ".xml");
+      output = new BufferedOutputStream(new FileOutputStream(outputFile));
+    } else {
+      output = System.out;
+    }
     StreamResult streamResult = new StreamResult(output);
     DOMSource source = new DOMSource(doc);
     trans.transform(source, streamResult);
@@ -160,42 +166,43 @@ public abstract class BaseRunner {
    * </ul>
    */
   protected void parseArgs(String... args) throws Throwable {
-    // Verify the arguments.
-    if (args.length == 0) {
-      System.err.println("Must specify an output directory.");
-      System.exit(1);
-    } else if (args.length == 1) {
-      System.err.println("Must specify an output directory and a default timeout.");
-      System.exit(1);
-    } else if (args.length == 2) {
-      System.err.println("Must specify some test selectors (or empty string for no selectors).");
-      System.exit(1);
-    } else if (args.length == 3) {
+    File outputDirectory = null;
+    long defaultTestTimeoutMillis = Long.MAX_VALUE;
+    TestSelectorList testSelectorList = TestSelectorList.empty();
+    boolean isDryRun = false;
+
+    List<String> testClassNames = new ArrayList<>();
+
+    for (int i = 0; i < args.length; i++) {
+      switch (args[i]) {
+        case "--default-test-timeout":
+          defaultTestTimeoutMillis = Long.parseLong(args[++i]);
+          break;
+        case "--test-selectors":
+          List<String> rawSelectors = Arrays.asList(args[++i].split("\n"));
+          testSelectorList = TestSelectorList.builder()
+              .addRawSelectors(rawSelectors)
+              .build();
+          break;
+        case "--dry-run":
+          isDryRun = true;
+          break;
+        case "--output":
+          outputDirectory = new File(args[++i]);
+          if (!outputDirectory.exists()) {
+            System.err.printf("The output directory did not exist: %s\n", outputDirectory);
+            System.exit(1);
+          }
+          break;
+        default:
+          testClassNames.add(args[i]);
+      }
+    }
+
+    if (testClassNames.isEmpty()) {
       System.err.println("Must specify at least one test.");
       System.exit(1);
     }
-
-    // The first argument should specify the output directory.
-    File outputDirectory = new File(args[0]);
-    if (!outputDirectory.exists()) {
-      System.err.printf("The output directory did not exist: %s\n", outputDirectory);
-      System.exit(1);
-    }
-
-    long defaultTestTimeoutMillis = Long.parseLong(args[1]);
-
-    TestSelectorList testSelectorList = TestSelectorList.empty();
-    if (!args[2].isEmpty()) {
-      List<String> rawSelectors = Arrays.asList(args[2].split("\n"));
-      testSelectorList = TestSelectorList.builder()
-          .addRawSelectors(rawSelectors)
-          .build();
-    }
-
-    boolean isDryRun = !args[3].isEmpty();
-
-    // Each subsequent argument should be a class name to run.
-    List<String> testClassNames = Arrays.asList(args).subList(4, args.length);
 
     this.outputDirectory = outputDirectory;
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;

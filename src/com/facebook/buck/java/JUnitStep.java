@@ -29,7 +29,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -39,13 +38,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -76,13 +73,13 @@ public class JUnitStep extends ShellStep {
   private static final String STD_ERR_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdErrLogLevel";
 
   private final ProjectFilesystem filesystem;
-  private final ImmutableSet<Path> classpathEntries;
+  private final ImmutableSet<String> classpathEntries;
   private final Iterable<String> testClassNames;
   private final List<String> vmArgs;
   private final ImmutableMap<String, String> nativeLibsEnvironment;
-  private final Path directoryForTestResults;
+  private final Optional<Path> directoryForTestResults;
   private final Path modulePath;
-  private final Path tmpDirectory;
+  private final Optional<Path> tmpDirectory;
   private final Path testRunnerClasspath;
   private final boolean isCodeCoverageEnabled;
   private final boolean isDebugEnabled;
@@ -121,13 +118,13 @@ public class JUnitStep extends ShellStep {
    */
   public JUnitStep(
       ProjectFilesystem filesystem,
-      Set<Path> classpathEntries,
+      ImmutableSet<String> classpathEntries,
       Iterable<String> testClassNames,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
-      Path directoryForTestResults,
+      Optional<Path> directoryForTestResults,
       Path modulePath,
-      Path tmpDirectory,
+      Optional<Path> tmpDirectory,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
       BuildId buildId,
@@ -164,13 +161,13 @@ public class JUnitStep extends ShellStep {
   @VisibleForTesting
   JUnitStep(
       ProjectFilesystem filesystem,
-      Set<Path> classpathEntries,
+      ImmutableSet<String> classpathEntries,
       Iterable<String> testClassNames,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
-      Path directoryForTestResults,
+      Optional<Path> directoryForTestResults,
       Path modulePath,
-      Path tmpDirectory,
+      Optional<Path> tmpDirectory,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
       BuildId buildId,
@@ -213,10 +210,13 @@ public class JUnitStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add("java");
-    args.add(
-        String.format(
-            "-Djava.io.tmpdir=%s",
-            filesystem.resolve(tmpDirectory)));
+
+    if (tmpDirectory.isPresent()) {
+      args.add(
+          String.format(
+              "-Djava.io.tmpdir=%s",
+              filesystem.resolve(tmpDirectory.get())));
+    }
 
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
     // to find the test runner classes, so propagate these down via the relevant properties.
@@ -270,8 +270,8 @@ public class JUnitStep extends ShellStep {
     // Add the -classpath argument.
     args.add("-classpath").add(
         Joiner.on(File.pathSeparator).join(
-            "@" + filesystem.resolve(getClassPathFile()),
-            testRunnerClasspath));
+            FluentIterable.from(classpathEntries)
+                .append(testRunnerClasspath.toString())));
 
     args.add(FileClassPathRunner.class.getName());
 
@@ -289,11 +289,13 @@ public class JUnitStep extends ShellStep {
     // The first argument to the test runner is where the test results should be written. It is not
     // reliable to write test results to stdout or stderr because there may be output from the unit
     // tests written to those file descriptors, as well.
-    args.add(directoryForTestResults.toString());
+    if (directoryForTestResults.isPresent()) {
+      args.add("--output", directoryForTestResults.get().toString());
+    }
 
     // Add the default test timeout if --debug flag is not set
     long timeout = isDebugEnabled ? 0 : context.getDefaultTestTimeoutMillis();
-    args.add(String.valueOf(timeout));
+    args.add("--default-test-timeout", String.valueOf(timeout));
 
     // Add the test selectors, one per line, in a single argument.
     StringBuilder selectorsArgBuilder = new StringBuilder();
@@ -301,11 +303,13 @@ public class JUnitStep extends ShellStep {
       for (String rawSelector : this.testSelectorList.getRawSelectors()) {
         selectorsArgBuilder.append(rawSelector).append("\n");
       }
+      args.add("--test-selectors", selectorsArgBuilder.toString());
     }
-    args.add(selectorsArgBuilder.toString());
 
     // Dry-run flag.
-    args.add(isDryRun ? "non-empty-dry-run-flag" : "");
+    if (isDryRun) {
+      args.add("--dry-run");
+    }
 
     // List all of the tests to be run.
     for (String testClassName : testClassNames) {
@@ -317,33 +321,16 @@ public class JUnitStep extends ShellStep {
 
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    return ImmutableMap.<String, String>builder()
-        .put("TMP", filesystem.resolve(tmpDirectory).toString())
-        .putAll(nativeLibsEnvironment)
-        .build();
+    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+    if (tmpDirectory.isPresent()) {
+      env.put("TMP", tmpDirectory.get().toString());
+    }
+    env.putAll(nativeLibsEnvironment);
+    return env.build();
   }
 
   private void warnUser(ExecutionContext context, String message) {
     context.getStdErr().println(context.getAnsi().asWarningText(message));
-  }
-
-  @VisibleForTesting
-  protected Path getClassPathFile() {
-    return tmpDirectory.resolve("classpath-file");
-  }
-
-  @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
-    try {
-      filesystem.writeLinesToPath(
-          FluentIterable.from(classpathEntries)
-              .transform(Functions.toStringFunction()),
-          getClassPathFile());
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return 1;
-    }
-    return super.execute(context);
   }
 
   @Override

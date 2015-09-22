@@ -24,6 +24,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
@@ -31,10 +32,12 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -54,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -192,19 +196,19 @@ public class JavaTest
     return ImmutableSet.of();
   }
 
+  private Path getClassPathFile() {
+    return BuildTargets.getGenPath(getBuildTarget(), "%s/classpath-file");
+  }
+
   private JUnitStep getJUnitStep(
       ExecutionContext executionContext,
-      TestRunningOptions options) {
+      TestRunningOptions options,
+      Optional<Path> outDir,
+      Optional<Path> tempDir) {
 
     Set<String> testClassNames = getClassNamesForSources();
     Iterable<String> reorderedTestClasses =
         reorderClasses(testClassNames, options.isShufflingTests());
-
-    ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
-        .addAll(getTransitiveClasspathEntries().values())
-        .addAll(additionalClasspathEntries)
-        .addAll(getBootClasspathEntries(executionContext))
-        .build();
 
     ImmutableList<String> properVmArgs = amendVmArgs(
         this.vmArgs,
@@ -212,13 +216,13 @@ public class JavaTest
 
     return new JUnitStep(
         getProjectFilesystem(),
-        classpathEntries,
+        ImmutableSet.of("@" + getProjectFilesystem().resolve(getClassPathFile())),
         reorderedTestClasses,
         properVmArgs,
         nativeLibsEnvironment,
-        getPathToTestOutputDirectory(),
+        outDir,
         getBuildTarget().getBasePath(),
-        getPathToTmpDirectory(),
+        tempDir,
         executionContext.isCodeCoverageEnabled(),
         executionContext.isDebugEnabled(),
         executionContext.getBuckEventBus().getBuildId(),
@@ -256,7 +260,12 @@ public class JavaTest
     Path tmpDirectory = getPathToTmpDirectory();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tmpDirectory));
-    junit = getJUnitStep(executionContext, options);
+    junit =
+        getJUnitStep(
+            executionContext,
+            options,
+            Optional.of(pathToTestOutput),
+            Optional.of(tmpDirectory));
     steps.add(junit);
     return steps.build();
   }
@@ -590,7 +599,12 @@ public class JavaTest
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions options) {
-    JUnitStep jUnitStep = getJUnitStep(executionContext, options);
+    JUnitStep jUnitStep =
+        getJUnitStep(
+            executionContext,
+            options,
+            Optional.<Path>absent(),
+            Optional.<Path>absent());
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget().toString())
         .setType("junit")
@@ -598,6 +612,32 @@ public class JavaTest
         .setEnv(jUnitStep.getEnvironmentVariables(executionContext))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .build();
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context,
+      BuildableContext buildableContext) {
+    buildableContext.recordArtifact(getClassPathFile());
+    return ImmutableList.<Step>builder()
+        .addAll(super.getBuildSteps(context, buildableContext))
+        .add(new MkdirStep(getProjectFilesystem(), getClassPathFile().getParent()))
+        .add(
+            new AbstractExecutionStep("write classpath file") {
+              @Override
+              public int execute(ExecutionContext context) throws IOException {
+                ImmutableSet<Path> classpathEntries = ImmutableSet.<Path>builder()
+                    .addAll(getTransitiveClasspathEntries().values())
+                    .addAll(additionalClasspathEntries)
+                    .addAll(getBootClasspathEntries(context))
+                    .build();
+                getProjectFilesystem().writeLinesToPath(
+                    Iterables.transform(classpathEntries, Functions.toStringFunction()),
+                    getClassPathFile());
+                return 0;
+              }
+            })
         .build();
   }
 

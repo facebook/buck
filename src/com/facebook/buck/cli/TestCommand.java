@@ -29,7 +29,6 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.Label;
@@ -306,9 +305,10 @@ public class TestCommand extends BuildCommand {
       }
       RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
       Path infoFile =
-          ((BuildRule) testRule).getProjectFilesystem().resolve(
-              testRule.getPathToTestOutputDirectory()
-                  .resolve(String.format("external_runner.%s.json", ruleKey)));
+          params.getCell().getFilesystem()
+              .resolve(
+                  testRule.getPathToTestOutputDirectory()
+                      .resolve(String.format("external_runner.%s.json", ruleKey)));
       if (!Files.exists(infoFile) || !isResultsCacheEnabled(params.getBuckConfig())) {
         Files.createDirectories(infoFile.getParent());
         ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
@@ -328,6 +328,7 @@ public class TestCommand extends BuildCommand {
         ProcessExecutorParams.builder()
             .addAllCommand(command)
             .addAllCommand(infoFileArgs)
+            .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
             .build();
     final WritableByteChannel stdout = Channels.newChannel(params.getConsole().getStdOut());
     final WritableByteChannel stderr = Channels.newChannel(params.getConsole().getStdErr());

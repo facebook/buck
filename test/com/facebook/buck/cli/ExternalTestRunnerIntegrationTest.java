@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.base.Joiner;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -70,6 +71,27 @@ public class ExternalTestRunnerIntegrationTest {
     assertThat(
         result.getStderr(),
         Matchers.endsWith("TESTS FAILED!\n"));
+  }
+
+  @Test
+  public void runJavaTest() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c", "test.external_runner=" + workspace.getPath("test_runner.py"),
+            "//:simple");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        Matchers.matchesPattern(
+            Joiner.on(System.lineSeparator()).join(
+                "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
+                "<testcase name=\"SimpleTest\">",
+                "  <test name=\"passingTest\" success=\"true\" time=\"\\d*\" type=\"SUCCESS\">",
+                "    <stdout>passed!",
+                "</stdout>",
+                "  </test>",
+                "</testcase>") + System.lineSeparator()));
   }
 
 }

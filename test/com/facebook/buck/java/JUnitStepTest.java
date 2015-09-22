@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,9 +49,7 @@ public class JUnitStepTest {
 
   @Test
   public void testGetShellCommand() throws IOException {
-    Set<Path> classpathEntries = ImmutableSet.of(
-        Paths.get("foo"),
-        Paths.get("bar/baz"));
+    ImmutableSet<String> classpathEntries = ImmutableSet.of("foo", "bar/baz");
 
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
@@ -71,8 +70,6 @@ public class JUnitStepTest {
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
-    boolean isCodeCoverageEnabled = false;
-    boolean isDebugEnabled = false;
     Path testRunnerClasspath = Paths.get("build/classes/junit");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -82,11 +79,11 @@ public class JUnitStepTest {
         testClassNames,
         vmArgs,
         /* nativeLibsEnvironment */ ImmutableMap.<String, String>of(),
-        directoryForTestResults,
+        Optional.of(directoryForTestResults),
         modulePath,
-        directoryForTemp,
-        isCodeCoverageEnabled,
-        isDebugEnabled,
+        Optional.of(directoryForTemp),
+        /* isCodeCoverageEnabled */ false,
+        /* isDebugEnabled */ false,
         pretendBuildId,
         TestSelectorList.empty(),
         /* isDryRun */ false,
@@ -115,14 +112,14 @@ public class JUnitStepTest {
             "-verbose",
             "-classpath",
             Joiner.on(File.pathSeparator).join(
-                "@" + filesystem.resolve(junit.getClassPathFile()),
-                Paths.get("build/classes/junit")),
+                FluentIterable.from(classpathEntries)
+                    .append("build/classes/junit")),
             FileClassPathRunner.class.getName(),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
+            "--output",
             directoryForTestResults.toString(),
+            "--default-test-timeout",
             "5000",
-            "",
-            "",
             testClass1,
             testClass2),
         observedArgs);
@@ -132,9 +129,7 @@ public class JUnitStepTest {
 
   @Test
   public void ensureThatDebugFlagCausesJavaDebugCommandFlagToBeAdded() {
-    Set<Path> classpathEntries = ImmutableSet.of(
-        Paths.get("foo"),
-        Paths.get("bar/baz"));
+    ImmutableSet<String> classpathEntries = ImmutableSet.of("foo", "bar/baz");
 
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
@@ -155,8 +150,6 @@ public class JUnitStepTest {
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
-    boolean isCodeCoverageEnabled = false;
-    boolean isDebugEnabled = true;
     Path testRunnerClasspath = Paths.get("build/classes/junit");
 
     JUnitStep junit = new JUnitStep(
@@ -165,11 +158,11 @@ public class JUnitStepTest {
         testClassNames,
         vmArgs,
         ImmutableMap.<String, String>of(),
-        directoryForTestResults,
+        Optional.of(directoryForTestResults),
         modulePath,
-        directoryForTemp,
-        isCodeCoverageEnabled,
-        isDebugEnabled,
+        Optional.of(directoryForTemp),
+        /* isCodeCoverageEnabled */ false,
+        /* isDebugEnabled */ true,
         pretendBuildId,
         TestSelectorList.empty(),
         /* isDryRun */ false,
@@ -200,14 +193,14 @@ public class JUnitStepTest {
             "-verbose",
             "-classpath",
             Joiner.on(File.pathSeparator).join(
-                "@/opt/src/buck/" + junit.getClassPathFile(),
-                Paths.get("build/classes/junit")),
+                FluentIterable.from(classpathEntries)
+                    .append("build/classes/junit")),
             FileClassPathRunner.class.getName(),
             JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
+            "--output",
             directoryForTestResults.toString(),
+            "--default-test-timeout",
             "0",
-            "",
-            "",
             testClass1,
             testClass2),
         observedArgs);
