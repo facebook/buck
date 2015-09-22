@@ -47,11 +47,11 @@ public class TargetPatternEvaluator {
     this.enableProfiling = enableProfiling;
     this.params = params;
     this.parserConfig = new ParserConfig(params.getBuckConfig());
-    this.projectRoot = params.getRepository().getFilesystem().getRootPath();
+    this.projectRoot = params.getCell().getFilesystem().getRootPath();
     this.targetNodeSpecParser = new CommandLineTargetNodeSpecParser(
         params.getBuckConfig(),
         new BuildTargetPatternTargetNodeParser(
-            params.getRepository().getFilesystem().getIgnorePaths()));
+            params.getCell().getFilesystem().getIgnorePaths()));
   }
 
   /**

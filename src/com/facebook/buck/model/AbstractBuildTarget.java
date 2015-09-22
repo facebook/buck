@@ -61,9 +61,9 @@ abstract class AbstractBuildTarget
         "Flavors must be ordered using natural ordering.");
   }
 
-  @JsonProperty("repository")
-  public Optional<String> getRepository() {
-    return getUnflavoredBuildTarget().getRepository();
+  @JsonProperty("cell")
+  public Optional<String> getCell() {
+    return getUnflavoredBuildTarget().getCell();
   }
 
   @JsonProperty("baseName")
@@ -181,7 +181,7 @@ abstract class AbstractBuildTarget
     return builder.build();
   }
 
-  public BuildTarget withoutRepository() {
+  public BuildTarget withoutCell() {
     return BuildTarget.builder(getBaseName(), getShortName())
         .addAllFlavors(getFlavors())
         .build();

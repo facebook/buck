@@ -38,7 +38,7 @@ public class BuildTargetParser {
 
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String BUILD_RULE_SEPARATOR = ":";
-  private static final String REPOSITORY_STARTER = "@";
+  private static final String CELL_STARTER = "@";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
   private static final Set<String> INVALID_BASE_NAME_PARTS = ImmutableSet.of("", ".", "..");
 
@@ -70,27 +70,27 @@ public class BuildTargetParser {
           String.format("%s cannot end with a colon", buildTargetName));
     }
 
-    Optional<String> givenRepoName = Optional.absent();
-    String targetAfterRepo = buildTargetName;
-    if (buildTargetName.startsWith(REPOSITORY_STARTER)) {
+    Optional<String> givenCellName = Optional.absent();
+    String targetAfterCell = buildTargetName;
+    if (buildTargetName.startsWith(CELL_STARTER)) {
       if (!buildTargetName.contains(BUILD_RULE_PREFIX)) {
         throw new BuildTargetParseException(
             String.format(
-                "Cross-repo paths must contain %s (found %s)",
+                "Cross-cell paths must contain %s (found %s)",
                 BUILD_RULE_PREFIX,
                 buildTargetName));
       }
       int slashIndex = buildTargetName.indexOf(BUILD_RULE_PREFIX);
-      givenRepoName = Optional.of(
-          buildTargetName.substring(REPOSITORY_STARTER.length(), slashIndex));
-      targetAfterRepo = buildTargetName.substring(slashIndex);
+      givenCellName = Optional.of(
+          buildTargetName.substring(CELL_STARTER.length(), slashIndex));
+      targetAfterCell = buildTargetName.substring(slashIndex);
     }
 
-    if (givenRepoName.isPresent() && givenRepoName.get().isEmpty()) {
-      throw new BuildTargetParseException("Repo name must not be empty.");
+    if (givenCellName.isPresent() && givenCellName.get().isEmpty()) {
+      throw new BuildTargetParseException("Cell name must not be empty.");
     }
 
-    List<String> parts = BUILD_RULE_SEPARATOR_SPLITTER.splitToList(targetAfterRepo);
+    List<String> parts = BUILD_RULE_SEPARATOR_SPLITTER.splitToList(targetAfterCell);
     if (parts.size() != 2) {
       throw new BuildTargetParseException(String.format(
           "%s must contain exactly one colon (found %d)", buildTargetName, parts.size() - 1));
@@ -113,7 +113,7 @@ public class BuildTargetParser {
 
     UnflavoredBuildTarget.Builder unflavoredBuilder =
         UnflavoredBuildTarget.builder(baseName, shortName);
-    unflavoredBuilder.setRepository(givenRepoName);
+    unflavoredBuilder.setCell(givenCellName);
     BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuilder.build());
     for (String flavor : flavorNames) {
       builder.addFlavors(ImmutableFlavor.of(flavor));

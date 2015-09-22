@@ -222,7 +222,7 @@ public class CachingBuildEngine implements BuildEngine {
             rule.getRuleKey(),
             buildInfoRecorder,
             context.getArtifactCache(),
-            // TODO(simons): This should be a shared between all tests, not one per repo
+            // TODO(simons): This should be a shared between all tests, not one per cell
             rule.getProjectFilesystem(),
             context);
     if (cacheResult.getType().isSuccess()) {
@@ -281,16 +281,16 @@ public class CachingBuildEngine implements BuildEngine {
               }
             }
 
-            RuleKeyFactories repoData = CachingBuildEngine.this.ruleKeyFactories.get(
+            RuleKeyFactories cellData = CachingBuildEngine.this.ruleKeyFactories.get(
                 rule.getProjectFilesystem());
-            Preconditions.checkNotNull(repoData);
+            Preconditions.checkNotNull(cellData);
 
             // Input-based rule keys.
             if (rule instanceof SupportsInputBasedRuleKey) {
 
               // Calculate the input-based rule key and record it in the metadata.
               RuleKey inputRuleKey =
-                  repoData.inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+                  cellData.inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
                   inputRuleKey.toString());
@@ -313,7 +313,7 @@ public class CachingBuildEngine implements BuildEngine {
                       inputRuleKey,
                       buildInfoRecorder,
                       context.getArtifactCache(),
-                      // TODO(simons): This should be a shared between all tests, not one per repo
+                      // TODO(simons): This should be a shared between all tests, not one per cell
                       rule.getProjectFilesystem(),
                       context);
               if (cacheResult.getType().isSuccess()) {
@@ -347,7 +347,7 @@ public class CachingBuildEngine implements BuildEngine {
             // rebuilt, which is slow. Fortunately, we limit the effects of this when building Java
             // code when checking the ABI of deps instead of the RuleKey for deps.
             if (rule instanceof AbiRule) {
-              RuleKey abiRuleKey = repoData.abiRuleKeyBuilderFactory.newInstance(rule).build();
+              RuleKey abiRuleKey = cellData.abiRuleKeyBuilderFactory.newInstance(rule).build();
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY,
                   abiRuleKey.toString());
@@ -1034,14 +1034,14 @@ public class CachingBuildEngine implements BuildEngine {
       return Optional.absent();
     }
 
-    RuleKeyFactories repoData = this.ruleKeyFactories.get(rule.getProjectFilesystem());
-    Preconditions.checkNotNull(repoData);
+    RuleKeyFactories cellData = this.ruleKeyFactories.get(rule.getProjectFilesystem());
+    Preconditions.checkNotNull(cellData);
 
     // Add in the inputs explicitly listed in the dep file.  If any inputs are no longer on disk,
     // this means something changed and a dep-file based rule key can't be calculated.
     ImmutableList<Path> inputs =
         FluentIterable.from(depFile.get()).transform(MorePaths.TO_PATH).toList();
-    RuleKeyBuilder builder = repoData.depFileRuleKeyBuilderFactory.newInstance(rule);
+    RuleKeyBuilder builder = cellData.depFileRuleKeyBuilderFactory.newInstance(rule);
     for (Path input : inputs) {
       try {
         builder.setPath(input);

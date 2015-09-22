@@ -91,7 +91,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    ProjectFilesystem projectFilesystem = params.getRepository().getFilesystem();
+    ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
 
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
@@ -106,7 +106,7 @@ public class AuditRulesCommand extends AbstractCommand {
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(
               // TODO(simons): When we land dynamic loading, this MUST change.
-              params.getRepository().getAllDescriptions())
+              params.getCell().getAllDescriptions())
             .build());
     try (ProjectBuildFileParser parser = factory.createParser(
         params.getConsole(),

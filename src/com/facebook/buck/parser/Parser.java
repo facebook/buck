@@ -49,7 +49,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
@@ -107,7 +107,7 @@ public class Parser {
 
   private final CachedState state;
 
-  private final Repository repository;
+  private final Cell cell;
   private final boolean useWatchmanGlob;
 
   /**
@@ -184,19 +184,19 @@ public class Parser {
   private final BuildFileTreeCache buildFileTreeCache;
 
   public static Parser createBuildFileParser(
-      final Repository repository,
+      final Cell cell,
       boolean useWatchmanGlob)
       throws IOException, InterruptedException {
     return new Parser(
-        repository,
+        cell,
         /* Calls to get() will reconstruct the build file tree by calling constructBuildFileTree. */
         // TODO(simons): Consider momoizing the suppler.
         new Supplier<BuildFileTree>() {
           @Override
           public BuildFileTree get() {
             return new FilesystemBackedBuildFileTree(
-                repository.getFilesystem(),
-                repository.getBuildFileName());
+                cell.getFilesystem(),
+                cell.getBuildFileName());
           }
         },
         useWatchmanGlob);
@@ -207,14 +207,14 @@ public class Parser {
    */
   @VisibleForTesting
   Parser(
-      Repository repository,
+      Cell cell,
       Supplier<BuildFileTree> buildFileTreeSupplier,
       boolean useWatchmanGlob)
       throws IOException, InterruptedException {
-    this.repository = repository;
+    this.cell = cell;
     this.useWatchmanGlob = useWatchmanGlob;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
-    this.state = new CachedState(repository.getBuildFileName());
+    this.state = new CachedState(cell.getBuildFileName());
   }
 
   /**
@@ -267,17 +267,17 @@ public class Parser {
 
     // Iterate over the build files the given target node spec returns.
     for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(
-        repository.getFilesystem(),
-        repository.getBuildFileName())) {
+        cell.getFilesystem(),
+        cell.getBuildFileName())) {
 
       // Format a proper error message for non-existent build files.
-      if (!repository.getFilesystem().isFile(buildFile)) {
+      if (!cell.getFilesystem().isFile(buildFile)) {
         throw new MissingBuildFileException(spec, buildFile);
       }
 
       // Build up a list of all target nodes from the build file.
       List<Map<String, Object>> parsed = parseBuildFile(
-          repository.getFilesystem().resolve(buildFile),
+          cell.getFilesystem().resolve(buildFile),
           parserConfig,
           buildFileParser,
           environment);
@@ -387,7 +387,7 @@ public class Parser {
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus eventBus) {
-    return repository
+    return cell
         .createBuildFileParserFactory(useWatchmanGlob)
         .createParser(console, environment, eventBus);
   }
@@ -432,8 +432,8 @@ public class Parser {
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     Path buildFilePath;
     try {
-      buildFilePath = repository.getAbsolutePathToBuildFile(buildTarget);
-    } catch (Repository.MissingBuildFileException e) {
+      buildFilePath = cell.getAbsolutePathToBuildFile(buildTarget);
+    } catch (Cell.MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }
     if (!state.isParsed(buildFilePath)) {
@@ -589,7 +589,7 @@ public class Parser {
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
-    Path buildFile = repository.getAbsolutePathToBuildFile(buildTarget);
+    Path buildFile = cell.getAbsolutePathToBuildFile(buildTarget);
     if (isCached(buildFile, parserConfig.getDefaultIncludes(), environment)) {
       throw new HumanReadableException(
           "The build file that should contain %s has already been parsed (%s), " +
@@ -632,10 +632,10 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     if (!isCached(buildFile, parserConfig.getDefaultIncludes(), environment)) {
-      LOG.debug("Parsing %s file: %s", repository.getBuildFileName(), buildFile);
+      LOG.debug("Parsing %s file: %s", cell.getBuildFileName(), buildFile);
       parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFile));
     } else {
-      LOG.debug("Not parsing %s file (already in cache)", repository.getBuildFileName());
+      LOG.debug("Not parsing %s file (already in cache)", cell.getBuildFileName());
     }
     return state.getRawRules(buildFile);
   }
@@ -656,11 +656,11 @@ public class Parser {
 
       BuildTarget target = parseBuildTargetFromRawRule(map);
       BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
-      Description<?> description = repository.getDescription(buildRuleType);
+      Description<?> description = cell.getDescription(buildRuleType);
       if (description == null) {
         throw new HumanReadableException("Unrecognized rule %s while parsing %s.",
             buildRuleType,
-            repository.getAbsolutePathToBuildFile(target));
+            cell.getAbsolutePathToBuildFile(target));
       }
 
       state.put(target, map);
@@ -709,7 +709,7 @@ public class Parser {
    */
   private BuildRuleType parseBuildRuleTypeFromRawRule(Map<String, Object> map) {
     String type = (String) Preconditions.checkNotNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
-    return repository.getBuildRuleType(type);
+    return cell.getBuildRuleType(type);
   }
 
   /**
@@ -749,15 +749,15 @@ public class Parser {
       LOG.verbose(
           "Parser watched event %s %s",
           event.kind(),
-          repository.getFilesystem().createContextString(event));
+          cell.getFilesystem().createContextString(event));
     }
 
-    if (repository.getFilesystem().isPathChangeEvent(event)) {
+    if (cell.getFilesystem().isPathChangeEvent(event)) {
       Path path = (Path) event.context();
 
       if (isPathCreateOrDeleteEvent(event)) {
 
-        if (path.endsWith(new ParserConfig(repository.getBuckConfig()).getBuildFileName())) {
+        if (path.endsWith(new ParserConfig(cell.getBuckConfig()).getBuildFileName())) {
 
           // If a build file has been added or removed, reconstruct the build file tree.
           buildFileTreeCache.invalidateIfStale();
@@ -795,7 +795,7 @@ public class Parser {
         return pattern.matcher(fileName).matches();
       }
     };
-    return Iterators.any(repository.getTempFilePatterns().iterator(), patternMatches);
+    return Iterators.any(cell.getTempFilePatterns().iterator(), patternMatches);
   }
 
   /**
@@ -814,7 +814,7 @@ public class Parser {
 
     // If we're *not* enforcing package boundary checks, it's possible for multiple ancestor
     // packages to reference the same file
-    if (!repository.isEnforcingBuckPackageBoundaries()) {
+    if (!cell.isEnforcingBuckPackageBoundaries()) {
       while (packageBuildFile.isPresent() && packageBuildFile.get().getParent() != null) {
         packageBuildFile =
             buildFileTreeCache.get()
@@ -826,9 +826,9 @@ public class Parser {
     // Invalidate all the packages we found.
     for (Path buildFile : packageBuildFiles) {
       state.invalidateDependents(
-          repository.getFilesystem().getPathForRelativePath(
+          cell.getFilesystem().getPathForRelativePath(
               buildFile.resolve(
-                  new ParserConfig(repository.getBuckConfig()).getBuildFileName())));
+                  new ParserConfig(cell.getBuckConfig()).getBuildFileName())));
     }
   }
 
@@ -844,7 +844,7 @@ public class Parser {
    * @return An equivalent file constructed from a normalized, absolute path to the given File.
    */
   private Path normalize(Path path) {
-    return repository.getFilesystem().resolve(path);
+    return cell.getFilesystem().resolve(path);
   }
 
   /**
@@ -903,8 +903,8 @@ public class Parser {
   private String getDefinedFilepathMessage(BuildTarget buildTarget) {
     String filePath;
     try {
-      filePath = repository.getAbsolutePathToBuildFile(buildTarget).toString();
-    } catch (Repository.MissingBuildFileException e) {
+      filePath = cell.getAbsolutePathToBuildFile(buildTarget).toString();
+    } catch (Cell.MissingBuildFileException e) {
       return e.getHumanReadableErrorMessage();
     }
     return "Defined in file: " + filePath;
@@ -1177,8 +1177,8 @@ public class Parser {
 
       Path buildFilePath;
       try {
-        buildFilePath = repository.getAbsolutePathToBuildFile(buildTarget);
-      } catch (Repository.MissingBuildFileException e) {
+        buildFilePath = cell.getAbsolutePathToBuildFile(buildTarget);
+      } catch (Cell.MissingBuildFileException e) {
         throw new HumanReadableException(e);
       }
       UnflavoredBuildTarget unflavored = buildTarget.getUnflavoredBuildTarget();
@@ -1195,7 +1195,7 @@ public class Parser {
             normalize(Paths.get((String) map.get("buck.base_path")))
                 .resolve(buildFile).toAbsolutePath());
 
-        Description<?> description = repository.getDescription(buildRuleType);
+        Description<?> description = cell.getDescription(buildRuleType);
         if (description == null) {
           throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
               buildRuleType,
@@ -1231,12 +1231,12 @@ public class Parser {
 
         this.pathsToBuildTargets.put(buildFilePath, buildTarget);
 
-        Repository targetRepo = Parser.this.repository.getRepository(buildTarget.getRepository());
+        Cell targetRepo = Parser.this.cell.getCell(buildTarget.getCell());
         BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
             targetRepo.getFilesystem(),
             // Although we store the rule by its unflavoured name, when we construct it, we need the
             // flavour.
-            buildTarget.withoutRepository(),
+            buildTarget.withoutCell(),
             buildFileTreeCache.get(),
             targetRepo.isEnforcingBuckPackageBoundaries());
         Object constructorArg = description.createUnpopulatedConstructorArg();
@@ -1264,7 +1264,7 @@ public class Parser {
                 factoryParams,
                 declaredDeps.build(),
                 visibilityPatterns.build(),
-                targetRepo.getRepositoryAliases());
+                targetRepo.getCellAliases());
           }
         } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
           throw new HumanReadableException(e);

@@ -28,10 +28,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -68,7 +68,7 @@ public class AuditInputCommandTest {
     projectFilesystem.touch(Paths.get("src/com/facebook/AndroidLibraryTwo.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/TestAndroidLibrary.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/TestJavaLibrary.java"));
-    Repository repository = new TestRepositoryBuilder().setFilesystem(projectFilesystem).build();
+    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     ObjectMapper objectMapper = new ObjectMapper();
@@ -77,7 +77,7 @@ public class AuditInputCommandTest {
     auditInputCommand = new AuditInputCommand();
     params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
-        repository,
+        cell,
         new FakeAndroidDirectoryResolver(),
         artifactCache,
         eventBus,

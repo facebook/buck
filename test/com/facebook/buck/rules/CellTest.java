@@ -33,14 +33,14 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class RepositoryTest {
+public class CellTest {
 
   @Test
   public void shouldReturnItselfIfRequestedToGetARepoWithAnAbsentOptionalName()
       throws IOException, InterruptedException {
-    Repository repo = new TestRepositoryBuilder().build();
+    Cell repo = new TestCellBuilder().build();
 
-    Repository target = repo.getRepository(Optional.<String>absent());
+    Cell target = repo.getCell(Optional.<String>absent());
 
     assertSame(repo, target);
   }
@@ -48,9 +48,9 @@ public class RepositoryTest {
   @Test(expected = HumanReadableException.class)
   public void shouldThrowAnExceptionIfTheNamedRepoIsNotPresent()
       throws IOException, InterruptedException {
-    Repository repo = new TestRepositoryBuilder().build();
+    Cell repo = new TestCellBuilder().build();
 
-    repo.getRepository(Optional.of("not-there"));
+    repo.getCell(Optional.of("not-there"));
   }
 
   @Test
@@ -70,9 +70,9 @@ public class RepositoryTest {
         "[repositories]",
         "example = " + repo2.toAbsolutePath().toString());
 
-    Repository repo = new TestRepositoryBuilder().setBuckConfig(config).setFilesystem(
+    Cell repo = new TestCellBuilder().setBuckConfig(config).setFilesystem(
         filesystem).build();
-    Repository other = repo.getRepository(Optional.of("example"));
+    Cell other = repo.getCell(Optional.of("example"));
 
     assertEquals(repo2, other.getFilesystem().getRootPath());
   }

@@ -75,7 +75,7 @@ public class FetchCommand extends BuildCommand {
           .buildTargetGraphForTargetNodeSpecs(
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  params.getRepository().getFilesystem().getIgnorePaths(),
+                  params.getCell().getFilesystem().getIgnorePaths(),
                   getArguments()),
               new ParserConfig(params.getBuckConfig()),
               params.getBuckEventBus(),
@@ -132,9 +132,9 @@ public class FetchCommand extends BuildCommand {
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
-        params.getRepository().getFilesystem(),
+        params.getCell().getFilesystem(),
         Optional.<String>absent(),
-        new DefaultPropertyFinder(params.getRepository().getFilesystem(), params.getEnvironment()));
+        new DefaultPropertyFinder(params.getCell().getFilesystem(), params.getEnvironment()));
 
     Optional<Path> sdkDir = resolver.findAndroidSdkDirSafe();
 

@@ -1,7 +1,7 @@
 java_library(
   name = 'types',
   srcs = [
-    'Repository.java',
+    'Cell.java',
     'KnownBuildRuleTypes.java',
     'KnownBuildRuleTypesFactory.java',
   ],

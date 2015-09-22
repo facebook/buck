@@ -34,7 +34,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -482,7 +482,7 @@ public class DaemonIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
 
     Object daemon = Main.getDaemon(
-        new TestRepositoryBuilder().setBuckConfig(
+        new TestCellBuilder().setBuckConfig(
             new FakeBuckConfig(
                 ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
             .setFilesystem(filesystem)
@@ -491,7 +491,7 @@ public class DaemonIntegrationTest {
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
-            new TestRepositoryBuilder().setBuckConfig(
+            new TestCellBuilder().setBuckConfig(
                 new FakeBuckConfig(
                     ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
                 .setFilesystem(filesystem)
@@ -501,7 +501,7 @@ public class DaemonIntegrationTest {
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
         Main.getDaemon(
-            new TestRepositoryBuilder().setBuckConfig(
+            new TestCellBuilder().setBuckConfig(
                 new FakeBuckConfig(
                     ImmutableMap.of(
                         "somesection",
@@ -540,7 +540,7 @@ public class DaemonIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
 
     Object daemon = Main.getDaemon(
-        new TestRepositoryBuilder()
+        new TestCellBuilder()
             .setAndroidDirectoryResolver(
                 new FakeAndroidDirectoryResolver(
                     Optional.<Path>absent(),
@@ -553,7 +553,7 @@ public class DaemonIntegrationTest {
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
         Main.getDaemon(
-            new TestRepositoryBuilder()
+            new TestCellBuilder()
                 .setAndroidDirectoryResolver(
                     new FakeAndroidDirectoryResolver(
                         Optional.<Path>absent(),

@@ -27,25 +27,25 @@ import javax.annotation.Nullable;
  * Provides a mechanism to take the cell name from a {@link com.facebook.buck.model.BuildTarget} and
  * resolve that down to a {@link ProjectFilesystem}.
  * <p>
- * This is used to provide a layer of indirection from {@link Repository} to
+ * This is used to provide a layer of indirection from {@link Cell} to
  * {@link TargetGraphToActionGraph} without needing to make everything aware of how to handle
- * Repositories. Equality is measured by comparing the underlying filesystems, since this is how we
+ * Cells. Equality is measured by comparing the underlying filesystems, since this is how we
  * manage equality of Cell instances.
  */
 public class CellFilesystemResolver implements Function<Optional<String>, ProjectFilesystem> {
   private ProjectFilesystem filesystem;
-  private final Function<Optional<String>, ProjectFilesystem> repoFilesystemAliases;
+  private final Function<Optional<String>, ProjectFilesystem> cellFilesystemAliases;
 
   public CellFilesystemResolver(
       ProjectFilesystem filesystem,
-      Function<Optional<String>, ProjectFilesystem> repoFilesystemAliases) {
+      Function<Optional<String>, ProjectFilesystem> cellFilesystemAliases) {
     this.filesystem = filesystem;
-    this.repoFilesystemAliases = repoFilesystemAliases;
+    this.cellFilesystemAliases = cellFilesystemAliases;
   }
 
   @Override
   public ProjectFilesystem apply(Optional<String> input) {
-    return Preconditions.checkNotNull(repoFilesystemAliases.apply(input));
+    return Preconditions.checkNotNull(cellFilesystemAliases.apply(input));
   }
 
   public ProjectFilesystem getFilesystem() {

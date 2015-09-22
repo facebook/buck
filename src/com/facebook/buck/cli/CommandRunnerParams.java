@@ -22,7 +22,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
@@ -46,7 +46,7 @@ class CommandRunnerParams {
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier;
-  private final Repository repository;
+  private final Cell cell;
   private final JavaPackageFinder javaPackageFinder;
   private final ObjectMapper objectMapper;
   private final Clock clock;
@@ -57,7 +57,7 @@ class CommandRunnerParams {
 
   public CommandRunnerParams(
       Console console,
-      Repository repository,
+      Cell cell,
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
@@ -72,7 +72,7 @@ class CommandRunnerParams {
       BuckConfig buckConfig,
       FileHashCache fileHashCache) {
     this.console = console;
-    this.repository = repository;
+    this.cell = cell;
     this.artifactCache = artifactCache;
     this.eventBus = eventBus;
     this.parser = parser;
@@ -92,8 +92,8 @@ class CommandRunnerParams {
     return console;
   }
 
-  public Repository getRepository() {
-    return repository;
+  public Cell getCell() {
+    return cell;
   }
 
   public ArtifactCache getArtifactCache() {

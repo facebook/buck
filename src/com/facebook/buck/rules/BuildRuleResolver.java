@@ -118,7 +118,7 @@ public class BuildRuleResolver {
    */
   @VisibleForTesting
   public <T extends BuildRule> T addToIndex(T buildRule) {
-    Preconditions.checkArgument(!buildRule.getBuildTarget().getRepository().isPresent());
+    Preconditions.checkArgument(!buildRule.getBuildTarget().getCell().isPresent());
 
     BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
     // Yuck! This is here to make it possible for a rule to depend on a flavor of itself but it

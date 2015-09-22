@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;

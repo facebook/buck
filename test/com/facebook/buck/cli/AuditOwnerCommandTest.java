@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -41,11 +41,11 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.NonCheckingBuildRuleFactoryParams;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
@@ -198,10 +198,10 @@ public class AuditOwnerCommandTest {
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    Repository repository = new TestRepositoryBuilder().setFilesystem(filesystem).build();
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
-        repository,
+        cell,
         androidDirectoryResolver,
         artifactCache,
         eventBus,

@@ -24,14 +24,14 @@ import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -67,14 +67,14 @@ public class BuckQueryEnvironmentTest {
         "query_command",
         tmp);
     workspace.setUp();
-    Repository repository = new TestRepositoryBuilder()
+    Cell cell = new TestCellBuilder()
         .setFilesystem(new ProjectFilesystem(workspace.getDestPath()))
         .build();
 
     TestConsole console = new TestConsole();
     CommandRunnerParams params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
-        repository,
+        cell,
         new FakeAndroidDirectoryResolver(),
         new NoopArtifactCache(),
         BuckEventBusFactory.newInstance(),

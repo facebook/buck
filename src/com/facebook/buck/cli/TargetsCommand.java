@@ -219,7 +219,7 @@ public class TargetsCommand extends AbstractCommand {
     ImmutableSet.Builder<BuildRuleType> buildRuleTypesBuilder = ImmutableSet.builder();
     for (String name : types) {
       try {
-        buildRuleTypesBuilder.add(params.getRepository().getBuildRuleType(name));
+        buildRuleTypesBuilder.add(params.getCell().getBuildRuleType(name));
       } catch (IllegalArgumentException e) {
         params.getConsole().printBuildFailure("Invalid build rule type: " + name);
         return 1;
@@ -247,7 +247,7 @@ public class TargetsCommand extends AbstractCommand {
                         Predicates.<TargetNode<?>>alwaysTrue(),
                         BuildFileSpec.fromRecursivePath(
                             Paths.get(""),
-                            params.getRepository().getFilesystem().getIgnorePaths()))),
+                            params.getCell().getFilesystem().getIgnorePaths()))),
                 parserConfig,
                 params.getBuckEventBus(),
                 params.getConsole(),
@@ -258,7 +258,7 @@ public class TargetsCommand extends AbstractCommand {
             .buildTargetGraphForTargetNodeSpecs(
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
-                    params.getRepository().getFilesystem().getIgnorePaths(),
+                    params.getCell().getFilesystem().getIgnorePaths(),
                     getArguments()),
                 parserConfig,
                 params.getBuckEventBus(),
@@ -274,7 +274,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     PathArguments.ReferencedFiles referencedFiles = getReferencedFiles(
-        params.getRepository().getFilesystem().getRootPath());
+        params.getCell().getFilesystem().getRootPath());
     SortedMap<String, TargetNode<?>> matchingNodes;
     // If all of the referenced files are paths outside the project root, then print nothing.
     if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty() &&
@@ -552,7 +552,7 @@ public class TargetsCommand extends AbstractCommand {
           .buildTargetGraphForTargetNodeSpecs(
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  params.getRepository().getFilesystem().getIgnorePaths(),
+                  params.getCell().getFilesystem().getIgnorePaths(),
                   getArguments()),
               new ParserConfig(params.getBuckConfig()),
               params.getBuckEventBus(),
@@ -648,7 +648,7 @@ public class TargetsCommand extends AbstractCommand {
     // Hash each target's rule description and contents of any files.
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
         TargetGraphHashing.hashTargetGraph(
-            params.getRepository().getFilesystem(),
+            params.getCell().getFilesystem(),
             projectGraphWithTests,
             params.getParser().getBuildTargetHashCodeCache(),
             matchingBuildTargetsWithTests);
@@ -719,7 +719,7 @@ public class TargetsCommand extends AbstractCommand {
     List<Map<String, Object>> ruleObjects;
     try {
       ruleObjects = parser.parseBuildFile(
-          params.getRepository().getAbsolutePathToBuildFile(buildTarget),
+          params.getCell().getAbsolutePathToBuildFile(buildTarget),
           new ParserConfig(params.getBuckConfig()),
           params.getEnvironment(),
           params.getConsole(),

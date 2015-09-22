@@ -341,7 +341,7 @@ public class ProjectCommand extends BuildCommand {
           .buildTargetGraphForTargetNodeSpecs(
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  params.getRepository().getFilesystem().getIgnorePaths(),
+                  params.getCell().getFilesystem().getIgnorePaths(),
                   getArguments()),
               new ParserConfig(params.getBuckConfig()),
               params.getBuckEventBus(),
@@ -369,7 +369,7 @@ public class ProjectCommand extends BuildCommand {
     TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
         getTargetNodeSpecsForIde(
             passedInTargetsSet,
-            params.getRepository().getFilesystem().getIgnorePaths(),
+            params.getCell().getFilesystem().getIgnorePaths(),
             useExperimentalProjectGeneration));
 
     projectIde = getIdeBasedOnPassedInTargetsAndProjectGraph(
@@ -406,7 +406,7 @@ public class ProjectCommand extends BuildCommand {
         projectPredicates.getAssociatedProjectPredicate(),
         isWithTests(),
         isWithDependenciesTests(),
-        params.getRepository().getFilesystem().getIgnorePaths(),
+        params.getCell().getFilesystem().getIgnorePaths(),
         useExperimentalProjectGeneration);
 
     if (getDryRun()) {
@@ -535,7 +535,7 @@ public class ProjectCommand extends BuildCommand {
         JavaFileParser.createJavaFileParser(javacOptions),
         buildRuleResolver,
         sourcePathResolver,
-        params.getRepository().getFilesystem(),
+        params.getCell().getFilesystem(),
         getIntellijAggregationMode(params.getBuckConfig()));
 
     ImmutableSet<BuildTarget> requiredBuildTargets = project.write();
@@ -592,9 +592,9 @@ public class ProjectCommand extends BuildCommand {
           getJavaPackageFinder(params.getBuckConfig()),
           executionContext,
           new FilesystemBackedBuildFileTree(
-              params.getRepository().getFilesystem(),
+              params.getCell().getFilesystem(),
               new ParserConfig(params.getBuckConfig()).getBuildFileName()),
-          params.getRepository().getFilesystem(),
+          params.getCell().getFilesystem(),
           getPathToDefaultAndroidManifest(params.getBuckConfig()),
           new IntellijConfig(params.getBuckConfig()),
           getPathToPostProcessScript(params.getBuckConfig()),
@@ -770,7 +770,7 @@ public class ProjectCommand extends BuildCommand {
             inputNode);
       }
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-          params.getRepository().getFilesystem(),
+          params.getCell().getFilesystem(),
           new ReactNativeBuckConfig(params.getBuckConfig()),
           targetGraphAndTargets.getTargetGraph(),
           workspaceArgs,
@@ -782,8 +782,8 @@ public class ProjectCommand extends BuildCommand {
           !(new AppleConfig(params.getBuckConfig()).getXcodeDisableParallelizeBuild()),
           new ExecutableFinder(),
           params.getEnvironment(),
-          params.getRepository().getKnownBuildRuleTypes().getCxxPlatforms(),
-          params.getRepository().getKnownBuildRuleTypes().getDefaultCxxPlatforms(),
+          params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
+          params.getCell().getKnownBuildRuleTypes().getDefaultCxxPlatforms(),
           new ParserConfig(params.getBuckConfig()).getBuildFileName(),
           new Function<TargetNode<?>, Path>() {
             @Nullable
@@ -878,7 +878,7 @@ public class ProjectCommand extends BuildCommand {
           "To disable this prompt in the future, add the following to %s: \n\n" +
               "[project]\n" +
               "  ide_prompt = false\n\n",
-          params.getRepository().getFilesystem()
+          params.getCell().getFilesystem()
               .getRootPath()
               .resolve(BuckConfig.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
               .toAbsolutePath());

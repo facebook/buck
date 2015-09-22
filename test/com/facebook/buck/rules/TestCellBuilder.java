@@ -37,13 +37,13 @@ import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
-public class TestRepositoryBuilder {
+public class TestCellBuilder {
   public static final CellFilesystemResolver UNALIASED = new CellFilesystemResolver(
       null,
       new Function<Optional<String>, ProjectFilesystem>() {
         @Override
         public ProjectFilesystem apply(Optional<String> input) {
-          throw new HumanReadableException("Cannot load repo: " + input);
+          throw new HumanReadableException("Cannot load cell: " + input);
         }
       });
 
@@ -53,33 +53,33 @@ public class TestRepositoryBuilder {
   @Nullable
   private ProjectBuildFileParserFactory parserFactory;
 
-  public TestRepositoryBuilder() throws InterruptedException, IOException {
+  public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
     buckConfig = new FakeBuckConfig();
     androidDirectoryResolver = new FakeAndroidDirectoryResolver();
   }
 
-  public TestRepositoryBuilder setFilesystem(ProjectFilesystem filesystem) {
+  public TestCellBuilder setFilesystem(ProjectFilesystem filesystem) {
     this.filesystem = filesystem;
     return this;
   }
 
-  public TestRepositoryBuilder setBuckConfig(BuckConfig buckConfig) {
+  public TestCellBuilder setBuckConfig(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
     return this;
   }
 
-  public TestRepositoryBuilder setAndroidDirectoryResolver(AndroidDirectoryResolver resolver) {
+  public TestCellBuilder setAndroidDirectoryResolver(AndroidDirectoryResolver resolver) {
     this.androidDirectoryResolver = resolver;
     return this;
   }
 
-  public TestRepositoryBuilder setBuildFileParserFactory(ProjectBuildFileParserFactory factory) {
+  public TestCellBuilder setBuildFileParserFactory(ProjectBuildFileParserFactory factory) {
     this.parserFactory = factory;
     return this;
   }
 
-  public Repository build() throws IOException, InterruptedException {
+  public Cell build() throws IOException, InterruptedException {
     ProcessExecutor executor = new ProcessExecutor(new TestConsole());
 
     KnownBuildRuleTypesFactory typesFactory = new KnownBuildRuleTypesFactory(
@@ -88,7 +88,7 @@ public class TestRepositoryBuilder {
         Optional.<Path>absent());
 
     if (parserFactory == null) {
-      return new Repository(
+      return new Cell(
           filesystem,
           new TestConsole(),
           NULL_WATCHMAN,
@@ -98,7 +98,7 @@ public class TestRepositoryBuilder {
           new FakeClock(0));
     }
 
-    return new Repository(
+    return new Cell(
         filesystem,
         new TestConsole(),
         NULL_WATCHMAN,

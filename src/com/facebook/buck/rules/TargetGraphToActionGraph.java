@@ -181,10 +181,10 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
     @Override
     public BuildRule getRule(BuildTarget target) {
-      ProjectFilesystem filesystem = nameResolver.apply(target.getRepository());
+      ProjectFilesystem filesystem = nameResolver.apply(target.getCell());
       BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
 
-      BuildTarget withoutCell = target.withoutRepository();
+      BuildTarget withoutCell = target.withoutCell();
       return toUse.getRule(withoutCell);
     }
 
@@ -202,16 +202,16 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
     @Override
     public Optional<BuildRule> getRuleOptional(BuildTarget target) {
-      ProjectFilesystem filesystem = nameResolver.apply(target.getRepository());
+      ProjectFilesystem filesystem = nameResolver.apply(target.getCell());
       BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
 
-      return toUse.getRuleOptional(target.withoutRepository());
+      return toUse.getRuleOptional(target.withoutCell());
     }
 
     @Override
     public <T extends BuildRule> Optional<T> getRuleOptionalWithType(
         BuildTarget target, Class<T> cls) {
-      ProjectFilesystem filesystem = nameResolver.apply(target.getRepository());
+      ProjectFilesystem filesystem = nameResolver.apply(target.getCell());
       BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
 
       return toUse.getRuleOptionalWithType(target, cls);

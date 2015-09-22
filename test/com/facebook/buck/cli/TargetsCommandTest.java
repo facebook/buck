@@ -44,11 +44,11 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -112,7 +112,7 @@ public class TargetsCommandTest {
       this, "target_command", tmp
     );
     workspace.setUp();
-    Repository repository = new TestRepositoryBuilder()
+    Cell cell = new TestCellBuilder()
         .setFilesystem(new ProjectFilesystem(workspace.getDestPath()))
         .build();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
@@ -123,7 +123,7 @@ public class TargetsCommandTest {
     targetsCommand = new TargetsCommand();
     params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
-        repository,
+        cell,
         androidDirectoryResolver,
         artifactCache,
         eventBus,

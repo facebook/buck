@@ -614,10 +614,10 @@ public class BuckConfig {
         .or(Float.POSITIVE_INFINITY);
   }
 
-  public Optional<Path> getPath(String sectionName, String name, boolean isRepoRootRelative) {
+  public Optional<Path> getPath(String sectionName, String name, boolean isCellRootRelative) {
     Optional<String> pathString = getValue(sectionName, name);
     return pathString.isPresent() ?
-        isRepoRootRelative ?
+        isCellRootRelative ?
             checkPathExists(
                 pathString.get(),
                 String.format("Overridden %s:%s path not found: ", sectionName, name)) :

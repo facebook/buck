@@ -408,7 +408,7 @@ public class TestCommand extends BuildCommand {
                     },
                     BuildFileSpec.fromRecursivePath(
                         Paths.get(""),
-                        params.getRepository().getFilesystem().getIgnorePaths()))),
+                        params.getCell().getFilesystem().getIgnorePaths()))),
             parserConfig,
             params.getBuckEventBus(),
             params.getConsole(),
@@ -424,7 +424,7 @@ public class TestCommand extends BuildCommand {
             .buildTargetGraphForTargetNodeSpecs(
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
-                    params.getRepository().getFilesystem().getIgnorePaths(),
+                    params.getCell().getFilesystem().getIgnorePaths(),
                     getArguments()),
                 parserConfig,
                 params.getBuckEventBus(),

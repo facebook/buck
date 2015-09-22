@@ -30,7 +30,7 @@ import java.nio.file.Path;
 
 /**
  * Contain items used to construct a {@link KnownBuildRuleTypes} that are shared between all
- * {@link Repository} instances.
+ * {@link Cell} instances.
  */
 public class KnownBuildRuleTypesFactory {
 

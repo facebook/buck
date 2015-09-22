@@ -49,7 +49,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
@@ -182,7 +182,7 @@ public final class Main {
    */
   private static final class Daemon implements Closeable {
 
-    private final Repository repository;
+    private final Cell cell;
     private final Parser parser;
     private final DefaultFileHashCache hashCache;
     private final DefaultFileHashCache buckOutHashCache;
@@ -191,28 +191,28 @@ public final class Main {
     private final UUID watchmanQueryUUID;
 
     public Daemon(
-        Repository repository,
+        Cell cell,
         ParserConfig.GlobHandler globHandler)
         throws IOException, InterruptedException {
-      this.repository = repository;
-      this.hashCache = new WatchedFileHashCache(repository.getFilesystem());
+      this.cell = cell;
+      this.hashCache = new WatchedFileHashCache(cell.getFilesystem());
       this.buckOutHashCache =
           new DefaultFileHashCache(
               new ProjectFilesystem(
-                  repository.getFilesystem().getRootPath(),
+                  cell.getFilesystem().getRootPath(),
                   Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
                   ImmutableSet.<Path>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
       this.parser = Parser.createBuildFileParser(
-          repository,
+          cell,
           globHandler == ParserConfig.GlobHandler.WATCHMAN);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
 
-      webServer = createWebServer(repository.getBuckConfig(), repository.getFilesystem());
+      webServer = createWebServer(cell.getBuckConfig(), cell.getFilesystem());
       watchmanQueryUUID = UUID.randomUUID();
-      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(repository.getFilesystem());
+      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
     }
 
     private Optional<WebServer> createWebServer(BuckConfig config, ProjectFilesystem filesystem) {
@@ -351,20 +351,20 @@ public final class Main {
    */
   @VisibleForTesting
   static Daemon getDaemon(
-      Repository repository,
+      Cell cell,
       ParserConfig.GlobHandler globHandler)
       throws IOException, InterruptedException  {
-    Path rootPath = repository.getFilesystem().getRootPath();
+    Path rootPath = cell.getFilesystem().getRootPath();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(repository, globHandler);
+      daemon = new Daemon(cell, globHandler);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
       // buckd scripts attempt to enforce this, so a change in project root is an error that
       // should be reported rather than silently worked around by invalidating the cache and
       // creating a new daemon object.
-      Path parserRoot = repository.getFilesystem().getRootPath();
+      Path parserRoot = cell.getFilesystem().getRootPath();
       if (!rootPath.equals(parserRoot)) {
         throw new HumanReadableException(String.format("Unsupported root path change from %s to %s",
             rootPath, parserRoot));
@@ -372,10 +372,10 @@ public final class Main {
 
       // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
       // create a new daemon.
-      if (!daemon.repository.equals(repository)) {
+      if (!daemon.cell.equals(cell)) {
         LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
         daemon.close();
-        daemon = new Daemon(repository, globHandler);
+        daemon = new Daemon(cell, globHandler);
       }
     }
     return daemon;
@@ -474,8 +474,8 @@ public final class Main {
       color = Optional.absent();
     }
 
-    // We need a BuckConfig to create a Console, but we get BuckConfig from Repository, and we need
-    // a Console to create a Repository. To break this bootstrapping loop, create a temporary
+    // We need a BuckConfig to create a Console, but we get BuckConfig from Cell, and we need
+    // a Console to create a Cell. To break this bootstrapping loop, create a temporary
     // BuckConfig.
     // TODO(jacko): We probably shouldn't rely on BuckConfig to instantiate Console.
     // Begin ugly bootstrapping code
@@ -581,7 +581,7 @@ public final class Main {
         androidDirectoryResolver,
         testTempDirOverride);
 
-    Repository rootRepository = new Repository(
+    Cell rootCell = new Cell(
         filesystem,
         console,
         watchman,
@@ -598,33 +598,33 @@ public final class Main {
         // TODO(user): Thread through properties from client environment.
         System.getProperties());
 
-    ProjectFileHashCache repoHashCache;
+    ProjectFileHashCache cellHashCache;
     ProjectFileHashCache buckOutHashCache;
     if (isDaemon) {
-      repoHashCache = getFileHashCacheFromDaemon(rootRepository, globHandler);
-      buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootRepository, globHandler);
+      cellHashCache = getFileHashCacheFromDaemon(rootCell, globHandler);
+      buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootCell, globHandler);
     } else {
-      repoHashCache = new DefaultFileHashCache(rootRepository.getFilesystem());
+      cellHashCache = new DefaultFileHashCache(rootCell.getFilesystem());
       buckOutHashCache =
           new DefaultFileHashCache(
               new ProjectFilesystem(
-                  rootRepository.getFilesystem().getRootPath(),
+                  rootCell.getFilesystem().getRootPath(),
                   Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
                   ImmutableSet.<Path>of()));
     }
 
-    // Build up the hash cache, which is a collection of the stateful repo cache and some per-run
+    // Build up the hash cache, which is a collection of the stateful cell cache and some per-run
     // caches.
     FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                repoHashCache,
+                cellHashCache,
                 buckOutHashCache,
-                // A cache which caches hashes of repo-relative paths which may have been ignore by
-                // the main repo cache, and only serves to prevent rehashing the same file multiple
+                // A cache which caches hashes of cell-relative paths which may have been ignore by
+                // the main cell cache, and only serves to prevent rehashing the same file multiple
                 // times in a single run.
                 new DefaultFileHashCache(
-                    new ProjectFilesystem(rootRepository.getFilesystem().getRootPath())),
+                    new ProjectFilesystem(rootCell.getFilesystem().getRootPath())),
                 // A cache which caches hashes of absolute paths which my be accessed by certain
                 // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
                 // multiple times in a single run.
@@ -632,7 +632,7 @@ public final class Main {
 
     Optional<WebServer> webServer = getWebServerIfDaemon(
         context,
-        rootRepository,
+        rootCell,
         globHandler);
 
     TestConfig testConfig = new TestConfig(buckConfig);
@@ -668,15 +668,15 @@ public final class Main {
              executionEnvironment.getWifiSsid())) {
 
       eventListeners = addEventListeners(buildEventBus,
-          rootRepository.getFilesystem(),
+          rootCell.getFilesystem(),
           buildId,
-          rootRepository.getBuckConfig(),
+          rootCell.getBuckConfig(),
           webServer,
           clock,
           executionEnvironment,
           console,
           consoleListener,
-          rootRepository.getKnownBuildRuleTypes(),
+          rootCell.getKnownBuildRuleTypes(),
           clientEnvironment);
 
       VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
@@ -685,7 +685,7 @@ public final class Main {
         vcStatsGenerator = new VersionControlStatsGenerator(
             vcStatsExecutorService,
             new DefaultVersionControlCmdLineInterfaceFactory(
-                rootRepository.getFilesystem().getRootPath(),
+                rootCell.getFilesystem().getRootPath(),
                 processExecutor,
                 vcBuckConfig),
             buildEventBus
@@ -709,7 +709,7 @@ public final class Main {
 
       if (isDaemon && watchman != Watchman.NULL_WATCHMAN) {
         try {
-          Daemon daemon = getDaemon(rootRepository, globHandler);
+          Daemon daemon = getDaemon(rootCell, globHandler);
           WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
              watchman.getWatchRoot().or(canonicalRootPath.toString()),
              daemon.getFileEventBus(),
@@ -722,7 +722,7 @@ public final class Main {
              daemon.getWatchmanQueryUUID());
          parser = getParserFromDaemon(
               context,
-              rootRepository,
+             rootCell,
               startedEvent,
               buildEventBus,
               watchmanWatcher,
@@ -737,10 +737,10 @@ public final class Main {
 
       if (parser == null) {
         parser = Parser.createBuildFileParser(
-            rootRepository,
+            rootCell,
             globHandler == ParserConfig.GlobHandler.WATCHMAN);
       }
-      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootRepository.getFilesystem());
+      JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
 
       Optional<ProcessManager> processManager;
       if (platform == Platform.WINDOWS) {
@@ -769,14 +769,14 @@ public final class Main {
       exitCode = command.run(
           new CommandRunnerParams(
               console,
-              rootRepository,
+              rootCell,
               androidPlatformTargetSupplier,
               artifactCache,
               buildEventBus,
               parser,
               platform,
               clientEnvironment,
-              rootRepository.getBuckConfig().createDefaultJavaPackageFinder(),
+              rootCell.getBuckConfig().createDefaultJavaPackageFinder(),
               objectMapper,
               clock,
               processManager,
@@ -795,7 +795,7 @@ public final class Main {
         commandSemaphore.release(); // Allow another command to execute while outputting traces.
       }
     }
-    if (isDaemon && !rootRepository.getBuckConfig().getFlushEventsBeforeExit()) {
+    if (isDaemon && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
@@ -827,11 +827,9 @@ public final class Main {
       final AndroidDirectoryResolver androidDirectoryResolver,
       final AndroidBuckConfig androidBuckConfig,
       final BuckEventBus eventBus) {
-    // TODO(mbolin): Only one such Supplier should be created per Repository per Buck execution.
+    // TODO(mbolin): Only one such Supplier should be created per Cell per Buck execution.
     // Currently, only one Supplier is created per Buck execution because Main creates the Supplier
-    // and passes it from above all the way through, but it is not parameterized by Repository. It
-    // seems like the Repository concept is not fully baked, so this is likely one of many
-    // multi-Repository issues that need to be addressed to support it properly.
+    // and passes it from above all the way through, but it is not parameterized by Cell.
     //
     // TODO(mbolin): Every build rule that uses AndroidPlatformTarget must include the result of its
     // getName() method in its RuleKey.
@@ -904,13 +902,13 @@ public final class Main {
 
   private Parser getParserFromDaemon(
       Optional<NGContext> context,
-      Repository repository,
+      Cell cell,
       CommandEvent commandEvent,
       BuckEventBus eventBus,
       WatchmanWatcher watchmanWatcher,
       ParserConfig.GlobHandler globHandler) throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemon = getDaemon(repository, globHandler);
+    Daemon daemon = getDaemon(cell, globHandler);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(commandEvent, eventBus, watchmanWatcher);
     daemon.initWebServer();
@@ -918,28 +916,28 @@ public final class Main {
   }
 
   private DefaultFileHashCache getFileHashCacheFromDaemon(
-      Repository repository,
+      Cell cell,
       ParserConfig.GlobHandler globHandler)
       throws IOException, InterruptedException {
-    Daemon daemon = getDaemon(repository, globHandler);
+    Daemon daemon = getDaemon(cell, globHandler);
     return daemon.getFileHashCache();
   }
 
   private DefaultFileHashCache getBuckOutFileHashCacheFromDaemon(
-      Repository repository,
+      Cell cell,
       ParserConfig.GlobHandler globHandler)
       throws IOException, InterruptedException {
-    Daemon daemon = getDaemon(repository, globHandler);
+    Daemon daemon = getDaemon(cell, globHandler);
     return daemon.getBuckOutHashCache();
   }
 
   private Optional<WebServer> getWebServerIfDaemon(
       Optional<NGContext> context,
-      Repository repository,
+      Cell cell,
       ParserConfig.GlobHandler globHandler)
       throws IOException, InterruptedException  {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(repository, globHandler);
+      Daemon daemon = getDaemon(cell, globHandler);
       return daemon.getWebServer();
     }
     return Optional.absent();

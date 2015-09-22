@@ -144,11 +144,11 @@ public class AuditInputCommand extends AbstractCommand {
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
-            if (!params.getRepository().getFilesystem().exists(input)) {
+            if (!params.getCell().getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s", node, input);
             }
-            targetInputs.addAll(params.getRepository().getFilesystem().getFilesUnderPath(input));
+            targetInputs.addAll(params.getCell().getFilesystem().getFilesUnderPath(input));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -179,14 +179,14 @@ public class AuditInputCommand extends AbstractCommand {
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
-            if (!params.getRepository().getFilesystem().exists(input)) {
+            if (!params.getCell().getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s",
                   node,
                   input);
             }
             ImmutableSortedSet<Path> nodeContents = ImmutableSortedSet.copyOf(
-                params.getRepository().getFilesystem().getFilesUnderPath(input));
+                params.getCell().getFilesystem().getFilesUnderPath(input));
             for (Path path : nodeContents) {
               putInput(path);
             }

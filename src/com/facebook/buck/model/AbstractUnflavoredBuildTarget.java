@@ -60,7 +60,7 @@ abstract class AbstractUnflavoredBuildTarget
   }
 
   @Value.Parameter
-  public abstract Optional<String> getRepository();
+  public abstract Optional<String> getCell();
 
   /**
    * If this build target were //third_party/java/guava:guava-latest, then this would return
@@ -114,14 +114,14 @@ abstract class AbstractUnflavoredBuildTarget
    * "//third_party/java/guava:guava-latest".
    */
   public String getFullyQualifiedName() {
-    return (getRepository().isPresent() ? "@" + getRepository().get() : "") +
+    return (getCell().isPresent() ? "@" + getCell().get() : "") +
         getBaseName() + ":" + getShortName();
   }
 
   public static UnflavoredBuildTarget.Builder builder(UnflavoredBuildTarget buildTarget) {
     return UnflavoredBuildTarget
         .builder()
-        .setRepository(buildTarget.getRepository())
+        .setCell(buildTarget.getCell())
         .setBaseName(buildTarget.getBaseName())
         .setShortName(buildTarget.getShortName());
   }
@@ -129,7 +129,7 @@ abstract class AbstractUnflavoredBuildTarget
   public static UnflavoredBuildTarget.Builder builder(String baseName, String shortName) {
     return UnflavoredBuildTarget
         .builder()
-        .setRepository(Optional.<String>absent())
+        .setCell(Optional.<String>absent())
         .setBaseName(baseName)
         .setShortName(shortName);
   }

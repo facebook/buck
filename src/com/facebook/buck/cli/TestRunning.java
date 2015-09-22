@@ -431,7 +431,7 @@ public class TestRunning {
             getReportCommand(
                 rulesUnderTest,
                 defaultJavaPackageFinderOptional,
-                params.getRepository().getFilesystem(),
+                params.getCell().getFilesystem(),
                 JACOCO_OUTPUT_DIR,
                 options.getCoverageReportFormat(),
                 options.getCoverageReportTitle()),

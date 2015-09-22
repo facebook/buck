@@ -96,7 +96,7 @@ public class EventSerializationTest {
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);
     assertJsonEquals("{\"timestamp\":%d,\"nanoTime\":%d,\"threadId\":%d,\"buildId\":\"%s\"," +
-        "\"buildTargets\":[{\"repository\":{\"present\":false},\"baseName\":\"//base\"," +
+        "\"buildTargets\":[{\"cell\":{\"present\":false},\"baseName\":\"//base\"," +
         "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\"," +
         "\"eventKey\":{\"value\":4242}}", message);
   }
@@ -191,7 +191,7 @@ public class EventSerializationTest {
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
         "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\"," +
-        "\"repository\":{\"present\":false},\"flavor\":\"\"}," +
+        "\"cell\":{\"present\":false},\"flavor\":\"\"}," +
         "\"success\":false}],\"type\":\"RunComplete\", \"eventKey\":" +
         "{\"value\":-624576559}}",
         message);
@@ -223,7 +223,7 @@ public class EventSerializationTest {
         "\"failureCount\":1,\"contacts\":[],\"labels\":[]," +
         "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0," +
         "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\"," +
-        "\"repository\":{\"present\":false},\"flavor\":\"\"}," +
+        "\"cell\":{\"present\":false},\"flavor\":\"\"}," +
         "\"success\":false},\"type\":\"ResultsAvailable\"}", message);
   }
 

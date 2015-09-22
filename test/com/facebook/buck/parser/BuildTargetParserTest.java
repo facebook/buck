@@ -173,7 +173,7 @@ public class BuildTargetParserTest {
     String targetStr = "@localreponame//foo/bar:baz";
     BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser);
     assertEquals(targetStr, buildTarget.getFullyQualifiedName());
-    assertEquals("localreponame", buildTarget.getRepository().get());
+    assertEquals("localreponame", buildTarget.getCell().get());
   }
 
   @Test(expected = BuildTargetParseException.class)

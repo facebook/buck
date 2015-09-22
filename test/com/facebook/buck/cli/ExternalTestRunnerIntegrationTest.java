@@ -32,7 +32,7 @@ import java.io.IOException;
 public class ExternalTestRunnerIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder().doNotDeleteOnExit();
+  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   private ProjectWorkspace workspace;
 

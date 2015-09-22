@@ -23,10 +23,10 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
-import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.SettableFakeClock;
@@ -130,12 +130,12 @@ public class ProjectCommandTests {
 
   private static CommandRunnerParams createCommandRunnerParamsForTests()
       throws IOException, InterruptedException {
-    Repository repository = new TestRepositoryBuilder()
+    Cell cell = new TestCellBuilder()
         .setFilesystem(new FakeProjectFilesystem(new SettableFakeClock(0, 0)))
         .build();
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         new TestConsole(),
-        repository,
+        cell,
         new FakeAndroidDirectoryResolver(),
         new NoopArtifactCache(),
         BuckEventBusFactory.newInstance(),

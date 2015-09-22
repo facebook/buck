@@ -192,7 +192,7 @@ public class InstallCommand extends BuildCommand {
     try {
       TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
           params.getBuckConfig(),
-          params.getRepository().getFilesystem().getIgnorePaths(),
+          params.getCell().getFilesystem().getIgnorePaths(),
           getArguments()).get(0);
 
       BuildTarget target = params.getParser().resolveTargetSpec(

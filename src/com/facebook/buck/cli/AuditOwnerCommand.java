@@ -146,7 +146,7 @@ public class AuditOwnerCommand extends AbstractCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
-        params.getRepository().getFilesystem(),
+        params.getCell().getFilesystem(),
         parserConfig.getBuildFileName());
     try {
       OwnersReport report = buildOwnersReport(
@@ -169,7 +169,7 @@ public class AuditOwnerCommand extends AbstractCommand {
       Iterable<String> arguments,
       boolean guessForDeletedEnabled)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    final Path rootPath = params.getRepository().getFilesystem().getRootPath();
+    final Path rootPath = params.getCell().getFilesystem().getRootPath();
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
     OwnersReport report = OwnersReport.emptyReport();
 
@@ -186,7 +186,7 @@ public class AuditOwnerCommand extends AbstractCommand {
       }
 
       Path buckFile = basePath.get().resolve(parserConfig.getBuildFileName());
-      Preconditions.checkState(params.getRepository().getFilesystem().exists(buckFile));
+      Preconditions.checkState(params.getCell().getFilesystem().exists(buckFile));
 
       // Get the target base name.
       Preconditions.checkState(rootPath.isAbsolute());
@@ -259,7 +259,7 @@ public class AuditOwnerCommand extends AbstractCommand {
     Set<String> nonFileInputs = Sets.newHashSet();
 
     for (String filePath : filePaths) {
-      File file = params.getRepository().getFilesystem().getFileForRelativePath(filePath);
+      File file = params.getCell().getFilesystem().getFileForRelativePath(filePath);
       if (!file.exists()) {
         nonExistentInputs.add(filePath);
       } else if (!file.isFile()) {

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -102,10 +101,6 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
 
     this.declaredDeps = declaredDeps;
     this.visibilityPatterns = visibilityPatterns;
-  }
-
-  public ProjectFilesystem getRepositoryFilesystem(Optional<String> repoName) {
-    return cellFilesystemResolver.apply(repoName);
   }
 
   public Description<T> getDescription() {

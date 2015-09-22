@@ -105,7 +105,7 @@ public abstract class CommandHelper {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     List<Map<String, Object>> rules;
     try {
-      Path buildFile = params.getRepository().getAbsolutePathToBuildFile(buildTarget);
+      Path buildFile = params.getCell().getAbsolutePathToBuildFile(buildTarget);
       rules = params.getParser().parseBuildFile(
           buildFile,
           parserConfig,

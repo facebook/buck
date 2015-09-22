@@ -56,11 +56,11 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
-import com.facebook.buck.rules.Repository;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.timing.FakeClock;
@@ -166,7 +166,7 @@ public class ParserTest extends EasyMockSupport {
     BuckConfig config = new FakeBuckConfig();
     eventBus = BuckEventBusFactory.newInstance();
 
-    buildRuleTypes = new TestRepositoryBuilder().build().getKnownBuildRuleTypes();
+    buildRuleTypes = new TestCellBuilder().build().getKnownBuildRuleTypes();
 
     ParserConfig parserConfig = new ParserConfig(config);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
@@ -228,12 +228,12 @@ public class ParserTest extends EasyMockSupport {
       BuckConfig buckConfig)
       throws IOException, InterruptedException {
 
-    TestRepositoryBuilder repoBuilder = new TestRepositoryBuilder()
+    TestCellBuilder repoBuilder = new TestCellBuilder()
         .setBuildFileParserFactory(buildFileParserFactory)
         .setBuckConfig(buckConfig)
         .setFilesystem(filesystem);
 
-    Repository toUse = repoBuilder.build();
+    Cell toUse = repoBuilder.build();
 
     Parser parser = new Parser(
         toUse,

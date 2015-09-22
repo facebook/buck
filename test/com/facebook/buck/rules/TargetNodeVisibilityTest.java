@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.TestRepositoryBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

@@ -28,8 +28,8 @@ import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.java.intellij.Project;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.rules.Repository;
-import com.facebook.buck.rules.TestRepositoryBuilder;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.BuckConstant;
@@ -112,13 +112,13 @@ public class CleanCommandTest extends EasyMockSupport {
 
   private CommandRunnerParams createCommandRunnerParams() throws InterruptedException, IOException {
     projectFilesystem = createMock(ProjectFilesystem.class);
-    Repository repository = new TestRepositoryBuilder().setFilesystem(projectFilesystem).build();
+    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
 
     Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
         AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
     return new CommandRunnerParams(
         new TestConsole(),
-        repository,
+        cell,
         androidPlatformTargetSupplier,
         createMock(ArtifactCache.class),
         BuckEventBusFactory.newInstance(),

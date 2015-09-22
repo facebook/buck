@@ -139,7 +139,7 @@ public class RunCommand extends AbstractCommand {
         .build();
 
     ShellStep step = new DefaultShellStep(
-        params.getRepository().getFilesystem().getRootPath(),
+        params.getCell().getFilesystem().getRootPath(),
         fullCommand) {
       // Print the output from the step directly to stdout and stderr rather than buffering it and
       // printing it as two individual strings. This preserves the expected behavior where output

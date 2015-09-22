@@ -73,7 +73,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     this.enableProfiling = enableProfiling;
     this.parserConfig = new ParserConfig(params.getBuckConfig());
     this.buildFileTree = new FilesystemBackedBuildFileTree(
-        params.getRepository().getFilesystem(),
+        params.getCell().getFilesystem(),
         parserConfig.getBuildFileName());
     this.targetPatternEvaluator = new TargetPatternEvaluator(params, enableProfiling);
   }

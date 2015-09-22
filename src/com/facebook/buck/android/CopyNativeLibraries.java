@@ -273,7 +273,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
               public int execute(ExecutionContext context) {
                 // TODO(simons): Using a projectfilesystem here is almost definitely wrong.
                 // This is because each library may come from different build rules, which may be in
-                // different repos --- this check works by coincidence.
+                // different cells --- this check works by coincidence.
                 if (!filesystem.exists(libSourceDir)) {
                   return 0;
                 }

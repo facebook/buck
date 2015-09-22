@@ -114,7 +114,7 @@ public class PublishCommand extends BuildCommand {
     }
 
     Publisher publisher = new Publisher(
-        params.getRepository().getFilesystem(),
+        params.getCell().getFilesystem(),
         Optional.fromNullable(remoteRepo),
         dryRun);
 
