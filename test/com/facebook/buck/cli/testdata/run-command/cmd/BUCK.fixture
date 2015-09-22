@@ -11,8 +11,5 @@ genrule(
 sh_binary(
   name = 'command',
   main = ':real_command',
-  deps = [
-    ':real_command',
-  ],
 )
 
