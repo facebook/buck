@@ -59,4 +59,11 @@ public class PythonTestIntegrationTest {
         containsString("test_that_fails"));
   }
 
+  @Test
+  public void testPythonTestEnv() throws IOException {
+    // Test if setting environment during test execution works
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-env");
+    result.assertSuccess();
+  }
+
 }

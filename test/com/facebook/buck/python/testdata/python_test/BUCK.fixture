@@ -11,3 +11,13 @@ python_test(
     'test_failure.py',
   ],
 )
+
+python_test(
+  name='test-env',
+  srcs=[
+    'test_env.py',
+  ],
+  env={
+    'PYTHON_TEST_ENV_VAR': '42',
+  },
+)

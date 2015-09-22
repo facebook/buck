@@ -36,15 +36,20 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -55,6 +60,11 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   private static final BuildRuleType TYPE = BuildRuleType.of("python_test");
 
   private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
+
+  private static final MacroHandler MACRO_HANDLER =
+      new MacroHandler(
+          ImmutableMap.<String, MacroExpander>of(
+              "location", new LocationMacroExpander()));
 
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
@@ -148,9 +158,9 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   @Override
   public <A extends Arg> PythonTest createBuildRule(
       TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+      final BuildRuleParams params,
+      final BuildRuleResolver resolver,
+      final A args) {
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -234,6 +244,21 @@ public class PythonTestDescription implements Description<PythonTestDescription.
             args.buildArgs.or(ImmutableList.<String>of()));
     resolver.addToIndex(binary);
 
+    // Supplier which expands macros in the passed in test environment.
+    Supplier<ImmutableMap<String, String>> testEnv =
+        new Supplier<ImmutableMap<String, String>>() {
+          @Override
+          public ImmutableMap<String, String> get() {
+            return ImmutableMap.copyOf(
+                Maps.transformValues(
+                    args.env.or(ImmutableMap.<String, String>of()),
+                    MACRO_HANDLER.getExpander(
+                        params.getBuildTarget(),
+                        resolver,
+                        params.getProjectFilesystem())));
+          }
+        };
+
     // Generate and return the python test rule, which depends on the python binary rule above.
     return new PythonTest(
         params.copyWithDeps(
@@ -244,6 +269,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                     .build()),
             params.getExtraDeps()),
         pathResolver,
+        testEnv,
         binary,
         ImmutableSortedSet.copyOf(Sets.difference(params.getDeps(), binaryParams.getDeps())),
         resolver.getAllRules(args.sourceUnderTest.or(ImmutableSortedSet.<BuildTarget>of())),
@@ -258,6 +284,8 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
 
     public Optional<ImmutableList<String>> buildArgs;
+
+    public Optional<ImmutableMap<String, String>> env;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

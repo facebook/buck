@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -39,8 +40,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -52,6 +56,8 @@ public class PythonTest
     extends NoopBuildRule
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
+  @AddToRuleKey
+  private final Supplier<ImmutableMap<String, String>> env;
   private final PythonBinary binary;
   private final ImmutableSortedSet<BuildRule> additionalDeps;
   private final ImmutableSet<Label> labels;
@@ -61,6 +67,7 @@ public class PythonTest
   public PythonTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      Supplier<ImmutableMap<String, String>> env,
       PythonBinary binary,
       ImmutableSortedSet<BuildRule> additionalDeps,
       ImmutableSet<BuildRule> sourceUnderTest,
@@ -69,6 +76,7 @@ public class PythonTest
 
     super(params, resolver);
 
+    this.env = Suppliers.memoize(env);
     this.binary = binary;
     this.additionalDeps = additionalDeps;
     this.sourceUnderTest = sourceUnderTest;
@@ -86,6 +94,11 @@ public class PythonTest
         builder.addAll(binary.getExecutableCommand().getCommandPrefix(getResolver()));
         builder.add("-o", getProjectFilesystem().resolve(getPathToTestOutputResult()).toString());
         return builder.build();
+      }
+
+      @Override
+      public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+        return env.get();
       }
 
       @Override
@@ -202,6 +215,7 @@ public class PythonTest
         .setTarget(getBuildTarget().toString())
         .setType("pyunit")
         .addAllCommand(binary.getExecutableCommand().getCommandPrefix(getResolver()))
+        .putAllEnv(env.get())
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
