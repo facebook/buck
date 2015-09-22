@@ -57,5 +57,6 @@ java_test(
     '//third-party/java/junit:junit',
     '//third-party/java/okhttp:okhttp',
     '//third-party/java/okio:okio',
-  ]
+  ],
+  vm_args = [ '-Xmx256M' ],
 )

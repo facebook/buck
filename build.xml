@@ -701,6 +701,7 @@
       <!-- See DEFS for details on why this property is needed. -->
       <sysproperty key="sun.zip.disableMemoryMapping" value="true" />
 
+      <jvmarg value="-Xmx512M" />
       <jvmarg value="${jvmArgs}" />
 
       <formatter type="plain" usefile="false" />
