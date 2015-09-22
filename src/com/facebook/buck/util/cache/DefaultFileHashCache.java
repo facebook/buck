@@ -18,7 +18,6 @@ package com.facebook.buck.util.cache;
 
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.HashCodeAndFileType;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -34,8 +33,8 @@ import com.google.common.io.ByteSource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 

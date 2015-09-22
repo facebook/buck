@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.cache;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;

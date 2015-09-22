@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.util.HashCodeAndFileType;
 import com.google.common.hash.HashCode;
 
 import org.hamcrest.junit.ExpectedException;

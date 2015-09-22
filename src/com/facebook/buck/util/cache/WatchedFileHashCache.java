@@ -18,7 +18,6 @@ package com.facebook.buck.util.cache;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.HashCodeAndFileType;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;

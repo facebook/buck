@@ -24,7 +24,6 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.util.HashCodeAndFileType;
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
