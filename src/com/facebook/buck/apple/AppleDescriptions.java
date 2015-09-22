@@ -265,7 +265,6 @@ public class AppleDescriptions {
                 headerPathPrefix,
                 arg)));
     output.exportedPlatformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
-    output.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
     output.exportedPlatformPreprocessorFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());
     output.exportedLangPreprocessorFlags = Optional.of(
