@@ -5,7 +5,8 @@ java_library(
   name = 'exceptions',
   srcs = EXCEPTION_SRCS,
   tests = [
-    '//test/com/facebook/buck/android:android',
+    '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:integration',
   ],
   deps = [
     '//third-party/java/jsr:jsr305',
@@ -22,6 +23,10 @@ PACKAGEABLE_SOURCES = [
 java_immutables_library(
   name = 'packageable',
   srcs = PACKAGEABLE_SOURCES,
+  tests = [
+    '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:integration',
+  ],
   deps = [
     '//third-party/java/guava:guava',
     '//src/com/facebook/buck/cxx:platform',
@@ -101,7 +106,8 @@ java_immutables_library(
   name = 'rules',
   srcs = RULES_SRCS,
   tests = [
-    '//test/com/facebook/buck/android:android',
+    '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:integration',
   ],
   deps = [
     ':exceptions',
@@ -173,7 +179,8 @@ java_library(
   name = 'split_dex',
   srcs = SPLIT_DEX_SRCS,
   tests = [
-    '//test/com/facebook/buck/android:android',
+    '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:integration',
   ],
   deps = [
     '//third-party/java/guava:guava',
@@ -196,6 +203,10 @@ HELPERS_SRCS = [
 java_library(
   name = 'helpers',
   srcs = HELPERS_SRCS,
+  tests = [
+    '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:integration',
+  ],
   deps = [
     ':exceptions',
     ':steps',
@@ -231,6 +242,10 @@ UTILS_SRCS = [
 java_library(
   name = 'utils',
   srcs = UTILS_SRCS,
+  tests = [
+    '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:integration',
+  ],
   deps = [
     ':exceptions',
     '//src/com/facebook/buck/util:util',
@@ -246,9 +261,10 @@ java_immutables_library(
   name = 'steps',
   srcs = glob(['*.java'],
               excludes = EXCEPTION_SRCS + PACKAGEABLE_SOURCES + RULES_SRCS + SPLIT_DEX_SRCS +
-	                 UTILS_SRCS + HELPERS_SRCS),
+                  UTILS_SRCS + HELPERS_SRCS),
   tests = [
-    '//test/com/facebook/buck/android:android',
+    '//test/com/facebook/buck/android:unit',
+    '//test/com/facebook/buck/android:integration',
   ],
   deps = [
     ':exceptions',
