@@ -31,9 +31,11 @@ import com.facebook.buck.util.environment.Platform;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+@Ignore("Disabled due to timeouts installing into the simulator")
 public class InstallCommandIntegrationTest {
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
