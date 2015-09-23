@@ -191,7 +191,7 @@ public class AuditOwnerCommand extends AbstractCommand {
       // Get the target base name.
       Preconditions.checkState(rootPath.isAbsolute());
       Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
-      String targetBaseName = "//" + targetBasePath.toString();
+      String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
 
       // Parse buck files and load target nodes.
       if (!targetNodes.containsKey(buckFile)) {
