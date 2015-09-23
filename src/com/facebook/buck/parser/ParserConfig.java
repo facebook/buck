@@ -41,6 +41,12 @@ public class ParserConfig {
     ;
   }
 
+  public enum AllowSymlinks {
+    ALLOW,
+    FORBID,
+    ;
+  }
+
   private final BuckConfig delegate;
 
   public ParserConfig(BuckConfig delegate) {
@@ -90,6 +96,11 @@ public class ParserConfig {
               }
             })
         .toSet();
+  }
+
+  public AllowSymlinks getAllowSymlinks() {
+    return delegate.getEnum("project", "allow_symlinks", AllowSymlinks.class)
+        .or(AllowSymlinks.ALLOW);
   }
 
   public GlobHandler getGlobHandler() {

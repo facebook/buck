@@ -227,6 +227,21 @@ public class ParserTest extends EasyMockSupport {
       ProjectBuildFileParserFactory buildFileParserFactory,
       BuckConfig buckConfig)
       throws IOException, InterruptedException {
+    return createParser(
+        buildFileTreeSupplier,
+        rules,
+        buildFileParserFactory,
+        buckConfig,
+        ParserConfig.AllowSymlinks.ALLOW);
+  }
+
+  private Parser createParser(
+      Supplier<BuildFileTree> buildFileTreeSupplier,
+      Iterable<Map<String, Object>> rules,
+      ProjectBuildFileParserFactory buildFileParserFactory,
+      BuckConfig buckConfig,
+      ParserConfig.AllowSymlinks allowSymlinks)
+      throws IOException, InterruptedException {
 
     TestCellBuilder repoBuilder = new TestCellBuilder()
         .setBuildFileParserFactory(buildFileParserFactory)
@@ -238,7 +253,8 @@ public class ParserTest extends EasyMockSupport {
     Parser parser = new Parser(
         toUse,
         buildFileTreeSupplier,
-        false);
+        false,
+        allowSymlinks);
 
     try {
       parser.parseRawRulesInternal(rules);
@@ -1540,6 +1556,53 @@ public class ParserTest extends EasyMockSupport {
           ImmutableSet.of(Paths.get("foo/bar/Bar.java")),
           libRule.getJavaSrcs());
     }
+  }
+
+  @Test
+  public void whenSymlinksForbiddenThenParseFailsOnSymlinkInSources()
+      throws Exception {
+    // This test depends on creating symbolic links which we cannot do on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Target //foo:lib contains input files under a path which contains a symbolic link (" +
+        "{foo/bar=bar}). To resolve this, use separate rules and declare dependencies instead of " +
+        "using symbolic links.");
+
+    Parser parser = createParser(
+        ofInstance(
+            new FilesystemBackedBuildFileTree(filesystem, "BUCK")),
+        emptyBuildTargets(),
+        new TestProjectBuildFileParserFactory(filesystem.getRootPath(), buildRuleTypes),
+        new FakeBuckConfig(),
+        ParserConfig.AllowSymlinks.FORBID);
+
+    tempDir.newFolder("bar");
+    tempDir.newFile("bar/Bar.java");
+    tempDir.newFolder("foo");
+    Path rootPath = tempDir.getRoot().toPath().toRealPath();
+    java.nio.file.Files.createSymbolicLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
+
+    Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
+    Files.write(
+        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n",
+        testBuckFile.toFile(),
+        Charsets.UTF_8);
+
+    BuildTarget libTarget = BuildTarget.builder("//foo", "lib").build();
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckConfig config = new FakeBuckConfig();
+
+    parser.buildTargetGraphForBuildTargets(
+        buildTargets,
+        new ParserConfig(config),
+        eventBus,
+        new TestConsole(),
+        config.getEnvironment(),
+        /* enableProfiling */ false);
   }
 
   @Test

@@ -82,7 +82,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -185,7 +184,8 @@ public class Parser {
 
   public static Parser createBuildFileParser(
       final Cell cell,
-      boolean useWatchmanGlob)
+      boolean useWatchmanGlob,
+      ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
     return new Parser(
         cell,
@@ -199,7 +199,8 @@ public class Parser {
                 cell.getBuildFileName());
           }
         },
-        useWatchmanGlob);
+        useWatchmanGlob,
+        allowSymlinks);
   }
 
   /**
@@ -209,12 +210,13 @@ public class Parser {
   Parser(
       Cell cell,
       Supplier<BuildFileTree> buildFileTreeSupplier,
-      boolean useWatchmanGlob)
+      boolean useWatchmanGlob,
+      ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
     this.cell = cell;
     this.useWatchmanGlob = useWatchmanGlob;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
-    this.state = new CachedState(cell.getBuildFileName());
+    this.state = new CachedState(cell.getBuildFileName(), allowSymlinks);
   }
 
   /**
@@ -974,7 +976,9 @@ public class Parser {
 
     private final String buildFile;
 
-    public CachedState(String buildFileName) {
+    private final ParserConfig.AllowSymlinks allowSymlinks;
+
+    public CachedState(String buildFileName, ParserConfig.AllowSymlinks allowSymlinks) {
       this.memoizedTargetNodes = CacheBuilder.newBuilder().<BuildTarget, TargetNode<?>>build();
       this.symlinkExistenceCache = Maps.newHashMap();
       this.buildInputPathsUnderSymlink = Sets.newHashSet();
@@ -990,6 +994,7 @@ public class Parser {
           });
       this.buildFileDependents = ArrayListMultimap.create();
       this.buildFile = buildFileName;
+      this.allowSymlinks = allowSymlinks;
     }
 
     public void invalidateAll() {
@@ -1278,6 +1283,14 @@ public class Parser {
                 targetRepo.getFilesystem(),
                 symlinkExistenceCache,
                 newSymlinksEncountered)) {
+          if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
+            throw new HumanReadableException(
+                "Target %s contains input files under a path which contains a symbolic link " +
+                "(%s). To resolve this, use separate rules and declare dependencies instead of " +
+                "using symbolic links.",
+                targetNode.getBuildTarget(),
+                newSymlinksEncountered);
+          }
           LOG.warn(
               "Disabling caching for target %s, because one or more input files are under a " +
               "symbolic link (%s). This will severely impact performance! To resolve this, use " +
@@ -1351,19 +1364,16 @@ public class Parser {
         Path subpath = input.subpath(0, i);
         Path resolvedSymlink = symlinkExistenceCache.get(subpath);
         if (resolvedSymlink != null) {
+          LOG.debug("Detected cached symlink %s -> %s", subpath, resolvedSymlink);
           newSymlinksEncountered.put(subpath, resolvedSymlink);
           result = true;
         } else if (projectFilesystem.isSymLink(subpath)) {
-          try {
-            resolvedSymlink = projectFilesystem.getRootPath().relativize(subpath.toRealPath());
-            LOG.debug("Detected symbolic link %s -> %s", subpath, resolvedSymlink);
-            newSymlinksEncountered.put(subpath, resolvedSymlink);
-            symlinkExistenceCache.put(subpath, resolvedSymlink);
-          } catch (NoSuchFileException e) {
-            LOG.verbose(e, "No such file detecting symlink at %s", subpath);
-          } catch (IOException e) {
-            LOG.error(e, "Couldn't detect symbolic link at %s", subpath);
-          }
+          Path symlinkTarget = projectFilesystem.resolve(subpath).toRealPath();
+          Path relativeSymlinkTarget = projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget)
+              .or(symlinkTarget);
+          LOG.debug("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
+          newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
+          symlinkExistenceCache.put(subpath, relativeSymlinkTarget);
           result = true;
         }
       }

@@ -487,7 +487,8 @@ public class DaemonIntegrationTest {
                 ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
             .setFilesystem(filesystem)
             .build(),
-        ParserConfig.GlobHandler.PYTHON);
+        ParserConfig.GlobHandler.PYTHON,
+        ParserConfig.AllowSymlinks.ALLOW);
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
@@ -496,7 +497,8 @@ public class DaemonIntegrationTest {
                     ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON));
+            ParserConfig.GlobHandler.PYTHON,
+            ParserConfig.AllowSymlinks.ALLOW));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -508,7 +510,8 @@ public class DaemonIntegrationTest {
                         ImmutableMap.of("somename", "someothervalue"))))
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON));
+            ParserConfig.GlobHandler.PYTHON,
+            ParserConfig.AllowSymlinks.ALLOW));
   }
 
   @Test
@@ -548,7 +551,8 @@ public class DaemonIntegrationTest {
                     Optional.of("something")))
             .setFilesystem(filesystem)
             .build(),
-        ParserConfig.GlobHandler.PYTHON);
+        ParserConfig.GlobHandler.PYTHON,
+        ParserConfig.AllowSymlinks.ALLOW);
 
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
@@ -561,6 +565,7 @@ public class DaemonIntegrationTest {
                         Optional.of("different")))
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON));
+            ParserConfig.GlobHandler.PYTHON,
+            ParserConfig.AllowSymlinks.ALLOW));
   }
 }
