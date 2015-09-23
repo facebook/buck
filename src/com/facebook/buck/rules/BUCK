@@ -117,7 +117,6 @@ java_immutables_library(
     'Description.java',
     'FlavorableDescription.java',
     'ExportDependencies.java',
-    'HasDependencies.java',
     'HashedFileTool.java',
     'HasPostBuildSteps.java',
     'HasRuntimeDeps.java',

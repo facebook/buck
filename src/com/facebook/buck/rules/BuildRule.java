@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget, HasDependencies {
+public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
 
   @Override
   BuildTarget getBuildTarget();
@@ -55,7 +55,6 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget, HasDep
    *     original {@code deps} argument, as defined in the build file, must be accessed via a
    *     custom getter provided by the build rule.
    */
-  @Override
   ImmutableSortedSet<BuildRule> getDeps();
 
   /**
