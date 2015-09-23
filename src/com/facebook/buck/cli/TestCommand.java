@@ -31,8 +31,8 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
+import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -44,6 +44,7 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -285,15 +286,14 @@ public class TestCommand extends BuildCommand {
 
   private int runTestsExternal(
       final CommandRunnerParams params,
-      BuildEngine buildEngine,
       Build build,
       Iterable<String> command,
       Iterable<TestRule> testRules)
       throws InterruptedException, IOException {
+    TestRunningOptions options = getTestRunningOptions(params);
 
-    // Walk the test rules and serialize their external specs to files to be passed to the
-    // external test runner.
-    List<String> infoFileArgs = Lists.newArrayList();
+    // Walk the test rules, collecting all the specs.
+    List<ExternalTestRunnerTestSpec> specs = Lists.newArrayList();
     for (TestRule testRule : testRules) {
       if (!(testRule instanceof ExternalTestRunnerRule)) {
         params.getBuckEventBus().post(
@@ -303,23 +303,17 @@ public class TestCommand extends BuildCommand {
                     testRule.getBuildTarget())));
         return 1;
       }
-      RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
-      Path infoFile =
-          params.getCell().getFilesystem()
-              .resolve(
-                  testRule.getPathToTestOutputDirectory()
-                      .resolve(String.format("external_runner.%s.json", ruleKey)));
-      if (!Files.exists(infoFile) || !isResultsCacheEnabled(params.getBuckConfig())) {
-        Files.createDirectories(infoFile.getParent());
-        ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
-        params.getObjectMapper().writeValue(
-            infoFile.toFile(),
-            rule.getExternalTestRunnerSpec(
-                build.getExecutionContext(),
-                getTestRunningOptions(params)));
-      }
-      infoFileArgs.add(infoFile.toString());
+      ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
+      specs.add(rule.getExternalTestRunnerSpec(build.getExecutionContext(), options));
     }
+
+    // Serialize the specs to a file to pass into the test runner.
+    Path infoFile =
+        params.getCell().getFilesystem()
+            .resolve(BuckConstant.SCRATCH_PATH.resolve("external_runner_specs.json"));
+    Files.createDirectories(infoFile.getParent());
+    Files.deleteIfExists(infoFile);
+    params.getObjectMapper().writerWithDefaultPrettyPrinter().writeValue(infoFile.toFile(), specs);
 
     // Launch and run the external test runner, forwarding it's stdout/stderr to the console.
     // We wait for it to complete then returns its error code.
@@ -327,7 +321,7 @@ public class TestCommand extends BuildCommand {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
             .addAllCommand(command)
-            .addAllCommand(infoFileArgs)
+            .addCommand("--buck-test-info", infoFile.toString())
             .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
             .build();
     final WritableByteChannel stdout = Channels.newChannel(params.getConsole().getStdOut());
@@ -535,7 +529,6 @@ public class TestCommand extends BuildCommand {
         if (externalTestRunner.isPresent()) {
           return runTestsExternal(
               params,
-              cachingBuildEngine,
               build,
               externalTestRunner.get(),
               testRules);
