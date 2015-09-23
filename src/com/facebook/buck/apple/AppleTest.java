@@ -17,10 +17,13 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.ExternalTestRunnerRule;
+import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -62,7 +65,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps {
+public class AppleTest
+    extends NoopBuildRule
+    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
   @AddToRuleKey
   private final Optional<Path> xctoolPath;
@@ -194,13 +199,16 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
     return getProjectFilesystem().exists(testOutputPath);
   }
 
-  @Override
-  public ImmutableList<Step> runTests(
-      BuildContext buildContext,
-      ExecutionContext executionContext,
-      TestRunningOptions options,
+  public Pair<ImmutableList<Step>, ExternalTestRunnerTestSpec> getTestCommand(
+      ExecutionContext context,
       TestRule.TestReportingCallback testReportingCallback) {
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ExternalTestRunnerTestSpec.Builder externalSpec = ExternalTestRunnerTestSpec.builder()
+        .setTarget(getBuildTarget().toString())
+        .setLabels(getLabels())
+        .setContacts(getContacts());
+
     Path resolvedTestBundleDirectory = getProjectFilesystem().resolve(
         Preconditions.checkNotNull(testBundle.getPathToOutput()));
 
@@ -271,7 +279,7 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
       } else {
         destinationSpecifierArg = defaultDestinationSpecifier;
       }
-      steps.add(
+      XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
               getProjectFilesystem(),
               xctoolBinaryPath,
@@ -281,7 +289,10 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
               logicTestPathsBuilder.build(),
               appTestPathsToHostAppsBuilder.build(),
               resolvedTestOutputPath,
-              xctoolStdoutReader));
+              xctoolStdoutReader);
+      steps.add(xctoolStep);
+      externalSpec.setType("xctool");
+      externalSpec.setCommand(xctoolStep.getCommand());
     } else {
       Tool testRunningTool;
       if (testBundleExtension.equals("xctest")) {
@@ -293,16 +304,29 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
             "Cannot run non-xctest bundle type %s (otest not present)",
             testBundleExtension);
       }
-      steps.add(
+      XctestRunTestsStep xctestStep =
           new XctestRunTestsStep(
               getProjectFilesystem(),
               testRunningTool.getCommandPrefix(getResolver()),
               (testBundleExtension.equals("xctest") ? "-XCTest" : "-SenTest"),
               resolvedTestBundleDirectory,
-              resolvedTestOutputPath));
+              resolvedTestOutputPath);
+      steps.add(xctestStep);
+      externalSpec.setType("xctest");
+      externalSpec.setCommand(xctestStep.getCommand());
+      externalSpec.setEnv(xctestStep.getEnv(context));
     }
 
-    return steps.build();
+    return new Pair<>(steps.build(), externalSpec.build());
+  }
+
+  @Override
+  public ImmutableList<Step> runTests(
+      BuildContext buildContext,
+      ExecutionContext executionContext,
+      TestRunningOptions options,
+      TestReportingCallback testReportingCallback) {
+    return getTestCommand(executionContext, testReportingCallback).getFirst();
   }
 
   @Override
@@ -388,4 +412,11 @@ public class AppleTest extends NoopBuildRule implements TestRule, HasRuntimeDeps
   public boolean supportsStreamingTests() {
     return !useXctest;
   }
+
+  @Override
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext, TestRunningOptions testRunningOptions) {
+    return getTestCommand(executionContext, NOOP_REPORTING_CALLBACK).getSecond();
+  }
+
 }

@@ -65,23 +65,29 @@ public class XctestRunTestsStep implements Step {
     return "xctest-run-tests";
   }
 
-  @Override
-  public int execute(ExecutionContext context) throws InterruptedException {
+  public ImmutableList<String> getCommand() {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(xctest);
     args.add(testArgument);
     args.add("All");
     args.add(logicTestBundlePath.toString());
+    return args.build();
+  }
 
+  public ImmutableMap<String, String> getEnv(ExecutionContext context) {
     ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
     environment.putAll(context.getEnvironment());
     // if (appTestHostAppPath.isPresent()) {
     //   TODO(grp): Pass XCBundleInjection environment.
     // }
+    return environment.build();
+  }
 
+  @Override
+  public int execute(ExecutionContext context) throws InterruptedException {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-    builder.setCommand(args.build());
-    builder.setEnvironment(environment.build());
+    builder.setCommand(getCommand());
+    builder.setEnvironment(getEnv(context));
     builder.setRedirectError(
         ProcessBuilder.Redirect.to(
             filesystem.resolve(outputPath).toFile()));
@@ -101,7 +107,7 @@ public class XctestRunTestsStep implements Step {
       // Failure will be detected through the output, not from here.
       exitCode = 0;
     } catch (IOException e) {
-      LOG.error(e, "Error while running %s", args.build());
+      LOG.error(e, "Error while running %s", getCommand());
       e.printStackTrace(context.getStdErr());
       exitCode = 1;
     }
