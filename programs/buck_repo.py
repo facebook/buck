@@ -1,4 +1,5 @@
 from __future__ import print_function
+import glob
 import os
 import platform
 import subprocess
@@ -329,4 +330,16 @@ class BuckRepo(BuckTool):
         return self._pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
 
     def _get_pywatchman_path(self):
-        return self._join_buck_dir("build/pywatchman")
+        # If setuptools is installed, we need to find the path to the .egg and
+        # set that in sys.path instead of using the containing directory
+        pywatchman_dir = self._join_buck_dir("build/pywatchman")
+        eggs = glob.glob(os.path.join(pywatchman_dir, '*.egg'))
+        if eggs:
+            if len(eggs) > 1:
+                # Built with multiple versions of Python? Give up.
+                raise BuckToolException(textwrap.dedent("""\
+                ::: Multiple .egg archives found in '{0}': {1}.
+                ::: Please rm -rf {0} and try again.""".format(pywatchman_dir, eggs)))
+            return eggs[0]
+        else:
+            return pywatchman_dir

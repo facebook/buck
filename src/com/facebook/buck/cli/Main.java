@@ -1133,6 +1133,7 @@ public final class Main {
             buildDateStr,
             buildRev,
             Arrays.toString(args));
+        LOG.debug("System properties: %s", System.getProperties());
       }
       return runMainWithExitCode(buildId, projectRoot, context, clientEnvironment, args);
     } catch (HumanReadableException e) {
