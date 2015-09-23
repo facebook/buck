@@ -20,6 +20,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -27,23 +29,55 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.util.Collection;
+import java.util.Set;
+
 public class CxxTestDescriptionTest {
+
+  private CxxTestBuilder createTestBuilder(
+      BuildRuleResolver resolver,
+      ProjectFilesystem filesystem,
+      Collection<TargetNode<?>> targetNodes) {
+    BuildRule frameworkRule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:framwork_rule"))
+            .setOut("out")
+            .build(resolver, filesystem, targetNodes);
+    return new CxxTestBuilder(
+        BuildTargetFactory.newInstance("//:test"),
+        new CxxBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.of(
+                    "cxx",
+                    ImmutableMap.of(
+                        "gtest_dep", frameworkRule.getBuildTarget().toString(),
+                        "gtest_default_test_main_dep",
+                        frameworkRule.getBuildTarget().toString(),
+                        "boost_test_dep", frameworkRule.getBuildTarget().toString())))),
+        CxxTestBuilder.createDefaultPlatform(),
+        CxxTestBuilder.createDefaultPlatforms());
+  }
 
   @Test
   public void findDepsFromParams() {
@@ -81,44 +115,24 @@ public class CxxTestDescriptionTest {
 
   @Test
   public void environmentIsPropagated() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
+    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
             .setOut("someRule")
             .build(resolver);
-    BuildRule gtest =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtest"))
-            .setOut("out")
+    CxxTest cxxTest =
+        (CxxTest) createTestBuilder(resolver, filesystem, targetNodes)
+            .setEnv(ImmutableMap.of("TEST", "value $(location //:some_rule)"))
             .build(resolver);
-    BuildRule gtestMain =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtestMain"))
-            .setOut("out")
-            .build(resolver);
-    CxxTestBuilder builder =
-        new CxxTestBuilder(
-            BuildTargetFactory.newInstance("//:test"),
-            new CxxBuckConfig(
-                new FakeBuckConfig(
-                    ImmutableMap.of(
-                        "cxx",
-                        ImmutableMap.of(
-                                        "gtest_dep", gtest.getBuildTarget().toString(),
-                                        "gtest_default_test_main_dep",
-                                        gtestMain.getBuildTarget().toString()
-                                        )))),
-            CxxTestBuilder.createDefaultPlatform(),
-            CxxTestBuilder.createDefaultPlatforms());
-    CxxTest test = (CxxTest) builder
-          .setEnv(ImmutableMap.of("TEST", "value $(location //:some_rule)"))
-          .build(resolver);
-
     TestRunningOptions options =
         TestRunningOptions.builder()
             .setDryRun(false)
             .setTestSelectorList(TestSelectorList.empty())
             .build();
     ImmutableList<Step> steps =
-        test.runTests(
+        cxxTest.runTests(
             FakeBuildContext.NOOP_CONTEXT,
             TestExecutionContext.newInstance(),
             options,
@@ -135,36 +149,17 @@ public class CxxTestDescriptionTest {
 
   @Test
   public void testArgsArePropagated() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver = new BuildRuleResolver();
+    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
             .setOut("someRule")
             .build(resolver);
-    BuildRule gtest =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtest"))
-            .setOut("out")
+    CxxTest cxxTest =
+        (CxxTest) createTestBuilder(resolver, filesystem, targetNodes)
+            .setArgs(ImmutableList.of("value $(location //:some_rule)"))
             .build(resolver);
-    BuildRule gtestMain =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtestMain"))
-            .setOut("out")
-            .build(resolver);
-    CxxTestBuilder builder =
-        new CxxTestBuilder(
-            BuildTargetFactory.newInstance("//:test"),
-            new CxxBuckConfig(
-                new FakeBuckConfig(
-                    ImmutableMap.of(
-                        "cxx",
-                        ImmutableMap.of(
-                            "gtest_dep", gtest.getBuildTarget().toString(),
-                            "gtest_default_test_main_dep",
-                            gtestMain.getBuildTarget().toString()
-                        )))),
-            CxxTestBuilder.createDefaultPlatform(),
-            CxxTestBuilder.createDefaultPlatforms());
-    CxxTest test = (CxxTest) builder
-        .setArgs(ImmutableList.of("value $(location //:some_rule)"))
-        .build(resolver);
     TestRunningOptions testOptions =
           TestRunningOptions.builder()
           .setDryRun(false)
@@ -172,7 +167,7 @@ public class CxxTestDescriptionTest {
           .setTestSelectorList(TestSelectorList.empty())
           .build();
     ImmutableList<Step> steps =
-        test.runTests(
+        cxxTest.runTests(
             FakeBuildContext.NOOP_CONTEXT,
             TestExecutionContext.newInstance(),
             testOptions,
@@ -187,32 +182,56 @@ public class CxxTestDescriptionTest {
   @Test
   public void runTestSeparately() {
     for (CxxTestType framework : CxxTestType.values()) {
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
       BuildRuleResolver resolver = new BuildRuleResolver();
-      BuildRule frameworkRule =
-          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gtest"))
-              .setOut("out")
+      Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
+      CxxTest cxxTest =
+          (CxxTest) createTestBuilder(resolver, filesystem, targetNodes)
+              .setRunTestSeparately(true)
+              .setUseDefaultTestMain(true)
+              .setFramework(framework)
               .build(resolver);
-      CxxTestBuilder builder =
-          new CxxTestBuilder(
-              BuildTargetFactory.newInstance("//:test"),
-              new CxxBuckConfig(
-                  new FakeBuckConfig(
-                      ImmutableMap.of(
-                          "cxx",
-                          ImmutableMap.of(
-                              "gtest_dep", frameworkRule.getBuildTarget().toString(),
-                              "gtest_default_test_main_dep",
-                              frameworkRule.getBuildTarget().toString(),
-                              "boost_test_dep", frameworkRule.getBuildTarget().toString())))),
-              CxxTestBuilder.createDefaultPlatform(),
-              CxxTestBuilder.createDefaultPlatforms());
-      CxxTest test = (CxxTest) builder
-          .setRunTestSeparately(true)
-          .setUseDefaultTestMain(true)
-          .setFramework(framework)
-          .build(resolver);
-      assertTrue(test.runTestSeparately());
+      assertTrue(cxxTest.runTestSeparately());
     }
+  }
+
+  private ImmutableSortedSet<BuildRule> getTransitiveRuntimeDeps(HasRuntimeDeps rule) {
+    final Set<BuildRule> runtimeDeps = Sets.newHashSet();
+    AbstractBreadthFirstTraversal<BuildRule> visitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(rule.getRuntimeDeps()) {
+          @Override
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+            runtimeDeps.add(rule);
+            if (rule instanceof HasRuntimeDeps) {
+              return ((HasRuntimeDeps) rule).getRuntimeDeps();
+            }
+            return ImmutableSet.of();
+          }
+        };
+    visitor.start();
+    return ImmutableSortedSet.copyOf(runtimeDeps);
+  }
+
+
+  @Test
+  public void runtimeDepOnDeps() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
+    BuildRule cxxBinary =
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver, filesystem, targetNodes);
+    BuildRule cxxLibrary =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
+            .build(resolver, filesystem, targetNodes);
+    CxxTest cxxTest =
+        (CxxTest) createTestBuilder(resolver, filesystem, targetNodes)
+            .setDeps(ImmutableSortedSet.of(cxxLibrary.getBuildTarget()))
+            .build(resolver, filesystem, targetNodes);
+    assertThat(
+        getTransitiveRuntimeDeps(cxxTest),
+        Matchers.hasItem(cxxBinary));
   }
 
 }
