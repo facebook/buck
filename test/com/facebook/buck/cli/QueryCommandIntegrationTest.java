@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -30,6 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class QueryCommandIntegrationTest {
 
@@ -55,7 +57,8 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-one-transitive-deps"))));
+        is(equalToIgnoringPlatformNewlines(
+                workspace.getFileContents("stdout-one-transitive-deps"))));
   }
 
   @Test
@@ -69,7 +72,9 @@ public class QueryCommandIntegrationTest {
         "query",
         "testsof(//example:one)");
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalTo(workspace.getFileContents("stdout-one-testsof"))));
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-one-testsof"))));
   }
 
   @Test
@@ -120,7 +125,7 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-two-deps-tests"))));
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-two-deps-tests"))));
   }
 
   @Test
@@ -178,7 +183,8 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-one-direct-deps-tests"))));
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+                    "stdout-one-direct-deps-tests"))));
   }
 
   @Test
@@ -194,7 +200,8 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-pkg-pattern-testsof"))));
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+                    "stdout-pkg-pattern-testsof"))));
   }
 
   @Test
@@ -210,7 +217,8 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-recursive-pattern-testsof"))));
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+                    "stdout-recursive-pattern-testsof"))));
   }
 
   @Test
@@ -244,7 +252,9 @@ public class QueryCommandIntegrationTest {
         "owner('example/1.txt')");
 
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalTo(workspace.getFileContents("stdout-one-owner"))));
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-one-owner"))));
   }
 
   @Test
@@ -298,7 +308,8 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-recursive-pattern-kind"))));
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+                    "stdout-recursive-pattern-kind"))));
   }
 
   @Test
@@ -347,7 +358,7 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-five-seven-rdeps"))));
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-five-seven-rdeps"))));
   }
 
   @Test
@@ -378,7 +389,9 @@ public class QueryCommandIntegrationTest {
         "query",
         "labels('srcs', '//example:one')");
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalTo("example/1.txt\n")));
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(Paths.get("example/1.txt") + "\n")));
   }
 
   @Test
@@ -391,7 +404,11 @@ public class QueryCommandIntegrationTest {
         "query",
         "example/1.txt + example/2.txt");
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalTo("example/1.txt\nexample/2.txt\n")));
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(String.format("%s%n%s%n",
+                    Paths.get("example/1.txt"),
+                    Paths.get("example/2.txt")))));
   }
 
   @Test
@@ -407,7 +424,8 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-one-five-except-six-src-test-exp-header"))));
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+                    "stdout-one-five-except-six-src-test-exp-header"))));
   }
 
   @Test
@@ -473,7 +491,9 @@ public class QueryCommandIntegrationTest {
         "query",
         "filter('four', '//example/...')");
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalTo(workspace.getFileContents("stdout-filter-four"))));
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-filter-four"))));
   }
 
   @Test
@@ -506,7 +526,8 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalTo(workspace.getFileContents("stdout-allpaths-deps-one-to-five-six.dot"))));
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents(
+                    "stdout-allpaths-deps-one-to-five-six.dot"))));
   }
 
   @Test
@@ -519,7 +540,9 @@ public class QueryCommandIntegrationTest {
         "query",
         "attrfilter(tests, '//example:four-tests', '//example/...')");
     result.assertSuccess();
-    assertThat(result.getStdout(), is(equalTo("//example:four\n")));
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines("//example:four\n")));
   }
 
   @Test
