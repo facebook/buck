@@ -393,7 +393,33 @@ public class ProjectWorkspace {
   }
 
   public String getFileContents(String pathRelativeToProjectRoot) throws IOException {
-    return new String(Files.readAllBytes(getPath(pathRelativeToProjectRoot)), UTF_8);
+    Path path = getPath(pathRelativeToProjectRoot);
+    String platformExt = null;
+    switch (Platform.detect()) {
+      case LINUX:
+        platformExt = "linux";
+        break;
+      case MACOS:
+        platformExt = "macos";
+        break;
+      case WINDOWS:
+        platformExt = "win";
+        break;
+      case UNKNOWN:
+        // Leave platformExt as null.
+        break;
+    }
+    if (platformExt != null) {
+      String extension = com.google.common.io.Files.getFileExtension(path.toString());
+      String basename = com.google.common.io.Files.getNameWithoutExtension(path.toString());
+      Path platformPath = extension.length() > 0 ?
+          path.getParent().resolve(String.format("%s.%s.%s", basename, platformExt, extension)) :
+          path.getParent().resolve(String.format("%s.%s", basename, platformExt));
+      if (platformPath.toFile().exists()) {
+        path = platformPath;
+      }
+    }
+    return new String(Files.readAllBytes(path), UTF_8);
   }
 
   public void enableDirCache() throws IOException {
