@@ -32,7 +32,6 @@ public class EnvironmentFilter {
   // Always exclude environment variables with these names.
   private static final ImmutableSet<String> ENV_TO_REMOVE = ImmutableSet.of(
       "Apple_PubSub_Socket_Render", // OS X pubsub control variable.
-      "ANDROID_SERIAL",   // Serial of the target Android device/emulator.
       "BUCK_BUILD_ID",    // Build ID passed in from Python.
       "BUCK_CLASSPATH",   // Main classpath; set in Python
       "CLASSPATH",        // Bootstrap classpath; set in Python.
@@ -63,6 +62,7 @@ public class EnvironmentFilter {
 
   // Ignore the environment variables with these names when comparing environments.
   private static final ImmutableSet<String> ENV_TO_IGNORE = ImmutableSet.of(
+      "ANDROID_SERIAL", // Serial of the target Android device/emulator.
       "NAILGUN_TTY_1",  // Nailgun stdout supports ANSI escape sequences.
       "NAILGUN_TTY_2"   // Nailgun stderr supports ANSI escape sequences.
   );
