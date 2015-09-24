@@ -50,6 +50,7 @@ EXPORTED_RESOURCES = [
     Resource("path_to_intellij_py"),
     Resource("path_to_pex"),
     Resource("path_to_python_test_main"),
+    Resource("path_to_pywatchman"),
     Resource("path_to_sh_binary_template"),
     Resource("jacoco_agent_jar"),
     Resource("report_generator_jar"),
@@ -191,9 +192,6 @@ class BuckTool(object):
             command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
             command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
             command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
-            pywatchman_path = self._get_pywatchman_path()
-            if pywatchman_path:
-                command.append("-Dbuck.path_to_pywatchman={0}".format(pywatchman_path))
             command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
             command.append("-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
                 ngserver_output_path))
@@ -337,9 +335,6 @@ class BuckTool(object):
         raise NotImplementedError()
 
     def _get_java_classpath(self):
-        raise NotImplementedError()
-
-    def _get_pywatchman_path(self):
         raise NotImplementedError()
 
     def _get_extra_java_args(self):
