@@ -1,8 +1,10 @@
 
-java_library(
+java_immutables_library(
   name = 'timing',
   srcs = glob(['*.java']),
-  deps = [],
+  deps = [
+    '//src/com/facebook/buck/util:tristate',
+  ],
   visibility = [
     'PUBLIC',
   ],

@@ -14,6 +14,18 @@ java_library(
   ],
 )
 
+TRISTATE_SRCS = [
+  'TriState.java',
+]
+java_library(
+  name = 'tristate',
+  srcs = TRISTATE_SRCS,
+  tests = [
+    '//test/com/facebook/buck/util:util',
+  ],
+  visibility = [ 'PUBLIC' ],
+  deps = [],
+)
 
 EXCEPTION_SRCS = [
   'ExceptionWithHumanReadableMessage.java',
@@ -126,7 +138,7 @@ java_immutables_library(
   srcs = glob(
     includes = ['*.java'],
     excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS +
-               WATCHMAN_WATCHER_SRCS),
+               WATCHMAN_WATCHER_SRCS + TRISTATE_SRCS),
   tests = [
     '//test/com/facebook/buck/util:util',
   ],
