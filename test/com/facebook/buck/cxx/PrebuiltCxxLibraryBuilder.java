@@ -103,4 +103,9 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setForceStatic(boolean forceStatic) {
+    arg.forceStatic = Optional.of(forceStatic);
+    return this;
+  }
+
 }
