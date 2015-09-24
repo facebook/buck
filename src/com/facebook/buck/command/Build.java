@@ -17,6 +17,7 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
@@ -24,7 +25,6 @@ import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
@@ -38,12 +38,12 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -55,16 +55,18 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import org.immutables.value.Value;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
@@ -72,11 +74,11 @@ import javax.annotation.Nullable;
 
 public class Build implements Closeable {
 
-  private static final Predicate<Optional<BuildResult>> RULES_FAILED_PREDICATE =
-      new Predicate<Optional<BuildResult>>() {
+  private static final Predicate<BuildResult> RULES_FAILED_PREDICATE =
+      new Predicate<BuildResult>() {
         @Override
-        public boolean apply(Optional<BuildResult> input) {
-          return !input.isPresent() || input.get().getSuccess() == null;
+        public boolean apply(BuildResult input) {
+          return input.getSuccess() == null;
         }
       };
 
@@ -165,7 +167,7 @@ public class Build implements Closeable {
    * @param targetish The targets to build. All targets in this iterable must be unique.
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  public LinkedHashMap<BuildRule, Optional<BuildResult>> executeBuild(
+  public BuildExecutionResult executeBuild(
       Iterable<? extends HasBuildTarget> targetish,
       boolean isKeepGoing)
       throws IOException, StepFailedException, ExecutionException, InterruptedException {
@@ -255,7 +257,10 @@ public class Build implements Closeable {
       resultBuilder.put(rule, Optional.fromNullable(results.get(i)));
     }
 
-    return resultBuilder;
+    return BuildExecutionResult.builder()
+        .setFailures(FluentIterable.from(results).filter(RULES_FAILED_PREDICATE))
+        .setResults(resultBuilder)
+        .build();
   }
 
   private String getFailureMessage(Throwable thrown) {
@@ -266,25 +271,26 @@ public class Build implements Closeable {
       Iterable<? extends HasBuildTarget> targetsish,
       boolean isKeepGoing,
       BuckEventBus eventBus,
-      Ansi ansi,
+      Console console,
       Optional<Path> pathToBuildReport) throws InterruptedException {
     int exitCode;
 
     try {
-      LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = executeBuild(
+      BuildExecutionResult buildExecutionResult = executeBuild(
           targetsish,
           isKeepGoing);
 
-      BuildReport buildReport = new BuildReport(ruleToResult);
+      BuildReport buildReport = new BuildReport(buildExecutionResult);
 
       if (isKeepGoing) {
-        String buildReportText = buildReport.generateForConsole(ansi);
+        String buildReportText = buildReport.generateForConsole(console);
         // Remove trailing newline from build report.
         buildReportText = buildReportText.substring(0, buildReportText.length() - 1);
         eventBus.post(ConsoleEvent.info(buildReportText));
-        exitCode = Iterables.any(ruleToResult.values(), RULES_FAILED_PREDICATE) ? 1 : 0;
+        exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
         if (exitCode != 0) {
           eventBus.post(ConsoleEvent.severe("Not all rules succeeded."));
+
         }
       } else {
         exitCode = 0;
@@ -330,6 +336,19 @@ public class Build implements Closeable {
   @Override
   public void close() throws IOException {
     executionContext.close();
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractBuildExecutionResult {
+
+    /**
+     * @return Keys are build rules built during this invocation of Buck. Values reflect
+     * the success of each build rule, if it succeeded. ({@link Optional#absent()} represents a
+     * failed build rule.)
+     */
+    public abstract Map<BuildRule, Optional<BuildResult>> getResults();
+    public abstract ImmutableSet<BuildResult> getFailures();
   }
 
 }
