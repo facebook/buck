@@ -321,14 +321,14 @@ the repository and the target <code>//foo:bar</code>.
 </p>
 
 <p>
-This operator is meant to be used together with the <code>--dot</code>
+This operator is best used together with the <code>--dot</code>
 {sp}parameter to generate an image. Sample usage:
 </p>
 
-<p><pre>
+<p><pre class="prettyprint lang-py">
 {literal}
-buck query "allpaths(//foo:bar, //foo/bar/lib:baz)" --dot > result.dot
-dot -Tpng result.dot -o image.png
+$ buck query "allpaths(//foo:bar, //foo/bar/lib:baz)" --dot > result.dot
+$ dot -Tpng result.dot -o image.png
 {/literal}
 </pre></p>
 
@@ -606,6 +606,27 @@ returns the union of each query.
 {/param}
 
 {param params}
+
+{call buck.param}
+  {param name: 'dot' /}
+  {param desc}
+  <p>
+  Outputs the digraph representing the query results in <a href=
+  "https://en.wikipedia.org/wiki/DOT_(graph_description_language)#Directed_graphs">
+  dot format</a>. Example usage:
+  </p>
+
+<p><pre class="prettyprint lang-py">
+{literal}
+buck query "allpaths(//foo:bar, //path/to:other)" --dot > graph.dot
+dot -Tpng graph.dot -o graph.png
+{/literal}
+</pre></p>
+
+  <p>Then, open <code>graph.png</code> to visualize the graph.</p>
+
+  {/param}
+{/call}
 
 {call buck.param}
   {param name: 'json' /}
