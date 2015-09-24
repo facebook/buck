@@ -19,10 +19,12 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.Config;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -32,6 +34,7 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -212,7 +215,20 @@ public class Cell {
     return buildFile;
   }
 
-  public ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
+  /**
+   * Callers are responsible for managing the life-cycle of the created {@link
+   * ProjectBuildFileParser}.
+   */
+  public ProjectBuildFileParser createBuildFileParser(
+      Console console,
+      BuckEventBus eventBus,
+      boolean useWatchmanGlob) {
+    ProjectBuildFileParserFactory factory = createBuildFileParserFactory(useWatchmanGlob);
+    return factory.createParser(console, config.getEnvironment(), eventBus);
+  }
+
+  @VisibleForTesting
+  protected ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
     ParserConfig parserConfig = new ParserConfig(getBuckConfig());
 
     return new DefaultProjectBuildFileParserFactory(
