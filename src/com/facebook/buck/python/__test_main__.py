@@ -85,8 +85,8 @@ class FbJsonTestResult(unittest._TextTestResult):
     def startTest(self, test):
         super(FbJsonTestResult, self).startTest(test)
 
-        sys.stdout = TeeStream(CallbackStream(self.addStdout), sys.stdout)
-        sys.stderr = TeeStream(CallbackStream(self.addStderr), sys.stderr)
+        sys.stdout = CallbackStream(self.addStdout)
+        sys.stderr = CallbackStream(self.addStderr)
 
         self._current_test = test
         self._test_start_time = time.time()
