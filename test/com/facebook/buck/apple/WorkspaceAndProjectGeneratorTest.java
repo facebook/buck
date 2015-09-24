@@ -40,6 +40,7 @@ import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
@@ -61,6 +62,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.base.Function;
@@ -90,6 +92,7 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -220,6 +223,10 @@ public class WorkspaceAndProjectGeneratorTest {
         workspaceNode);
   }
 
+  private BuckEventBus getFakeBuckEventBus() {
+    return BuckEventBusFactory.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
+  }
+
   @Test
   public void workspaceAndProjectsShouldDiscoverDependenciesAndTests() throws IOException {
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
@@ -239,7 +246,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -307,7 +315,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -359,7 +368,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -440,7 +450,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -490,7 +501,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -522,7 +534,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -628,7 +641,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
     Map<Path, ProjectGenerator> projectGenerators = Maps.newHashMap();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
@@ -1042,7 +1056,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -1193,7 +1208,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 
@@ -1282,7 +1298,8 @@ public class WorkspaceAndProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
-        getOutputPathOfNodeFunction(targetGraph));
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(projectGenerators);
 

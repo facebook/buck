@@ -48,6 +48,7 @@ java_immutables_library(
     '//third-party/java/jackson:jackson',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/stringtemplate:stringtemplate',
+     '//src/com/facebook/buck/event:event',
   ],
   visibility = [
     'PUBLIC'
