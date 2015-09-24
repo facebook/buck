@@ -46,6 +46,7 @@ import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -488,7 +489,8 @@ public class DaemonIntegrationTest {
             .setFilesystem(filesystem)
             .build(),
         ParserConfig.GlobHandler.PYTHON,
-        ParserConfig.AllowSymlinks.ALLOW);
+        ParserConfig.AllowSymlinks.ALLOW,
+        new ObjectMapper());
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
@@ -498,7 +500,8 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW));
+            ParserConfig.AllowSymlinks.ALLOW,
+            new ObjectMapper()));
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.", daemon,
@@ -511,7 +514,8 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW));
+            ParserConfig.AllowSymlinks.ALLOW,
+            new ObjectMapper()));
   }
 
   @Test
@@ -552,7 +556,8 @@ public class DaemonIntegrationTest {
             .setFilesystem(filesystem)
             .build(),
         ParserConfig.GlobHandler.PYTHON,
-        ParserConfig.AllowSymlinks.ALLOW);
+        ParserConfig.AllowSymlinks.ALLOW,
+        new ObjectMapper());
 
     assertNotEquals(
         "Daemon should be replaced when not equal.", daemon,
@@ -566,6 +571,7 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW));
+            ParserConfig.AllowSymlinks.ALLOW,
+            new ObjectMapper()));
   }
 }

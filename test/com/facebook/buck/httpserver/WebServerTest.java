@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 
@@ -35,7 +36,11 @@ public class WebServerTest {
   @Test
   public void testCreateHandlersCoversExpectedContextPaths() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    WebServer webServer = new WebServer(/* port */ 9999, projectFilesystem, "/static/");
+    WebServer webServer = new WebServer(
+    /* port */ 9999,
+        projectFilesystem,
+        "/static/",
+        new ObjectMapper());
     List<ContextHandler> handlers = webServer.createHandlers();
     final Map<String, ContextHandler> contextPathToHandler = Maps.newHashMap();
     for (ContextHandler handler : handlers) {
