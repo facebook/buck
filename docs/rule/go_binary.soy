@@ -1,0 +1,82 @@
+{namespace go_binary}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'go_binary()' /}
+    {param prettify: true /}
+    {param description}
+      A go_binary() rule builds a native Go executable.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+<p>
+  A go_binary() rule builds a native executable from the supplied set of Go source files
+  and dependencies. The files supplied are expected to be in the main package, implicitly.
+</p>
+<p>
+  {call go_common.supported_language_version /}
+</p>
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call go_common.srcs_arg /}
+
+{call go_common.deps_arg /}
+
+{call go_common.compiler_flags_arg /}
+
+{call go_common.linker_flags_arg /}
+
+{/param} // close args
+
+{param examples}
+
+{call go_common.more_examples /}
+
+{literal}<pre class="prettyprint lang-py">
+go_binary(
+  name='greet',
+  srcs=[
+    'main.go',
+  ],
+  deps=[
+    ':greeting',
+  ],
+)
+
+go_library(
+  name='greeting',
+  srcs=[
+    'greeting.go',
+  ],
+  deps=[
+    ':join',
+  ],
+)
+
+go_library(
+  name='join',
+  srcs=[
+    'join.go',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

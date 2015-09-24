@@ -79,6 +79,9 @@ import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.StackedDownloader;
+import com.facebook.buck.go.GoBinaryDescription;
+import com.facebook.buck.go.GoBuckConfig;
+import com.facebook.buck.go.GoLibraryDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -373,6 +376,8 @@ public class KnownBuildRuleTypes {
 
     RustBuckConfig rustBuckConfig = new RustBuckConfig(config);
 
+    GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
@@ -491,6 +496,8 @@ public class KnownBuildRuleTypes {
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
+    builder.register(new GoBinaryDescription(goBuckConfig, defaultCxxPlatform));
+    builder.register(new GoLibraryDescription(goBuckConfig));
     builder.register(new GwtBinaryDescription());
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
