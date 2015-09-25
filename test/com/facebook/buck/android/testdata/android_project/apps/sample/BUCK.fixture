@@ -96,13 +96,13 @@ android_binary(
 )
 
 android_binary(
-  name = 'app_deps_resource_with_orig_file',
+  name = 'app_deps_resource_with_ignored_file',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
   deps = [
     '//java/com/sample/lib:lib',
     '//res/com/sample/base:base',
-    '//res/com/sample/with_origfile:res',
+    '//res/com/sample/with_ignored_file:res',
   ],
 )
 

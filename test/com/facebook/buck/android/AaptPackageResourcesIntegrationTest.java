@@ -69,8 +69,8 @@ public class AaptPackageResourcesIntegrationTest {
   }
 
   @Test
-  public void testOrigFileIsIgnoredByAapt() throws IOException {
+  public void testIgnoredFileIsIgnoredByAapt() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    workspace.runBuckBuild("//apps/sample:app_deps_resource_with_orig_file").assertSuccess();
+    workspace.runBuckBuild("//apps/sample:app_deps_resource_with_ignored_file").assertSuccess();
   }
 }
