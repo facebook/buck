@@ -66,7 +66,7 @@ public class MavenUrlDecoder {
 
     Matcher matcher = URL_PATTERN.matcher(uri.getSchemeSpecificPart());
 
-    if (!matcher.matches() || matcher.groupCount() != 6) {
+    if (!matcher.matches()) {
       throw new HumanReadableException("Unable to parse: " + uri);
     }
 

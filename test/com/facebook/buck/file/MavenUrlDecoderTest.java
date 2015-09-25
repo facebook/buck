@@ -86,6 +86,14 @@ public class MavenUrlDecoderTest {
   }
 
   @Test
+  public void optionalServerUrlIsOptional() throws URISyntaxException {
+    Optional<String> repo = Optional.of("http://foo.bar");
+    MavenUrlDecoder.toHttpUrl(
+        repo,
+        new URI("mvn:org.seleniumhq.selenium:selenium-java:jar:2.42.2"));
+  }
+
+  @Test
   public void shouldAddSlashesToMavenRepoUriIfOneIsMissing() throws URISyntaxException {
     String validUri = "mvn:junit:junit:jar:4.12";
     URI slashless = MavenUrlDecoder.toHttpUrl(
