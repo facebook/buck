@@ -99,7 +99,6 @@ public class AaptPackageResources extends AbstractBuildRule
   private final boolean rDotJavaNeedsDexing;
   @AddToRuleKey
   private final boolean shouldBuildStringSourceMap;
-  private final boolean shouldWarnIfMissingResource;
   @AddToRuleKey
   private final boolean skipCrunchPngs;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -115,7 +114,6 @@ public class AaptPackageResources extends AbstractBuildRule
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
       boolean shouldBuildStringSourceMap,
-      boolean shouldWarnIfMissingResources,
       boolean skipCrunchPngs) {
     super(params, resolver);
     this.manifest = manifest;
@@ -126,7 +124,6 @@ public class AaptPackageResources extends AbstractBuildRule
     this.javacOptions = javacOptions;
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
-    this.shouldWarnIfMissingResource = shouldWarnIfMissingResources;
     this.skipCrunchPngs = skipCrunchPngs;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
@@ -364,7 +361,6 @@ public class AaptPackageResources extends AbstractBuildRule
         getProjectFilesystem(),
         resourceDeps,
         getPathToRDotTxtFile(),
-        shouldWarnIfMissingResource,
         rDotJavaSrc);
     steps.add(mergeStep);
 

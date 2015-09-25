@@ -17,10 +17,12 @@
 package com.facebook.buck.android;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 
@@ -84,5 +86,17 @@ public class AndroidPrebuiltAarIntegrationTest {
         "R.txt contains transitive dependencies",
         rDotTxt,
         containsString(appCompatResource));
+  }
+
+  @Test
+  public void testExtraDepsDontResultInWarning() throws IOException {
+    ProcessResult result =
+        workspace.runBuckBuild("//:app-extra-res-entry").assertSuccess();
+
+    String buildOutput = result.getStderr();
+    assertThat(
+        "No warnings are shown",
+        buildOutput,
+        not(containsString("Cannot find resource")));
   }
 }

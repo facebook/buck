@@ -17,6 +17,15 @@ genrule(
   ],
 )
 
+genrule(
+  name = 'gen_aar-with-extra-res-entry',
+  cmd = '$(exe :aar_generator) --extra-res-entry $TMP $OUT',
+  out = 'extra.aar',
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 python_binary(
   name = 'aar_generator',
   main = 'gen_aar.py',
@@ -47,6 +56,15 @@ android_binary(
   package_type = 'DEBUG',
   deps = [
     ':lib',
+  ],
+)
+
+android_binary(
+  name = 'app-extra-res-entry',
+  manifest = 'AndroidManifest.xml',
+  keystore = ':debug',
+  deps = [
+    '//android_prebuilt_aar-dep:aar-extra-res-entry',
   ],
 )
 

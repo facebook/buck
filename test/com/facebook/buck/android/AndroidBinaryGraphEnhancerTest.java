@@ -157,7 +157,6 @@ public class AndroidBinaryGraphEnhancerTest {
         ANDROID_JAVAC_OPTIONS,
         false,
         false,
-        /* warnMissingResource */ false,
         /* skipCrunchPngs */ false);
     ruleResolver.addToIndex(aaptPackageResources);
 
