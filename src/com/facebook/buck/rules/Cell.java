@@ -19,10 +19,12 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.Config;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -32,8 +34,10 @@ import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -65,7 +69,7 @@ public class Cell {
   private CellFilesystemResolver cellFilesystemResolver;
 
   public Cell(
-      ProjectFilesystem filesystem,
+      final ProjectFilesystem filesystem,
       final Console console,
       final Watchman watchman,
       BuckConfig config,
@@ -92,20 +96,27 @@ public class Cell {
         new CacheLoader<String, Cell>() {
           @Override
           public Cell load(String cellName) throws Exception {
-            Optional<Path> root = getBuckConfig().getPath("repositories", cellName, false);
-            if (!root.isPresent()) {
+            Optional<Path> maybeRoot = getBuckConfig().getPath("repositories", cellName, false);
+            if (!maybeRoot.isPresent()) {
               throw new HumanReadableException(
                   "Unable to find repository named '%s' in repo rooted at %s",
                   cellName,
                   getFilesystem().getRootPath());
             }
 
+            // Added the precondition check, though the resolve call can never return null.
+            // TODO(user): Remove precondition check when possible.
+            Path root = Preconditions.checkNotNull(
+                getBuckConfig()
+                    .resolvePathThatMayBeOutsideTheProjectFilesystem(maybeRoot.get()));
+
             // TODO(simons): Get the overrides from the parent config
             ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of();
             Config config = Config.createDefaultConfig(
-                root.get(),
+                root,
                 sections);
-            ProjectFilesystem cellFilesystem = new ProjectFilesystem(root.get(), config);
+
+            ProjectFilesystem cellFilesystem = new ProjectFilesystem(root, config);
 
             Cell parent = Cell.this;
             BuckConfig parentConfig = parent.getBuckConfig();
@@ -116,7 +127,7 @@ public class Cell {
                 parentConfig.getPlatform(),
                 parentConfig.getEnvironment());
 
-            Watchman.build(root.get(), parentConfig.getEnvironment(), console, clock);
+            Watchman.build(root, parentConfig.getEnvironment(), console, clock);
 
             return new Cell(
                 cellFilesystem,
@@ -193,15 +204,31 @@ public class Cell {
       throws MissingBuildFileException {
     Cell targetCell = getCell(target.getCell());
 
-    Path relativePath = target.getBasePath().resolve(
+    ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
+
+    Path buildFile = targetFilesystem.resolve(target.getBasePath()).resolve(
         new ParserConfig(targetCell.getBuckConfig()).getBuildFileName());
-    if (!getFilesystem().isFile(relativePath)) {
+
+    if (!targetFilesystem.isFile(buildFile)) {
       throw new MissingBuildFileException(target, targetCell.getBuckConfig());
     }
-    return targetCell.getFilesystem().resolve(relativePath);
+    return buildFile;
   }
 
-  public ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
+  /**
+   * Callers are responsible for managing the life-cycle of the created {@link
+   * ProjectBuildFileParser}.
+   */
+  public ProjectBuildFileParser createBuildFileParser(
+      Console console,
+      BuckEventBus eventBus,
+      boolean useWatchmanGlob) {
+    ProjectBuildFileParserFactory factory = createBuildFileParserFactory(useWatchmanGlob);
+    return factory.createParser(console, config.getEnvironment(), eventBus);
+  }
+
+  @VisibleForTesting
+  protected ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
     ParserConfig parserConfig = new ParserConfig(getBuckConfig());
 
     return new DefaultProjectBuildFileParserFactory(

@@ -1,0 +1,9 @@
+go_library(
+  name = 'messenger',
+  srcs = [
+    'messenger.go',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

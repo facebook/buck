@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -82,6 +83,7 @@ public class WorkspaceAndProjectGenerator {
   private Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
   private final Function<TargetNode<?>, Path> outputPathOfNode;
+  private final BuckEventBus buckEventBus;
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
@@ -102,7 +104,8 @@ public class WorkspaceAndProjectGenerator {
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       String buildFileName,
-      Function<TargetNode<?>, Path> outputPathOfNode) {
+      Function<TargetNode<?>, Path> outputPathOfNode,
+      BuckEventBus buckEventBus) {
     this.projectFilesystem = projectFilesystem;
     this.reactNativeBuckConfig = reactNativeBuckConfig;
     this.projectGraph = projectGraph;
@@ -119,6 +122,7 @@ public class WorkspaceAndProjectGenerator {
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildFileName = buildFileName;
     this.outputPathOfNode = outputPathOfNode;
+    this.buckEventBus = buckEventBus;
     this.combinedProjectGenerator = Optional.absent();
   }
 
@@ -247,7 +251,8 @@ public class WorkspaceAndProjectGenerator {
           environment,
           cxxPlatforms,
           defaultCxxPlatform,
-          outputPathOfNode)
+          outputPathOfNode,
+          buckEventBus)
           .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
       combinedProjectGenerator = Optional.of(generator);
@@ -316,7 +321,8 @@ public class WorkspaceAndProjectGenerator {
               environment,
               cxxPlatforms,
               defaultCxxPlatform,
-              outputPathOfNode)
+              outputPathOfNode,
+              buckEventBus)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
           generator.createXcodeProjects();
@@ -350,7 +356,8 @@ public class WorkspaceAndProjectGenerator {
             environment,
             cxxPlatforms,
             defaultCxxPlatform,
-            outputPathOfNode);
+            outputPathOfNode,
+            buckEventBus);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTests)
             .createXcodeProjects();

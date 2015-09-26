@@ -381,6 +381,7 @@ public class PrebuiltCxxLibraryDescription
           }
         },
         args.soname,
+        args.forceStatic.or(false) ? NativeLinkable.Linkage.STATIC : NativeLinkable.Linkage.ANY,
         args.headerOnly.or(false),
         args.linkWhole.or(false),
         args.provided.or(false));
@@ -397,6 +398,7 @@ public class PrebuiltCxxLibraryDescription
     public Optional<String> headerNamespace;
     public Optional<Boolean> provided;
     public Optional<Boolean> linkWhole;
+    public Optional<Boolean> forceStatic;
     public Optional<ImmutableList<String>> exportedPreprocessorFlags;
     public Optional<PatternMatchedCollection<ImmutableList<String>>>
         exportedPlatformPreprocessorFlags;

@@ -57,6 +57,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       exportedPreprocessorFlags;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final Optional<String> soname;
+  private final Linkage linkage;
   private final boolean headerOnly;
   private final boolean linkWhole;
   private final boolean provided;
@@ -76,6 +77,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
           exportedPreprocessorFlags,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
       Optional<String> soname,
+      Linkage linkage,
       boolean headerOnly,
       boolean linkWhole,
       boolean provided) {
@@ -89,6 +91,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.soname = soname;
+    this.linkage = linkage;
     this.headerOnly = headerOnly;
     this.linkWhole = linkWhole;
     this.provided = provided;
@@ -219,7 +222,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
     if (!headerOnly) {
-      if (provided || type == Linker.LinkableDepType.SHARED) {
+      if (provided || (type == Linker.LinkableDepType.SHARED && linkage != Linkage.STATIC)) {
         SourcePath sharedLibrary = requireSharedLibrary(targetGraph, cxxPlatform);
         librariesBuilder.add(sharedLibrary);
         linkerArgsBuilder.add(pathResolver.getPath(sharedLibrary).toString());
@@ -253,7 +256,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.ANY;
+    return linkage;
   }
 
   @Override

@@ -38,9 +38,11 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
 
   // This is threadsafe
   private final Set<MyWebSocket> connections;
+  private final ObjectMapper objectMapper;
 
-  public StreamingWebSocketServlet() {
+  public StreamingWebSocketServlet(ObjectMapper objectMapper) {
     this.connections = Collections.newSetFromMap(Maps.<MyWebSocket, Boolean>newConcurrentMap());
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -64,7 +66,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     }
 
     try {
-      String message = new ObjectMapper().writeValueAsString(event);
+      String message = objectMapper.writeValueAsString(event);
       tellAll(message);
     } catch (IOException e) {
       Throwables.propagate(e);

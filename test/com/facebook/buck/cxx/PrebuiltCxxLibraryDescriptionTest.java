@@ -32,6 +32,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -45,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -52,6 +54,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 public class PrebuiltCxxLibraryDescriptionTest {
 
@@ -630,6 +633,26 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         ((PathSourcePath) input).getRelativePath(),
         Matchers.equalTo(getStaticPicLibraryPath(libBuilder.build().getConstructorArg())));
+  }
+
+  @Test
+  public void forceStatic() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Set<TargetNode<?>> targetNodes = Sets.newHashSet();
+    PrebuiltCxxLibrary prebuiltCxxLibrary =
+        (PrebuiltCxxLibrary) new PrebuiltCxxLibraryBuilder(TARGET)
+            .setForceStatic(true)
+            .build(resolver, filesystem, targetNodes);
+    NativeLinkableInput nativeLinkableInput =
+        prebuiltCxxLibrary.getNativeLinkableInput(
+            TargetGraphFactory.newInstance(targetNodes),
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED);
+    assertThat(
+        pathResolver.getPath(nativeLinkableInput.getInputs().get(0)).toString(),
+        Matchers.endsWith(".a"));
   }
 
 }

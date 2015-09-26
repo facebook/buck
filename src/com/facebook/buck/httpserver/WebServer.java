@@ -17,6 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -60,12 +61,13 @@ public class WebServer {
   public WebServer(
       int port,
       ProjectFilesystem projectFilesystem,
-      String staticContentDirectory) {
+      String staticContentDirectory,
+      ObjectMapper objectMapper) {
     this.projectFilesystem = projectFilesystem;
     this.staticContentDirectory = staticContentDirectory;
     this.port = Optional.absent();
     this.server = new Server(port);
-    this.streamingWebSocketServlet = new StreamingWebSocketServlet();
+    this.streamingWebSocketServlet = new StreamingWebSocketServlet(objectMapper);
   }
 
   public Optional<Integer> getPort() {

@@ -1,4 +1,5 @@
 from __future__ import print_function
+import glob
 import os
 import platform
 import subprocess
@@ -92,6 +93,7 @@ RESOURCES = {
     "path_to_pathlib_py": "third-party/py/pathlib/pathlib.py",
     "path_to_pex": "src/com/facebook/buck/python/pex.py",
     "path_to_python_test_main": "src/com/facebook/buck/python/__test_main__.py",
+    "path_to_pywatchman": "third-party/py/pywatchman",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "path_to_static_content": "webserver/static",
     "report_generator_jar": "build/report-generator.jar",
@@ -327,6 +329,3 @@ class BuckRepo(BuckTool):
 
     def _get_java_classpath(self):
         return self._pathsep.join([self._join_buck_dir(p) for p in JAVA_CLASSPATHS])
-
-    def _get_pywatchman_path(self):
-        return self._join_buck_dir("build/pywatchman")

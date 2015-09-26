@@ -62,6 +62,3 @@ class BuckPackage(BuckTool):
 
     def _get_java_classpath(self):
         return self._get_resource(SERVER)
-
-    def _get_pywatchman_path(self):
-        return self._get_resource(Resource('path_to_pywatchman'))

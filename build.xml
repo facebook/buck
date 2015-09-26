@@ -42,8 +42,6 @@
 
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
   <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
-  <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
-  <property name="pywatchman.install.dir" value="${build.dir}/pywatchman" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.21.jar" />
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
@@ -164,7 +162,7 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar, compile-pywatchman" />
+  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
@@ -177,46 +175,6 @@
       <arg value="-c" />
       <arg value="import distutils.sysconfig; print(distutils.sysconfig.PREFIX)" />
     </exec>
-  </target>
-
-  <target name="pywatchman-check-build">
-    <uptodate property="pywatchman-build-not-required" targetfile="${pywatchman.install.dir}/pywatchman/__init__.pyc">
-      <srcfiles dir="${pywatchman.dir}" includes="**/*.py,**/*.c" />
-    </uptodate>
-  </target>
-
-  <target name="compile-pywatchman" depends="pywatchman-check-build,python-get-prefix" unless="pywatchman-build-not-required">
-    <mkdir dir="${pywatchman.install.dir}" />
-    <exec executable="python" resultproperty="pywatchman-build-exit-code" dir="${pywatchman.dir}">
-      <!-- Work around broken python installs which can't find libpython.so. -->
-      <env key="LIBRARY_PATH" value="${python.prefix}/lib" />
-      <env key="CFLAGS" value="-Wno-unused-const-variable" />
-      <!-- Work around error "/path does NOT support .pth files" -->
-      <env key="PYTHONPATH" value="${pywatchman.install.dir}" />
-      <arg value="setup.py" />
-      <arg value="-q" />
-      <arg value="install" />
-      <arg value="--install-lib=${pywatchman.install.dir}" />
-    </exec>
-    <fail message="Error ${pywatchman-build-exit-code} compiling pywatchman Python extension (try installing python-devel package)">
-      <condition>
-        <and>
-          <isfailure code="${pywatchman-build-exit-code}" />
-          <!--
-              Python extensions need to be built with the same compiler as
-              Python itself.  On Windows, this means installing a lot of
-              dependencies, including Microsoft Visual C++ Compiler for Python
-              2.7.
-
-              Since pywatchman isn't (yet) required to use Buck, let's make it
-              OK for the build to fail there.
-          -->
-          <not>
-            <os family="windows" />
-          </not>
-        </and>
-      </condition>
-    </fail>
   </target>
 
   <target name="compile-testrunner" depends="checkversion">

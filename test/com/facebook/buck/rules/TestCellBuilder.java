@@ -24,9 +24,9 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
-import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Function;
@@ -107,7 +107,7 @@ public class TestCellBuilder {
         androidDirectoryResolver,
         new FakeClock(0)) {
       @Override
-      public ProjectBuildFileParserFactory createBuildFileParserFactory(boolean useWatchmanGlob) {
+      protected ProjectBuildFileParserFactory createBuildFileParserFactory(boolean watchmanGlob) {
         return parserFactory;
       }
     };

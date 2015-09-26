@@ -28,7 +28,7 @@ public class TargetGraphFactory {
 
   private TargetGraphFactory() {}
 
-  public static TargetGraph newInstance(ImmutableSet<TargetNode<?>> nodes) {
+  public static TargetGraph newInstance(Iterable<TargetNode<?>> nodes) {
     ImmutableMap.Builder<BuildTarget, TargetNode<?>> builder = ImmutableMap.builder();
     for (TargetNode<?> node : nodes) {
       builder.put(node.getBuildTarget(), node);

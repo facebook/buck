@@ -129,6 +129,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
         .addArg(new BuildTargetSourcePath(getBuildTarget(), output))
+        .addInput(main)
         .build();
   }
 

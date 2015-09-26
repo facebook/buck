@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -29,6 +30,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 
 /**
  * Support class for writing builders for nodes of a {@link TargetGraph}
@@ -58,6 +60,17 @@ public abstract class AbstractNodeBuilder<A> {
 
   public final BuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem) {
     return build(resolver, filesystem, TargetGraph.EMPTY);
+  }
+
+  public final BuildRule build(
+      BuildRuleResolver resolver,
+      ProjectFilesystem filesystem,
+      Collection<TargetNode<?>> targetNodes) {
+    targetNodes.add(build());
+    return build(
+        resolver,
+        filesystem,
+        TargetGraphFactory.newInstance(ImmutableSet.copyOf(targetNodes)));
   }
 
   public final BuildRule build(

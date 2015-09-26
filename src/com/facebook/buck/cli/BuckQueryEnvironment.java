@@ -130,7 +130,6 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
           ((QueryBuildTarget) target).getBuildTarget(),
           params.getBuckEventBus(),
           params.getConsole(),
-          params.getEnvironment(),
           enableProfiling);
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error getting target node for %s\n%s", target, e.getMessage());

@@ -802,7 +802,8 @@ public class ProjectCommand extends BuildCommand {
                   actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
               return rule.getPathToOutput();
             }
-          });
+          },
+          params.getBuckEventBus());
       generator.setGroupableTests(groupableTests);
       generator.generateWorkspaceAndDependentProjects(projectGenerators);
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =

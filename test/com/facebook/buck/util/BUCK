@@ -32,6 +32,7 @@ java_test(
     '//src/com/facebook/buck/util:escaper',
     '//src/com/facebook/buck/util:exceptions',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:tristate',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util:watchman',
     '//src/com/facebook/buck/util/environment:platform',

@@ -334,7 +334,7 @@ public class BuildCommand extends AbstractCommand {
           buildTargets,
           isKeepGoing(),
           params.getBuckEventBus(),
-          params.getConsole().getAnsi(),
+          params.getConsole(),
           getPathToBuildReport(params.getBuckConfig()));
       params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
       return exitCode;

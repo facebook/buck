@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -51,7 +52,7 @@ import java.util.regex.Pattern;
  * An action graph representation of a C/C++ library from the target graph, providing the
  * various interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
-public class CxxLibrary extends AbstractCxxLibrary {
+public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
 
   @AddToRuleKey
   private final boolean canBeAsset;
@@ -322,6 +323,15 @@ public class CxxLibrary extends AbstractCxxLibrary {
   @Override
   public boolean isTestedBy(BuildTarget testTarget) {
     return tests.contains(testTarget);
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
+    // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
+    // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
+    // overhead.
+    return getDeclaredDeps();
   }
 
 }

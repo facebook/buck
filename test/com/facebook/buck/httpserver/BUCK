@@ -14,6 +14,7 @@ java_test(
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jackson:jackson',
     '//third-party/java/jetty:jetty',
     '//third-party/java/junit:junit',
   ],

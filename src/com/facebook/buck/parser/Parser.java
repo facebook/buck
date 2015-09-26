@@ -46,10 +46,10 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Console;
@@ -82,12 +82,12 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -185,7 +185,8 @@ public class Parser {
 
   public static Parser createBuildFileParser(
       final Cell cell,
-      boolean useWatchmanGlob)
+      boolean useWatchmanGlob,
+      ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
     return new Parser(
         cell,
@@ -196,10 +197,11 @@ public class Parser {
           public BuildFileTree get() {
             return new FilesystemBackedBuildFileTree(
                 cell.getFilesystem(),
-                cell.getBuildFileName());
+                cell.getBuildFileName());  // TODO(simons): This is doomed to failure.
           }
         },
-        useWatchmanGlob);
+        useWatchmanGlob,
+        allowSymlinks);
   }
 
   /**
@@ -209,12 +211,13 @@ public class Parser {
   Parser(
       Cell cell,
       Supplier<BuildFileTree> buildFileTreeSupplier,
-      boolean useWatchmanGlob)
+      boolean useWatchmanGlob,
+      ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
     this.cell = cell;
     this.useWatchmanGlob = useWatchmanGlob;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
-    this.state = new CachedState(cell.getBuildFileName());
+    this.state = new CachedState(cell.getBuildFileName(), allowSymlinks);
   }
 
   /**
@@ -259,7 +262,7 @@ public class Parser {
   private ImmutableSet<BuildTarget> resolveTargetSpec(
       TargetNodeSpec spec,
       ParserConfig parserConfig,
-      ProjectBuildFileParser buildFileParser,
+      BuildFileParsers buildFileParsers,
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
@@ -274,6 +277,8 @@ public class Parser {
       if (!cell.getFilesystem().isFile(buildFile)) {
         throw new MissingBuildFileException(spec, buildFile);
       }
+
+      ProjectBuildFileParser buildFileParser = buildFileParsers.create(cell);
 
       // Build up a list of all target nodes from the build file.
       List<Map<String, Object>> parsed = parseBuildFile(
@@ -306,19 +311,21 @@ public class Parser {
       ImmutableMap<String, String> environment,
       boolean enableProfiling)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
-    ProjectBuildFileParser buildFileParser = createBuildFileParser(
-        console,
-        environment,
-        eventBus);
-    buildFileParser.setEnableProfiling(enableProfiling);
 
-    return resolveTargetSpec(spec, parserConfig, buildFileParser, environment);
+    try (BuildFileParsers buildFileParsers = new BuildFileParsers(
+        console,
+        eventBus,
+        useWatchmanGlob)) {
+      buildFileParsers.setEnableProfiling(enableProfiling);
+
+      return resolveTargetSpec(spec, parserConfig, buildFileParsers, environment);
+    }
   }
 
   private ImmutableSet<BuildTarget> resolveTargetSpecs(
       Iterable<? extends TargetNodeSpec> specs,
       ParserConfig parserConfig,
-      ProjectBuildFileParser buildFileParser,
+      BuildFileParsers buildFileParsers,
       ImmutableMap<String, String> environment)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
@@ -329,7 +336,7 @@ public class Parser {
           resolveTargetSpec(
               spec,
               parserConfig,
-              buildFileParser,
+              buildFileParsers,
               environment));
     }
 
@@ -352,19 +359,20 @@ public class Parser {
           throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
 
     TargetGraph graph = null;
-    // TODO(jacko): Instantiating one ProjectBuildFileParser here isn't enough. We a collection of
-    //              repo-specific parsers.
-    try (ProjectBuildFileParser buildFileParser = createBuildFileParser(
+
+    try (BuildFileParsers buildFileParsers = new BuildFileParsers(
         console,
-        environment,
-        eventBus)) {
-      buildFileParser.setEnableProfiling(enableProfiling);
+        eventBus,
+        useWatchmanGlob)) {
+      buildFileParsers.setEnableProfiling(enableProfiling);
+      // TODO(simons): This is doomed since we should be using the cell for each resolved node.
+      ProjectBuildFileParser buildFileParser = buildFileParsers.create(cell);
 
       // Resolve the target node specs to the build targets the represent.
       ImmutableSet<BuildTarget> buildTargets = resolveTargetSpecs(
           targetNodeSpecs,
           parserConfig,
-          buildFileParser,
+          buildFileParsers,
           environment);
 
       ParseEvent.Started parseStart = postParseStartEvent(buildTargets, eventBus);
@@ -381,15 +389,6 @@ public class Parser {
         eventBus.post(ParseEvent.finished(parseStart, Optional.fromNullable(graph)));
       }
     }
-  }
-
-  private ProjectBuildFileParser createBuildFileParser(
-      Console console,
-      ImmutableMap<String, String> environment,
-      BuckEventBus eventBus) {
-    return cell
-        .createBuildFileParserFactory(useWatchmanGlob)
-        .createParser(console, environment, eventBus);
   }
 
   /**
@@ -427,7 +426,6 @@ public class Parser {
       BuildTarget buildTarget,
       BuckEventBus eventBus,
       Console console,
-      ImmutableMap<String, String> environment,
       boolean enableProfiling)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     Path buildFilePath;
@@ -437,12 +435,18 @@ public class Parser {
       throw new HumanReadableException(e);
     }
     if (!state.isParsed(buildFilePath)) {
-      ProjectBuildFileParser buildFileParser = createBuildFileParser(
+      // Used to parse a single file and return the map. Create and close.
+
+      try (BuildFileParsers buildFileParsers = new BuildFileParsers(
           console,
-          environment,
-          eventBus);
-      buildFileParser.setEnableProfiling(enableProfiling);
-      parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFilePath));
+          eventBus,
+          useWatchmanGlob)) {
+        buildFileParsers.setEnableProfiling(enableProfiling);
+
+        Cell targetCell = cell.getCell(buildTarget.getCell());
+        ProjectBuildFileParser buildFileParser = buildFileParsers.create(targetCell);
+        parseRawRulesInternal(buildFileParser.getAllRulesAndMetaRules(buildFilePath));
+      }
     }
     return Preconditions.checkNotNull(getTargetNode(buildTarget));
   }
@@ -611,11 +615,11 @@ public class Parser {
       Console console,
       BuckEventBus buckEventBus)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    try (ProjectBuildFileParser projectBuildFileParser = createBuildFileParser(
+    try (BuildFileParsers buildFileParsers = new BuildFileParsers(
         console,
-        environment,
-        buckEventBus)) {
-      return parseBuildFile(buildFile, parserConfig, projectBuildFileParser, environment);
+        buckEventBus,
+        useWatchmanGlob)) {
+      return parseBuildFile(buildFile, parserConfig, buildFileParsers.create(cell), environment);
     }
   }
 
@@ -974,7 +978,9 @@ public class Parser {
 
     private final String buildFile;
 
-    public CachedState(String buildFileName) {
+    private final ParserConfig.AllowSymlinks allowSymlinks;
+
+    public CachedState(String buildFileName, ParserConfig.AllowSymlinks allowSymlinks) {
       this.memoizedTargetNodes = CacheBuilder.newBuilder().<BuildTarget, TargetNode<?>>build();
       this.symlinkExistenceCache = Maps.newHashMap();
       this.buildInputPathsUnderSymlink = Sets.newHashSet();
@@ -990,6 +996,7 @@ public class Parser {
           });
       this.buildFileDependents = ArrayListMultimap.create();
       this.buildFile = buildFileName;
+      this.allowSymlinks = allowSymlinks;
     }
 
     public void invalidateAll() {
@@ -1278,6 +1285,14 @@ public class Parser {
                 targetRepo.getFilesystem(),
                 symlinkExistenceCache,
                 newSymlinksEncountered)) {
+          if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
+            throw new HumanReadableException(
+                "Target %s contains input files under a path which contains a symbolic link " +
+                "(%s). To resolve this, use separate rules and declare dependencies instead of " +
+                "using symbolic links.",
+                targetNode.getBuildTarget(),
+                newSymlinksEncountered);
+          }
           LOG.warn(
               "Disabling caching for target %s, because one or more input files are under a " +
               "symbolic link (%s). This will severely impact performance! To resolve this, use " +
@@ -1351,23 +1366,69 @@ public class Parser {
         Path subpath = input.subpath(0, i);
         Path resolvedSymlink = symlinkExistenceCache.get(subpath);
         if (resolvedSymlink != null) {
+          LOG.debug("Detected cached symlink %s -> %s", subpath, resolvedSymlink);
           newSymlinksEncountered.put(subpath, resolvedSymlink);
           result = true;
         } else if (projectFilesystem.isSymLink(subpath)) {
-          try {
-            resolvedSymlink = projectFilesystem.getRootPath().relativize(subpath.toRealPath());
-            LOG.debug("Detected symbolic link %s -> %s", subpath, resolvedSymlink);
-            newSymlinksEncountered.put(subpath, resolvedSymlink);
-            symlinkExistenceCache.put(subpath, resolvedSymlink);
-          } catch (NoSuchFileException e) {
-            LOG.verbose(e, "No such file detecting symlink at %s", subpath);
-          } catch (IOException e) {
-            LOG.error(e, "Couldn't detect symbolic link at %s", subpath);
-          }
+          Path symlinkTarget = projectFilesystem.resolve(subpath).toRealPath();
+          Path relativeSymlinkTarget = projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget)
+              .or(symlinkTarget);
+          LOG.debug("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
+          newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
+          symlinkExistenceCache.put(subpath, relativeSymlinkTarget);
           result = true;
         }
       }
     }
     return result;
+  }
+
+  private static class BuildFileParsers implements AutoCloseable {
+
+    private final Console console;
+    private final BuckEventBus eventBus;
+    private final boolean useWatchmanGlob;
+    private Map<Cell, ProjectBuildFileParser> toClose = new HashMap<>();
+    private boolean enableProfiling;
+
+    public BuildFileParsers(Console console, BuckEventBus eventBus, boolean useWatchmanGlob) {
+      this.console = console;
+      this.eventBus = eventBus;
+      this.useWatchmanGlob = useWatchmanGlob;
+    }
+
+    public void setEnableProfiling(boolean enableProfiling) {
+      this.enableProfiling = enableProfiling;
+    }
+
+    public ProjectBuildFileParser create(Cell cell) {
+      ProjectBuildFileParser parser = toClose.get(cell);
+
+      if (parser == null) {
+        parser = cell.createBuildFileParser(console, eventBus, useWatchmanGlob);
+        parser.setEnableProfiling(enableProfiling);
+        toClose.put(cell, parser);
+      }
+
+      return parser;
+    }
+
+    @Override
+    public void close() throws IOException, InterruptedException {
+      Exception lastThrown = null;
+      StringBuilder failureMessage = new StringBuilder("Unable to close: ");
+      for (ProjectBuildFileParser parser : toClose.values()) {
+        try {
+          parser.close();
+        } catch (BuildFileParseException e) {
+          failureMessage.append(parser).append(", ");
+          lastThrown = e;
+        }
+      }
+      if (lastThrown != null) {
+        failureMessage.append("so throwing the last seen exception");
+        throw new IOException(failureMessage.toString(), lastThrown);
+      }
+    }
   }
 }

@@ -260,4 +260,9 @@ public class XctoolRunTestsStep implements Step {
       stutterLock.release();
     }
   }
+
+  public ImmutableList<String> getCommand() {
+    return command;
+  }
+
 }

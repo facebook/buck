@@ -221,6 +221,6 @@ public class MissingSymbolsHandler {
   }
 
   private void print(String line) {
-    console.getStdOut().println(console.getAnsi().asWarningText(line));
+    console.getStdErr().println(console.getAnsi().asWarningText(line));
   }
 }

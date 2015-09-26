@@ -117,7 +117,7 @@ public class MissingSymbolsHandlerIntegrationTest {
 
     assertThat(
         "Output should describe the missing dependency.",
-        processResult.getStdout(),
+        processResult.getStderr(),
         containsString(expectedDependencyOutput));
   }
 
@@ -140,7 +140,7 @@ public class MissingSymbolsHandlerIntegrationTest {
 
     assertThat(
         "Output should describe the missing dependency.",
-        processResult.getStdout(),
+        processResult.getStderr(),
         containsString(expectedDependencyOutput));
   }
 }

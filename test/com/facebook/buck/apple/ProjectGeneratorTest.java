@@ -64,6 +64,8 @@ import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -88,6 +90,7 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
@@ -124,6 +127,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -2900,7 +2904,8 @@ public class ProjectGeneratorTest {
           public Path apply(TargetNode<?> input) {
             return null;
           }
-        })
+        },
+        getFakeBuckEventBus())
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
         .setAdditionalCombinedTestTargets(
             ImmutableMultimap.of(
@@ -2936,6 +2941,10 @@ public class ProjectGeneratorTest {
     assertHasSingletonResourcesPhaseWithEntries(
         target,
         "bar.png");
+  }
+
+  private BuckEventBus getFakeBuckEventBus() {
+    return BuckEventBusFactory.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
   }
 
   @Test
@@ -3095,7 +3104,8 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        Functions.<Path>constant(null));
+        Functions.<Path>constant(null),
+        getFakeBuckEventBus());
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3429,7 +3439,8 @@ public class ProjectGeneratorTest {
         ImmutableMap.<String, String>of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
-        Functions.<Path>constant(null));
+        Functions.<Path>constant(null),
+        getFakeBuckEventBus());
   }
 
   private ImmutableSet<TargetNode<?>> setupSimpleLibraryWithResources(

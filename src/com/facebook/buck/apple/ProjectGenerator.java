@@ -45,6 +45,8 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -232,6 +234,7 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
   private final Function<? super TargetNode<?>, Path> outputPathOfNode;
+  private final BuckEventBus buckEventBus;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -256,7 +259,8 @@ public class ProjectGenerator {
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
-      Function<? super TargetNode<?>, Path> outputPathOfNode) {
+      Function<? super TargetNode<?>, Path> outputPathOfNode,
+      BuckEventBus buckEventBus) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
@@ -279,6 +283,7 @@ public class ProjectGenerator {
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.outputPathOfNode = outputPathOfNode;
+    this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.pathRelativizer = new PathRelativizer(
@@ -566,6 +571,7 @@ public class ProjectGenerator {
       checkAppleResourceTargetNodeReferencingValidContents(
           (TargetNode<AppleResourceDescription.Arg>) targetNode);
     }
+    buckEventBus.post(ProjectGenerationEvent.processed());
     return result;
   }
 

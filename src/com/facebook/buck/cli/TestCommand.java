@@ -509,7 +509,7 @@ public class TestCommand extends BuildCommand {
             testRules,
             isKeepGoing(),
             params.getBuckEventBus(),
-            params.getConsole().getAnsi(),
+            params.getConsole(),
             getPathToBuildReport(params.getBuckConfig()));
         params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
         if (exitCode != 0) {

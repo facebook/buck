@@ -1,0 +1,72 @@
+{namespace go_common}
+
+/***/
+{template .supported_language_version}
+Note: Buck is currently tested with (and therefore supports) version 1.5 of Go.
+{/template}
+
+/***/
+{template .deps_arg}
+{call buck.arg}
+  {param name : 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of dependencies of this rule.  Currently, this only supports go_library rules.
+ {/param}
+{/call}
+{/template}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name : 'srcs' /}
+  {param desc}
+  <p>
+    The set of Go source files to be compiled by this rule.
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .package_name_arg}
+{call buck.arg}
+  {param name : 'package_name' /}
+  {param default : 'path relative to the buck root' /}
+  {param desc}
+  Sets the full name of the package being compiled. This defaults to the path from the buck root.
+  (e.g. given a ./.buckconfig, a rule in ./a/b/BUCK defaults to package "a/b"
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .compiler_flags_arg}
+{call buck.arg}
+  {param name : 'compiler_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of additional compiler flags to pass to <code>go tool compile</code>.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .linker_flags_arg}
+{call buck.arg}
+  {param name: 'linker_flags' /}
+  {param default: '[]' /}
+  {param desc}
+  Extra linker flags passed to go link
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .more_examples}
+<p>
+  For more examples, check out our <a
+  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/go/testdata/">
+  integration tests</a>.
+</p>
+{/template}

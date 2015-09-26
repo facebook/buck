@@ -116,7 +116,7 @@ public class FetchCommand extends BuildCommand {
           buildTargets,
           isKeepGoing(),
           params.getBuckEventBus(),
-          params.getConsole().getAnsi(),
+          params.getConsole(),
           getPathToBuildReport(params.getBuckConfig()));
     }
 

@@ -35,6 +35,7 @@ java_test(
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/step:step',
     '//src/com/facebook/buck/util:io',
+    '//src/com/facebook/buck/util:tristate',
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util/environment:platform',
@@ -44,6 +45,7 @@ java_test(
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/immutables:processor',
     '//third-party/java/junit:junit',
   ],
 )
