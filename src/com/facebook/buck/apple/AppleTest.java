@@ -291,7 +291,7 @@ public class AppleTest
               resolvedTestOutputPath,
               xctoolStdoutReader);
       steps.add(xctoolStep);
-      externalSpec.setType("xctool");
+      externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());
     } else {
       Tool testRunningTool;
