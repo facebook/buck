@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -70,6 +71,16 @@ public class AndroidPrebuiltAarIntegrationTest {
   @Test
   public void testAndroidPrebuiltAarInDepsIsExported() throws IOException {
     workspace.runBuckBuild("//android_prebuilt_aar-dep:lib").assertSuccess();
+  }
+
+  @Test
+  public void testAndroidPrebuiltAarHasOutput() throws IOException {
+    ProjectWorkspace.ProcessResult targetsResult = workspace.runBuckCommand(
+        "targets",
+        "--show_output",
+        "//:aar");
+    targetsResult.assertSuccess();
+    assertEquals("//:aar buck-out/gen/aar#aar_unzip.aar", targetsResult.getStdout().trim());
   }
 
   @Test
