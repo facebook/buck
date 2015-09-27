@@ -260,7 +260,6 @@ class BuckRepo(BuckTool):
                 ant = self._check_for_ant()
                 self._run_ant_clean(ant)
                 self._run_ant(ant)
-                open(self._build_success_file, 'w').close()
                 print("All done, continuing with build.", file=sys.stderr)
 
     def _has_resource(self, resource):

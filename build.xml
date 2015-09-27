@@ -162,7 +162,7 @@
 
   <!-- Default target so that a command line build can
        do more than one thing. -->
-  <target name="default" depends="compile, dx, client, javac-tracing, report-generator-jar" />
+  <target name="default" depends="start-build, compile, dx, client, javac-tracing, report-generator-jar, build-successful" />
 
   <target name="checkversion">
     <!-- The nio Files class was only introduced in Java 7. -->
@@ -992,4 +992,16 @@
 
   <target name="pre-checkin" depends="clean, default, compile-tests, lint"/>
   <target name="all" depends="jar, test, javadoc, client" />
+
+  <target name="start-build"
+          description="Remove build successful marker before building">
+    <delete file="${build.dir}/successful-build" />
+  </target>
+
+  <target name="build-successful"
+          depends="compile"
+          description="Mark the build as successful">
+    <touch file="${build.dir}/successful-build" />
+  </target>
+
 </project>
