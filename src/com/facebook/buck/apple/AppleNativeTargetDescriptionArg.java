@@ -33,4 +33,5 @@ public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg i
   public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
   public Optional<ImmutableList<SourcePath>> extraXcodeSources;
   public Optional<String> headerPathPrefix;
+  public Optional<SourcePath> swiftObjcBridgingHeader;
 }

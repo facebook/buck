@@ -204,6 +204,7 @@ public final class FileTypes {
           .put("storyboard", "file.storyboard")
           .put("strings", "text.plist.strings")
           .put("stringsdict", "text.plist.stringsdict")
+          .put("swift", "sourcecode.swift")
           .put("tar", "archive.tar")
           .put("tbd", "sourcecode.text-based-dylib-definition")
           .put("tcc", "sourcecode.cpp.cpp")

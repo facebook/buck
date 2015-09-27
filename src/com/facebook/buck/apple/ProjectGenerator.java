@@ -105,6 +105,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -894,6 +895,21 @@ public class ProjectGenerator {
       extraSettingsBuilder.put("GCC_PRECOMPILE_PREFIX_HEADER", "YES");
     }
     extraSettingsBuilder.put("USE_HEADERMAP", "NO");
+    if (appleTargetNode.isPresent() &&
+        appleTargetNode.get().getConstructorArg().swiftObjcBridgingHeader.isPresent()) {
+      extraSettingsBuilder.put(
+          "SWIFT_OBJC_BRIDGING_HEADER",
+          pathRelativizer.outputPathToSourcePath(
+              appleTargetNode.get().getConstructorArg().swiftObjcBridgingHeader.get()).toString());
+    }
+    for (SourceWithFlags src : arg.srcs.get()) {
+      if (Files.getFileExtension(
+              sourcePathResolver.apply(src.getSourcePath()).toString()).equals("swift")) {
+        extraSettingsBuilder.put(
+            "LD_RUNPATH_SEARCH_PATHS",
+            "@executable_path/Frameworks @executable_path/../Frameworks");
+      }
+    }
 
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
     defaultSettingsBuilder.put(
