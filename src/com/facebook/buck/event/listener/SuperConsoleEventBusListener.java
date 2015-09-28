@@ -225,6 +225,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           0L,
           projectBuildFileParseStarted,
           projectBuildFileParseFinished,
+          getEstimatedProgressOfProcessingBuckFiles(),
           lines);
     }
 
@@ -234,8 +235,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         0L,
         parseStarted,
         actionGraphFinished,
+        getEstimatedProgressOfProcessingBuckFiles(),
         lines);
-
 
     logEventPair(
         "GENERATING PROJECT",
@@ -244,8 +245,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         0L,
         projectGenerationStarted,
         projectGenerationFinished,
-        lines
-    );
+        getEstimatedProgressOfGeneratingProjectFiles(),
+        lines);
 
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
@@ -302,6 +303,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           parseTime,
           buildStarted,
           buildFinished,
+          getApproximateBuildProgress(),
           lines);
 
       if (buildTime == UNFINISHED_EVENT_PAIR) {
@@ -315,6 +317,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           0,
           testRunStarted.get(),
           testRunFinished.get(),
+          Optional.<Double>absent(),
           lines);
 
       if (testRunTime == UNFINISHED_EVENT_PAIR) {
@@ -327,9 +330,34 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           0L,
           installStarted,
           installFinished,
+          Optional.<Double>absent(),
           lines);
     }
     return lines.build();
+  }
+
+  private Optional<Double> getApproximateBuildProgress() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getApproximateBuildProgress();
+    } else {
+      return Optional.<Double>absent();
+    }
+  }
+
+  private Optional<Double> getEstimatedProgressOfGeneratingProjectFiles() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getEstimatedProgressOfGeneratingProjectFiles();
+    } else {
+      return Optional.<Double>absent();
+    }
+  }
+
+  private Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
+    } else {
+      return Optional.<Double>absent();
+    }
   }
 
   /**

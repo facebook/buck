@@ -63,8 +63,17 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         0L,
         parseStarted,
         parseFinished,
+        getEstimatedProgressOfProcessingBuckFiles(),
         lines));
     printLines(lines);
+  }
+
+  private Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
+    } else {
+      return Optional.<Double>absent();
+    }
   }
 
   @Override
@@ -78,8 +87,17 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         parseTime.get(),
         buildStarted,
         buildFinished,
+        getApproximateBuildProgress(),
         lines);
     printLines(lines);
+  }
+
+  private Optional<Double> getApproximateBuildProgress() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getApproximateBuildProgress();
+    } else {
+      return Optional.<Double>absent();
+    }
   }
 
   @Override
@@ -93,6 +111,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         0L,
         installStarted,
         installFinished,
+        Optional.<Double>absent(),
         lines);
     printLines(lines);
   }

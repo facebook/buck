@@ -147,6 +147,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       long offsetMs,
       @Nullable BuckEvent startEvent,
       @Nullable BuckEvent finishedEvent,
+      Optional<Double> progress,
       ImmutableList.Builder<String> lines) {
     long result = UNFINISHED_EVENT_PAIR;
     if (startEvent == null) {
@@ -158,10 +159,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       elapsedTimeMs = finishedEvent.getTimestamp() - startEvent.getTimestamp();
       parseLine += "FINISHED ";
       result = elapsedTimeMs;
+      if (progress.isPresent()) {
+        progress = Optional.<Double>of(Double.valueOf(1));
+      }
     } else {
       elapsedTimeMs = currentMillis - startEvent.getTimestamp();
     }
     parseLine += formatElapsedTime(elapsedTimeMs - offsetMs);
+    if (progress.isPresent()) {
+      parseLine += " [" + Math.round(progress.get().doubleValue() * 100) + "%]";
+    }
     if (suffix.isPresent()) {
       parseLine += " " + suffix.get();
     }
