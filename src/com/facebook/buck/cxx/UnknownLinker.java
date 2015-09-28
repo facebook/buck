@@ -81,6 +81,11 @@ public class UnknownLinker implements Linker {
   }
 
   @Override
+  public String libOrigin() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
         .setReflectively("tool", tool)

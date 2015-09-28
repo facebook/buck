@@ -174,6 +174,17 @@ public class CxxPythonExtensionDescription implements
             allSources,
             CxxSourceRuleFactory.PicType.PIC);
 
+    ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
+    extraLdFlagsBuilder.addAll(
+        CxxFlags.getFlags(
+            args.linkerFlags,
+            args.platformLinkerFlags,
+            cxxPlatform));
+
+    // Embed a origin-relative library path into the binary so it can find the shared libraries.
+    extraLdFlagsBuilder.addAll(
+        Linkers.iXlinker("-rpath", String.format("%s/", cxxPlatform.getLd().libOrigin())));
+
     // Setup the rules to link the shared library.
     String extensionName = getExtensionName(params.getBuildTarget());
     Path extensionPath = getExtensionPath(params.getBuildTarget(), cxxPlatform.getFlavor());
@@ -182,10 +193,7 @@ public class CxxPythonExtensionDescription implements
         cxxPlatform,
         params,
         pathResolver,
-        /* extraLdFlags */ CxxFlags.getFlags(
-            args.linkerFlags,
-            args.platformLinkerFlags,
-            cxxPlatform),
+        extraLdFlagsBuilder.build(),
         getExtensionTarget(params.getBuildTarget(), cxxPlatform.getFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),

@@ -73,6 +73,11 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
+  public String libOrigin() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public String searchPathEnvVar() {
     return "PATH";
   }

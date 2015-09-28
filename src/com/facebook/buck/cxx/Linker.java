@@ -49,6 +49,12 @@ public interface Linker extends Tool {
   String origin();
 
   /**
+   * @return the placeholder used by the dynamic loader for the directory containing the top-level
+   *     library (useful for e.g. plugins).
+   */
+  String libOrigin();
+
+  /**
    * @return the name of the environment variable for the shared library runtime search path.
    */
   String searchPathEnvVar();
