@@ -18,6 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
@@ -25,16 +27,27 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 
 public class AppleBinaryDescription
     implements Description<AppleNativeTargetDescriptionArg>, Flavored {
+
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
@@ -49,8 +62,14 @@ public class AppleBinaryDescription
 
   private final CxxBinaryDescription delegate;
 
-  public AppleBinaryDescription(CxxBinaryDescription delegate) {
+  private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
+
+  public AppleBinaryDescription(
+      CxxBinaryDescription delegate,
+      Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms) {
     this.delegate = delegate;
+    this.platformFlavorsToAppleCxxPlatforms =
+        ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
   }
 
   @Override
@@ -65,8 +84,25 @@ public class AppleBinaryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR) ||
-        delegate.hasFlavors(flavors);
+    if (FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR)) {
+      return true;
+    }
+    Collection<ImmutableSortedSet<Flavor>> thinFlavorSets =
+        FatBinaryInfo.generateThinFlavors(
+            platformFlavorsToAppleCxxPlatforms.keySet(),
+            ImmutableSortedSet.copyOf(flavors));
+    if (thinFlavorSets.size() > 1) {
+      return Iterables.all(
+          thinFlavorSets,
+          new Predicate<ImmutableSortedSet<Flavor>>() {
+            @Override
+            public boolean apply(ImmutableSortedSet<Flavor> input) {
+              return delegate.hasFlavors(input);
+            }
+          });
+    } else {
+      return delegate.hasFlavors(flavors);
+    }
   }
 
   @Override
@@ -75,15 +111,58 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-    AppleDescriptions.populateCxxBinaryDescriptionArg(
-        pathResolver,
-        delegateArg,
-        args,
+    Optional<FatBinaryInfo> fatBinaryInfo = FatBinaryInfo.create(
+        platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());
 
-    return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+    if (fatBinaryInfo.isPresent()) {
+      return createFatBinaryBuildRule(targetGraph, params, resolver, args, fatBinaryInfo.get());
+    } else {
+      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+      AppleDescriptions.populateCxxBinaryDescriptionArg(
+          new SourcePathResolver(resolver),
+          delegateArg,
+          args,
+          params.getBuildTarget());
+
+      return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+    }
+  }
+
+  /**
+   * Create a fat binary rule.
+   */
+  private <A extends AppleNativeTargetDescriptionArg> BuildRule createFatBinaryBuildRule(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      A args,
+      FatBinaryInfo fatBinaryInfo) {
+    ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
+    for (BuildTarget thinTarget : fatBinaryInfo.getThinTargets()) {
+      if (resolver.getRuleOptional(thinTarget).isPresent()) {
+        continue;
+      }
+      BuildRule thinRule = createBuildRule(
+          targetGraph,
+          params.copyWithBuildTarget(thinTarget),
+          resolver,
+          args);
+      resolver.addToIndex(thinRule);
+      thinRules.add(thinRule);
+    }
+    ImmutableSortedSet<SourcePath> inputs = FluentIterable
+        .from(resolver.getAllRules(fatBinaryInfo.getThinTargets()))
+        .transform(SourcePaths.getToBuildTargetSourcePath())
+        .toSortedSet(Ordering.natural());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    return new FatBinary(
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(thinRules.build())),
+        pathResolver,
+        fatBinaryInfo.getRepresentativePlatform().getLipo(),
+        inputs,
+        BuildTargets.getGenPath(params.getBuildTarget(), "%s"));
   }
 }

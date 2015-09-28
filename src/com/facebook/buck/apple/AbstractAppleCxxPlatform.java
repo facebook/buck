@@ -50,4 +50,5 @@ abstract class AbstractAppleCxxPlatform {
   public abstract Tool getXctest();
   public abstract Optional<Tool> getOtest();
   public abstract Tool getDsymutil();
+  public abstract Tool getLipo();
 }

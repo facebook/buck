@@ -185,6 +185,12 @@ public class AppleCxxPlatforms {
         "apple-dsymutil",
         version);
 
+    Tool lipo = new VersionedTool(
+        getToolPath("lipo", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "apple-lipo",
+        version);
+
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
     ImmutableFlavor targetFlavor = ImmutableFlavor.of(
@@ -249,6 +255,7 @@ public class AppleCxxPlatforms {
         .setXctest(xctest)
         .setOtest(otest)
         .setDsymutil(dsymutil)
+        .setLipo(lipo)
         .build();
   }
 
