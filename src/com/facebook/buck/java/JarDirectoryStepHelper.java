@@ -85,7 +85,8 @@ public class JarDirectoryStepHelper {
               "Trying to put file %s into itself",
               file);
           // Assume the file is a ZIP/JAR file.
-          copyZipEntriesToJar(file,
+          copyZipEntriesToJar(
+              file,
               outputFile,
               manifest,
               alreadyAddedEntries,
@@ -189,7 +190,10 @@ public class JarDirectoryStepHelper {
         if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
           // Duplicate entries. Skip.
           eventBus.post(ConsoleEvent.create(
-              determineSeverity(entry), "Duplicate found when adding file to jar: %s", entryName));
+                  determineSeverity(entry),
+                  "Duplicate found when adding file '%s' to jar '%s'",
+                  entryName,
+                  file.toString()));
           continue;
         }
 
