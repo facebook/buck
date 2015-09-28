@@ -200,11 +200,9 @@ public class AppleBinaryIntegrationTest {
                 "TestApp#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"));
     MoreAsserts.assertContentsEqual(
         workspace.getPath(
-            "first/buck-out/gen/Apps/TestApp/" +
-                "TestApp#iphonesimulator-x86_64/TestApp#iphonesimulator-x86_64"),
+            "first/buck-out/gen/Apps/TestApp/TestApp#iphonesimulator-x86_64"),
         workspace.getPath(
-            "second/buck-out/gen/Apps/TestApp/" +
-                "TestApp#iphonesimulator-x86_64/TestApp#iphonesimulator-x86_64"));
+            "second/buck-out/gen/Apps/TestApp/TestApp#iphonesimulator-x86_64"));
   }
 
   @Test
