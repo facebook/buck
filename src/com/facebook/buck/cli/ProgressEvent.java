@@ -44,6 +44,10 @@ public abstract class ProgressEvent extends AbstractBuckEvent {
     return "progress=" + String.valueOf(progressValue);
   }
 
+  public double getProgressValue() {
+    return progressValue;
+  }
+
   public static class ParsingProgressUpdated extends ProgressEvent {
     public ParsingProgressUpdated(double progress) {
       super(progress);
