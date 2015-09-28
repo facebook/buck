@@ -158,7 +158,6 @@ public class AndroidLibraryDescription
                   args.resourcesRoot,
                   args.mavenCoords,
                   args.manifest,
-                  /* isPrebuiltAar */ false,
                   args.tests.get()));
 
       resolver.addToIndex(

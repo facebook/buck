@@ -70,7 +70,6 @@ public class AndroidPrebuiltAar
         /* mavenCoords */ Optional.<String>absent(),
         Optional.<SourcePath>of(
             new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
-        /* isPrebuiltAar */ true,
         /* tests */ ImmutableSortedSet.<BuildTarget>of());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
