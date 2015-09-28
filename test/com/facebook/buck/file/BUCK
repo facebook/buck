@@ -19,6 +19,7 @@ java_test(
     '//test/com/facebook/buck/step:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/easymock:easymock',
+    '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jetty:jetty',
     '//third-party/java/jimfs:jimfs',
     '//third-party/java/jsr:jsr305',
