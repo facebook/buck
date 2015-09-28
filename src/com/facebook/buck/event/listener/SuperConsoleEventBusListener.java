@@ -336,30 +336,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return lines.build();
   }
 
-  private Optional<Double> getApproximateBuildProgress() {
-    if (progressEstimator.isPresent()) {
-      return progressEstimator.get().getApproximateBuildProgress();
-    } else {
-      return Optional.<Double>absent();
-    }
-  }
-
-  private Optional<Double> getEstimatedProgressOfGeneratingProjectFiles() {
-    if (progressEstimator.isPresent()) {
-      return progressEstimator.get().getEstimatedProgressOfGeneratingProjectFiles();
-    } else {
-      return Optional.<Double>absent();
-    }
-  }
-
-  private Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
-    if (progressEstimator.isPresent()) {
-      return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
-    } else {
-      return Optional.<Double>absent();
-    }
-  }
-
   /**
    * Adds log messages for rendering.
    */

@@ -684,7 +684,8 @@ public final class Main {
              executionEnvironment.getWifiSsid())) {
 
       ProgressEstimator progressEstimator = new ProgressEstimator(
-          filesystem.getRootPath());
+          filesystem.getRootPath(),
+          buildEventBus);
       consoleListener.setProgressEstimator(progressEstimator);
 
       eventListeners = addEventListeners(buildEventBus,

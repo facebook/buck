@@ -124,6 +124,29 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return TIME_FORMATTER.format(elapsedTimeMs / 1000.0);
   }
 
+  protected Optional<Double> getApproximateBuildProgress() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getApproximateBuildProgress();
+    } else {
+      return Optional.<Double>absent();
+    }
+  }
+
+  protected Optional<Double> getEstimatedProgressOfGeneratingProjectFiles() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getEstimatedProgressOfGeneratingProjectFiles();
+    } else {
+      return Optional.<Double>absent();
+    }
+  }
+
+  protected Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
+    } else {
+      return Optional.<Double>absent();
+    }
+  }
 
   /**
    * Adds a line about a pair of start and finished events to lines.

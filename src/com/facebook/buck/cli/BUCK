@@ -1,5 +1,6 @@
 EVENTS_SRCS = [
   'CommandEvent.java',
+  'ProgressEvent.java',
 ]
 java_library(
   name = 'events',

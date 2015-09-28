@@ -330,10 +330,11 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
-    eventBus.register(listener);
-
-    ProgressEstimator e = new ProgressEstimator(getStorageForTest().getParent().getParent());
+    ProgressEstimator e = new ProgressEstimator(
+        getStorageForTest().getParent().getParent(),
+        eventBus);
     listener.setProgressEstimator(e);
+    eventBus.register(listener);
 
     BuildEvent.RuleCountCalculated ruleCountCalculated =
         BuildEvent.ruleCountCalculated(ImmutableSet.<BuildTarget>of(), 10);
@@ -1529,10 +1530,11 @@ public class SuperConsoleEventBusListenerTest {
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
             Optional.<WebServer>absent());
-    eventBus.register(listener);
-
-    ProgressEstimator e = new ProgressEstimator(storagePath.getParent().getParent());
+    ProgressEstimator e = new ProgressEstimator(
+        getStorageForTest().getParent().getParent(),
+        eventBus);
     listener.setProgressEstimator(e);
+    eventBus.register(listener);
 
     rawEventBus.post(CommandEvent.started("project",
             ImmutableList.<String>of("arg1", "arg2"),

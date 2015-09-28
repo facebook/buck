@@ -68,14 +68,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     printLines(lines);
   }
 
-  private Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
-    if (progressEstimator.isPresent()) {
-      return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
-    } else {
-      return Optional.<Double>absent();
-    }
-  }
-
   @Override
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
@@ -90,14 +82,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         getApproximateBuildProgress(),
         lines);
     printLines(lines);
-  }
-
-  private Optional<Double> getApproximateBuildProgress() {
-    if (progressEstimator.isPresent()) {
-      return progressEstimator.get().getApproximateBuildProgress();
-    } else {
-      return Optional.<Double>absent();
-    }
   }
 
   @Override
