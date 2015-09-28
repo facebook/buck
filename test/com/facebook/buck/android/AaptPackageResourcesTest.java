@@ -81,7 +81,6 @@ public class AaptPackageResourcesTest {
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
-        /* shouldWarnIfMissingResources */ false,
         /* skipCrunchPngs */ false);
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
@@ -146,7 +145,6 @@ public class AaptPackageResourcesTest {
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
-        /* shouldWarnIfMissingResources */ false,
         /* skipCrunchPngs */ false);
 
     // Build up the parameters needed to invoke createAllAssetsDirectory().
@@ -228,7 +226,6 @@ public class AaptPackageResourcesTest {
         DEFAULT_JAVAC_OPTIONS,
         /* rDotJavaNeedsDexing */ false,
         /* shouldBuildStringSourceMap */ false,
-        /* shouldWarnIfMissingResources */ false,
         /* skipCrunchPngs */ false);
 
     AndroidResource resourceOne = (AndroidResource) ruleResolver.getRule(
@@ -343,7 +340,6 @@ public class AaptPackageResourcesTest {
             DEFAULT_JAVAC_OPTIONS,
             /* rDotJavaNeedsDexing */ false,
             /* shouldBuildStringSourceMap */ false,
-            /* shouldWarnIfMissingResources */ false,
             /* skipCrunchPngs */ false);
 
     FakeOnDiskBuildInfo onDiskBuildInfo =

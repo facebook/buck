@@ -19,8 +19,8 @@ package com.facebook.buck.android;
 import static com.google.common.collect.Ordering.natural;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreStrings;
@@ -47,10 +47,11 @@ import java.util.Set;
 
 public class MergeAndroidResourcesStep implements Step {
 
+  private static final Logger LOG = Logger.get(MergeAndroidResourcesStep.class);
+
   private final ProjectFilesystem filesystem;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Optional<Path> uberRDotTxt;
-  private final boolean warnMissingResource;
   private final Path outputDir;
 
   /**
@@ -64,12 +65,10 @@ public class MergeAndroidResourcesStep implements Step {
       ProjectFilesystem filesystem,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Optional<Path> uberRDotTxt,
-      boolean warnMissingResource,
       Path outputDir) {
     this.filesystem = filesystem;
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
     this.uberRDotTxt = uberRDotTxt;
-    this.warnMissingResource = warnMissingResource;
     this.outputDir = outputDir;
   }
 
@@ -81,7 +80,6 @@ public class MergeAndroidResourcesStep implements Step {
         filesystem,
         androidResourceDeps,
         Optional.<Path>absent(),
-        false,
         outputDir);
   }
 
@@ -89,13 +87,11 @@ public class MergeAndroidResourcesStep implements Step {
       ProjectFilesystem filesystem,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path uberRDotTxt,
-      boolean warnMissingResource,
       Path outputDir) {
     return new MergeAndroidResourcesStep(
         filesystem,
         androidResourceDeps,
         Optional.of(uberRDotTxt),
-        warnMissingResource,
         outputDir);
   }
 
@@ -115,7 +111,7 @@ public class MergeAndroidResourcesStep implements Step {
   @Override
   public int execute(ExecutionContext context) {
     try {
-      doExecute(context);
+      doExecute();
       return 0;
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
@@ -123,7 +119,7 @@ public class MergeAndroidResourcesStep implements Step {
     }
   }
 
-  private void doExecute(ExecutionContext context) throws IOException {
+  private void doExecute() throws IOException {
     // In order to convert a symbols file to R.java, all resources of the same type are grouped
     // into a static class of that name. The static class contains static values that correspond to
     // the resource (type, name, value) tuples. See RDotTxtEntry.
@@ -167,8 +163,6 @@ public class MergeAndroidResourcesStep implements Step {
     SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources = sortSymbols(
         symbolsFileToRDotJavaPackage,
         uberRDotTxtIds,
-        warnMissingResource,
-        context,
         filesystem);
 
     writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
@@ -245,8 +239,6 @@ public class MergeAndroidResourcesStep implements Step {
   static SortedSetMultimap<String, RDotTxtEntry> sortSymbols(
       Map<Path, String> symbolsFileToRDotJavaPackage,
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds,
-      boolean warnMissingResource,
-      ExecutionContext context,
       ProjectFilesystem filesystem) {
     // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
     // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
@@ -287,10 +279,7 @@ public class MergeAndroidResourcesStep implements Step {
         if (uberRDotTxtIds.isPresent()) {
           Preconditions.checkNotNull(finalIds);
           if (!finalIds.containsKey(resource)) {
-            if (warnMissingResource) {
-              context.postEvent(ConsoleEvent.warning(
-                      "Cannot find resource '%s' in the uber R.txt.", resource));
-            }
+            LOG.debug("Cannot find resource '%s' in the uber R.txt.", resource);
             continue;
           }
           resource = resource.copyWithNewIdValue(finalIds.get(resource));

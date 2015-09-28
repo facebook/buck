@@ -67,14 +67,10 @@ public class MergeAndroidResourcesStepTest {
             "int attr c1 0x7f010001",
             "int[] styleable c1 { 0x7f010001 }")));
 
-    ExecutionContext executionContext = TestExecutionContext.newInstance();
-
     SortedSetMultimap<String, RDotTxtEntry> packageNameToResources =
         MergeAndroidResourcesStep.sortSymbols(
             entriesBuilder.buildFilePathToPackageNameSet(),
             Optional.<ImmutableMap<RDotTxtEntry, String>>absent(),
-            /* warnMissingResource */ false,
-            executionContext,
             entriesBuilder.getProjectFilesystem());
 
     assertEquals(1, packageNameToResources.keySet().size());
@@ -131,7 +127,6 @@ public class MergeAndroidResourcesStepTest {
         filesystem,
         ImmutableList.of(resource),
         Optional.of(uberRDotTxt),
-        /* warnMissingResource */ false,
         Paths.get("output"));
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
