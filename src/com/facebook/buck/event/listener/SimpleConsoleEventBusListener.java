@@ -130,8 +130,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     printLines(lines);
   }
 
+  @Override
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
+    super.buildRuleFinished(finished);
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
       String line = String.format("BUILT %s", finished.getBuildRule().getFullyQualifiedName());
       if (ruleCount.isPresent()) {

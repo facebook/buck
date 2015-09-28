@@ -517,14 +517,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return result.toString();
   }
 
+  @Override
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
+    super.buildRuleStarted(started);
     threadsToRunningBuildRuleEvent.put(started.getThreadId(), Optional.of(started));
     accumulatedRuleTime.put(started.getBuildRule().getBuildTarget(), new AtomicLong(0));
   }
 
+  @Override
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
+    super.buildRuleFinished(finished);
     threadsToRunningBuildRuleEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
     accumulatedRuleTime.remove(finished.getBuildRule().getBuildTarget());
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
@@ -540,8 +544,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
   }
 
+  @Override
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
+    super.buildRuleSuspended(suspended);
     Optional<? extends BuildRuleEvent> started =
         Preconditions.checkNotNull(
             threadsToRunningBuildRuleEvent.put(
@@ -557,8 +563,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
   }
 
+  @Override
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
+    super.buildRuleResumed(resumed);
     threadsToRunningBuildRuleEvent.put(resumed.getThreadId(), Optional.of(resumed));
   }
 

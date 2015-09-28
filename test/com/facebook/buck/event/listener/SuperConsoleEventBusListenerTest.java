@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -131,7 +131,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -313,7 +313,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -581,7 +581,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -851,7 +851,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -1296,7 +1296,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1321,7 +1321,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     rawEventBus.post(

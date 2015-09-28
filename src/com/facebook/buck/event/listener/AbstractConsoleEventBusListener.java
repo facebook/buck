@@ -15,11 +15,13 @@
  */
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
@@ -88,6 +90,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final AtomicInteger numRulesCompleted = new AtomicInteger();
 
+  protected Optional<ProgressEstimator> progressEstimator = Optional.<ProgressEstimator>absent();
+
   public AbstractConsoleEventBusListener(Console console, Clock clock) {
     this.console = console;
     this.clock = clock;
@@ -110,6 +114,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.installStarted = null;
     this.installFinished = null;
+  }
+
+  public void setProgressEstimator(ProgressEstimator estimator) {
+    progressEstimator = Optional.<ProgressEstimator>of(estimator);
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {
@@ -182,6 +190,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
+  public void commandStartedEvent(CommandEvent.Started startedEvent) {
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().setCurrentCommand(
+          startedEvent.getCommandName(),
+          startedEvent.getArgs());
+    }
+  }
+
+  @Subscribe
   public void projectBuildFileParseStarted(ProjectBuildFileParseEvents.Started started) {
     projectBuildFileParseStarted = started;
   }
@@ -196,9 +213,20 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     projectGenerationStarted = started;
   }
 
+  @SuppressWarnings("unused")
+  @Subscribe
+  public void projectGenerationProcessedTarget(ProjectGenerationEvent.Processed processed) {
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didGenerateProjectForTarget();
+    }
+  }
+
   @Subscribe
   public void projectGenerationFinished(ProjectGenerationEvent.Finished finished) {
     projectGenerationFinished = finished;
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didFinishProjectGeneration();
+    }
   }
 
   @Subscribe
@@ -207,8 +235,18 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
+  public void ruleParseFinished(ParseBuckFileEvent.Finished ruleParseFinished) {
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didParseBuckRules(ruleParseFinished.getNumRules());
+    }
+  }
+
+  @Subscribe
   public void parseFinished(ParseEvent.Finished finished) {
     parseFinished = finished;
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didFinishParsing();
+    }
   }
 
   @Subscribe
@@ -224,16 +262,49 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
     buildStarted = started;
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didStartBuild();
+    }
   }
 
   @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount = Optional.of(calculated.getNumRules());
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().setNumberOfRules(calculated.getNumRules());
+    }
+  }
+
+  @SuppressWarnings("unused")
+  @Subscribe
+  public void buildRuleStarted(BuildRuleEvent.Started started) {
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didStartRule();
+    }
+  }
+
+  @SuppressWarnings("unused")
+  @Subscribe
+  public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didResumeRule();
+    }
+  }
+
+  @SuppressWarnings("unused")
+  @Subscribe
+  public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didSuspendRule();
+    }
   }
 
   @Subscribe
-  public void incrementNumRulesCompleted(BuildRuleEvent.Finished finished) {
+  public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     if (finished.getStatus() != BuildRuleStatus.CANCELED) {
+      if (progressEstimator.isPresent()) {
+        progressEstimator.get().didFinishRule();
+      }
       numRulesCompleted.getAndIncrement();
     }
   }
@@ -241,6 +312,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
     buildFinished = finished;
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().didFinishBuild();
+    }
   }
 
   @Subscribe
