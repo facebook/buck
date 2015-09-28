@@ -76,7 +76,7 @@ Optional&lt;String> name;</code>)
 <h3>Constructing new BuildRule instances</h3>
 
 When Buck needs to construct a <code>BuildRule</code> it will call
-<code>Description.createBuildRule()</code>, passing in a populated
+{sp}<code>Description.createBuildRule()</code>, passing in a populated
 constructor arg. Collection types on that arg will have been
 instantiated with an empty collection, even if they are declared as
 being optional.
@@ -93,10 +93,10 @@ and we suggest you do so too.
 <p>
 
 The created <code>BuildRule</code> will be registered with the
-<code>BuildRuleResolver</code> automatically. There are, however,
+{sp}<code>BuildRuleResolver</code> automatically. There are, however,
 plenty of cases where a <code>BuildRule</code> will want to depend on
 existing functionality that's already expressed as a
-<code>BuildRule</code>. In this case, it's fine to create that
+{sp}<code>BuildRule</code>. In this case, it's fine to create that
 intermediate rule in the <code>createBuildRule()</code> method, add it
 to the resolver, and then add that newly created rule as a dependency
 of the one ultimately returned from the method. The only caveat: each
@@ -106,7 +106,7 @@ name by which it's referred to in the action graph.
 <p>
 
 You are strongly encouraged to delay doing any work in your
-<code>BuildRule</code> until the <code>getBuildSteps()</code>
+{sp}<code>BuildRule</code> until the <code>getBuildSteps()</code>{sp}
 method. In particular, don't do any work other than assigning fields
 in the constructor! The exception to this is working out the path to
 the output of your rule.
@@ -114,8 +114,8 @@ the output of your rule.
 <p>
 
 You can think of a <code>Description</code> as a factory of
-<code>BuildRule</code> instances. Similarly, you can think of a
-<code>BuildRule</code> as a factory of <a
+{sp}<code>BuildRule</code> instances. Similarly, you can think of a
+{sp}<code>BuildRule</code> as a factory of <a
 href="https://buckbuild.com/javadoc/com/facebook/buck/step/Step.html"><code>Step</code>s</a>
 {sp}that must be executed in order to create a specific output. Unlike
 rules, steps are executed sequentially in the order in which they are
@@ -129,7 +129,7 @@ uniqueness with <a
 href="https://buckbuild.com/javadoc/com/facebook/buck/rules/AddToRuleKey.html"><code>@AddToRuleKey</code></a>. This
 is used by Buck to calculate the rule key, which, if the value changes
 between builds, will cause Buck to re-execute your
-<code>BuildRule</code>.
+{sp}<code>BuildRule</code>.
 
 <p>
 

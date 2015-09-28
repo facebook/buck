@@ -41,7 +41,7 @@
   {param name: 'srcs' /}
   {param desc}
   The set of files to include in the zip. If any of these are source
-  zips (indicated by a file name ending in <code>-sources.jar</code>
+  zips (indicated by a file name ending in <code>-sources.jar</code>{sp}
   or <code>.src.zip</code>) the contents of the source zip will be
   added to the generated zip, rather than the source zip itself. This
   provides a mechanism to roll up multiple source zips into a single
@@ -94,7 +94,7 @@ zip_file(
 If you were to examine the generated zip, the contents would look
 something like (assuming the output of
 "<code>//some/other:target</code>" was a file who's path ended with
-<code>hello.txt</code>, the "<code>dir</code>" glob found two files,
+{sp}<code>hello.txt</code>, the "<code>dir</code>" glob found two files,
 and "<code>amazing-library-1.0-sources.zip</code>" contained two Java
 source files):
 
