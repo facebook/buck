@@ -90,7 +90,7 @@ public final class TestNGRunner extends BaseRunner {
   private XmlSuite createXmlSuite(Class<?> c) {
     XmlSuite xmlSuite = new XmlSuite();
     xmlSuite.setName("TmpSuite");
-    xmlSuite.setTimeOut("1000");
+    xmlSuite.setTimeOut(String.valueOf(defaultTestTimeoutMillis));
     XmlTest xmlTest = new XmlTest(xmlSuite);
     xmlTest.setName("TmpTest");
     xmlTest.setXmlClasses(Collections.singletonList(new XmlClass(c)));
