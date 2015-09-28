@@ -141,7 +141,31 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void bundleHasOutputPath() throws IOException{
+  public void simpleApplicationBundleWithFatBinary() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_fat_application_bundle",
+        tmp);
+    workspace.setUp();
+    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-i386,iphonesimulator-x86_64")
+        .assertSuccess();
+    workspace.verify();
+
+    Path outputFile = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve("DemoApp#iphonesimulator-i386,iphonesimulator-x86_64/DemoApp.app/DemoApp");
+
+    assertTrue(Files.exists(outputFile));
+    ProcessExecutor.Result result = workspace.runCommand(
+        "lipo",
+        outputFile.toString(),
+        "-verify_arch", "i386", "x86_64");
+    assertEquals(0, result.getExitCode());
+  }
+
+  @Test
+  public void bundleHasOutputPath() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -156,7 +180,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void extensionBundle() throws IOException{
+  public void extensionBundle() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -185,7 +209,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void appBundleWithExtensionBundleDependency() throws IOException{
+  public void appBundleWithExtensionBundleDependency() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -255,7 +279,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void appBundleWithResources() throws IOException{
+  public void appBundleWithResources() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -287,7 +311,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void defaultPlatformInBuckConfig() throws IOException{
+  public void defaultPlatformInBuckConfig() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -306,7 +330,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void defaultPlatformInBuckConfigWithFlavorSpecified() throws IOException{
+  public void defaultPlatformInBuckConfigWithFlavorSpecified() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -325,7 +349,7 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void appleAssetCatalogsAreIncludedInBundle() throws IOException{
+  public void appleAssetCatalogsAreIncludedInBundle() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -392,5 +416,4 @@ public class AppleBundleIntegrationTest {
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/AppViewController.nib")));
   }
-
 }

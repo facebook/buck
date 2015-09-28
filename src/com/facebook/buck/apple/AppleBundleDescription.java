@@ -121,21 +121,28 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleResolver resolver,
       A args) {
 
-    CxxPlatform cxxPlatform;
-    try {
-      cxxPlatform = cxxPlatformFlavorDomain
-          .getValue(params.getBuildTarget().getFlavors())
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
-    }
-    AppleCxxPlatform appleCxxPlatform =
-        platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
-    if (appleCxxPlatform == null) {
-      throw new HumanReadableException(
-          "%s: Apple bundle requires an Apple platform, found '%s'",
-          params.getBuildTarget(),
-          cxxPlatform.getFlavor().getName());
+    Optional<FatBinaryInfo> fatBinaryInfo =
+        FatBinaryInfo.create(platformFlavorsToAppleCxxPlatforms, params.getBuildTarget());
+    AppleCxxPlatform appleCxxPlatform;
+    if (fatBinaryInfo.isPresent()) {
+      appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
+    } else {
+      CxxPlatform cxxPlatform;
+      try {
+        cxxPlatform = cxxPlatformFlavorDomain
+            .getValue(params.getBuildTarget().getFlavors())
+            .or(defaultCxxPlatform);
+      } catch (FlavorDomainException e) {
+        throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
+      }
+      appleCxxPlatform =
+          platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
+      if (appleCxxPlatform == null) {
+        throw new HumanReadableException(
+            "%s: Apple bundle requires an Apple platform, found '%s'",
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor().getName());
+      }
     }
 
     AppleBundleDestinations destinations =
