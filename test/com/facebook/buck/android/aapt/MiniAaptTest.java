@@ -32,6 +32,7 @@ import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.core.IsEqual;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -166,6 +167,67 @@ public class MiniAaptTest {
       }
     }
     assertTrue(foundElement);
+  }
+
+  @Test
+  public void testParsingAndroidDrawables() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<bitmap xmlns:android=\"http://schemas.android.com/apk/res/android\">",
+        "  xmlns:fbui=\"http://schemas.android.com/apk/res-auto\"",
+        "  android:src=\"@drawable/other_bitmap\"",
+        "  >",
+        "</bitmap>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("android_drawable.xml"));
+
+    MiniAapt aapt = new MiniAapt(
+        filesystem,
+        Paths.get("res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+    aapt.processDrawables(filesystem, Paths.get("android_drawable.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertThat(
+        definitions,
+        IsEqual.equalToObject(
+            ImmutableSet.<RDotTxtEntry>of(
+                new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "android_drawable"))));
+  }
+
+  @Test
+  public void testParsingCustomDrawables() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<app-network xmlns:android=\"http://schemas.android.com/apk/res/android\">",
+        "  xmlns:fbui=\"http://schemas.android.com/apk/res-auto\"",
+        "  fbui:imageUri=\"http://facebook.com\"",
+        "  android:width=\"128px\"",
+        "  android:height=\"128px\"",
+        "  fbui:density=\"160\"",
+        "  >",
+        "</app-network>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("custom_drawable.xml"));
+
+    MiniAapt aapt = new MiniAapt(
+        filesystem,
+        Paths.get("res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+    aapt.processDrawables(filesystem, Paths.get("custom_drawable.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertThat(
+        definitions,
+        IsEqual.equalToObject(
+            ImmutableSet.<RDotTxtEntry>of(
+                new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "custom_drawable", true))));
   }
 
   @Test(expected = ResourceParseException.class)

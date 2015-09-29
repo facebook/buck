@@ -69,6 +69,7 @@ public class MiniAapt implements Step {
 
   private static final String ID_DEFINITION_PREFIX = "@+id/";
   private static final String ITEM_TAG = "item";
+  private static final String CUSTOM_DRAWABLE_PREFIX = "app-";
 
   private static final XPathExpression ANDROID_ID_USAGE =
       createExpression("//@*[starts-with(., '@') and " +
@@ -247,8 +248,40 @@ public class MiniAapt implements Step {
       int dotIndex = filename.indexOf('.');
       String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
 
+      RType rType = Preconditions.checkNotNull(RESOURCE_TYPES.get(dirname));
+      if (rType == RType.DRAWABLE) {
+        processDrawables(filesystem, resourceFile);
+      } else {
+        resourceCollector.addIntResourceIfNotPresent(
+            rType,
+            resourceName);
+      }
+    }
+  }
+
+  void processDrawables(ProjectFilesystem filesystem, Path resourceFile)
+      throws IOException, ResourceParseException {
+    String filename = resourceFile.getFileName().toString();
+    int dotIndex = filename.indexOf('.');
+    String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
+
+    // Look into the XML file.
+    boolean isCustomDrawable = false;
+    if (filename.endsWith(".xml")) {
+      try (InputStream stream = filesystem.newFileInputStream(resourceFile)) {
+        Document dom = parseXml(resourceFile, stream);
+        Element root = dom.getDocumentElement();
+        isCustomDrawable = root.getNodeName().startsWith(CUSTOM_DRAWABLE_PREFIX);
+      }
+    }
+
+    if (isCustomDrawable) {
+      resourceCollector.addCustomDrawableResourceIfNotPresent(
+          RType.DRAWABLE,
+          resourceName);
+    } else {
       resourceCollector.addIntResourceIfNotPresent(
-          Preconditions.checkNotNull(RESOURCE_TYPES.get(dirname)),
+          RType.DRAWABLE,
           resourceName);
     }
   }

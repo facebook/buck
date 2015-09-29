@@ -54,6 +54,17 @@ public class AaptResourceCollector {
     }
   }
 
+  public void addCustomDrawableResourceIfNotPresent(RType rType, String name) {
+    RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name, true);
+    if (!resources.contains(entry)) {
+      String idValue = String.format(
+          "0x%08x %s",
+          getEnumerator(rType).next(),
+          RDotTxtEntry.CUSTOM_DRAWABLE_IDENTIFIER);
+      addCustomResource(rType, IdType.INT, name, idValue);
+    }
+  }
+
   public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
     // Robolectric expects the array to be populated with the right number of values, irrespective
     // of what the values are.
@@ -69,6 +80,10 @@ public class AaptResourceCollector {
 
   public void addResource(RType rType, IdType idType, String name, String idValue) {
     resources.add(new RDotTxtEntry(idType, rType, name, idValue));
+  }
+
+  public void addCustomResource(RType rType, IdType idType, String name, String idValue) {
+    resources.add(new RDotTxtEntry(idType, rType, name, idValue, true));
   }
 
   public Set<RDotTxtEntry> getResources() {

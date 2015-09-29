@@ -198,6 +198,7 @@ public class MergeAndroidResourcesStep implements Step {
         writer.format("package %s;\n\n", rDotJavaPackage);
         writer.println("public class R {\n");
 
+        ImmutableList.Builder<String> customDrawablesBuilder = ImmutableList.builder();
         RDotTxtEntry.RType lastType = null;
 
         for (RDotTxtEntry res : packageToResources.get(rDotJavaPackage)) {
@@ -221,12 +222,24 @@ public class MergeAndroidResourcesStep implements Step {
               res.idType,
               res.name,
               res.idValue);
+
+          if (type == RDotTxtEntry.RType.DRAWABLE && res.custom) {
+            customDrawablesBuilder.add(res.idValue);
+          }
         }
 
         // If some type was written (e.g., the for loop was entered), then the last type needs to be
         // closed.
         if (lastType != null) {
           writer.println("  }\n");
+        }
+
+        ImmutableList<String> customDrawables = customDrawablesBuilder.build();
+        if (customDrawables.size() > 0) {
+          // Add a new field for the custom drawables.
+          writer.format("  public static final int[] custom_drawables = ");
+          writer.format("{ %s };\n", Joiner.on(",").join(customDrawables));
+          writer.format("\n");
         }
 
         // Close the class definition.
