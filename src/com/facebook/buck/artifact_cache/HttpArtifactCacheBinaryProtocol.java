@@ -58,6 +58,37 @@ public class HttpArtifactCacheBinaryProtocol {
   public static FetchResponseReadResult readFetchResponse(
       DataInputStream input,
       OutputStream payloadSink) throws IOException {
+
+    MetadataAndPayloadReadResultInternal resultInternal = readMetadataAndPayload(
+        input,
+        payloadSink);
+
+    FetchResponseReadResult.Builder result = FetchResponseReadResult.builder().from(resultInternal);
+    return result.build();
+  }
+
+  public static StoreResponseReadResult readStoreRequest(
+      DataInputStream input,
+      OutputStream payloadSink) throws IOException {
+    ImmutableSet.Builder<RuleKey> rawRuleKeys = ImmutableSet.builder();
+    int ruleKeysCount = input.readInt();
+    for (int i = 0; i < ruleKeysCount; i++) {
+      rawRuleKeys.add(new RuleKey(input.readUTF()));
+    }
+
+    MetadataAndPayloadReadResultInternal resultInternal = readMetadataAndPayload(
+        input,
+        payloadSink);
+
+    StoreResponseReadResult.Builder result =
+        StoreResponseReadResult.builder().from(resultInternal);
+    result.setRawKeys(rawRuleKeys.build());
+    return result.build();
+  }
+
+  public static MetadataAndPayloadReadResultInternal readMetadataAndPayload(
+      DataInputStream input,
+      OutputStream payloadSink) throws IOException {
     // Read the size of a the metadata, and use that to build a input stream to read and
     // process the rest of it.
     int metadataSize = input.readInt();
@@ -65,8 +96,8 @@ public class HttpArtifactCacheBinaryProtocol {
       throw new IOException(
           String.format("Metadata header size of %d is too big.", metadataSize));
     }
-
-    FetchResponseReadResult.Builder result = FetchResponseReadResult.builder();
+    MetadataAndPayloadReadResultInternal.Builder result =
+        MetadataAndPayloadReadResultInternal.builder();
     // Create a hasher to be used to generate a hash of the metadata and input.  We'll use
     // this to compare against the embedded checksum.
     Hasher hasher = HASH_FUNCTION.newHasher();
@@ -115,49 +146,6 @@ public class HttpArtifactCacheBinaryProtocol {
     result.setActualHashCode(hasher.hash());
 
     return result.build();
-  }
-
-  public static class StoreRequest {
-    private final ByteSource payloadSource;
-    private final byte[] rawKeys;
-    private final byte[] rawMetadata;
-    private final long contentLength;
-
-    public StoreRequest(
-        ImmutableSet<RuleKey> ruleKeys,
-        ImmutableMap<String, String> metadata,
-        ByteSource payloadSource) throws IOException {
-      this.payloadSource = payloadSource;
-      this.rawKeys = createKeysHeader(ruleKeys);
-      this.rawMetadata = createMetadataHeader(
-          ruleKeys,
-          metadata,
-          payloadSource);
-      this.contentLength =
-          rawKeys.length +
-          Integer.SIZE / Byte.SIZE +
-          rawMetadata.length +
-          payloadSource.size();
-    }
-
-    public long getContentLength() {
-      return contentLength;
-    }
-
-    public StoreWriteResult write(OutputStream requestSink) throws IOException {
-      StoreWriteResult.Builder result = StoreWriteResult.builder();
-      try (DataOutputStream dataOutputStream = new DataOutputStream(requestSink)) {
-        dataOutputStream.write(rawKeys);
-        dataOutputStream.writeInt(rawMetadata.length);
-        dataOutputStream.write(rawMetadata);
-        Hasher hasher = HASH_FUNCTION.newHasher();
-        try (InputStream is = new HasherInputStream(hasher, payloadSource.openBufferedStream())) {
-          result.setArtifactSizeBytes(ByteStreams.copy(is, dataOutputStream));
-          result.setArtifactContentHashCode(hasher.hash());
-        }
-      }
-      return result.build();
-    }
   }
 
   @VisibleForTesting
@@ -215,15 +203,106 @@ public class HttpArtifactCacheBinaryProtocol {
     return bytes;
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractFetchResponseReadResult {
+  public static class StoreRequest {
+    private final ByteSource payloadSource;
+    private final byte[] rawKeys;
+    private final byte[] rawMetadata;
+    private final long contentLength;
+
+    public StoreRequest(
+        ImmutableSet<RuleKey> ruleKeys,
+        ImmutableMap<String, String> metadata,
+        ByteSource payloadSource) throws IOException {
+      this.payloadSource = payloadSource;
+      this.rawKeys = createKeysHeader(ruleKeys);
+      this.rawMetadata = createMetadataHeader(
+          ruleKeys,
+          metadata,
+          payloadSource);
+      this.contentLength =
+          rawKeys.length +
+              Integer.SIZE / Byte.SIZE +
+              rawMetadata.length +
+              payloadSource.size();
+    }
+
+    public long getContentLength() {
+      return contentLength;
+    }
+
+    public StoreWriteResult write(OutputStream requestSink) throws IOException {
+      StoreWriteResult.Builder result = StoreWriteResult.builder();
+      try (DataOutputStream dataOutputStream = new DataOutputStream(requestSink)) {
+        dataOutputStream.write(rawKeys);
+        dataOutputStream.writeInt(rawMetadata.length);
+        dataOutputStream.write(rawMetadata);
+        Hasher hasher = HASH_FUNCTION.newHasher();
+        try (InputStream is = new HasherInputStream(hasher, payloadSource.openBufferedStream())) {
+          result.setArtifactSizeBytes(ByteStreams.copy(is, dataOutputStream));
+          result.setArtifactContentHashCode(hasher.hash());
+        }
+      }
+      return result.build();
+    }
+  }
+
+  public static class FetchResponse {
+    private final ByteSource payloadSource;
+    private final byte[] rawMetadata;
+    private final long contentLength;
+
+    public FetchResponse(
+        ImmutableSet<RuleKey> ruleKeys,
+        ImmutableMap<String, String> metadata,
+        ByteSource payloadSource) throws IOException {
+      this.payloadSource = payloadSource;
+      this.rawMetadata = createMetadataHeader(
+          ruleKeys,
+          metadata,
+          payloadSource);
+      this.contentLength =
+              Integer.SIZE / Byte.SIZE +
+              rawMetadata.length +
+              payloadSource.size();
+    }
+
+    public long getContentLength() {
+      return contentLength;
+    }
+
+    public void write(OutputStream responseSink) throws IOException {
+      try (DataOutputStream dataOutputStream = new DataOutputStream(responseSink)) {
+        dataOutputStream.writeInt(rawMetadata.length);
+        dataOutputStream.write(rawMetadata);
+        ByteStreams.copy(payloadSource.openStream(), responseSink);
+      }
+    }
+  }
+
+  abstract static class MetadataAndPayloadReadResult {
     public abstract ImmutableSet<RuleKey> getRuleKeys();
     public abstract HashCode getExpectedHashCode();
     public abstract HashCode getActualHashCode();
     public abstract HashCode getArtifactOnlyHashCode();
     public abstract long getResponseSizeBytes();
     public abstract ImmutableMap<String, String> getMetadata();
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractMetadataAndPayloadReadResultInternal extends
+      MetadataAndPayloadReadResult {
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractFetchResponseReadResult extends MetadataAndPayloadReadResult {
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractStoreResponseReadResult extends MetadataAndPayloadReadResult {
+    public abstract ImmutableSet<RuleKey> getRawKeys();
   }
 
   @Value.Immutable

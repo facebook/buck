@@ -72,6 +72,41 @@ public class HttpArtifactCacheBinaryProtocolTest {
   }
 
   @Test
+  public void testFetchResponse() throws IOException {
+    RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
+    final String data = "data";
+    ImmutableMap<String, String> metadata = ImmutableMap.of("metaKey", "metaValue");
+
+    HttpArtifactCacheBinaryProtocol.FetchResponse fetchResponse =
+        new HttpArtifactCacheBinaryProtocol.FetchResponse(
+            ImmutableSet.of(ruleKey, ruleKey2),
+            metadata,
+            new ByteSource() {
+              @Override
+              public InputStream openStream() throws IOException {
+                return new ByteArrayInputStream(data.getBytes());
+              }
+            }
+        );
+    assertThat(fetchResponse.getContentLength(), Matchers.is(110L));
+
+    ByteArrayOutputStream fetchResponseOutputStream = new ByteArrayOutputStream();
+    fetchResponse.write(fetchResponseOutputStream);
+
+    ByteArrayInputStream fetchResponseInputStream =
+        new ByteArrayInputStream(fetchResponseOutputStream.toByteArray());
+    ByteArrayOutputStream fetchResponsePayload = new ByteArrayOutputStream();
+    FetchResponseReadResult responseReadResult = HttpArtifactCacheBinaryProtocol.readFetchResponse(
+        new DataInputStream(fetchResponseInputStream),
+        fetchResponsePayload);
+
+    assertThat(responseReadResult.getRuleKeys(), Matchers.containsInAnyOrder(ruleKey, ruleKey2));
+    assertThat(responseReadResult.getMetadata(), Matchers.equalTo(metadata));
+    assertThat(fetchResponsePayload.toByteArray(), Matchers.equalTo(data.getBytes()));
+  }
+
+  @Test
   public void testReadFetchResponse() throws IOException {
     final String base64EncodedData =
         "AAAALgAAAAEAIDAwMDAwMDAwMDEwMDAwMDAwMDAwMDA4MDAwMDAwMDAwAAAAANcwdr5kYXRh";
@@ -154,6 +189,37 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
   @Test
   public void testStoreRequest() throws IOException {
+    final RuleKey ruleKey = new RuleKey("00000000010000000000008000000000");
+    final RuleKey ruleKey2 = new RuleKey("90000000000000000000008000000005");
+    final String data = "data";
+    ImmutableMap<String, String> metadata = ImmutableMap.of("metaKey", "metaValue");
+
+    HttpArtifactCacheBinaryProtocol.StoreRequest storeRequest =
+        new HttpArtifactCacheBinaryProtocol.StoreRequest(
+            ImmutableSet.of(ruleKey, ruleKey2),
+            metadata,
+            new ByteSource() {
+              @Override
+              public InputStream openStream() throws IOException {
+                return new ByteArrayInputStream(data.getBytes());
+              }
+            });
+
+    ByteArrayOutputStream storeRequestOutputStream = new ByteArrayOutputStream();
+    storeRequest.write(storeRequestOutputStream);
+
+    ByteArrayOutputStream storeRequestPayloadStream = new ByteArrayOutputStream();
+    StoreResponseReadResult readStoreRequest = HttpArtifactCacheBinaryProtocol.readStoreRequest(
+        new DataInputStream(new ByteArrayInputStream(storeRequestOutputStream.toByteArray())),
+        storeRequestPayloadStream);
+
+    assertThat(readStoreRequest.getRuleKeys(), Matchers.containsInAnyOrder(ruleKey, ruleKey2));
+    assertThat(readStoreRequest.getMetadata(), Matchers.equalTo(metadata));
+    assertThat(storeRequestPayloadStream.toByteArray(), Matchers.equalTo(data.getBytes()));
+  }
+
+  @Test
+  public void testWriteStoreRequest() throws IOException {
     final String base64EncodedData = "AAAAAgAgMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAAIDkwMDA" +
         "wMDAwMDAwMDAwMDAwMDAwMDA4MDAwMDAwMDA1AAAAXgAAAAIAIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA" +
         "wMDAwACA5MDAwMDAwMDAwMDAwMDAwMDAwMDAwODAwMDAwMDAwNQAAAAEAA2tleQAAAAV2YWx1ZRf0zcZkYXRhZGF" +
