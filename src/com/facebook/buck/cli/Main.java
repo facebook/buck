@@ -215,6 +215,9 @@ public final class Main {
       fileEventBus.register(hashCache);
 
       webServer = createWebServer(cell.getBuckConfig(), cell.getFilesystem(), objectMapper);
+      if (!initWebServer()) {
+        LOG.warn("Can't start web server");
+      }
       watchmanQueryUUID = UUID.randomUUID();
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
     }
@@ -935,7 +938,6 @@ public final class Main {
     Daemon daemon = getDaemon(cell, globHandler, allowSymlinks, objectMapper);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(commandEvent, eventBus, watchmanWatcher);
-    daemon.initWebServer();
     return daemon.getParser();
   }
 
