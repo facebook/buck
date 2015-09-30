@@ -17,7 +17,7 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
 
 import java.io.BufferedInputStream;
@@ -37,6 +37,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpDownloader implements Downloader {
   public static final int PROGRESS_REPORT_EVERY_N_BYTES = 1000;
+
+  private static final Logger LOG = Logger.get(HttpDownloader.class);
+
   private final Optional<Proxy> proxy;
 
   public HttpDownloader(Optional<Proxy> proxy) {
@@ -55,8 +58,8 @@ public class HttpDownloader implements Downloader {
     try {
       HttpURLConnection connection = createConnection(uri);
       if (HttpURLConnection.HTTP_OK != connection.getResponseCode()) {
-        throw new HumanReadableException(
-            "Unable to download %s: %s", uri, connection.getResponseMessage());
+        LOG.info("Unable to download %s: %s", uri, connection.getResponseMessage());
+        return false;
       }
       long contentLength = connection.getContentLengthLong();
       try (InputStream is = new BufferedInputStream(connection.getInputStream());
