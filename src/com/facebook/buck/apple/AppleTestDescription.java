@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -30,21 +31,28 @@ import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -52,12 +60,14 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
@@ -73,6 +83,7 @@ public class AppleTestDescription implements
    */
   private static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
   private static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
+  private static final Flavor UNZIP_XCTOOL_FLAVOR = ImmutableFlavor.of("unzip-xctool");
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       LIBRARY_FLAVOR, BUNDLE_FLAVOR);
@@ -328,17 +339,55 @@ public class AppleTestDescription implements
         AppleBundle.DebugInfoFormat.NONE);
 
 
-    Optional<BuildRule> xctoolZipBuildRule;
+    // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which
+    // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
+    // can use that directly.
+    Optional<SourcePath> xctool;
     if (appleConfig.getXctoolZipTarget().isPresent()) {
-      xctoolZipBuildRule = Optional.of(
-          resolver.getRule(appleConfig.getXctoolZipTarget().get()));
+      final BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
+      BuildTarget unzipXctoolTarget =
+          BuildTarget.builder(xctoolZipBuildRule.getBuildTarget())
+              .addFlavors(UNZIP_XCTOOL_FLAVOR)
+              .build();
+      final Path outputDirectory = BuildTargets.getGenPath(unzipXctoolTarget, "%s/unzipped");
+      if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
+        BuildRuleParams unzipXctoolParams =
+            params.copyWithChanges(
+                unzipXctoolTarget,
+                Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
+                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        resolver.addToIndex(
+            new AbstractBuildRule(unzipXctoolParams, sourcePathResolver) {
+              @Override
+              public ImmutableList<Step> getBuildSteps(
+                  BuildContext context,
+                  BuildableContext buildableContext) {
+                return ImmutableList.of(
+                    new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory),
+                    new UnzipStep(
+                        getProjectFilesystem(),
+                        Preconditions.checkNotNull(xctoolZipBuildRule.getPathToOutput()),
+                        outputDirectory));
+              }
+              @Override
+              public Path getPathToOutput() {
+                return outputDirectory;
+              }
+            });
+      }
+      xctool =
+          Optional.<SourcePath>of(
+              new BuildTargetSourcePath(unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
+    } else if (appleConfig.getXctoolPath().isPresent()) {
+      xctool =
+          Optional.<SourcePath>of(
+              new PathSourcePath(params.getProjectFilesystem(), appleConfig.getXctoolPath().get()));
     } else {
-      xctoolZipBuildRule = Optional.absent();
+      xctool = Optional.absent();
     }
 
     return new AppleTest(
-        appleConfig.getXctoolPath(),
-        xctoolZipBuildRule,
+        xctool,
         appleConfig.getXctoolStutterTimeoutMs(),
         appleCxxPlatform.getXctest(),
         appleCxxPlatform.getOtest(),

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -27,6 +26,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
@@ -38,7 +38,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -70,10 +69,7 @@ public class AppleTest
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
 
   @AddToRuleKey
-  private final Optional<Path> xctoolPath;
-
-  @AddToRuleKey
-  private final Optional<BuildRule> xctoolZipRule;
+  private final Optional<SourcePath> xctool;
 
   @AddToRuleKey
   private Optional<Long> xctoolStutterTimeout;
@@ -105,7 +101,6 @@ public class AppleTest
   @AddToRuleKey
   private final boolean runTestSeparately;
 
-  private final Path xctoolUnzipDirectory;
   private final Path testOutputPath;
 
   private final String testBundleExtension;
@@ -137,8 +132,7 @@ public class AppleTest
   }
 
   AppleTest(
-      Optional<Path> xctoolPath,
-      Optional<BuildRule> xctoolZipRule,
+      Optional<SourcePath> xctool,
       Optional<Long> xctoolStutterTimeout,
       Tool xctest,
       Optional<Tool> otest,
@@ -155,8 +149,7 @@ public class AppleTest
       ImmutableSet<Label> labels,
       boolean runTestSeparately) {
     super(params, resolver);
-    this.xctoolPath = xctoolPath;
-    this.xctoolZipRule = xctoolZipRule;
+    this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.useXctest = useXctest;
     this.xctest = xctest;
@@ -170,9 +163,6 @@ public class AppleTest
     this.labels = labels;
     this.runTestSeparately = runTestSeparately;
     this.testBundleExtension = testBundleExtension;
-    this.xctoolUnzipDirectory = BuildTargets.getScratchPath(
-        params.getBuildTarget(),
-        "__xctool_%s__");
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.xctoolStdoutReader = Optional.absent();
   }
@@ -229,7 +219,7 @@ public class AppleTest
     }
 
     if (!useXctest) {
-      if (!xctoolPath.isPresent() && !xctoolZipRule.isPresent()) {
+      if (!xctool.isPresent()) {
         throw new HumanReadableException(
             "Set xctool_path = /path/to/xctool or xctool_zip_target = //path/to:xctool-zip " +
             "in the [apple] section of .buckconfig to run this test");
@@ -244,23 +234,6 @@ public class AppleTest
             testHostAppPath.get());
       } else {
         logicTestPathsBuilder.add(resolvedTestBundleDirectory);
-      }
-
-      Path xctoolBinaryPath;
-
-      if (xctoolZipRule.isPresent()) {
-        Path resolvedXctoolUnzipDirectory = getProjectFilesystem().resolve(
-            xctoolUnzipDirectory);
-        steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resolvedXctoolUnzipDirectory));
-        steps.add(
-            new UnzipStep(
-                getProjectFilesystem(),
-                // This is added as a runtime dependency via getRuntimeDeps() earlier.
-                Preconditions.checkNotNull(xctoolZipRule.get().getPathToOutput()),
-                resolvedXctoolUnzipDirectory));
-        xctoolBinaryPath = resolvedXctoolUnzipDirectory.resolve("bin/xctool");
-      } else {
-        xctoolBinaryPath = xctoolPath.get();
       }
 
       xctoolStdoutReader = Optional.of(new AppleTestXctoolStdoutReader(testReportingCallback));
@@ -282,7 +255,7 @@ public class AppleTest
       XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
               getProjectFilesystem(),
-              xctoolBinaryPath,
+              getResolver().getResolvedPath(xctool.get()),
               xctoolStutterTimeout,
               platformName,
               destinationSpecifierArg,
@@ -396,16 +369,11 @@ public class AppleTest
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    ImmutableSortedSet.Builder<BuildRule> runtimeDepsBuilder =
-        ImmutableSortedSet.<BuildRule>naturalOrder()
-            .add(testBundle)
-            .addAll(testHostApp.asSet());
-
-    if (xctoolZipRule.isPresent()) {
-      runtimeDepsBuilder.add(xctoolZipRule.get());
-    }
-
-    return runtimeDepsBuilder.build();
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .add(testBundle)
+        .addAll(getResolver().filterBuildRuleInputs(xctool.asSet()))
+        .addAll(testHostApp.asSet())
+        .build();
   }
 
   @Override
