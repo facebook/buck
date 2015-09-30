@@ -195,7 +195,8 @@ public final class Main {
         Cell cell,
         ParserConfig.GlobHandler globHandler,
         ParserConfig.AllowSymlinks allowSymlinks,
-        ObjectMapper objectMapper)
+        ObjectMapper objectMapper,
+        Optional<WebServer> webServerToReuse)
         throws IOException, InterruptedException {
       this.cell = cell;
       this.hashCache = new WatchedFileHashCache(cell.getFilesystem());
@@ -214,7 +215,11 @@ public final class Main {
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
 
-      webServer = createWebServer(cell.getBuckConfig(), cell.getFilesystem(), objectMapper);
+      if (webServerToReuse.isPresent()) {
+        webServer = webServerToReuse;
+      } else {
+        webServer = createWebServer(cell.getBuckConfig(), cell.getFilesystem(), objectMapper);
+      }
       if (!initWebServer()) {
         LOG.warn("Can't start web server");
       }
@@ -243,7 +248,7 @@ public final class Main {
      * If the return value is not absent, then the port is a nonnegative integer. This means that
      * specifying a port of -1 effectively disables the WebServer.
      */
-    private static Optional<Integer> getValidWebServerPort(BuckConfig config) {
+    public static Optional<Integer> getValidWebServerPort(BuckConfig config) {
       // Enable the web httpserver if it is given by command line parameter or specified in
       // .buckconfig. The presence of a nonnegative port number is sufficient.
       Optional<String> serverPort =
@@ -371,9 +376,10 @@ public final class Main {
       ObjectMapper objectMapper)
       throws IOException, InterruptedException  {
     Path rootPath = cell.getFilesystem().getRootPath();
+    Optional<WebServer> webServer = Optional.<WebServer>absent();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(cell, globHandler, allowSymlinks, objectMapper);
+      daemon = new Daemon(cell, globHandler, allowSymlinks, objectMapper, webServer);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -390,11 +396,27 @@ public final class Main {
       // create a new daemon.
       if (!daemon.cell.equals(cell)) {
         LOG.info("Shutting down and restarting daemon on config or directory resolver change.");
-        daemon.close();
-        daemon = new Daemon(cell, globHandler, allowSymlinks, objectMapper);
+        if (shouldReuseWebServer(cell)) {
+          webServer = daemon.getWebServer();
+          LOG.info("Reusing web server");
+        } else {
+          daemon.close();
+        }
+        daemon = new Daemon(cell, globHandler, allowSymlinks, objectMapper, webServer);
       }
     }
     return daemon;
+  }
+
+  private static boolean shouldReuseWebServer(Cell newCell) {
+    if (newCell == null || daemon == null || daemon.cell == null) {
+      return false;
+    }
+    Optional<Integer> portFromOldConfig =
+        Daemon.getValidWebServerPort(daemon.cell.getBuckConfig());
+    Optional<Integer> portFromUpdatedConfig =
+        Daemon.getValidWebServerPort(newCell.getBuckConfig());
+    return portFromOldConfig.equals(portFromUpdatedConfig);
   }
 
   @VisibleForTesting
