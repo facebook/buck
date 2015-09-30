@@ -31,7 +31,7 @@ class TestStatus(object):
     FAILED = 'FAILURE'
     EXPECTED_FAILURE = 'SUCCESS'
     UNEXPECTED_SUCCESS = 'FAILURE'
-    SKIPPED = 'SUCCESS'
+    SKIPPED = 'ASSUMPTION_VIOLATION'
 
 
 class TeeStream(object):

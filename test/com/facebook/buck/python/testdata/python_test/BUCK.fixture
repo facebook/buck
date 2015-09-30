@@ -13,6 +13,13 @@ python_test(
 )
 
 python_test(
+  name='test-skip',
+  srcs=[
+    'test_skipped.py',
+  ],
+)
+
+python_test(
   name='test-env',
   srcs=[
     'test_env.py',
