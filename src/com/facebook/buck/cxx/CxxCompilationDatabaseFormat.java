@@ -18,29 +18,37 @@ package com.facebook.buck.cxx;
 
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+
 public enum CxxCompilationDatabaseFormat {
 
   CLANG {
     @Override
     public CxxCompilationDatabaseEntry createEntry(
-        String directory,
+        Path root,
+        Path basePath,
         String file,
         ImmutableList<String> args) {
-      return ClangCxxCompilationDatabaseEntry.of(directory, file, args);
+      return ClangCxxCompilationDatabaseEntry.of(root.toString(), file, args);
     }
   },
   NUCLIDE {
     @Override
     public CxxCompilationDatabaseEntry createEntry(
-        String directory,
+        Path root,
+        Path basePath,
         String file,
         ImmutableList<String> args) {
-      return NuclideCompatibleCxxCompilationDatabaseEntry.of(directory, file, args);
+      return NuclideCompatibleCxxCompilationDatabaseEntry.of(
+          root.resolve(basePath).toString(),
+          file,
+          args);
     }
   };
 
   public abstract CxxCompilationDatabaseEntry createEntry(
-      String directory,
+      Path root,
+      Path basePath,
       String file,
       ImmutableList<String> args);
 }

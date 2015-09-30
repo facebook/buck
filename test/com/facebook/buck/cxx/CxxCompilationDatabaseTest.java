@@ -64,6 +64,11 @@ public class CxxCompilationDatabaseTest {
     final Path fakeRoot = Paths.get(root);
     ProjectFilesystem filesystem = new FakeProjectFilesystem() {
       @Override
+      public Path getRootPath() {
+        return fakeRoot;
+      }
+
+      @Override
       public Path resolve(Path relativePath) {
         return fakeRoot.resolve(relativePath);
       }
@@ -191,7 +196,7 @@ public class CxxCompilationDatabaseTest {
     Iterable<ClangCxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
           ClangCxxCompilationDatabaseEntry.of(
-              root + "/foo",
+              root,
               root + "/test.cpp",
               expectedArguments));
     MoreAsserts.assertIterablesEquals(expectedEntries, observedEntries);
@@ -239,6 +244,11 @@ public class CxxCompilationDatabaseTest {
     String root = "/Users/user/src";
     final Path fakeRoot = Paths.get(root);
     ProjectFilesystem filesystem = new FakeProjectFilesystem() {
+      @Override
+      public Path getRootPath() {
+        return fakeRoot;
+      }
+
       @Override
       public Path resolve(Path relativePath) {
         return fakeRoot.resolve(relativePath);
@@ -346,7 +356,7 @@ public class CxxCompilationDatabaseTest {
     Iterable<ClangCxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
             ClangCxxCompilationDatabaseEntry.of(
-                root + "/foo",
+                root,
                 root + "/test.cpp",
                 ImmutableList.of(
                     "compiler",

@@ -188,7 +188,8 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
           compileRule.getCompileCommandCombinedWithPreprocessBuildRule(preprocessRule.get()) :
           compileRule.getCommand();
       return compilationDatabaseFormat.createEntry(
-          /* directory */ getProjectFilesystem().resolve(getBuildTarget().getBasePath()).toString(),
+          getProjectFilesystem().getRootPath(),
+          getBuildTarget().getBasePath(),
           fileToCompile,
           args);
     }
