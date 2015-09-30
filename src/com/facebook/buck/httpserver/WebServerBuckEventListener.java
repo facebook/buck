@@ -22,9 +22,7 @@ import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.step.StepEvent;
@@ -62,11 +60,6 @@ public class WebServerBuckEventListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
-    streamingWebSocketServlet.tellClients(calculated);
-  }
-
-  @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
     streamingWebSocketServlet.tellClients(finished);
   }
@@ -78,36 +71,6 @@ public class WebServerBuckEventListener implements BuckEventListener {
 
   @Subscribe
   public void stepFinished(StepEvent.Finished finished) {
-    streamingWebSocketServlet.tellClients(finished);
-  }
-
-  @Subscribe
-  public void buildRuleStarted(BuildRuleEvent.Started started) {
-    streamingWebSocketServlet.tellClients(started);
-  }
-
-  @Subscribe
-  public void buildRuleFinished(BuildRuleEvent.Finished finished) {
-    streamingWebSocketServlet.tellClients(finished);
-  }
-
-  @Subscribe
-  public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
-    streamingWebSocketServlet.tellClients(suspended);
-  }
-
-  @Subscribe
-  public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    streamingWebSocketServlet.tellClients(resumed);
-  }
-
-  @Subscribe
-  public void artifactStarted(ArtifactCacheEvent.Started started) {
-    streamingWebSocketServlet.tellClients(started);
-  }
-
-  @Subscribe
-  public void artifactFinished(ArtifactCacheEvent.Finished finished) {
     streamingWebSocketServlet.tellClients(finished);
   }
 
