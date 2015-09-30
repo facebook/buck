@@ -85,16 +85,7 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name : 'force_static' /}
-  {param default: 'false' /}
-  {param desc}
-  If <code>true</code>, the library will always be linked statically, even if the target that
-  depends on it specifies <code>link_style</code> to be something other than <code>static</code>.
-  Note this will cause duplicate symbols if multiple targets that depend on the library are linked
-  together.
-  {/param}
-{/call}
+{call cxx_common.force_static /}
 
 {call buck.tests_arg /}
 
