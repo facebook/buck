@@ -27,22 +27,15 @@ files that contain tests to run via the <a href="https://docs.python.org/2/libra
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'srcs' /}
-  {param default : '[]' /}
-  {param desc}
-  The set of <code>.py</code> files that contain tests.
-  {/param}
-{/call}
+{call python_common.srcs_arg /}
 
-{call buck.arg}
-  {param name: 'resources' /}
-  {param default : '[]' /}
-  {param desc}
-  Static files to be packaged along with the python sources. These resources can be
-  accessed at runtime using the <a href="https://pythonhosted.org/setuptools/pkg_resources.html">pkg_resources</a> API.
-  {/param}
-{/call}
+{call python_common.platform_srcs_arg /}
+
+{call python_common.resources_arg /}
+
+{call python_common.platform_resources_arg /}
+
+{call python_common.base_module_arg /}
 
 {call buck.arg}
   {param name: 'env' /}
@@ -58,16 +51,6 @@ files that contain tests to run via the <a href="https://docs.python.org/2/libra
     means that you can refer to these without needing to be aware of how
     Buck is storing data on the disk mid-build.</dd>
   </dl>
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'base_module' /}
-  {param default : 'None' /}
-  {param desc}
-  The package for which the given specified sources and resources should reside in their final
-  location in the top-level binary. If unset, the project relative directory that houses the
-  BUCK file is used.
   {/param}
 {/call}
 
@@ -130,6 +113,33 @@ python_library(
   srcs = glob(['fileutil/**/*.py'],
   resources = [
     'testdata.dat',
+  ],
+)
+</pre>{/literal}
+<p>
+Here is an example of using the `platform_srcs` and `platform_resources`
+parameters to pull in sources/resources only when building for a specific
+Python platform:
+</p>
+{literal}<pre class="prettyprint lang-ini">
+; .buckconfig
+[python#py2]
+  interpreter = /usr/bin/python2.7
+[python#py3]
+  interpreter = /usr/bin/python3.4
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+# BUCK
+python_test(
+  name = 'test',
+  platform_srcs = [
+    ('py2', ['foo.py']),
+    ('py3', ['bar.py']),
+  ],
+  platform_resources = [
+    ('py2', ['foo.dat']),
+    ('py3', ['bar.dat']),
   ],
 )
 </pre>{/literal}

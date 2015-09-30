@@ -25,6 +25,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
@@ -51,8 +52,8 @@ public class PythonLibraryTest {
             BuildTarget.builder("//scripts/python", "foo").build())
             .build(),
         new SourcePathResolver(new BuildRuleResolver()),
-        srcs,
-        ImmutableMap.<Path, SourcePath>of(),
+        Functions.constant(srcs),
+        Functions.constant(ImmutableMap.<Path, SourcePath>of()),
         Optional.<Boolean>absent());
 
     assertTrue(pythonLibrary.getProperties().is(LIBRARY));

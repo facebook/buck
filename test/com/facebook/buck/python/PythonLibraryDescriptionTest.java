@@ -17,60 +17,100 @@
 package com.facebook.buck.python;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public class PythonLibraryDescriptionTest {
 
   @Test
   public void baseModule() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     String sourceName = "main.py";
     SourcePath source = new TestSourcePath("foo/" + sourceName);
-    PythonLibraryDescription desc = new PythonLibraryDescription();
-    PythonLibraryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.absent();
-    arg.resources = Optional.absent();
-    arg.srcs = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)));
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
-    arg.baseModule = Optional.absent();
-    PythonLibrary normalRule = desc
-        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
+    PythonLibrary normal =
+        (PythonLibrary) new PythonLibraryBuilder(target)
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
+            .build(new BuildRuleResolver());
     assertEquals(
         ImmutableMap.of(
             target.getBasePath().resolve(sourceName),
             source),
-        normalRule.getSrcs());
+        normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM));
 
     // Run *with* a base module set and verify it gets used to build the main module path.
-    arg.baseModule = Optional.of("blah");
-    PythonLibrary baseModuleRule = desc
-        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
+    String baseModule = "blah";
+    PythonLibrary withBaseModule =
+        (PythonLibrary) new PythonLibraryBuilder(target)
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
+            .setBaseModule("blah")
+            .build(new BuildRuleResolver());
     assertEquals(
         ImmutableMap.of(
-            Paths.get(arg.baseModule.get()).resolve(sourceName),
+            Paths.get(baseModule).resolve(sourceName),
             source),
-        baseModuleRule.getSrcs());
+        withBaseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM));
+  }
+
+  @Test
+  public void platformSrcs() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
+    SourcePath matchedSource = new TestSourcePath("foo/a.py");
+    SourcePath unmatchedSource = new TestSourcePath("foo/b.py");
+    PythonLibrary library =
+        (PythonLibrary) new PythonLibraryBuilder(target)
+            .setPlatformSrcs(
+                PatternMatchedCollection.<SourceList>builder()
+                    .add(
+                        Pattern.compile(PythonTestUtils.PYTHON_PLATFORM.getFlavor().toString()),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                    .add(
+                        Pattern.compile("won't match anything"),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
+                    .build())
+            .build(new BuildRuleResolver());
+    assertThat(
+        library.getSrcs(PythonTestUtils.PYTHON_PLATFORM).values(),
+        Matchers.contains(matchedSource));
+  }
+
+  @Test
+  public void platformResources() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
+    SourcePath matchedSource = new TestSourcePath("foo/a.dat");
+    SourcePath unmatchedSource = new TestSourcePath("foo/b.dat");
+    PythonLibrary library =
+        (PythonLibrary) new PythonLibraryBuilder(target)
+            .setPlatformResources(
+                PatternMatchedCollection.<SourceList>builder()
+                    .add(
+                        Pattern.compile(PythonTestUtils.PYTHON_PLATFORM.getFlavor().toString()),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                    .add(
+                        Pattern.compile("won't match anything"),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
+                    .build())
+            .build(new BuildRuleResolver());
+    assertThat(
+        library.getResources(PythonTestUtils.PYTHON_PLATFORM).values(),
+        Matchers.contains(matchedSource));
   }
 
 }

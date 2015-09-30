@@ -25,7 +25,9 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -35,15 +37,15 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
 
-  private final ImmutableMap<Path, SourcePath> srcs;
-  private final ImmutableMap<Path, SourcePath> resources;
+  private final Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> srcs;
+  private final Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> resources;
   private final Optional<Boolean> zipSafe;
 
   public PythonLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableMap<Path, SourcePath> srcs,
-      ImmutableMap<Path, SourcePath> resources,
+      Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> srcs,
+      Function<? super PythonPlatform, ImmutableMap<Path, SourcePath>> resources,
       Optional<Boolean> zipSafe) {
     super(params, resolver);
     this.srcs = srcs;
@@ -57,8 +59,8 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform) {
     return PythonPackageComponents.of(
-        srcs,
-        resources,
+        Preconditions.checkNotNull(srcs.apply(pythonPlatform)),
+        Preconditions.checkNotNull(resources.apply(pythonPlatform)),
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableSet.<SourcePath>of(),
         zipSafe);
@@ -69,8 +71,12 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
     return OUTPUT_TYPE;
   }
 
-  public ImmutableMap<Path, SourcePath> getSrcs() {
-    return srcs;
+  public ImmutableMap<Path, SourcePath> getSrcs(PythonPlatform pythonPlatform) {
+    return Preconditions.checkNotNull(srcs.apply(pythonPlatform));
+  }
+
+  public ImmutableMap<Path, SourcePath> getResources(PythonPlatform pythonPlatform) {
+    return Preconditions.checkNotNull(resources.apply(pythonPlatform));
   }
 
 }

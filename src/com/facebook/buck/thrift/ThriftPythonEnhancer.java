@@ -29,6 +29,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -144,8 +145,8 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
     return new PythonLibrary(
         langParams,
         new SourcePathResolver(resolver),
-        modules,
-        ImmutableMap.<Path, SourcePath>of(),
+        Functions.constant(modules),
+        Functions.constant(ImmutableMap.<Path, SourcePath>of()),
         Optional.of(true));
   }
 

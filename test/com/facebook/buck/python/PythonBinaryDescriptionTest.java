@@ -42,6 +42,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -78,10 +79,11 @@ public class PythonBinaryDescriptionTest {
     PythonLibrary lib = new PythonLibrary(
         libParams,
         new SourcePathResolver(resolver),
-        ImmutableMap.<Path, SourcePath>of(
-            Paths.get("hello"),
-            new BuildTargetSourcePath(genrule.getBuildTarget())),
-        ImmutableMap.<Path, SourcePath>of(),
+        Functions.constant(
+            ImmutableMap.<Path, SourcePath>of(
+                Paths.get("hello"),
+                new BuildTargetSourcePath(genrule.getBuildTarget()))),
+        Functions.constant(ImmutableMap.<Path, SourcePath>of()),
         Optional.<Boolean>absent());
 
     BuildRuleParams params =

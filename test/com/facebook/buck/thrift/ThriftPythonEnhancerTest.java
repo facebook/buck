@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonLibrary;
+import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -256,7 +257,8 @@ public class ThriftPythonEnhancerTest {
             arg,
             sources,
             ImmutableSortedSet.<BuildRule>of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent : normal.getSrcs().entrySet()) {
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
     }
 
@@ -270,7 +272,8 @@ public class ThriftPythonEnhancerTest {
             arg,
             sources,
             ImmutableSortedSet.<BuildRule>of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent : baseModule.getSrcs().entrySet()) {
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().startsWith(Paths.get(arg.pyBaseModule.get())));
     }
   }
@@ -304,7 +307,8 @@ public class ThriftPythonEnhancerTest {
             arg,
             sources,
             ImmutableSortedSet.<BuildRule>of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent : normal.getSrcs().entrySet()) {
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
     }
 
@@ -318,7 +322,8 @@ public class ThriftPythonEnhancerTest {
             arg,
             sources,
             ImmutableSortedSet.<BuildRule>of());
-    for (ImmutableMap.Entry<Path, SourcePath> ent : baseModule.getSrcs().entrySet()) {
+    for (ImmutableMap.Entry<Path, SourcePath> ent :
+         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().startsWith(Paths.get(arg.pyTwistedBaseModule.get())));
     }
   }

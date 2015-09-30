@@ -96,22 +96,22 @@ public class PythonTestDescription implements Description<PythonTestDescription.
   }
 
   @VisibleForTesting
-  protected Path getTestMainName() {
+  protected static Path getTestMainName() {
     return Paths.get("__test_main__.py");
   }
 
   @VisibleForTesting
-  protected Path getTestModulesListName() {
+  protected static Path getTestModulesListName() {
     return Paths.get("__test_modules__.py");
   }
 
   @VisibleForTesting
-  protected Path getTestModulesListPath(BuildTarget buildTarget) {
+  protected static Path getTestModulesListPath(BuildTarget buildTarget) {
     return BuildTargets.getGenPath(buildTarget, "%s").resolve(getTestModulesListName());
   }
 
   @VisibleForTesting
-  protected BuildTarget getBinaryBuildTarget(BuildTarget target) {
+  protected static BuildTarget getBinaryBuildTarget(BuildTarget target) {
     return BuildTargets.createFlavoredBuildTarget(target.checkUnflavored(), BINARY_FLAVOR);
   }
 
@@ -190,19 +190,43 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 
-    ImmutableMap<Path, SourcePath> srcs = PythonUtil.toModuleMap(
-        params.getBuildTarget(),
-        pathResolver,
-        "srcs",
-        baseModule,
-        args.srcs);
+    ImmutableMap<Path, SourcePath> srcs =
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(
+                PythonUtil.toModuleMap(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "srcs",
+                    baseModule,
+                    args.srcs.asSet()))
+            .putAll(
+                PythonUtil.toModuleMap(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "platformSrcs",
+                    baseModule,
+                    args.platformSrcs.get()
+                        .getMatchingValues(pythonPlatform.getFlavor().toString())))
+            .build();
 
-    ImmutableMap<Path, SourcePath> resources = PythonUtil.toModuleMap(
-        params.getBuildTarget(),
-        pathResolver,
-        "resources",
-        baseModule,
-        args.resources);
+    ImmutableMap<Path, SourcePath> resources =
+        ImmutableMap.<Path, SourcePath>builder()
+            .putAll(
+                PythonUtil.toModuleMap(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "resources",
+                    baseModule,
+                    args.resources.asSet()))
+            .putAll(
+                PythonUtil.toModuleMap(
+                    params.getBuildTarget(),
+                    pathResolver,
+                    "platformResources",
+                    baseModule,
+                    args.platformResources.get()
+                        .getMatchingValues(pythonPlatform.getFlavor().toString())))
+            .build();
 
     // Convert the passed in module paths into test module names.
     ImmutableSet.Builder<String> testModulesBuilder = ImmutableSet.builder();

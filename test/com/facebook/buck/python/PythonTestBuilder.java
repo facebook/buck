@@ -23,6 +23,8 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,6 +65,27 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
             ImmutableMap.of(
                 CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
                 CxxPlatformUtils.DEFAULT_PLATFORM)));
+  }
+
+  public PythonTestBuilder setSrcs(SourceList srcs) {
+    arg.srcs = Optional.of(srcs);
+    return this;
+  }
+
+  public PythonTestBuilder setPlatformSrcs(PatternMatchedCollection<SourceList> platformSrcs) {
+    arg.platformSrcs = Optional.of(platformSrcs);
+    return this;
+  }
+
+  public PythonTestBuilder setResources(SourceList resources) {
+    arg.resources = Optional.of(resources);
+    return this;
+  }
+
+  public PythonTestBuilder setPlatformResources(
+      PatternMatchedCollection<SourceList> platformResources) {
+    arg.platformResources = Optional.of(platformResources);
+    return this;
   }
 
   public PythonTestBuilder setBaseModule(String baseModule) {

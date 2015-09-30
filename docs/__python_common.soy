@@ -1,0 +1,65 @@
+{namespace python_common}
+
+/***/
+{template .srcs_arg}
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of <code>.py</code> files included in this library.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .platform_srcs_arg}
+{call buck.arg}
+  {param name : 'platform_srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  Python-platform-specific source files. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform name
+  is matched (as defined in the `python#name` section of `.buckconfig`), and the second element is
+  a list of source files.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .resources_arg}
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Static files to be packaged along with the python sources. These resources can be
+  accessed at runtime using the <a href="https://pythonhosted.org/setuptools/pkg_resources.html">pkg_resources</a> API.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .platform_resources_arg}
+{call buck.arg}
+  {param name : 'platform_resources' /}
+  {param default : '[]' /}
+  {param desc}
+  Python-platform-specific resource files. These should be specified as a list of pairs where the first
+  element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform name
+  is matched (as defined in the `python#name` section of `.buckconfig`), and the second element is a
+  list of resource files.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .base_module_arg}
+{call buck.arg}
+  {param name: 'base_module' /}
+  {param default : 'None' /}
+  {param desc}
+  The package for which the given specified sources and resources should reside in their final
+  location in the top-level binary. If unset, the project relative directory that houses the
+  BUCK file is used.
+  {/param}
+{/call}
+{/template}

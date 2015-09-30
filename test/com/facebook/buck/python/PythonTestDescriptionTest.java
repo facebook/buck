@@ -16,153 +16,86 @@
 
 package com.facebook.buck.python;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 public class PythonTestDescriptionTest {
-
-  private static final PythonBuckConfig PYTHON_BUCK_CONFIG =
-      new PythonBuckConfig(
-          new FakeBuckConfig(),
-          new AlwaysFoundExecutableFinder());
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      new CxxBuckConfig(new FakeBuckConfig()));
-  private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
-      new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());
 
   @Test
   public void thatTestModulesAreInComponents() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bin"))
-            .build();
-    PythonTestDescription desc =
-        new PythonTestDescription(
-            new PythonBinaryDescription(
-                PYTHON_BUCK_CONFIG,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CXX_PLATFORM,
-                CXX_PLATFORMS),
-            PYTHON_BUCK_CONFIG,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CXX_PLATFORM,
-            CXX_PLATFORMS);
-    PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.srcs = Optional.of(
-        SourceList.ofUnnamedSources(
-            ImmutableSortedSet.<SourcePath>of(new TestSourcePath("blah.py"))));
-    arg.resources = Optional.absent();
-    arg.baseModule = Optional.absent();
-    arg.contacts = Optional.absent();
-    arg.labels = Optional.absent();
-    arg.sourceUnderTest = Optional.absent();
-    arg.zipSafe = Optional.absent();
-    arg.buildArgs = Optional.absent();
-    PythonTest testRule = desc
-        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
-
-    PythonBinary binRule = (PythonBinary) resolver.getRule(
-        desc.getBinaryBuildTarget(testRule.getBuildTarget()));
-    assertNotNull(binRule);
-
+    PythonTest testRule =
+        (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+            .setSrcs(
+                SourceList.ofUnnamedSources(
+                    ImmutableSortedSet.<SourcePath>of(new TestSourcePath("blah.py"))))
+            .build(resolver);
+    PythonBinary binRule = testRule.getBinary();
     PythonPackageComponents components = binRule.getComponents();
-    assertTrue(components.getModules().containsKey(desc.getTestModulesListName()));
-    assertTrue(components.getModules().containsKey(desc.getTestMainName()));
-    assertEquals(
+    assertThat(
+        components.getModules().keySet(),
+        Matchers.hasItem(PythonTestDescription.getTestModulesListName()));
+    assertThat(
+        components.getModules().keySet(),
+        Matchers.hasItem(PythonTestDescription.getTestMainName()));
+    assertThat(
         binRule.getMainModule(),
-        PythonUtil.toModuleName(
-            params.getBuildTarget(),
-            desc.getTestMainName().toString()));
+        Matchers.equalTo(
+            PythonUtil.toModuleName(
+                testRule.getBuildTarget(),
+                PythonTestDescription.getTestMainName().toString())));
   }
 
   @Test
   public void baseModule() {
-    BuildRuleResolver resolver;
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     String sourceName = "main.py";
     SourcePath source = new TestSourcePath("foo/" + sourceName);
-    PythonTestDescription desc =
-        new PythonTestDescription(
-            new PythonBinaryDescription(
-                PYTHON_BUCK_CONFIG,
-                PythonTestUtils.PYTHON_PLATFORMS,
-                CXX_PLATFORM,
-                CXX_PLATFORMS),
-            PYTHON_BUCK_CONFIG,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CXX_PLATFORM,
-            CXX_PLATFORMS);
-    PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.absent();
-    arg.resources = Optional.absent();
-    arg.contacts = Optional.absent();
-    arg.labels = Optional.absent();
-    arg.sourceUnderTest = Optional.absent();
-    arg.srcs = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)));
-    arg.zipSafe = Optional.absent();
-    arg.buildArgs = Optional.absent();
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
-    arg.baseModule = Optional.absent();
-    resolver = new BuildRuleResolver();
-    desc.createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
-    PythonBinary normalRule = (PythonBinary) resolver.getRule(
-        desc.getBinaryBuildTarget(target));
-    assertNotNull(normalRule);
-    assertTrue(normalRule.getComponents().getModules().containsKey(
-        target.getBasePath().resolve(sourceName)));
+    PythonTest normal =
+        (PythonTest) PythonTestBuilder.create(target)
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
+            .build(new BuildRuleResolver());
+    assertThat(
+        normal.getBinary().getComponents().getModules().keySet(),
+        Matchers.hasItem(target.getBasePath().resolve(sourceName)));
 
     // Run *with* a base module set and verify it gets used to build the main module path.
-    arg.baseModule = Optional.of("blah");
-    resolver = new BuildRuleResolver();
-    desc.createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
-    PythonBinary baseModuleRule = (PythonBinary) resolver.getRule(
-        desc.getBinaryBuildTarget(target));
-    assertNotNull(baseModuleRule);
-    assertTrue(
-        baseModuleRule.getComponents().getModules().containsKey(
-            Paths.get(arg.baseModule.get()).resolve(sourceName)));
+    String baseModule = "blah";
+    PythonTest withBaseModule =
+        (PythonTest) PythonTestBuilder.create(target)
+            .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(source)))
+            .setBaseModule(baseModule)
+            .build(new BuildRuleResolver());
+    assertThat(
+        withBaseModule.getBinary().getComponents().getModules().keySet(),
+        Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
   }
-
 
   @Test
   public void buildArgs() {
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     BuildRuleResolver resolver = new BuildRuleResolver();
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
     PythonTest test =
@@ -178,6 +111,54 @@ public class PythonTestDescriptionTest {
     assertThat(
         pexStep.getCommandPrefix(),
         Matchers.hasItems(buildArgs.toArray(new String[buildArgs.size()])));
+  }
+
+  @Test
+  public void platformSrcs() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
+    SourcePath matchedSource = new TestSourcePath("foo/a.py");
+    SourcePath unmatchedSource = new TestSourcePath("foo/b.py");
+    PythonTest test =
+        (PythonTest) PythonTestBuilder.create(target)
+            .setPlatformSrcs(
+                PatternMatchedCollection.<SourceList>builder()
+                    .add(
+                        Pattern.compile(PythonTestUtils.PYTHON_PLATFORM.getFlavor().toString()),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                    .add(
+                        Pattern.compile("won't match anything"),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
+                    .build())
+            .build(new BuildRuleResolver());
+    assertThat(
+        test.getBinary().getComponents().getModules().values(),
+        Matchers.allOf(
+            Matchers.hasItem(matchedSource),
+            Matchers.not(Matchers.hasItem(unmatchedSource))));
+  }
+
+  @Test
+  public void platformResources() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
+    SourcePath matchedSource = new TestSourcePath("foo/a.dat");
+    SourcePath unmatchedSource = new TestSourcePath("foo/b.dat");
+    PythonTest test =
+        (PythonTest) PythonTestBuilder.create(target)
+            .setPlatformResources(
+                PatternMatchedCollection.<SourceList>builder()
+                    .add(
+                        Pattern.compile(PythonTestUtils.PYTHON_PLATFORM.getFlavor().toString()),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(matchedSource)))
+                    .add(
+                        Pattern.compile("won't match anything"),
+                        SourceList.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
+                    .build())
+            .build(new BuildRuleResolver());
+    assertThat(
+        test.getBinary().getComponents().getResources().values(),
+        Matchers.allOf(
+            Matchers.hasItem(matchedSource),
+            Matchers.not(Matchers.hasItem(unmatchedSource))));
   }
 
 }

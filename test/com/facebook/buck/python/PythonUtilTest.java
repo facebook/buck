@@ -25,7 +25,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
@@ -42,7 +42,8 @@ public class PythonUtilTest {
         target,
         new SourcePathResolver(new BuildRuleResolver()),
         "srcs",
-        target.getBasePath(), Optional.of(
+        target.getBasePath(),
+        ImmutableList.of(
             SourceList.ofNamedSources(
                 ImmutableSortedMap.<String, SourcePath>of(
                     "hello.py", new TestSourcePath("goodbye.py")))));
