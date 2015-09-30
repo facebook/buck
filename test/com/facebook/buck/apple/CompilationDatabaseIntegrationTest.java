@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.cxx.CxxCompilationDatabaseEntry;
+import com.facebook.buck.cxx.CxxCompilationDatabaseUtils;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -81,7 +82,7 @@ public class CompilationDatabaseIntegrationTest {
 
     // Parse the compilation_database.json file.
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
-        CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
+        CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
 
     ImmutableSet<String> frameworks = ImmutableSet.of(
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString());
@@ -138,7 +139,7 @@ public class CompilationDatabaseIntegrationTest {
 
     // Parse the compilation_database.json file.
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
-        CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
+        CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
 
     ImmutableSet<String> frameworks = ImmutableSet.of(
         Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
@@ -256,6 +257,8 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add(source);
     commandArgs.add("-o");
     commandArgs.add(output);
-    MoreAsserts.assertIterablesEquals(commandArgs, ImmutableList.copyOf(entry.command.split(" ")));
+    MoreAsserts.assertIterablesEquals(
+        commandArgs,
+        ImmutableList.copyOf(entry.getCommand().split(" ")));
   }
 }

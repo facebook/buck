@@ -220,4 +220,10 @@ public class CxxBuckConfig {
     return delegate.getLong(cxxSection, "max_test_output_size").or(DEFAULT_MAX_TEST_OUTPUT_SIZE);
   }
 
+  public CxxCompilationDatabaseFormat getCompilationDatabaseFormat() {
+    return delegate
+        .getEnum(cxxSection, "compilation_database_format", CxxCompilationDatabaseFormat.class)
+        .or(CxxCompilationDatabaseFormat.NUCLIDE);
+  }
+
 }

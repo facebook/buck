@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -99,7 +98,7 @@ public class CxxCompilationDatabaseIntegrationTest {
         Files.exists(tmp.getRootPath().resolve(libraryExportedHeaderSymlinkTreeFoler + "/bar.h")));
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
-        CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
+        CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
     assertHasEntry(
         fileToEntry,
@@ -147,7 +146,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertTrue(Files.exists(tmp.getRootPath().resolve(exportedHeaderSymlinkTreeFoler)));
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
-        CxxCompilationDatabaseEntry.parseCompilationDatabaseJsonFile(compilationDatabase);
+        CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
     assertHasEntry(
         fileToEntry,
@@ -186,12 +185,11 @@ public class CxxCompilationDatabaseIntegrationTest {
     String key = tmp.getRootPath().toRealPath().resolve(fileName).toString();
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
-    MoreAsserts.assertIterablesEquals(command, entry.args);
     assertEquals(
         Joiner.on(' ').join(
             Iterables.transform(
                 command,
                 Escaper.SHELL_ESCAPER)),
-        entry.command);
+        entry.getCommand());
   }
 }

@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -42,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -53,15 +53,21 @@ import java.util.Set;
 public class CxxCompilationDatabase extends AbstractBuildRule implements HasPostBuildSteps {
   public static final Flavor COMPILATION_DATABASE = ImmutableFlavor.of("compilation-database");
 
+  @AddToRuleKey
   private final CxxPreprocessMode preprocessMode;
+  @AddToRuleKey
   private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
+  @AddToRuleKey(stringify = true)
   private final Path outputJsonFile;
+  @AddToRuleKey
+  private final CxxCompilationDatabaseFormat compilationDatabaseFormat;
 
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       CxxPreprocessMode preprocessMode,
-      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
+      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules,
+      CxxCompilationDatabaseFormat compilationDatabaseFormat) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
         .naturalOrder();
@@ -78,7 +84,8 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
             params.getExtraDeps()),
         pathResolver,
         compileRules.build(),
-        preprocessMode);
+        preprocessMode,
+        compilationDatabaseFormat);
   }
 
   static BuildRuleParams paramsWithoutCompilationDatabaseFlavor(BuildRuleParams params) {
@@ -100,11 +107,13 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
-      CxxPreprocessMode preprocessMode) {
+      CxxPreprocessMode preprocessMode,
+      CxxCompilationDatabaseFormat compilationDatabaseFormat) {
     super(buildRuleParams, pathResolver);
     this.compileRules = compileRules;
     this.preprocessMode = preprocessMode;
     this.outputJsonFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s.json");
+    this.compilationDatabaseFormat = compilationDatabaseFormat;
   }
 
   @Override
@@ -178,7 +187,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
       ImmutableList<String> args = preprocessRule.isPresent() ?
           compileRule.getCompileCommandCombinedWithPreprocessBuildRule(preprocessRule.get()) :
           compileRule.getCommand();
-      return new CxxCompilationDatabaseEntry(
+      return compilationDatabaseFormat.createEntry(
           /* directory */ getProjectFilesystem().resolve(getBuildTarget().getBasePath()).toString(),
           fileToCompile,
           args);
@@ -187,11 +196,10 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
     private int writeOutput(
         Iterable<CxxCompilationDatabaseEntry> entries,
         ExecutionContext context) {
-      Gson gson = new Gson();
       try {
         OutputStream outputStream = getProjectFilesystem().newFileOutputStream(
             getPathToOutput());
-        outputStream.write(gson.toJson(entries).getBytes());
+        outputStream.write(context.getObjectMapper().writeValueAsBytes(entries));
         outputStream.close();
       } catch (IOException e) {
         logError(e, context);

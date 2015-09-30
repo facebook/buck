@@ -482,7 +482,8 @@ public class CxxLibraryDescription implements
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableSet<Path> frameworkSearchPaths,
-      CxxPreprocessMode preprocessMode) {
+      CxxPreprocessMode preprocessMode,
+      CxxCompilationDatabaseFormat compilationDatabaseFormat) {
     BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
         .paramsWithoutCompilationDatabaseFlavor(params);
     // Invoking requireObjects has the side-effect of invoking
@@ -511,7 +512,8 @@ public class CxxLibraryDescription implements
         params,
         pathResolver,
         preprocessMode,
-        objects.keySet());
+        objects.keySet(),
+        compilationDatabaseFormat);
   }
 
   @Override
@@ -727,7 +729,8 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args,
-      CxxPreprocessMode preprocessMode) {
+      CxxPreprocessMode preprocessMode,
+      CxxCompilationDatabaseFormat compilationDatabaseFormat) {
     return createCompilationDatabase(
         targetGraph,
         params,
@@ -758,7 +761,8 @@ public class CxxLibraryDescription implements
             args.frameworks,
             cxxPlatform,
             new SourcePathResolver(resolver)),
-        preprocessMode);
+        preprocessMode,
+        compilationDatabaseFormat);
   }
 
   public static TypeAndPlatform getTypeAndPlatform(
@@ -829,14 +833,15 @@ public class CxxLibraryDescription implements
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
       return createCompilationDatabaseBuildRule(
-              targetGraph,
-              params,
-              resolver,
-              platform.isPresent()
-                  ? platform.get().getValue()
-                  : DefaultCxxPlatforms.build(cxxBuckConfig),
-              args,
-              preprocessMode);
+          targetGraph,
+          params,
+          resolver,
+          platform.isPresent()
+              ? platform.get().getValue()
+              : DefaultCxxPlatforms.build(cxxBuckConfig),
+          args,
+          preprocessMode,
+          cxxBuckConfig.getCompilationDatabaseFormat());
     }
 
     if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER)) {
