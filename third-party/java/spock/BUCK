@@ -1,0 +1,15 @@
+prebuilt_jar(
+  name = 'spock',
+  binary_jar = 'spock-core-jar-0.7-groovy-2.0.jar',
+  visibility = [
+    '//src/com/facebook/buck/junit:spock',
+  ],
+  deps = [
+    ':groovy'
+  ]
+)
+
+prebuilt_jar(
+  name = 'groovy',
+  binary_jar = 'groovy-all-2.3.6.jar',
+)

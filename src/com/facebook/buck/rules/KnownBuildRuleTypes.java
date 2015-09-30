@@ -82,6 +82,8 @@ import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.go.GoBinaryDescription;
 import com.facebook.buck.go.GoBuckConfig;
 import com.facebook.buck.go.GoLibraryDescription;
+import com.facebook.buck.groovy.GroovyLibraryDescription;
+import com.facebook.buck.groovy.GroovyTestDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -451,7 +453,8 @@ public class KnownBuildRuleTypes {
             ndkCxxPlatforms,
             dxExecutorService));
     builder.register(new AndroidBuildConfigDescription(androidBinaryOptions));
-    builder.register(new AndroidInstrumentationApkDescription(
+    builder.register(
+        new AndroidInstrumentationApkDescription(
             proGuardConfig,
             androidBinaryOptions,
             ndkCxxPlatforms,
@@ -529,7 +532,8 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloader));
-    builder.register(new RobolectricTestDescription(
+    builder.register(
+        new RobolectricTestDescription(
             androidBinaryOptions,
             testRuleTimeoutMs,
             defaultCxxPlatform,
@@ -558,6 +562,8 @@ public class KnownBuildRuleTypes {
     builder.register(new XcodePrebuildScriptDescription());
     builder.register(new XcodeWorkspaceConfigDescription());
     builder.register(new ZipDescription());
+    builder.register(new GroovyLibraryDescription());
+    builder.register(new GroovyTestDescription(testRuleTimeoutMs, testTempDirOverride));
 
     builder.setCxxPlatforms(cxxPlatforms);
     builder.setDefaultCxxPlatform(defaultCxxPlatform);

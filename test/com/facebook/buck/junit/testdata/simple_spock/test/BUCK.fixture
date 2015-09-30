@@ -1,0 +1,17 @@
+groovy_library(
+  name = 'groovy-main',
+  srcs = glob(['SimpleGroovyMain.groovy', 'SimpleJavaMain.java'])
+)
+
+groovy_test(
+  name = 'groovy-test',
+  srcs = glob(['SimpleSpec.groovy']),
+  source_under_test = [
+    ':groovy-main',
+  ],
+  deps = [
+    ':groovy-main',
+    '//lib:spock'
+  ],
+)
+

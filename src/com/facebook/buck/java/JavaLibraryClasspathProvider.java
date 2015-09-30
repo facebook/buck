@@ -127,7 +127,7 @@ public class JavaLibraryClasspathProvider {
     return classpathEntries.build();
   }
 
-  static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {
+  public static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {
     return FluentIterable.from(deps).filter(JavaLibrary.class);
   }
 }
