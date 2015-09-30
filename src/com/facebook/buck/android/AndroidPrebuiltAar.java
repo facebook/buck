@@ -33,6 +33,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 public class AndroidPrebuiltAar
     extends AndroidLibrary
     implements HasAndroidResourceDeps, HasRuntimeDeps {
@@ -117,6 +119,12 @@ public class AndroidPrebuiltAar
 
   public Path getBinaryJar() {
     return prebuiltJar.getPathToOutput();
+  }
+
+  @Nullable
+  @Override
+  public Path getPathToOutput() {
+    return unzipAar.getPathToOutput();
   }
 
   // This class is basically a wrapper around its android resource rule, since dependents will
