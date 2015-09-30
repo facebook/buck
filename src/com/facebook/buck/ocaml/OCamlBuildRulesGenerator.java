@@ -233,6 +233,9 @@ public class OCamlBuildRulesGenerator {
                 .addAll(pathResolver.filterBuildRuleInputs(allInputs))
                 .addAll(
                     pathResolver.filterBuildRuleInputs(ocamlContext.getLinkableInput().getInputs()))
+                .addAll(
+                    pathResolver.filterBuildRuleInputs(
+                        ocamlContext.getNativeLinkableInput().getInputs()))
                 .build()),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>of()));
@@ -251,14 +254,15 @@ public class OCamlBuildRulesGenerator {
         pathResolver,
         allInputs,
         new OCamlLinkStep.Args(
-          cxxCompiler.getCommandPrefix(pathResolver),
-          ocamlContext.getOcamlCompiler().get(),
-          ocamlContext.getOutput(),
-          ImmutableList.copyOf(ocamlContext.getLinkableInput().getArgs()),
-          linkerInputs,
-          flags.build(),
-          ocamlContext.isLibrary(),
-          /* isBytecode */ false));
+            cxxCompiler.getCommandPrefix(pathResolver),
+            ocamlContext.getOcamlCompiler().get(),
+            ocamlContext.getOutput(),
+            ocamlContext.getLinkableInput().getArgs(),
+            ocamlContext.getNativeLinkableInput().getArgs(),
+            linkerInputs,
+            flags.build(),
+            ocamlContext.isLibrary(),
+            /* isBytecode */ false));
     resolver.addToIndex(link);
     return link;
   }
@@ -281,6 +285,9 @@ public class OCamlBuildRulesGenerator {
                         .from(
                             pathResolver.filterBuildRuleInputs(
                                 ocamlContext.getLinkableInput().getInputs()))
+                        .append(
+                            pathResolver.filterBuildRuleInputs(
+                                ocamlContext.getNativeLinkableInput().getInputs()))
                         .filter(Predicates.not(Predicates.instanceOf(OCamlBuild.class))))
                 .build()),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
@@ -302,7 +309,8 @@ public class OCamlBuildRulesGenerator {
             cxxCompiler.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlBytecodeCompiler().get(),
             ocamlContext.getBytecodeOutput(),
-            ImmutableList.copyOf(ocamlContext.getLinkableInput().getArgs()),
+            ocamlContext.getLinkableInput().getArgs(),
+            ocamlContext.getNativeLinkableInput().getArgs(),
             linkerInputs,
             flags.build(),
             ocamlContext.isLibrary(),

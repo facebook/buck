@@ -17,17 +17,21 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxHeaders;
+import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -53,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -152,6 +157,40 @@ public class OCamlRuleBuilder {
     }
   }
 
+  private static NativeLinkableInput getLinkableInput(Iterable<BuildRule> deps) {
+    List<NativeLinkableInput> inputs = Lists.newArrayList();
+
+    // Add in the linkable input from OCaml libraries.
+    ImmutableList<BuildRule> ocamlDeps =
+        TopologicalSort.sort(
+            BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
+                deps,
+                Predicates.instanceOf(OCamlLibrary.class),
+                Predicates.instanceOf(OCamlLibrary.class)),
+            Predicates.<BuildRule>alwaysTrue());
+    for (BuildRule dep : ocamlDeps) {
+      inputs.add(((OCamlLibrary) dep).getNativeLinkableInput());
+    }
+
+    return NativeLinkableInput.concat(inputs);
+  }
+
+  private static NativeLinkableInput getNativeLinkableInput(
+      TargetGraph targetGraph,
+      CxxPlatform cxxPlatform,
+      Iterable<BuildRule> deps) {
+    return NativeLinkables.getTransitiveNativeLinkableInput(
+        targetGraph,
+        cxxPlatform,
+        deps,
+        Linker.LinkableDepType.STATIC,
+        Predicates.or(
+            Predicates.instanceOf(NativeLinkable.class),
+            Predicates.instanceOf(OCamlLibrary.class)),
+        ImmutableSet.<BuildRule>of(),
+        /* reverse */ true);
+  }
+
   public static AbstractBuildRule createBulkBuildRule(
       OCamlBuckConfig ocamlBuckConfig,
       TargetGraph targetGraph,
@@ -183,19 +222,17 @@ public class OCamlRuleBuilder {
         .transformAndConcat(getLibInclude(true))
         .toList();
 
-    NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
-        targetGraph,
-        ocamlBuckConfig.getCxxPlatform(),
-        params.getDeps(),
-        Linker.LinkableDepType.STATIC,
-        ImmutableSet.<BuildRule>of(),
-        /* reverse */ false);
+    NativeLinkableInput linkableInput =
+        getLinkableInput(params.getDeps());
+    NativeLinkableInput nativeLinkableInput =
+        getNativeLinkableInput(targetGraph, ocamlBuckConfig.getCxxPlatform(), params.getDeps());
 
     ImmutableList<OCamlLibrary> ocamlInput = OCamlUtil.getTransitiveOCamlInput(params.getDeps());
 
     ImmutableSortedSet.Builder<BuildRule> allDepsBuilder = ImmutableSortedSet.naturalOrder();
     allDepsBuilder.addAll(pathResolver.filterBuildRuleInputs(getInput(srcs)));
     allDepsBuilder.addAll(pathResolver.filterBuildRuleInputs(linkableInput.getInputs()));
+    allDepsBuilder.addAll(pathResolver.filterBuildRuleInputs(nativeLinkableInput.getInputs()));
     for (OCamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getCompileDeps());
       allDepsBuilder.addAll(library.getBytecodeCompileDeps());
@@ -230,6 +267,7 @@ public class OCamlRuleBuilder {
             .setBytecodeIncludes(bytecodeIncludes)
             .setOCamlInput(ocamlInput)
             .setLinkableInput(linkableInput)
+            .setNativeLinkableInput(nativeLinkableInput)
             .setBuildTarget(buildTarget)
             .setLibrary(isLibrary)
             .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
@@ -316,13 +354,10 @@ public class OCamlRuleBuilder {
         .transformAndConcat(getLibInclude(true))
         .toList();
 
-    NativeLinkableInput linkableInput = NativeLinkables.getTransitiveNativeLinkableInput(
-        targetGraph,
-        ocamlBuckConfig.getCxxPlatform(),
-        params.getDeps(),
-        Linker.LinkableDepType.STATIC,
-        ImmutableSet.<BuildRule>of(),
-        /* reverse */ false);
+    NativeLinkableInput linkableInput =
+        getLinkableInput(params.getDeps());
+    NativeLinkableInput nativeLinkableInput =
+        getNativeLinkableInput(targetGraph, ocamlBuckConfig.getCxxPlatform(), params.getDeps());
 
     ImmutableList<OCamlLibrary> ocamlInput = OCamlUtil.getTransitiveOCamlInput(params.getDeps());
 
@@ -330,6 +365,7 @@ public class OCamlRuleBuilder {
         ImmutableList.<SourcePath>builder()
             .addAll(getInput(srcs))
             .addAll(linkableInput.getInputs())
+            .addAll(nativeLinkableInput.getInputs())
             .build();
 
     BuildTarget buildTarget =
@@ -362,6 +398,7 @@ public class OCamlRuleBuilder {
             .setBytecodeIncludes(bytecodeIncludes)
             .setOCamlInput(ocamlInput)
             .setLinkableInput(linkableInput)
+            .setNativeLinkableInput(nativeLinkableInput)
             .setBuildTarget(buildTarget)
             .setLibrary(isLibrary)
             .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)

@@ -16,9 +16,6 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -29,14 +26,12 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -83,15 +78,7 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) {
-
-    Preconditions.checkArgument(
-        type == Linker.LinkableDepType.STATIC,
-        "Only supporting static linking in OCaml");
-
+  public NativeLinkableInput getNativeLinkableInput() {
     Preconditions.checkState(
         bytecodeLib.equals(
             nativeLib.replaceFirst(
@@ -127,18 +114,6 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
         linkerArgs,
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
-  }
-
-  @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.ANY;
-  }
-
-  @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      TargetGraph targetGraph,
-      CxxPlatform cxxPlatform) {
-    return ImmutableMap.of();
   }
 
   @Override

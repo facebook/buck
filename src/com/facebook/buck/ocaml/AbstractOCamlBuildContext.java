@@ -56,6 +56,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
   public abstract List<Path> getInput();
   public abstract List<String> getIncludes();
   public abstract NativeLinkableInput getLinkableInput();
+  public abstract NativeLinkableInput getNativeLinkableInput();
   public abstract List<OCamlLibrary> getOCamlInput();
   public abstract CxxPreprocessorInput getCxxPreprocessorInput();
   public abstract List<String> getBytecodeIncludes();

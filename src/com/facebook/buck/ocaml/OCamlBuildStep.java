@@ -193,14 +193,15 @@ public class OCamlBuildStep implements Step {
     OCamlLinkStep linkStep = new OCamlLinkStep(
         filesystem.getRootPath(),
         new OCamlLinkStep.Args(
-          cxxCompiler,
-          ocamlContext.getOcamlCompiler().get(),
-          ocamlContext.getOutput(),
-          ImmutableList.copyOf(ocamlContext.getLinkableInput().getArgs()),
-          linkerInputs,
-          flags.build(),
-          ocamlContext.isLibrary(),
-          /* isBytecode */ false));
+            cxxCompiler,
+            ocamlContext.getOcamlCompiler().get(),
+            ocamlContext.getOutput(),
+            ocamlContext.getLinkableInput().getArgs(),
+            ocamlContext.getNativeLinkableInput().getArgs(),
+            linkerInputs,
+            flags.build(),
+            ocamlContext.isLibrary(),
+            /* isBytecode */ false));
     return linkStep.execute(context);
   }
 
@@ -215,14 +216,15 @@ public class OCamlBuildStep implements Step {
     OCamlLinkStep linkStep = new OCamlLinkStep(
         filesystem.getRootPath(),
         new OCamlLinkStep.Args(
-          cxxCompiler,
-          ocamlContext.getOcamlBytecodeCompiler().get(),
-          ocamlContext.getBytecodeOutput(),
-          ImmutableList.copyOf(ocamlContext.getLinkableInput().getArgs()),
-          linkerInputs,
-          flags.build(),
-          ocamlContext.isLibrary(),
-          /* isBytecode */ true));
+            cxxCompiler,
+            ocamlContext.getOcamlBytecodeCompiler().get(),
+            ocamlContext.getBytecodeOutput(),
+            ocamlContext.getLinkableInput().getArgs(),
+            ocamlContext.getNativeLinkableInput().getArgs(),
+            linkerInputs,
+            flags.build(),
+            ocamlContext.isLibrary(),
+            /* isBytecode */ true));
     return linkStep.execute(context);
   }
 

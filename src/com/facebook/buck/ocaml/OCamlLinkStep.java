@@ -39,6 +39,7 @@ public class OCamlLinkStep extends ShellStep {
     public final ImmutableList<String> flags;
     public final Path output;
     public final ImmutableList<String> depInput;
+    public final ImmutableList<String> nativeDepInput;
     public final ImmutableList<String> input;
     public final boolean isLibrary;
     public final boolean isBytecode;
@@ -48,6 +49,7 @@ public class OCamlLinkStep extends ShellStep {
         Path ocamlCompiler,
         Path output,
         ImmutableList<String> depInput,
+        ImmutableList<String> nativeDepInput,
         ImmutableList<String> input,
         ImmutableList<String> flags,
         boolean isLibrary,
@@ -59,6 +61,7 @@ public class OCamlLinkStep extends ShellStep {
       this.flags = flags;
       this.output = output;
       this.depInput = depInput;
+      this.nativeDepInput = nativeDepInput;
       this.input = input;
     }
 
@@ -69,6 +72,7 @@ public class OCamlLinkStep extends ShellStep {
           .setReflectively("ocamlCompiler", ocamlCompiler.toString())
           .setReflectively("output", output.toString())
           .setReflectively("depInput", depInput)
+          .setReflectively("nativeDepInput", nativeDepInput)
           .setReflectively("input", input)
           .setReflectively("flags", flags)
           .setReflectively("isLibrary", isLibrary)
@@ -93,41 +97,27 @@ public class OCamlLinkStep extends ShellStep {
 
   private final Args args;
 
-  private final ImmutableList<String> aAndOInput;
   private final ImmutableList<String> ocamlInput;
-  private final ImmutableList<String> systemSoLibs;
 
   public OCamlLinkStep(Path workingDirectory, Args args) {
     super(workingDirectory);
     this.args = args;
 
-    ImmutableList.Builder<String> aAndOInputBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
-    ImmutableList.Builder<String> systemSoLibsBuilder = ImmutableList.builder();
 
     for (String linkInput : this.args.depInput) {
-      if (linkInput.endsWith(OCamlCompilables.OCAML_O) ||
-          linkInput.endsWith(OCamlCompilables.OCAML_A)) {
-        aAndOInputBuilder.add(linkInput);
-      } else if (linkInput.endsWith(OCamlCompilables.SYSTEM_SO)) {
-        systemSoLibsBuilder.add(linkInput);
-      } else {
-        if (!(this.args.isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA))) {
-          if (!this.args.isBytecode) {
-            ocamlInputBuilder.add(linkInput);
-          } else {
-            String bytecodeLinkInput = linkInput.replaceAll(
-                OCamlCompilables.OCAML_CMXA_REGEX,
-                OCamlCompilables.OCAML_CMA);
-            ocamlInputBuilder.add(bytecodeLinkInput);
-          }
-        }
+      if (this.args.isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA)) {
+        continue;
       }
+      if (this.args.isBytecode) {
+        linkInput = linkInput.replaceAll(
+            OCamlCompilables.OCAML_CMXA_REGEX,
+            OCamlCompilables.OCAML_CMA);
+      }
+      ocamlInputBuilder.add(linkInput);
     }
 
     this.ocamlInput = ocamlInputBuilder.build();
-    this.aAndOInput = aAndOInputBuilder.build().reverse();
-    this.systemSoLibs = systemSoLibsBuilder.build();
   }
 
   @Override
@@ -145,19 +135,19 @@ public class OCamlLinkStep extends ShellStep {
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-ccopt"),
                 args.cxxCompiler.subList(1, args.cxxCompiler.size())))
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-ccopt"),
-                systemSoLibs))
         .addAll((args.isLibrary ? Optional.of("-a") : Optional.<String>absent()).asSet())
-        .addAll((!args.isLibrary && args.isBytecode ?
+        .addAll(
+            (!args.isLibrary && args.isBytecode ?
                 Optional.of("-custom") :
                 Optional.<String>absent()).asSet())
         .add("-o", args.output.toString())
         .addAll(args.flags)
         .addAll(ocamlInput)
         .addAll(args.input)
-        .addAll(aAndOInput)
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-cclib"),
+                args.nativeDepInput))
         .build();
   }
 }
