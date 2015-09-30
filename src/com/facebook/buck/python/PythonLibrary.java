@@ -54,6 +54,7 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable {
   @Override
   public PythonPackageComponents getPythonPackageComponents(
       TargetGraph targetGraph,
+      PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform) {
     return PythonPackageComponents.of(
         srcs,

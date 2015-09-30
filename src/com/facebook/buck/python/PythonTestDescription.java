@@ -68,16 +68,19 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
+  private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonTestDescription(
       PythonBinaryDescription binaryDescription,
       PythonBuckConfig pythonBuckConfig,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
+    this.pythonPlatforms = pythonPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -164,6 +167,17 @@ public class PythonTestDescription implements Description<PythonTestDescription.
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
+    PythonPlatform pythonPlatform;
+    try {
+      pythonPlatform = pythonPlatforms
+          .getValue(params.getBuildTarget().getFlavors())
+          .or(pythonPlatforms.getValues().asList().get(0));
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+
+    // Extract the platform from the flavor, falling back to the default platform if none are
+    // found.
     CxxPlatform cxxPlatform;
     try {
       cxxPlatform = cxxPlatforms
@@ -226,7 +240,12 @@ public class PythonTestDescription implements Description<PythonTestDescription.
         ImmutableSet.<SourcePath>of(),
         args.zipSafe);
     PythonPackageComponents allComponents =
-        PythonUtil.getAllComponents(targetGraph, params, testComponents, cxxPlatform);
+        PythonUtil.getAllComponents(
+            targetGraph,
+            params,
+            testComponents,
+            pythonPlatform,
+            cxxPlatform);
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(
@@ -238,6 +257,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
             binaryParams,
             resolver,
             pathResolver,
+            pythonPlatform,
             cxxPlatform,
             PythonUtil.toModuleName(params.getBuildTarget(), getTestMainName().toString()),
             allComponents,

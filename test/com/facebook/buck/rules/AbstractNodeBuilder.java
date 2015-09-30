@@ -116,7 +116,7 @@ public abstract class AbstractNodeBuilder<A> {
     TargetNode<?> node = build();
     return new FakeBuildRuleParamsBuilder(target)
         .setProjectFilesystem(filesystem)
-        .setDeps(resolver.getAllRules(node.getDeps()))
+        .setDeps(resolver.getAllRules(node.getDeclaredDeps()))
         .setExtraDeps(resolver.getAllRules(node.getExtraDeps()))
         .build();
   }

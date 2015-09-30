@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -178,7 +179,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, CXX_PLATFORM));
+        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -231,7 +232,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, CXX_PLATFORM));
+        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -272,7 +273,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableMap.<Path, SourcePath>of(),
         ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
-    assertEquals(expectedComponents, lib.getPythonPackageComponents(targetGraph, CXX_PLATFORM));
+    assertEquals(
+        expectedComponents,
+        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -327,7 +330,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, CXX_PLATFORM));
+        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -483,7 +486,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, CXX_PLATFORM));
+        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -540,7 +543,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedComponents,
-        lib.getPythonPackageComponents(targetGraph, CXX_PLATFORM));
+        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test
@@ -593,7 +596,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
             new PathSourcePath(filesystem, getSharedLibraryPath(arg))),
         ImmutableSet.<SourcePath>of(),
         Optional.<Boolean>absent());
-    assertEquals(expectedComponents, lib.getPythonPackageComponents(targetGraph, CXX_PLATFORM));
+    assertEquals(
+        expectedComponents,
+        lib.getPythonPackageComponents(targetGraph, PythonTestUtils.PYTHON_PLATFORM, CXX_PLATFORM));
   }
 
   @Test

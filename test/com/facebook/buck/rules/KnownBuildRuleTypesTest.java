@@ -38,8 +38,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.python.PythonEnvironment;
-import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -64,7 +62,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,9 +69,6 @@ public class KnownBuildRuleTypesTest {
 
   @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
   @Rule public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
-
-  private static final PythonEnvironment DUMMY_PYTHON_ENVIRONMENT =
-      new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7"));
 
   private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
 
@@ -162,7 +156,6 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT,
         Optional.<Path>absent()).build();
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
 
@@ -186,7 +179,6 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT,
         Optional.<Path>absent())
         .build();
 
@@ -215,7 +207,6 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT,
         Optional.<Path>absent())
         .build();
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
@@ -242,9 +233,6 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
-        new PythonEnvironment(
-            Paths.get("fake_python"),
-            PythonVersion.of("Python 2.7")),
         Optional.<Path>absent()).build();
     AndroidLibraryDescription description =
         (AndroidLibraryDescription) buildRuleTypes.getDescription(AndroidLibraryDescription.TYPE);
@@ -274,8 +262,7 @@ public class KnownBuildRuleTypesTest {
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
         processExecutor,
-    new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT,
+        new FakeAndroidDirectoryResolver(),
         Optional.<Path>absent())
         .build();
     AndroidLibraryDescription description =
@@ -340,7 +327,6 @@ public class KnownBuildRuleTypesTest {
         new FakeBuckConfig(),
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT,
         Optional.<Path>absent());
 
     final File javac = temporaryFolder.newFile();
@@ -355,7 +341,6 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         processExecutor,
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT,
         Optional.<Path>absent());
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
@@ -373,7 +358,6 @@ public class KnownBuildRuleTypesTest {
         buckConfig,
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
-        DUMMY_PYTHON_ENVIRONMENT,
         Optional.<Path>absent()).build();
   }
 
@@ -386,13 +370,15 @@ public class KnownBuildRuleTypesTest {
   private ProcessExecutor createExecutor(String javac, String version) {
     Map<ProcessExecutorParams, FakeProcess> processMap = new HashMap<>();
 
-      FakeProcess process = new FakeProcess(0, "", version);
-      ProcessExecutorParams params = ProcessExecutorParams.builder()
-          .setCommand(ImmutableList.of(javac, "-version"))
-          .build();
-      processMap.put(params, process);
+    FakeProcess process = new FakeProcess(0, "", version);
+    ProcessExecutorParams params = ProcessExecutorParams.builder()
+        .setCommand(ImmutableList.of(javac, "-version"))
+        .build();
+    processMap.put(params, process);
 
     addXcodeSelectProcess(processMap, FAKE_XCODE_DEV_PATH);
+
+    processMap.putAll(DefaultKnownBuildRuleTypes.getPythonProcessMap());
 
     return new FakeProcessExecutor(processMap);
   }

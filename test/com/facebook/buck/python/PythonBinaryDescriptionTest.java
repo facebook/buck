@@ -61,10 +61,6 @@ public class PythonBinaryDescriptionTest {
       new PythonBuckConfig(
           new FakeBuckConfig(),
           new AlwaysFoundExecutableFinder());
-  private static final PythonEnvironment PYTHON_ENV =
-      new PythonEnvironment(
-          Paths.get("python"),
-          PythonVersion.of("2.6"));
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(new FakeBuckConfig()));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
@@ -95,7 +91,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
             PYTHON_BUCK_CONFIG,
-            PYTHON_ENV,
+            PythonTestUtils.PYTHON_PLATFORMS,
             CXX_PLATFORM,
             CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
@@ -124,7 +120,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
             PYTHON_BUCK_CONFIG,
-            PYTHON_ENV,
+            PythonTestUtils.PYTHON_PLATFORMS,
             CXX_PLATFORM,
             CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
@@ -152,7 +148,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
             PYTHON_BUCK_CONFIG,
-            PYTHON_ENV,
+            PythonTestUtils.PYTHON_PLATFORMS,
             CXX_PLATFORM,
             CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
@@ -191,7 +187,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
             PYTHON_BUCK_CONFIG,
-            PYTHON_ENV,
+            PythonTestUtils.PYTHON_PLATFORMS,
             CXX_PLATFORM,
             CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
@@ -221,7 +217,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinaryDescription desc =
         new PythonBinaryDescription(
             config,
-            PYTHON_ENV,
+            PythonTestUtils.PYTHON_PLATFORMS,
             CXX_PLATFORM,
             CXX_PLATFORMS);
     PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();

@@ -1,7 +1,42 @@
+java_library(
+  name = 'testutil',
+  srcs = glob(['*.java'], excludes=['*Test.java', '*Builder.java']),
+  deps = [
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/python:support',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = [
+    '//test/...',
+  ],
+)
+
+java_library(
+  name = 'builders',
+  srcs = glob(['*Builder.java']),
+  deps = [
+    ':testutil',
+    '//src/com/facebook/buck/cli:config',
+    '//src/com/facebook/buck/cxx:platform',
+    '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/python:config',
+    '//src/com/facebook/buck/python:rules',
+    '//src/com/facebook/buck/python:support',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
+    '//test/com/facebook/buck/cxx:testutil',
+    '//test/com/facebook/buck/rules:testutil',
+    '//third-party/java/guava:guava',
+  ],
+)
+
 java_test(
   name = 'python',
-  srcs = glob(['*.java']),
+  srcs = glob(['*Test.java']),
   deps = [
+    ':builders',
+    ':testutil',
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',

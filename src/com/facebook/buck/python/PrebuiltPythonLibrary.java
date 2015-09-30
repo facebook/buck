@@ -50,6 +50,7 @@ public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackag
   @Override
   public PythonPackageComponents getPythonPackageComponents(
       TargetGraph targetGraph,
+      PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform) {
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).

@@ -57,10 +57,6 @@ public class PythonTestDescriptionTest {
       new PythonBuckConfig(
           new FakeBuckConfig(),
           new AlwaysFoundExecutableFinder());
-  private static final PythonEnvironment PYTHON_ENV =
-      new PythonEnvironment(
-          Paths.get("python"),
-          PythonVersion.of("2.6"));
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
       new CxxBuckConfig(new FakeBuckConfig()));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
@@ -76,10 +72,11 @@ public class PythonTestDescriptionTest {
         new PythonTestDescription(
             new PythonBinaryDescription(
                 PYTHON_BUCK_CONFIG,
-                PYTHON_ENV,
+                PythonTestUtils.PYTHON_PLATFORMS,
                 CXX_PLATFORM,
                 CXX_PLATFORMS),
             PYTHON_BUCK_CONFIG,
+            PythonTestUtils.PYTHON_PLATFORMS,
             CXX_PLATFORM,
             CXX_PLATFORMS);
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
@@ -122,12 +119,13 @@ public class PythonTestDescriptionTest {
         new PythonTestDescription(
             new PythonBinaryDescription(
                 PYTHON_BUCK_CONFIG,
-                PYTHON_ENV,
+                PythonTestUtils.PYTHON_PLATFORMS,
                 CXX_PLATFORM,
                 CXX_PLATFORMS),
             PYTHON_BUCK_CONFIG,
+            PythonTestUtils.PYTHON_PLATFORMS,
             CXX_PLATFORM,
-        CXX_PLATFORMS);
+            CXX_PLATFORMS);
     PythonTestDescription.Arg arg = desc.createUnpopulatedConstructorArg();
     arg.deps = Optional.absent();
     arg.resources = Optional.absent();

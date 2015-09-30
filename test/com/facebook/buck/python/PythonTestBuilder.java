@@ -28,24 +28,23 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Paths;
-
 public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription.Arg> {
 
   private PythonTestBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
-      PythonEnvironment pythonEnvironment,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new PythonTestDescription(
             new PythonBinaryDescription(
                 pythonBuckConfig,
-                pythonEnvironment,
+                pythonPlatforms,
                 defaultCxxPlatform,
                 cxxPlatforms),
             pythonBuckConfig,
+            pythonPlatforms,
             defaultCxxPlatform,
             cxxPlatforms),
         target);
@@ -57,7 +56,7 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
     return new PythonTestBuilder(
         target,
         pythonBuckConfig,
-        new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.7")),
+        PythonTestUtils.PYTHON_PLATFORMS,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         new FlavorDomain<>(
             "C/C++ Platform",

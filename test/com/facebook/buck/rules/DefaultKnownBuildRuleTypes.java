@@ -20,8 +20,6 @@ import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.python.PythonEnvironment;
-import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -31,7 +29,7 @@ import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Map;
 
 public class DefaultKnownBuildRuleTypes {
 
@@ -45,15 +43,36 @@ public class DefaultKnownBuildRuleTypes {
           .build();
   private static final FakeProcess XCODE_SELECT_PROCESS = new FakeProcess(0, "/path/to/xcode", "");
 
+  private static final ImmutableMap<String, String> PYTHONS =
+      ImmutableMap.of(
+          "python", "2.6.5",
+          "python2", "2.6.5",
+          "python3", "3.5.0");
+
+  protected static ImmutableMap<ProcessExecutorParams, FakeProcess> getPythonProcessMap() {
+    ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> processMap = ImmutableMap.builder();
+    for (Map.Entry<String, String> python : PYTHONS.entrySet()) {
+      processMap.put(
+          ProcessExecutorParams.builder()
+              .setCommand(ImmutableList.of("/usr/bin/" + python.getKey(), "-V"))
+              .build(),
+          new FakeProcess(0, "Python " + python.getValue(), ""));
+    }
+    return processMap.build();
+  }
+
   public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(ProjectFilesystem filesystem)
       throws InterruptedException, IOException {
     BuckConfig config = new FakeBuckConfig(filesystem);
 
     return KnownBuildRuleTypes.createInstance(
         config,
-        new FakeProcessExecutor(ImmutableMap.of(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)),
+        new FakeProcessExecutor(
+            ImmutableMap.<ProcessExecutorParams, FakeProcess>builder()
+                .put(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)
+                .putAll(getPythonProcessMap())
+                .build()),
         new FakeAndroidDirectoryResolver(),
-        new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         Optional.<Path>absent());
   }
 

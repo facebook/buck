@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -262,6 +263,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
   @Override
   public PythonPackageComponents getPythonPackageComponents(
       TargetGraph targetGraph,
+      PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform) {
     String resolvedSoname =
         PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);

@@ -28,20 +28,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Paths;
-
 public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescription.Arg> {
 
   private PythonBinaryBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
-      PythonEnvironment pythonEnvironment,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new PythonBinaryDescription(
             pythonBuckConfig,
-            pythonEnvironment,
+            pythonPlatforms,
             defaultCxxPlatform,
             cxxPlatforms),
         target);
@@ -53,7 +51,7 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
     return new PythonBinaryBuilder(
         target,
         pythonBuckConfig,
-        new PythonEnvironment(Paths.get("python"), PythonVersion.of("2.7")),
+        PythonTestUtils.PYTHON_PLATFORMS,
         CxxPlatformUtils.DEFAULT_PLATFORM,
         new FlavorDomain<>(
             "C/C++ Platform",

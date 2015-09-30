@@ -98,6 +98,7 @@ public class PythonUtil {
       final TargetGraph targetGraph,
       BuildRuleParams params,
       PythonPackageComponents packageComponents,
+      final PythonPlatform pythonPlatform,
       final CxxPlatform cxxPlatform) {
 
     final PythonPackageComponents.Builder components =
@@ -118,7 +119,7 @@ public class PythonUtil {
           // Add all components from the python packable into our top-level
           // package.
           components.addComponent(
-              lib.getPythonPackageComponents(targetGraph, cxxPlatform),
+              lib.getPythonPackageComponents(targetGraph, pythonPlatform, cxxPlatform),
               rule.getBuildTarget());
 
           // Return all our deps to recurse on them.

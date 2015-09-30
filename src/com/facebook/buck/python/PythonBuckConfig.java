@@ -20,6 +20,9 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuckVersion;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
@@ -41,7 +44,10 @@ import java.util.regex.Pattern;
 
 public class PythonBuckConfig {
 
+  public static final Flavor DEFAULT_PYTHON_PLATFORM = ImmutableFlavor.of("default");
+
   private static final String SECTION = "python";
+  private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
 
   private static final Pattern PYTHON_VERSION_REGEX =
       Pattern.compile(".*?(\\wy(thon|run) \\d+\\.\\d+).*");
@@ -72,6 +78,54 @@ public class PythonBuckConfig {
     this.exeFinder = exeFinder;
   }
 
+  private PythonPlatform getDefaultPythonPlatform(ProcessExecutor executor)
+      throws InterruptedException {
+    return getPythonPlatform(
+        executor,
+        DEFAULT_PYTHON_PLATFORM,
+        delegate.getValue(SECTION, "interpreter"),
+        Optional.<BuildTarget>absent());
+  }
+
+  /**
+   * Constructs set of Python platform flavors given in a .buckconfig file, as is specified by
+   * section names of the form python#{flavor name}.
+   */
+  public ImmutableList<PythonPlatform> getPythonPlatforms(
+      ProcessExecutor processExecutor)
+      throws InterruptedException {
+    ImmutableList.Builder<PythonPlatform> builder = ImmutableList.builder();
+
+    // Add the python platform described in the top-level section first.
+    builder.add(getDefaultPythonPlatform(processExecutor));
+
+    // Then add all additional python platform described in the extended sections.
+    for (String section : delegate.getSections()) {
+      if (section.startsWith(PYTHON_PLATFORM_SECTION_PREFIX)) {
+        builder.add(
+            getPythonPlatform(
+                processExecutor,
+                ImmutableFlavor.of(section.substring(PYTHON_PLATFORM_SECTION_PREFIX.length())),
+                delegate.getValue(section, "interpreter"),
+                delegate.getBuildTarget(section, "library")));
+      }
+    }
+
+    return builder.build();
+  }
+
+  private PythonPlatform getPythonPlatform(
+      ProcessExecutor processExecutor,
+      Flavor flavor,
+      Optional<String> interpreter,
+      Optional<BuildTarget> library)
+      throws InterruptedException {
+    return PythonPlatform.of(
+        flavor,
+        getPythonEnvironment(processExecutor, interpreter),
+        library);
+  }
+
   /**
    * @return true if file is executable and not a directory.
    */
@@ -84,8 +138,7 @@ public class PythonBuckConfig {
    * of the 'python' section that is used and an error reported if invalid.
    * @return The found python interpreter.
    */
-  public String getPythonInterpreter() {
-    Optional<String> configPath = delegate.getValue(SECTION, "interpreter");
+  public String getPythonInterpreter(Optional<String> configPath) {
     ImmutableList<String> pythonInterpreterNames = PYTHON_INTERPRETER_NAMES;
     if (configPath.isPresent()) {
       // Python path in config. Use it or report error if invalid.
@@ -115,11 +168,24 @@ public class PythonBuckConfig {
     }
   }
 
-  public PythonEnvironment getPythonEnvironment(ProcessExecutor processExecutor)
+  public String getPythonInterpreter() {
+    Optional<String> configPath = delegate.getValue(SECTION, "interpreter");
+    return getPythonInterpreter(configPath);
+  }
+
+  public PythonEnvironment getPythonEnvironment(
+      ProcessExecutor processExecutor,
+      Optional<String> configPath)
       throws InterruptedException {
-    Path pythonPath = Paths.get(getPythonInterpreter());
+    Path pythonPath = Paths.get(getPythonInterpreter(configPath));
     PythonVersion pythonVersion = getPythonVersion(processExecutor, pythonPath);
     return new PythonEnvironment(pythonPath, pythonVersion);
+  }
+
+  public PythonEnvironment getPythonEnvironment(ProcessExecutor processExecutor)
+      throws InterruptedException {
+    Optional<String> configPath = delegate.getValue(SECTION, "interpreter");
+    return getPythonEnvironment(processExecutor, configPath);
   }
 
   public Path getPathToTestMain() {

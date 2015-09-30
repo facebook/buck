@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -152,6 +153,7 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
   @Override
   public PythonPackageComponents getPythonPackageComponents(
       TargetGraph targetGraph,
+      PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform) {
     return PythonPackageComponents.of(
         ImmutableMap.<Path, SourcePath>of(),

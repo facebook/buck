@@ -19,6 +19,7 @@ package com.facebook.buck.model;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -46,6 +47,10 @@ public class FlavorDomain<T> {
 
   public ImmutableSet<Flavor> getFlavors() {
     return translation.keySet();
+  }
+
+  public ImmutableCollection<T> getValues() {
+    return translation.values();
   }
 
   public boolean containsAnyOf(ImmutableSet<Flavor> flavors) {

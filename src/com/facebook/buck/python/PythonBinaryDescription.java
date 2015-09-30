@@ -66,17 +66,17 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
   public static final BuildRuleType TYPE = BuildRuleType.of("python_binary");
 
   private final PythonBuckConfig pythonBuckConfig;
-  private final PythonEnvironment pythonEnvironment;
+  private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public PythonBinaryDescription(
       PythonBuckConfig pythonBuckConfig,
-      PythonEnvironment pythonEnv,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.pythonBuckConfig = pythonBuckConfig;
-    this.pythonEnvironment = pythonEnv;
+    this.pythonPlatforms = pythonPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -129,6 +129,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
       PythonPackageComponents components) {
@@ -213,7 +214,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
                     Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
                 pathResolver,
                 new ST(getRunInplaceResource())
-                    .add("PYTHON", pythonEnvironment.getPythonPath())
+                    .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
                     .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
                     .add("MODULES_DIR", relativeLinkTreeRootStr)
                     .add(
@@ -235,13 +236,14 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         linkTree,
         mainModule,
         components,
-        pythonEnvironment.getPythonPath());
+        pythonPlatform.getEnvironment().getPythonPath());
   }
 
   protected PythonBinary createPackageRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
       PythonPackageComponents components,
@@ -254,6 +256,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
             params,
             resolver,
             pathResolver,
+            pythonPlatform,
             cxxPlatform,
             mainModule,
             components);
@@ -270,7 +273,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
             buildArgs,
             pythonBuckConfig.getPathToPexExecuter(),
             pythonBuckConfig.getPexExtension(),
-            pythonEnvironment,
+            pythonPlatform.getEnvironment(),
             mainModule,
             components,
             // Attach any additional declared deps that don't qualify as build time deps,
@@ -292,6 +295,17 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
+
+    // Extract the platform from the flavor, falling back to the default platform if none are
+    // found.
+    PythonPlatform pythonPlatform;
+    try {
+      pythonPlatform = pythonPlatforms
+          .getValue(params.getBuildTarget().getFlavors())
+          .or(pythonPlatforms.getValues().asList().get(0));
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
+    }
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -341,12 +355,14 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         targetGraph,
         params,
         binaryPackageComponents,
+        pythonPlatform,
         cxxPlatform);
 
     return createPackageRule(
         params,
         resolver,
         pathResolver,
+        pythonPlatform,
         cxxPlatform,
         mainModule,
         allPackageComponents,

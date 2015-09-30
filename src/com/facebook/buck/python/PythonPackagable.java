@@ -23,6 +23,7 @@ public interface PythonPackagable {
 
   PythonPackageComponents getPythonPackageComponents(
       TargetGraph targetGraph,
+      PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform);
 
 }

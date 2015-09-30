@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonPackagable;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
@@ -26,6 +27,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -49,17 +51,26 @@ public class CxxPythonExtension extends NoopBuildRule implements PythonPackagabl
     this.module = module;
   }
 
+  @VisibleForTesting
+  protected BuildRule getExtension(
+      TargetGraph targetGraph,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform) {
+    return CxxDescriptionEnhancer.requireBuildRule(
+        targetGraph,
+        params,
+        ruleResolver,
+        pythonPlatform.getFlavor(),
+        cxxPlatform.getFlavor(),
+        CxxDescriptionEnhancer.SHARED_FLAVOR);
+  }
+
   @Override
   public PythonPackageComponents getPythonPackageComponents(
       TargetGraph targetGraph,
+      PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform) {
-    BuildRule extension =
-        CxxDescriptionEnhancer.requireBuildRule(
-            targetGraph,
-            params,
-            ruleResolver,
-            cxxPlatform.getFlavor(),
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
+    BuildRule extension = getExtension(targetGraph, pythonPlatform, cxxPlatform);
     SourcePath output = new BuildTargetSourcePath(extension.getBuildTarget());
     return PythonPackageComponents.of(
         ImmutableMap.of(module, output),

@@ -590,6 +590,11 @@ public class BuckConfig {
     return getPath(sectionName, name, true);
   }
 
+  public Path getRequiredPath(String section, String field) {
+    Optional<Path> path = getPath(section, field);
+    return required(section, field, path);
+  }
+
   /**
    * @return the number of threads Buck should use.
    */

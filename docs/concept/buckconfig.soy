@@ -724,7 +724,7 @@ on the generated files.
 
 {call .section}{param title: 'python' /}{/call}
 
-This section may define a settings relevant to <code>python_</code> rules.
+This section may define a settings relevant to <code>python_*</code> rules.
 
 {literal}<pre class="prettyprint lang-ini">
 [python]
@@ -753,6 +753,26 @@ This section may define a settings relevant to <code>python_</code> rules.
   package_style = standalone
 </pre>{/literal}
 
+Adding a section with header [python#<i>flavor</i>] to the .buckconfig will define
+a python platform to build <code>python_*</code> rules against, by using the given
+<i>#flavor</i> when building a python binary or test rule.
+
+{literal}<pre class="prettyprint lang-ini">
+[python#py2]
+
+  # As in the `python` section, this is the path to the Python interpreter to
+  # use with this Python platform.
+  interpreter = /usr/bin/python2.7
+
+  # The rule (typically a `prebuilt_cxx_library`) wrapping the libpython.so
+  # that `cpp_python_extension` rules should build against when using this
+  # Python platform.
+  library = //third-party/python:py2.7
+
+[python#py3]
+  interpreter = /usr/bin/python3.4
+  library = //third-party/python:py3.4
+</pre>{/literal}
 
 {call .section}{param title: 'rust' /}{/call}
 

@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -165,7 +166,10 @@ public class CxxLibraryTest {
         Optional.<Boolean>absent());
     assertEquals(
         expectedPythonPackageComponents,
-        cxxLibrary.getPythonPackageComponents(TargetGraph.EMPTY, cxxPlatform));
+        cxxLibrary.getPythonPackageComponents(
+            TargetGraph.EMPTY,
+            PythonTestUtils.PYTHON_PLATFORM,
+            cxxPlatform));
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
@@ -215,7 +219,10 @@ public class CxxLibraryTest {
         Matchers.empty());
     assertThat(
         cxxLibrary
-            .getPythonPackageComponents(TargetGraph.EMPTY, cxxPlatform)
+            .getPythonPackageComponents(
+                TargetGraph.EMPTY,
+                PythonTestUtils.PYTHON_PLATFORM,
+                cxxPlatform)
             .getNativeLibraries()
             .entrySet(),
         Matchers.empty());
