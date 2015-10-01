@@ -10,6 +10,7 @@ import sys
 import tempfile
 import textwrap
 import time
+import shlex
 
 from timing import monotonic_time_nanos
 from tracing import Tracing
@@ -365,17 +366,16 @@ class BuckTool(object):
             java_args.append("-Dbuck.soy.debug=true")
 
         if self._buck_project.buck_javaargs:
-            java_args.extend(self._buck_project.buck_javaargs.split(' '))
+            java_args.extend(shlex.split(self._buck_project.buck_javaargs))
 
         if self._buck_project.buck_javaargs_local:
-            java_args.extend(
-                self._buck_project.buck_javaargs_local.split(' '))
+            java_args.extend(shlex.split(self._buck_project.buck_javaargs_local))
 
         java_args.extend(self._get_extra_java_args())
 
         extra_java_args = os.environ.get("BUCK_EXTRA_JAVA_ARGS")
         if extra_java_args:
-            java_args.extend(extra_java_args.split(' '))
+            java_args.extend(shlex.split(extra_java_args))
         return java_args
 
     def _platform_path(self, path):
