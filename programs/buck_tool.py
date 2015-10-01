@@ -160,8 +160,10 @@ class BuckTool(object):
                     return exit_code
 
             command = ["buck"]
-            command.extend(self._get_java_args(buck_version_uid))
-            command.append("-Djava.io.tmpdir={0}".format(self._tmp_dir))
+            extra_default_options = [
+                "-Djava.io.tmpdir={0}".format(self._tmp_dir)
+            ]
+            command.extend(self._get_java_args(buck_version_uid, extra_default_options))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
@@ -189,21 +191,30 @@ class BuckTool(object):
             available port, then parse the port number out of the first log entry.
             '''
             command = ["buckd"]
-            command.extend(self._get_java_args(buck_version_uid))
-            command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
-            command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
-            command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
-            # Stop Java waking up every 50ms to collect thread statistics;
-            # doing it once every five seconds is much saner for a long-lived
-            # daemon.
-            command.append("-XX:PerfDataSamplingInterval=5000")
-            # Likewise, waking up once per second just in case there's
-            # some rebalancing to be done is silly.
-            command.append("-XX:+UnlockDiagnosticVMOptions")
-            command.append("-XX:GuaranteedSafepointInterval=5000")
-            command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
-            command.append("-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
-                ngserver_output_path))
+            extra_default_options = [
+                "-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()),
+                "-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET),
+                "-XX:SoftRefLRUPolicyMSPerMB=0",
+                # Stop Java waking up every 50ms to collect thread
+                # statistics; doing it once every five seconds is much
+                # saner for a long-lived daemon.
+                "-XX:PerfDataSamplingInterval=5000",
+                # Likewise, waking up once per second just in case
+                # there's some rebalancing to be done is silly.
+                "-XX:+UnlockDiagnosticVMOptions",
+                "-XX:GuaranteedSafepointInterval=5000",
+                "-Djava.io.tmpdir={0}".format(buckd_tmp_dir),
+                "-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
+                    ngserver_output_path),
+            ]
+
+            if is_java8():
+                extra_default_options.extend([
+                    "-XX:+UseG1GC",
+                    "-XX:MaxHeapFreeRatio=40",
+                ])
+
+            command.extend(self._get_java_args(buck_version_uid, extra_default_options))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
             command.append("com.martiansoftware.nailgun.NGServer")
             command.append("local:.buckd/sock")
@@ -349,7 +360,7 @@ class BuckTool(object):
     def _get_extra_java_args(self):
         return []
 
-    def _get_java_args(self, version_uid):
+    def _get_java_args(self, version_uid, extra_default_options=[]):
         java_args = [] if is_java8() else ["-XX:MaxPermSize=256m"]
         java_args.extend([
             "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
@@ -372,6 +383,8 @@ class BuckTool(object):
 
         if os.environ.get("BUCK_DEBUG_SOY"):
             java_args.append("-Dbuck.soy.debug=true")
+
+        java_args.extend(extra_default_options)
 
         if self._buck_project.buck_javaargs:
             java_args.extend(shlex.split(self._buck_project.buck_javaargs))
@@ -457,12 +470,18 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
                     return name
     return None
 
+_java8 = None
 
 def is_java8():
+    global _java8
+    if _java8 is not None:
+        return _java8
     try:
         output = check_output(['java', '-version'], stderr=subprocess.STDOUT)
         version_line = output.strip().splitlines()[0]
-        return re.compile('(openjdk|java) version "1\.8\..*').match(version_line)
+        m = re.compile('(openjdk|java) version "1\.8\..*').match(version_line)
+        _java8 = bool(m)
+        return _java8
     except CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e

@@ -1204,6 +1204,10 @@ public final class Main {
       }
       return FAIL_EXIT_CODE;
     } finally {
+      final boolean isDaemon = context.isPresent();
+      if (isDaemon) {
+        System.gc(); // Let VM return memory to OS
+      }
       LOG.debug("Done.");
     }
   }
