@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -27,6 +28,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -172,7 +174,9 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testFailsWithInvalidEntitlementsPlist() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
     thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("Invalid provisioning profile");
 
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
@@ -189,7 +193,9 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testFailsWithInvalidInfoPlist() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
     thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("Invalid provisioning profile");
 
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
@@ -197,6 +203,29 @@ public class ProvisioningProfileCopyStepTest {
         Optional.<String>absent(),
         Optional.<Path>absent(),
         ProvisioningProfileCopyStep.findProfilesInPath(testdataDir),
+        outputFile,
+        xcentFile
+    );
+
+    step.execute(executionContext);
+  }
+
+  @Test
+  public void testFailsWithNoSuitableProfilesFound() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "No valid non-expired provisioning profiles match for *.com.example.TestApp");
+
+    Path emptyDir =
+        TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles_empty");
+
+    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
+        projectFilesystem,
+        testdataDir.resolve("Info.plist"),
+        Optional.<String>absent(),
+        Optional.<Path>absent(),
+        ProvisioningProfileCopyStep.findProfilesInPath(emptyDir),
         outputFile,
         xcentFile
     );

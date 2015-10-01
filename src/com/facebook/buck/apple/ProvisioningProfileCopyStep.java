@@ -218,7 +218,7 @@ public class ProvisioningProfileCopyStep implements Step {
 
     if (!bestProfile.isPresent()) {
       throw new HumanReadableException("No valid non-expired provisioning profiles match for " +
-        prefix + "." + bundleID);
+        prefix.or("*") + "." + bundleID);
     }
 
     Path provisioningProfileSource = bestProfile.get().getProfilePath().get();
