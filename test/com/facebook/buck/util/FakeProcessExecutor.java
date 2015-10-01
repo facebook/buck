@@ -29,7 +29,7 @@ import java.util.Set;
 
 public class FakeProcessExecutor extends ProcessExecutor {
 
-  private final Function<ProcessExecutorParams, FakeProcess> processFunction;
+  private final Function<? super ProcessExecutorParams, FakeProcess> processFunction;
   private final Set<ProcessExecutorParams> launchedProcesses;
 
   public FakeProcessExecutor() {
@@ -78,7 +78,7 @@ public class FakeProcessExecutor extends ProcessExecutor {
   }
 
   public FakeProcessExecutor(
-      Function<ProcessExecutorParams, FakeProcess> processFunction,
+      Function<? super ProcessExecutorParams, FakeProcess> processFunction,
       Console console) {
     super(console);
     this.processFunction = processFunction;

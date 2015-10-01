@@ -731,6 +731,10 @@ This section may define a settings relevant to <code>python_*</code> rules.
   # Path to the Python interpreter.
   interpreter = /usr/bin/python
 
+  # The rule (typically a `prebuilt_cxx_library`) wrapping the libpython.so
+  # that `cpp_python_extension` rules should build against.
+  library = //third-party/python:python
+
   # Path to the tool used to run executable Python packages.  For self-executing packages,
   # this should just be the shell.
   path_to_pex_executor = /bin/sh

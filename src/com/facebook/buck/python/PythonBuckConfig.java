@@ -78,13 +78,14 @@ public class PythonBuckConfig {
     this.exeFinder = exeFinder;
   }
 
-  private PythonPlatform getDefaultPythonPlatform(ProcessExecutor executor)
+  @VisibleForTesting
+  protected PythonPlatform getDefaultPythonPlatform(ProcessExecutor executor)
       throws InterruptedException {
     return getPythonPlatform(
         executor,
         DEFAULT_PYTHON_PLATFORM,
         delegate.getValue(SECTION, "interpreter"),
-        Optional.<BuildTarget>absent());
+        delegate.getBuildTarget(SECTION, "library"));
   }
 
   /**

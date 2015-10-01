@@ -17,23 +17,33 @@
 package com.facebook.buck.python;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cli.FakeBuckEnvironment;
+import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -287,4 +297,22 @@ public class PythonBuckConfigTest {
             new ProcessExecutor.Result(0, "", "pyrun 2.7.6 (release 2.0.0)\n"));
     assertEquals("pyrun 2.7", version.toString());
   }
+
+  @Test
+  public void testDefaultPythonLibrary() throws InterruptedException {
+    BuildTarget library = BuildTargetFactory.newInstance("//:library");
+    PythonBuckConfig config =
+        new PythonBuckConfig(
+            new FakeBuckConfig(
+                ImmutableMap.of("python", ImmutableMap.of("library", library.toString()))),
+            new AlwaysFoundExecutableFinder());
+    assertThat(
+        config.getDefaultPythonPlatform(
+            new FakeProcessExecutor(
+                Functions.constant(new FakeProcess(0, "Python 2.7.5", "")),
+                new TestConsole()))
+            .getCxxLibrary(),
+        Matchers.equalTo(Optional.of(library)));
+  }
+
 }
