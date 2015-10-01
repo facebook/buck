@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -158,30 +159,45 @@ public class JavacStep implements Step {
       String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
 
-      if (declaredDepsResult != 0 && suggestBuildRules.isPresent()) {
-        ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
-        ImmutableSet<String> suggestions = suggestBuildRules.get().suggest(
-            filesystem,
-            failedImports);
-
+      if (declaredDepsResult != 0) {
         ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
         errorMessage.add(firstOrderStderr);
 
-        if (!suggestions.isEmpty()) {
-          String invoker = invokingRule.toString();
-          errorMessage.add(String.format("Rule %s has failed to build.", invoker));
-          errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
-          errorMessage.add("Try adding the following deps:");
-          errorMessage.add(Joiner.on(LINE_SEPARATOR).join(suggestions));
-          errorMessage.add("");
-          errorMessage.add("");
+        if (suggestBuildRules.isPresent()) {
+          ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
+          ImmutableSet<String> suggestions = suggestBuildRules.get().suggest(
+              filesystem,
+              failedImports);
+
+          if (!suggestions.isEmpty()) {
+            String invoker = invokingRule.toString();
+            errorMessage.add(String.format("Rule %s has failed to build.", invoker));
+            errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
+            errorMessage.add("Try adding the following deps:");
+            errorMessage.add(Joiner.on(LINE_SEPARATOR).join(suggestions));
+            errorMessage.add("");
+            errorMessage.add("");
+          }
+          CompilerErrorEvent evt = CompilerErrorEvent.create(
+              invokingRule,
+              firstOrderStderr,
+              CompilerErrorEvent.CompilerType.Java,
+              suggestions
+          );
+          context.postEvent(evt);
+        } else {
+          ImmutableSet<String> suggestions = ImmutableSet.of();
+          CompilerErrorEvent evt = CompilerErrorEvent.create(
+              invokingRule,
+              firstOrderStderr,
+              CompilerErrorEvent.CompilerType.Java,
+              suggestions
+          );
+          context.postEvent(evt);
         }
 
         context.getStdOut().print(firstOrderStdout);
         context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
-      } else if (declaredDepsResult != 0) {
-        context.getStdOut().print(firstOrderStdout);
-        context.getStdErr().print(firstOrderStderr);
       }
 
       return declaredDepsResult;

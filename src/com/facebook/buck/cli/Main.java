@@ -32,6 +32,7 @@ import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
+import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.RemoteLogUploaderEventListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
@@ -682,6 +683,11 @@ public final class Main {
              filesystem,
              executionEnvironment.getWifiSsid())) {
 
+      ProgressEstimator progressEstimator = new ProgressEstimator(
+          filesystem.getRootPath(),
+          buildEventBus);
+      consoleListener.setProgressEstimator(progressEstimator);
+
       eventListeners = addEventListeners(buildEventBus,
           rootCell.getFilesystem(),
           buildId,
@@ -1118,7 +1124,10 @@ public final class Main {
           SUPER_CONSOLE_REFRESH_RATE.getUnit());
       return superConsole;
     }
-    return new SimpleConsoleEventBusListener(console, clock, testResultSummaryVerbosity);
+    return new SimpleConsoleEventBusListener(
+        console,
+        clock,
+        testResultSummaryVerbosity);
   }
 
   @VisibleForTesting

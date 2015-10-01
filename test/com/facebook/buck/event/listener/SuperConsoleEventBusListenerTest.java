@@ -20,6 +20,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
@@ -37,7 +39,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -52,8 +53,10 @@ import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.google.common.base.Function;
@@ -64,14 +67,20 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.hash.HashCode;
+import com.google.gson.Gson;
 
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -82,6 +91,8 @@ public class SuperConsoleEventBusListenerTest {
 
   private static final TestResultSummaryVerbosity silentSummaryVerbosity =
       TestResultSummaryVerbosity.of(false, false);
+
+  private static final DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   /**
    * Formats a string with times passed in in seconds.
@@ -131,7 +142,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -289,6 +300,148 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   @Test
+  public void testSimpleBuildWithProgress() throws IOException {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+
+    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
+    BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    FakeBuildRule fakeRule = new FakeBuildRule(
+        fakeTarget,
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of());
+    FakeBuildRule cachedRule = new FakeBuildRule(
+        cachedTarget,
+        pathResolver,
+        ImmutableSortedSet.<BuildRule>of());
+
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            silentSummaryVerbosity,
+            new DefaultExecutionEnvironment(
+                new FakeProcessExecutor(),
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+            Optional.<WebServer>absent());
+    ProgressEstimator e = new ProgressEstimator(
+        getStorageForTest().getParent().getParent(),
+        eventBus);
+    listener.setProgressEstimator(e);
+    eventBus.register(listener);
+
+    BuildEvent.RuleCountCalculated ruleCountCalculated =
+        BuildEvent.ruleCountCalculated(ImmutableSet.<BuildTarget>of(), 10);
+    rawEventBus.post(ruleCountCalculated);
+
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
+    rawEventBus.post(
+        configureTestEventAtTime(
+            buildEventStarted,
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
+    rawEventBus.post(configureTestEventAtTime(
+            parseStarted,
+            200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 300L, ImmutableList.of(
+            formatConsoleTimes("[+] PROCESSING BUCK FILES...%s", 0.1)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(ParseEvent.finished(parseStarted,
+                Optional.<TargetGraph>absent()),
+            300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(ActionGraphEvent.started()),
+            400L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    final String parsingLine = formatConsoleTimes("[-] PROCESSING BUCK FILES...FINISHED %s", 0.2);
+
+    validateConsole(console, listener, 540L, ImmutableList.of(parsingLine,
+            formatConsoleTimes("[+] BUILDING...%s", 0.1) + " [0%] (0/10 JOBS, 0 UPDATED, " +
+                "0.0% CACHE MISS)"));
+
+    rawEventBus.post(configureTestEventAtTime(
+            BuildRuleEvent.started(fakeRule),
+            600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
+            formatConsoleTimes("[+] BUILDING...%s", 0.4) + " [1%] (0/10 JOBS, 0 UPDATED, " +
+                "0.0% CACHE MISS)",
+            formatConsoleTimes(" |=> //banana:stand...  %s (checking local cache)", 0.2)));
+
+    String stepShortName = "doing_something";
+    String stepDescription = "working hard";
+    UUID stepUuid = UUID.randomUUID();
+    StepEvent.Started stepEventStarted =
+        StepEvent.started(stepShortName, stepDescription, stepUuid);
+    rawEventBus.post(configureTestEventAtTime(
+            stepEventStarted,
+            800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 900L, ImmutableList.of(parsingLine,
+            formatConsoleTimes("[+] BUILDING...%s", 0.5) + " [1%] (0/10 JOBS, 0 UPDATED, " +
+                "0.0% CACHE MISS)",
+            formatConsoleTimes(" |=> //banana:stand...  %s (running doing_something[%s])",
+                0.3, 0.1)));
+
+    rawEventBus.post(configureTestEventAtTime(StepEvent.finished(stepEventStarted, 0),
+            900L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(configureTestEventAtTime(
+            BuildRuleEvent.finished(
+                fakeRule,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.miss(),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
+            1000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 1000L, ImmutableList.of(parsingLine,
+            formatConsoleTimes("[+] BUILDING...%s", 0.6) +
+                " [1%] (1/10 JOBS, 1 UPDATED, 10.0% CACHE MISS)",
+            " |=> IDLE"));
+
+    rawEventBus.post(configureTestEventAtTime(
+            BuildRuleEvent.started(cachedRule),
+            1010L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
+
+    validateConsole(console, listener, 1100L, ImmutableList.of(parsingLine,
+            formatConsoleTimes("[+] BUILDING...%s", 0.7) +
+                " [2%] (1/10 JOBS, 1 UPDATED, 10.0% CACHE MISS)",
+            " |=> IDLE",
+            formatConsoleTimes(" |=> //chicken:dance...  %s (checking local cache)", 0.1)));
+
+    rawEventBus.post(configureTestEventAtTime(
+            BuildRuleEvent.finished(
+                cachedRule,
+                BuildRuleStatus.SUCCESS,
+                CacheResult.miss(),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                Optional.<HashCode>absent(),
+                Optional.<Long>absent()),
+            1120L, TimeUnit.MILLISECONDS, /* threadId */ 2L));
+
+    rawEventBus.post(configureTestEventAtTime(
+            BuildEvent.finished(buildEventStarted, 0),
+            1234L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    final String buildingLine = formatConsoleTimes("[-] BUILDING...FINISHED %s", 0.8) +
+        " [100%] (2/10 JOBS, 2 UPDATED, 20.0% CACHE MISS)";
+
+    validateConsole(console, listener, 1300L, ImmutableList.of(parsingLine, buildingLine));
+  }
+
+  @Test
   public void testSimpleTest() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
@@ -313,7 +466,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -581,7 +734,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -851,7 +1004,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -1296,7 +1449,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1321,7 +1474,7 @@ public class SuperConsoleEventBusListenerTest {
                 new FakeProcessExecutor(),
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-        Optional.<WebServer>absent());
+            Optional.<WebServer>absent());
     eventBus.register(listener);
 
     rawEventBus.post(
@@ -1339,6 +1492,81 @@ public class SuperConsoleEventBusListenerTest {
 
     validateConsole(console, listener, 0L, ImmutableList.of(
         formatConsoleTimes("[-] GENERATING PROJECT...FINISHED %s", 0.0)));
+  }
+
+  private Path getStorageForTest() throws IOException {
+    tmp.create();
+    return tmp.getRootPath()
+        .resolve("/tmp/estimatortests/")
+        .resolve(BuckConstant.BUCK_OUTPUT_PATH)
+        .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
+  }
+
+  @Test
+  public void testProjectGenerationWithProgress() throws IOException {
+    Path storagePath = getStorageForTest();
+    Map<String, Object> storageContents = ImmutableSortedMap.<String, Object>naturalOrder()
+        .put(
+            "project arg1 arg2",
+            ImmutableSortedMap.<String, Number>naturalOrder()
+                .put(ProgressEstimator.EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES, 10)
+                .build())
+        .build();
+    String contents = new Gson().toJson(storageContents);
+    Files.createDirectories(storagePath.getParent());
+    Files.write(storagePath, contents.getBytes());
+
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
+    TestConsole console = new TestConsole();
+    SuperConsoleEventBusListener listener =
+        new SuperConsoleEventBusListener(
+            console,
+            fakeClock,
+            silentSummaryVerbosity,
+            new DefaultExecutionEnvironment(
+                new FakeProcessExecutor(),
+                ImmutableMap.copyOf(System.getenv()),
+                System.getProperties()),
+            Optional.<WebServer>absent());
+    ProgressEstimator e = new ProgressEstimator(
+        getStorageForTest().getParent().getParent(),
+        eventBus);
+    listener.setProgressEstimator(e);
+    eventBus.register(listener);
+
+    rawEventBus.post(CommandEvent.started("project",
+            ImmutableList.<String>of("arg1", "arg2"),
+            false));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ProjectGenerationEvent.started(),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 0L, ImmutableList.of(
+            formatConsoleTimes("[+] GENERATING PROJECT...%s", 0.0)));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ProjectGenerationEvent.processed(),
+            0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    rawEventBus.post(
+        configureTestEventAtTime(
+            ProjectGenerationEvent.processed(),
+            100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 100L, ImmutableList.of(
+            formatConsoleTimes("[+] GENERATING PROJECT...%s", 0.1) + " [20%]"));
+
+    rawEventBus.post(
+        configureTestEventAtTime(
+            new ProjectGenerationEvent.Finished(),
+            200L, TimeUnit.MILLISECONDS, 0L));
+
+    validateConsole(console, listener, 0L, ImmutableList.of(
+            formatConsoleTimes("[-] GENERATING PROJECT...FINISHED %s", 0.2) + " [100%]"));
   }
 
   @Test

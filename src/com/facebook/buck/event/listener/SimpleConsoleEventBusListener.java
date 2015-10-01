@@ -63,6 +63,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         0L,
         parseStarted,
         parseFinished,
+        getEstimatedProgressOfProcessingBuckFiles(),
         lines));
     printLines(lines);
   }
@@ -78,6 +79,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         parseTime.get(),
         buildStarted,
         buildFinished,
+        getApproximateBuildProgress(),
         lines);
     printLines(lines);
   }
@@ -93,6 +95,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         0L,
         installStarted,
         installFinished,
+        Optional.<Double>absent(),
         lines);
     printLines(lines);
   }
@@ -130,8 +133,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     printLines(lines);
   }
 
+  @Override
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
+    super.buildRuleFinished(finished);
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
       String line = String.format("BUILT %s", finished.getBuildRule().getFullyQualifiedName());
       if (ruleCount.isPresent()) {

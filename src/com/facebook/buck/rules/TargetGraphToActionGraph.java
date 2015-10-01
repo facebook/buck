@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.annotation.Nullable;
 
 public class TargetGraphToActionGraph implements TargetGraphTransformer {
@@ -115,6 +117,9 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
         }
     );
 
+    final int numberOfNodes = targetGraph.getNodes().size();
+    final AtomicInteger processedNodes = new AtomicInteger(0);
+
     AbstractBottomUpTraversal<TargetNode<?>, ActionGraph> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?>, ActionGraph>(targetGraph) {
 
@@ -146,6 +151,10 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
             if (!existingRule.isPresent()) {
               ruleResolver.addToIndex(rule);
             }
+
+            eventBus.post(ActionGraphEvent.processed(
+                    processedNodes.incrementAndGet(),
+                    numberOfNodes));
           }
         };
     bottomUpTraversal.traverse();

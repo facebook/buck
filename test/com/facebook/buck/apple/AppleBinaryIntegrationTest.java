@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
 import org.junit.Rule;
@@ -199,11 +200,30 @@ public class AppleBinaryIntegrationTest {
                 "TestApp#compile-TestClass.m.o,iphonesimulator-x86_64/TestClass.m.o"));
     MoreAsserts.assertContentsEqual(
         workspace.getPath(
-            "first/buck-out/gen/Apps/TestApp/" +
-                "TestApp#iphonesimulator-x86_64/TestApp#iphonesimulator-x86_64"),
+            "first/buck-out/gen/Apps/TestApp/TestApp#iphonesimulator-x86_64"),
         workspace.getPath(
-            "second/buck-out/gen/Apps/TestApp/" +
-                "TestApp#iphonesimulator-x86_64/TestApp#iphonesimulator-x86_64"));
+            "second/buck-out/gen/Apps/TestApp/TestApp#iphonesimulator-x86_64"));
+  }
+
+  @Test
+  public void testAppleBinaryBuildsFatBinaries() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_application_bundle", tmp);
+    workspace.setUp();
+    workspace.runBuckCommand(
+        "build",
+        "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64")
+        .assertSuccess();
+    Path output = tmp.getRootPath()
+        .resolve(BuckConstant.GEN_DIR)
+        .resolve("DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64");
+    ProcessExecutor.Result lipoVerifyResult =
+        workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
+    assertEquals(
+        lipoVerifyResult.getStderr().or(""),
+        0,
+        lipoVerifyResult.getExitCode());
   }
 
   private static void assertIsSymbolicLink(

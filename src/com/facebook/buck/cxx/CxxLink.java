@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static com.google.common.base.Predicates.notNull;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -111,16 +112,21 @@ public class CxxLink
       BuildContext context,
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
+    Path argFilePath = getProjectFilesystem().getRootPath().resolve(
+        BuildTargets.getScratchPath(getBuildTarget(), "%s__argfile.txt"));
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
-        new CxxLinkStep(
-            getProjectFilesystem().getRootPath(),
-            linker.getCommandPrefix(getResolver()),
+        new CxxPrepareForLinkStep(
+            argFilePath,
             output,
             args,
             frameworkRoots,
             getLibrarySearchDirectories(),
             getLibraryNames()),
+        new CxxLinkStep(
+            getProjectFilesystem().getRootPath(),
+            linker.getCommandPrefix(getResolver()),
+            argFilePath),
         new FileScrubberStep(
             getProjectFilesystem(),
             output,

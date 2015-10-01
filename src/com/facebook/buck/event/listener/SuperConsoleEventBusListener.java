@@ -16,16 +16,16 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
@@ -100,8 +100,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   // Counts the rules that have updated rule keys.
   private final AtomicInteger updated = new AtomicInteger(0);
 
-  // Counts the number of cache hits and errors, respectively.
-  private final AtomicInteger cacheHits = new AtomicInteger(0);
+  // Counts the number of cache misses and errors, respectively.
+  private final AtomicInteger cacheMisses = new AtomicInteger(0);
   private final AtomicInteger cacheErrors = new AtomicInteger(0);
 
   private final ConcurrentLinkedQueue<ConsoleEvent> logEvents;
@@ -225,6 +225,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           0L,
           projectBuildFileParseStarted,
           projectBuildFileParseFinished,
+          getEstimatedProgressOfProcessingBuckFiles(),
           lines);
     }
 
@@ -234,18 +235,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         0L,
         parseStarted,
         actionGraphFinished,
+        getEstimatedProgressOfProcessingBuckFiles(),
         lines);
 
-
     logEventPair(
-            "GENERATING PROJECT",
-            Optional.<String>absent(),
-            currentTimeMillis,
-            0L,
-            projectGenerationStarted,
-            projectGenerationFinished,
-            lines
-    );
+        "GENERATING PROJECT",
+        Optional.<String>absent(),
+        currentTimeMillis,
+        0L,
+        projectGenerationStarted,
+        projectGenerationFinished,
+        getEstimatedProgressOfGeneratingProjectFiles(),
+        lines);
 
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
@@ -255,11 +256,19 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         List<String> columns = Lists.newArrayList();
         columns.add(String.format("%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
         columns.add(String.format("%d UPDATED", updated.get()));
-        if (updated.get() > 0) {
+        if (ruleCount.isPresent() && ruleCount.get() > 0) {
+          // Measure CACHE HIT % based on total cache misses and the theoretical total number of
+          // build rules.
+          // REASON: If we only look at cache_misses and processed rules we are strongly biasing
+          // the result toward misses. Basically misses weight more than hits.
+          // One MISS will traverse all its dependency subtree potentially generating misses for
+          // all internal Nodes; worst case generating N cache_misses.
+          // One HIT will prevent any further traversal of dependency sub-tree nodes so it will
+          // only count as one cache_hit even though it saved us from fetching N nodes.
           columns.add(
               String.format(
-                  "%.1f%% CACHE HITS",
-                  100 * (double) cacheHits.get() / updated.get()));
+                  "%.1f%% CACHE MISS",
+                  100 * (double) cacheMisses.get() / ruleCount.get()));
           if (cacheErrors.get() > 0) {
             columns.add(
                 String.format(
@@ -276,9 +285,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         Optional<Integer> port = webServer.get().getPort();
         if (port.isPresent()) {
           buildTrace = String.format(
-               "Details: http://localhost:%s/trace/%s",
-               port.get(),
-               buildFinished.getBuildId());
+              "Details: http://localhost:%s/trace/%s",
+              port.get(),
+              buildFinished.getBuildId());
         }
       }
 
@@ -294,6 +303,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           parseTime,
           buildStarted,
           buildFinished,
+          getApproximateBuildProgress(),
           lines);
 
       if (buildTime == UNFINISHED_EVENT_PAIR) {
@@ -307,6 +317,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           0,
           testRunStarted.get(),
           testRunFinished.get(),
+          Optional.<Double>absent(),
           lines);
 
       if (testRunTime == UNFINISHED_EVENT_PAIR) {
@@ -319,6 +330,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           0L,
           installStarted,
           installFinished,
+          Optional.<Double>absent(),
           lines);
     }
     return lines.build();
@@ -346,13 +358,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // Sort events by thread id.
     ImmutableList<Map.Entry<Long, Optional<? extends BuildRuleEvent>>> eventsByThread =
         FluentIterable.from(threadsToRunningBuildRuleEvent.entrySet())
-          .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends BuildRuleEvent>>>() {
-            @Override
-            public int compare(Map.Entry<Long, Optional<? extends BuildRuleEvent>> a,
-                               Map.Entry<Long, Optional<? extends BuildRuleEvent>> b) {
-              return Long.signum(a.getKey() - b.getKey());
-            }
-          });
+            .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends BuildRuleEvent>>>() {
+              @Override
+              public int compare(Map.Entry<Long, Optional<? extends BuildRuleEvent>> a,
+                  Map.Entry<Long, Optional<? extends BuildRuleEvent>> b) {
+                return Long.signum(a.getKey() - b.getKey());
+              }
+            });
 
     // For each thread that has ever run a rule, render information about that thread.
     StringBuilder lineBuilder = new StringBuilder(EXPECTED_MAXIMUM_RENDERED_LINE_LENGTH);
@@ -368,7 +380,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             startedEvent.get().getBuildRule().getBuildTarget());
         long elapsedTimeMs =
             (currentMillis - startedEvent.get().getTimestamp()) +
-            (accumulatedTime != null ? accumulatedTime.get() : 0);
+                (accumulatedTime != null ? accumulatedTime.get() : 0);
         Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
 
         lineBuilder.append(startedEvent.get().getBuildRule().getFullyQualifiedName());
@@ -413,13 +425,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // Sort events by thread id.
     ImmutableList<Map.Entry<Long, Optional<? extends TestRuleEvent>>> eventsByThread =
         FluentIterable.from(threadsToRunningTestRuleEvent.entrySet())
-          .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends TestRuleEvent>>>() {
-            @Override
-            public int compare(Map.Entry<Long, Optional<? extends TestRuleEvent>> a,
-                               Map.Entry<Long, Optional<? extends TestRuleEvent>> b) {
-              return Long.signum(a.getKey() - b.getKey());
-            }
-          });
+            .toSortedList(new Comparator<Map.Entry<Long, Optional<? extends TestRuleEvent>>>() {
+              @Override
+              public int compare(Map.Entry<Long, Optional<? extends TestRuleEvent>> a,
+                  Map.Entry<Long, Optional<? extends TestRuleEvent>> b) {
+                return Long.signum(a.getKey() - b.getKey());
+              }
+            });
 
     // For each thread that has ever run a rule, render information about that thread.
     for (Map.Entry<Long, Optional<? extends TestRuleEvent>> entry : eventsByThread) {
@@ -434,7 +446,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             startedEvent.get().getBuildTarget());
         long elapsedTimeMs =
             (currentMillis - startedEvent.get().getTimestamp()) +
-            (accumulatedTime != null ? accumulatedTime.get() : 0);
+                (accumulatedTime != null ? accumulatedTime.get() : 0);
 
         threadLine += String.format("%s...  %s",
             startedEvent.get().getBuildTarget(),
@@ -509,22 +521,26 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return result.toString();
   }
 
+  @Override
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
+    super.buildRuleStarted(started);
     threadsToRunningBuildRuleEvent.put(started.getThreadId(), Optional.of(started));
     accumulatedRuleTime.put(started.getBuildRule().getBuildTarget(), new AtomicLong(0));
   }
 
+  @Override
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
+    super.buildRuleFinished(finished);
     threadsToRunningBuildRuleEvent.put(finished.getThreadId(), Optional.<BuildRuleEvent>absent());
     accumulatedRuleTime.remove(finished.getBuildRule().getBuildTarget());
     if (finished.getStatus() == BuildRuleStatus.SUCCESS) {
       CacheResult cacheResult = finished.getCacheResult();
       if (cacheResult.getType() != CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
         updated.incrementAndGet();
-        if (cacheResult.getType() == CacheResultType.HIT) {
-          cacheHits.incrementAndGet();
+        if (cacheResult.getType() == CacheResultType.MISS) {
+          cacheMisses.incrementAndGet();
         } else if (cacheResult.getType() == CacheResultType.ERROR) {
           cacheErrors.incrementAndGet();
         }
@@ -532,8 +548,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
   }
 
+  @Override
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
+    super.buildRuleSuspended(suspended);
     Optional<? extends BuildRuleEvent> started =
         Preconditions.checkNotNull(
             threadsToRunningBuildRuleEvent.put(
@@ -549,8 +567,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
   }
 
+  @Override
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
+    super.buildRuleResumed(resumed);
     threadsToRunningBuildRuleEvent.put(resumed.getThreadId(), Optional.of(resumed));
   }
 
@@ -580,11 +600,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     Preconditions.checkState(set, "Test run should not start while test run in progress");
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     testFormatter.runStarted(builder,
-                             event.isRunAllTests(),
-                             event.getTestSelectorList(),
-                             event.shouldExplainTestSelectorList(),
-                             event.getTargetNames(),
-                             TestResultFormatter.FormatMode.AFTER_TEST_RUN);
+        event.isRunAllTests(),
+        event.getTestSelectorList(),
+        event.shouldExplainTestSelectorList(),
+        event.getTargetNames(),
+        TestResultFormatter.FormatMode.AFTER_TEST_RUN);
     synchronized (testReportBuilder) {
       testReportBuilder.addAll(builder.build());
     }
@@ -646,10 +666,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         logEvents.add(
             ConsoleEvent.severe(
                 String.format("%s %s %s: %s",
-                              testResult.getType().toString(),
-                              testResult.getTestCaseName(),
-                              testResult.getTestName(),
-                              testResult.getMessage())));
+                    testResult.getType().toString(),
+                    testResult.getTestCaseName(),
+                    testResult.getTestName(),
+                    testResult.getMessage())));
         break;
       case ASSUMPTION_VIOLATION:
         testSkips.incrementAndGet();

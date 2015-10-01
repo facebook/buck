@@ -23,13 +23,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.SortedSet;
 
 import javax.annotation.Nullable;
@@ -170,7 +170,7 @@ abstract class AbstractBuildTarget
     return BuildTarget.copyOf(this);
   }
 
-  public BuildTarget withoutFlavors(ImmutableSet<Flavor> flavors) {
+  public BuildTarget withoutFlavors(Set<Flavor> flavors) {
     BuildTarget.Builder builder = BuildTarget.builder();
     builder.setUnflavoredBuildTarget(getUnflavoredBuildTarget());
     for (Flavor flavor : getFlavors()) {

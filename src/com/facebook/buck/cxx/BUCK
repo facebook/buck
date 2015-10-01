@@ -79,6 +79,7 @@ java_immutables_library(
     '//third-party/java/infer-annotations:infer-annotations',
     '//third-party/java/jsr:jsr305',
     '//third-party/java/gson:gson',
+    '//src/com/facebook/buck/java:support',
   ],
   visibility = [
     'PUBLIC'

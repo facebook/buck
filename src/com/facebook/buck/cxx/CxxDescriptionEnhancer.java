@@ -703,8 +703,8 @@ public class CxxDescriptionEnhancer {
   }
 
   @VisibleForTesting
-  protected static Path getOutputPath(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "%s/" + target.getShortNameAndFlavorPostfix());
+  protected static Path getLinkOutputPath(BuildTarget target) {
+    return BuildTargets.getGenPath(target, "%s");
   }
 
   @VisibleForTesting
@@ -763,7 +763,7 @@ public class CxxDescriptionEnhancer {
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     Linker.LinkableDepType linkStyle = args.linkStyle.or(Linker.LinkableDepType.STATIC);
-    Path output = getOutputPath(params.getBuildTarget());
+    Path linkOutput = getLinkOutputPath(params.getBuildTarget());
     ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -864,7 +864,7 @@ public class CxxDescriptionEnhancer {
               String.format(
                   "%s/%s",
                   cxxPlatform.getLd().origin(),
-                  output.getParent().relativize(sharedLibraries.getRoot()).toString())));
+                  linkOutput.getParent().relativize(sharedLibraries.getRoot()).toString())));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
@@ -884,7 +884,7 @@ public class CxxDescriptionEnhancer {
             createCxxLinkTarget(params.getBuildTarget()),
             Linker.LinkType.EXECUTABLE,
             Optional.<String>absent(),
-            output,
+            linkOutput,
             objects.values(),
             /* extraInputs */ ImmutableList.<SourcePath>of(),
             linkStyle,

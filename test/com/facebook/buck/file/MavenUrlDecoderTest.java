@@ -17,11 +17,13 @@
 package com.facebook.buck.file;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.net.URI;
@@ -83,6 +85,15 @@ public class MavenUrlDecoderTest {
     } catch (HumanReadableException expected) {
       // Ignored
     }
+  }
+
+  @Test
+  public void optionalServerUrlIsOptional() throws URISyntaxException {
+    Optional<String> repo = Optional.of("http://foo.bar");
+    URI uri = MavenUrlDecoder.toHttpUrl(
+        repo,
+        new URI("mvn:org.seleniumhq.selenium:selenium-java:jar:2.42.2"));
+    assertThat(uri.getHost(), Matchers.equalTo("foo.bar"));
   }
 
   @Test

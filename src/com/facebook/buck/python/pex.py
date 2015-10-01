@@ -131,7 +131,10 @@ def main():
             except Exception as e:
                 raise Exception("Failed to add {}: {}".format(req, e))
 
-        # TODO(mikekap): Do something about manifest['nativeLibraries'].
+        # Add resources listed in the manifest.
+        for dst, src in manifest['nativeLibraries'].iteritems():
+            # NOTE(agallagher): see rationale above.
+            pex_builder.add_resource(dereference_symlinks(src), dst)
 
         # Generate the PEX file.
         pex_builder.build(output)

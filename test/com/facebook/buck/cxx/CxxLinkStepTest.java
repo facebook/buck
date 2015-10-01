@@ -23,12 +23,8 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class CxxLinkStepTest {
 
@@ -37,36 +33,18 @@ public class CxxLinkStepTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<String> linker = ImmutableList.of("linker");
-    Path output = Paths.get("output");
-    ImmutableList<String> args = ImmutableList.of(
-        "-rpath",
-        "hello",
-        "a.o",
-        "libb.a");
-    Path frameworkRoot = Paths.get("/System/Frameworks");
-    final Path librarySearchPath = Paths.get("/System/libraries");
-    final String library = "z";
 
     // Create our CxxLinkStep to test.
     CxxLinkStep cxxLinkStep = new CxxLinkStep(
         projectFilesystem.getRootPath(),
         linker,
-        output,
-        args,
-        ImmutableSet.of(frameworkRoot),
-        ImmutableSet.of(librarySearchPath),
-        ImmutableSet.of(library));
+        projectFilesystem.getRootPath().resolve("argfile.txt"));
 
     // Verify it uses the expected command.
     ImmutableList<String> expected = ImmutableList.<String>builder()
         .addAll(linker)
-        .add("-o", output.toString())
-        .add("-F", frameworkRoot.toString())
-        .add("-L", librarySearchPath.toString())
-        .add("-l" + library)
-        .addAll(args)
+        .add("@" + projectFilesystem.getRootPath().resolve("argfile.txt").toString())
         .build();
     ImmutableList<String> actual = cxxLinkStep.getShellCommand(context);
     assertEquals(expected, actual);
