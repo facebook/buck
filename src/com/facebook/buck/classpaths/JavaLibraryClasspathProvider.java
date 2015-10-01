@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.classpaths;
 
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExportDependencies;
 import com.google.common.base.Optional;
@@ -127,7 +128,8 @@ public class JavaLibraryClasspathProvider {
     return classpathEntries.build();
   }
 
-  public static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {
+  public static FluentIterable<JavaLibrary>
+  getJavaLibraryDeps(Iterable<BuildRule> deps) {
     return FluentIterable.from(deps).filter(JavaLibrary.class);
   }
 }

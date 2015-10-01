@@ -16,6 +16,7 @@
 
 package com.facebook.buck.java;
 
+import com.facebook.buck.classpaths.Classpaths;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.io.DefaultDirectoryTraverser;
 import com.facebook.buck.model.BuildTarget;

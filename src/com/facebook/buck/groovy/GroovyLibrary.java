@@ -18,12 +18,12 @@ package com.facebook.buck.groovy;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.classpaths.JavaLibraryClasspathProvider;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.CopyResourcesStep;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.java.JavaLibraryRules;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.ResourcesRootPackageFinder;

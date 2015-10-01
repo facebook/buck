@@ -1,8 +1,7 @@
 java_library(
-  name = 'jvmlang',
+  name = 'classpaths',
   srcs = glob(['**/*.java']),
   deps = [
-    '//src/com/facebook/buck/classpaths:classpaths',
     '//src/com/facebook/buck/java:classhash',
     '//src/com/facebook/buck/java:support',
     '//src/com/facebook/buck/model:model',

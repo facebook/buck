@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.java;
+package com.facebook.buck.classpaths;
 
+import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
