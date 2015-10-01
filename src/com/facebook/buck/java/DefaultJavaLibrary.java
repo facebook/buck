@@ -25,6 +25,7 @@ import com.facebook.buck.classpaths.JavaLibraryClasspathProvider;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvmlang.JVMLangLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
@@ -38,7 +39,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
@@ -74,14 +74,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
-
-import javax.annotation.Nullable;
 
 /**
  * Suppose this were a rule defined in <code>src/com/facebook/feed/BUILD</code>:
@@ -100,9 +97,8 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
-    implements JavaLibrary, HasClasspathEntries, ExportDependencies,
-    InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable,
+public class DefaultJavaLibrary extends JVMLangLibrary
+    implements InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable,
     SupportsInputBasedRuleKey, HasTests {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
@@ -115,20 +111,15 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
   private final Optional<Path> resourcesRoot;
   @AddToRuleKey
   private final Optional<String> mavenCoords;
-  private final Optional<Path> outputJar;
   @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey
   private final ImmutableList<String> postprocessClassesCommands;
-  private final ImmutableSortedSet<BuildRule> exportedDeps;
   private final ImmutableSortedSet<BuildRule> providedDeps;
   // Some classes need to override this when enhancing deps (see AndroidLibrary).
   private final ImmutableSet<Path> additionalClasspathEntries;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       outputClasspathEntriesSupplier;
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
-      transitiveClasspathEntriesSupplier;
-  private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>>
       declaredClasspathEntriesSupplier;
 
@@ -162,30 +153,30 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
 
   private static final JarResolver JAR_RESOLVER =
       new JarResolver() {
-    @Override
-    public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
-      ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
-      try {
-        Path classPath = filesystem.getPathForRelativePath(relativeClassPath);
-        ClassLoader loader = URLClassLoader.newInstance(
-            new URL[]{classPath.toUri().toURL()},
+        @Override
+        public ImmutableSet<String> resolve(ProjectFilesystem filesystem, Path relativeClassPath) {
+          ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
+          try {
+            Path classPath = filesystem.getPathForRelativePath(relativeClassPath);
+            ClassLoader loader = URLClassLoader.newInstance(
+                new URL[]{classPath.toUri().toURL()},
           /* parent */ null);
 
-        // For every class contained in that jar, check to see if the package name
-        // (e.g. com.facebook.foo), the simple name (e.g. ImmutableSet) or the name
-        // (e.g com.google.common.collect.ImmutableSet) is one of the missing symbols.
-        for (ClassPath.ClassInfo classInfo : ClassPath.from(loader).getTopLevelClasses()) {
+            // For every class contained in that jar, check to see if the package name
+            // (e.g. com.facebook.foo), the simple name (e.g. ImmutableSet) or the name
+            // (e.g com.google.common.collect.ImmutableSet) is one of the missing symbols.
+            for (ClassPath.ClassInfo classInfo : ClassPath.from(loader).getTopLevelClasses()) {
           topLevelSymbolsBuilder.add(classInfo.getPackageName(),
-              classInfo.getSimpleName(),
-              classInfo.getName());
+                  classInfo.getSimpleName(),
+                  classInfo.getName());
+            }
+          } catch (IOException e) {
+            // Since this simply is a heuristic, return an empty set if we fail to load a jar.
+            return topLevelSymbolsBuilder.build();
+          }
+          return topLevelSymbolsBuilder.build();
         }
-      } catch (IOException e) {
-        // Since this simply is a heuristic, return an empty set if we fail to load a jar.
-        return topLevelSymbolsBuilder.build();
-      }
-      return topLevelSymbolsBuilder.build();
-    }
-  };
+      };
 
   public DefaultJavaLibrary(
       final BuildRuleParams params,
@@ -250,7 +241,10 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
                 return resolver.filterBuildRuleInputs(abiClasspath.get());
               }
             }),
-        resolver);
+        resolver,
+        exportedDeps,
+        srcs,
+        resources);
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -258,8 +252,8 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
       if (!(dep instanceof JavaLibrary)) {
         throw new HumanReadableException(
             params.getBuildTarget() + ": exported dep " +
-            dep.getBuildTarget() + " (" + dep.getType() + ") " +
-            "must be a type of java library.");
+                dep.getBuildTarget() + " (" + dep.getType() + ") " +
+                "must be a type of java library.");
       }
     }
 
@@ -267,7 +261,6 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = proguardConfig;
     this.postprocessClassesCommands = postprocessClassesCommands;
-    this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
     this.additionalClasspathEntries = additionalClasspathEntries;
     this.javacOptions = javacOptions;
@@ -278,61 +271,36 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
     this.abiJar = abiJar;
     this.abiClasspath = abiClasspath;
 
-    if (!srcs.isEmpty() || !resources.isEmpty()) {
-      this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
-    } else {
-      this.outputJar = Optional.absent();
-    }
-
     this.outputClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
-          @Override
-          public ImmutableSetMultimap<JavaLibrary, Path> get() {
-            return JavaLibraryClasspathProvider.getOutputClasspathEntries(
-                DefaultJavaLibrary.this,
-                outputJar);
-          }
-        });
-
-    this.transitiveClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
-          @Override
-          public ImmutableSetMultimap<JavaLibrary, Path> get() {
-            return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
-                DefaultJavaLibrary.this,
-                outputJar);
-          }
-        });
-
-    this.transitiveClasspathDepsSupplier =
         Suppliers.memoize(
-            new Supplier<ImmutableSet<JavaLibrary>>() {
+            new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
               @Override
-              public ImmutableSet<JavaLibrary> get() {
-                return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
+              public ImmutableSetMultimap<JavaLibrary, Path> get() {
+                return JavaLibraryClasspathProvider.getOutputClasspathEntries(
                     DefaultJavaLibrary.this,
-                    outputJar);
+                    getOutputJar());
               }
             });
 
     this.declaredClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
-          @Override
-          public ImmutableSetMultimap<JavaLibrary, Path> get() {
-            return JavaLibraryClasspathProvider.getDeclaredClasspathEntries(
-                DefaultJavaLibrary.this);
-          }
-        });
+        Suppliers.memoize(
+            new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
+              @Override
+              public ImmutableSetMultimap<JavaLibrary, Path> get() {
+                return JavaLibraryClasspathProvider.getDeclaredClasspathEntries(
+                    DefaultJavaLibrary.this);
+              }
+            });
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
   /**
-   * @param outputDirectory Directory to write class files to
+   * @param outputDirectory          Directory to write class files to
    * @param declaredClasspathEntries Classpaths of all declared dependencies.
-   * @param javacOptions javac configuration.
-   * @param suggestBuildRules Function to convert from missing symbols to the suggested rules.
-   * @param commands List of steps to add to.
+   * @param javacOptions             javac configuration.
+   * @param suggestBuildRules        Function to convert from missing symbols to the suggested rules.
+   * @param commands                 List of steps to add to.
    */
   @VisibleForTesting
   void createCommandsForJavac(
@@ -396,21 +364,9 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
     return BuildTargets.getGenPath(getBuildTarget(), "lib__%s__abi");
   }
 
-  private static Path getOutputJarDirPath(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "lib__%s__output");
-  }
-
-  static Path getOutputJarPath(BuildTarget target) {
-    return Paths.get(
-        String.format(
-            "%s/%s.jar",
-            getOutputJarDirPath(target),
-            target.getShortNameAndFlavorPostfix()));
-  }
-
   /**
    * @return directory path relative to the project root where .class files will be generated.
-   *     The return value does not end with a slash.
+   * The return value does not end with a slash.
    */
   private static Path getClassesDir(BuildTarget target) {
     return BuildTargets.getScratchPath(target, "lib__%s__classes");
@@ -446,7 +402,7 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
   /**
    * Creates a Hasher containing the ABI keys of the dependencies.
    * @param rulesWithAbiToConsider a sorted set containing the dependencies whose ABI key will be
-   *     added to the hasher.
+   *                               added to the hasher.
    * @return a Hasher containing the ABI keys of the dependencies.
    */
   private Hasher createHasherWithAbiKeyForDeps(SortedSet<HasBuildTarget> rulesWithAbiToConsider) {
@@ -485,21 +441,6 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return ImmutableSortedSet.copyOf(Sets.union(getDeclaredDeps(), exportedDeps));
-  }
-
-  @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return transitiveClasspathEntriesSupplier.get();
-  }
-
-  @Override
-  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return transitiveClasspathDepsSupplier.get();
-  }
-
-  @Override
   public ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries() {
     return declaredClasspathEntriesSupplier.get();
   }
@@ -512,11 +453,6 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
   @Override
   public AnnotationProcessingParams getAnnotationProcessingParams() {
     return javacOptions.getAnnotationProcessingParams();
-  }
-
-  @Override
-  public ImmutableSortedSet<BuildRule> getExportedDeps() {
-    return exportedDeps;
   }
 
   public JavacOptions getJavacOptions() {
@@ -622,8 +558,8 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
         .resolve(String.format("%s-abi.jar", target.getShortNameAndFlavorPostfix()));
     steps.add(new MkdirStep(getProjectFilesystem(), abiJar.getParent()));
 
-    if (outputJar.isPresent()) {
-      Path output = outputJar.get();
+    if (getOutputJar().isPresent()) {
+      Path output = getOutputJar().get();
 
       steps.add(
           new JarDirectoryStep(
@@ -652,12 +588,12 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
   }
 
   /**
-   *  @param transitiveNotDeclaredRule A {@link BuildRule} that is contained in the transitive
-   *      dependency list but is not declared as a dependency.
-   *  @param failedImports A Set of remaining failed imports.  This function will mutate this set
-   *      and remove any imports satisfied by {@code transitiveNotDeclaredDep}.
-   *  @return whether or not adding {@code transitiveNotDeclaredDep} as a dependency to this build
-   *      rule would have satisfied one of the {@code failedImports}.
+   * @param transitiveNotDeclaredRule A {@link BuildRule} that is contained in the transitive
+   *                                  dependency list but is not declared as a dependency.
+   * @param failedImports             A Set of remaining failed imports.  This function will mutate this set
+   *                                  and remove any imports satisfied by {@code transitiveNotDeclaredDep}.
+   * @return whether or not adding {@code transitiveNotDeclaredDep} as a dependency to this build
+   * rule would have satisfied one of the {@code failedImports}.
    */
   private boolean isMissingBuildRule(ProjectFilesystem filesystem,
       BuildRule transitiveNotDeclaredRule,
@@ -694,7 +630,7 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
 
   /**
    * @return A function that takes a list of failed imports from a javac invocation and returns a
-   *    set of rules to suggest that the developer import to satisfy those imports.
+   * set of rules to suggest that the developer import to satisfy those imports.
    */
   @VisibleForTesting
   Optional<JavacStep.SuggestBuildRules> createSuggestBuildFunction(
@@ -733,28 +669,28 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
 
     JavacStep.SuggestBuildRules suggestBuildRuleFn =
         new JavacStep.SuggestBuildRules() {
-      @Override
+          @Override
       public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
-          ImmutableSet<String> failedImports) {
-        ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
+              ImmutableSet<String> failedImports) {
+            ImmutableSet.Builder<String> suggestedDeps = ImmutableSet.builder();
 
-        Set<String> remainingImports = Sets.newHashSet(failedImports);
+            Set<String> remainingImports = Sets.newHashSet(failedImports);
 
         for (JavaLibrary transitiveNotDeclaredDep : sortedTransitiveNotDeclaredDeps.get()) {
           if (isMissingBuildRule(filesystem,
                   transitiveNotDeclaredDep,
                   remainingImports,
                   jarResolver)) {
-            suggestedDeps.add(transitiveNotDeclaredDep.getFullyQualifiedName());
+                suggestedDeps.add(transitiveNotDeclaredDep.getFullyQualifiedName());
+              }
+              // If we've wiped out all remaining imports, break the loop looking for them.
+              if (remainingImports.isEmpty()) {
+                break;
+              }
+            }
+            return suggestedDeps.build();
           }
-          // If we've wiped out all remaining imports, break the loop looking for them.
-          if (remainingImports.isEmpty()) {
-            break;
-          }
-        }
-        return suggestedDeps.build();
-      }
-    };
+        };
     return Optional.of(suggestBuildRuleFn);
   }
 
@@ -778,7 +714,7 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
 
   @Override
   public Optional<SourcePath> getAbiJar() {
-    return outputJar.isPresent() ? Optional.of(abiJar) : Optional.<SourcePath>absent();
+    return getOutputJar().isPresent() ? Optional.of(abiJar) : Optional.<SourcePath>absent();
   }
 
   @Override
@@ -789,17 +725,17 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
   /**
    * Adds a BashStep for each postprocessClasses command that runs the command followed by the
    * outputDirectory of javac outputs.
-   *
+   * <p/>
    * The expectation is that the command will inspect and update the directory by
    * modifying, adding, and deleting the .class files in the directory.
-   *
+   * <p/>
    * The outputDirectory should be a valid java root.  I.e., if outputDirectory
    * is buck-out/bin/java/abc/lib__abc__classes/, then a contained class abc.AbcModule
    * should be at buck-out/bin/java/abc/lib__abc__classes/abc/AbcModule.class
    *
-   * @param commands the list of Steps we are building.
+   * @param commands                   the list of Steps we are building.
    * @param postprocessClassesCommands the list of commands to post-process .class files.
-   * @param outputDirectory the directory that will contain all the javac output.
+   * @param outputDirectory            the directory that will contain all the javac output.
    */
   @VisibleForTesting
   static void addPostprocessClassesCommands(
@@ -816,16 +752,11 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
   }
 
   @Override
-  @Nullable
-  public Path getPathToOutput() {
-    return outputJar.orNull();
-  }
-
-  @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(ImmutableSortedSet.copyOf(
+    return AndroidPackageableCollector.getPackageableRules(
+        ImmutableSortedSet.copyOf(
             Sets.difference(
-                Sets.union(getDeclaredDeps(), exportedDeps),
+                Sets.union(getDeclaredDeps(), getExportedDeps()),
                 providedDeps)));
   }
 
@@ -836,10 +767,10 @@ public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    if (outputJar.isPresent()) {
+    if (getOutputJar().isPresent()) {
       collector.addClasspathEntry(
           this,
-          new BuildTargetSourcePath(getBuildTarget(), outputJar.get()));
+          new BuildTargetSourcePath(getBuildTarget(), getOutputJar().get()));
     }
     if (proguardConfig.isPresent()) {
       collector.addProguardConfig(getBuildTarget(), proguardConfig.get());

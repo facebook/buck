@@ -1274,7 +1274,7 @@ public class DefaultJavaLibraryTest {
     };
     BuildRuleResolver resolver1 = new BuildRuleResolver();
     SourcePathResolver pathResolver1 = new SourcePathResolver(resolver1);
-    JVMLangLibrary rule1 = (DefaultJavaLibrary) JavaLibraryBuilder
+    DefaultJavaLibrary rule1 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("agifhbkjdec.java"))
         .addSrc(Paths.get("bdeafhkgcji.java"))
@@ -1288,7 +1288,7 @@ public class DefaultJavaLibraryTest {
 
     BuildRuleResolver resolver2 = new BuildRuleResolver();
     SourcePathResolver pathResolver2 = new SourcePathResolver(resolver2);
-    JVMLangLibrary rule2 = (DefaultJavaLibrary) JavaLibraryBuilder
+    DefaultJavaLibrary rule2 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("cfiabkjehgd.java"))
         .addSrc(Paths.get("bdehgaifjkc.java"))

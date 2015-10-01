@@ -21,7 +21,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.classpaths.JavaLibraryClasspathProvider;
 import com.facebook.buck.java.AnnotationProcessingParams;
 import com.facebook.buck.java.CopyResourcesStep;
-import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.java.JarDirectoryStep;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaLibraryRules;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -53,22 +51,16 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
-public class GroovyLibrary extends JVMLangLibrary
-    implements HasClasspathEntries, ExportDependencies, JavaLibrary {
+public class GroovyLibrary extends JVMLangLibrary {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
-
 
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> srcs;
@@ -76,15 +68,12 @@ public class GroovyLibrary extends JVMLangLibrary
   private final ImmutableSortedSet<SourcePath> resources;
   @AddToRuleKey(stringify = true)
   private final Optional<Path> resourcesRoot;
-  private final Optional<Path> outputJar;
   @AddToRuleKey
   private final ImmutableSortedSet<BuildRule> exportedDeps;
   @AddToRuleKey
   private final ImmutableSortedSet<BuildRule> providedDeps;
 
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>> outputClasspathEntriesSupplier;
-  private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>> transitiveClasspathEntriesSupplier;
-  private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
   private final Supplier<ImmutableSetMultimap<JavaLibrary, Path>> declaredClasspathEntriesSupplier;
 
   private final SourcePath abiJar;
@@ -99,19 +88,16 @@ public class GroovyLibrary extends JVMLangLibrary
       SourcePath abiJar,
       Optional<Path> resourcesRoot) {
 
-    super(params, resolver);
+    super(
+        params,
+        resolver,
+        exportedDeps, srcs, resources);
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.resources = ImmutableSortedSet.copyOf(resources);
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
     this.resourcesRoot = resourcesRoot;
     this.abiJar = abiJar;
-
-    if (!srcs.isEmpty() || !resources.isEmpty()) {
-      this.outputJar = Optional.of(getOutputJarPath(getBuildTarget()));
-    } else {
-      this.outputJar = Optional.absent();
-    }
 
     this.outputClasspathEntriesSupplier =
         Suppliers.memoize(
@@ -120,29 +106,7 @@ public class GroovyLibrary extends JVMLangLibrary
               public ImmutableSetMultimap<JavaLibrary, Path> get() {
                 return JavaLibraryClasspathProvider.getOutputClasspathEntries(
                     GroovyLibrary.this,
-                    outputJar);
-              }
-            });
-
-    this.transitiveClasspathEntriesSupplier =
-        Suppliers.memoize(
-            new Supplier<ImmutableSetMultimap<JavaLibrary, Path>>() {
-              @Override
-              public ImmutableSetMultimap<JavaLibrary, Path> get() {
-                return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
-                    GroovyLibrary.this,
-                    outputJar);
-              }
-            });
-
-    this.transitiveClasspathDepsSupplier =
-        Suppliers.memoize(
-            new Supplier<ImmutableSet<JavaLibrary>>() {
-              @Override
-              public ImmutableSet<JavaLibrary> get() {
-                return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-                    GroovyLibrary.this,
-                    outputJar);
+                    getOutputJar());
               }
             });
 
@@ -218,16 +182,19 @@ public class GroovyLibrary extends JVMLangLibrary
             outputDirectory,
             finder));
 
-    if (outputJar.isPresent()) {
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputJarDirPath(getBuildTarget())));
+    if (getOutputJar().isPresent()) {
+      steps.add(
+          new MakeCleanDirectoryStep(
+              getProjectFilesystem(),
+              getOutputJarDirPath(getBuildTarget())));
       steps.add(
           new JarDirectoryStep(
               getProjectFilesystem(),
-              outputJar.get(),
+              getOutputJar().get(),
               Collections.singleton(outputDirectory),
           /* mainClass */ null,
           /* manifestFile */ null));
-      buildableContext.recordArtifact(outputJar.get());
+      buildableContext.recordArtifact(getOutputJar().get());
     }
 
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
@@ -276,13 +243,7 @@ public class GroovyLibrary extends JVMLangLibrary
 
   @Override
   public Optional<SourcePath> getAbiJar() {
-    return outputJar.isPresent() ? Optional.of(abiJar) : Optional.<SourcePath>absent();
-  }
-
-  @Override
-  @Nullable
-  public Path getPathToOutput() {
-    return outputJar.orNull();
+    return getOutputJar().isPresent() ? Optional.of(abiJar) : Optional.<SourcePath>absent();
   }
 
   /**
@@ -291,11 +252,6 @@ public class GroovyLibrary extends JVMLangLibrary
    */
   private static Path getClassesDir(BuildTarget target) {
     return BuildTargets.getScratchPath(target, "lib__%s__classes");
-  }
-
-  @Override
-  public ImmutableSortedSet<BuildRule> getExportedDeps() {
-    return exportedDeps;
   }
 
   @Override
@@ -333,39 +289,13 @@ public class GroovyLibrary extends JVMLangLibrary
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return ImmutableSortedSet.copyOf(Sets.union(getDeclaredDeps(), exportedDeps));
-  }
-
-  @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return transitiveClasspathEntriesSupplier.get();
-  }
-
-  @Override
-  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return transitiveClasspathDepsSupplier.get();
-  }
-
-  @Override
   public BuildableProperties getProperties() {
     return OUTPUT_TYPE;
-  }
-
-  private static Path getOutputJarDirPath(BuildTarget target) {
-    return BuildTargets.getGenPath(target, "lib__%s__output");
-  }
-
-  private static Path getOutputJarPath(BuildTarget target) {
-    return Paths.get(
-        String.format(
-            "%s/%s.jar",
-            getOutputJarDirPath(target),
-            target.getShortName()));
   }
 
   @Override
   public Optional<String> getMavenCoords() {
     throw new UnsupportedOperationException();
   }
+
 }
