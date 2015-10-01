@@ -193,6 +193,14 @@ class BuckTool(object):
             command.append("-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()))
             command.append("-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET))
             command.append("-XX:SoftRefLRUPolicyMSPerMB=0")
+            # Stop Java waking up every 50ms to collect thread statistics;
+            # doing it once every five seconds is much saner for a long-lived
+            # daemon.
+            command.append("-XX:PerfDataSamplingInterval=5000")
+            # Likewise, waking up once per second just in case there's
+            # some rebalancing to be done is silly.
+            command.append("-XX:+UnlockDiagnosticVMOptions")
+            command.append("-XX:GuaranteedSafepointInterval=5000")
             command.append("-Djava.io.tmpdir={0}".format(buckd_tmp_dir))
             command.append("-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
                 ngserver_output_path))
