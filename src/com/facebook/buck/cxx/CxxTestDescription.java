@@ -37,6 +37,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -48,6 +49,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import java.nio.file.Path;
 
 public class CxxTestDescription implements
     Description<CxxTestDescription.Arg>,
@@ -130,6 +133,7 @@ public class CxxTestDescription implements
                     args.env.or(ImmutableMap.<String, String>of()),
                     MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
+                        params.getCellRoots(),
                         resolver,
                         params.getProjectFilesystem())));
           }
@@ -144,6 +148,7 @@ public class CxxTestDescription implements
                 .transform(
                     MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
+                        params.getCellRoots(),
                         resolver,
                         params.getProjectFilesystem()))
                 .toList();
@@ -170,6 +175,7 @@ public class CxxTestDescription implements
                 deps.addAll(
                     MACRO_HANDLER.extractAdditionalBuildTimeDeps(
                         params.getBuildTarget(),
+                        params.getCellRoots(),
                         resolver,
                         part));
               } catch (MacroException e) {
@@ -230,6 +236,7 @@ public class CxxTestDescription implements
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
       Arg constructorArg) {
 
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
@@ -244,7 +251,7 @@ public class CxxTestDescription implements
               constructorArg.args.or(ImmutableList.<String>of()),
               constructorArg.env.or(ImmutableMap.<String, String>of()).values())) {
       try {
-        deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, part));
+        deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, part));
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }

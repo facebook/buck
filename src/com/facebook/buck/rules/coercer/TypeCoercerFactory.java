@@ -23,6 +23,8 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,6 +61,7 @@ public class TypeCoercerFactory {
         new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
           @Override
           public BuildTargetPattern coerce(
+              Function<Optional<String>, Path> cellRoots,
               ProjectFilesystem filesystem,
               Path pathRelativeToProjectRoot,
               Object object)

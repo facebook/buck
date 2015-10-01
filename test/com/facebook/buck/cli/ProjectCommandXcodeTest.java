@@ -27,6 +27,7 @@ import com.facebook.buck.apple.ProjectGenerator;
 import com.facebook.buck.apple.ProjectGeneratorTestUtils;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
@@ -80,21 +81,21 @@ public class ProjectCommandXcodeTest {
     // FooBin and BazLib use "tests" to specify their tests while FooLibTest uses source_under_test
     // to specify that it is a test of FooLib.
 
-    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "xctest").build();
-    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-xctest").build();
+    BuildTarget bazTestTarget = BuildTargetFactory.newInstance("//baz:xctest");
+    BuildTarget fooBinTestTarget = BuildTargetFactory.newInstance("//foo:bin-xctest");
 
-    BuildTarget barLibTarget = BuildTarget.builder("//bar", "lib").build();
+    BuildTarget barLibTarget = BuildTargetFactory.newInstance("//bar:lib");
     barLibNode = AppleLibraryBuilder
         .createBuilder(barLibTarget)
         .build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "lib").build();
+    BuildTarget bazLibTarget = BuildTargetFactory.newInstance("//baz:lib");
     bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
         .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
         .build();
 
-    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-xctest").build();
+    BuildTarget fooTestTarget = BuildTargetFactory.newInstance("//foo:lib-xctest");
     fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
@@ -102,20 +103,20 @@ public class ProjectCommandXcodeTest {
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .build();
 
-    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
     fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
         .build();
 
-    BuildTarget fooBinBinaryTarget = BuildTarget.builder("//foo", "binbinary").build();
+    BuildTarget fooBinBinaryTarget = BuildTargetFactory.newInstance("//foo:binbinary");
     fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
         .build();
 
-    BuildTarget fooBinTarget = BuildTarget.builder("//foo", "bin").build();
+    BuildTarget fooBinTarget = BuildTargetFactory.newInstance("//foo:bin");
     fooBinNode = AppleBundleBuilder
         .createBuilder(fooBinTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
@@ -138,20 +139,20 @@ public class ProjectCommandXcodeTest {
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .build();
 
-    BuildTarget quxBinTarget = BuildTarget.builder("//qux", "bin").build();
+    BuildTarget quxBinTarget = BuildTargetFactory.newInstance("//qux:bin");
     quxBinNode = AppleBinaryBuilder
         .createBuilder(quxBinTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .build();
 
-    BuildTarget workspaceExtraTestTarget = BuildTarget.builder("//foo", "extra-xctest").build();
+    BuildTarget workspaceExtraTestTarget = BuildTargetFactory.newInstance("//foo:extra-xctest");
     workspaceExtraTestNode = AppleTestBuilder
         .createBuilder(workspaceExtraTestTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .build();
 
-    BuildTarget workspaceTarget = BuildTarget.builder("//foo", "workspace").build();
+    BuildTarget workspaceTarget = BuildTargetFactory.newInstance("//foo:workspace");
     workspaceNode = XcodeWorkspaceConfigBuilder
         .createBuilder(workspaceTarget)
         .setWorkspaceName(Optional.of("workspace"))
@@ -159,7 +160,7 @@ public class ProjectCommandXcodeTest {
         .setExtraTests(Optional.of(ImmutableSortedSet.of(workspaceExtraTestTarget)))
         .build();
 
-    BuildTarget smallWorkspaceTarget = BuildTarget.builder("//baz", "small-workspace").build();
+    BuildTarget smallWorkspaceTarget = BuildTargetFactory.newInstance("//baz:small-workspace");
     smallWorkspaceNode = XcodeWorkspaceConfigBuilder
         .createBuilder(smallWorkspaceTarget)
         .setWorkspaceName(Optional.of("small-workspace"))
@@ -287,7 +288,7 @@ public class ProjectCommandXcodeTest {
         /* withDependenciesTests */ false);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.of(
             smallWorkspaceNode,
             bazLibNode),
         ImmutableSortedSet.copyOf(
@@ -304,7 +305,7 @@ public class ProjectCommandXcodeTest {
         /* withDependenciesTests */ true);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.of(
             smallWorkspaceNode,
             bazLibNode,
             bazTestNode),

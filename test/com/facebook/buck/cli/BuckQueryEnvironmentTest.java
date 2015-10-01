@@ -48,6 +48,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class BuckQueryEnvironmentTest {
 
@@ -55,9 +56,10 @@ public class BuckQueryEnvironmentTest {
   public TemporaryPaths tmp = new TemporaryPaths();
 
   private BuckQueryEnvironment buckQueryEnvironment;
+  private Path cellRoot;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
-    return QueryBuildTarget.of(BuildTarget.builder(baseName, shortName).build());
+    return QueryBuildTarget.of(BuildTarget.builder(cellRoot, baseName, shortName).build());
   }
 
   @Before
@@ -86,6 +88,7 @@ public class BuckQueryEnvironmentTest {
         Optional.<WebServer>absent());
 
     buckQueryEnvironment = new BuckQueryEnvironment(params, /* enableProfiling */ false);
+    cellRoot = workspace.getDestPath();
   }
 
   @Test

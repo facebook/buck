@@ -31,8 +31,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -250,7 +250,10 @@ public class CxxLibraryDescriptionTest {
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        new FakeProjectFilesystem().getRootPath(),
+        target,
+        cxxPlatform);
     String headerName = "test/bar.h";
     String privateHeaderName = "test/bar_private.h";
     CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
@@ -564,6 +567,8 @@ public class CxxLibraryDescriptionTest {
   @Test
   @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createCxxLibraryBuildRules() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
@@ -696,7 +701,10 @@ public class CxxLibraryDescriptionTest {
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        filesystem.getRootPath(),
+        target,
+        cxxPlatform);
     CxxLibraryBuilder cxxLibraryBuilder = (CxxLibraryBuilder) new CxxLibraryBuilder(target)
         .setExportedHeaders(
             ImmutableSortedMap.<String, SourcePath>of(
@@ -719,7 +727,7 @@ public class CxxLibraryDescriptionTest {
         GenruleBuilder.newGenruleBuilder(depTarget)
             .build());
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder
-        .build(resolver, new FakeProjectFilesystem(), targetGraph);
+        .build(resolver, filesystem, targetGraph);
 
     // Verify the C/C++ preprocessor input is setup correctly.
     Path headerRoot =

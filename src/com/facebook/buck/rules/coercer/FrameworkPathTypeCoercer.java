@@ -75,6 +75,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
 
   @Override
   public FrameworkPath coerce(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
@@ -118,6 +119,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
       } else {
         return FrameworkPath.ofSourcePath(
             sourcePathTypeCoercer.coerce(
+                cellRoots,
                 filesystem,
                 pathRelativeToProjectRoot,
                 object));

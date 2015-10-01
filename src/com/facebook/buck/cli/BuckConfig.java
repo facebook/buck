@@ -93,6 +93,24 @@ public class BuckConfig {
     }
   };
 
+  private final Function<Optional<String>, Path> cellToPath =
+      new Function<Optional<String>, Path>() {
+        @Override
+        public Path apply(Optional<String> cellName) {
+          if (!cellName.isPresent()) {
+            return projectFilesystem.getRootPath();
+          }
+          Optional<Path> root = getPath("repositories", cellName.get(), false);
+          if (!root.isPresent()) {
+            throw new HumanReadableException(
+                "Unable to find repository '%s' in cell rooted at: %s",
+                cellName.get(),
+                projectFilesystem.getRootPath());
+          }
+          return root.get().toAbsolutePath().normalize();
+        }
+      };
+
   private final Config config;
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
@@ -195,6 +213,10 @@ public class BuckConfig {
     return config.getListWithoutComments(section, field);
   }
 
+  public Function<Optional<String>, Path> getCellRoots() {
+    return cellToPath;
+  }
+
   @Nullable
   public String getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
     Pair<BuildTarget, Integer> buildTargetPoundIdx = getBuildTargetForAlias(possiblyFlavoredAlias);
@@ -221,7 +243,8 @@ public class BuckConfig {
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
     return BuildTargetParser.INSTANCE.parse(
         target,
-        BuildTargetPatternParser.fullyQualified());
+        BuildTargetPatternParser.fullyQualified(),
+        getCellRoots());
   }
 
   /**
@@ -322,7 +345,7 @@ public class BuckConfig {
    * alias defined earlier in the {@code alias} section. The mapping produced by this method
    * reflects the result of resolving all aliases as values in the {@code alias} section.
    */
-  private static ImmutableMap<String, BuildTarget> createAliasToBuildTargetMap(
+  private ImmutableMap<String, BuildTarget> createAliasToBuildTargetMap(
       ImmutableMap<String, String> rawAliasMap) {
     // We use a LinkedHashMap rather than an ImmutableMap.Builder because we want both (1) order to
     // be preserved, and (2) the ability to inspect the Map while building it up.
@@ -344,7 +367,8 @@ public class BuckConfig {
         // and just grab everything between "//" and ":" and assume it's a valid base path.
         buildTarget = BuildTargetParser.INSTANCE.parse(
             value,
-            BuildTargetPatternParser.fullyQualified());
+            BuildTargetPatternParser.fullyQualified(),
+            getCellRoots());
       }
       aliasToBuildTarget.put(alias, buildTarget);
     }

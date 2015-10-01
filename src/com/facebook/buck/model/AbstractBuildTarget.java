@@ -146,11 +146,11 @@ abstract class AbstractBuildTarget
         .setUnflavoredBuildTarget(buildTarget);
   }
 
-  public static BuildTarget.Builder builder(String baseName, String shortName) {
+  public static BuildTarget.Builder builder(Path cellPath, String baseName, String shortName) {
     return BuildTarget
         .builder()
         .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(Optional.<String>absent(), baseName, shortName));
+            UnflavoredBuildTarget.of(cellPath, Optional.<String>absent(), baseName, shortName));
   }
 
   /** @return {@link #getFullyQualifiedName()} */
@@ -182,7 +182,10 @@ abstract class AbstractBuildTarget
   }
 
   public BuildTarget withoutCell() {
-    return BuildTarget.builder(getBaseName(), getShortName())
+    return BuildTarget.builder(
+        getUnflavoredBuildTarget().getCellPath(),
+        getBaseName(),
+        getShortName())
         .addAllFlavors(getFlavors())
         .build();
 

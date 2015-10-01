@@ -43,8 +43,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -94,7 +94,7 @@ public class TargetsCommandTest {
 
   private SortedMap<String, TargetNode<?>> buildTargetNodes(String baseName, String name) {
     SortedMap<String, TargetNode<?>> buildRules = Maps.newTreeMap();
-    BuildTarget buildTarget = BuildTarget.builder(baseName, name).build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(baseName + ":" + name);
     TargetNode<?> node = JavaLibraryBuilder
         .createBuilder(buildTarget)
         .build();
@@ -389,7 +389,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testGetMatchingAppleLibraryBuildTarget() throws CmdLineException, IOException {
-    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
@@ -428,7 +428,7 @@ public class TargetsCommandTest {
 
   @Test
   public void testGetMatchingAppleTestBuildTarget() throws CmdLineException, IOException {
-    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
@@ -436,7 +436,7 @@ public class TargetsCommandTest {
                 ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo/foo.m")))))
         .build();
 
-    BuildTarget testTarget = BuildTarget.builder("//foo", "xctest").build();
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest");
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
@@ -551,11 +551,11 @@ public class TargetsCommandTest {
 
   @Test
   public void testDetectTestChanges() throws CmdLineException, IOException {
-    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
-    BuildTarget libraryTestTarget1 = BuildTarget.builder("//foo", "xctest1").build();
-    BuildTarget libraryTestTarget2 = BuildTarget.builder("//foo", "xctest2").build();
-    BuildTarget testLibraryTarget = BuildTarget.builder("//testlib", "testlib").build();
-    BuildTarget testLibraryTestTarget = BuildTarget.builder("//testlib", "testlib-xctest").build();
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
+    BuildTarget libraryTestTarget1 = BuildTargetFactory.newInstance("//foo:xctest1");
+    BuildTarget libraryTestTarget2 = BuildTargetFactory.newInstance("//foo:xctest2");
+    BuildTarget testLibraryTarget = BuildTargetFactory.newInstance("//testlib:testlib");
+    BuildTarget testLibraryTestTarget = BuildTargetFactory.newInstance("//testlib:testlib-xctest");
 
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)

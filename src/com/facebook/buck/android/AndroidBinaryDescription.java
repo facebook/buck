@@ -249,6 +249,7 @@ public class AndroidBinaryDescription
         exopackageModes,
         MACRO_HANDLER.getExpander(
             params.getBuildTarget(),
+            params.getCellRoots(),
             resolver,
             params.getProjectFilesystem()),
         args.preprocessJavaClassesBash,

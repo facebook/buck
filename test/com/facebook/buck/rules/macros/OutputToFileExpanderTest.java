@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -54,7 +55,12 @@ public class OutputToFileExpanderTest {
     StringExpander source = new StringExpander(text);
     OutputToFileExpander expander = new OutputToFileExpander(source);
     BuildTarget target = BuildTargetFactory.newInstance("//some:example");
-    String result = expander.expand(target, new BuildRuleResolver(), filesystem, "totally ignored");
+    String result = expander.expand(
+        target,
+        createCellRoots(filesystem),
+        new BuildRuleResolver(),
+        filesystem,
+        "totally ignored");
 
     assertTrue(result, result.startsWith("@"));
     Path output = Paths.get(result.substring(1));

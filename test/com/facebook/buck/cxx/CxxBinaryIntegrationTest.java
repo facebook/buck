@@ -91,6 +91,7 @@ public class CxxBinaryIntegrationTest {
     buildLog = workspace.getBuildLog();
 
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
         inputBuildTarget,
         cxxPlatform);
 
@@ -122,7 +123,8 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:simple");
+    BuildTarget inputBuildTarget =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:simple");
     String inputBuildTargetName =
         inputBuildTarget.withFlavors(CxxInferEnhancer.INFER).getFullyQualifiedName();
 
@@ -138,6 +140,7 @@ public class CxxBinaryIntegrationTest {
     String sourceFull = "foo/" + sourceName;
 
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
         inputBuildTarget,
         cxxPlatform);
     // this is unflavored, but bounded to the InferCapture build rule
@@ -201,7 +204,8 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
+    BuildTarget inputBuildTarget =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:binary_with_deps");
     String inputBuildTargetName =
         inputBuildTarget.withFlavors(CxxInferEnhancer.INFER).getFullyQualifiedName();
 
@@ -215,6 +219,7 @@ public class CxxBinaryIntegrationTest {
      */
     String sourceName = "src_with_deps.c";
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
         inputBuildTarget,
         cxxPlatform);
     // 1. create the targets of binary_with_deps
@@ -237,11 +242,12 @@ public class CxxBinaryIntegrationTest {
     BuildTarget topInferReportTarget = inputBuildTarget.withFlavors(CxxInferEnhancer.INFER);
 
     // 2. create the targets of dep_one
-    BuildTarget depOneBuildTarget = BuildTargetFactory.newInstance("//foo:dep_one");
+    BuildTarget depOneBuildTarget =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:dep_one");
     String depOneSourceName = "dep_one.c";
     String depOneSourceFull = "foo/" + depOneSourceName;
     CxxSourceRuleFactory depOneSourceRuleFactory =
-        CxxSourceRuleFactoryHelper.of(depOneBuildTarget, cxxPlatform);
+        CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), depOneBuildTarget, cxxPlatform);
 
     BuildTarget depOneCaptureBuildTarget =
         depOneSourceRuleFactory.createInferCaptureBuildTarget(depOneSourceName);
@@ -264,9 +270,10 @@ public class CxxBinaryIntegrationTest {
             CxxInferEnhancer.INFER_ANALYZE);
 
     // 3. create the targets of dep_two
-    BuildTarget depTwoBuildTarget = BuildTargetFactory.newInstance("//foo:dep_two");
+    BuildTarget depTwoBuildTarget =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:dep_two");
     CxxSourceRuleFactory depTwoSourceRuleFactory =
-        CxxSourceRuleFactoryHelper.of(depTwoBuildTarget, cxxPlatform);
+        CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), depTwoBuildTarget, cxxPlatform);
 
     BuildTarget depTwoCaptureBuildTarget =
         depTwoSourceRuleFactory.createInferCaptureBuildTarget("dep_two.c");
@@ -422,8 +429,11 @@ public class CxxBinaryIntegrationTest {
         String.format("[cxx]\npreprocess_mode = %s\n", preprocessMode),
         ".buckconfig");
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:simple");
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple.cpp";
     String sourceFull = "foo/" + sourceName;
@@ -555,8 +565,12 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:simple_with_header");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    BuildTarget target =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:simple_with_header");
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple_with_header.cpp";
     String headerName = "simple_with_header.h";
@@ -637,8 +651,12 @@ public class CxxBinaryIntegrationTest {
 
     // Setup variables pointing to the sources and targets of the top-level binary rule.
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:binary_with_dep");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    BuildTarget target =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:binary_with_dep");
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "foo.cpp";
     BuildTarget preprocessTarget =
@@ -657,9 +675,10 @@ public class CxxBinaryIntegrationTest {
             HeaderVisibility.PRIVATE);
 
     // Setup variables pointing to the sources and targets of the library dep.
-    BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:library_with_header");
+    BuildTarget depTarget =
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:library_with_header");
     CxxSourceRuleFactory depCxxSourceRuleFactory =
-        CxxSourceRuleFactoryHelper.of(depTarget, cxxPlatform);
+        CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), depTarget, cxxPlatform);
     String depSourceName = "bar.cpp";
     String depSourceFull = "foo/" + depSourceName;
     String depHeaderName = "bar.h";
@@ -871,7 +890,10 @@ public class CxxBinaryIntegrationTest {
     workspace.writeContentsToPath("", "lib2.h");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
 
     // Verify that the preprocessed source contains no references to the symlink tree used to

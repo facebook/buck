@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -64,11 +64,7 @@ public class FatBinaryTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRule fatBinaryRule = AppleBinaryBuilder
         .createBuilder(
-            BuildTarget.builder("//foo", "xctest")
-                .addFlavors(
-                    ImmutableFlavor.of("iphoneos-i386"),
-                    ImmutableFlavor.of("iphoneos-x86_64"))
-                .build())
+            BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,iphoneos-x86_64"))
         .build(resolver, filesystem);
 
     assertThat(fatBinaryRule, instanceOf(FatBinary.class));
@@ -102,11 +98,7 @@ public class FatBinaryTest {
     try {
       AppleBinaryBuilder
           .createBuilder(
-              BuildTarget.builder("//foo", "xctest")
-                  .addFlavors(
-                      ImmutableFlavor.of("iphoneos-i386"),
-                      ImmutableFlavor.of("macosx-x86_64"))
-                  .build())
+              BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,macosx-x86_64"))
           .build(resolver);
     } catch (HumanReadableException e) {
       exception = e;
@@ -130,12 +122,8 @@ public class FatBinaryTest {
       try {
         AppleBinaryBuilder
             .createBuilder(
-                BuildTarget.builder("//foo", "xctest")
-                    .addFlavors(
-                        ImmutableFlavor.of("iphoneos-i386"),
-                        ImmutableFlavor.of("iphoneos-x86_64"),
-                        ImmutableFlavor.of(flavor.toString()))
-                    .build())
+                BuildTargetFactory.newInstance("//foo:xctest#" +
+                        "iphoneos-i386,iphoneos-x86_64," + flavor.toString()))
             .build(resolver);
       } catch (HumanReadableException e) {
         exception = e;

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTargetFactory;
@@ -44,20 +45,20 @@ public class CommandLineTargetNodeSpecParserTest {
         TargetNodePredicateSpec.of(
             Predicates.alwaysTrue(),
             BuildFileSpec.fromRecursivePath(Paths.get("hello"))),
-        PARSER.parse("//hello/..."));
+        PARSER.parse(createCellRoots(null), "//hello/..."));
     assertEquals(
         TargetNodePredicateSpec.of(
             Predicates.alwaysTrue(),
             BuildFileSpec.fromRecursivePath(Paths.get(""))),
-        PARSER.parse("//..."));
+        PARSER.parse(createCellRoots(null), "//..."));
     assertEquals(
         TargetNodePredicateSpec.of(
             Predicates.alwaysTrue(),
             BuildFileSpec.fromRecursivePath(Paths.get(""))),
-        PARSER.parse("..."));
+        PARSER.parse(createCellRoots(null), "..."));
     assertEquals(
         BuildTargetSpec.from(BuildTargetFactory.newInstance("//hello:...")),
-        PARSER.parse("//hello:..."));
+        PARSER.parse(createCellRoots(null), "//hello:..."));
   }
 
   @Test
@@ -66,7 +67,7 @@ public class CommandLineTargetNodeSpecParserTest {
         TargetNodePredicateSpec.of(
             Predicates.alwaysTrue(),
             BuildFileSpec.fromPath(Paths.get("hello"))),
-        PARSER.parse("//hello:"));
+        PARSER.parse(createCellRoots(null), "//hello:"));
   }
 
   @Test

@@ -173,7 +173,10 @@ public class JavaSymbolFinder {
                 String shortName = (String) Preconditions.checkNotNull(ruleMap.get("name"));
                 sourceFileTargetsMultimap.put(
                     sourceFile,
-                    BuildTarget.builder(baseName, shortName).build());
+                    BuildTarget.builder(
+                        projectFilesystem.getRootPath(),
+                        baseName,
+                        shortName).build());
               }
             }
           }

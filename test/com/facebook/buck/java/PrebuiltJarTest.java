@@ -18,7 +18,7 @@ package com.facebook.buck.java;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -54,7 +54,7 @@ public class PrebuiltJarTest {
     filesystem = new FakeProjectFilesystem(temp.newFolder());
 
     BuildRuleParams buildRuleParams =
-        new FakeBuildRuleParamsBuilder(BuildTarget.builder("//lib", "junit").build())
+        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//lib:junit"))
             .setProjectFilesystem(filesystem)
             .build();
 

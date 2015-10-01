@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -70,6 +71,7 @@ public class GenruleDescriptionTest {
     GenruleDescription.Arg constructorArg = genruleDescription.createUnpopulatedConstructorArg();
     try {
       marshaller.populate(
+          createCellRoots(projectFilesystem),
           projectFilesystem,
           params,
           constructorArg,
@@ -85,6 +87,7 @@ public class GenruleDescriptionTest {
         params,
         declaredDeps.build(),
         visibilityPatterns.build(),
+        createCellRoots(projectFilesystem),
         UNALIASED);
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Optional;
@@ -55,7 +56,7 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepForExitCodeWithBuildTarget() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
         step, verboseContext, exitCode, Optional.of(buildTarget));
 
@@ -80,7 +81,7 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepWithSilentConsole() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
         step, silentContext, exitCode, Optional.of(buildTarget));
 
@@ -92,7 +93,7 @@ public class StepFailedExceptionTest {
   public void testCreateForFailingStepWithBuildTarget() {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
-    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     StepFailedException exception = StepFailedException.createForFailingStepWithException(
         step, new IOException("Copy failed!"), Optional.of(buildTarget));
 

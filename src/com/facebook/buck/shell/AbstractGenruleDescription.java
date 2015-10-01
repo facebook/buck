@@ -47,10 +47,11 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     implements Description<T>, ImplicitDepsInferringDescription<T> {
 
   public static final MacroHandler MACRO_HANDLER = new MacroHandler(
-      ImmutableMap.<String, MacroExpander>of(
-          "classpath", new ClasspathMacroExpander(),
-          "exe", new ExecutableMacroExpander(),
-          "location", new LocationMacroExpander()));
+      ImmutableMap.<String, MacroExpander>builder()
+          .put("classpath", new ClasspathMacroExpander())
+          .put("exe", new ExecutableMacroExpander())
+          .put("location", new LocationMacroExpander())
+          .build());
 
   protected abstract <A extends T> BuildRule createBuildRule(
       final BuildRuleParams params,
@@ -80,7 +81,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                 return ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
                         // Attach any extra dependencies found from macro expansion.
-                    .addAll(findExtraDepsFromArgs(params.getBuildTarget(), resolver , args))
+                    .addAll(
+                        findExtraDepsFromArgs(
+                            params.getBuildTarget(),
+                            params.getCellRoots(),
+                            resolver,
+                            args))
                     .build();
               }
             }),
@@ -89,6 +95,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.srcs.get(),
         MACRO_HANDLER.getExpander(
             params.getBuildTarget(),
+            params.getCellRoots(),
             resolver,
             params.getProjectFilesystem()),
         args.cmd,
@@ -99,20 +106,25 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         new Supplier<ImmutableList<Object>>() {
           @Override
           public ImmutableList<Object> get() {
-            return findRuleKeyAppendables(params.getBuildTarget(), resolver, args);
+            return findRuleKeyAppendables(
+                params.getBuildTarget(),
+                params.getCellRoots(),
+                resolver,
+                args);
           }
         });
   }
 
   protected ImmutableList<Object> findRuleKeyAppendables(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       T arg) {
     ImmutableList.Builder<Object> deps = ImmutableList.builder();
     try {
       for (String val :
           Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(MACRO_HANDLER.extractRuleKeyAppendables(target, resolver, val));
+        deps.addAll(MACRO_HANDLER.extractRuleKeyAppendables(target, cellNames, resolver, val));
       }
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
@@ -122,13 +134,14 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
 
   protected ImmutableList<BuildRule> findExtraDepsFromArgs(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       T arg) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
     try {
       for (String val :
           Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(MACRO_HANDLER.extractAdditionalBuildTimeDeps(target, resolver, val));
+        deps.addAll(MACRO_HANDLER.extractAdditionalBuildTimeDeps(target, cellNames, resolver, val));
       }
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
@@ -139,26 +152,28 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
       T constructorArg) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
     if (constructorArg.bash.isPresent()) {
-      addDepsFromParam(buildTarget, constructorArg.bash.get(), targets);
+      addDepsFromParam(buildTarget, cellRoots, constructorArg.bash.get(), targets);
     }
     if (constructorArg.cmd.isPresent()) {
-      addDepsFromParam(buildTarget, constructorArg.cmd.get(), targets);
+      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmd.get(), targets);
     }
     if (constructorArg.cmdExe.isPresent()) {
-      addDepsFromParam(buildTarget, constructorArg.cmdExe.get(), targets);
+      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmdExe.get(), targets);
     }
     return targets.build();
   }
 
   private void addDepsFromParam(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       String paramValue,
       ImmutableSet.Builder<BuildTarget> targets) {
     try {
-      targets.addAll(MACRO_HANDLER.extractParseTimeDeps(target, paramValue));
+      targets.addAll(MACRO_HANDLER.extractParseTimeDeps(target, cellNames, paramValue));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }

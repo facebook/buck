@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.rules.coercer;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -42,6 +43,7 @@ public class LogLevelTypeCoercerTest {
   public void coercesValidLogLevel() throws CoerceFailedException {
     Level expected = Level.WARNING;
     Level actual = coercer.coerce(
+        createCellRoots(filesystem),
         filesystem,
         pathFromRoot,
         "WARNING");
@@ -51,6 +53,6 @@ public class LogLevelTypeCoercerTest {
 
   @Test(expected = CoerceFailedException.class)
   public void throwsWhenCoercingUnknownLogLevel() throws CoerceFailedException {
-    coercer.coerce(filesystem, pathFromRoot, "not a log level");
+    coercer.coerce(createCellRoots(filesystem), filesystem, pathFromRoot, "not a log level");
   }
 }

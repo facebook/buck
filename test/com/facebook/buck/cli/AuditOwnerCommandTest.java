@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -29,6 +30,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.artifact_cache.ArtifactCache;
@@ -113,6 +115,7 @@ public class AuditOwnerCommandTest {
           params,
           ImmutableSet.<BuildTarget>of(),
           ImmutableSet.<BuildTargetPattern>of(),
+          createCellRoots(params.getProjectFilesystem()),
           UNALIASED);
     } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw new RuntimeException(e);
@@ -229,7 +232,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder",
         "com/test/subtest");
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
@@ -261,7 +264,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/perfect.java",
         "com/test/subtest/random.java");
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
@@ -293,7 +296,7 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java");
     ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
@@ -324,7 +327,7 @@ public class AuditOwnerCommandTest {
         "java/somefolder/perfect.java");
     ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(
         target,
         ImmutableSet.of(Paths.get("java/somefolder")));
@@ -362,7 +365,7 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java");
     ImmutableSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target = BuildTarget.builder("//base", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
     CommandRunnerParams params = createAuditOwnerCommandRunnerParams(filesystem);
@@ -400,7 +403,7 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java");
     ImmutableSortedSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target = BuildTarget.builder("//base/name", "name").build();
+    BuildTarget target = BuildTargetFactory.newInstance("//base/name:name");
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
     AuditOwnerCommand command = new AuditOwnerCommand();
@@ -444,8 +447,8 @@ public class AuditOwnerCommandTest {
         "com/test/subtest/random.java");
     ImmutableSortedSet<Path> inputPaths = MorePaths.asPaths(inputs);
 
-    BuildTarget target1 = BuildTarget.builder("//base/name1", "name").build();
-    BuildTarget target2 = BuildTarget.builder("//base/name2", "name").build();
+    BuildTarget target1 = BuildTargetFactory.newInstance("//base/name1:name");
+    BuildTarget target2 = BuildTargetFactory.newInstance("//base/name2:name");
     TargetNode<?> targetNode1 = createTargetNode(target1, inputPaths);
     TargetNode<?> targetNode2 = createTargetNode(target2, inputPaths);
 

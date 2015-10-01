@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -73,6 +74,7 @@ public class ConstructorArgMarshallerTest {
     Dto dto = new Dto();
     try {
       marshaller.populate(
+          createCellRoots(filesystem),
           filesystem,
           buildRuleFactoryParams(),
           dto,
@@ -93,6 +95,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -112,6 +115,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -132,6 +136,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -142,8 +147,8 @@ public class ConstructorArgMarshallerTest {
             "local", ":fish"
         ));
 
-    assertEquals(BuildTargetFactory.newInstance("//cake:walk"), dto.target);
-    assertEquals(BuildTargetFactory.newInstance("//example/path:fish"), dto.local);
+    assertEquals(BuildTargetFactory.newInstance(filesystem, "//cake:walk"), dto.target);
+    assertEquals(BuildTargetFactory.newInstance(filesystem, "//example/path:fish"), dto.local);
   }
 
   @Test
@@ -155,6 +160,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -175,6 +181,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -201,6 +208,7 @@ public class ConstructorArgMarshallerTest {
     ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -232,6 +240,7 @@ public class ConstructorArgMarshallerTest {
     Dto dto = new Dto();
     // Note: the ordering is reversed from the natural ordering
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -251,6 +260,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -272,6 +282,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -295,6 +306,7 @@ public class ConstructorArgMarshallerTest {
     args.put("targets", Lists.newArrayList());
 
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -318,6 +330,7 @@ public class ConstructorArgMarshallerTest {
     // Deliberately not populating args
 
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -338,6 +351,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -356,6 +370,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -374,6 +389,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -392,6 +408,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -411,6 +428,7 @@ public class ConstructorArgMarshallerTest {
     }
 
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         new Dto(),
@@ -429,6 +447,7 @@ public class ConstructorArgMarshallerTest {
     Dto dto = new Dto();
 
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -463,6 +482,7 @@ public class ConstructorArgMarshallerTest {
     ruleResolver.addToIndex(rule);
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -485,6 +505,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -538,6 +559,7 @@ public class ConstructorArgMarshallerTest {
         .build();
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -582,6 +604,7 @@ public class ConstructorArgMarshallerTest {
     args.put("defaultSourcePath", null);
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,
@@ -611,6 +634,7 @@ public class ConstructorArgMarshallerTest {
 
     Dto dto = new Dto();
     marshaller.populate(
+        createCellRoots(filesystem),
         filesystem,
         buildRuleFactoryParams(),
         dto,

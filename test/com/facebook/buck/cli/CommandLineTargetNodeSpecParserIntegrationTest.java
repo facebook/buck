@@ -48,9 +48,9 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.runBuckBuild("//simple/...").assertSuccess();
     ImmutableSet<BuildTarget> targets =
         ImmutableSet.of(
-            BuildTargetFactory.newInstance("//simple:simple"),
-            BuildTargetFactory.newInstance("//simple/foo:foo"),
-            BuildTargetFactory.newInstance("//simple/bar:bar"));
+            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple"),
+            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/foo:foo"),
+            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/bar:bar"));
     for (BuildTarget target : targets) {
       workspace.getBuildLog().assertTargetBuiltLocally(target.toString());
     }
@@ -113,7 +113,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.runBuckBuild("//simple:").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//simple:simple");
     assertEquals(
-        ImmutableSet.of(BuildTargetFactory.newInstance("//simple:simple")),
+        ImmutableSet.of(BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple")),
         workspace.getBuildLog().getAllTargets());
   }
 

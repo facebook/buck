@@ -22,7 +22,12 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class ImmediateDirectoryBuildTargetPatternTest {
+
+  private static final Path ROOT = Paths.get("/opt/src/buck");
 
   @Test
   public void testApply() {
@@ -30,9 +35,10 @@ public class ImmediateDirectoryBuildTargetPatternTest {
         new ImmediateDirectoryBuildTargetPattern("src/com/facebook/buck/");
 
     assertFalse(pattern.apply(null));
-    assertTrue(pattern.apply(BuildTarget.builder("//src/com/facebook/buck", "buck").build()));
-    assertFalse(pattern.apply(BuildTarget.builder("//src/com/facebook/foo/", "foo").build()));
-    assertFalse(pattern.apply(BuildTarget.builder("//src/com/facebook/buck/bar", "bar").build()));
+    assertTrue(pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/buck", "buck").build()));
+    assertFalse(pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/foo/", "foo").build()));
+    assertFalse(
+        pattern.apply(BuildTarget.builder(ROOT, "//src/com/facebook/buck/bar", "bar").build()));
   }
 
   @Test

@@ -113,7 +113,7 @@ import javax.annotation.Nullable;
 public class CachingBuildEngineTest extends EasyMockSupport {
 
   private static final BuildTarget BUILD_TARGET =
-      BuildTarget.builder("//src/com/facebook/orca", "orca").build();
+      BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
   private static final RuleKeyBuilderFactory NOOP_RULE_KEY_FACTORY =
       new DefaultRuleKeyBuilderFactory(
           new NullFileHashCache(),

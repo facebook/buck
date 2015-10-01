@@ -265,6 +265,10 @@ public class Cell {
     return tempFilePatterns;
   }
 
+  public Function<Optional<String>, Path> getCellRoots() {
+    return config.getCellRoots();
+  }
+
   public CellFilesystemResolver getCellAliases() {
     return cellFilesystemResolver;
   }

@@ -345,9 +345,9 @@ public class CxxSourceRuleFactory {
     String outputName = Flavor.replaceInvalidCharacters(getCompileOutputName(name));
     return BuildTarget
         .builder(params.getBuildTarget())
+        .addAllFlavors(params.getBuildTarget().getFlavors())
         .addFlavors(cxxPlatform.getFlavor())
-        .addFlavors(
-            ImmutableFlavor.of(String.format("infer-capture-%s", outputName)))
+        .addFlavors(ImmutableFlavor.of(String.format("infer-capture-%s", outputName)))
         .build();
   }
 

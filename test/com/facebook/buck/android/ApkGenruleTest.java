@@ -64,6 +64,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -116,13 +117,15 @@ public class ApkGenruleTest {
     // that builds a ApkGenrule from the Python object.
     BuildTargetParser parser = EasyMock.createNiceMock(BuildTargetParser.class);
     final BuildTarget apkTarget = BuildTargetFactory.newInstance("//:fb4a");
+
     EasyMock.expect(
-        parser.parse(EasyMock.eq(":fb4a"),
-            EasyMock.anyObject(BuildTargetPatternParser.class)))
+        parser.parse(
+            EasyMock.eq(":fb4a"),
+            EasyMock.anyObject(BuildTargetPatternParser.class),
+            EasyMock.<Function<Optional<String>, Path>>anyObject()))
         .andStubReturn(apkTarget);
     EasyMock.replay(parser);
-
-    BuildTarget buildTarget = BuildTarget.builder("//src/com/facebook", "sign_fb4a").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook:sign_fb4a");
     ApkGenruleDescription description = new ApkGenruleDescription();
     ApkGenruleDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.apk = new FakeInstallable(apkTarget, new SourcePathResolver(ruleResolver)).getBuildTarget();

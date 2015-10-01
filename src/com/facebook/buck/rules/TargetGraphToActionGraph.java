@@ -190,11 +190,16 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
     @Override
     public BuildRule getRule(BuildTarget target) {
-      ProjectFilesystem filesystem = nameResolver.apply(target.getCell());
-      BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
-
-      BuildTarget withoutCell = target.withoutCell();
-      return toUse.getRule(withoutCell);
+      try {
+        BuildRuleResolver toUse = getResolver(target).get();
+        return toUse.getRule(target.withoutCell());
+      } catch (IllegalStateException e) {
+        LOG.warn(
+            "Unable to retrieve rule: %s in cell %s",
+            target,
+            target.getUnflavoredBuildTarget().getCellPath());
+        throw e;
+      }
     }
 
     @Override
@@ -211,19 +216,48 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
     @Override
     public Optional<BuildRule> getRuleOptional(BuildTarget target) {
-      ProjectFilesystem filesystem = nameResolver.apply(target.getCell());
-      BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
+      Optional<BuildRuleResolver> toUse = getResolver(target);
 
-      return toUse.getRuleOptional(target.withoutCell());
+      if (!toUse.isPresent()) {
+        return Optional.absent();
+      }
+
+      return toUse.get().getRuleOptional(target.withoutCell());
     }
 
     @Override
     public <T extends BuildRule> Optional<T> getRuleOptionalWithType(
         BuildTarget target, Class<T> cls) {
-      ProjectFilesystem filesystem = nameResolver.apply(target.getCell());
-      BuildRuleResolver toUse = ruleResolvers.getUnchecked(filesystem);
+      Optional<BuildRuleResolver> toUse = getResolver(target);
 
-      return toUse.getRuleOptionalWithType(target, cls);
+      if (toUse.isPresent()) {
+        return toUse.get().getRuleOptionalWithType(target.withoutCell(), cls);
+      }
+      return Optional.absent();
+    }
+
+    private Optional<BuildRuleResolver> getResolver(BuildTarget target) {
+      // Handle the case where there's an actual honest-to-goodness cell name given. Avoid using the
+      // normal mechanism to ensure that only rules visible from a cell are requested.
+      if (target.getCell().isPresent()) {
+        ProjectFilesystem filesystem = nameResolver.apply(target.getCell());
+        return Optional.of(ruleResolvers.getUnchecked(filesystem));
+      }
+
+      // At this point, we need to be aware that the target has been stored without a qualifying
+      // cell, so scan the available roots to figure out if we can find the right resolver to use.
+      ProjectFilesystem filesystem = null;
+      for (ProjectFilesystem pfs : ruleResolvers.asMap().keySet()) {
+        if (pfs.getRootPath().equals(target.getUnflavoredBuildTarget().getCellPath())) {
+          filesystem = pfs;
+          break;
+        }
+      }
+      if (filesystem == null) {
+        return Optional.absent();
+      }
+
+      return Optional.of(ruleResolvers.getUnchecked(filesystem));
     }
   }
 }

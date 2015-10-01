@@ -38,11 +38,17 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public class TestCellBuilder {
+
+  private static final ProjectFilesystem DEFAULT_FS = new FakeProjectFilesystem();
+
   public static final CellFilesystemResolver UNALIASED = new CellFilesystemResolver(
-      null,
+      DEFAULT_FS,
       new Function<Optional<String>, ProjectFilesystem>() {
         @Override
         public ProjectFilesystem apply(Optional<String> input) {
+          if (!input.isPresent()) {
+            return DEFAULT_FS;
+          }
           throw new HumanReadableException("Cannot load cell: " + input);
         }
       });
@@ -111,6 +117,20 @@ public class TestCellBuilder {
         return parserFactory;
       }
     };
+  }
 
+  public static Function<Optional<String>, Path> createCellRoots(
+      @Nullable ProjectFilesystem filesystem) {
+    final ProjectFilesystem toUse = filesystem == null ? new FakeProjectFilesystem() : filesystem;
+
+    return new Function<Optional<String>, Path>() {
+      @Override
+      public Path apply(Optional<String> cellName) {
+        if (cellName.isPresent()) {
+          throw new RuntimeException("No known cell with the name: " + cellName);
+        }
+        return toUse.getRootPath();
+      }
+    };
   }
 }

@@ -102,7 +102,7 @@ public class TargetPatternEvaluator {
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     Set<BuildTarget> buildTargets = params.getParser()
         .resolveTargetSpec(
-            targetNodeSpecParser.parse(pattern),
+            targetNodeSpecParser.parse(params.getCell().getCellRoots(), pattern),
             parserConfig,
             params.getBuckEventBus(),
             params.getConsole(),

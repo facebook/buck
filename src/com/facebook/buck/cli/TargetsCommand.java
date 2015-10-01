@@ -719,6 +719,7 @@ public class TargetsCommand extends AbstractCommand {
     List<Map<String, Object>> ruleObjects;
     try {
       ruleObjects = parser.parseBuildFile(
+          params.getCell().getFilesystem().getRootPath(),
           params.getCell().getAbsolutePathToBuildFile(buildTarget),
           new ParserConfig(params.getBuckConfig()),
           params.getEnvironment(),

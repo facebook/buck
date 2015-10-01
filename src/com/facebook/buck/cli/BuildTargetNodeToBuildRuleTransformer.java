@@ -55,6 +55,7 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
         Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getDeclaredDeps())),
         Suppliers.ofInstance(ruleResolver.getAllRules(targetNode.getExtraDeps())),
         ruleFactoryParams.getProjectFilesystem(),
+        targetNode.getCellNames(),
         ruleKeyBuilderFactory);
     BuildRule buildRule =
         description.createBuildRule(targetGraph, params, ruleResolver, arg);
@@ -65,6 +66,7 @@ public class BuildTargetNodeToBuildRuleTransformer implements TargetNodeToBuildR
       flavorable.registerFlavors(
           arg,
           buildRule,
+          targetNode.getCellNames(),
           ruleFactoryParams.getProjectFilesystem(),
           ruleKeyBuilderFactory,
           ruleResolver);

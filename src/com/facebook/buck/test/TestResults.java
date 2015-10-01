@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -31,7 +32,8 @@ import java.util.List;
 public class TestResults {
 
   private static final BuildTarget DUMMY_TARGET_FOR_TESTING =
-      BuildTarget.builder("//foo/bar", "baz").build();
+      BuildTarget.builder(Paths.get("/does/not/exist"), "//foo/bar", "baz").build();
+
 
   private final BuildTarget source;
   private final ImmutableList<TestCaseSummary> testCases;
@@ -49,8 +51,8 @@ public class TestResults {
     this(
         DUMMY_TARGET_FOR_TESTING,
         testCases,
-        /* contacts */ ImmutableSet.<String>of(),
-        /* labels */ ImmutableSet.<String>of());
+  /* contacts */ ImmutableSet.<String>of(),
+  /* labels */ ImmutableSet.<String>of());
   }
 
   @Beta

@@ -107,6 +107,7 @@ public abstract class CommandHelper {
     try {
       Path buildFile = params.getCell().getAbsolutePathToBuildFile(buildTarget);
       rules = params.getParser().parseBuildFile(
+          params.getCell().getFilesystem().getRootPath(),
           buildFile,
           parserConfig,
           params.getEnvironment(),

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -486,7 +486,7 @@ public class DirArtifactCacheTest {
 
     private BuildRuleForTest(Path file) {
       super(
-          BuildTarget.builder("//foo", file.getFileName().toString()).build(),
+          BuildTargetFactory.newInstance("//foo:" + file.getFileName().toString()),
           new SourcePathResolver(new BuildRuleResolver()));
       this.file = file;
     }

@@ -50,6 +50,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryBuilder;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
@@ -282,7 +283,7 @@ public class NewNativeTargetProjectMutatorTest {
     mutator.setCopyFilesPhases(ImmutableList.of(copyFilesPhase));
 
     TargetNode<?> postbuildNode = XcodePostbuildScriptBuilder
-        .createBuilder(BuildTarget.builder("//foo", "script").build())
+        .createBuilder(BuildTargetFactory.newInstance("//foo:script"))
         .setCmd("echo \"hello world!\"")
         .build();
     mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(postbuildNode));
@@ -328,7 +329,7 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
     TargetNode<?> prebuildNode = XcodePrebuildScriptBuilder
-        .createBuilder(BuildTarget.builder("//foo", "script").build())
+        .createBuilder(BuildTargetFactory.newInstance("//foo:script"))
         .setSrcs(ImmutableSortedSet.<SourcePath>of(new TestSourcePath("script/input.png")))
         .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
         .setCmd("echo \"hello world!\"")
@@ -358,7 +359,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void testScriptBuildPhaseWithReactNative() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    BuildTarget depBuildTarget = BuildTarget.builder("//foo", "dep").build();
+    BuildTarget depBuildTarget = BuildTargetFactory.newInstance("//foo:dep");
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(new FakeBuckConfig(
         ImmutableMap.of("react-native", ImmutableMap.of("packager", "react-native/packager.sh")),

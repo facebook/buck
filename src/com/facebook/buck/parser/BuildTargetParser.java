@@ -20,11 +20,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,7 +64,8 @@ public class BuildTargetParser {
    */
   public BuildTarget parse(
       String buildTargetName,
-      BuildTargetPatternParser<?> buildTargetPatternParser) {
+      BuildTargetPatternParser<?> buildTargetPatternParser,
+      Function<Optional<String>, Path> cellNames) {
 
     if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) &&
         !buildTargetPatternParser.isWildCardAllowed()) {
@@ -112,8 +115,10 @@ public class BuildTargetParser {
     checkBaseName(baseName, buildTargetName);
 
     UnflavoredBuildTarget.Builder unflavoredBuilder =
-        UnflavoredBuildTarget.builder(baseName, shortName);
-    unflavoredBuilder.setCell(givenCellName);
+        UnflavoredBuildTarget.builder(baseName, shortName)
+            .setCell(givenCellName)
+            .setCellPath(cellNames.apply(givenCellName));
+
     BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuilder.build());
     for (String flavor : flavorNames) {
       builder.addFlavors(ImmutableFlavor.of(flavor));

@@ -32,6 +32,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -106,8 +107,10 @@ public class CxxTestDescriptionTest {
     constructorArg.args = Optional.absent();
     constructorArg.useDefaultTestMain = Optional.of(true);
     constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    Iterable<BuildTarget> implicit = desc
-        .findDepsForTargetFromConstructorArgs(target, constructorArg);
+    Iterable<BuildTarget> implicit = desc.findDepsForTargetFromConstructorArgs(
+        target,
+        TestCellBuilder.createCellRoots(new FakeProjectFilesystem()),
+        constructorArg);
 
     assertTrue(Iterables.contains(implicit, gtest));
     assertTrue(Iterables.contains(implicit, gtestMain));

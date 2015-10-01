@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -125,6 +126,7 @@ public class ClasspathMacroExpanderTest {
     ImmutableList<BuildRule> deps =
         expander.extractAdditionalBuildTimeDeps(
             forTarget,
+            createCellRoots(filesystem),
             ruleResolver,
             rule.getBuildTarget().toString());
 
@@ -147,6 +149,7 @@ public class ClasspathMacroExpanderTest {
     assertThat(
         expander.extractRuleKeyAppendables(
             forTarget,
+            createCellRoots(filesystem),
             ruleResolver,
             rule.getBuildTarget().toString()),
         Matchers.<Object>equalTo(
@@ -162,6 +165,7 @@ public class ClasspathMacroExpanderTest {
     String classpath = expander.expand(new SourcePathResolver(buildRuleResolver), filesystem, rule);
     String fileClasspath = expander.expandForFile(
         rule.getBuildTarget(),
+        createCellRoots(filesystem),
         buildRuleResolver,
         filesystem,
         ':' + rule.getBuildTarget().getShortName());

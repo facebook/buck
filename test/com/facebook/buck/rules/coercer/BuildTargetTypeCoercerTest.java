@@ -16,11 +16,12 @@
 
 package com.facebook.buck.rules.coercer;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Test;
@@ -39,61 +40,57 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        createCellRoots(filesystem),
         filesystem,
         basePath,
         "//foo:bar");
 
-    assertEquals(BuildTarget.builder("//foo", "bar").build(), seen);
+    assertEquals(BuildTargetFactory.newInstance("//foo:bar"), seen);
   }
 
   @Test
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        createCellRoots(filesystem),
         filesystem,
         basePath,
         ":bar");
 
-    assertEquals(BuildTarget.builder("//java/com/facebook/buck/example", "bar").build(), seen);
+    assertEquals(BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar"), seen);
   }
 
   @Test
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        createCellRoots(filesystem),
         filesystem,
         basePath,
         "//foo:bar#baz");
 
-    assertEquals(
-        BuildTarget.builder("//foo", "bar").addFlavors(ImmutableFlavor.of("baz")).build(),
-        seen);
+    assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz"), seen);
   }
 
   @Test
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        createCellRoots(filesystem),
         filesystem,
         basePath,
         "//foo:bar#baz,qux");
 
-    assertEquals(
-        BuildTarget
-            .builder("//foo", "bar")
-            .addFlavors(ImmutableFlavor.of("baz"))
-            .addFlavors(ImmutableFlavor.of("qux"))
-            .build(),
-        seen);
+    assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz,qux"), seen);
   }
 
   @Test
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        createCellRoots(filesystem),
         filesystem,
         basePath,
         ":bar#baz");
 
-    BuildTarget expected = BuildTarget.builder("//java/com/facebook/buck/example", "bar")
-        .addFlavors(ImmutableFlavor.of("baz"))
-        .build();
+    BuildTarget expected =
+        BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar#baz");
     assertEquals(expected, seen);
   }
 
@@ -119,11 +116,12 @@ public class BuildTargetTypeCoercerTest {
         });
 
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(
+        createCellRoots(filesystem),
         filesystem,
         stubPath,
         ":baz");
 
-    BuildTarget expected = BuildTarget.builder("//foo/bar", "baz").build();
+    BuildTarget expected = BuildTargetFactory.newInstance("//foo/bar:baz");
     assertEquals(expected, seen);
   }
 }

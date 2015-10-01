@@ -77,9 +77,12 @@ public class CxxDependencyFileIntegrationTest {
     workspace.runBuckBuild("//:test").assertSuccess();
 
     // Find the target used for preprocessing and verify it ran.
-    target = BuildTargetFactory.newInstance("//:test");
+    target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//:test");
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     String source = "test.cpp";
     if (mode == CxxPreprocessMode.SEPARATE) {
       preprocessTarget =

@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -30,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.util.Collection;
 
 /**
@@ -42,6 +44,7 @@ public abstract class AbstractNodeBuilder<A> {
   protected final BuildRuleFactoryParams factoryParams;
   protected final BuildTarget target;
   protected final A arg;
+  private final Function<Optional<String>, Path> cellRoots;
 
   protected AbstractNodeBuilder(
       Description<A> description,
@@ -50,6 +53,17 @@ public abstract class AbstractNodeBuilder<A> {
     this.factoryParams = NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
         target);
     this.target = target;
+
+    this.cellRoots = new Function<Optional<String>, Path>() {
+      @Override
+      public Path apply(Optional<String> input) {
+        if (input.isPresent()) {
+          throw new HumanReadableException("Can't find the cell");
+        }
+        return factoryParams.getProjectFilesystem().getRootPath();
+      }
+    };
+
     this.arg = description.createUnpopulatedConstructorArg();
     populateWithDefaultValues(this.arg);
   }
@@ -94,6 +108,7 @@ public abstract class AbstractNodeBuilder<A> {
           factoryParams,
           getDepsFromArg(),
           ImmutableSet.<BuildTargetPattern>of(),
+          cellRoots,
           new CellFilesystemResolver(
               factoryParams.getProjectFilesystem(),
               new Function<Optional<String>, ProjectFilesystem>() {
@@ -166,6 +181,7 @@ public abstract class AbstractNodeBuilder<A> {
   private void populateWithDefaultValues(A arg) {
     try {
       new ConstructorArgMarshaller().populate(
+          cellRoots,
           new FakeProjectFilesystem(),
           factoryParams,
           arg,
@@ -176,5 +192,4 @@ public abstract class AbstractNodeBuilder<A> {
       throw Throwables.propagate(error);
     }
   }
-
 }

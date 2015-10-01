@@ -29,6 +29,7 @@ import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
@@ -106,7 +107,7 @@ public class JavaSymbolFinderIntegrationTest {
         "JavaSymbolFinder failed to find the right target.",
         ImmutableSetMultimap.of(
             "com.example.a.A",
-            BuildTarget.builder("//java/com/example/a", "a").build()),
+            BuildTargetFactory.newInstance(projectFilesystem, "//java/com/example/a:a")),
         foundTargets);
   }
 }

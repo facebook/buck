@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -26,8 +27,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.python.PythonEnvironment;
-import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonPackageComponents;
+import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -231,6 +232,7 @@ public class CxxPythonExtensionDescriptionTest {
     constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     Iterable<BuildTarget> res = desc.findDepsForTargetFromConstructorArgs(
         BuildTargetFactory.newInstance("//foo:bar"),
+        createCellRoots(filesystem),
         constructorArg);
     assertThat(res, Matchers.contains(PYTHON2_DEP_TARGET, PYTHON3_DEP_TARGET));
   }

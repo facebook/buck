@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -61,7 +62,7 @@ public class BuildTargetMacroExpanderTest {
                 return "";
               }
             }));
-    handler.expand(rule.getBuildTarget(), resolver, filesystem, blob);
+    handler.expand(rule.getBuildTarget(), createCellRoots(filesystem), resolver, filesystem, blob);
     return Optional.fromNullable(Iterables.getFirst(found, null));
   }
 

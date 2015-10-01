@@ -15,16 +15,21 @@
  */
 package com.facebook.buck.parser;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Test;
 
 public class BuildTargetPatternParserTest {
+
+  private final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
   @Test
   public void testParse() throws NoSuchBuildTargetException {
@@ -33,15 +38,23 @@ public class BuildTargetPatternParserTest {
 
     assertEquals(
         new ImmediateDirectoryBuildTargetPattern("test/com/facebook/buck/parser/"),
-        buildTargetPatternParser.parse("//test/com/facebook/buck/parser:"));
+        buildTargetPatternParser.parse(
+            createCellRoots(filesystem),
+            "//test/com/facebook/buck/parser:"));
 
     assertEquals(
-        new SingletonBuildTargetPattern("//test/com/facebook/buck/parser:parser"),
-        buildTargetPatternParser.parse("//test/com/facebook/buck/parser:parser"));
+        new SingletonBuildTargetPattern(
+            filesystem.getRootPath(),
+            "//test/com/facebook/buck/parser:parser"),
+        buildTargetPatternParser.parse(
+            createCellRoots(filesystem),
+            "//test/com/facebook/buck/parser:parser"));
 
     assertEquals(
         new SubdirectoryBuildTargetPattern("test/com/facebook/buck/parser/"),
-        buildTargetPatternParser.parse("//test/com/facebook/buck/parser/..."));
+        buildTargetPatternParser.parse(
+            createCellRoots(filesystem),
+            "//test/com/facebook/buck/parser/..."));
   }
 
   @Test(expected = BuildTargetParseException.class)
@@ -49,7 +62,7 @@ public class BuildTargetPatternParserTest {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.fullyQualified();
 
-    buildTargetPatternParser.parse("//...");
+    buildTargetPatternParser.parse(createCellRoots(filesystem), "//...");
   }
 
   @Test
@@ -59,15 +72,15 @@ public class BuildTargetPatternParserTest {
 
     assertEquals(
         new ImmediateDirectoryBuildTargetPattern(""),
-        buildTargetPatternParser.parse("//:"));
+        buildTargetPatternParser.parse(createCellRoots(filesystem), "//:"));
 
     assertEquals(
-        new SingletonBuildTargetPattern("//:parser"),
-        buildTargetPatternParser.parse("//:parser"));
+        new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:parser"),
+        buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
 
     assertEquals(
         new SubdirectoryBuildTargetPattern(""),
-        buildTargetPatternParser.parse("//..."));
+        buildTargetPatternParser.parse(createCellRoots(filesystem), "//..."));
   }
 
   @Test
@@ -76,6 +89,6 @@ public class BuildTargetPatternParserTest {
     BuildTargetPatternParser<BuildTargetPattern> parser =
         BuildTargetPatternParser.forVisibilityArgument();
 
-    assertEquals(BuildTargetPattern.MATCH_ALL, parser.parse("PUBLIC"));
+    assertEquals(BuildTargetPattern.MATCH_ALL, parser.parse(createCellRoots(filesystem), "PUBLIC"));
   }
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -175,22 +176,27 @@ public abstract class AbstractCommand implements Command {
             config,
             new BuildTargetPatternTargetNodeParser(ignorePaths));
     for (String arg : targetsAsArgs) {
-      specs.add(parser.parse(arg));
+      specs.add(parser.parse(config.getCellRoots(), arg));
     }
     return specs.build();
   }
 
   /**
+   * @param buildTargetNames The build targets to parse, represented as strings.
    * @return A set of {@link BuildTarget}s for the input buildTargetNames.
    */
-  protected ImmutableSet<BuildTarget> getBuildTargets(Iterable<String> buildTargetNames) {
+  protected ImmutableSet<BuildTarget> getBuildTargets(
+      Function<Optional<String>, Path> cellNames,
+      Iterable<String> buildTargetNames) {
     ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
 
     // Parse all of the build targets specified by the user.
     for (String buildTargetName : buildTargetNames) {
-      buildTargets.add(BuildTargetParser.INSTANCE.parse(
+      buildTargets.add(
+          BuildTargetParser.INSTANCE.parse(
               buildTargetName,
-              BuildTargetPatternParser.fullyQualified()));
+              BuildTargetPatternParser.fullyQualified(),
+              cellNames));
     }
 
     return buildTargets.build();

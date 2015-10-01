@@ -22,8 +22,8 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -118,10 +118,9 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_header_symlink_tree", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
-        .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#" +
+            "default," + CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -153,10 +152,9 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_header_symlink_tree", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//Libraries/TestLibrary", "TestLibrary")
-        .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(
+        "//Libraries/TestLibrary:TestLibrary#" +
+            "default," + CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());

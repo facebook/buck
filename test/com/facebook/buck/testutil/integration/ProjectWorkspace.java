@@ -470,6 +470,7 @@ public class ProjectWorkspace {
 
   public BuckBuildLog getBuildLog() throws IOException {
     return BuckBuildLog.fromLogContents(
+        getDestPath(),
         Files.readAllLines(getPath(PATH_TO_BUILD_LOG), UTF_8));
   }
 

@@ -275,12 +275,14 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   public void registerFlavors(
       Arg arg,
       BuildRule buildRule,
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver) {
     BuildTarget originalBuildTarget = buildRule.getBuildTarget();
 
     Optional<GwtModule> gwtModuleOptional = tryCreateGwtModule(
+        cellRoots,
         new SourcePathResolver(ruleResolver),
         originalBuildTarget,
         projectFilesystem,
@@ -302,6 +304,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
    */
   @VisibleForTesting
   static Optional<GwtModule> tryCreateGwtModule(
+      Function<Optional<String>, Path> cellRoots,
       SourcePathResolver resolver,
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -332,6 +335,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             Suppliers.ofInstance(deps),
             /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
             projectFilesystem,
+            cellRoots,
             ruleKeyBuilderFactory),
         resolver,
         filesForGwtModule);

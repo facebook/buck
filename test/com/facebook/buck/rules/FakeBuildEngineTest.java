@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -31,7 +32,7 @@ public class FakeBuildEngineTest {
 
   @Test
   public void buildRuleFutureHasResult() throws Exception {
-    BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
@@ -46,7 +47,7 @@ public class FakeBuildEngineTest {
 
   @Test
   public void buildRuleResultIsPresent() throws Exception {
-    BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
@@ -61,7 +62,7 @@ public class FakeBuildEngineTest {
 
   @Test
   public void buildRuleIsBuilt() throws Exception {
-    BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
@@ -76,7 +77,7 @@ public class FakeBuildEngineTest {
 
   @Test
   public void unbuiltRuleIsNotBuilt() throws Exception {
-    BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =
@@ -84,7 +85,7 @@ public class FakeBuildEngineTest {
     FakeBuildEngine fakeEngine = new FakeBuildEngine(
         ImmutableMap.of(fakeBuildTarget, fakeBuildResult),
         ImmutableMap.of(fakeBuildTarget, new RuleKey("00")));
-    BuildTarget anotherFakeBuildTarget = BuildTarget.builder("//foo", "baz").build();
+    BuildTarget anotherFakeBuildTarget = BuildTargetFactory.newInstance("//foo:baz");
     assertThat(
         fakeEngine.isRuleBuilt(anotherFakeBuildTarget),
         is(false));
@@ -92,7 +93,7 @@ public class FakeBuildEngineTest {
 
   @Test
   public void ruleKeyIsPresent() throws Exception {
-    BuildTarget fakeBuildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
     BuildResult fakeBuildResult =

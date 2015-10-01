@@ -38,6 +38,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -107,6 +108,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
   public void registerFlavors(
       Arg arg,
       BuildRule buildRule,
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver) {
@@ -118,6 +120,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(buildRule)),
         /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
         projectFilesystem,
+        cellRoots,
         ruleKeyBuilderFactory);
     BuildRule gwtModule = createGwtModule(params, new SourcePathResolver(ruleResolver), arg);
     ruleResolver.addToIndex(gwtModule);

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static com.facebook.buck.util.BuckConstant.GEN_DIR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -67,18 +68,24 @@ public class ExecutableMacroExpanderTest {
 
   @Test
   public void testReplaceBinaryBuildRuleRefsInCmd() throws MacroException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    BuildTarget target = BuildTarget.builder("//cheese", "cake").build();
+    BuildTarget target = BuildTarget.builder(filesystem.getRootPath(), "//cheese", "cake").build();
     createSampleJavaBinaryRule(ruleResolver);
     String originalCmd = "$(exe //java/com/facebook/util:ManifestGenerator) $OUT";
 
     // Interpolate the build target in the genrule cmd string.
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     MacroHandler macroHandler = new MacroHandler(
         ImmutableMap.<String, MacroExpander>of(
             "exe",
             new ExecutableMacroExpander()));
-    String transformedString = macroHandler.expand(target, ruleResolver, filesystem, originalCmd);
+    String transformedString = macroHandler.expand(
+        target,
+        createCellRoots(filesystem),
+        ruleResolver,
+        filesystem,
+        originalCmd);
 
     // Verify that the correct cmd was created.
     Path expectedClasspath = Paths.get(GEN_DIR + "/java/com/facebook/util/ManifestGenerator.jar")
@@ -104,6 +111,7 @@ public class ExecutableMacroExpanderTest {
             new ExecutableMacroExpander()));
     String transformedString = macroHandler.expand(
         rule.getBuildTarget(),
+        createCellRoots(filesystem),
         ruleResolver,
         filesystem,
         originalCmd);
@@ -132,6 +140,7 @@ public class ExecutableMacroExpanderTest {
             new ExecutableMacroExpander()));
     String transformedString = macroHandler.expand(
         rule.getBuildTarget(),
+        createCellRoots(filesystem),
         ruleResolver,
         filesystem,
         originalCmd);
@@ -176,10 +185,14 @@ public class ExecutableMacroExpanderTest {
     // Verify that the correct cmd was created.
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
     assertThat(
-        expander.extractAdditionalBuildTimeDeps(target, ruleResolver, "//:rule"),
+        expander.extractAdditionalBuildTimeDeps(
+            target,
+            createCellRoots(filesystem),
+            ruleResolver,
+            "//:rule"),
         Matchers.containsInAnyOrder(dep1, dep2));
     assertThat(
-        expander.expand(target, ruleResolver, filesystem, "//:rule"),
+        expander.expand(target, createCellRoots(filesystem), ruleResolver, filesystem, "//:rule"),
         Matchers.equalTo(
             String.format(
                 "%s %s",
@@ -203,7 +216,11 @@ public class ExecutableMacroExpanderTest {
         });
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
     assertThat(
-        expander.extractRuleKeyAppendables(target, ruleResolver, "//:rule"),
+        expander.extractRuleKeyAppendables(
+            target,
+            createCellRoots(params.getProjectFilesystem()),
+            ruleResolver,
+            "//:rule"),
         Matchers.<Object>equalTo(tool));
   }
 

@@ -148,11 +148,16 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_source");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//:binary_using_generated_source");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:gensource");
     String sourceName = "bar.cpp";
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     BuildTarget preprocessTarget =
         cxxSourceRuleFactory.createPreprocessBuildTarget(
             sourceName,
@@ -206,7 +211,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:genheader");
     String sourceName = "foo.cpp";
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     BuildTarget preprocessTarget =
         cxxSourceRuleFactory.createPreprocessBuildTarget(
             sourceName,
@@ -264,7 +272,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     String unusedHeaderName = "unused_header.h";
     String sourceName = "source.cpp";
     BuildTarget compileTarget =
@@ -303,7 +314,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
     BuildTarget target = BuildTargetFactory.newInstance("//:source_relative_header");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     String usedHeaderName = "source_relative_header.h";
     String unusedHeaderName = "unused_header.h";
     String sourceName = "source_relative_header.cpp";

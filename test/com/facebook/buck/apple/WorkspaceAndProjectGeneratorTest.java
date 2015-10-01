@@ -101,6 +101,7 @@ public class WorkspaceAndProjectGeneratorTest {
   private static final FlavorDomain<CxxPlatform> PLATFORMS =
       new FlavorDomain<>("C/C++ platform", ImmutableMap.<Flavor, CxxPlatform>of());
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
+  private static final Path ROOT = Paths.get("/opt/src/buck");
 
   private ProjectFilesystem projectFilesystem;
   private ReactNativeBuckConfig reactNativeBuckConfig;
@@ -140,27 +141,27 @@ public class WorkspaceAndProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin
 
-    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "xctest").build();
-    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "bin-xctest").build();
-    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "lib-xctest").build();
+    BuildTarget bazTestTarget = BuildTarget.builder(ROOT, "//baz", "xctest").build();
+    BuildTarget fooBinTestTarget = BuildTarget.builder(ROOT, "//foo", "bin-xctest").build();
+    BuildTarget fooTestTarget = BuildTarget.builder(ROOT, "//foo", "lib-xctest").build();
 
-    BuildTarget barLibTarget = BuildTarget.builder("//bar", "lib").build();
+    BuildTarget barLibTarget = BuildTarget.builder(ROOT, "//bar", "lib").build();
     TargetNode<?> barLibNode = AppleLibraryBuilder.createBuilder(barLibTarget).build();
 
-    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTarget.builder(ROOT, "//foo", "lib").build();
     TargetNode<?> fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
         .build();
 
-    BuildTarget fooBinBinaryTarget = BuildTarget.builder("//foo", "binbinary").build();
+    BuildTarget fooBinBinaryTarget = BuildTarget.builder(ROOT, "//foo", "binbinary").build();
     TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
         .build();
 
-    BuildTarget fooBinTarget = BuildTarget.builder("//foo", "bin").build();
+    BuildTarget fooBinTarget = BuildTarget.builder(ROOT, "//foo", "bin").build();
     TargetNode<?> fooBinNode = AppleBundleBuilder
         .createBuilder(fooBinTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
@@ -169,7 +170,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
         .build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "lib").build();
+    BuildTarget bazLibTarget = BuildTarget.builder(ROOT, "//baz", "lib").build();
     TargetNode<?> bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
@@ -197,13 +198,13 @@ public class WorkspaceAndProjectGeneratorTest {
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .build();
 
-    BuildTarget quxBinTarget = BuildTarget.builder("//qux", "bin").build();
+    BuildTarget quxBinTarget = BuildTarget.builder(ROOT, "//qux", "bin").build();
     TargetNode<?> quxBinNode = AppleBinaryBuilder
         .createBuilder(quxBinTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .build();
 
-    BuildTarget workspaceTarget = BuildTarget.builder("//foo", "workspace").build();
+    BuildTarget workspaceTarget = BuildTarget.builder(ROOT, "//foo", "workspace").build();
     workspaceNode = XcodeWorkspaceConfigBuilder
         .createBuilder(workspaceTarget)
         .setWorkspaceName(Optional.of("workspace"))
@@ -411,13 +412,13 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void requiredBuildTargets() throws IOException {
-    BuildTarget genruleTarget = BuildTarget.builder("//foo", "gen").build();
+    BuildTarget genruleTarget = BuildTarget.builder(ROOT, "//foo", "gen").build();
     TargetNode<GenruleDescription.Arg> genrule  = GenruleBuilder
         .newGenruleBuilder(genruleTarget)
         .setOut("source.m")
         .build();
 
-    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTarget.builder(ROOT, "//foo", "lib").build();
     TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
@@ -428,7 +429,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
-        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "workspace").build())
         .setSrcTarget(Optional.of(libraryTarget))
         .build();
 
@@ -462,13 +463,13 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void requiredBuildTargetsForCombinedProject() throws IOException {
-    BuildTarget genruleTarget = BuildTarget.builder("//foo", "gen").build();
+    BuildTarget genruleTarget = BuildTarget.builder(ROOT, "//foo", "gen").build();
     TargetNode<GenruleDescription.Arg> genrule  = GenruleBuilder
         .newGenruleBuilder(genruleTarget)
         .setOut("source.m")
         .build();
 
-    BuildTarget libraryTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTarget.builder(ROOT, "//foo", "lib").build();
     TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
@@ -479,7 +480,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
-        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "workspace").build())
         .setSrcTarget(Optional.of(libraryTarget))
         .build();
 
@@ -576,31 +577,31 @@ public class WorkspaceAndProjectGeneratorTest {
   @Test
   public void combinedTestBundle() throws IOException {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//foo", "combinableTest1").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "combinableTest1").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//bar", "combinableTest2").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//bar", "combinableTest2").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> testMarkedUncombinable = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//foo", "testMarkedUncombinable").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "testMarkedUncombinable").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(false))
         .build();
     TargetNode<AppleTestDescription.Arg> anotherTest = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//foo", "anotherTest").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "anotherTest").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.OCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleNativeTargetDescriptionArg> library = AppleLibraryBuilder
-        .createBuilder(BuildTarget.builder("//foo", "lib").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "lib").build())
         .setTests(
             Optional.of(
                 ImmutableSortedSet.of(
@@ -610,7 +611,7 @@ public class WorkspaceAndProjectGeneratorTest {
                     anotherTest.getBuildTarget())))
         .build();
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspace = XcodeWorkspaceConfigBuilder
-        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "workspace").build())
         .setSrcTarget(Optional.of(library.getBuildTarget()))
         .setWorkspaceName(Optional.of("workspace"))
         .build();
@@ -727,13 +728,13 @@ public class WorkspaceAndProjectGeneratorTest {
   @Test
   public void groupTests() {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//foo", "test1").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "test1").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//bar", "test2").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//bar", "test2").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
@@ -775,13 +776,13 @@ public class WorkspaceAndProjectGeneratorTest {
   @Test
   public void doNotGroupTestsWithDifferentExtensions() {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//foo", "test1").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "test1").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//bar", "test2").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//bar", "test2").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.OCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
@@ -827,13 +828,13 @@ public class WorkspaceAndProjectGeneratorTest {
         ImmutableMap.of("KEY", "VALUE"));
 
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//foo", "test1").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "test1").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//bar", "test2").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//bar", "test2").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setConfigs(Optional.of(configs))
@@ -876,13 +877,13 @@ public class WorkspaceAndProjectGeneratorTest {
   @Test
   public void doNotGroupTestsWithDifferentLinkerFlags() {
     TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//foo", "test1").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "test1").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setCanGroup(Optional.of(true))
         .build();
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder("//bar", "test2").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//bar", "test2").build())
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .setLinkerFlags(Optional.of(ImmutableList.of("-flag")))
@@ -943,27 +944,27 @@ public class WorkspaceAndProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin
 
-    BuildTarget bazTestTarget = BuildTarget.builder("//baz", "BazTest").build();
-    BuildTarget fooBinTestTarget = BuildTarget.builder("//foo", "FooBinTest").build();
-    BuildTarget fooTestTarget = BuildTarget.builder("//foo", "FooLibTest").build();
+    BuildTarget bazTestTarget = BuildTarget.builder(ROOT, "//baz", "BazTest").build();
+    BuildTarget fooBinTestTarget = BuildTarget.builder(ROOT, "//foo", "FooBinTest").build();
+    BuildTarget fooTestTarget = BuildTarget.builder(ROOT, "//foo", "FooLibTest").build();
 
-    BuildTarget barLibTarget = BuildTarget.builder("//bar", "BarLib").build();
+    BuildTarget barLibTarget = BuildTarget.builder(ROOT, "//bar", "BarLib").build();
     TargetNode<?> barLibNode = AppleLibraryBuilder.createBuilder(barLibTarget).build();
 
-    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "FooLib").build();
+    BuildTarget fooLibTarget = BuildTarget.builder(ROOT, "//foo", "FooLib").build();
     TargetNode<?> fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
         .build();
 
-    BuildTarget fooBinBinaryTarget = BuildTarget.builder("//foo", "FooBinBinary").build();
+    BuildTarget fooBinBinaryTarget = BuildTarget.builder(ROOT, "//foo", "FooBinBinary").build();
     TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
         .build();
 
-    BuildTarget fooBinTarget = BuildTarget.builder("//foo", "FooBin").build();
+    BuildTarget fooBinTarget = BuildTarget.builder(ROOT, "//foo", "FooBin").build();
     TargetNode<?> fooBinNode = AppleBundleBuilder
         .createBuilder(fooBinTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
@@ -972,7 +973,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
         .build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "BazLib").build();
+    BuildTarget bazLibTarget = BuildTarget.builder(ROOT, "//baz", "BazLib").build();
     TargetNode<?> bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
@@ -1000,20 +1001,21 @@ public class WorkspaceAndProjectGeneratorTest {
         .setInfoPlist(new TestSourcePath("Info.plist"))
         .build();
 
-    BuildTarget quxBinTarget = BuildTarget.builder("//qux", "QuxBin").build();
+    BuildTarget quxBinTarget = BuildTarget.builder(ROOT, "//qux", "QuxBin").build();
     TargetNode<?> quxBinNode = AppleBinaryBuilder
         .createBuilder(quxBinTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .build();
 
-    BuildTarget workspaceTarget = BuildTarget.builder("//foo", "workspace").build();
+    BuildTarget workspaceTarget = BuildTarget.builder(ROOT, "//foo", "workspace").build();
     workspaceNode = XcodeWorkspaceConfigBuilder
         .createBuilder(workspaceTarget)
         .setWorkspaceName(Optional.of("workspace"))
         .setSrcTarget(Optional.of(fooBinTarget))
         .build();
 
-    BuildTarget workspaceWithExtraSchemeTarget = BuildTarget.builder("//qux", "workspace").build();
+    BuildTarget workspaceWithExtraSchemeTarget =
+        BuildTarget.builder(ROOT, "//qux", "workspace").build();
     workspaceWithExtraSchemeNode = XcodeWorkspaceConfigBuilder
         .createBuilder(workspaceWithExtraSchemeTarget)
         .setWorkspaceName(Optional.of("workspace"))
@@ -1165,24 +1167,24 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void targetsForWorkspaceWithExtraTargets() throws IOException {
-    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "FooLib").build();
+    BuildTarget fooLibTarget = BuildTarget.builder(ROOT, "//foo", "FooLib").build();
     TargetNode<AppleNativeTargetDescriptionArg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .build();
 
-    BuildTarget barLibTarget = BuildTarget.builder("//bar", "BarLib").build();
+    BuildTarget barLibTarget = BuildTarget.builder(ROOT, "//bar", "BarLib").build();
     TargetNode<AppleNativeTargetDescriptionArg> barLib = AppleLibraryBuilder
         .createBuilder(barLibTarget)
         .build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder("//baz", "BazLib").build();
+    BuildTarget bazLibTarget = BuildTarget.builder(ROOT, "//baz", "BazLib").build();
     TargetNode<AppleNativeTargetDescriptionArg> bazLib = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
-        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "workspace").build())
         .setWorkspaceName(Optional.of("workspace"))
         .setSrcTarget(Optional.of(fooLibTarget))
         .setExtraTargets(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
@@ -1268,13 +1270,13 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void enablingParallelizeBuild() throws IOException {
-    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "FooLib").build();
+    BuildTarget fooLibTarget = BuildTarget.builder(ROOT, "//foo", "FooLib").build();
     TargetNode<AppleNativeTargetDescriptionArg> fooLib = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
-        .createBuilder(BuildTarget.builder("//foo", "workspace").build())
+        .createBuilder(BuildTarget.builder(ROOT, "//foo", "workspace").build())
         .setWorkspaceName(Optional.of("workspace"))
         .setSrcTarget(Optional.of(fooLibTarget))
         .build();

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -62,6 +63,7 @@ public class TargetNodeTest {
         buildRuleFactoryParams,
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<BuildTargetPattern>of(),
+        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()),
         UNALIASED);
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
@@ -99,6 +101,7 @@ public class TargetNodeTest {
         buildRuleFactoryParams,
         depsTargets,
         ImmutableSet.<BuildTargetPattern>of(),
+        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()),
         UNALIASED);
 
     assertThat(
@@ -166,6 +169,7 @@ public class TargetNodeTest {
     Arg constructorArg = description.createUnpopulatedConstructorArg();
     try {
       marshaller.populate(
+          createCellRoots(projectFilesystem),
           projectFilesystem,
           buildRuleFactoryParams,
           constructorArg,

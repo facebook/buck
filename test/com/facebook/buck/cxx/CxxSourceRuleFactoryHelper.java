@@ -21,17 +21,25 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.nio.file.Path;
 
 public class CxxSourceRuleFactoryHelper {
 
   private CxxSourceRuleFactoryHelper() {}
 
-  public static CxxSourceRuleFactory of(BuildTarget target, CxxPlatform cxxPlatform) {
+  public static CxxSourceRuleFactory of(
+      Path cellRoot,
+      BuildTarget target,
+      CxxPlatform cxxPlatform) {
     BuildRuleResolver resolver = new BuildRuleResolver();
     return new CxxSourceRuleFactory(
-        new FakeBuildRuleParamsBuilder(target).build(),
+        new FakeBuildRuleParamsBuilder(target)
+            .setProjectFilesystem(new FakeProjectFilesystem(cellRoot.toFile()))
+            .build(),
         resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,

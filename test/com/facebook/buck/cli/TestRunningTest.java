@@ -117,7 +117,7 @@ public class TestRunningTest {
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToGenFile);
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
+        BuildTargetFactory.newInstance("//foo:bar"),
         new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -146,7 +146,7 @@ public class TestRunningTest {
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
+        BuildTargetFactory.newInstance("//foo:bar"),
         new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -173,7 +173,7 @@ public class TestRunningTest {
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
+        BuildTargetFactory.newInstance("//foo:bar"),
         new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -199,7 +199,7 @@ public class TestRunningTest {
 
     ImmutableSortedSet<Path> javaSrcs = ImmutableSortedSet.of(pathToNonGenFile);
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
+        BuildTargetFactory.newInstance("//foo:bar"),
         new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -238,7 +238,7 @@ public class TestRunningTest {
     expect(defaultJavaPackageFinder.getPathElements()).andReturn(pathElements).times(2);
 
     JavaLibrary javaLibrary = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(),
+        BuildTargetFactory.newInstance("//foo:bar"),
         new SourcePathResolver(new BuildRuleResolver())).setJavaSrcs(javaSrcs);
 
     replay(defaultJavaPackageFinder);

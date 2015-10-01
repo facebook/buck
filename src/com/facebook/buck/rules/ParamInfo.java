@@ -22,6 +22,7 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Types;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
 import java.lang.reflect.Field;
@@ -109,12 +110,14 @@ public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
   }
 
   public void setFromParams(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       BuildRuleFactoryParams params,
       Object arg,
       Map<String, ?> instance
       ) throws ParamInfoException {
     set(
+        cellRoots,
         filesystem,
         params.target.getBasePath(),
         arg,
@@ -130,6 +133,7 @@ public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
   public void set(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object dto,
@@ -149,6 +153,7 @@ public class ParamInfo<T> implements Comparable<ParamInfo<T>> {
     } else {
       try {
         result = typeCoercer.coerce(
+            cellRoots,
             filesystem,
             pathRelativeToProjectRoot,
             value);

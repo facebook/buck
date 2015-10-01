@@ -25,6 +25,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,6 +43,7 @@ import java.nio.file.Path;
 public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget {
 
   private final BuildRuleFactoryParams ruleFactoryParams;
+  private final Function<Optional<String>, Path> cellRoots;
   private final CellFilesystemResolver cellFilesystemResolver;
   private final Description<T> description;
 
@@ -59,11 +61,13 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       BuildRuleFactoryParams params,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTargetPattern> visibilityPatterns,
+      Function<Optional<String>, Path> cellRoots,
       CellFilesystemResolver cellFilesystemResolver)
       throws NoSuchBuildTargetException, InvalidSourcePathInputException {
     this.description = description;
     this.constructorArg = constructorArg;
     this.ruleFactoryParams = params;
+    this.cellRoots = cellRoots;
     this.cellFilesystemResolver = cellFilesystemResolver;
 
     final ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
@@ -84,7 +88,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       extraDeps
           .addAll(
               ((ImplicitDepsInferringDescription<T>) description)
-                  .findDepsForTargetFromConstructorArgs(params.target, constructorArg));
+                  .findDepsForTargetFromConstructorArgs(params.target, cellRoots, constructorArg));
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
@@ -289,6 +293,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
           ruleFactoryParams,
           declaredDeps,
           visibilityPatterns,
+          cellRoots,
           cellFilesystemResolver);
     } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
@@ -308,12 +313,17 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
           ruleFactoryParams,
           declaredDeps,
           visibilityPatterns,
+          cellRoots,
           cellFilesystemResolver);
     } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
       // This is extremely unlikely to happen --- we've already created a TargetNode with these
       // values before.
       throw new RuntimeException(e);
     }
+  }
+
+  public Function<Optional<String>, Path> getCellNames() {
+    return cellRoots;
   }
 
   public CellFilesystemResolver getCellFilesystemResolver() {

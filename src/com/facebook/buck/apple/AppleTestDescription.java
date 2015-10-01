@@ -54,6 +54,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -410,6 +411,7 @@ public class AppleTestDescription implements
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
       AppleTestDescription.Arg constructorArg) {
     // TODO(user, coneko): This should technically only be a runtime dependency;
     // doing this adds it to the extra deps in BuildRuleParams passed to

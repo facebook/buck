@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePath;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -68,18 +69,21 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
 
   @Override
   public SourceList coerce(
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException {
     if (object instanceof List) {
       return SourceList.ofUnnamedSources(
           unnamedHeadersTypeCoercer.coerce(
+              cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               object));
     } else {
       return SourceList.ofNamedSources(
           namedHeadersTypeCoercer.coerce(
+              cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               object));

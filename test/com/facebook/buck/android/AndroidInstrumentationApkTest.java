@@ -24,6 +24,7 @@ import com.facebook.buck.java.FakeJavaLibrary;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -51,10 +52,10 @@ public class AndroidInstrumentationApkTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(
-        BuildTarget.builder("//java/com/example", "lib1").build(), pathResolver);
+        BuildTargetFactory.newInstance("//java/com/example:lib1"), pathResolver);
 
     FakeJavaLibrary javaLibrary2 = new FakeJavaLibrary(
-        BuildTarget.builder("//java/com/example", "lib2").build(),
+        BuildTargetFactory.newInstance("//java/com/example:lib2"),
         pathResolver,
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
       @Override
@@ -68,10 +69,10 @@ public class AndroidInstrumentationApkTest {
     };
 
     final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(
-        BuildTarget.builder("//java/com/example", "lib3").build(), pathResolver);
+        BuildTargetFactory.newInstance("//java/com/example:lib3"), pathResolver);
 
     FakeJavaLibrary javaLibrary4 = new FakeJavaLibrary(
-        BuildTarget.builder("//java/com/example", "lib4").build(),
+        BuildTargetFactory.newInstance("//java/com/example:lib4"),
         pathResolver,
         /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
       @Override
@@ -90,14 +91,14 @@ public class AndroidInstrumentationApkTest {
     ruleResolver.addToIndex(javaLibrary4);
 
     BuildRule keystore = KeystoreBuilder.createBuilder(
-        BuildTarget.builder("//keystores", "debug").build())
+        BuildTargetFactory.newInstance("//keystores:debug"))
         .setProperties(Paths.get("keystores/debug.properties"))
         .setStore(Paths.get("keystores/debug.keystore"))
         .build(ruleResolver);
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
     AndroidBinaryBuilder androidBinaryBuilder = AndroidBinaryBuilder.createBuilder(
-        BuildTarget.builder("//apps", "app").build());
+        BuildTargetFactory.newInstance("//apps:app"));
     ImmutableSortedSet<BuildTarget> originalDepsTargets = ImmutableSortedSet.of(
         javaLibrary2.getBuildTarget(),
         javaLibrary3.getBuildTarget());
@@ -117,7 +118,7 @@ public class AndroidInstrumentationApkTest {
     arg.manifest = new TestSourcePath("apps/InstrumentationAndroidManifest.xml");
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
-        BuildTarget.builder("//apps", "instrumentation").build())
+        BuildTargetFactory.newInstance("//apps:instrumentation"))
         .setDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
         .setExtraDeps(ImmutableSortedSet.<BuildRule>of(androidBinary))
         .build();

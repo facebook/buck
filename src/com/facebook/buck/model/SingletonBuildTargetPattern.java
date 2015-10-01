@@ -17,6 +17,8 @@ package com.facebook.buck.model;
 
 import com.google.common.base.Objects;
 
+import java.nio.file.Path;
+
 import javax.annotation.Nullable;
 
 /**
@@ -30,11 +32,12 @@ public class SingletonBuildTargetPattern implements BuildTargetPattern {
    * @param fullyQualifiedName The fully qualified name of valid target. It is expected to
    *     match the value returned from a {@link BuildTarget#getFullyQualifiedName()} call.
    */
-  public SingletonBuildTargetPattern(String fullyQualifiedName) {
+  public SingletonBuildTargetPattern(Path cellPath, String fullyQualifiedName) {
 
     int colon = fullyQualifiedName.lastIndexOf(':');
     target = UnflavoredBuildTarget
         .builder(fullyQualifiedName.substring(0, colon), fullyQualifiedName.substring(colon + 1))
+        .setCellPath(cellPath)
         .build();
   }
 

@@ -60,6 +60,9 @@ abstract class AbstractUnflavoredBuildTarget
   }
 
   @Value.Parameter
+  public abstract Path getCellPath();
+
+  @Value.Parameter
   public abstract Optional<String> getCell();
 
   /**

@@ -29,6 +29,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.testutil.TestConsole;
@@ -85,7 +86,7 @@ public class MissingSymbolsHandlerIntegrationTest {
         environment);
 
     MissingSymbolEvent missingSymbolEvent = MissingSymbolEvent.create(
-        BuildTarget.builder("//java/com/example/b", "b").build(),
+        BuildTargetFactory.newInstance(workspace.getDestPath(), "//java/com/example/b:b"),
         "com.example.a.A",
         MissingSymbolEvent.SymbolType.Java);
 
@@ -96,8 +97,8 @@ public class MissingSymbolsHandlerIntegrationTest {
         "MissingSymbolsHandler failed to find the needed dependency.",
         neededDeps,
         ImmutableSetMultimap.of(
-            BuildTarget.builder("//java/com/example/b", "b").build(),
-            BuildTarget.builder("//java/com/example/a", "a").build()));
+            BuildTargetFactory.newInstance(workspace.getDestPath(), "//java/com/example/b:b"),
+            BuildTargetFactory.newInstance(workspace.getDestPath(), "//java/com/example/a:a")));
   }
 
   @Test

@@ -287,13 +287,13 @@ public class AndroidPackageableCollectorTest {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
     BuildTarget androidLibraryKeystoreTarget =
-        BuildTarget.builder("//java/com/keystore/base", "base").build();
+        BuildTargetFactory.newInstance("//java/com/keystore/base:base");
     BuildRule androidLibraryKeystore = AndroidLibraryBuilder
         .createBuilder(androidLibraryKeystoreTarget)
         .addSrc(Paths.get("java/com/facebook/keystore/Base.java"))
         .build(ruleResolver);
 
-    BuildTarget keystoreTarget = BuildTarget.builder("//keystore", "debug").build();
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(Paths.get("keystore/debug.keystore"))
         .setProperties(Paths.get("keystore/debug.keystore.properties"))
@@ -301,7 +301,7 @@ public class AndroidPackageableCollectorTest {
         .build(ruleResolver);
 
     BuildTarget androidLibraryTarget =
-        BuildTarget.builder("//java/com/facebook/base", "base").build();
+        BuildTargetFactory.newInstance("//java/com/facebook/base:base");
     BuildRule androidLibrary = AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
         .addSrc(Paths.get("java/com/facebook/base/Base.java"))
         .build(ruleResolver);
@@ -309,7 +309,7 @@ public class AndroidPackageableCollectorTest {
     ImmutableSortedSet<BuildTarget> originalDepsTargets =
         ImmutableSortedSet.of(androidLibrary.getBuildTarget());
     AndroidBinary androidBinary = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
-        BuildTarget.builder("//apps/sample", "app").build())
+        BuildTargetFactory.newInstance("//apps/sample:app"))
         .setManifest(new TestSourcePath("apps/sample/AndroidManifest.xml"))
         .setOriginalDeps(originalDepsTargets)
         .setKeystore(keystoreTarget)

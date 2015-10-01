@@ -17,6 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+
+import java.nio.file.Path;
 
 /**
  * {@link Description} that has flavors to register.
@@ -42,6 +46,7 @@ public interface FlavorableDescription<T> extends Description<T> {
   public void registerFlavors(
       T arg,
       BuildRule describedRule,
+      Function<Optional<String>, Path> cellRoots,
       ProjectFilesystem projectFilesystem,
       RuleKeyBuilderFactory ruleKeyBuilderFactory,
       BuildRuleResolver ruleResolver);

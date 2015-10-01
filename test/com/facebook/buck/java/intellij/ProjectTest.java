@@ -767,9 +767,8 @@ public class ProjectTest {
   }
 
   private static BuildRule getRuleById(String id, ActionGraph actionGraph) {
-    String[] parts = id.split(":");
     BuildRule rule = actionGraph.findBuildRuleByTarget(
-        BuildTarget.builder(parts[0], parts[1]).build());
+        BuildTargetFactory.newInstance(id));
     Preconditions.checkNotNull(rule, "No rule for %s", id);
     return rule;
   }
@@ -823,10 +822,14 @@ public class ProjectTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     ImmutableSet<Path> ignorePaths = ImmutableSet.of(Paths.get("buck-out"), Paths.get(".git"));
+    EasyMock.expect(projectFilesystem.getRootPath()).andStubReturn(Paths.get("/opt/src/buck"));
     EasyMock.expect(projectFilesystem.getIgnorePaths()).andReturn(ignorePaths);
     EasyMock.replay(projectFilesystem);
 
-    BuildTarget buildTarget = BuildTarget.builder("//", "base").build();
+    BuildTarget buildTarget = BuildTarget.builder(
+        projectFilesystem.getRootPath(),
+        "//",
+        "base").build();
     BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
     SerializableModule module = new SerializableModule(buildRule, buildTarget);
 

@@ -107,7 +107,10 @@ public class RunCommand extends AbstractCommand {
     }
 
     String targetName = getTarget(params.getBuckConfig());
-    BuildTarget target = Iterables.getOnlyElement(getBuildTargets(ImmutableSet.of(targetName)));
+    BuildTarget target = Iterables.getOnlyElement(
+        getBuildTargets(
+            params.getCell().getCellRoots(),
+            ImmutableSet.of(targetName)));
 
     Build build = buildCommand.getBuild();
     BuildRule targetRule = build.getActionGraph().findBuildRuleByTarget(target);

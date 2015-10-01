@@ -20,28 +20,35 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class BuildTargetFactoryTest {
+
+  private static final Path ROOT = Paths.get("/opt/might/exist");
 
   @Test
   public void testTargetWithoutFlavor() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//example/base:one");
-    assertEquals(BuildTarget.builder("//example/base", "one").build(), buildTarget);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "//example/base:one");
+    assertEquals(BuildTarget.builder(ROOT, "//example/base", "one").build(), buildTarget);
   }
 
   @Test
   public void testTargetWithFlavor() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//example/base:one#two");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "//example/base:one#two");
     assertEquals(
-        BuildTarget.builder("//example/base", "one").addFlavors(ImmutableFlavor.of("two")).build(),
+        BuildTarget.builder(ROOT, "//example/base", "one")
+            .addFlavors(ImmutableFlavor.of("two"))
+            .build(),
         buildTarget);
   }
 
   @Test
   public void testTargetWithMultipleFlavors() {
     BuildTarget buildTarget = BuildTargetFactory
-        .newInstance("//example/base:shortName#one,two,three");
+        .newInstance(ROOT, "//example/base:shortName#one,two,three");
     assertEquals(
-        BuildTarget.builder("//example/base", "shortName")
+        BuildTarget.builder(ROOT, "//example/base", "shortName")
             .addFlavors(ImmutableFlavor.of("one"))
             .addFlavors(ImmutableFlavor.of("two"))
             .addFlavors(ImmutableFlavor.of("three"))

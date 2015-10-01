@@ -24,9 +24,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Escaper;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+
+import java.nio.file.Path;
 
 /**
  * Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}.
@@ -63,10 +67,11 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
   @Override
   public Object extractRuleKeyAppendables(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
-    return getTool(resolve(target, resolver, input));
+    return getTool(resolve(target, cellNames, resolver, input));
   }
 
 }

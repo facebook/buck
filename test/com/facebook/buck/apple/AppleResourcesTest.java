@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -31,9 +32,9 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.util.Set;
-
 import org.junit.Test;
+
+import java.util.Set;
 
 public class AppleResourcesTest {
 
@@ -52,7 +53,7 @@ public class AppleResourcesTest {
 
   @Test
   public void libWithSingleResourceDepReturnsResource() {
-    BuildTarget resourceTarget = BuildTarget.builder("//foo", "resource").build();
+    BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo:resource");
 
     Set<SourcePath> variants = ImmutableSet.<SourcePath>of(
         new TestSourcePath("path/aa.lproj/Localizable.strings"),
@@ -66,7 +67,7 @@ public class AppleResourcesTest {
             .setVariants(Optional.of(variants))
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> libNode = AppleLibraryBuilder
-        .createBuilder(BuildTarget.builder("//foo", "lib").build())
+        .createBuilder(BuildTargetFactory.newInstance("//foo:lib"))
         .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
         .build();
     ImmutableSet<TargetNode<?>> graphNodes = ImmutableSet.of(
@@ -85,25 +86,25 @@ public class AppleResourcesTest {
 
   @Test
   public void libWithTransitiveResourceDepReturnsAllResources() {
-    BuildTarget fooResourceTarget = BuildTarget.builder("//foo", "resource").build();
+    BuildTarget fooResourceTarget = BuildTargetFactory.newInstance("//foo:resource");
     TargetNode<AppleResourceDescription.Arg> fooResourceNode =
         AppleResourceBuilder.createBuilder(fooResourceTarget)
             .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("foo.png")))
             .setDirs(ImmutableSet.<SourcePath>of())
             .build();
-    BuildTarget fooLibTarget = BuildTarget.builder("//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<AppleNativeTargetDescriptionArg> fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
         .setDeps(Optional.of(ImmutableSortedSet.of(fooResourceTarget)))
         .build();
-    BuildTarget barResourceTarget = BuildTarget.builder("//bar", "resource").build();
+    BuildTarget barResourceTarget = BuildTargetFactory.newInstance("//bar:resource");
     TargetNode<AppleResourceDescription.Arg> barResourceNode =
         AppleResourceBuilder.createBuilder(barResourceTarget)
             .setFiles(ImmutableSet.<SourcePath>of(new TestSourcePath("bar.png")))
             .setDirs(ImmutableSet.<SourcePath>of())
             .build();
     TargetNode<AppleNativeTargetDescriptionArg> barLibNode = AppleLibraryBuilder
-        .createBuilder(BuildTarget.builder("//bar", "lib").build())
+        .createBuilder(BuildTargetFactory.newInstance("//bar:lib"))
         .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget, barResourceTarget)))
         .build();
     ImmutableSet<TargetNode<?>> graphNodes = ImmutableSet.of(

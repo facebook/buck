@@ -69,8 +69,7 @@ public class AndroidResourceTest {
             "java/src/com/facebook/base/res/drawable/C.xml", commonHash,
             "java/src/com/facebook/base/AndroidManifest.xml", Strings.repeat("d", 40)));
 
-    BuildTarget buildTarget =
-        BuildTarget.builder("//java/src/com/facebook/base", "res").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setFileHashCache(fakeFileHashCache)
         .build();

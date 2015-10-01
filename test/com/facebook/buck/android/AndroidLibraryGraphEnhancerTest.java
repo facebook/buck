@@ -49,7 +49,7 @@ public class AndroidLibraryGraphEnhancerTest {
 
   @Test
   public void testEmptyResources() {
-    BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "library").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
@@ -63,7 +63,7 @@ public class AndroidLibraryGraphEnhancerTest {
 
   @Test
   public void testBuildRuleResolverCaching() {
-    BuildTarget buildTarget = BuildTarget.builder("//java/com/example", "library").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         buildTarget,
         new FakeBuildRuleParamsBuilder(buildTarget).build(),

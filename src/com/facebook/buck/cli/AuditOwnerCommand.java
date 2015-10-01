@@ -197,6 +197,7 @@ public class AuditOwnerCommand extends AbstractCommand {
       if (!targetNodes.containsKey(buckFile)) {
         try {
           List<Map<String, Object>> buildFileTargets = params.getParser().parseBuildFile(
+              params.getCell().getFilesystem().getRootPath(),
               buckFile,
               parserConfig,
               params.getEnvironment(),
@@ -209,6 +210,8 @@ public class AuditOwnerCommand extends AbstractCommand {
             }
 
             BuildTarget target = BuildTarget.builder(
+                // TODO(simons): Check that this is actually correct.
+                params.getCell().getFilesystem().getRootPath(),
                 targetBaseName,
                 (String) buildFileTarget.get("name")).build();
 

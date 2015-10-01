@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -71,7 +71,7 @@ public class PrebuiltJarIntegrationTest {
     Path binaryJar = workspace.getPath("junit.jar");
     HashCode originalHash = MorePaths.asByteSource(binaryJar).hash(Hashing.sha1());
     Path expectedOut =
-        BuildTargets.getGenPath(BuildTarget.builder("//", "jar").build(), "%s-abi.jar");
+        BuildTargets.getGenPath(BuildTargetFactory.newInstance("//:jar"), "%s-abi.jar");
     Path abiJar = workspace.getPath(expectedOut.toString());
     HashCode abiHash = MorePaths.asByteSource(abiJar).hash(Hashing.sha1());
 

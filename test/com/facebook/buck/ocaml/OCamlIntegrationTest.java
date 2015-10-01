@@ -90,9 +90,13 @@ public class OCamlIntegrationTest {
         this, "ocaml", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//hello_ocaml:hello_ocaml");
+    BuildTarget target = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//hello_ocaml:hello_ocaml");
     BuildTarget binary = createOCamlLinkTarget(target);
-    BuildTarget lib = BuildTargetFactory.newInstance("//hello_ocaml:ocamllib");
+    BuildTarget lib = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//hello_ocaml:ocamllib");
     BuildTarget staticLib = createStaticLibraryBuildTarget(lib);
     ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, lib, staticLib);
 
@@ -153,7 +157,9 @@ public class OCamlIntegrationTest {
 
     workspace.resetBuildLogFile();
 
-    BuildTarget lib1 = BuildTargetFactory.newInstance("//hello_ocaml:ocamllib1");
+    BuildTarget lib1 = BuildTargetFactory.newInstance(
+        workspace.getDestPath(),
+        "//hello_ocaml:ocamllib1");
     BuildTarget staticLib1 = createStaticLibraryBuildTarget(lib1);
     ImmutableSet<BuildTarget> targets1 = ImmutableSet.of(target, binary, lib1, staticLib1);
     // We rebuild if lib name changes
@@ -179,7 +185,7 @@ public class OCamlIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//calc:calc");
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//calc:calc");
     BuildTarget binary = createOCamlLinkTarget(target);
 
     ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary);
@@ -231,7 +237,7 @@ public class OCamlIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//ctest:ctest");
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//ctest:ctest");
     BuildTarget binary = createOCamlLinkTarget(target);
     ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary);
 
@@ -294,7 +300,7 @@ public class OCamlIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:plus");
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//:plus");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
   }
 
@@ -306,7 +312,7 @@ public class OCamlIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:main");
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//:main");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
   }
 
@@ -319,9 +325,13 @@ public class OCamlIntegrationTest {
           tmp);
       workspace.setUp();
 
-      BuildTarget target = BuildTargetFactory.newInstance("//ocaml_ext_mac:ocaml_ext");
+      BuildTarget target = BuildTargetFactory.newInstance(
+          workspace.getDestPath(),
+          "//ocaml_ext_mac:ocaml_ext");
       BuildTarget binary = createOCamlLinkTarget(target);
-      BuildTarget libplus = BuildTargetFactory.newInstance("//ocaml_ext_mac:plus");
+      BuildTarget libplus = BuildTargetFactory.newInstance(
+          workspace.getDestPath(),
+          "//ocaml_ext_mac:plus");
       ImmutableSet<BuildTarget> targets = ImmutableSet.of(target, binary, libplus);
 
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -358,15 +368,18 @@ public class OCamlIntegrationTest {
         tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//clib:clib");
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:clib");
     BuildTarget binary = createOCamlLinkTarget(target);
-    BuildTarget libplus = BuildTargetFactory.newInstance("//clib:plus");
+    BuildTarget libplus = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:plus");
     BuildTarget libplusStatic = createStaticLibraryBuildTarget(libplus);
-    BuildTarget cclib = BuildTargetFactory.newInstance("//clib:cc");
+    BuildTarget cclib = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:cc");
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(new FakeBuckConfig()));
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(cclib, cxxPlatform);
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        cclib,
+        cxxPlatform);
     BuildTarget cclibbin =
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
             cclib,

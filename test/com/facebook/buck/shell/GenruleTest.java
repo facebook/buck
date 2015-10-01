@@ -122,7 +122,7 @@ public class GenruleTest {
 //    EasyMock.replay(parser);
 
     BuildTarget buildTarget =
-        BuildTarget.builder("//src/com/facebook/katana", "katana_manifest").build();
+        BuildTargetFactory.newInstance("//src/com/facebook/katana:katana_manifest");
     BuildRule genrule = GenruleBuilder
         .newGenruleBuilder(buildTarget)
         .setCmd("python convert_to_katana.py AndroidManifest.xml > $OUT")
@@ -231,7 +231,7 @@ public class GenruleTest {
   @Test
   public void testDepsEnvironmentVariableIsComplete() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-    BuildTarget depTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRule dep = new FakeBuildRule(depTarget, new SourcePathResolver(new BuildRuleResolver())) {
       @Override
       public Path getPathToOutput() {
@@ -242,9 +242,7 @@ public class GenruleTest {
 
     BuildRule genrule = GenruleBuilder
         .newGenruleBuilder(
-            BuildTarget.builder(
-                "//foo",
-                "baz").build())
+            BuildTargetFactory.newInstance("//foo:baz"))
         .setBash("cat $DEPS > $OUT")
         .setOut("deps.txt")
         .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))

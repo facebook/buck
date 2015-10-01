@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -114,13 +115,13 @@ public class ParamInfoTest {
 
     ParamInfo<?> info = new ParamInfo<Object>(typeCoercerFactory, Example.class.getField("field"));
 
-    info.set(filesystem, testPath, example, null);
+    info.set(createCellRoots(filesystem), filesystem, testPath, example, null);
     assertEquals(Optional.<String>absent(), example.field);
 
-    info.set(filesystem, testPath, example, "");
+    info.set(createCellRoots(filesystem), filesystem, testPath, example, "");
     assertEquals(Optional.of(""), example.field);
 
-    info.set(filesystem, testPath, example, "foo");
+    info.set(createCellRoots(filesystem), filesystem, testPath, example, "foo");
     assertEquals(Optional.of("foo"), example.field);
   }
 }

@@ -21,8 +21,12 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
+import java.nio.file.Path;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -63,7 +67,7 @@ public abstract class BuildTargetPatternParser<T> {
    * For case 2 and 3, parseContext is expected to be
    * {@link BuildTargetPatternParser#forVisibilityArgument()}.
    */
-  public final T parse(String buildTargetPattern) {
+  public final T parse(Function<Optional<String>, Path> cellNames, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
       if (isPublicVisibilityAllowed()) {
         return createForAll();
@@ -95,7 +99,7 @@ public abstract class BuildTargetPatternParser<T> {
       }
     }
 
-    BuildTarget target = BuildTargetParser.INSTANCE.parse(buildTargetPattern, this);
+    BuildTarget target = BuildTargetParser.INSTANCE.parse(buildTargetPattern, this, cellNames);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       return createForChildren(target.getBasePathWithSlash());
     } else {
@@ -157,7 +161,9 @@ public abstract class BuildTargetPatternParser<T> {
     }
     @Override
     public BuildTargetPattern createForSingleton(BuildTarget target) {
-      return new SingletonBuildTargetPattern(target.getFullyQualifiedName());
+      return new SingletonBuildTargetPattern(
+          target.getUnflavoredBuildTarget().getCellPath(),
+          target.getFullyQualifiedName());
     }
   }
 

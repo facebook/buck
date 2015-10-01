@@ -31,7 +31,6 @@ import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -72,7 +71,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
-        BuildTarget.builder("//foo", "bar").build(), pathResolver) {
+        BuildTargetFactory.newInstance("//foo:bar"), pathResolver) {
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
@@ -96,10 +95,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         "buck-out/gen/foo/bar#dex.dex.jar",
         "buck-out/gen/foo/bar.jar");
 
-    BuildTarget buildTarget = BuildTarget
-        .builder("//foo", "bar")
-        .addFlavors(ImmutableFlavor.of("dex"))
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(filesystem)
         .build();
@@ -177,7 +173,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(projectFilesystem)
         .build();
@@ -231,7 +227,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    BuildTarget buildTarget = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(

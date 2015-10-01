@@ -50,6 +50,7 @@ import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -83,19 +84,19 @@ public class AndroidBinaryGraphEnhancerTest {
             new SourcePathResolver(ruleResolver));
 
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
-    BuildTarget javaDep1BuildTarget = BuildTarget.builder("//java/com/example", "dep1").build();
+    BuildTarget javaDep1BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep1");
     BuildRule javaDep1 = JavaLibraryBuilder
         .createBuilder(javaDep1BuildTarget)
         .addSrc(Paths.get("java/com/example/Dep1.java"))
         .build(ruleResolver);
 
-    BuildTarget javaDep2BuildTarget = BuildTarget.builder("//java/com/example", "dep2").build();
+    BuildTarget javaDep2BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep2");
     BuildRule javaDep2 = JavaLibraryBuilder
         .createBuilder(javaDep2BuildTarget)
         .addSrc(Paths.get("java/com/example/Dep2.java"))
         .build(ruleResolver);
 
-    BuildTarget javaLibBuildTarget = BuildTarget.builder("//java/com/example", "lib").build();
+    BuildTarget javaLibBuildTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
     BuildRule javaLib = JavaLibraryBuilder
         .createBuilder(javaLibBuildTarget)
         .addSrc(Paths.get("java/com/example/Lib.java"))
@@ -107,12 +108,14 @@ public class AndroidBinaryGraphEnhancerTest {
     // is //java/com/example:lib, and that //java/com/example:dep2 is in its no_dx list.
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
-    BuildTarget apkTarget = BuildTarget.builder("//java/com/example", "apk").build();
+    BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams = new BuildRuleParams(
         apkTarget,
         Suppliers.ofInstance(originalDeps),
         Suppliers.ofInstance(originalDeps),
-        new FakeProjectFilesystem(),
+        filesystem,
+        TestCellBuilder.createCellRoots(filesystem),
         ruleKeyBuilderFactory);
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         TargetGraph.EMPTY,
@@ -140,10 +143,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
         MoreExecutors.newDirectExecutorService());
 
-    BuildTarget aaptPackageResourcesTarget = BuildTarget
-        .builder("//java/com/example", "apk")
-        .addFlavors(ImmutableFlavor.of("aapt_package"))
-        .build();
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
     BuildRuleParams aaptPackageResourcesParams =
         new FakeBuildRuleParamsBuilder(aaptPackageResourcesTarget).build();
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
@@ -178,10 +179,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* preDexRulesNotInThePackageableCollection */ ImmutableList
             .<DexProducedFromJavaLibrary>of(),
         collection);
-    BuildTarget dexMergeTarget = BuildTarget
-        .builder("//java/com/example", "apk")
-        .addFlavors(ImmutableFlavor.of("dex_merge"))
-        .build();
+    BuildTarget dexMergeTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#dex_merge");
     BuildRule dexMergeRule = ruleResolver.getRule(dexMergeTarget);
 
     assertEquals(dexMergeRule, preDexMergeRule);
@@ -214,7 +213,7 @@ public class AndroidBinaryGraphEnhancerTest {
   @Test
   public void testAllBuildablesExceptPreDexRule() {
     // Create an android_build_config() as a dependency of the android_binary().
-    BuildTarget buildConfigBuildTarget = BuildTarget.builder("//java/com/example", "cfg").build();
+    BuildTarget buildConfigBuildTarget = BuildTargetFactory.newInstance("//java/com/example:cfg");
     BuildRuleParams buildConfigParams = new FakeBuildRuleParamsBuilder(buildConfigBuildTarget)
         .build();
     BuildRuleResolver ruleResolver = new BuildRuleResolver();

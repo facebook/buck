@@ -40,6 +40,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -422,6 +423,7 @@ public class ThriftLibraryDescription
   @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
       ThriftConstructorArg arg) {
     Optional<Map.Entry<Flavor, ThriftLanguageSpecificEnhancer>> enhancerFlavor;
     try {

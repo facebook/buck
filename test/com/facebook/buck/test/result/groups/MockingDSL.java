@@ -31,21 +31,25 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.Capture;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Comparator;
 
 class MockingDSL {
+  private static final Path SPOOF = Paths.get("/also/does/not/exist");
+
   private MockingDSL() {}
 
   static BuildRule mockLibrary(String baseName, String shortName) {
     BuildRule mock = createMock(BuildRule.class);
-    BuildTarget buildTarget = BuildTarget.builder(baseName, shortName).build();
+    BuildTarget buildTarget = BuildTarget.builder(SPOOF, baseName, shortName).build();
     expect(mock.getBuildTarget()).andReturn(buildTarget).anyTimes();
     return mock;
   }
 
   static TestRule mockTest(String baseName, String shortName) {
     TestRule mock = createMock(TestRule.class);
-    BuildTarget buildTarget = BuildTarget.builder(baseName, shortName).build();
+    BuildTarget buildTarget = BuildTarget.builder(SPOOF, baseName, shortName).build();
     expect(mock.getBuildTarget()).andReturn(buildTarget).anyTimes();
     return mock;
   }

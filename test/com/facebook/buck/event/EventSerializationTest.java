@@ -19,10 +19,10 @@ package com.facebook.buck.event;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.RuleKey;
@@ -90,8 +89,8 @@ public class EventSerializationTest {
 
   @Test
   public void testParseEventFinished() throws IOException {
-    ParseEvent.Started started = ParseEvent.started(ImmutableList.<BuildTarget>of(
-            BuildTarget.builder("//base", "short").addFlavors(ImmutableFlavor.of("flv")).build()));
+    ParseEvent.Started started = ParseEvent.started(ImmutableList.of(
+            BuildTargetFactory.newInstance("//base:short#flv")));
     ParseEvent.Finished event = ParseEvent.finished(started, Optional.<TargetGraph>absent());
     event.configure(timestamp, nanoTime, threadId, buildId);
     String message = new ObjectMapper().writeValueAsString(event);

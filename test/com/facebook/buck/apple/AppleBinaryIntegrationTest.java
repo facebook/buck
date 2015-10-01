@@ -22,8 +22,8 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -107,10 +107,8 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_header_symlink_tree", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTarget.builder("//Apps/TestApp", "TestApp")
-        .addFlavors(ImmutableFlavor.of("default"))
-        .addFlavors(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#default," +
+            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());

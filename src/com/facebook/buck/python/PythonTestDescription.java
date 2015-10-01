@@ -301,6 +301,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
                     args.env.or(ImmutableMap.<String, String>of()),
                     MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
+                        params.getCellRoots(),
                         resolver,
                         params.getProjectFilesystem())));
           }

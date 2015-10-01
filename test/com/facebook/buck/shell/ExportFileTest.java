@@ -77,7 +77,7 @@ public class ExportFileTest {
 
   @Before
   public void createFixtures() {
-    target = BuildTarget.builder("//", "example.html").build();
+    target = BuildTargetFactory.newInstance("//:example.html");
     context = getBuildContext();
   }
 

@@ -27,11 +27,16 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class BuildTargetsTest {
+
+  private static final Path ROOT = Paths.get("/opt/src/buck");
 
   @Test
   public void testCreateFlavoredBuildTarget() {
-    BuildTarget fooBar = BuildTarget.builder("//foo", "bar").build();
+    BuildTarget fooBar = BuildTarget.builder(ROOT, "//foo", "bar").build();
     BuildTarget fooBarBaz =
         BuildTargets.createFlavoredBuildTarget(fooBar.checkUnflavored(), ImmutableFlavor.of("baz"));
     assertTrue(fooBarBaz.isFlavored());
@@ -41,7 +46,7 @@ public class BuildTargetsTest {
   @Test(expected = IllegalStateException.class)
   public void testCheckUnflavoredRejectsFlavoredBuildTarget() {
     BuildTarget fooBarBaz = BuildTarget
-        .builder("//foo", "bar")
+        .builder(ROOT, "//foo", "bar")
         .addFlavors(ImmutableFlavor.of("baz"))
         .build();
     fooBarBaz.checkUnflavored();
@@ -60,7 +65,7 @@ public class BuildTargetsTest {
         ImmutableList.<FlavorDomain<?>>of(domain),
         ImmutableList.of(child));
     assertEquals(
-        ImmutableSortedSet.<BuildTarget>of(BuildTarget.builder(child).addFlavors(flavor).build()),
+        ImmutableSortedSet.of(BuildTarget.builder(child).addFlavors(flavor).build()),
         result);
   }
 

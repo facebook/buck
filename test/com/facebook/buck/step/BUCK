@@ -40,6 +40,7 @@ java_test(
     '//src/com/facebook/buck/util/concurrent:concurrent',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/event:testutil',
+    '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/timing:testutil',
     '//third-party/java/easymock:easymock',

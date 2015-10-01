@@ -20,7 +20,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.nio.file.Path;
 
 public interface MacroExpander {
 
@@ -29,6 +33,7 @@ public interface MacroExpander {
    */
   String expand(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem,
       String input)
@@ -42,6 +47,7 @@ public interface MacroExpander {
    */
   ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException;
@@ -52,7 +58,10 @@ public interface MacroExpander {
    *     {@link com.facebook.buck.rules.ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs}
    *     to extract implicit dependencies hidden behind macros.
    */
-  ImmutableList<BuildTarget> extractParseTimeDeps(BuildTarget target, String input)
+  ImmutableList<BuildTarget> extractParseTimeDeps(
+      BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
+      String input)
       throws MacroException;
 
   /**
@@ -60,8 +69,8 @@ public interface MacroExpander {
    */
   Object extractRuleKeyAppendables(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException;
-
 }

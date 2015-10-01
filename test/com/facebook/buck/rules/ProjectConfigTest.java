@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.java.JavaLibraryBuilder;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.Step;
 
@@ -64,7 +63,7 @@ public class ProjectConfigTest extends EasyMockSupport {
         .build(ruleResolver);
 
     return (ProjectConfig) ProjectConfigBuilder
-        .createBuilder(BuildTarget.builder("//javatests", "project_config").build())
+        .createBuilder(BuildTargetFactory.newInstance("//javatests:project_config"))
         .setSrcRule(javaRule.getBuildTarget())
         .build(ruleResolver);
   }

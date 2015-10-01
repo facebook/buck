@@ -82,8 +82,11 @@ public class CxxLexYaccIntegrationTest {
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(new FakeBuckConfig()));
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:main");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(target, cxxPlatform);
+    BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:main");
+    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
+        workspace.getDestPath(),
+        target,
+        cxxPlatform);
     BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "main.cpp";
     String yaccSourceName = "mainy.yy";

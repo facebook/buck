@@ -42,7 +42,7 @@ public class BuildCommandIntegrationTest {
     workspace.runBuckBuild("--just-build", "//:bar", "//:foo").assertSuccess();
     assertThat(
         workspace.getBuildLog().getAllTargets(),
-        Matchers.contains(BuildTargetFactory.newInstance("//:bar")));
+        Matchers.contains(BuildTargetFactory.newInstance(workspace.getDestPath(), "//:bar")));
   }
 
 }

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -60,16 +61,23 @@ public class ClasspathMacroExpander
   @Override
   public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
     return ImmutableList.<BuildRule>copyOf(
-        getHasClasspathEntries(resolve(target, resolver, input)).getTransitiveClasspathDeps());
+        getHasClasspathEntries(
+            resolve(
+                target,
+                cellNames,
+                resolver,
+                input)).getTransitiveClasspathDeps());
   }
 
   @Override
   public String expandForFile(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem,
       String input) throws MacroException {
@@ -78,7 +86,7 @@ public class ClasspathMacroExpander
     // http://hg.openjdk.java.net/jdk7/jdk7/langtools/file/ce654f4ecfd8/src/share/classes/com/sun/tools/javac/main/CommandLine.java#l74
     // The # characters that might be present in classpaths due to flavoring would be read as
     // comments. As a simple workaround, we quote the entire classpath.
-    return String.format("'%s'", expand(target, resolver, filesystem, input));
+    return String.format("'%s'", expand(target, cellNames, resolver, filesystem, input));
   }
 
   @Override
@@ -103,11 +111,12 @@ public class ClasspathMacroExpander
   @Override
   public Object extractRuleKeyAppendables(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
     return FluentIterable.from(
-            getHasClasspathEntries(resolve(target, resolver, input))
+            getHasClasspathEntries(resolve(target, cellNames, resolver, input))
                 .getTransitiveClasspathDeps())
         .filter(
             new Predicate<JavaLibrary>() {

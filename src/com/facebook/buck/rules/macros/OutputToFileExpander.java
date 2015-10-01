@@ -23,6 +23,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 
@@ -39,6 +41,7 @@ public class OutputToFileExpander implements MacroExpander {
   @Override
   public String expand(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem,
       String input) throws MacroException {
@@ -49,11 +52,12 @@ public class OutputToFileExpander implements MacroExpander {
       if (delegate instanceof MacroExpanderWithCustomFileOutput) {
         expanded = ((MacroExpanderWithCustomFileOutput) delegate).expandForFile(
             target,
+            cellNames,
             resolver,
             filesystem,
             input);
       } else {
-        expanded = delegate.expand(target, resolver, filesystem, input);
+        expanded = delegate.expand(target, cellNames, resolver, filesystem, input);
       }
 
       filesystem.writeContentsToPath(expanded, tempFile);
@@ -66,25 +70,30 @@ public class OutputToFileExpander implements MacroExpander {
   @Override
   public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
-    return delegate.extractAdditionalBuildTimeDeps(target, resolver, input);
+    return delegate.extractAdditionalBuildTimeDeps(target, cellNames, resolver, input);
   }
 
   @Override
-  public ImmutableList<BuildTarget> extractParseTimeDeps(BuildTarget target, String input)
+  public ImmutableList<BuildTarget> extractParseTimeDeps(
+      BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
+      String input)
       throws MacroException {
-    return delegate.extractParseTimeDeps(target, input);
+    return delegate.extractParseTimeDeps(target, cellNames, input);
   }
 
   @Override
   public Object extractRuleKeyAppendables(
       BuildTarget target,
+      Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
-    return delegate.extractRuleKeyAppendables(target, resolver, input);
+    return delegate.extractRuleKeyAppendables(target, cellNames, resolver, input);
   }
 
   /**

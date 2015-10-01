@@ -17,6 +17,7 @@
 package com.facebook.buck.java;
 
 import static com.facebook.buck.java.BuiltInJavac.DEFAULT;
+import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -309,7 +310,8 @@ public class JavaLibraryDescriptionTest {
 
     try {
       new ConstructorArgMarshaller().populate(
-          new FakeProjectFilesystem(),
+          createCellRoots(factoryParams.getProjectFilesystem()),
+          factoryParams.getProjectFilesystem(),
           factoryParams,
           arg,
           ImmutableSet.<BuildTarget>builder(),
