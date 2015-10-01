@@ -62,6 +62,11 @@ class BuckProject:
         buck_javaargs_path = os.path.join(self.root, ".buckjavaargs")
         self.buck_javaargs = get_file_contents_if_exists(buck_javaargs_path)
 
+        buck_javaargs_path_local = os.path.join(
+            self.root, ".buckjavaargs.local")
+        self.buck_javaargs_local = get_file_contents_if_exists(
+            buck_javaargs_path_local)
+
     def get_buckd_run_count(self):
         return int(get_file_contents_if_exists(self.buckd_run_count_file, -1))
 

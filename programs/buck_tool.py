@@ -367,6 +367,10 @@ class BuckTool(object):
         if self._buck_project.buck_javaargs:
             java_args.extend(self._buck_project.buck_javaargs.split(' '))
 
+        if self._buck_project.buck_javaargs_local:
+            java_args.extend(
+                self._buck_project.buck_javaargs_local.split(' '))
+
         java_args.extend(self._get_extra_java_args())
 
         extra_java_args = os.environ.get("BUCK_EXTRA_JAVA_ARGS")

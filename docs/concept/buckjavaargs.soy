@@ -29,4 +29,24 @@ For example, to specify a larger heap size:
 
 {call buck.footer /}
 
+{call buck.header}
+  {param title: '.buckjavaargs.local' /}
+  {param description}
+    An optional file that specifies additional java command line arguments to pass to Buck,
+    overriding <code>.buckjavaargs</code>.
+  {/param}
+{/call}
+
+<div class="{css overview}">
+
+<code>.buckjavaargs.local</code> works the same way as <code>.buckjavaargs</code>;
+options given in the former are added to Java's command line after the options
+given in the latter.  It may be useful to configure your source management system
+to ignore <code>.buckjavaargs.local</code>, allowing developers to customize
+Java options without risking checking in changes to a shared <code>.buckjavaargs</code>.
+
+</div> // close overview
+
+{call buck.footer /}
+
 {/template}
