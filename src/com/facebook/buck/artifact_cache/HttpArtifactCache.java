@@ -41,6 +41,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
@@ -95,7 +96,7 @@ public class HttpArtifactCache implements ArtifactCache {
 
     Request request =
         new Request.Builder()
-            .url(uri.resolve("/artifacts/key/" + ruleKey.toString()).toURL())
+            .url(new URL(uri.toURL(), "artifacts/key/" + ruleKey.toString()))
             .get()
             .build();
     Response response = fetchCall(request);

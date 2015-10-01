@@ -177,14 +177,14 @@ public class HttpArtifactCacheTest {
   public void testFetchUrl() throws Exception {
     final RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
     final String expectedUri =
-        "http://localhost:8080/artifacts/key/00000000000000000000000000000000";
+        "http://localhost:8080/path/artifacts/key/00000000000000000000000000000000";
 
     HttpArtifactCache cache =
         new HttpArtifactCache(
             "http",
             null,
             null,
-            new URI("http://localhost:8080"),
+            new URI("http://localhost:8080/path/"),
             /* doStore */ true,
             new FakeProjectFilesystem(),
             BUCK_EVENT_BUS) {
