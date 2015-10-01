@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.HashedFileTool;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Paths;
 
@@ -40,5 +42,11 @@ public class CxxPlatformUtils {
           .setSharedLibraryExtension(".so")
           .setDebugPathSanitizer(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER)
           .build();
+
+    public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =
+        new FlavorDomain<>(
+            "C/C++ Platform",
+            ImmutableMap.of(
+                DEFAULT_PLATFORM.getFlavor(), DEFAULT_PLATFORM));
 
 }

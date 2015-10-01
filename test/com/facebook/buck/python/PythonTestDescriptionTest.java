@@ -20,6 +20,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -28,8 +30,10 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -159,6 +163,38 @@ public class PythonTestDescriptionTest {
         Matchers.allOf(
             Matchers.hasItem(matchedSource),
             Matchers.not(Matchers.hasItem(unmatchedSource))));
+  }
+
+  @Test
+  public void explicitPythonHome() {
+    PythonPlatform platform1 =
+        PythonPlatform.of(
+            ImmutableFlavor.of("pyPlat1"),
+            new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("2.6")),
+            Optional.<BuildTarget>absent());
+    PythonPlatform platform2 =
+        PythonPlatform.of(
+            ImmutableFlavor.of("pyPlat2"),
+            new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("2.7")),
+            Optional.<BuildTarget>absent());
+    PythonTestBuilder builder =
+        PythonTestBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"),
+            new FlavorDomain<>(
+                "Python Platform",
+                ImmutableMap.of(
+                    platform1.getFlavor(), platform1,
+                    platform2.getFlavor(), platform2)));
+    PythonTest test1 =
+        (PythonTest) builder
+            .setPlatform(platform1.getFlavor().toString())
+            .build(new BuildRuleResolver());
+    assertThat(test1.getBinary().getPythonPlatform(), Matchers.equalTo(platform1));
+    PythonTest test2 =
+        (PythonTest) builder
+            .setPlatform(platform2.getFlavor().toString())
+            .build(new BuildRuleResolver());
+    assertThat(test2.getBinary().getPythonPlatform(), Matchers.equalTo(platform2));
   }
 
 }

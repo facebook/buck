@@ -63,3 +63,14 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .platform_arg}
+{call buck.arg}
+  {param name : 'platform' /}
+  {param default : 'None' /}
+  {param desc}
+  The name of the Python platform to build against by default (as defined in the `python#name` section of `.buckconfig`).
+  {/param}
+{/call}
+{/template}

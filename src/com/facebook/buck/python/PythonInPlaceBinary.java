@@ -56,12 +56,13 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   public PythonInPlaceBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      PythonPlatform pythonPlatform,
       WriteFile script,
       SymlinkTree linkTree,
       String mainModule,
       PythonPackageComponents components,
       Path python) {
-    super(params, resolver, mainModule, components);
+    super(params, resolver, pythonPlatform, mainModule, components);
     this.script = script;
     this.linkTree = linkTree;
     this.components = components;

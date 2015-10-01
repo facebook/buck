@@ -24,17 +24,25 @@ import com.google.common.annotations.VisibleForTesting;
 
 public abstract class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
 
+  private final PythonPlatform pythonPlatform;
   private final String mainModule;
   private final PythonPackageComponents components;
 
   public PythonBinary(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      PythonPlatform pythonPlatform,
       String mainModule,
       PythonPackageComponents components) {
     super(buildRuleParams, resolver);
+    this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;
     this.components = components;
+  }
+
+  @VisibleForTesting
+  protected PythonPlatform getPythonPlatform() {
+    return pythonPlatform;
   }
 
   @VisibleForTesting

@@ -171,7 +171,10 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     try {
       pythonPlatform = pythonPlatforms
           .getValue(params.getBuildTarget().getFlavors())
-          .or(pythonPlatforms.getValues().asList().get(0));
+          .or(pythonPlatforms.getValue(
+                  args.platform
+                      .transform(Flavor.TO_FLAVOR)
+                      .or(pythonPlatforms.getFlavors().iterator().next())));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }
@@ -326,6 +329,7 @@ public class PythonTestDescription implements Description<PythonTestDescription.
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+    public Optional<String> platform;
 
     public Optional<ImmutableList<String>> buildArgs;
 

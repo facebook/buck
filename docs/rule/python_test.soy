@@ -37,6 +37,8 @@ files that contain tests to run via the <a href="https://docs.python.org/2/libra
 
 {call python_common.base_module_arg /}
 
+{call python_common.platform_arg /}
+
 {call buck.arg}
   {param name: 'env' /}
   {{param default : '{}' /}}
@@ -140,6 +142,20 @@ python_test(
   platform_resources = [
     ('py2', ['foo.dat']),
     ('py3', ['bar.dat']),
+  ],
+)
+</pre>{/literal}
+<p>
+Here is an example of using the `platform` parameter to select the "py2"
+Python platform as defined in `.buckconfig` above:
+</p>
+{literal}<pre class="prettyprint lang-py">
+# BUCK
+python_test(
+  name = 'bin',
+  platform = 'py2',
+  srcs = [
+    'foo.py',
   ],
 )
 </pre>{/literal}

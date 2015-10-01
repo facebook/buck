@@ -71,6 +71,7 @@ public class PythonPackagedBinaryTest {
     PythonBinary binary = new PythonPackagedBinary(
         new FakeBuildRuleParamsBuilder("//:bin").build(),
         resolver,
+        PythonTestUtils.PYTHON_PLATFORM,
         PEX,
         ImmutableList.<String>of(),
         Paths.get("dummy_path_to_pex_runner"),

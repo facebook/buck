@@ -22,6 +22,7 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -232,6 +233,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     return new PythonInPlaceBinary(
         params,
         pathResolver,
+        pythonPlatform,
         script,
         linkTree,
         mainModule,
@@ -269,6 +271,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
                 Suppliers.ofInstance(componentDeps),
                 Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
             pathResolver,
+            pythonPlatform,
             pythonBuckConfig.getPexTool(resolver),
             buildArgs,
             pythonBuckConfig.getPathToPexExecuter(),
@@ -302,7 +305,10 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     try {
       pythonPlatform = pythonPlatforms
           .getValue(params.getBuildTarget().getFlavors())
-          .or(pythonPlatforms.getValues().asList().get(0));
+          .or(pythonPlatforms.getValue(
+                  args.platform
+                      .transform(Flavor.TO_FLAVOR)
+                      .or(pythonPlatforms.getFlavors().iterator().next())));
     } catch (FlavorDomainException e) {
       throw new HumanReadableException("%s: %s", params.getBuildTarget(), e.getMessage());
     }
@@ -377,6 +383,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
     public Optional<String> baseModule;
     public Optional<Boolean> zipSafe;
     public Optional<ImmutableList<String>> buildArgs;
+    public Optional<String> platform;
   }
 
 }

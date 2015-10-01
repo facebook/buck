@@ -27,7 +27,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription.Arg> {
@@ -52,19 +51,21 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
         target);
   }
 
-  public static PythonTestBuilder create(BuildTarget target) {
+  public static PythonTestBuilder create(
+      BuildTarget target,
+      FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
         new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder());
     return new PythonTestBuilder(
         target,
         pythonBuckConfig,
-        PythonTestUtils.PYTHON_PLATFORMS,
+        pythonPlatforms,
         CxxPlatformUtils.DEFAULT_PLATFORM,
-        new FlavorDomain<>(
-            "C/C++ Platform",
-            ImmutableMap.of(
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
-                CxxPlatformUtils.DEFAULT_PLATFORM)));
+        CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonTestBuilder create(BuildTarget target) {
+    return create(target, PythonTestUtils.PYTHON_PLATFORMS);
   }
 
   public PythonTestBuilder setSrcs(SourceList srcs) {
@@ -105,6 +106,11 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
 
   public PythonTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.fromNullable(deps);
+    return this;
+  }
+
+  public PythonTestBuilder setPlatform(String platform) {
+    arg.platform = Optional.of(platform);
     return this;
   }
 

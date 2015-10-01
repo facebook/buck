@@ -62,6 +62,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   protected PythonPackagedBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      PythonPlatform pythonPlatform,
       Tool builder,
       ImmutableList<String> buildArgs,
       Path pathToPexExecuter,
@@ -70,7 +71,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       String mainModule,
       PythonPackageComponents components,
       ImmutableSortedSet<BuildRule> runtimeDeps) {
-    super(params, resolver, mainModule, components);
+    super(params, resolver, pythonPlatform, mainModule, components);
     this.builder = builder;
     this.buildArgs = buildArgs;
     this.pathToPexExecuter = pathToPexExecuter;

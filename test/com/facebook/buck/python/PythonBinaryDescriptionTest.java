@@ -16,33 +16,25 @@
 
 package com.facebook.buck.python;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -53,162 +45,90 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PythonBinaryDescriptionTest {
 
-  private static final PythonBuckConfig PYTHON_BUCK_CONFIG =
-      new PythonBuckConfig(
-          new FakeBuckConfig(),
-          new AlwaysFoundExecutableFinder());
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      new CxxBuckConfig(new FakeBuckConfig()));
-  private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
-      new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of());
-
   @Test
   public void thatComponentSourcePathDepsPropagateProperly() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-
-    Genrule genrule = (Genrule) GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
-        .setOut("blah.py")
-        .build(resolver);
-    BuildRuleParams libParams = new FakeBuildRuleParamsBuilder("//:lib").build();
-    PythonLibrary lib = new PythonLibrary(
-        libParams,
-        new SourcePathResolver(resolver),
-        Functions.constant(
-            ImmutableMap.<Path, SourcePath>of(
-                Paths.get("hello"),
-                new BuildTargetSourcePath(genrule.getBuildTarget()))),
-        Functions.constant(ImmutableMap.<Path, SourcePath>of()),
-        Optional.<Boolean>absent());
-
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bin"))
-            .setDeps(ImmutableSortedSet.<BuildRule>of(lib))
-            .build();
-    PythonBinaryDescription desc =
-        new PythonBinaryDescription(
-            PYTHON_BUCK_CONFIG,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CXX_PLATFORM,
-            CXX_PLATFORMS);
-    PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.mainModule = Optional.absent();
-    arg.main = Optional.<SourcePath>of(new TestSourcePath("blah.py"));
-    arg.baseModule = Optional.absent();
-    arg.zipSafe = Optional.absent();
-    arg.buildArgs = Optional.absent();
-    BuildRule rule = desc.createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
-
-    assertEquals(
-        ImmutableSortedSet.<BuildRule>of(genrule),
-        rule.getDeps());
+    Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+            .setOut("blah.py")
+            .build(resolver);
+    PythonLibrary lib =
+        (PythonLibrary) new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceList.ofUnnamedSources(
+                    ImmutableSortedSet.<SourcePath>of(
+                        new BuildTargetSourcePath(genrule.getBuildTarget()))))
+            .build(resolver);
+    PythonBinary binary =
+        (PythonBinary) PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+            .setMainModule("main")
+            .setDeps(ImmutableSortedSet.of(lib.getBuildTarget()))
+            .build(resolver);
+    assertThat(binary.getDeps(), Matchers.hasItem(genrule));
   }
 
   @Test
   public void thatMainSourcePathPropagatesToDeps() {
     BuildRuleResolver resolver = new BuildRuleResolver();
-
-    Genrule genrule = (Genrule) GenruleBuilder
-        .newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
-        .setOut("blah.py")
-        .build(resolver);
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:bin").build();
-    PythonBinaryDescription desc =
-        new PythonBinaryDescription(
-            PYTHON_BUCK_CONFIG,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CXX_PLATFORM,
-            CXX_PLATFORMS);
-    PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.mainModule = Optional.absent();
-    arg.main =
-        Optional.<SourcePath>of(
-            new BuildTargetSourcePath(genrule.getBuildTarget()));
-    arg.baseModule = Optional.absent();
-    arg.zipSafe = Optional.absent();
-    arg.buildArgs = Optional.absent();
-    BuildRule rule = desc.createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
-    assertEquals(
-        ImmutableSortedSet.<BuildRule>of(genrule),
-        rule.getDeps());
+    Genrule genrule =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+            .setOut("blah.py")
+            .build(resolver);
+    PythonBinary binary =
+        (PythonBinary) PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+            .setMain(new BuildTargetSourcePath(genrule.getBuildTarget()))
+            .build(resolver);
+    assertThat(binary.getDeps(), Matchers.hasItem(genrule));
   }
 
   @Test
   public void baseModule() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    String mainName = "main.py";
-    PythonBinaryDescription desc =
-        new PythonBinaryDescription(
-            PYTHON_BUCK_CONFIG,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CXX_PLATFORM,
-            CXX_PLATFORMS);
-    PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.mainModule = Optional.absent();
-    arg.main = Optional.<SourcePath>of(new TestSourcePath("foo/" + mainName));
-    arg.zipSafe = Optional.absent();
-    arg.buildArgs = Optional.absent();
+    String sourceName = "main.py";
+    SourcePath source = new TestSourcePath("foo/" + sourceName);
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
-    arg.baseModule = Optional.absent();
-    PythonBinary normalRule = desc
-        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
-    assertEquals(
-        PythonUtil.toModuleName(target, target.getBasePath().resolve(mainName).toString()),
-        normalRule.getMainModule());
+    PythonBinary normal =
+        (PythonBinary) PythonBinaryBuilder.create(target)
+            .setMain(source)
+            .build(new BuildRuleResolver());
+    assertThat(
+        normal.getComponents().getModules().keySet(),
+        Matchers.hasItem(target.getBasePath().resolve(sourceName)));
 
     // Run *with* a base module set and verify it gets used to build the main module path.
-    arg.baseModule = Optional.of("blah");
-    PythonBinary baseModuleRule = desc
-        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
-    assertEquals(
-        PythonUtil.toModuleName(
-            target,
-            Paths.get(arg.baseModule.get()).resolve(mainName).toString()),
-        baseModuleRule.getMainModule());
+    String baseModule = "blah";
+    PythonBinary withBaseModule =
+        (PythonBinary) PythonBinaryBuilder.create(target)
+            .setMain(source)
+            .setBaseModule(baseModule)
+            .build(new BuildRuleResolver());
+    assertThat(
+        withBaseModule.getComponents().getModules().keySet(),
+        Matchers.hasItem(Paths.get(baseModule).resolve(sourceName)));
   }
 
   @Test
   public void mainModule() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleResolver resolver = new BuildRuleResolver();
     String mainModule = "foo.main";
-    PythonBinaryDescription desc =
-        new PythonBinaryDescription(
-            PYTHON_BUCK_CONFIG,
-            PythonTestUtils.PYTHON_PLATFORMS,
-            CXX_PLATFORM,
-            CXX_PLATFORMS);
-    PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.mainModule = Optional.of(mainModule);
-    arg.main = Optional.absent();
-    arg.baseModule = Optional.absent();
-    arg.zipSafe = Optional.absent();
-    arg.buildArgs = Optional.absent();
-    PythonBinary rule = desc
-        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
-    assertEquals(mainModule, rule.getMainModule());
+    PythonBinary binary =
+        (PythonBinary) PythonBinaryBuilder.create(target)
+            .setMainModule(mainModule)
+            .build(resolver);
+    assertThat(mainModule, Matchers.equalTo(binary.getMainModule()));
   }
 
   @Test
   public void pexExtension() {
-    BuildRuleResolver resolver = new BuildRuleResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    BuildRuleResolver resolver = new BuildRuleResolver();
     PythonBuckConfig config =
         new PythonBuckConfig(
             new FakeBuckConfig(
@@ -216,23 +136,19 @@ public class PythonBinaryDescriptionTest {
                     "python",
                     ImmutableMap.of("pex_extension", ".different_extension"))),
             new AlwaysFoundExecutableFinder());
-    PythonBinaryDescription desc =
-        new PythonBinaryDescription(
+    PythonBinaryBuilder builder =
+        new PythonBinaryBuilder(
+            target,
             config,
             PythonTestUtils.PYTHON_PLATFORMS,
-            CXX_PLATFORM,
-            CXX_PLATFORMS);
-    PythonBinaryDescription.Arg arg = desc.createUnpopulatedConstructorArg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.mainModule = Optional.of("main");
-    arg.main = Optional.absent();
-    arg.baseModule = Optional.absent();
-    arg.zipSafe = Optional.absent();
-    arg.buildArgs = Optional.absent();
-    PythonBinary rule = desc
-        .createBuildRule(TargetGraph.EMPTY, params, resolver, arg);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS);
+    PythonBinary binary =
+        (PythonBinary) builder
+            .setMainModule("main")
+            .build(resolver);
     assertThat(
-        Preconditions.checkNotNull(rule.getPathToOutput()).toString(),
+        Preconditions.checkNotNull(binary.getPathToOutput()).toString(),
         Matchers.endsWith(".different_extension"));
   }
 
@@ -254,6 +170,39 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         pexStep.getCommandPrefix(),
         Matchers.hasItems(buildArgs.toArray(new String[buildArgs.size()])));
+  }
+
+  @Test
+  public void explicitPythonHome() {
+    PythonPlatform platform1 =
+        PythonPlatform.of(
+            ImmutableFlavor.of("pyPlat1"),
+            new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("2.6")),
+            Optional.<BuildTarget>absent());
+    PythonPlatform platform2 =
+        PythonPlatform.of(
+            ImmutableFlavor.of("pyPlat2"),
+            new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("2.7")),
+            Optional.<BuildTarget>absent());
+    PythonBinaryBuilder builder =
+        PythonBinaryBuilder.create(
+            BuildTargetFactory.newInstance("//:bin"),
+            new FlavorDomain<>(
+                "Python Platform",
+                ImmutableMap.of(
+                    platform1.getFlavor(), platform1,
+                    platform2.getFlavor(), platform2)));
+    builder.setMainModule("main");
+    PythonBinary binary1 =
+        (PythonBinary) builder
+            .setPlatform(platform1.getFlavor().toString())
+            .build(new BuildRuleResolver());
+    assertThat(binary1.getPythonPlatform(), Matchers.equalTo(platform1));
+    PythonBinary binary2 =
+        (PythonBinary) builder
+            .setPlatform(platform2.getFlavor().toString())
+            .build(new BuildRuleResolver());
+    assertThat(binary2.getPythonPlatform(), Matchers.equalTo(platform2));
   }
 
 }

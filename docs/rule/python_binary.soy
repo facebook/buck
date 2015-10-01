@@ -46,6 +46,8 @@ from all transitive {call buck.python_library /} dependencies.
   {/param}
 {/call}
 
+{call python_common.platform_arg /}
+
 {call buck.arg}
   {param name: 'deps' /}
   {param default : '[]' /}
@@ -74,6 +76,27 @@ python_library(
   srcs = glob(['*.py'], excludes = ['tailer.py']),
 )
 </pre>{/literal}
+<p>
+Here is an example of using the `platform` parameter to select the "py2"
+Python platform as defined in `.buckconfig`:
+</p>
+{literal}<pre class="prettyprint lang-ini">
+; .buckconfig
+[python#py2]
+  interpreter = /usr/bin/python2.7
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+# BUCK
+python_binary(
+  name = 'bin',
+  platform = 'py2',
+  deps = [
+    ':bar',
+  ],
+)
+</pre>{/literal}
+
 {/param}
 
 {/call} // close buck.rule
