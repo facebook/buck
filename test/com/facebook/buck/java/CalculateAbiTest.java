@@ -19,6 +19,7 @@ package com.facebook.buck.java;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvmlang.JVMLangLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -51,7 +52,7 @@ public class CalculateAbiTest {
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:library");
     JavaLibraryBuilder builder =  JavaLibraryBuilder.createBuilder(javaLibraryTarget)
         .addSrc(new PathSourcePath(filesystem, input));
-    DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) builder.build(resolver, filesystem);
+    JVMLangLibrary javaLibrary = (JVMLangLibrary) builder.build(resolver, filesystem);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("stuff", input);
@@ -111,7 +112,7 @@ public class CalculateAbiTest {
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:library");
     JavaLibraryBuilder builder =  JavaLibraryBuilder.createBuilder(javaLibraryTarget)
         .addSrc(new PathSourcePath(filesystem, input));
-    DefaultJavaLibrary javaLibrary = (DefaultJavaLibrary) builder.build(resolver, filesystem);
+    JVMLangLibrary javaLibrary = (JVMLangLibrary) builder.build(resolver, filesystem);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("stuff", input);

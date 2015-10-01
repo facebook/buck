@@ -27,9 +27,9 @@ import com.facebook.buck.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.java.JavaLibraryRules;
 import com.facebook.buck.java.JavaPackageFinder;
 import com.facebook.buck.java.ResourcesRootPackageFinder;
+import com.facebook.buck.jvmlang.JVMLangLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -64,7 +64,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-public class GroovyLibrary extends AbstractBuildRule
+public class GroovyLibrary extends JVMLangLibrary
     implements HasClasspathEntries, ExportDependencies, JavaLibrary {
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);

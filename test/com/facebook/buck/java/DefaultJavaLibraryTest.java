@@ -34,6 +34,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.abi.AbiWriterProtocol;
+import com.facebook.buck.jvmlang.JVMLangLibrary;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -1273,7 +1274,7 @@ public class DefaultJavaLibraryTest {
     };
     BuildRuleResolver resolver1 = new BuildRuleResolver();
     SourcePathResolver pathResolver1 = new SourcePathResolver(resolver1);
-    DefaultJavaLibrary rule1 = (DefaultJavaLibrary) JavaLibraryBuilder
+    JVMLangLibrary rule1 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("agifhbkjdec.java"))
         .addSrc(Paths.get("bdeafhkgcji.java"))
@@ -1287,7 +1288,7 @@ public class DefaultJavaLibraryTest {
 
     BuildRuleResolver resolver2 = new BuildRuleResolver();
     SourcePathResolver pathResolver2 = new SourcePathResolver(resolver2);
-    DefaultJavaLibrary rule2 = (DefaultJavaLibrary) JavaLibraryBuilder
+    JVMLangLibrary rule2 = (DefaultJavaLibrary) JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:lib"))
         .addSrc(Paths.get("cfiabkjehgd.java"))
         .addSrc(Paths.get("bdehgaifjkc.java"))

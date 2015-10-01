@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
@@ -100,7 +99,7 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends AbstractBuildRule
+public class DefaultJavaLibrary extends com.facebook.buck.jvmlang.JVMLangLibrary
     implements JavaLibrary, HasClasspathEntries, ExportDependencies,
     InitializableFromDisk<JavaLibrary.Data>, AndroidPackageable,
     SupportsInputBasedRuleKey, HasTests {

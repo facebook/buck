@@ -113,6 +113,7 @@ java_test(
     '//src/com/facebook/buck/java/abi:protocol',
     '//src/com/facebook/buck/java/classes:classes',
     '//src/com/facebook/buck/json:json',
+    '//src/com/facebook/buck/jvmlang:jvmlang',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:config',
     '//src/com/facebook/buck/parser:rule_pattern',
