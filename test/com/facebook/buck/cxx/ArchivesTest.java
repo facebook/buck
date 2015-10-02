@@ -99,7 +99,7 @@ public class ArchivesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:archive");
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dummy"))
-            .setDeps(ImmutableSortedSet.of(dep))
+            .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .build();
     Archive archive = Archives.createArchiveRule(
         pathResolver,

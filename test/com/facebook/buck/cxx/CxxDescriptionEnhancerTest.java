@@ -176,7 +176,7 @@ public class CxxDescriptionEnhancerTest {
     );
 
     BuildRuleParams testParams = new FakeBuildRuleParamsBuilder(testTarget)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
         .build();
 
     ImmutableList<CxxPreprocessorInput> combinedInput =
@@ -228,7 +228,7 @@ public class CxxDescriptionEnhancerTest {
 
     BuildTarget otherLibDepTarget = BuildTargetFactory.newInstance("//:other");
     BuildRuleParams otherLibDepParams = new FakeBuildRuleParamsBuilder(otherLibDepTarget)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
         .build();
 
     ImmutableList<CxxPreprocessorInput> otherInput =

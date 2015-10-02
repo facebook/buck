@@ -1170,7 +1170,7 @@ public class DefaultJavaLibraryTest {
         .toSortedSet(Ordering.natural());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setDeps(ImmutableSortedSet.copyOf(deps))
+        .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
         .build();
 
     return new DefaultJavaLibrary(

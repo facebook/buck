@@ -45,7 +45,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
       ImmutableSortedSet<BuildRule> deps) {
     this(
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(deps)
+            .setDeclaredDeps(deps)
             .build(), resolver);
   }
 
@@ -65,7 +65,7 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
     this(
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
-            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build(), resolver);
   }
 

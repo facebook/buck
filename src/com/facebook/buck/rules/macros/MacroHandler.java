@@ -112,7 +112,7 @@ public class MacroHandler {
     return MACRO_FINDER.replace(replacers.build(), blob);
   }
 
-  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  public ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
@@ -124,7 +124,7 @@ public class MacroHandler {
     // extract for their respective macros.
     for (Pair<String, String> match : MACRO_FINDER.findAll(expanders.keySet(), blob)) {
       deps.addAll(
-          getExpander(match.getFirst()).extractAdditionalBuildTimeDeps(
+          getExpander(match.getFirst()).extractBuildTimeDeps(
               target,
               cellNames,
               resolver,

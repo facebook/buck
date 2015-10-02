@@ -48,7 +48,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
   }
 
   @Override
-  protected ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  protected ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildRuleResolver resolver,
       BuildRule rule)
       throws MacroException {

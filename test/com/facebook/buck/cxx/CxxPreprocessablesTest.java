@@ -101,7 +101,7 @@ public class CxxPreprocessablesTest {
       BuildRule... deps) {
     return new FakeCxxPreprocessorDep(
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build(),
         resolver, input);
   }
@@ -124,7 +124,7 @@ public class CxxPreprocessablesTest {
       BuildRule... deps) {
     return new FakeBuildRule(
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.copyOf(deps))
+            .setDeclaredDeps(ImmutableSortedSet.copyOf(deps))
             .build(),
         resolver);
   }
@@ -206,7 +206,7 @@ public class CxxPreprocessablesTest {
         pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
         .build();
     Path root = Paths.get("root");
 

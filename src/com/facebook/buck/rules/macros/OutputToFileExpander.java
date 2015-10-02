@@ -68,13 +68,13 @@ public class OutputToFileExpander implements MacroExpander {
   }
 
   @Override
-  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  public ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
-    return delegate.extractAdditionalBuildTimeDeps(target, cellNames, resolver, input);
+    return delegate.extractBuildTimeDeps(target, cellNames, resolver, input);
   }
 
   @Override

@@ -126,7 +126,7 @@ public class CxxCompilationDatabaseTest {
         rules.add(preprocessRule);
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)
-            .setDeps(ImmutableSortedSet.<BuildRule>of(preprocessRule))
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(preprocessRule))
             .build();
         break;
       case COMBINED:
@@ -306,7 +306,7 @@ public class CxxCompilationDatabaseTest {
         .build();
     BuildRuleParams compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
         .setProjectFilesystem(filesystem)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(testPreprocessRule))
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(testPreprocessRule))
         .build();
     CxxPreprocessAndCompile testCompileRule = new CxxPreprocessAndCompile(
         compileBuildRuleParams,

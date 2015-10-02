@@ -100,7 +100,7 @@ public class AndroidLibraryGraphEnhancerTest {
             .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
+        .setDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
         .build();
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
@@ -149,7 +149,7 @@ public class AndroidLibraryGraphEnhancerTest {
             .build());
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
+        .setDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2))
         .build();
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(

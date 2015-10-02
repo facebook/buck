@@ -464,11 +464,11 @@ public class RuleKeyTest {
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//cheese:milk");
 
     BuildRuleParams parentParams1 = new FakeBuildRuleParamsBuilder(parentTarget)
-        .setDeps(ImmutableSortedSet.of(buildRule1))
+        .setDeclaredDeps(ImmutableSortedSet.of(buildRule1))
         .build();
     BuildRule parentRule1 = new NoopBuildRule(parentParams1, pathResolver);
     BuildRuleParams parentParams2 = new FakeBuildRuleParamsBuilder(parentTarget)
-        .setDeps(ImmutableSortedSet.of(buildRule2))
+        .setDeclaredDeps(ImmutableSortedSet.of(buildRule2))
         .build();
     BuildRule parentRule2 = new NoopBuildRule(parentParams2, pathResolver);
 

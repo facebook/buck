@@ -124,7 +124,7 @@ public class ClasspathMacroExpanderTest {
 
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
     ImmutableList<BuildRule> deps =
-        expander.extractAdditionalBuildTimeDeps(
+        expander.extractBuildTimeDeps(
             forTarget,
             createCellRoots(filesystem),
             ruleResolver,

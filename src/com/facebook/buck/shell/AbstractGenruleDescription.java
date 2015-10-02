@@ -74,7 +74,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final A args) {
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     return createBuildRule(
-        params.appendExtraDeps(
+        params.copyWithExtraDeps(
             new Supplier<ImmutableSortedSet<BuildRule>>() {
               @Override
               public ImmutableSortedSet<BuildRule> get() {
@@ -141,7 +141,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     try {
       for (String val :
           Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(MACRO_HANDLER.extractAdditionalBuildTimeDeps(target, cellNames, resolver, val));
+        deps.addAll(MACRO_HANDLER.extractBuildTimeDeps(target, cellNames, resolver, val));
       }
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());

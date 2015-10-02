@@ -173,7 +173,7 @@ public class CxxTestDescription implements
                     args.env.or(ImmutableMap.<String, String>of()).values())) {
               try {
                 deps.addAll(
-                    MACRO_HANDLER.extractAdditionalBuildTimeDeps(
+                    MACRO_HANDLER.extractBuildTimeDeps(
                         params.getBuildTarget(),
                         params.getCellRoots(),
                         resolver,

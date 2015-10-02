@@ -119,7 +119,7 @@ public class AndroidInstrumentationApkTest {
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTargetFactory.newInstance("//apps:instrumentation"))
-        .setDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
+        .setDeclaredDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
         .setExtraDeps(ImmutableSortedSet.<BuildRule>of(androidBinary))
         .build();
     AndroidInstrumentationApk androidInstrumentationApk = (AndroidInstrumentationApk)

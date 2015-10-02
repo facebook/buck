@@ -816,7 +816,7 @@ public class CxxLibraryDescription implements
     try {
       for (String flag : flags) {
         deps.addAll(
-            MACRO_HANDLER.extractAdditionalBuildTimeDeps(
+            MACRO_HANDLER.extractBuildTimeDeps(
                 target,
                 cellNames,
                 resolver,

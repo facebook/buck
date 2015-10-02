@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableSortedSet;
 public class FakeBuildRuleParamsBuilder {
 
   private final BuildTarget buildTarget;
-  private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
+  private ImmutableSortedSet<BuildRule> declaredDeps = ImmutableSortedSet.of();
   private ImmutableSortedSet<BuildRule> extraDeps = ImmutableSortedSet.of();
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Optional<FileHashCache> fileHashCache = Optional.absent();
@@ -44,8 +44,8 @@ public class FakeBuildRuleParamsBuilder {
     this(BuildTargetFactory.newInstance(Preconditions.checkNotNull(buildTarget)));
   }
 
-  public FakeBuildRuleParamsBuilder setDeps(ImmutableSortedSet<BuildRule> deps) {
-    this.deps = deps;
+  public FakeBuildRuleParamsBuilder setDeclaredDeps(ImmutableSortedSet<BuildRule> declaredDeps) {
+    this.declaredDeps = declaredDeps;
     return this;
   }
 
@@ -73,7 +73,7 @@ public class FakeBuildRuleParamsBuilder {
     }
     return new BuildRuleParams(
         buildTarget,
-        Suppliers.ofInstance(deps),
+        Suppliers.ofInstance(declaredDeps),
         Suppliers.ofInstance(extraDeps),
         filesystem,
         TestCellBuilder.createCellRoots(filesystem),

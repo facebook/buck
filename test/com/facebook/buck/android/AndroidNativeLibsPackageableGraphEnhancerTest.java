@@ -62,7 +62,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.<BuildRule>of(ndkLibrary))
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(ndkLibrary))
             .build();
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -130,7 +130,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.<BuildRule>of(cxxLibrary))
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(cxxLibrary))
             .build();
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =

@@ -212,7 +212,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
 
     BuildRuleParams params =
         new FakeBuildRuleParamsBuilder("//:rule")
-            .setDeps(ImmutableSortedSet.of(dep))
+            .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .build();
     BuildRule rule =
         new NoopBuildRule(params, pathResolver) {

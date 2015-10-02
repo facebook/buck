@@ -43,7 +43,7 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
       ImmutableSortedSet<BuildRule> deps) {
     this(
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(deps)
+            .setDeclaredDeps(deps)
             .build(),
         resolver,
         labels

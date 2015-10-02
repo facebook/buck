@@ -159,7 +159,7 @@ public class AndroidResourceTest {
             .setDeps(deps)
             .setBuildRuleParams(
                 new FakeBuildRuleParamsBuilder(target)
-                    .setDeps(deps)
+                    .setDeclaredDeps(deps)
                     .build())
             .build());
 

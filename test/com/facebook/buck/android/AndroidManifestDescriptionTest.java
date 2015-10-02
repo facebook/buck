@@ -58,7 +58,7 @@ public class AndroidManifestDescriptionTest {
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:baz")
-        .setDeps(buildRuleResolver.getAllRules(arg.deps.get()))
+        .setDeclaredDeps(buildRuleResolver.getAllRules(arg.deps.get()))
         .build();
     BuildRule androidManifest = new AndroidManifestDescription()
         .createBuildRule(TargetGraph.EMPTY, params, buildRuleResolver, arg);

@@ -82,7 +82,7 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
         resolve(target, cellNames, resolver, input));
   }
 
-  protected ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  protected ImmutableList<BuildRule> extractBuildTimeDeps(
       @SuppressWarnings("unused") BuildRuleResolver resolver,
       BuildRule rule)
       throws MacroException {
@@ -90,13 +90,13 @@ public abstract class BuildTargetMacroExpander implements MacroExpander {
   }
 
   @Override
-  public ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  public ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,
       String input)
       throws MacroException {
-    return extractAdditionalBuildTimeDeps(resolver, resolve(target, cellNames, resolver, input));
+    return extractBuildTimeDeps(resolver, resolve(target, cellNames, resolver, input));
   }
 
   @Override

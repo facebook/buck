@@ -40,12 +40,12 @@ public interface MacroExpander {
       throws MacroException;
 
   /**
-   * @return additional {@link BuildRule}s which provide output which is consumed by the expanded
+   * @return {@link BuildRule}s which provide output which is consumed by the expanded
    *     form of this macro.  These are intended to become dependencies of {@code BuildRule}s that
    *     use this macro.  In many cases, this may just be the {@link BuildRule}s resolved from the
    *     {@link BuildTarget}s returned by {@link #extractParseTimeDeps}.
    */
-  ImmutableList<BuildRule> extractAdditionalBuildTimeDeps(
+  ImmutableList<BuildRule> extractBuildTimeDeps(
       BuildTarget target,
       Function<Optional<String>, Path> cellNames,
       BuildRuleResolver resolver,

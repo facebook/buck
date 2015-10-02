@@ -227,7 +227,7 @@ public class SymlinkTreeTest {
     symlinkTreeBuildRule =
         new SymlinkTree(
             new FakeBuildRuleParamsBuilder(buildTarget)
-                .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
+                .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
                 .build(),
             new SourcePathResolver(new BuildRuleResolver()),
             outputPath,
@@ -262,7 +262,7 @@ public class SymlinkTreeTest {
     symlinkTreeBuildRule =
         new SymlinkTree(
             new FakeBuildRuleParamsBuilder(buildTarget)
-                .setDeps(ImmutableSortedSet.<BuildRule>of(dep))
+                .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
                 .build(),
             pathResolver,
             outputPath,

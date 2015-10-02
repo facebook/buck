@@ -69,7 +69,7 @@ public class JavaBinaryTest {
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
-        .setDeps(ImmutableSortedSet.of(libraryRule))
+        .setDeclaredDeps(ImmutableSortedSet.of(libraryRule))
         .build();
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary =

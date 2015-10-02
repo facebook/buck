@@ -1617,7 +1617,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule dep2 =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep2"))
-                .setDeps(ImmutableSortedSet.of(dep1))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep1))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1636,7 +1636,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule dep4 =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep4"))
-                .setDeps(ImmutableSortedSet.of(dep3))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep3))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1647,7 +1647,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule rule =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
-                .setDeps(ImmutableSortedSet.of(dep2, dep4))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep2, dep4))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1719,7 +1719,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule dep2 =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep2"))
-                .setDeps(ImmutableSortedSet.of(dep1))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep1))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1738,7 +1738,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule dep4 =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:dep4"))
-                .setDeps(ImmutableSortedSet.of(dep3))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep3))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1749,7 +1749,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule rule =
         new RuleWithSteps(
             new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:rule"))
-                .setDeps(ImmutableSortedSet.of(dep2, dep4))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep2, dep4))
                 .setProjectFilesystem(filesystem)
                 .build(),
             pathResolver,
@@ -1999,7 +1999,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(BUILD_TARGET)
         .setProjectFilesystem(filesystem)
-        .setDeps(sortedDeps)
+        .setDeclaredDeps(sortedDeps)
         .setFileHashCache(fileHashCache)
         .build();
 

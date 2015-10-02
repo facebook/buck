@@ -229,7 +229,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget)
-        .setDeps(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary))
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary))
         .build();
 
     // set it up.
@@ -351,7 +351,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.<BuildRule>of(resource))
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(resource))
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         TargetGraph.EMPTY,
@@ -462,7 +462,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeps(ImmutableSortedSet.<BuildRule>of(resource))
+            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(resource))
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         TargetGraph.EMPTY,

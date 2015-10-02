@@ -185,7 +185,7 @@ public class ExecutableMacroExpanderTest {
     // Verify that the correct cmd was created.
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
     assertThat(
-        expander.extractAdditionalBuildTimeDeps(
+        expander.extractBuildTimeDeps(
             target,
             createCellRoots(filesystem),
             ruleResolver,
