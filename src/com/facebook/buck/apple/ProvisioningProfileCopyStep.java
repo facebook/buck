@@ -195,6 +195,9 @@ public class ProvisioningProfileCopyStep implements Step {
         entitlementsPlistDict =
             (NSDictionary) PropertyListParser.parse(entitlementsPlist.get().toFile());
 
+      } catch (IOException e) {
+        throw new HumanReadableException("Unable to find entitlement .plist: " +
+            entitlementsPlist.get());
       } catch (Exception e) {
         throw new HumanReadableException("Malformed entitlement .plist: " +
             entitlementsPlist.get());

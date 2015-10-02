@@ -435,8 +435,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     // Copy the .mobileprovision file if the platform requires it.
     if (provisioningProfiles.isPresent()) {
       Optional<Path> entitlementsPlist = Optional.absent();
-      final String srcRoot = getProjectFilesystem().getRootPath().resolve(
-          getBuildTarget().getBasePath()).toString();
+      final Path srcRoot = getProjectFilesystem().getRootPath().resolve(
+          getBuildTarget().getBasePath());
       Optional<String> entitlementsPlistString =
           InfoPlistSubstitution.getVariableExpansionForPlatform(
               CODE_SIGN_ENTITLEMENTS,
@@ -444,11 +444,11 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               withDefaults(
                   infoPlistSubstitutions,
                   ImmutableMap.of(
-                      "SOURCE_ROOT", srcRoot,
-                      "SRCROOT", srcRoot
+                      "SOURCE_ROOT", srcRoot.toString(),
+                      "SRCROOT", srcRoot.toString()
                   )));
       if (entitlementsPlistString.isPresent()) {
-        entitlementsPlist = Optional.of(Paths.get(entitlementsPlistString.get()));
+        entitlementsPlist = Optional.of(srcRoot.resolve(Paths.get(entitlementsPlistString.get())));
       }
 
       final Path signingEntitlementsTempPath =
