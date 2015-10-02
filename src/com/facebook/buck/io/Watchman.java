@@ -94,6 +94,7 @@ public class Watchman {
       ExecutableFinder exeFinder,
       Console console,
       Clock clock) throws InterruptedException {
+    LOG.info("Creating for: " + rootPath);
     try {
       String watchman = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath().toString();
       Optional<Map<String, String>> result;
@@ -156,7 +157,7 @@ public class Watchman {
 
       if (map.containsKey("warning")) {
         LOG.warn("Warning in watchman output: %s", map.get("warning"));
-        return NULL_WATCHMAN;
+        // Warnings are not fatal. Don't panic.
       }
 
       if (!map.containsKey("watch")) {
