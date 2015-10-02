@@ -27,10 +27,12 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 
 import org.easymock.Capture;
 import org.easymock.IAnswer;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
@@ -44,10 +46,11 @@ public class VersionControlStatsGeneratorTest {
   private static final String MASTER_BOOKMARK = "master";
   private static final long BRANCHED_FROM_MASTER_TS_SECS = 123L;
   private static final long BRANCHED_FROM_MASTER_TS_MILLIS = 123000L;
-  private static final boolean IS_SUPPORTED_VCS = true;
+  private static final boolean SUPPORTED_VCS = true;
 
   @Test
-  public void testStartAsync() throws InterruptedException, VersionControlCommandFailedException {
+  public void givenSupportedVcsWhenGenerateStatsAsyncThenPostEvent()
+      throws InterruptedException, VersionControlCommandFailedException {
     VersionControlCmdLineInterface cmdLineInterfaceMock =
         createMock(VersionControlCmdLineInterface.class);
     VersionControlCmdLineInterfaceFactory factoryMock =
@@ -55,7 +58,7 @@ public class VersionControlStatsGeneratorTest {
     BuckEventBus eventBus = createMock(BuckEventBus.class);
 
     expect(cmdLineInterfaceMock.isSupportedVersionControlSystem()).andReturn(
-        IS_SUPPORTED_VCS);
+        SUPPORTED_VCS);
 
     expect(cmdLineInterfaceMock.hasWorkingDirectoryChanges()).andReturn(
         HAS_WORKING_DIRECTORY_CHANGES);
@@ -96,6 +99,39 @@ public class VersionControlStatsGeneratorTest {
         BRANCHED_FROM_MASTER_REVISION_ID,
         is(equalTo(vcStats.branchedFromMasterRevisionId())));
     assertThat(BRANCHED_FROM_MASTER_TS_MILLIS, is(equalTo(vcStats.branchedFromMasterTsMillis())));
+  }
+
+  @Test
+  public void givenNoOpWhenGenerateStatsAsyncThenPostNothing()
+      throws InterruptedException, VersionControlCommandFailedException {
+    VersionControlCmdLineInterface cmdLineInterfaceMock = new NoOpCmdLineInterface();
+    VersionControlCmdLineInterfaceFactory factoryMock =
+        createMock(VersionControlCmdLineInterfaceFactory.class);
+    BuckEventBus eventBus = createMock(BuckEventBus.class);
+
+    expect(factoryMock.createCmdLineInterface()).andReturn(cmdLineInterfaceMock);
+
+    // Nothing should be posted to the event bus
+    eventBus.post(anyObject(BuckEvent.class));
+    expectLastCall().andAnswer(
+        new IAnswer<BuckEvent>() {
+          @Override
+          public BuckEvent answer() {
+            Assert.fail("Event posted to event bus, but was expecting no events.");
+            return null;
+          }
+        }).anyTimes();
+
+    replay(eventBus, factoryMock);
+    ExecutorService executorService = sameThreadExecutorService();
+
+    VersionControlStatsGenerator vcStatsGenerator = new VersionControlStatsGenerator(
+        executorService,
+        factoryMock,
+        eventBus
+    );
+
+    vcStatsGenerator.generateStatsAsync();
   }
 
   private ExecutorService sameThreadExecutorService() {
