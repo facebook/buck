@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
+import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
@@ -81,7 +82,7 @@ import javax.annotation.Nullable;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class JavaTest
     extends DefaultJavaLibrary
-    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
+    implements TestRule, HasRuntimeDeps, HasPostBuildSteps, ExternalTestRunnerRule {
 
   @AddToRuleKey
   private final ImmutableList<String> vmArgs;
@@ -616,12 +617,10 @@ public class JavaTest
   }
 
   @Override
-  public ImmutableList<Step> getBuildSteps(
+  public ImmutableList<Step> getPostBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getClassPathFile());
     return ImmutableList.<Step>builder()
-        .addAll(super.getBuildSteps(context, buildableContext))
         .add(new MkdirStep(getProjectFilesystem(), getClassPathFile().getParent()))
         .add(
             new AbstractExecutionStep("write classpath file") {
