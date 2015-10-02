@@ -363,6 +363,7 @@ public class AppleTestDescription implements
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context,
                   BuildableContext buildableContext) {
+                buildableContext.recordArtifact(outputDirectory);
                 return ImmutableList.of(
                     new MakeCleanDirectoryStep(getProjectFilesystem(), outputDirectory),
                     new UnzipStep(
