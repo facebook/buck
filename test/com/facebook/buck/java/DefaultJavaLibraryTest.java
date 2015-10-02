@@ -1599,7 +1599,6 @@ public class DefaultJavaLibraryTest {
           /* resourcesRoot */ Optional.<Path>absent(),
           /* mavenCoords */ Optional.<String>absent(),
           /* manifestFile */ Optional.<SourcePath>absent(),
-          /* isPrebuiltAar */ false,
           /* tests */ ImmutableSortedSet.<BuildTarget>of());
     }
 

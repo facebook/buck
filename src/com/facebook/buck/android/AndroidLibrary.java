@@ -48,8 +48,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   @AddToRuleKey
   private final Optional<SourcePath> manifestFile;
 
-  private final boolean isPrebuiltAar;
-
   @VisibleForTesting
   public AndroidLibrary(
       BuildRuleParams params,
@@ -66,7 +64,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
-      boolean isPrebuiltAar,
       ImmutableSortedSet<BuildTarget> tests) {
     super(
         params,
@@ -84,7 +81,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         mavenCoords,
         tests);
     this.manifestFile = manifestFile;
-    this.isPrebuiltAar = isPrebuiltAar;
   }
 
   @Override
@@ -96,8 +92,4 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     return manifestFile;
   }
 
-  /** @return whether this library was generated from an {@link AndroidPrebuiltAarDescription}. */
-  public boolean isPrebuiltAar() {
-    return isPrebuiltAar;
-  }
 }
