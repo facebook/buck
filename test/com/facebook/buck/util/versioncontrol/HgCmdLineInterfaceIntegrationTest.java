@@ -57,6 +57,7 @@ public class HgCmdLineInterfaceIntegrationTest {
   private static final String REPOS_DIR = "repos";
   private static final String REPO_TWO_DIR = "hg_repo_two";
   private static final String REPO_THREE_DIR = "hg_repo_three";
+  private static final String REPO_WITH_SUB_DIR = "hg_repo_with_subdir";
 
   /***
    *
@@ -87,6 +88,8 @@ public class HgCmdLineInterfaceIntegrationTest {
    * hg_repo_two: above, current tip @branch_from_master2, and no local changes.
    * hg_repo_three: above, current tip @branch_from_master3, and with local changes.
    *
+   * Additionally hg_repo_with_subdir is a new hg_repo with a directory called subdir
+   *
    */
 
   @ClassRule
@@ -94,11 +97,11 @@ public class HgCmdLineInterfaceIntegrationTest {
 
   private static VersionControlCmdLineInterface repoTwoCmdLine;
   private static VersionControlCmdLineInterface repoThreeCmdLine;
-
+  private static Path reposPath;
 
   @BeforeClass
   public static void setUpClass() throws IOException, InterruptedException {
-    Path reposPath = explodeReposZip();
+    reposPath = explodeReposZip();
 
     repoTwoCmdLine = makeCmdLine(reposPath.resolve(REPO_TWO_DIR));
     repoThreeCmdLine = makeCmdLine(reposPath.resolve(REPO_THREE_DIR));
@@ -162,6 +165,15 @@ public class HgCmdLineInterfaceIntegrationTest {
         MASTER_THREE_ID);
 
     assertThat(commonAncestor.startsWith(MASTER_TWO_ID), is(true));
+  }
+
+  @Test
+  public void testCreateCmdLineInterfaceUsingHgSubDir()
+      throws VersionControlCommandFailedException, InterruptedException {
+    VersionControlCmdLineInterface subDirCmdLineInterface =
+        makeCmdLine(reposPath.resolve(REPO_WITH_SUB_DIR));
+
+    assertThat(subDirCmdLineInterface instanceof HgCmdLineInterface, is(true));
   }
 
   @Test

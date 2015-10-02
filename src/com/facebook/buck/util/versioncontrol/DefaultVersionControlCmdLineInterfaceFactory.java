@@ -40,7 +40,6 @@ public class DefaultVersionControlCmdLineInterfaceFactory
 
   @Override
   public VersionControlCmdLineInterface createCmdLineInterface() throws InterruptedException {
-    if (projectRoot.resolve(".hg").toFile().exists()) {
       HgCmdLineInterface hgCmdLineInterface =
           new HgCmdLineInterface(processExecutor, projectRoot.toFile(), hgCmd);
 
@@ -49,10 +48,10 @@ public class DefaultVersionControlCmdLineInterfaceFactory
         LOG.debug("Using HgCmdLineInterface.");
         return hgCmdLineInterface;
       } catch (VersionControlCommandFailedException ex) {
-        LOG.warn("Project contains a .hg file, but could not read current revision " +
-        " due to exception %s", ex);
+        LOG.warn("Mercurial is the only VCS supported for VCS stats generation, however " +
+                "current project (which has enabled VCS stats generation in its .buckconfig) " +
+                "does not appear to be a Mercurial repository: \n%s", ex);
       }
-    }
 
     LOG.debug("Using NoOpCmdLineInterface.");
     return new NoOpCmdLineInterface();

@@ -45,10 +45,10 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final String REVISION_IDS_TEMPLATE = "{revisions}";
 
   private static final ImmutableList<String> CURRENT_REVISION_ID_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "id", "-i");
+      ImmutableList.of(HG_CMD_TEMPLATE, "log", "-l", "1", "--template", "{node|short}");
 
   private static final ImmutableList<String> REVISION_ID_FOR_NAME_COMMAND_TEMPLATE =
-      ImmutableList.of(HG_CMD_TEMPLATE, "id", "-i", "-r", NAME_TEMPLATE);
+      ImmutableList.of(HG_CMD_TEMPLATE, "log", "-r", NAME_TEMPLATE, "--template", "{node|short}");
 
   private static final ImmutableList<String> STATUS_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "status");
@@ -146,7 +146,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     LOG.debug("Executing command: " + commandString);
 
     try {
-      Optional<String> resultString =
+      ProcessExecutor.Result result =
           processExecutor.launchAndExecute(
               processExecutorParams,
               // Must specify that stdout is expected or else output may be wrapped
@@ -155,11 +155,19 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
               /* stdin */ Optional.<String>absent(),
               /* timeOutMs */ Optional.<Long>absent(),
               /* timeOutHandler */ Optional.<Function<Process, Void>>absent()
-              ).getStdout();
+          );
+
+      Optional<String> resultString = result.getStdout();
 
       if (!resultString.isPresent()) {
         throw new VersionControlCommandFailedException(
             "Received no output from launched process for command: " +
+                commandString);
+      }
+
+      if (result.getExitCode() != 0) {
+        throw new VersionControlCommandFailedException(
+            "Received non-zero exit for for command:" +
                 commandString);
       }
 
