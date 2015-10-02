@@ -220,7 +220,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("gtest")
         .addAllCommand(executable.getCommandPrefix(getResolver()))
         .addAllCommand(getArgs().get())

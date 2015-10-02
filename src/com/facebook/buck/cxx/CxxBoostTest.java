@@ -230,7 +230,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("boost")
         .addAllCommand(executable.getCommandPrefix(getResolver()))
         .addAllCommand(getArgs().get())

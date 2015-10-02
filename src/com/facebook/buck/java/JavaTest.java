@@ -607,7 +607,7 @@ public class JavaTest
             Optional.<Path>absent(),
             Optional.<Path>absent());
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("junit")
         .setCommand(jUnitStep.getShellCommandInternal(executionContext))
         .setEnv(jUnitStep.getEnvironmentVariables(executionContext))

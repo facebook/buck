@@ -229,7 +229,7 @@ public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunner
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("dunit")
         .setCommand(getShellCommand())
         .setLabels(getLabels())

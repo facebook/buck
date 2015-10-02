@@ -195,7 +195,7 @@ public class AppleTest
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ExternalTestRunnerTestSpec.Builder externalSpec = ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setLabels(getLabels())
         .setContacts(getContacts());
 

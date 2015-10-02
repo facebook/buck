@@ -199,7 +199,7 @@ public class ShTest
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("custom")
         .addCommand(getResolver().getResolvedPath(test).toString())
         .addAllCommand(args)

@@ -212,7 +212,7 @@ public class PythonTest
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions) {
     return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget().toString())
+        .setTarget(getBuildTarget())
         .setType("pyunit")
         .addAllCommand(binary.getExecutableCommand().getCommandPrefix(getResolver()))
         .putAllEnv(env.get())
