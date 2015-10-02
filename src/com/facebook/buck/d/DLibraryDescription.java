@@ -24,13 +24,9 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class DLibraryDescription implements Description<DLibraryDescription.Arg> {
@@ -57,25 +53,19 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      BuildRuleResolver buildRuleResolver,
       A args) {
     return new DLibrary(
         params,
-        new SourcePathResolver(resolver),
-        ImmutableList.<SourcePath>builder()
-            .addAll(args.srcs)
-            .addAll(
-                FluentIterable.from(params.getDeps())
-                    .filter(DLibrary.class)
-                    .transform(
-                        SourcePaths.getToBuildTargetSourcePath()))
-            .build(),
+        new SourcePathResolver(buildRuleResolver),
+        buildRuleResolver,
+        args.srcs,
         dBuckConfig.getDCompiler());
   }
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public ImmutableSet<SourcePath> srcs;
+    public ImmutableSortedSet<SourcePath> srcs;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 }

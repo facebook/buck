@@ -78,6 +78,7 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.util.concurrent.TimeSpan;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvironmentFilter;
@@ -160,6 +161,8 @@ public final class Main {
   private final PrintStream stdOut;
   private final PrintStream stdErr;
   private final ImmutableList<BuckEventListener> externalEventsListeners;
+
+  private final Architecture architecture;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
 
@@ -445,6 +448,7 @@ public final class Main {
       List<BuckEventListener> externalEventsListeners) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
+    this.architecture = Architecture.detect();
     this.platform = Platform.detect();
     this.objectMapper = new ObjectMapper();
     // Add support for serializing Path and other JDK 7 objects.
@@ -538,7 +542,12 @@ public final class Main {
 
     Config rawConfig = Config.createDefaultConfig(canonicalRootPath, configOverrides);
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, rawConfig);
-    BuckConfig buckConfig = new BuckConfig(rawConfig, filesystem, platform, clientEnvironment);
+    BuckConfig buckConfig = new BuckConfig(
+        rawConfig,
+        filesystem,
+        architecture,
+        platform,
+        clientEnvironment);
     // End ugly bootstrapping code.
 
     final Console console = new Console(

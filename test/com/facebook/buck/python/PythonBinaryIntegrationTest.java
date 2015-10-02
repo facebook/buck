@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
@@ -215,6 +216,7 @@ public class PythonBinaryIntegrationTest {
     BuckConfig buckConfig = new BuckConfig(
         rawConfig,
         new ProjectFilesystem(tmp.getRootPath()),
+        Architecture.detect(),
         Platform.detect(),
         ImmutableMap.<String, String>of());
 

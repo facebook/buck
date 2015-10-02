@@ -16,44 +16,28 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.rules.Tool;
 
-public class DBinary extends DLinkable implements BinaryBuildRule {
+/**
+ * BinaryBuildRule implementation for D binaries.
+ */
+public class DBinary extends NoopBuildRule implements BinaryBuildRule {
+  private final Tool executable;
 
   public DBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableList<SourcePath> inputs,
-      Tool compiler) {
-    super(
-        params,
-        resolver,
-        inputs,
-        /* prependFlags */ ImmutableList.<String>of(),
-        BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName()),
-        compiler);
+      Tool executable) {
+    super(params, resolver);
+    this.executable = executable;
   }
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(new BuildTargetSourcePath(getBuildTarget()))
-        .build();
+    return executable;
   }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return new BuildableProperties(BuildableProperties.Kind.PACKAGING);
-  }
-
 }

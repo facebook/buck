@@ -38,6 +38,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -67,6 +68,7 @@ public class JavaSymbolFinderIntegrationTest {
     BuckConfig config = new BuckConfig(
         rawConfig,
         projectFilesystem,
+        Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
 

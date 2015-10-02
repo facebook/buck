@@ -18,9 +18,26 @@ d_test(
   ],
 )
 
+d_test(
+  name='with_cxx',
+  srcs=[
+    'with_cxx.d',
+  ],
+  deps=[
+    ':quus',
+  ],
+)
+
 d_library(
   name='lib',
   srcs=[
     'lib.d',
+  ],
+)
+
+cxx_library(
+  name='quus',
+  srcs=[
+    'quus.cpp',
   ],
 )

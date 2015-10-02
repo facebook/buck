@@ -59,4 +59,12 @@ public class DCompileStep extends ShellStep {
   public String getShortName() {
     return "d compile";
   }
+
+  /**
+   * @param sourceName name of the source file
+   * @return the object file name for the given source file name.
+   */
+  public static String getObjectNameForSourceName(String sourceName) {
+    return sourceName.replaceFirst("(?:\\.[^.]+)$", ".o");
+  }
 }

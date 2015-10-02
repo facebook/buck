@@ -32,14 +32,34 @@ public class DBinaryIntegrationTest {
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
   @Test
-  public void compileAndRun() throws Exception {
+  public void cxx() throws Exception {
+    Assumptions.assumeDCompilerAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "cxx", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("-v", "10", "//:test").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:test");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(
+        workspace.resolve("buck-out/gen/test/test").toString());
+    assertEquals(0, result.getExitCode());
+    assertEquals("1 + 1 = 2\n100 + 1 = 5\n", result.getStdout().get());
+    assertEquals("", result.getStderr().get());
+  }
+
+  @Test
+  public void xyzzy() throws Exception {
     Assumptions.assumeDCompilerAvailable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);
     workspace.setUp();
 
-    workspace.runBuckBuild("//:xyzzy").assertSuccess();
+    workspace.runBuckBuild("-v", "10", "//:xyzzy").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy");
     workspace.resetBuildLogFile();

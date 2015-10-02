@@ -501,9 +501,9 @@ public class KnownBuildRuleTypes {
     builder.register(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.register(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
-    builder.register(new DBinaryDescription(dBuckConfig));
+    builder.register(new DBinaryDescription(dBuckConfig, defaultCxxPlatform));
     builder.register(new DLibraryDescription(dBuckConfig));
-    builder.register(new DTestDescription(dBuckConfig));
+    builder.register(new DTestDescription(dBuckConfig, defaultCxxPlatform));
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());

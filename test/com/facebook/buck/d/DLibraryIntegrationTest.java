@@ -39,7 +39,7 @@ public class DLibraryIntegrationTest {
         this, "library", tmp);
     workspace.setUp();
 
-    workspace.runBuckBuild("//:greet").assertSuccess();
+    workspace.runBuckBuild("-v", "10", "//:greet").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:greet");
     buildLog.assertTargetBuiltLocally("//:greeting");

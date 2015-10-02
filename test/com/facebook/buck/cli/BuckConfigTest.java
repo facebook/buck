@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -337,14 +338,15 @@ public class BuckConfigTest {
 
   @Test
   public void testCreateAnsi() {
-    FakeBuckConfig windowsConfig = new FakeBuckConfig(Platform.WINDOWS);
+    FakeBuckConfig windowsConfig = new FakeBuckConfig(
+        Architecture.X86_64, Platform.WINDOWS);
     // "auto" on Windows is equivalent to "never".
     assertFalse(windowsConfig.createAnsi(Optional.<String>absent()).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("auto")).isAnsiTerminal());
     assertTrue(windowsConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
 
-    FakeBuckConfig linuxConfig = new FakeBuckConfig(Platform.LINUX);
+    FakeBuckConfig linuxConfig = new FakeBuckConfig(Architecture.I386, Platform.LINUX);
     // We don't test "auto" on Linux, because the behavior would depend on how the test was run.
     assertTrue(linuxConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(linuxConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
@@ -372,6 +374,7 @@ public class BuckConfigTest {
     return BuckConfigTestUtils.createFromReader(
         reader,
         projectFilesystem,
+        Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
   }

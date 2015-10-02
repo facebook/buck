@@ -25,10 +25,9 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -51,30 +50,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule {
+public class DTest extends NoopBuildRule implements TestRule, ExternalTestRunnerRule {
   private ImmutableSortedSet<String> contacts;
   private ImmutableSortedSet<Label> labels;
   private ImmutableSet<BuildRule> sourceUnderTest;
+  private final Path testBinary;
 
   public DTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      ImmutableList<SourcePath> inputs,
+      Path testBinary,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<Label> labels,
-      ImmutableSet<BuildRule> sourceUnderTest,
-      Tool compiler) {
-    super(
-        params,
-        resolver,
-        inputs,
-        ImmutableList.of("-unittest"),
-        BuildTargets.getGenPath(
-            params.getBuildTarget(), "%s/" + params.getBuildTarget().getShortName()),
-        compiler);
+      ImmutableSet<BuildRule> sourceUnderTest) {
+    super(params, resolver);
     this.contacts = contacts;
     this.labels = labels;
     this.sourceUnderTest = sourceUnderTest;
+    this.testBinary = testBinary;
   }
 
   @Override
@@ -83,7 +76,7 @@ public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule
   }
 
   public ImmutableList<String> getExecutableCommand(ProjectFilesystem projectFilesystem) {
-    return ImmutableList.of(projectFilesystem.resolve(getPathToOutput()).toString());
+    return ImmutableList.of(projectFilesystem.resolve(testBinary).toString());
   }
 
   @Override
@@ -243,5 +236,4 @@ public class DTest extends DLinkable implements TestRule, ExternalTestRunnerRule
         .setContacts(getContacts())
         .build();
   }
-
 }

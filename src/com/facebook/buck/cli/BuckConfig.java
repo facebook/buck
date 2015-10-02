@@ -37,6 +37,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.HostnameFetching;
 import com.google.common.annotations.Beta;
@@ -111,6 +112,8 @@ public class BuckConfig {
         }
       };
 
+  private final Architecture architecture;
+
   private final Config config;
 
   private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
@@ -124,10 +127,12 @@ public class BuckConfig {
   public BuckConfig(
       Config config,
       ProjectFilesystem projectFilesystem,
+      Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment) {
     this.config = config;
     this.projectFilesystem = projectFilesystem;
+    this.architecture = architecture;
 
     // We could create this Map on demand; however, in practice, it is almost always needed when
     // BuckConfig is needed because CommandLineBuildTargetNormalizer needs it.
@@ -171,6 +176,7 @@ public class BuckConfig {
   static BuckConfig createFromReaders(
       Map<Path, Reader> readers,
       ProjectFilesystem projectFilesystem,
+      Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment,
       ImmutableMap<String, ImmutableMap<String, String>>... configOverrides)
@@ -192,8 +198,13 @@ public class BuckConfig {
     return new BuckConfig(
         config,
         projectFilesystem,
+        architecture,
         platform,
         environment);
+  }
+
+  public Architecture getArchitecture() {
+    return architecture;
   }
 
   public ImmutableMap<String, String> getEntriesForSection(String section) {
@@ -215,6 +226,11 @@ public class BuckConfig {
 
   public Function<Optional<String>, Path> getCellRoots() {
     return cellToPath;
+  }
+
+  public Optional<ImmutableList<String>> getOptionalListWithoutComments(
+      String section, String field) {
+    return config.getOptionalListWithoutComments(section, field);
   }
 
   @Nullable
@@ -517,6 +533,10 @@ public class BuckConfig {
     }
   }
 
+  public Platform getPlatform() {
+    return platform;
+  }
+
   public Optional<URI> getRemoteLogUrl() {
     return getValue("log", "remote_log_url").transform(TO_URI);
   }
@@ -576,10 +596,6 @@ public class BuckConfig {
 
   public ImmutableMap<String, String> getEnvironment() {
     return environment;
-  }
-
-  public Platform getPlatform() {
-    return platform;
   }
 
   public String[] getEnv(String propertyName, String separator) {

@@ -126,34 +126,45 @@ public class Config {
   }
 
   /**
+   * @return An {@link ImmutableList} containing all entries that don't look like comments, or the
+   *     empty list if the property is not defined or there are no values.
+   */
+  public ImmutableList<String> getListWithoutComments(String sectionName, String propertyName) {
+    return getOptionalListWithoutComments(sectionName, propertyName).or(ImmutableList.<String>of());
+  }
+
+  /**
    * ini4j leaves things that look like comments in the values of entries in the file. Generally,
    * we don't want to include these in our parameters, so filter them out where necessary. In an INI
    * file, the comment separator is ";", but some parsers (ini4j included) use "#" too. This method
    * handles both cases.
    *
-   * @return An {@link ImmutableList} containing all entries that don't look like comments, or the
-   *     empty list if there are no values.
+   * @return an {@link ImmutableList} containing all entries that don't look like comments, the
+   *     empty list if the property is defined but there are no values, or Optional.absent() if
+   *     the property is not defined.
    */
-  public ImmutableList<String> getListWithoutComments(String sectionName, String propertyName) {
+  public Optional<ImmutableList<String>> getOptionalListWithoutComments(
+      String sectionName, String propertyName) {
     Optional<String> value = getValue(sectionName, propertyName);
     if (!value.isPresent()) {
-      return ImmutableList.of();
+      return Optional.absent();
     }
 
     Iterable<String> allValues = Splitter.on(',')
         .omitEmptyStrings()
         .trimResults()
         .split(value.get());
-    return FluentIterable.from(allValues)
-        .filter(
-            new Predicate<String>() {
-              @Override
-              public boolean apply(String input) {
-                // Reject if the first printable character is an ini comment char (';' or '#')
-                return !Pattern.compile("^\\s*[#;]").matcher(input).find();
-              }
-            })
-        .toList();
+    return Optional.of(
+        FluentIterable.from(allValues)
+            .filter(
+                new Predicate<String>() {
+                  @Override
+                  public boolean apply(String input) {
+                    // Reject if the first printable character is an ini comment char (';' or '#')
+                    return !Pattern.compile("^\\s*[#;]").matcher(input).find();
+                  }
+                })
+            .toList());
   }
 
   public Optional<String> getValue(String sectionName, String propertyName) {

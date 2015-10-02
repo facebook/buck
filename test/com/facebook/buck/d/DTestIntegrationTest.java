@@ -37,7 +37,8 @@ public class DTestIntegrationTest {
         this, "test", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:failing_test");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "-v", "10", "//:failing_test");
     result.assertTestFailure();
     assertTrue(
         "test reports correct location on failure. stderr:\n" + result.getStderr(),
@@ -52,7 +53,21 @@ public class DTestIntegrationTest {
         this, "test", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:passing_test");
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "-v", "10", "//:passing_test");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void withCxx() throws Exception {
+    Assumptions.assumeDCompilerAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "test", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "-v", "10", "//:with_cxx");
     result.assertSuccess();
   }
 }

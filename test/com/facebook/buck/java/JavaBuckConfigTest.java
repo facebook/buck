@@ -29,6 +29,7 @@ import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -186,6 +187,7 @@ public class JavaBuckConfigTest {
     BuckConfig raw = BuckConfigTestUtils.createFromReader(
         reader,
         defaultFilesystem,
+        Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
     return new JavaBuckConfig(raw);

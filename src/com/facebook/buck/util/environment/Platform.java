@@ -16,16 +16,23 @@
 package com.facebook.buck.util.environment;
 
 public enum Platform {
-  LINUX("Linux"),
-  MACOS("OS X"),
-  WINDOWS("Windows"),
-  UNKNOWN("Unknown");
+  LINUX("Linux", "linux"),
+  MACOS("OS X", "darwin"),
+  WINDOWS("Windows", "windows"),
+  UNKNOWN("Unknown", "unknown");
 
+  private String autoconfName;
   private String platformName;
 
-  Platform(String platformName) {
+  Platform(String platformName, String autoconfName) {
     this.platformName = platformName;
+    this.autoconfName = autoconfName;
   }
+
+  /**
+   * @return platform name as used in autoconf target tuples
+   */
+  public String getAutoconfName() { return autoconfName; }
 
   public String getPrintableName() {
     return platformName;

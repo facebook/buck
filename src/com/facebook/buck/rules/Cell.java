@@ -124,6 +124,7 @@ public class Cell {
             BuckConfig buckConfig = new BuckConfig(
                 config,
                 cellFilesystem,
+                parentConfig.getArchitecture(),
                 parentConfig.getPlatform(),
                 parentConfig.getEnvironment());
 

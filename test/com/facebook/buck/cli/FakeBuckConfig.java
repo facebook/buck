@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -40,18 +41,25 @@ public class FakeBuckConfig extends BuckConfig {
   public FakeBuckConfig() {
     this(
         EMPTY_SECTIONS,
+        Architecture.detect(),
         Platform.detect(),
         new FakeProjectFilesystem(),
         ImmutableMap.copyOf(System.getenv()));
   }
 
   public FakeBuckConfig(ProjectFilesystem filesystem) {
-    this(EMPTY_SECTIONS, Platform.detect(), filesystem, ImmutableMap.copyOf(System.getenv()));
+    this(
+        EMPTY_SECTIONS,
+        Architecture.detect(),
+        Platform.detect(),
+        filesystem,
+        ImmutableMap.copyOf(System.getenv()));
   }
 
   public FakeBuckConfig(ImmutableMap<String, ImmutableMap<String, String>> sections) {
     this(
         sections,
+        Architecture.detect(),
         Platform.detect(),
         new FakeProjectFilesystem(),
         ImmutableMap.copyOf(System.getenv()));
@@ -60,12 +68,18 @@ public class FakeBuckConfig extends BuckConfig {
   public FakeBuckConfig(
       ImmutableMap<String, ImmutableMap<String, String>> sections,
       ProjectFilesystem filesystem) {
-    this(sections, Platform.detect(), filesystem, ImmutableMap.copyOf(System.getenv()));
+    this(
+        sections,
+        Architecture.detect(),
+        Platform.detect(),
+        filesystem,
+        ImmutableMap.copyOf(System.getenv()));
   }
 
-  public FakeBuckConfig(Platform platform) {
+  public FakeBuckConfig(Architecture architecture, Platform platform) {
     this(
         EMPTY_SECTIONS,
+        architecture,
         platform,
         new FakeProjectFilesystem(),
         ImmutableMap.copyOf(System.getenv()));
@@ -74,17 +88,24 @@ public class FakeBuckConfig extends BuckConfig {
   public FakeBuckConfig(
       ImmutableMap<String, ImmutableMap<String, String>> sections,
       ImmutableMap<String, String> environment) {
-    this(sections, Platform.detect(), new FakeProjectFilesystem(), environment);
+    this(
+        sections,
+        Architecture.detect(),
+        Platform.detect(),
+        new FakeProjectFilesystem(),
+        environment);
   }
 
   private FakeBuckConfig(
       ImmutableMap<String, ImmutableMap<String, String>> sections,
+      Architecture architecture,
       Platform platform,
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment) {
     super(
         new Config(sections),
         filesystem,
+        architecture,
         platform,
         environment);
   }
@@ -93,6 +114,7 @@ public class FakeBuckConfig extends BuckConfig {
     super(
         new Config(Inis.read(new StringReader(Joiner.on("\n").join(Arrays.asList(iniFileLines))))),
         new FakeProjectFilesystem(),
+        Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
   }
@@ -101,6 +123,7 @@ public class FakeBuckConfig extends BuckConfig {
     super(
         new Config(Inis.read(new StringReader(Joiner.on("\n").join(Arrays.asList(iniFileLines))))),
         filesystem,
+        Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()));
   }

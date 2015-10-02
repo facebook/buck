@@ -23,6 +23,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -148,6 +149,7 @@ public class ArtifactCacheBuckConfigTest {
         BuckConfigTestUtils.createFromReader(
             reader,
             projectFilesystem,
+            Architecture.detect(),
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv())));
   }

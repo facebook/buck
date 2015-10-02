@@ -1,10 +1,15 @@
 PLATFORM_SRCS = [
+  'Architecture.java',
   'Platform.java',
 ]
 
 java_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
+  deps = [
+    '//src/com/facebook/buck/log:api',
+    '//third-party/java/guava:guava',
+  ],
   visibility = [
     'PUBLIC',
   ],
