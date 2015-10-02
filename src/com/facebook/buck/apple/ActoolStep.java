@@ -63,6 +63,7 @@ public class ActoolStep extends ShellStep {
         "--minimum-deployment-target", target,
         //TODO(jakubzika): Let apps decide which device they want to target (iPhone / iPad / both)
         "--target-device", "iphone",
+        "--target-device", "ipad",
         "--compress-pngs",
         "--compile",
         output.toString());
