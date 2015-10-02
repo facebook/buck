@@ -1716,7 +1716,7 @@ public class ParserTest extends EasyMockSupport {
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', visibility=['PUBLIC'])\n" +
-        "java_library(name = 'lib2', visibility=['PUBLIC'])\n").getBytes(UTF_8));
+         "java_library(name = 'lib2', visibility=['PUBLIC'])\n").getBytes(UTF_8));
 
     BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
     BuildTarget fooLib2Target = BuildTarget.builder(cellRoot, "//foo", "lib2").build();
@@ -1767,6 +1767,51 @@ public class ParserTest extends EasyMockSupport {
 
     assertEquals(libKey, hashes.get(fooLibTarget));
     assertNotEquals(lib2Key, hashes.get(fooLib2Target));
+  }
+
+  @Test
+  public void loadedBuildFileWithoutLoadedTargetNodesLoadsAdditionalTargetNodes()
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+
+    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    Files.write(
+        testFooBuckFile,
+        "java_library(name = 'lib1')\njava_library(name = 'lib2')\n".getBytes(UTF_8));
+    BuildTarget fooLib1Target = BuildTarget.builder(cellRoot, "//foo", "lib1").build();
+    BuildTarget fooLib2Target = BuildTarget.builder(cellRoot, "//foo", "lib2").build();
+
+    // First, only load one target from the build file so the file is parsed, but only one of the
+    // TargetNodes will be cached.
+    TargetNode<?> targetNode = parser.getOrLoadTargetNode(
+        fooLib1Target,
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        false);
+    assertThat(targetNode.getBuildTarget(), Matchers.equalTo(fooLib1Target));
+
+    // Now, try to load the entire build file and get all TargetNodes.
+    BuckConfig config = new FakeBuckConfig();
+    ImmutableList<TargetNode<?>> targetNodes = parser.getOrLoadTargetNodes(
+        MorePaths.relativize(tempDir.getRoot(), testFooBuckFile),
+        new ParserConfig(config),
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        config.getEnvironment());
+    assertThat(targetNodes.size(), Matchers.equalTo(2));
+    assertThat(
+        FluentIterable.from(targetNodes)
+            .transform(
+                new Function<TargetNode<?>, BuildTarget>() {
+                  @Override
+                  public BuildTarget apply(TargetNode<?> targetNode) {
+                    return targetNode.getBuildTarget();
+                  }
+                })
+            .toList(),
+        Matchers.hasItems(fooLib1Target, fooLib2Target));
   }
 
   private ImmutableMap<BuildTarget, HashCode> buildTargetGraphAndGetHashCodes(

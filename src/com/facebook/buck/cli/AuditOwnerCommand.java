@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.ParserConfig;
@@ -170,6 +169,7 @@ public class AuditOwnerCommand extends AbstractCommand {
       boolean guessForDeletedEnabled)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
     final Path rootPath = params.getCell().getFilesystem().getRootPath();
+    Preconditions.checkState(rootPath.isAbsolute());
     Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
     OwnersReport report = OwnersReport.emptyReport();
 
@@ -188,42 +188,21 @@ public class AuditOwnerCommand extends AbstractCommand {
       Path buckFile = basePath.get().resolve(parserConfig.getBuildFileName());
       Preconditions.checkState(params.getCell().getFilesystem().exists(buckFile));
 
-      // Get the target base name.
-      Preconditions.checkState(rootPath.isAbsolute());
-      Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
-      String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
-
       // Parse buck files and load target nodes.
       if (!targetNodes.containsKey(buckFile)) {
         try {
-          List<Map<String, Object>> buildFileTargets = params.getParser().parseBuildFile(
-              params.getCell().getFilesystem().getRootPath(),
+          targetNodes.put(
               buckFile,
-              parserConfig,
-              params.getEnvironment(),
-              params.getConsole(),
-              params.getBuckEventBus());
-
-          for (Map<String, Object> buildFileTarget : buildFileTargets) {
-            if (!buildFileTarget.containsKey("name")) {
-              continue;
-            }
-
-            BuildTarget target = BuildTarget.builder(
-                // TODO(simons): Check that this is actually correct.
-                params.getCell().getFilesystem().getRootPath(),
-                targetBaseName,
-                (String) buildFileTarget.get("name")).build();
-
-            if (!targetNodes.containsKey(buckFile)) {
-              targetNodes.put(buckFile, Lists.<TargetNode<?>>newArrayList());
-            }
-            TargetNode<?> parsedTargetNode = params.getParser().getTargetNode(target);
-            if (parsedTargetNode != null) {
-              targetNodes.get(buckFile).add(parsedTargetNode);
-            }
-          }
+              params.getParser().getOrLoadTargetNodes(
+                  buckFile,
+                  parserConfig,
+                  params.getBuckEventBus(),
+                  params.getConsole(),
+                  params.getEnvironment()));
         } catch (BuildFileParseException | BuildTargetException e) {
+          Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
+          String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
+
           params
               .getConsole()
               .getStdErr()
