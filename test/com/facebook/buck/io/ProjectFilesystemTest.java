@@ -367,7 +367,7 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testWalkFileTreeWhenProjectRootIsWorkingDir() throws IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
     Path pathRelativeToProjectRoot = Paths.get(
@@ -417,7 +417,7 @@ public class ProjectFilesystemTest {
 
   @Test
   public void whenContextNullThenCreateContextStringReturnsValidString() {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     assertThat(
         "Context string should contain null.",
         projectFilesystem.createContextString(WatchEvents.createOverflowEvent()),

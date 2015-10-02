@@ -85,6 +85,7 @@ import okio.BufferedSource;
 public class FakeProjectFilesystem extends ProjectFilesystem {
 
   private static final Random RANDOM = new Random();
+  private static final Path DEFAULT_ROOT = Paths.get(".").toAbsolutePath().normalize();
 
   private static final BasicFileAttributes DEFAULT_FILE_ATTRIBUTES =
       new BasicFileAttributes() {
@@ -221,24 +222,28 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   public FakeProjectFilesystem() {
-    this(new FakeClock(0), Paths.get("").toFile(), ImmutableSet.<Path>of());
+    this(new FakeClock(0), DEFAULT_ROOT, ImmutableSet.<Path>of());
   }
 
   // We accept a File here since that's what's returned by TemporaryFolder.
   public FakeProjectFilesystem(File root) {
-    this(new FakeClock(0), root, ImmutableSet.<Path>of());
+    this(new FakeClock(0), root.toPath(), ImmutableSet.<Path>of());
   }
 
   public FakeProjectFilesystem(Clock clock) {
-    this(clock, Paths.get(".").toFile(), ImmutableSet.<Path>of());
+    this(clock, DEFAULT_ROOT, ImmutableSet.<Path>of());
   }
 
   public FakeProjectFilesystem(Set<Path> files) {
-    this(new FakeClock(0), Paths.get(".").toFile(), files);
+    this(new FakeClock(0), DEFAULT_ROOT, files);
   }
 
   public FakeProjectFilesystem(Clock clock, File root, Set<Path> files) {
-    super(root.toPath());
+    this(clock, root.toPath(), files);
+  }
+
+  public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {
+    super(root);
     // We use LinkedHashMap to preserve insertion order, so the
     // behavior of this test is consistent across versions. (It also lets
     // us write tests which explicitly test iterating over entries in

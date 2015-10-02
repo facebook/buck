@@ -33,7 +33,7 @@ public class DefaultPropertyFinderTest {
   @Test
   public void whenPropertiesAreEmptyThenEnvironmentUsed() {
     DefaultPropertyFinder propertyFinder = new DefaultPropertyFinder(
-        new ProjectFilesystem(Paths.get(".")),
+        new ProjectFilesystem(Paths.get(".").toAbsolutePath()),
         ImmutableMap.of("SOME_ENVIRONMENT_VARIABLE", "."));
 
     Optional<Path> path = propertyFinder.findDirectoryByPropertiesThenEnvironmentVariable(

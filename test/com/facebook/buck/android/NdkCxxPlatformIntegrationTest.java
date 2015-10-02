@@ -105,7 +105,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   private Path getNdkRoot() {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         projectFilesystem,
         Optional.<String>absent(),

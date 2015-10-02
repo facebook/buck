@@ -57,7 +57,9 @@ public class ClasspathTraversalTest {
     }).toList();
     final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
-    traverser.traverse(new ClasspathTraversal(paths, new ProjectFilesystem(Paths.get("."))) {
+    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
+    traverser.traverse(new ClasspathTraversal(paths,
+                           filesystem) {
       @Override
       public void visit(FileLike fileLike) {
         String contents;

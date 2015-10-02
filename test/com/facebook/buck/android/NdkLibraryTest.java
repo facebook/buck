@@ -58,7 +58,7 @@ public class NdkLibraryTest {
   @Before
   public void setUp() {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    projectFilesystem = new ProjectFilesystem(Paths.get("."));
+    projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(projectFilesystem,
         Optional.<String>absent(),
         new DefaultPropertyFinder(projectFilesystem, ImmutableMap.copyOf(System.getenv())));
@@ -106,7 +106,7 @@ public class NdkLibraryTest {
                     "APP_BUILD_SCRIPT=%s " +
                     "NDK_OUT=%s " +
                     "NDK_LIBS_OUT=%s " +
-                    "BUCK_PROJECT_DIR=../../../../../. " +
+                    "BUCK_PROJECT_DIR=../../../../.. " +
                     "host-echo-build-step=%s " +
                     "--silent",
                 ndkBuildCommand,

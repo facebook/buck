@@ -177,7 +177,8 @@ public class ProjectFilesystem {
       ImmutableSet<Path> blackListedPaths) {
     Preconditions.checkArgument(Files.isDirectory(root));
     Preconditions.checkState(vfs.equals(root.getFileSystem()));
-    this.projectRoot = root.toAbsolutePath();
+    Preconditions.checkArgument(root.isAbsolute());
+    this.projectRoot = root.normalize();
     this.pathAbsolutifier = new Function<Path, Path>() {
       @Override
       public Path apply(Path path) {

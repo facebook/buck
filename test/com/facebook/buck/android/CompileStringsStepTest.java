@@ -354,7 +354,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
     public FakeProjectFileSystem() {
-      super(Paths.get("."));
+      super(Paths.get(".").toAbsolutePath());
     }
 
     @Override

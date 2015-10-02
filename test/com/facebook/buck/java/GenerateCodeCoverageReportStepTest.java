@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-public class GenerateCodeCoverageReportStepTest {
+public class  GenerateCodeCoverageReportStepTest {
 
   public static final String OUTPUT_DIRECTORY = Paths.get("buck-out/gen/output").toString();
   public static final Set<String> SOURCE_DIRECTORIES = ImmutableSet.of(
@@ -58,7 +58,7 @@ public class GenerateCodeCoverageReportStepTest {
 
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(Paths.get("."));
+    filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
 
     step = new GenerateCodeCoverageReportStep(
         filesystem,
