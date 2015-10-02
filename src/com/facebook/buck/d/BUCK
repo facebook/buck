@@ -36,6 +36,7 @@ java_library(
     '//third-party/java/guava:guava',
     '//third-party/java/immutables:processor',
     '//third-party/java/infer-annotations:infer-annotations',
+    '//third-party/java/jackson:jackson',
     '//third-party/java/jsr:jsr305',
   ],
   visibility=['PUBLIC'],
