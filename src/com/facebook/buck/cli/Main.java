@@ -508,8 +508,7 @@ public final class Main {
 
     Verbosity verbosity = VerbosityParser.parse(args);
     Optional<String> color;
-    final boolean isDaemon = context.isPresent();
-    if (isDaemon && (context.get().getEnv() != null)) {
+    if (context.isPresent() && (context.get().getEnv() != null)) {
       String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
       color = Optional.fromNullable(colorString);
     } else {
@@ -622,6 +621,8 @@ public final class Main {
       watchman = Watchman.NULL_WATCHMAN;
       globHandler = ParserConfig.GlobHandler.PYTHON;
     }
+
+    final boolean isDaemon = context.isPresent() && (watchman != Watchman.NULL_WATCHMAN);
 
     KnownBuildRuleTypesFactory factory = new KnownBuildRuleTypesFactory(
         processExecutor,
@@ -852,7 +853,7 @@ public final class Main {
         commandSemaphore.release(); // Allow another command to execute while outputting traces.
       }
     }
-    if (isDaemon && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
+    if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
