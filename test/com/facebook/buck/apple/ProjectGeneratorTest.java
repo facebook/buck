@@ -182,6 +182,47 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testProjectStructureWithInfoPlist() throws IOException {
+    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
+
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setExportedHeaders(
+            ImmutableSortedSet.<SourcePath>of(new TestSourcePath("foo.h")))
+        .build();
+
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setBinary(libraryTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new TestSourcePath(("Info.plist")))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, bundleNode));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup bundleGroup =
+        project.getMainGroup().getOrCreateChildGroupByName(bundleTarget.getFullyQualifiedName());
+    PBXGroup sourcesGroup = bundleGroup.getOrCreateChildGroupByName("Sources");
+
+    assertThat(bundleGroup.getChildren(), hasSize(2));
+
+    Iterable<String> childNames = Iterables.transform(
+        sourcesGroup.getChildren(),
+        new Function<PBXReference, String>() {
+          @Override
+          public String apply(PBXReference fileReference) {
+            return fileReference.getName();
+          }
+        });
+    assertThat(childNames, hasItem("Info.plist"));
+  }
+
+  @Test
   public void testCreateDirectoryStructure() throws IOException {
     BuildTarget buildTarget1 = BuildTarget.builder(rootPath, "//foo/bar", "target1").build();
     TargetNode<?> node1 = AppleLibraryBuilder.createBuilder(buildTarget1).build();

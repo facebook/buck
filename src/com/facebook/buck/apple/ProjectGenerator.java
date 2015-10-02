@@ -782,6 +782,11 @@ public class ProjectGenerator {
         .setRecursiveResources(recursiveResources)
         .setDirectResources(directResources);
 
+    if (bundle.isPresent()) {
+      HasAppleBundleFields bundleArg = bundle.get().getConstructorArg();
+      mutator.setInfoPlist(Optional.of(bundleArg.getInfoPlist()));
+    }
+
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
         targetNode.castArg(AppleNativeTargetDescriptionArg.class);
     if (appleTargetNode.isPresent()) {
