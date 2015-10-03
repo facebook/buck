@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
@@ -30,6 +31,7 @@ import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
@@ -37,6 +39,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
@@ -49,11 +52,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 public class CxxBinaryDescriptionTest {
 
@@ -300,6 +306,27 @@ public class CxxBinaryDescriptionTest {
             ImmutableSortedSet.of(
                 SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))))
         .build(resolver, filesystem);
+  }
+
+  @Test
+  public void runtimeDepOnDeps() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
+    BuildRule leafCxxBinary =
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver, filesystem, targetNodes);
+    BuildRule cxxLibrary =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setDeps(ImmutableSortedSet.of(leafCxxBinary.getBuildTarget()))
+            .build(resolver, filesystem, targetNodes);
+    CxxBinary topLevelCxxBinary =
+        (CxxBinary) new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:bin"))
+            .setDeps(ImmutableSortedSet.of(cxxLibrary.getBuildTarget()))
+            .build(resolver, filesystem, targetNodes);
+    assertThat(
+        BuildRules.getTransitiveRuntimeDeps(topLevelCxxBinary),
+        Matchers.hasItem(leafCxxBinary));
   }
 
 }
