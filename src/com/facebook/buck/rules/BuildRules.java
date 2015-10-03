@@ -112,4 +112,21 @@ public class BuildRules {
     return exportedRules.build();
   }
 
+  public static ImmutableSortedSet<BuildRule> getTransitiveRuntimeDeps(HasRuntimeDeps rule) {
+    final ImmutableSortedSet.Builder<BuildRule> runtimeDeps = ImmutableSortedSet.naturalOrder();
+    AbstractBreadthFirstTraversal<BuildRule> visitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(rule.getRuntimeDeps()) {
+          @Override
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+            runtimeDeps.add(rule);
+            if (rule instanceof HasRuntimeDeps) {
+              return ((HasRuntimeDeps) rule).getRuntimeDeps();
+            }
+            return ImmutableSet.of();
+          }
+        };
+    visitor.start();
+    return runtimeDeps.build();
+  }
+
 }

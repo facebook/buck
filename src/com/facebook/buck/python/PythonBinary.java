@@ -18,11 +18,16 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSortedSet;
 
-public abstract class PythonBinary extends AbstractBuildRule implements BinaryBuildRule {
+public abstract class PythonBinary
+    extends AbstractBuildRule
+    implements BinaryBuildRule, HasRuntimeDeps {
 
   private final PythonPlatform pythonPlatform;
   private final String mainModule;
@@ -53,6 +58,11 @@ public abstract class PythonBinary extends AbstractBuildRule implements BinaryBu
   @VisibleForTesting
   protected PythonPackageComponents getComponents() {
     return components;
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+    return getDeclaredDeps();
   }
 
 }

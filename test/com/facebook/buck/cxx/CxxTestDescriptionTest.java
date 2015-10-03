@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -28,8 +27,8 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -44,7 +43,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -198,24 +196,6 @@ public class CxxTestDescriptionTest {
     }
   }
 
-  private ImmutableSortedSet<BuildRule> getTransitiveRuntimeDeps(HasRuntimeDeps rule) {
-    final Set<BuildRule> runtimeDeps = Sets.newHashSet();
-    AbstractBreadthFirstTraversal<BuildRule> visitor =
-        new AbstractBreadthFirstTraversal<BuildRule>(rule.getRuntimeDeps()) {
-          @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) {
-            runtimeDeps.add(rule);
-            if (rule instanceof HasRuntimeDeps) {
-              return ((HasRuntimeDeps) rule).getRuntimeDeps();
-            }
-            return ImmutableSet.of();
-          }
-        };
-    visitor.start();
-    return ImmutableSortedSet.copyOf(runtimeDeps);
-  }
-
-
   @Test
   public void runtimeDepOnDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -233,7 +213,7 @@ public class CxxTestDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxLibrary.getBuildTarget()))
             .build(resolver, filesystem, targetNodes);
     assertThat(
-        getTransitiveRuntimeDeps(cxxTest),
+        BuildRules.getTransitiveRuntimeDeps(cxxTest),
         Matchers.hasItem(cxxBinary));
   }
 

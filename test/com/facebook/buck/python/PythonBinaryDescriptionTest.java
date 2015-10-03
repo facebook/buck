@@ -19,13 +19,16 @@ package com.facebook.buck.python;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -203,6 +206,26 @@ public class PythonBinaryDescriptionTest {
             .setPlatform(platform2.getFlavor().toString())
             .build(new BuildRuleResolver());
     assertThat(binary2.getPythonPlatform(), Matchers.equalTo(platform2));
+  }
+
+  @Test
+  public void runtimeDepOnDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildRule cxxBinary =
+        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    BuildRule pythonLibrary =
+        new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
+            .build(resolver);
+    PythonBinary pythonBinary =
+        (PythonBinary) PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+            .setMainModule("main")
+            .setDeps(ImmutableSortedSet.of(pythonLibrary.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        BuildRules.getTransitiveRuntimeDeps(pythonBinary),
+        Matchers.hasItem(cxxBinary));
   }
 
 }
