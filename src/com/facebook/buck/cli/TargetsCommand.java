@@ -466,8 +466,20 @@ public class TargetsCommand extends AbstractCommand {
     while (valueIterator.hasNext()) {
       TargetNode<?> targetNode = valueIterator.next();
 
-      SortedMap<String, Object> sortedTargetRule =
-          CommandHelper.getBuildTargetRules(params, parserConfig, targetNode);
+      SortedMap<String, Object> sortedTargetRule = null;
+      try {
+        sortedTargetRule = params.getParser().getOrLoadTargetNodeRules(
+            targetNode,
+            parserConfig,
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment());
+      } catch (BuildTargetException e) {
+        LOG.debug(
+            "While loading rules for target %s: %e",
+            targetNode.getBuildTarget(),
+            e);
+      }
       if (sortedTargetRule == null) {
         params.getConsole().printErrorText(
             "unable to find rule for target " +

@@ -57,6 +57,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -94,6 +95,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -530,6 +532,60 @@ public class Parser {
     return builder.build();
   }
 
+  @Nullable
+  public SortedMap<String, Object> getOrLoadTargetNodeRules(
+      TargetNode<?> targetNode,
+      ParserConfig parserConfig,
+      BuckEventBus eventBus,
+      Console console,
+      ImmutableMap<String, String> environment)
+      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    Path buildFile = cell.getAbsolutePathToBuildFile(buildTarget);
+    List<Map<String, Object>> rules;
+    if (state.isParsed(buildFile)) {
+      rules = state.getRawRules(buildFile);
+    } else {
+      try {
+        rules = parseBuildFile(
+            cell.getFilesystem().getRootPath(),
+            buildFile,
+            parserConfig,
+            environment,
+            console,
+            eventBus);
+      } catch (BuildTargetException e) {
+        return null;
+      }
+    }
+
+    // Find the build rule information that corresponds to this build buildTarget.
+    Map<String, Object> targetRule = null;
+    for (Map<String, Object> rule : rules) {
+      String name = (String) Preconditions.checkNotNull(rule.get("name"));
+      if (name.equals(buildTarget.getShortName())) {
+        targetRule = rule;
+        break;
+      }
+    }
+
+    if (targetRule == null) {
+      return null;
+    }
+
+    targetRule.put(
+        "buck.direct_dependencies",
+        ImmutableList.copyOf((Iterables.transform(
+                targetNode.getDeps(),
+                Functions.toStringFunction()))));
+
+    // Sort the rule items, both so we have a stable order for unit tests and
+    // to improve readability of the output.
+    SortedMap<String, Object> sortedTargetRule = Maps.newTreeMap();
+    sortedTargetRule.putAll(targetRule);
+    return sortedTargetRule;
+  }
+
   private SimplePerfEvent.Scope getTargetNodeEventScope(
       BuckEventBus eventBus,
       BuildTarget buildTarget) {
@@ -686,7 +742,7 @@ public class Parser {
         environment);
   }
 
-  public synchronized List<Map<String, Object>> parseBuildFile(
+  private synchronized List<Map<String, Object>> parseBuildFile(
       Path cellRoot,
       Path buildFile,
       ParserConfig parserConfig,

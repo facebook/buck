@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
@@ -196,8 +197,12 @@ public class QueryCommand extends AbstractCommand {
       }
       TargetNode<?> node = env.getNode(target);
       try {
-        SortedMap<String, Object> sortedTargetRule =
-            CommandHelper.getBuildTargetRules(params, parserConfig, node);
+        SortedMap<String, Object> sortedTargetRule =  params.getParser().getOrLoadTargetNodeRules(
+              node,
+              parserConfig,
+              params.getBuckEventBus(),
+              params.getConsole(),
+              params.getEnvironment());
         if (sortedTargetRule == null) {
           params.getConsole().printErrorText(
               "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
@@ -212,7 +217,7 @@ public class QueryCommand extends AbstractCommand {
         result.put(
             node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName(),
             attributes);
-      } catch (BuildFileParseException e) {
+      } catch (BuildFileParseException | BuildTargetException e) {
         params.getConsole().printErrorText(
             "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
         continue;

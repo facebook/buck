@@ -105,6 +105,7 @@ import java.nio.file.WatchEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 public class ParserTest extends EasyMockSupport {
 
@@ -1812,6 +1813,39 @@ public class ParserTest extends EasyMockSupport {
                 })
             .toList(),
         Matchers.hasItems(fooLib1Target, fooLib2Target));
+  }
+
+  @Test
+  public void getOrLoadTargetNodeRules()
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+    Parser parser = createParser(emptyBuildTargets());
+
+    tempDir.newFolder("foo");
+
+    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    Files.write(
+        testFooBuckFile,
+        "java_library(name = 'lib')\n".getBytes(UTF_8));
+    BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+
+    TargetNode<?> targetNode = parser.getOrLoadTargetNode(
+        fooLibTarget,
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        false);
+    assertThat(targetNode.getBuildTarget(), Matchers.equalTo(fooLibTarget));
+
+    BuckConfig config = new FakeBuckConfig();
+    SortedMap<String, Object> rules = parser.getOrLoadTargetNodeRules(
+        targetNode,
+        new ParserConfig(config),
+        BuckEventBusFactory.newInstance(),
+        new TestConsole(),
+        config.getEnvironment());
+    assertThat(rules, Matchers.hasKey("name"));
+    assertThat(
+        (String) rules.get("name"),
+        Matchers.equalTo(targetNode.getBuildTarget().getShortName()));
   }
 
   private ImmutableMap<BuildTarget, HashCode> buildTargetGraphAndGetHashCodes(
