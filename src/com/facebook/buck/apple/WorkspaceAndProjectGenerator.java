@@ -22,7 +22,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -63,7 +62,6 @@ public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
   private final ProjectFilesystem projectFilesystem;
-  private final ReactNativeBuckConfig reactNativeBuckConfig;
   private final TargetGraph projectGraph;
   private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
@@ -90,7 +88,6 @@ public class WorkspaceAndProjectGenerator {
 
   public WorkspaceAndProjectGenerator(
       ProjectFilesystem projectFilesystem,
-      ReactNativeBuckConfig reactNativeBuckConfig,
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescription.Arg workspaceArguments,
       BuildTarget workspaceBuildTarget,
@@ -107,7 +104,6 @@ public class WorkspaceAndProjectGenerator {
       Function<TargetNode<?>, Path> outputPathOfNode,
       BuckEventBus buckEventBus) {
     this.projectFilesystem = projectFilesystem;
-    this.reactNativeBuckConfig = reactNativeBuckConfig;
     this.projectGraph = projectGraph;
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
@@ -240,7 +236,6 @@ public class WorkspaceAndProjectGenerator {
           projectGraph,
           targetsInRequiredProjects,
           projectFilesystem,
-          reactNativeBuckConfig.getServer(),
           outputDirectory.getParent(),
           workspaceName,
           buildFileName,
@@ -301,7 +296,6 @@ public class WorkspaceAndProjectGenerator {
               projectGraph,
               rules,
               projectFilesystem,
-              reactNativeBuckConfig.getServer(),
               projectDirectory,
               projectName,
               buildFileName,
@@ -345,7 +339,6 @@ public class WorkspaceAndProjectGenerator {
             projectGraph,
             ImmutableSortedSet.<BuildTarget>of(),
             projectFilesystem,
-            reactNativeBuckConfig.getServer(),
             BuildTargets.getGenPath(workspaceBuildTarget, "%s-CombinedTestBundles"),
             "_CombinedTestBundles",
             buildFileName,

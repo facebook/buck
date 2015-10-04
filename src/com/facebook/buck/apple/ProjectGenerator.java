@@ -201,7 +201,6 @@ public class ProjectGenerator {
   private final Function<SourcePath, Path> sourcePathResolver;
   private final TargetGraph targetGraph;
   private final ProjectFilesystem projectFilesystem;
-  private final Optional<Path> reactNativeServer;
   private final Path outputDirectory;
   private final String projectName;
   private final ImmutableSet<BuildTarget> initialTargets;
@@ -248,7 +247,6 @@ public class ProjectGenerator {
       TargetGraph targetGraph,
       Set<BuildTarget> initialTargets,
       ProjectFilesystem projectFilesystem,
-      Optional<Path> reactNativeServer,
       Path outputDirectory,
       String projectName,
       String buildFileName,
@@ -271,7 +269,6 @@ public class ProjectGenerator {
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectFilesystem = projectFilesystem;
-    this.reactNativeServer = reactNativeServer;
     this.outputDirectory = outputDirectory;
     this.projectName = projectName;
     this.buildFileName = buildFileName;
@@ -846,11 +843,6 @@ public class ProjectGenerator {
     }
     mutator.setPostBuildRunScriptPhases(postScriptPhases.build());
     mutator.skipReactNativeBundle(skipRNBundle);
-
-    if (skipRNBundle && reactNativeServer.isPresent()) {
-      mutator.setAdditionalRunScripts(
-          ImmutableList.of(projectFilesystem.resolve(reactNativeServer.get())));
-    }
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
     try {

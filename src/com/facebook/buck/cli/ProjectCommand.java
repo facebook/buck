@@ -37,7 +37,6 @@ import com.facebook.buck.java.intellij.IjModuleGraph;
 import com.facebook.buck.java.intellij.IjProject;
 import com.facebook.buck.java.intellij.IntellijConfig;
 import com.facebook.buck.java.intellij.Project;
-import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -771,7 +770,6 @@ public class ProjectCommand extends BuildCommand {
       }
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           params.getCell().getFilesystem(),
-          new ReactNativeBuckConfig(params.getBuckConfig()),
           targetGraphAndTargets.getTargetGraph(),
           workspaceArgs,
           inputTarget,

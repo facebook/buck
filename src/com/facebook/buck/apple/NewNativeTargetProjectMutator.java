@@ -112,7 +112,6 @@ public class NewNativeTargetProjectMutator {
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
   private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
   private boolean skipRNBundle = false;
-  private Collection<Path> additionalRunScripts = ImmutableList.of();
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
@@ -224,10 +223,6 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public void setAdditionalRunScripts(Collection<Path> scripts) {
-    additionalRunScripts = scripts;
-  }
-
   /**
    * @param recursiveAssetCatalogs List of asset catalog targets of targetNode and dependencies of
    *                               targetNode.
@@ -262,7 +257,6 @@ public class NewNativeTargetProjectMutator {
     addResourcesBuildPhase(target, targetGroup);
     target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
     addRunScriptBuildPhases(target, postBuildRunScriptPhases);
-    addRawScriptBuildPhases(target);
 
     // Product
 
@@ -619,14 +613,6 @@ public class NewNativeTargetProjectMutator {
         // unreachable
         throw new IllegalStateException("Invalid rule type for shell script build phase");
       }
-    }
-  }
-
-  private void addRawScriptBuildPhases(PBXNativeTarget target) {
-    for (Path runScript : additionalRunScripts) {
-      PBXShellScriptBuildPhase phase = new PBXShellScriptBuildPhase();
-      phase.setShellScript(runScript.toString());
-      target.getBuildPhases().add(phase);
     }
   }
 
