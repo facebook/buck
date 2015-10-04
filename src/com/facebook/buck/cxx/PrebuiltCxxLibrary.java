@@ -270,7 +270,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
     // Build up the shared library list to contribute to a python executable package.
     ImmutableMap.Builder<Path, SourcePath> nativeLibrariesBuilder = ImmutableMap.builder();
-    if (!headerOnly && !provided) {
+    if (!headerOnly && !provided && linkage != Linkage.STATIC) {
       SourcePath sharedLibrary = requireSharedLibrary(targetGraph, cxxPlatform);
       nativeLibrariesBuilder.put(
           Paths.get(resolvedSoname),
@@ -303,7 +303,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     String resolvedSoname =
         PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname, libName);
     ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
-    if (!headerOnly && !provided) {
+    if (!headerOnly && !provided && linkage != Linkage.STATIC) {
       SourcePath sharedLibrary = requireSharedLibrary(targetGraph, cxxPlatform);
       solibs.put(resolvedSoname, sharedLibrary);
     }

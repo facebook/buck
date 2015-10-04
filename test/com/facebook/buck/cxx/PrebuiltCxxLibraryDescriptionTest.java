@@ -650,14 +650,29 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) new PrebuiltCxxLibraryBuilder(TARGET)
             .setForceStatic(true)
             .build(resolver, filesystem, targetNodes);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
     NativeLinkableInput nativeLinkableInput =
         prebuiltCxxLibrary.getNativeLinkableInput(
-            TargetGraphFactory.newInstance(targetNodes),
+            targetGraph,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED);
     assertThat(
         pathResolver.getPath(nativeLinkableInput.getInputs().get(0)).toString(),
         Matchers.endsWith(".a"));
+    assertThat(
+        prebuiltCxxLibrary.getSharedLibraries(
+            targetGraph,
+            CxxPlatformUtils.DEFAULT_PLATFORM)
+            .entrySet(),
+        Matchers.empty());
+    assertThat(
+        prebuiltCxxLibrary.getPythonPackageComponents(
+            targetGraph,
+            PythonTestUtils.PYTHON_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLibraries()
+            .entrySet(),
+        Matchers.empty());
   }
 
   @Test
