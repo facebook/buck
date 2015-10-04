@@ -660,4 +660,22 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Matchers.endsWith(".a"));
   }
 
+  @Test
+  public void exportedLinkerFlagsAreUsedToBuildSharedLibrary() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    BuildTarget target =
+        BuildTarget.builder(BuildTargetFactory.newInstance("//:lib"))
+            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+            .addFlavors(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor())
+            .build();
+    CxxLink cxxLink =
+        (CxxLink) new PrebuiltCxxLibraryBuilder(target)
+            .setExportedLinkerFlags(ImmutableList.of("--some-flag"))
+            .setForceStatic(true)
+            .build(resolver);
+    assertThat(
+        cxxLink.getArgs(),
+        Matchers.hasItem("--some-flag"));
+  }
+
 }

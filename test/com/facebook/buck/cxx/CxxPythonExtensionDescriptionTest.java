@@ -80,11 +80,11 @@ public class CxxPythonExtensionDescriptionTest {
       BuildTarget target) {
     new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
         .setHeaderOnly(true)
-        .setLinkerFlags(ImmutableList.of("-lpython2"))
+        .setExportedLinkerFlags(ImmutableList.of("-lpython2"))
         .build(resolver, filesystem, targetNodes);
     new PrebuiltCxxLibraryBuilder(PYTHON3_DEP_TARGET)
         .setHeaderOnly(true)
-        .setLinkerFlags(ImmutableList.of("-lpython3"))
+        .setExportedLinkerFlags(ImmutableList.of("-lpython3"))
         .build(resolver, filesystem, targetNodes);
     return new CxxPythonExtensionBuilder(
         target,

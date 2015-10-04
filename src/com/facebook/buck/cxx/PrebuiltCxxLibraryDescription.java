@@ -276,7 +276,10 @@ public class PrebuiltCxxLibraryDescription
         cxxPlatform,
         params,
         pathResolver,
-        /* extraLdFlags */ ImmutableList.<String>of(),
+        CxxFlags.getFlags(
+            args.exportedLinkerFlags,
+            args.exportedPlatformLinkerFlags,
+            cxxPlatform),
         sharedTarget,
         Linker.LinkType.SHARED,
         Optional.of(soname),

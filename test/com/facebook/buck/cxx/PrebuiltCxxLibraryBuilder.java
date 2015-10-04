@@ -83,7 +83,7 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setLinkerFlags(ImmutableList<String> linkerFlags) {
+  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> linkerFlags) {
     arg.exportedLinkerFlags = Optional.of(linkerFlags);
     return this;
   }
