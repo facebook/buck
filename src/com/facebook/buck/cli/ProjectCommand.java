@@ -711,7 +711,7 @@ public class ProjectCommand extends BuildCommand {
         super.getOptions(),
         new HashMap<Path, ProjectGenerator>(),
         getCombinedProject(),
-        buildWithBuck,
+        buildWithBuck || shouldForceBuildingWithBuck(params.getBuckConfig(), passedInTargetsSet),
         getCombineTestBundles());
     if (!requiredBuildTargets.isEmpty()) {
       BuildCommand buildCommand = new BuildCommand();
@@ -722,6 +722,17 @@ public class ProjectCommand extends BuildCommand {
       exitCode = buildCommand.runWithoutHelp(params);
     }
     return exitCode;
+  }
+
+  private boolean shouldForceBuildingWithBuck(
+      BuckConfig buckConfig,
+      ImmutableSet<BuildTarget> passedInTargetsSet) {
+    if (passedInTargetsSet.size() == 0) {
+      return false;
+    }
+    ImmutableList<BuildTarget> forcedTargets =
+        buckConfig.getBuildTargetList("project", "force_build_with_buck_targets");
+    return forcedTargets.containsAll(passedInTargetsSet);
   }
 
   @VisibleForTesting

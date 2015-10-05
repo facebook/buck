@@ -46,6 +46,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -261,6 +262,27 @@ public class BuckConfig {
         target,
         BuildTargetPatternParser.fullyQualified(),
         getCellRoots());
+  }
+
+  public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
+    ImmutableList<String> targetsToForce = getListWithoutComments(section, key);
+    if (targetsToForce.size() == 0) {
+      return ImmutableList.<BuildTarget>of();
+    }
+    ImmutableList<BuildTarget> targets = ImmutableList.copyOf(FluentIterable
+        .from(targetsToForce)
+        .transform(
+            new Function<String, BuildTarget>() {
+              @Override
+              public BuildTarget apply(String input) {
+                String expandedAlias = getBuildTargetForAliasAsString(input);
+                if (expandedAlias != null) {
+                  input = expandedAlias;
+                }
+                return getBuildTargetForFullyQualifiedTarget(input);
+              }
+            }));
+    return targets;
   }
 
   /**

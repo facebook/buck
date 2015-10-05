@@ -35,8 +35,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -161,6 +163,29 @@ public class BuckConfigTest {
     assertNull(noAliasesConfig.getBuildTargetForAliasAsString("foo"));
     assertNull(noAliasesConfig.getBuildTargetForAliasAsString("bar"));
     assertNull(noAliasesConfig.getBuildTargetForAliasAsString("baz"));
+  }
+
+  @Test
+  public void testGetBuildTargetListResolvesAliases()
+      throws IOException, NoSuchBuildTargetException {
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[alias]",
+        "foo = //java/com/example:foo",
+        "[section]",
+        "some_list = \\",
+        "foo, \\",
+        "//java/com/example:bar"));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader);
+
+    ImmutableList<String> expected = ImmutableList.<String>of(
+        "//java/com/example:foo",
+        "//java/com/example:bar");
+    ImmutableList<String> result = ImmutableList.copyOf(FluentIterable
+            .from(config.getBuildTargetList("section", "some_list"))
+            .transform(Functions.toStringFunction()));
+    assertThat(result, Matchers.equalTo(expected));
   }
 
   /**
