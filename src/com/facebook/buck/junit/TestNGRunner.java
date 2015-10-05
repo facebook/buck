@@ -19,15 +19,17 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestDescription;
 
 import org.testng.IAnnotationTransformer;
+import org.testng.IReporter;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
 import org.testng.annotations.ITestAnnotation;
-import org.testng.internal.annotations.JDK15AnnotationFinder;
-import org.testng.xml.XmlClass;
-import org.testng.xml.XmlSuite;
-import org.testng.xml.XmlTest;
+import org.testng.reporters.EmailableReporter;
+import org.testng.reporters.FailedReporter;
+import org.testng.reporters.JUnitReportReporter;
+import org.testng.reporters.SuiteHTMLReporter;
+import org.testng.reporters.XMLReporter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -44,9 +46,11 @@ import java.util.List;
 public final class TestNGRunner extends BaseRunner {
   @Override
   public void run() throws Throwable {
-    System.out.println("TestNGRunner started!");
     for (String className : testClassNames) {
-      System.out.println("TestNGRunner handling " + className);
+      if (!shouldIncludeTest(className)) {
+        continue;
+      }
+
       final Class<?> testClass = Class.forName(className);
 
       List<TestResult> results;
@@ -54,69 +58,68 @@ public final class TestNGRunner extends BaseRunner {
         results = Collections.emptyList();
       } else {
         results = new ArrayList<>();
-        TestNGWrapper tester = new TestNGWrapper();
-        tester.setAnnoTransformer(new FilteringAnnotationTransformer());
-        tester.setXmlSuites(Collections.singletonList(createXmlSuite(testClass)));
-        TestListener listener = new TestListener(results);
-        tester.addListener(new TestListener(results));
-        try {
-          System.out.println("TestNGRunner running " + className);
-          tester.initializeSuitesAndJarFile();
-          tester.runSuitesLocally();
-        } catch (Throwable e) {
-          // There are failures that the TestNG framework fails to
-          // handle (for example, if a test requires a Guice module and
-          // the module throws an exception).
-          // Furthermore, there are bugs in TestNG itself. For example,
-          // when printing the results of a parameterized test, it tries
-          // to call toString() on all the test params and does not catch
-          // resulting exceptions.
-          listener.onFinish(null);
-          System.out.println("TestNGRunner caught an exception");
-          e.printStackTrace();
-          results.add(new TestResult(className,
-              "<TestNG failure>", 0,
-              ResultType.FAILURE, e,
-              "", ""));
-        }
-        System.out.println("TestNGRunner tested " + className + ", got " + results.size());
+        TestNG testng = new TestNG();
+        testng.setUseDefaultListeners(false);
+        testng.setAnnotationTransformer(new TestFilter());
+        testng.setTestClasses(new Class<?>[]{testClass});
+        testng.addListener(new TestListener(results));
+        // use default TestNG reporters ...
+        testng.addListener(new SuiteHTMLReporter());
+        testng.addListener((IReporter) new FailedReporter());
+        testng.addListener(new XMLReporter());
+        testng.addListener(new EmailableReporter());
+        // ... except this replaces JUnitReportReporter ...
+        testng.addListener(new JUnitReportReporterImproved());
+        // ... and we can't access TestNG verbosity, so we remove VerboseReporter
+        testng.run();
       }
 
       writeResult(className, results);
     }
-    System.out.println("TestNGRunner done!");
-  }
-
-  private XmlSuite createXmlSuite(Class<?> c) {
-    XmlSuite xmlSuite = new XmlSuite();
-    xmlSuite.setName("TmpSuite");
-    xmlSuite.setTimeOut(String.valueOf(defaultTestTimeoutMillis));
-    XmlTest xmlTest = new XmlTest(xmlSuite);
-    xmlTest.setName("TmpTest");
-    xmlTest.setXmlClasses(Collections.singletonList(new XmlClass(c)));
-    return xmlSuite;
   }
 
   private boolean isTestClass(Class<?> klass) {
     return klass.getConstructors().length <= 1;
   }
 
-  public final class TestNGWrapper extends TestNG {
-    /**
-     * The built-in setAnnotationTransformer unfortunately does not work with runSuitesLocally()
-     *
-     * The alternative would be to use the (much heavier) run() method.
-     */
-    public void setAnnoTransformer(IAnnotationTransformer anno) {
-      getConfiguration().setAnnotationFinder(new JDK15AnnotationFinder(anno));
-    }
+  private boolean shouldIncludeTest(String className) {
+    TestDescription testDescription = new TestDescription(className, null);
+    return testSelectorList.isIncluded(testDescription);
   }
 
-  public class FilteringAnnotationTransformer implements IAnnotationTransformer {
+  private static String calculateTestMethodName(ITestResult iTestResult) {
+    Object[] parameters = iTestResult.getParameters();
+    String name = iTestResult.getName();
+
+    if (parameters == null || parameters.length == 0) {
+      return name;
+    }
+
+    StringBuilder builder = new StringBuilder(name).append(" (");
+    for (int i = 0; i < parameters.length; i++) {
+      Object parameter = parameters[i];
+      if (parameter == null) {
+        builder.append("null");
+      } else {
+        try {
+          builder.append(parameter.toString());
+        } catch (Exception e) {
+          builder.append("Unstringable object");
+        }
+      }
+      if (i < parameters.length - 1) {
+        builder.append(", ");
+      }
+    }
+    builder.append(")");
+    return builder.toString();
+  }
+
+  public class TestFilter implements IAnnotationTransformer {
     @Override
     @SuppressWarnings("rawtypes")
-    public void transform(ITestAnnotation annotation, Class testClass,
-        Constructor testConstructor, Method testMethod) {
+    public void transform(ITestAnnotation annotation, Class testClass, Constructor testConstructor,
+        Method testMethod) {
       if (!annotation.getEnabled()) {
         return;
       }
@@ -127,7 +130,6 @@ public final class TestNGRunner extends BaseRunner {
       String methodName = testMethod.getName();
       TestDescription testDescription = new TestDescription(className, methodName);
       boolean isIncluded = testSelectorList.isIncluded(testDescription);
-      seenDescriptions.add(testDescription);
       annotation.setEnabled(isIncluded && !isDryRun);
     }
   }
@@ -142,7 +144,18 @@ public final class TestNGRunner extends BaseRunner {
     }
 
     @Override
-    public void onTestStart(ITestResult result) {}
+    public void onTestStart(ITestResult result) {
+      // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
+      // form of System.out.println) the developer is using to debug the test.
+      originalOut = System.out;
+      originalErr = System.err;
+      rawStdOutBytes = new ByteArrayOutputStream();
+      rawStdErrBytes = new ByteArrayOutputStream();
+      stdOutStream = streamToPrintStream(rawStdOutBytes, System.out);
+      stdErrStream = streamToPrintStream(rawStdErrBytes, System.err);
+      System.setOut(stdOutStream);
+      System.setErr(stdErrStream);
+    }
 
     @Override
     public void onTestSuccess(ITestResult result) {
@@ -163,21 +176,12 @@ public final class TestNGRunner extends BaseRunner {
     }
 
     @Override
-    public void onStart(ITestContext context) {
-      // Create an intermediate stdout/stderr to capture any debugging statements (usually in the
-      // form of System.out.println) the developer is using to debug the test.
-      originalOut = System.out;
-      originalErr = System.err;
-      rawStdOutBytes = new ByteArrayOutputStream();
-      rawStdErrBytes = new ByteArrayOutputStream();
-      stdOutStream = streamToPrintStream(rawStdOutBytes, System.out);
-      stdErrStream = streamToPrintStream(rawStdErrBytes, System.err);
-      System.setOut(stdOutStream);
-      System.setErr(stdErrStream);
-    }
+    public void onStart(ITestContext context) {}
 
     @Override
-    public void onFinish(ITestContext context) {
+    public void onFinish(ITestContext context) {}
+
+    private void recordResult(ITestResult result, ResultType type, Throwable failure) {
       // Restore the original stdout/stderr.
       System.setOut(originalOut);
       System.setErr(originalErr);
@@ -185,22 +189,21 @@ public final class TestNGRunner extends BaseRunner {
       // Get the stdout/stderr written during the test as strings.
       stdOutStream.flush();
       stdErrStream.flush();
-    }
 
-    private void recordResult(ITestResult result, ResultType type, Throwable failure) {
       String stdOut = streamToString(rawStdOutBytes);
       String stdErr = streamToString(rawStdErrBytes);
 
       String className = result.getTestClass().getName();
-      String methodName = result.getTestName();
+      String methodName = calculateTestMethodName(result);
+
       long runTimeMillis = result.getEndMillis() - result.getStartMillis();
       results.add(new TestResult(className,
-          methodName,
-          runTimeMillis,
-          type,
-          failure,
-          stdOut,
-          stdErr));
+            methodName,
+            runTimeMillis,
+            type,
+            failure,
+            stdOut,
+            stdErr));
     }
 
     private String streamToString(ByteArrayOutputStream str) {
@@ -217,6 +220,13 @@ public final class TestNGRunner extends BaseRunner {
       } catch (UnsupportedEncodingException e) {
         return fallback;
       }
+    }
+  }
+
+  private static class JUnitReportReporterImproved extends JUnitReportReporter {
+    @Override
+    public String getTestName(ITestResult result) {
+      return calculateTestMethodName(result);
     }
   }
 }

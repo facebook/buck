@@ -354,6 +354,12 @@ public class Project {
         projectConfig.getTestsSourceRoots(),
         true /* isTestSource */);
 
+    addResourceFolders(
+        module,
+        projectConfig.getTestRule(),
+        projectConfig.getTestsResourceRoots(),
+        true /* isTestSource */);
+
     // test dependencies
     BuildRule testRule = projectConfig.getTestRule();
     if (testRule != null) {
@@ -369,6 +375,12 @@ public class Project {
         module,
         projectConfig.getSrcRule(),
         projectConfig.getSourceRoots(),
+        false /* isTestSource */);
+
+    addResourceFolders(
+        module,
+        projectConfig.getSrcRule(),
+        projectConfig.getResourceRoots(),
         false /* isTestSource */);
 
     addRootExcludes(module, projectConfig.getSrcRule(), projectFilesystem);
@@ -464,7 +476,12 @@ public class Project {
       if (module.isIntelliJPlugin()) {
         jdkDependency = SerializableDependentModule.newIntelliJPluginJdk();
       } else {
-        jdkDependency = SerializableDependentModule.newStandardJdk();
+        if (projectConfig.getJdkName() == null || projectConfig.getJdkType() == null) {
+          jdkDependency = SerializableDependentModule.newInheritedJdk();
+        } else {
+          jdkDependency = SerializableDependentModule.newStandardJdk(
+              projectConfig.getJdkName(), projectConfig.getJdkType());
+        }
       }
     }
 
@@ -656,6 +673,22 @@ public class Project {
     }
 
     return true;
+  }
+
+  private void addResourceFolders(
+      SerializableModule module,
+      @Nullable BuildRule buildRule,
+      @Nullable ImmutableList<SourceRoot> resourceRoots,
+      boolean isTestSource) {
+    if (buildRule == null || resourceRoots == null) {
+      return;
+    }
+
+    for (SourceRoot resourceRoot : resourceRoots) {
+      SerializableModule.SourceFolder resourceFolder = new SerializableModule.SourceFolder(
+          String.format("file://$MODULE_DIR$/%s", resourceRoot.getName()), isTestSource, true, null);
+      module.sourceFolders.add(resourceFolder);
+    }
   }
 
   @VisibleForTesting

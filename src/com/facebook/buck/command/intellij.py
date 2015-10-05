@@ -280,11 +280,19 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
                 package_prefix = 'packagePrefix="%s" ' % source_folder['packagePrefix']
             else:
                 package_prefix = ''
-            xml += '\n      <sourceFolder url="%(url)s" isTestSource="%(is_test_source)s" %(package_prefix)s/>' % {
-                'url': source_folder['url'],
-                'is_test_source': str(source_folder['isTestSource']).lower(),
-                'package_prefix': package_prefix
-            }
+            if source_folder['isResource']:
+                resource_folder_type = 'java-test-resource' if source_folder['isTestSource'] else 'java-resource'
+                xml += '\n      <sourceFolder url="%(url)s" type="%(resource_folder_type)s" %(package_prefix)s/>' % {
+                    'url': source_folder['url'],
+                    'resource_folder_type': resource_folder_type,
+                    'package_prefix': package_prefix
+                }
+            else:
+                xml += '\n      <sourceFolder url="%(url)s" isTestSource="%(is_test_source)s" %(package_prefix)s/>' % {
+                    'url': source_folder['url'],
+                    'is_test_source': str(source_folder['isTestSource']).lower(),
+                    'package_prefix': package_prefix
+                }
         for exclude_folder in module['excludeFolders']:
             xml += '\n      <excludeFolder url="%s" />' % exclude_folder['url']
         for exclude_folder in sorted(additional_excludes[module['pathToImlFile']]):
@@ -393,7 +401,9 @@ def write_modules(modules, generate_minimum_project, android_auto_generation_dis
             elif dep_type == 'inheritedJdk':
                 xml += '\n    <orderEntry type="inheritedJdk" />'
             elif dep_type == 'jdk':
-                xml += '\n    <orderEntry type="jdk" jdkName="%s" jdkType="%s" />' % (dep['jdkName'], dep['jdkType'])
+                jdkName = dep.get('jdkName', '1.7')
+                jdkType = dep.get('jdkType', 'JavaSDK')
+                xml += '\n    <orderEntry type="jdk" jdkName="%s" jdkType="%s" />' % (jdkName, jdkType)
             elif dep_type == 'sourceFolder':
                 xml += '\n    <orderEntry type="sourceFolder" forTests="false" />'
 

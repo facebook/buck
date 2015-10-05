@@ -12,6 +12,6 @@
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
     </content>
     <orderEntry type="module" module-name="module_modules_dep1" />
-    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
+    <orderEntry type="inheritedJdk" />
   </component>
 </module>

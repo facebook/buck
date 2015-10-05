@@ -108,10 +108,10 @@ class SerializableDependentModule {
     return new SerializableDependentModule("inheritedJdk", null);
   }
 
-  static SerializableDependentModule newStandardJdk() {
+  static SerializableDependentModule newStandardJdk(String jdkName, String jdkType) {
     SerializableDependentModule dependentModule = new SerializableDependentModule("jdk", null);
-    dependentModule.jdkName = "1.7";
-    dependentModule.jdkType = "JavaSDK";
+    dependentModule.jdkName = jdkName;
+    dependentModule.jdkType = jdkType;
     return dependentModule;
   }
 
