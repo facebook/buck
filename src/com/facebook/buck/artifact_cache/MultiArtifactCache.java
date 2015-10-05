@@ -17,6 +17,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -93,11 +94,16 @@ public class MultiArtifactCache implements ArtifactCache {
 
   @Override
   public void close() {
-    // TODO(natthu): It's possible for this to be interrupted before it gets to call close() on all
-    // the individual caches. This is acceptable for now since every ArtifactCache.close() is a
-    // no-op.
+    Optional<RuntimeException> throwable = Optional.absent();
     for (ArtifactCache artifactCache : artifactCaches) {
-      artifactCache.close();
+      try {
+        artifactCache.close();
+      } catch (RuntimeException e) {
+        throwable = Optional.of(e);
+      }
+    }
+    if (throwable.isPresent()) {
+      throw throwable.get();
     }
   }
 }

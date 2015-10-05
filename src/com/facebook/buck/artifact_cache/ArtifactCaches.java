@@ -74,7 +74,6 @@ public class ArtifactCaches {
       switch (mode) {
         case dir:
           ArtifactCache dirArtifactCache = createDirArtifactCache(buckConfig, projectFilesystem);
-          buckEventBus.register(dirArtifactCache);
           builder.add(dirArtifactCache);
           break;
         case http:

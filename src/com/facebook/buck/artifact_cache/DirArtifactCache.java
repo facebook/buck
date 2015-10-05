@@ -19,7 +19,6 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.collect.ArrayIterable;
 import com.google.common.annotations.VisibleForTesting;
@@ -29,7 +28,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.io.ByteStreams;
 
 import java.io.DataInputStream;
@@ -44,12 +42,18 @@ import java.util.Map;
 public class DirArtifactCache implements ArtifactCache {
 
   private static final Logger LOG = Logger.get(DirArtifactCache.class);
+  // Ratio of bytes stored to max size that expresses how many bytes need to be stored after we
+  // attempt to delete old files.
+  private static final float STORED_TO_MAX_BYTES_RATIO_TRIM_TRIGGER = 0.5f;
+  // How much of the max size to leave if we decide to delete old files.
+  private static final float MAX_BYTES_TRIM_RATIO = 2 / 3f;
 
   private final String name;
   private final ProjectFilesystem filesystem;
   private final Path cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
   private final boolean doStore;
+  private long bytesSinceLastDeleteOldFiles;
 
   public DirArtifactCache(
       String name,
@@ -63,6 +67,7 @@ public class DirArtifactCache implements ArtifactCache {
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.doStore = doStore;
+    this.bytesSinceLastDeleteOldFiles = 0L;
     filesystem.mkdirs(cacheDir);
   }
 
@@ -130,7 +135,9 @@ public class DirArtifactCache implements ArtifactCache {
         Path tmp = filesystem.createTempFile(filesystem.resolve(cacheDir), "artifact", ".tmp");
         try {
           filesystem.copyFile(output, tmp);
-          filesystem.move(tmp, cacheDir.resolve(ruleKey.toString()));
+          Path artifactPath = cacheDir.resolve(ruleKey.toString());
+          filesystem.move(tmp, artifactPath);
+          bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
         } finally {
           filesystem.deleteFileAtPathIfExists(tmp);
         }
@@ -147,7 +154,9 @@ public class DirArtifactCache implements ArtifactCache {
               out.write(val);
             }
           }
-          filesystem.move(tmp, cacheDir.resolve(ruleKey.toString() + ".metadata"));
+          Path metadataPath = cacheDir.resolve(ruleKey.toString() + ".metadata");
+          filesystem.move(tmp, metadataPath);
+          bytesSinceLastDeleteOldFiles += filesystem.getFileSize(metadataPath);
         } finally {
           filesystem.deleteFileAtPathIfExists(tmp);
         }
@@ -159,6 +168,13 @@ public class DirArtifactCache implements ArtifactCache {
           "Artifact store(%s, %s) error",
           ruleKeys,
           output);
+    }
+
+    if (maxCacheSizeBytes.isPresent() &&
+        bytesSinceLastDeleteOldFiles >
+            (maxCacheSizeBytes.get() * STORED_TO_MAX_BYTES_RATIO_TRIM_TRIGGER)) {
+      bytesSinceLastDeleteOldFiles = 0L;
+      deleteOldFiles();
     }
   }
 
@@ -172,14 +188,6 @@ public class DirArtifactCache implements ArtifactCache {
 
   @Override
   public void close() {
-    // store() operation is synchronous - do nothing.
-  }
-
-  /**
-   * @param finished Signals that the build has finished.
-   */
-  @Subscribe
-  public synchronized void buildFinished(BuildEvent.Finished finished) {
     deleteOldFiles();
   }
 
@@ -212,11 +220,15 @@ public class DirArtifactCache implements ArtifactCache {
     // Finds the first N from the list ordered by last access time who's combined size is less than
     // maxCacheSizeBytes.
     long currentSizeBytes = 0;
+    Optional<Integer> maxTrimMark = Optional.absent();
     for (int i = 0; i < files.length; ++i) {
       File file = files[i];
       currentSizeBytes += file.length();
+      if (!maxTrimMark.isPresent() && currentSizeBytes > maxSizeBytes * MAX_BYTES_TRIM_RATIO) {
+        maxTrimMark = Optional.of(i);
+      }
       if (currentSizeBytes > maxSizeBytes) {
-        return ArrayIterable.of(files, i, files.length);
+        return ArrayIterable.of(files, maxTrimMark.get(), files.length);
       }
     }
     return ImmutableList.of();

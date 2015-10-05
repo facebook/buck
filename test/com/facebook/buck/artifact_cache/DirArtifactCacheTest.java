@@ -158,7 +158,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.of(0L));
+        /* maxCacheSizeBytes */ Optional.<Long>absent());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
@@ -196,7 +196,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.of(0L));
+        /* maxCacheSizeBytes */ Optional.<Long>absent());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     Files.write(fileY, "y".getBytes(UTF_8));
@@ -247,10 +247,6 @@ public class DirArtifactCacheTest {
     assertEquals(inputRuleZ, new BuildRuleForTest(fileZ));
 
     assertEquals(6, cacheDir.toFile().listFiles().length);
-
-    dirArtifactCache.deleteOldFiles();
-
-    assertEquals(0, cacheDir.toFile().listFiles().length);
   }
 
   @Test
@@ -388,7 +384,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.of(2L));
+        /* maxCacheSizeBytes */ Optional.of(3L));
 
     Files.write(fileW, "w".getBytes(UTF_8));
     Files.write(fileX, "x".getBytes(UTF_8));
@@ -414,6 +410,87 @@ public class DirArtifactCacheTest {
               }
             })
             .toSet());
+  }
+
+  @Test
+  public void testDeleteAfterStoreIfFull() throws IOException {
+    Path cacheDir = tmpDir.newFolder();
+    Path fileX = tmpDir.newFile("x");
+    Path fileY = tmpDir.newFile("y");
+    Path fileZ = tmpDir.newFile("z");
+
+    fileHashCache =
+        new FakeFileHashCache(
+            ImmutableMap.of(
+                fileX, HashCode.fromInt(0),
+                fileY, HashCode.fromInt(1),
+                fileZ, HashCode.fromInt(2)));
+
+    // The reason max size is 9 bytes is because a 1-byte entry actually takes 6 bytes to store.
+    // If the cache trims the size down to 2/3 (6 bytes) every time it hits the max it means after
+    // every store only the most recent artifact should be left.
+    dirArtifactCache = new DirArtifactCache(
+        "dir",
+        new ProjectFilesystem(cacheDir),
+        Paths.get("."),
+        /* doStore */ true,
+        /* maxCacheSizeBytes */ Optional.of(9L));
+
+    Files.write(fileX, "x".getBytes(UTF_8));
+    Files.write(fileY, "y".getBytes(UTF_8));
+    Files.write(fileZ, "z".getBytes(UTF_8));
+
+    BuildRule inputRuleX = new BuildRuleForTest(fileX);
+    BuildRule inputRuleY = new BuildRuleForTest(fileY);
+    BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
+        inputRuleX,
+        inputRuleY,
+        inputRuleZ)));
+
+    DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
+
+    RuleKey ruleKeyX = fakeRuleKeyBuilderFactory
+        .newInstance(inputRuleX)
+        .build();
+    RuleKey ruleKeyY = fakeRuleKeyBuilderFactory
+        .newInstance(inputRuleY)
+        .build();
+    RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory
+        .newInstance(inputRuleZ)
+        .build();
+
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+
+    Files.setAttribute(
+        cacheDir.resolve(ruleKeyX.toString()),
+        "lastAccessTime",
+        FileTime.fromMillis(0));
+    Files.setAttribute(
+        cacheDir.resolve(ruleKeyX.toString() + ".metadata"),
+        "lastAccessTime",
+        FileTime.fromMillis(0));
+
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyY), ImmutableMap.<String, String>of(), fileY);
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
+
+    Files.setAttribute(
+        cacheDir.resolve(ruleKeyY.toString()),
+        "lastAccessTime",
+        FileTime.fromMillis(1000));
+    Files.setAttribute(
+        cacheDir.resolve(ruleKeyY.toString() + ".metadata"),
+        "lastAccessTime",
+        FileTime.fromMillis(1000));
+
+    dirArtifactCache.store(ImmutableSet.of(ruleKeyZ), ImmutableMap.<String, String>of(), fileZ);
+
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
+    assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
+    assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyZ, fileZ).getType());
   }
 
   @Test

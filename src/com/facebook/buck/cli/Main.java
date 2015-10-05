@@ -76,6 +76,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
+import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.concurrent.MoreExecutors;
 import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.Architecture;
@@ -156,7 +157,7 @@ public final class Main {
    */
   private static final String STATIC_CONTENT_DIRECTORY = System.getProperty(
       "buck.path_to_static_content", "webserver/static");
-  private static final int VC_STATS_TIMEOUT_SECONDS = 2;
+  private static final int DISK_IO_STATS_TIMEOUT_SECONDS = 2;
 
   private final PrintStream stdOut;
   private final PrintStream stdErr;
@@ -689,7 +690,7 @@ public final class Main {
     TestConfig testConfig = new TestConfig(buckConfig);
     ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
-    ExecutorService vcStatsExecutorService = MoreExecutors.newSingleThreadExecutor("VC Stats");
+    ExecutorService diskIoExecutorService = MoreExecutors.newSingleThreadExecutor("Disk I/O");
     VersionControlStatsGenerator vcStatsGenerator = null;
 
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
@@ -711,12 +712,15 @@ public final class Main {
                  webServer);
          TempDirectoryCreator tempDirectoryCreator =
              new TempDirectoryCreator(testTempDirOverride);
-         BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
-         ArtifactCache artifactCache = ArtifactCaches.newInstance(
-             cacheBuckConfig,
-             buildEventBus,
-             filesystem,
-             executionEnvironment.getWifiSsid())) {
+         AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
+         BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
+
+      ArtifactCache artifactCache = asyncCloseable.closeAsync(
+          ArtifactCaches.newInstance(
+              cacheBuckConfig,
+              buildEventBus,
+              filesystem,
+              executionEnvironment.getWifiSsid()));
 
       ProgressEstimator progressEstimator = new ProgressEstimator(
           filesystem.getRootPath(),
@@ -739,7 +743,7 @@ public final class Main {
 
       if (vcBuckConfig.shouldGenerateStatistics()) {
         vcStatsGenerator = new VersionControlStatsGenerator(
-            vcStatsExecutorService,
+            diskIoExecutorService,
             new DefaultVersionControlCmdLineInterfaceFactory(
                 rootCell.getFilesystem().getRootPath(),
                 processExecutor,
@@ -845,7 +849,7 @@ public final class Main {
       buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
     } catch (Throwable t) {
       LOG.debug(t, "Failing build on exception.");
-      closeVcStatsGenerator(vcStatsExecutorService, vcStatsGenerator);
+      closeDiskIoExecutorService(diskIoExecutorService);
       flushEventListeners(console, buildId, eventListeners);
       throw t;
     } finally {
@@ -857,26 +861,21 @@ public final class Main {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
-    closeVcStatsGenerator(vcStatsExecutorService, vcStatsGenerator);
+    closeDiskIoExecutorService(diskIoExecutorService);
     flushEventListeners(console, buildId, eventListeners);
     return exitCode;
   }
 
-  private static void closeVcStatsGenerator(
-      ExecutorService vcStatsExecutorService,
-      @Nullable VersionControlStatsGenerator vcStatsGenerator) throws InterruptedException {
-    if (vcStatsGenerator == null) {
-      return;
-    }
-
-    vcStatsExecutorService.shutdown();
-    vcStatsExecutorService.awaitTermination(VC_STATS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    if (!vcStatsExecutorService.isShutdown()) {
+  private static void closeDiskIoExecutorService(
+      ExecutorService diskIoExecutorService) throws InterruptedException {
+    diskIoExecutorService.shutdown();
+    diskIoExecutorService.awaitTermination(DISK_IO_STATS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    if (!diskIoExecutorService.isShutdown()) {
       LOG.warn(
-          "VC stats generator is still running after shutdown request and " +
-              VC_STATS_TIMEOUT_SECONDS + " second timeout." +
+          "Disk IO executor service is still running after shutdown request and " +
+              DISK_IO_STATS_TIMEOUT_SECONDS + " second timeout." +
               "Shutting down forcefully..");
-      vcStatsExecutorService.shutdownNow();
+      diskIoExecutorService.shutdownNow();
     }
   }
 
