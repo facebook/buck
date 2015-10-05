@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -68,6 +69,7 @@ public class FatBinary extends AbstractBuildRule {
       commandBuilder.add(getResolver().getResolvedPath(thinBinary).toString());
     }
     return ImmutableList.<Step>of(
+        new MkdirStep(getProjectFilesystem(), output.getParent()),
         new DefaultShellStep(getProjectFilesystem().getRootPath(), commandBuilder.build()));
   }
 

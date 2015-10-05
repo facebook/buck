@@ -73,7 +73,7 @@ public class FatBinaryTest {
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());
 
-    assertThat(steps, hasSize(1));
+    assertThat(steps, hasSize(2));
     Step step = Iterables.getLast(steps);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();

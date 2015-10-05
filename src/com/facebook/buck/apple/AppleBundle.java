@@ -323,6 +323,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
             "APPLWRUN",
             metadataPath.resolve("PkgInfo"),
             /* executable */ false),
+        new MkdirStep(getProjectFilesystem(), infoPlistSubstitutionTempPath.getParent()),
         new FindAndReplaceStep(
             getProjectFilesystem(),
             infoPlistInputPath,

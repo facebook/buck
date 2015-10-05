@@ -75,6 +75,7 @@ public class ApplePackage extends AbstractBuildRule {
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
 
     // do the zipping
+    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
     commands.add(
         new ZipStep(
             getProjectFilesystem(),
