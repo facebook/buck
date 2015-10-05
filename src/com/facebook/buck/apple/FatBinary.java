@@ -61,7 +61,10 @@ public class FatBinary extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
+      BuildContext context,
+      BuildableContext buildableContext) {
+    buildableContext.recordArtifact(output);
+
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
     commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
     commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
