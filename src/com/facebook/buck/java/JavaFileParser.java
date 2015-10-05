@@ -57,6 +57,7 @@ public class JavaFileParser {
       .put("5", JavaCore.VERSION_1_5)
       .put("6", JavaCore.VERSION_1_6)
       .put("7", JavaCore.VERSION_1_7)
+      .put("8", JavaCore.VERSION_1_8)
       .build();
 
   private JavaFileParser(int jlsLevel, String javaVersion) {
