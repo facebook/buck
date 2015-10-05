@@ -200,6 +200,17 @@ This section includes settings that control settings that are specific to Apple 
   device_helper_path = third-party/iOSConsole/iOSConsole
 </pre>{/literal}
 
+<p>
+  Specifies a path where Buck will look for provisioning profiles (files with extension <code>
+  .mobileprovision</code>) that it can use to provision the application to be used on a device.
+  You can specify either an absolute path or one relative to the project root.  If unspecified,
+  Buck will look in <code>~/Library/MobileDevice/Provisioning Profiles</code>.
+</p>
+{literal}<pre class = "prettyprint lang-ini">
+[apple]
+  provisioning_profile_search_path = path/to/provisioning/profiles
+</pre>{/literal}
+
 {call .section}{param title: 'build' /}{/call}
 
 This section includes settings that control build engine behavior.

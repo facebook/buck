@@ -72,6 +72,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities;
+  private final Optional<Path> provisioningProfileSearchPath;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
@@ -79,7 +80,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
-      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities) {
+      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities,
+      Optional<Path> provisioningProfileSearchPath) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -87,6 +89,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.allValidCodeSignIdentities = allValidCodeSignIdentities;
+    this.provisioningProfileSearchPath = provisioningProfileSearchPath;
   }
 
   @Override
@@ -219,7 +222,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.getTests(),
         appleCxxPlatform.getAppleSdk(),
         allValidCodeSignIdentities,
-        args.provisioningProfileSearchPath,
+        provisioningProfileSearchPath,
         AppleBundle.DebugInfoFormat.DSYM);
   }
 
@@ -327,7 +330,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<SourcePath> provisioningProfileSearchPath;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
     public Optional<String> xcodeProductType;
 

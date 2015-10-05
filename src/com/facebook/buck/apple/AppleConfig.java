@@ -246,10 +246,15 @@ public class AppleConfig {
     return delegate.getBuildTarget("apple", "device_helper_target");
   }
 
+  public Optional<Path> getProvisioningProfileSearchPath() {
+    return getOptionalPath("apple", "provisioning_profile_search_path");
+  }
+
   private Optional<Path> getOptionalPath(String sectionName, String propertyName) {
     Optional<String> pathString = delegate.getValue(sectionName, propertyName);
     if (pathString.isPresent()) {
-      return Optional.of(Paths.get(pathString.get()));
+      return Optional.of(delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
+              Paths.get(pathString.get())));
     } else {
       return Optional.absent();
     }

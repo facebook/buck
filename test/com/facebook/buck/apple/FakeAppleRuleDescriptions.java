@@ -30,10 +30,12 @@ import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -185,7 +187,8 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
-          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC));
+          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC),
+          Optional.<Path>absent());
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.
@@ -198,5 +201,6 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
-          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC));
+          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC),
+          Optional.<Path>absent());
 }

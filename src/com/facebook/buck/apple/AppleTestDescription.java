@@ -103,6 +103,7 @@ public class AppleTestDescription implements
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities;
+  private final Optional<Path> provisioningProfileSearchPath;
 
   public AppleTestDescription(
       AppleConfig appleConfig,
@@ -111,7 +112,8 @@ public class AppleTestDescription implements
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
-      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities) {
+      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities,
+      Optional<Path> provisioningProfileSearchPath) {
     this.appleConfig = appleConfig;
     this.appleBundleDescription = appleBundleDescription;
     this.appleLibraryDescription = appleLibraryDescription;
@@ -120,6 +122,7 @@ public class AppleTestDescription implements
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.allValidCodeSignIdentities = allValidCodeSignIdentities;
+    this.provisioningProfileSearchPath = provisioningProfileSearchPath;
   }
 
   @Override
@@ -336,7 +339,7 @@ public class AppleTestDescription implements
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),
         allValidCodeSignIdentities,
-        args.provisioningProfileSearchPath,
+        provisioningProfileSearchPath,
         AppleBundle.DebugInfoFormat.NONE);
 
 
@@ -438,7 +441,6 @@ public class AppleTestDescription implements
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
-    public Optional<SourcePath> provisioningProfileSearchPath;
 
     public Optional<ImmutableMap<String, String>> destinationSpecifier;
 

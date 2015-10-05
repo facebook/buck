@@ -97,14 +97,3 @@
 {/call}
 {/template}
 
-/***/
-{template .provisioning_profile_search_path_arg}
-{call buck.arg}
-  {param name: 'provisioning_profile_search_path' /}
-  {param default : '\'~/Library/MobileDevice/Provisioning Profiles\'' /}
-  {param desc}
-  Specifies a path where Buck will look for provisioning profiles (files with extension <code>
-  .mobileprovision</code>) that it can use to provision the application to be used on a device.
-  {/param}
-{/call}
-{/template}
