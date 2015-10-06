@@ -29,6 +29,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -184,7 +185,7 @@ public class AppleTestDescription implements
 
     Optional<AppleBundle> testHostApp;
     Optional<SourcePath> testHostAppBinarySourcePath;
-    ImmutableSet<BuildRule> blacklist;
+    ImmutableSet<BuildTarget> blacklist;
     if (args.testHostApp.isPresent()) {
       TargetNode<?> testHostAppNode = targetGraph.get(args.testHostApp.get());
       Preconditions.checkNotNull(testHostAppNode);
@@ -231,7 +232,10 @@ public class AppleTestDescription implements
             Linker.LinkableDepType.STATIC,
             Predicates.alwaysTrue());
 
-      blacklist = ImmutableSet.copyOf(transitiveDependencies.getFirst().getNodes());
+      blacklist =
+          FluentIterable.from(transitiveDependencies.getFirst().getNodes())
+              .transform(HasBuildTarget.TO_TARGET)
+              .toSet();
     } else {
       testHostApp = Optional.absent();
       testHostAppBinarySourcePath = Optional.absent();

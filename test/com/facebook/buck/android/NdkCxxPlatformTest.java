@@ -177,7 +177,7 @@ public class NdkCxxPlatformTest {
           ImmutableList.<BuildRule>of(),
           Optional.<Linker.CxxRuntimeType>absent(),
           Optional.<SourcePath>absent(),
-          ImmutableSet.<BuildRule>of());
+          ImmutableSet.<BuildTarget>of());
       RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(rule);
       ruleKeys.put(entry.getKey(), builder.build());
     }

@@ -187,7 +187,7 @@ public class OCamlRuleBuilder {
         Predicates.or(
             Predicates.instanceOf(NativeLinkable.class),
             Predicates.instanceOf(OCamlLibrary.class)),
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.<BuildTarget>of(),
         /* reverse */ true);
   }
 

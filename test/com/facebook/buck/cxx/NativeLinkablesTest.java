@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -157,7 +158,7 @@ public class NativeLinkablesTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Linker.LinkableDepType.SHARED,
-            ImmutableSet.<BuildRule>of(),
+            ImmutableSet.<BuildTarget>of(),
             /* reverse */ false);
     assertThat(inputForTop.getArgs(), Matchers.containsInAnyOrder("a", "b", "d"));
     assertThat(inputForTop.getArgs(), Matchers.not(Matchers.contains("c")));
@@ -170,7 +171,7 @@ public class NativeLinkablesTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(c),
             Linker.LinkableDepType.SHARED,
-            ImmutableSet.<BuildRule>of(),
+            ImmutableSet.<BuildTarget>of(),
             /* reverse */ false);
     assertThat(inputForB.getArgs(), Matchers.containsInAnyOrder("c", "d"));
   }

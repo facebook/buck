@@ -288,7 +288,7 @@ public class PrebuiltCxxLibraryDescription
         params.getDeps(),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildRule>of());
+        ImmutableSet.<BuildTarget>of());
   }
 
   @Override

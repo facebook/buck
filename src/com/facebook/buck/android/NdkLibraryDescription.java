@@ -227,7 +227,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               Predicates.or(
                   Predicates.instanceOf(NativeLinkable.class),
                   Predicates.instanceOf(NdkLibrary.class)),
-              ImmutableSet.<BuildRule>of(),
+              ImmutableSet.<BuildTarget>of(),
               /* reverse */ true);
 
       // We add any dependencies from the native linkable input to this rule, even though

@@ -62,7 +62,7 @@ public class CxxLinkableEnhancer {
       Iterable<? extends BuildRule> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildRule> blacklist) {
+      ImmutableSet<BuildTarget> blacklist) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));

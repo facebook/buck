@@ -100,7 +100,7 @@ public class AppleLibraryDescription implements
         args,
         args.linkStyle,
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildRule>of());
+        ImmutableSet.<BuildTarget>of());
   }
 
   public <A extends AppleNativeTargetDescriptionArg> BuildRule createBuildRule(
@@ -110,7 +110,7 @@ public class AppleLibraryDescription implements
       A args,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildRule> blacklist) {
+      ImmutableSet<BuildTarget> blacklist) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();

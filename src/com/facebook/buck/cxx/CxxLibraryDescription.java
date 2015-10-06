@@ -375,7 +375,7 @@ public class CxxLibraryDescription implements
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildRule> blacklist) {
+      ImmutableSet<BuildTarget> blacklist) {
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects = requireObjects(
@@ -668,7 +668,7 @@ public class CxxLibraryDescription implements
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildRule> blacklist) {
+      ImmutableSet<BuildTarget> blacklist) {
     ImmutableList.Builder<String> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -804,7 +804,7 @@ public class CxxLibraryDescription implements
         typeAndPlatform,
         args.linkStyle,
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildRule>of());
+        ImmutableSet.<BuildTarget>of());
   }
 
   private static ImmutableList<BuildRule> getExtraMacroBuildInputs(
@@ -836,7 +836,7 @@ public class CxxLibraryDescription implements
       TypeAndPlatform typeAndPlatform,
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildRule> blacklist) {
+      ImmutableSet<BuildTarget> blacklist) {
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = typeAndPlatform.getPlatform();
 
     if (params.getBuildTarget().getFlavors()

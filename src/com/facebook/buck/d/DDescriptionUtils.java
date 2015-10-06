@@ -133,7 +133,7 @@ abstract class DDescriptionUtils {
         params.getDeps(),
         /* cxxRuntimeType */ Optional.<Linker.CxxRuntimeType>absent(),
         /* bundleLoader */ Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildRule>of());
+        ImmutableSet.<BuildTarget>of());
   }
 
   /**

@@ -891,7 +891,7 @@ public class CxxDescriptionEnhancer {
             params.getDeps(),
             args.cxxRuntimeType,
             Optional.<SourcePath>absent(),
-            ImmutableSet.<BuildRule>of());
+            ImmutableSet.<BuildTarget>of());
     resolver.addToIndex(cxxLink);
 
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.

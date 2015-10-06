@@ -228,7 +228,7 @@ public class CxxPythonExtensionDescription implements
         params.getDeps(),
         args.cxxRuntimeType,
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildRule>of());
+        ImmutableSet.<BuildTarget>of());
   }
 
   @Override
