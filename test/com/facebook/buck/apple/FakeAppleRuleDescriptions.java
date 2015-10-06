@@ -31,6 +31,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -202,5 +203,6 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
           ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC),
-          Optional.<Path>absent());
+          Optional.<Path>absent(),
+          Suppliers.ofInstance(Optional.<Path>absent()));
 }

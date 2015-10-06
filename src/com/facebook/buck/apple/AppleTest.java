@@ -43,6 +43,7 @@ import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -107,6 +108,13 @@ public class AppleTest
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
 
+  /**
+   * Absolute path to xcode developer dir.
+   *
+   * Should not be added to rule key.
+   */
+  private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
+
   private static class AppleTestXctoolStdoutReader
     implements XctoolRunTestsStep.StdoutReadingCallback {
 
@@ -147,7 +155,8 @@ public class AppleTest
       String testBundleExtension,
       ImmutableSet<String> contacts,
       ImmutableSet<Label> labels,
-      boolean runTestSeparately) {
+      boolean runTestSeparately,
+      Supplier<Optional<Path>> xcodeDeveloperDirSupplier) {
     super(params, resolver);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -165,6 +174,7 @@ public class AppleTest
     this.testBundleExtension = testBundleExtension;
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.xctoolStdoutReader = Optional.absent();
+    this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
   }
 
   @Override
@@ -266,6 +276,12 @@ public class AppleTest
       steps.add(xctoolStep);
       externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());
+      Optional<Path> xcodeDeveloperDir = xcodeDeveloperDirSupplier.get();
+      if (xcodeDeveloperDir.isPresent()) {
+        externalSpec.setEnv(ImmutableMap.of("DEVELOPER_DIR", xcodeDeveloperDir.get().toString()));
+      } else {
+        throw new HumanReadableException("Cannot determine xcode developer dir");
+      }
     } else {
       Tool testRunningTool;
       if (testBundleExtension.equals("xctest")) {

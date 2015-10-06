@@ -60,6 +60,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -105,6 +106,7 @@ public class AppleTestDescription implements
   private final CxxPlatform defaultCxxPlatform;
   private final ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities;
   private final Optional<Path> provisioningProfileSearchPath;
+  private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
 
   public AppleTestDescription(
       AppleConfig appleConfig,
@@ -114,7 +116,8 @@ public class AppleTestDescription implements
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities,
-      Optional<Path> provisioningProfileSearchPath) {
+      Optional<Path> provisioningProfileSearchPath,
+      Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier) {
     this.appleConfig = appleConfig;
     this.appleBundleDescription = appleBundleDescription;
     this.appleLibraryDescription = appleLibraryDescription;
@@ -124,6 +127,7 @@ public class AppleTestDescription implements
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.allValidCodeSignIdentities = allValidCodeSignIdentities;
     this.provisioningProfileSearchPath = provisioningProfileSearchPath;
+    this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
   }
 
   @Override
@@ -413,7 +417,8 @@ public class AppleTestDescription implements
         extension,
         args.contacts.get(),
         args.labels.get(),
-        args.getRunTestSeparately());
+        args.getRunTestSeparately(),
+        xcodeDeveloperDirectorySupplier);
   }
 
   @Override

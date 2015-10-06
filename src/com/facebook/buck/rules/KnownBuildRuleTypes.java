@@ -495,7 +495,8 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
             codeSignIdentitiesSupplier.get(),
-            appleConfig.getProvisioningProfileSearchPath()));
+            appleConfig.getProvisioningProfileSearchPath(),
+            appleConfig.getAppleDeveloperDirectorySupplier(processExecutor)));
     builder.register(new CoreDataModelDescription());
     builder.register(new CSharpLibraryDescription());
     builder.register(cxxBinaryDescription);
