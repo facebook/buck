@@ -87,6 +87,9 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
 
     for (String service : services) {
       sources.add(prefix.resolve(service + ".py").toString());
+      if (type == Type.NORMAL) {
+        sources.add(prefix.resolve(service + "-remote").toString());
+      }
     }
 
     return sources.build();
@@ -126,7 +129,7 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
             .resolve("gen-" + getLanguage())
             .resolve(module);
         modulesBuilder.put(
-            Paths.get(module),
+            Paths.get(module.endsWith(".py") ? module : module + ".py"),
             new BuildTargetSourcePath(source.getCompileRule().getBuildTarget(), path));
       }
 
