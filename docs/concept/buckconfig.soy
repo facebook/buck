@@ -635,6 +635,16 @@ build C/C++ for NDK platforms:
 
 {call .section}{param title: 'project' /}{/call}
 
+<code>ide</code> setting defines the IDE for which the project files should be generated.
+Sometimes Buck determine the type of IDE (e.g. for {call buck.apple_library /} it will generate Xcode workspace), 
+but for x-platform types of libraries (like {call buck.cxx_library /}) it is not possible. You may specify the default ide setting here.
+
+{literal}<pre class="prettyprint lang-ini">
+[project]
+  ide = xcode   # or ide = intellij
+</pre>{/literal}
+
+
 This section may define a <code>default_android_manifest</code> property
 to identify the <code>AndroidManifest.xml</code> that should be used when
 the <code>src_target</code> of a

@@ -177,8 +177,8 @@ public class ProjectCommand extends BuildCommand {
 
   @Option(
       name = "--ide",
-      usage = "The type of IDE for which to generate a project. Defaults to 'intellij' if not " +
-          "specified in .buckconfig.")
+      usage = "The type of IDE for which to generate a project. You may specify it in the " +
+          ".buckconfig file. Please refer to https://buckbuild.com/concept/buckconfig.html#project")
   @Nullable
   private Ide ide = null;
 
