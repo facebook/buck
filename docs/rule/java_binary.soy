@@ -17,6 +17,10 @@
 A <code>java_binary()</code> rule is used to create a JAR file of the
 compiled .class files and resources of the <code>java_library()</code>
 {sp}rules on which it depends.
+
+<p>
+If the resulting composite jar is invoked with <code>-Djava.buck.java_bin</code>,
+the inner jar will be invoked with the provided alternate path, rather than <code>java</code>
 {/param}
 
 {param args}

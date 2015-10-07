@@ -121,6 +121,8 @@ public class JavaTest
 
   private final Optional<Path> testTempDirOverride;
 
+  private final Optional<String> javaBinOverride;
+
   protected JavaTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -142,7 +144,8 @@ public class JavaTest
       boolean runTestSeparately,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
-      Optional<Path> testTempDirOverride) {
+      Optional<Path> testTempDirOverride,
+      Optional<String> javaBinOverride) {
     super(
         params,
         resolver,
@@ -170,6 +173,7 @@ public class JavaTest
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
     this.testTempDirOverride = testTempDirOverride;
+    this.javaBinOverride = javaBinOverride;
   }
 
   @Override
@@ -205,7 +209,8 @@ public class JavaTest
       ExecutionContext executionContext,
       TestRunningOptions options,
       Optional<Path> outDir,
-      Optional<Path> tempDir) {
+      Optional<Path> tempDir,
+      Optional<String> javaBinOverride) {
 
     Set<String> testClassNames = getClassNamesForSources();
     Iterable<String> reorderedTestClasses =
@@ -233,7 +238,8 @@ public class JavaTest
         testRuleTimeoutMs,
         stdOutLogLevel,
         stdErrLogLevel,
-        options.getPathToJavaAgent());
+        options.getPathToJavaAgent(),
+        javaBinOverride);
   }
 
   /**
@@ -266,7 +272,8 @@ public class JavaTest
             executionContext,
             options,
             Optional.of(pathToTestOutput),
-            Optional.of(tmpDirectory));
+            Optional.of(tmpDirectory),
+            javaBinOverride);
     steps.add(junit);
     return steps.build();
   }
@@ -605,7 +612,8 @@ public class JavaTest
             executionContext,
             options,
             Optional.<Path>absent(),
-            Optional.<Path>absent());
+            Optional.<Path>absent(),
+            Optional.<String>absent());
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("junit")

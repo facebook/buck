@@ -88,4 +88,8 @@ public class JavaBuckConfig {
   public boolean getSkipCheckingMissingDeps() {
     return delegate.getBooleanValue("java", "skip_checking_missing_deps", false);
   }
+
+  public Optional<String> getJavaBinOverride() {
+    return delegate.getValue("java", "java_bin");
+  }
 }

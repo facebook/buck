@@ -121,7 +121,8 @@ public class RobolectricTest extends JavaTest {
         runTestSeparately,
         stdOutLogLevel,
         stdErrLogLevel,
-        testTempDirOverride
+        testTempDirOverride,
+        Optional.<String>absent()
     );
     this.optionalDummyRDotJava = optionalDummyRDotJava;
   }

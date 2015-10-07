@@ -91,6 +91,7 @@ public class JUnitStep extends ShellStep {
   private final TestType type;
   private final Optional<Long> testRuleTimeoutMs;
   private final Optional<String> pathToJavaAgent;
+  private final Optional<String> javaBinOverride;
 
   // Set when the junit command times out.
   private boolean hasTimedOut = false;
@@ -134,7 +135,8 @@ public class JUnitStep extends ShellStep {
       Optional<Long> testRuleTimeoutMs,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
-      Optional<String> pathToJavaAgent) {
+      Optional<String> pathToJavaAgent,
+      Optional<String> javaBinOverride) {
     this(
         filesystem,
         classpathEntries,
@@ -154,7 +156,8 @@ public class JUnitStep extends ShellStep {
         testRuleTimeoutMs,
         stdOutLogLevel,
         stdErrLogLevel,
-        pathToJavaAgent
+        pathToJavaAgent,
+        javaBinOverride
         );
   }
 
@@ -178,7 +181,8 @@ public class JUnitStep extends ShellStep {
       Optional<Long> testRuleTimeoutMs,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
-      Optional<String> pathToJavaAgent) {
+      Optional<String> pathToJavaAgent,
+      Optional<String> javaBinOverride) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.classpathEntries = ImmutableSet.copyOf(classpathEntries);
@@ -199,6 +203,7 @@ public class JUnitStep extends ShellStep {
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
     this.pathToJavaAgent = pathToJavaAgent;
+    this.javaBinOverride = javaBinOverride;
   }
 
   @Override
@@ -209,7 +214,7 @@ public class JUnitStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add("java");
+    args.add(javaBinOverride.or("java"));
 
     if (tmpDirectory.isPresent()) {
       args.add(
@@ -326,6 +331,7 @@ public class JUnitStep extends ShellStep {
       env.put("TMP", tmpDirectory.get().toString());
     }
     env.putAll(nativeLibsEnvironment);
+    env.put("JAVA_HOME", System.getProperty("java.home"));
     return env.build();
   }
 

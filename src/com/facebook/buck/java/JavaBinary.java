@@ -39,6 +39,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -72,6 +73,7 @@ public class JavaBinary extends AbstractBuildRule
 
   private final DirectoryTraverser directoryTraverser;
   private final ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries;
+  private final Optional<String> javaBinOverride;
 
   public JavaBinary(
       BuildRuleParams params,
@@ -82,7 +84,8 @@ public class JavaBinary extends AbstractBuildRule
       @Nullable Path metaInfDirectory,
       ImmutableSet<String> blacklist,
       DirectoryTraverser directoryTraverser,
-      ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries) {
+      ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries,
+      Optional<String> javaBinOverride) {
     super(params, resolver);
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
@@ -91,6 +94,7 @@ public class JavaBinary extends AbstractBuildRule
     this.blacklist = blacklist;
     this.directoryTraverser = directoryTraverser;
     this.transitiveClasspathEntries = transitiveClasspathEntries;
+    this.javaBinOverride = javaBinOverride;
   }
 
   @Override
@@ -189,7 +193,7 @@ public class JavaBinary extends AbstractBuildRule
         getBuildTarget());
 
     return new CommandTool.Builder()
-        .addArg("java")
+        .addArg(javaBinOverride.or("java"))
         .addArg("-jar")
         .addArg(new BuildTargetSourcePath(getBuildTarget()))
         .build();

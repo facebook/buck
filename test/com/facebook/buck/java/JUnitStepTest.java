@@ -16,7 +16,10 @@
 
 package com.facebook.buck.java;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.java.runner.FileClassPathRunner;
 import com.facebook.buck.model.BuildId;
@@ -92,7 +95,8 @@ public class JUnitStepTest {
         /* testRuleTimeoutMs*/ Optional.<Long>absent(),
         /* stdOutLogLevel */ Optional.<Level>absent(),
         /* stdErrLogLevel */ Optional.<Level>absent(),
-        /* pathToJavAgent */ Optional.<String>absent());
+        /* pathToJavaAgent */ Optional.<String>absent(),
+        /* javaBinOverride */ Optional.<String>absent());
 
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
@@ -171,7 +175,8 @@ public class JUnitStepTest {
         /* testRuleTimeoutMs*/ Optional.<Long>absent(),
         /* stdOutLogLevel */ Optional.<Level>absent(),
         /* stdErrLogLevel */ Optional.<Level>absent(),
-        /* pathToJavaAgent */ Optional.<String> absent());
+        /* pathToJavaAgent */ Optional.<String>absent(),
+        /* javaBinOverride */ Optional.<String>absent());
 
     TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext executionContext = TestExecutionContext.newBuilder()
@@ -206,7 +211,92 @@ public class JUnitStepTest {
         observedArgs);
 
     // TODO(simons): Why does the CapturingPrintStream append spaces?
-    assertEquals("Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.",
-        console.getTextWrittenToStdErr().trim());
+    assertThat(console.getTextWrittenToStdErr().trim(),
+        is(equalTo("Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.")));
+  }
+
+  @Test
+  public void ensureThatCustomJavaBinIsInCommand() {
+    ImmutableSet<String> classpathEntries = ImmutableSet.of("foo", "bar/baz");
+
+    String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
+    String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
+    Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);
+
+    String vmArg1 = "-Dname1=value1";
+    String vmArg2 = "-Dname1=value2";
+    List<String> vmArgs = ImmutableList.of(vmArg1, vmArg2);
+
+    BuildId pretendBuildId = new BuildId("pretend-build-id");
+    String buildIdArg = String.format("-D%s=%s", JUnitStep.BUILD_ID_PROPERTY, pretendBuildId);
+
+    Path modulePath = Paths.get("module/submodule");
+    String modulePathArg = String.format(
+        "-D%s=%s",
+        JUnitStep.MODULE_BASE_PATH_PROPERTY,
+        modulePath);
+
+    Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
+    Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
+    Path testRunnerClasspath = Paths.get("build/classes/junit");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    JUnitStep junit = new JUnitStep(
+        filesystem,
+        classpathEntries,
+        testClassNames,
+        vmArgs,
+        /* nativeLibsEnvironment */ ImmutableMap.<String, String>of(),
+        Optional.of(directoryForTestResults),
+        modulePath,
+        Optional.of(directoryForTemp),
+        /* isCodeCoverageEnabled */ false,
+        /* isDebugEnabled */ false,
+        pretendBuildId,
+        TestSelectorList.empty(),
+        /* isDryRun */ false,
+        TestType.JUNIT,
+        testRunnerClasspath,
+        /* testRuleTimeoutMs*/ Optional.<Long>absent(),
+        /* stdOutLogLevel */ Optional.<Level>absent(),
+        /* stdErrLogLevel */ Optional.<Level>absent(),
+        /* pathToJavAgent */ Optional.<String>absent(),
+        /* javaBinOverride */ Optional.of("/usr/bin/my_java_wrapper.sh"));
+
+    ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
+    EasyMock.expect(executionContext.getVerbosity()).andReturn(Verbosity.ALL);
+    EasyMock.expect(executionContext.getDefaultTestTimeoutMillis()).andReturn(5000L);
+    EasyMock.replay(executionContext);
+
+    List<String> observedArgs = junit.getShellCommand(executionContext);
+    ImmutableMap<String, String> env = junit.getEnvironmentVariables(executionContext);
+
+    MoreAsserts.assertListEquals(
+        ImmutableList.of(
+            "/usr/bin/my_java_wrapper.sh",
+            "-Djava.io.tmpdir=" + filesystem.resolve(directoryForTemp),
+            "-Dbuck.testrunner_classes=" + testRunnerClasspath,
+            buildIdArg,
+            modulePathArg,
+            vmArg1,
+            vmArg2,
+            "-verbose",
+            "-classpath",
+            Joiner.on(File.pathSeparator).join(
+                FluentIterable.from(classpathEntries)
+                    .append("build/classes/junit")),
+            FileClassPathRunner.class.getName(),
+            JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
+            "--output",
+            directoryForTestResults.toString(),
+            "--default-test-timeout",
+            "5000",
+            testClass1,
+            testClass2),
+        observedArgs);
+    assertTrue(env.containsKey("JAVA_HOME"));
+    assertThat(System.getProperty("java.home"), is(equalTo(env.get("JAVA_HOME"))));
+
+    EasyMock.verify(executionContext);
   }
 }

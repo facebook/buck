@@ -37,7 +37,8 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
             DEFAULT_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.<Long>absent(),
             null,
-            Optional.<Path>absent()),
+            Optional.<Path>absent(),
+            Optional.<String>absent()),
         target);
   }
 

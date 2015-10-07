@@ -18,8 +18,10 @@ package com.facebook.buck.java;
 
 
 import static com.facebook.buck.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -61,7 +63,7 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertEquals(Optional.absent(), config.getJavacPath());
+    assertThat(config.getJavacPath(), is(equalTo(Optional.<Path>absent())));
   }
 
   @Test
@@ -75,7 +77,7 @@ public class JavaBuckConfigTest {
             "    javac = " + javac.toPath().toString().replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
 
-    assertEquals(Optional.of(javac.toPath()), config.getJavacPath());
+    assertThat(config.getJavacPath(), is(equalTo(Optional.of(javac.toPath()))));
   }
 
   @Test
@@ -89,7 +91,9 @@ public class JavaBuckConfigTest {
       config.getJavacPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "Javac does not exist: " + invalidPath);
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          is(equalTo("Javac does not exist: " + invalidPath)));
     }
   }
 
@@ -106,7 +110,9 @@ public class JavaBuckConfigTest {
       config.getJavacPath();
       fail("Should throw exception as javac file is not executable.");
     } catch (HumanReadableException e) {
-      assertEquals(e.getHumanReadableErrorMessage(), "Javac is not executable: " + javac.getPath());
+      assertThat(
+          e.getHumanReadableErrorMessage(),
+          is(equalTo("Javac is not executable: " + javac.getPath())));
     }
   }
 
@@ -121,10 +127,32 @@ public class JavaBuckConfigTest {
       config.getJavacJarPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
-      assertEquals(
-          "Overridden tools:javac_jar path not found: " + invalidPath,
-          e.getHumanReadableErrorMessage());
+      assertThat(e.getHumanReadableErrorMessage(),
+          is(equalTo("Overridden tools:javac_jar path not found: " + invalidPath)));
     }
+  }
+
+  @Test
+  public void whenJavaBinIsSetReturnAsOverride() throws IOException {
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[java]",
+        "    java_bin = /usr/bin/my_java_wrapper.sh"));
+
+    JavaBuckConfig config = createWithDefaultFilesystem(reader);
+    Optional<String> javaBinOverride = config.getJavaBinOverride();
+
+    assertTrue(javaBinOverride.isPresent());
+    assertThat(javaBinOverride.get(), is(equalTo("/usr/bin/my_java_wrapper.sh")));
+  }
+
+  @Test
+  public void whenJavaBinIsNotSetReturnEmpty() throws IOException {
+    Reader reader = new StringReader("");
+
+    JavaBuckConfig config = createWithDefaultFilesystem(reader);
+    Optional<String> javaBinOverride = config.getJavaBinOverride();
+
+    assertFalse(javaBinOverride.isPresent());
   }
 
   @Test
@@ -142,8 +170,8 @@ public class JavaBuckConfigTest {
 
     JavacOptions options = config.getDefaultJavacOptions();
 
-    assertEquals(sourceLevel, options.getSourceLevel());
-    assertEquals(targetLevel, options.getTargetLevel());
+    assertThat(options.getSourceLevel(), is(equalTo(sourceLevel)));
+    assertThat(options.getTargetLevel(), is(equalTo(targetLevel)));
   }
 
   @Test
@@ -153,8 +181,8 @@ public class JavaBuckConfigTest {
 
     JavacOptions options = config.getDefaultJavacOptions();
 
-    assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
-    assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());
+    assertThat(options.getSourceLevel(), is(equalTo(TARGETED_JAVA_VERSION)));
+    assertThat(options.getTargetLevel(), is(equalTo(TARGETED_JAVA_VERSION)));
   }
 
   @Test
