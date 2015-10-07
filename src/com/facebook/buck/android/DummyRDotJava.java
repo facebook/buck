@@ -60,6 +60,8 @@ public class DummyRDotJava extends AbstractBuildRule
   private final SourcePath abiJar;
   @AddToRuleKey
   private final JavacOptions javacOptions;
+  @AddToRuleKey
+  private final Optional<String> unionPackage;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public DummyRDotJava(
@@ -67,7 +69,8 @@ public class DummyRDotJava extends AbstractBuildRule
       SourcePathResolver resolver,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       SourcePath abiJar,
-      JavacOptions javacOptions) {
+      JavacOptions javacOptions,
+      Optional<String> unionPackage) {
     super(params, resolver);
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
@@ -75,6 +78,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.abiJar = abiJar;
     this.javacOptions = javacOptions;
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.unionPackage = unionPackage;
   }
 
   @Override
@@ -107,7 +111,8 @@ public class DummyRDotJava extends AbstractBuildRule
       MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
           getProjectFilesystem(),
           androidResourceDeps,
-          rDotJavaSrcFolder);
+          rDotJavaSrcFolder,
+          unionPackage);
       steps.add(mergeStep);
       javaSourceFilePaths =
           ImmutableSet.copyOf(mergeStep.getRDotJavaFiles());

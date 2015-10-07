@@ -48,12 +48,14 @@ public class AndroidLibraryGraphEnhancer {
   private final BuildRuleParams originalBuildRuleParams;
   private final JavacOptions javacOptions;
   private final ResourceDependencyMode resourceDependencyMode;
+  private final Optional<String> resourceUnionPackage;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams buildRuleParams,
       JavacOptions javacOptions,
-      ResourceDependencyMode resourceDependencyMode) {
+      ResourceDependencyMode resourceDependencyMode,
+      Optional<String> resourceUnionPackage) {
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
     this.originalBuildRuleParams = buildRuleParams;
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
@@ -61,6 +63,7 @@ public class AndroidLibraryGraphEnhancer {
         .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
         .build();
     this.resourceDependencyMode = resourceDependencyMode;
+    this.resourceUnionPackage = resourceUnionPackage;
   }
 
   public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
@@ -133,7 +136,8 @@ public class AndroidLibraryGraphEnhancer {
         pathResolver,
         androidResourceDeps,
         new BuildTargetSourcePath(abiJarTarget),
-        javacOptions);
+        javacOptions,
+        resourceUnionPackage);
     ruleResolver.addToIndex(dummyRDotJava);
 
     ruleResolver.addToIndex(

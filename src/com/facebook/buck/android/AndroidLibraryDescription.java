@@ -100,7 +100,8 @@ public class AndroidLibraryDescription
         params.copyWithExtraDeps(
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
         javacOptions,
-        ResourceDependencyMode.FIRST_ORDER);
+        ResourceDependencyMode.FIRST_ORDER,
+        args.resourceUnionPackage);
 
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
@@ -181,5 +182,6 @@ public class AndroidLibraryDescription
   @SuppressFieldNotInitialized
   public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<SourcePath> manifest;
+    public Optional<String> resourceUnionPackage;
   }
 }

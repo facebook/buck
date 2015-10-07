@@ -101,7 +101,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         params.copyWithExtraDeps(
             Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
         javacOptions,
-        ResourceDependencyMode.TRANSITIVE);
+        ResourceDependencyMode.TRANSITIVE,
+        Optional.<String>absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         resolver,
         /* createBuildableIfEmpty */ true);

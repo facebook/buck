@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -32,12 +31,14 @@ import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -86,7 +87,8 @@ public class DummyRDotJavaTest {
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2),
         new TestSourcePath("abi.jar"),
-        ANDROID_JAVAC_OPTIONS);
+        ANDROID_JAVAC_OPTIONS,
+        Optional.<String>absent());
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(EasyMock.createMock(BuildContext.class),
@@ -134,7 +136,8 @@ public class DummyRDotJavaTest {
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSet.<HasAndroidResourceDeps>of(),
         new TestSourcePath("abi.jar"),
-        ANDROID_JAVAC_OPTIONS);
+        ANDROID_JAVAC_OPTIONS,
+        Optional.<String>absent());
     assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
   }
@@ -146,7 +149,8 @@ public class DummyRDotJavaTest {
         new SourcePathResolver(new BuildRuleResolver()),
         ImmutableSet.<HasAndroidResourceDeps>of(),
         new TestSourcePath("abi.jar"),
-        ANDROID_JAVAC_OPTIONS);
+        ANDROID_JAVAC_OPTIONS,
+        Optional.<String>absent());
 
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     String keyHash = Strings.repeat("a", 40);

@@ -41,6 +41,8 @@ import com.google.common.collect.TreeMultimap;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +55,7 @@ public class MergeAndroidResourcesStep implements Step {
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Optional<Path> uberRDotTxt;
   private final Path outputDir;
+  private final Optional<String> unionPackage;
 
   /**
    * Merges text symbols files from {@code aapt} for each of the input {@code android_resource}
@@ -65,22 +68,26 @@ public class MergeAndroidResourcesStep implements Step {
       ProjectFilesystem filesystem,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Optional<Path> uberRDotTxt,
-      Path outputDir) {
+      Path outputDir,
+      Optional<String> unionPackage) {
     this.filesystem = filesystem;
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
     this.uberRDotTxt = uberRDotTxt;
     this.outputDir = outputDir;
+    this.unionPackage = unionPackage;
   }
 
   public static MergeAndroidResourcesStep createStepForDummyRDotJava(
       ProjectFilesystem filesystem,
       List<HasAndroidResourceDeps> androidResourceDeps,
-      Path outputDir) {
+      Path outputDir,
+      Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
         filesystem,
         androidResourceDeps,
         Optional.<Path>absent(),
-        outputDir);
+        outputDir,
+        unionPackage);
   }
 
   public static MergeAndroidResourcesStep createStepForUberRDotJava(
@@ -92,7 +99,8 @@ public class MergeAndroidResourcesStep implements Step {
         filesystem,
         androidResourceDeps,
         Optional.of(uberRDotTxt),
-        outputDir);
+        outputDir,
+        Optional.<String>absent());
   }
 
   public ImmutableSet<Path> getRDotJavaFiles() {
@@ -164,6 +172,22 @@ public class MergeAndroidResourcesStep implements Step {
         symbolsFileToRDotJavaPackage,
         uberRDotTxtIds,
         filesystem);
+
+    // If a resource_union_package was specified, copy all resource into that package,
+    // unless they are already present.
+    if (unionPackage.isPresent()) {
+      Collection<RDotTxtEntry> target = rDotJavaPackageToResources.asMap().get(unionPackage.get());
+      if (target != null) {
+        // Create a temporary list to avoid concurrent modification problems.
+        for (Map.Entry<String, RDotTxtEntry> entry :
+            new ArrayList<>(rDotJavaPackageToResources.entries())) {
+          if (target.contains(entry.getValue())) {
+            continue;
+          }
+          target.add(entry.getValue());
+        }
+      }
+    }
 
     writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
     Set<String> emptyPackages = Sets.difference(
