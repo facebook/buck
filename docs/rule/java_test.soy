@@ -126,6 +126,14 @@ A <code>java_test()</code> rule is used to define a set of
 
 {call buck.visibility_arg /}
 
+{call buck.arg}
+  {param name: 'use_cxx_libraries' /}
+  {param default: 'False' /}
+  {param desc}
+  Whether or not to build and link against cxx_library dependencies when testing
+  {/param}
+{/call}
+
 {/param} // close args
 
 {/call} // close buck.rule
