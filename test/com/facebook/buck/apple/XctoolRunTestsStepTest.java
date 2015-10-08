@@ -27,6 +27,7 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,7 +51,8 @@ public class XctoolRunTestsStepTest {
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"),
-        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent(),
+        Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -63,6 +65,7 @@ public class XctoolRunTestsStepTest {
                     "run-tests",
                     "-logicTest",
                     "/path/to/Foo.xctest"))
+            .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
@@ -92,7 +95,8 @@ public class XctoolRunTestsStepTest {
             Paths.get("/path/to/FooAppTest.xctest"),
             Paths.get("/path/to/Foo.app")),
         Paths.get("/path/to/output.json"),
-        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent(),
+        Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -107,6 +111,7 @@ public class XctoolRunTestsStepTest {
                     "run-tests",
                     "-appTest",
                     "/path/to/FooAppTest.xctest:/path/to/Foo.app"))
+            .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
@@ -137,7 +142,8 @@ public class XctoolRunTestsStepTest {
             Paths.get("/path/to/FooAppTest.xctest"),
             Paths.get("/path/to/Foo.app")),
         Paths.get("/path/to/output.json"),
-        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent(),
+        Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -154,6 +160,7 @@ public class XctoolRunTestsStepTest {
                     "/path/to/FooLogicTest.xctest",
                     "-appTest",
                     "/path/to/FooAppTest.xctest:/path/to/Foo.app"))
+            .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
@@ -181,7 +188,8 @@ public class XctoolRunTestsStepTest {
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"),
-        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent(),
+        Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -194,6 +202,7 @@ public class XctoolRunTestsStepTest {
                     "run-tests",
                     "-logicTest",
                     "/path/to/Foo.xctest"))
+            .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
             .setDirectory(projectFilesystem.getRootPath().toAbsolutePath().toFile())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
@@ -221,7 +230,8 @@ public class XctoolRunTestsStepTest {
         ImmutableSet.of(Paths.get("/path/to/Foo.xctest")),
         ImmutableMap.<Path, Path>of(),
         Paths.get("/path/to/output.json"),
-        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent());
+        Optional.<XctoolRunTestsStep.StdoutReadingCallback>absent(),
+        Suppliers.ofInstance(Optional.of(Paths.get("/path/to/developer/dir"))));
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(

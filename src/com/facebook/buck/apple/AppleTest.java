@@ -272,16 +272,12 @@ public class AppleTest
               logicTestPathsBuilder.build(),
               appTestPathsToHostAppsBuilder.build(),
               resolvedTestOutputPath,
-              xctoolStdoutReader);
+              xctoolStdoutReader,
+              xcodeDeveloperDirSupplier);
       steps.add(xctoolStep);
       externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());
-      Optional<Path> xcodeDeveloperDir = xcodeDeveloperDirSupplier.get();
-      if (xcodeDeveloperDir.isPresent()) {
-        externalSpec.setEnv(ImmutableMap.of("DEVELOPER_DIR", xcodeDeveloperDir.get().toString()));
-      } else {
-        throw new HumanReadableException("Cannot determine xcode developer dir");
-      }
+      externalSpec.setEnv(xctoolStep.getEnv(context));
     } else {
       Tool testRunningTool;
       if (testBundleExtension.equals("xctest")) {
@@ -299,7 +295,8 @@ public class AppleTest
               testRunningTool.getCommandPrefix(getResolver()),
               (testBundleExtension.equals("xctest") ? "-XCTest" : "-SenTest"),
               resolvedTestBundleDirectory,
-              resolvedTestOutputPath);
+              resolvedTestOutputPath,
+              xcodeDeveloperDirSupplier);
       steps.add(xctestStep);
       externalSpec.setType("xctest");
       externalSpec.setCommand(xctestStep.getCommand());

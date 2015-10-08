@@ -28,7 +28,9 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 
@@ -37,6 +39,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -69,6 +72,7 @@ public class XctoolRunTestsStep implements Step {
   private final Optional<Long> xctoolStutterTimeout;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
+  private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
 
   public XctoolRunTestsStep(
       ProjectFilesystem filesystem,
@@ -79,7 +83,8 @@ public class XctoolRunTestsStep implements Step {
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
       Path outputPath,
-      Optional<? extends StdoutReadingCallback> stdoutReadingCallback) {
+      Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
+      Supplier<Optional<Path>> xcodeDeveloperDirSupplier) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty() &&
           appTestBundleToHostAppPaths.isEmpty()),
@@ -111,11 +116,24 @@ public class XctoolRunTestsStep implements Step {
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
+    this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
   }
 
   @Override
   public String getShortName() {
     return "xctool-run-tests";
+  }
+
+  public ImmutableMap<String, String> getEnv(ExecutionContext context) {
+    Map<String, String> environment = new HashMap<>();
+    environment.putAll(context.getEnvironment());
+    Optional<Path> xcodeDeveloperDir = xcodeDeveloperDirSupplier.get();
+    if (xcodeDeveloperDir.isPresent()) {
+      environment.put("DEVELOPER_DIR", xcodeDeveloperDir.get().toString());
+    } else {
+      throw new RuntimeException("Cannot determine xcode developer dir");
+    }
+    return ImmutableMap.copyOf(environment);
   }
 
   @Override
@@ -124,6 +142,7 @@ public class XctoolRunTestsStep implements Step {
         .setCommand(command)
         .setDirectory(filesystem.getRootPath().toAbsolutePath().toFile())
         .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+        .setEnvironment(getEnv(context))
         .build();
 
     // Only launch one instance of xctool at the time
