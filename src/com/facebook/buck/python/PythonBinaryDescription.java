@@ -274,7 +274,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
             pythonPlatform,
             pythonBuckConfig.getPexTool(resolver),
             buildArgs,
-            pythonBuckConfig.getPathToPexExecuter(),
+            pythonBuckConfig.getPathToPexExecuter(resolver).or(pythonPlatform.getEnvironment()),
             pythonBuckConfig.getPexExtension(),
             pythonPlatform.getEnvironment(),
             mainModule,

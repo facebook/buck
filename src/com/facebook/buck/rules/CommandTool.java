@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -38,14 +39,17 @@ import java.nio.file.Path;
  */
 public class CommandTool implements Tool {
 
+  private final Optional<Tool> baseTool;
   private final ImmutableList<Arg> args;
   private final ImmutableSortedSet<SourcePath> extraInputs;
   private final ImmutableSortedSet<BuildRule> extraDeps;
 
   private CommandTool(
+      Optional<Tool> baseTool,
       ImmutableList<Arg> args,
       ImmutableSortedSet<SourcePath> extraInputs,
       ImmutableSortedSet<BuildRule> extraDeps) {
+    this.baseTool = baseTool;
     this.args = args;
     this.extraInputs = extraInputs;
     this.extraDeps = extraDeps;
@@ -54,6 +58,9 @@ public class CommandTool implements Tool {
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
     ImmutableSortedSet.Builder<SourcePath> inputs = ImmutableSortedSet.naturalOrder();
+    if (baseTool.isPresent()) {
+      inputs.addAll(baseTool.get().getInputs());
+    }
     for (Arg arg : args) {
       inputs.addAll(arg.getInputs());
     }
@@ -63,24 +70,31 @@ public class CommandTool implements Tool {
 
   @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(resolver.filterBuildRuleInputs(getInputs()))
-        .addAll(extraDeps)
-        .build();
+    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+    if (baseTool.isPresent()) {
+      deps.addAll(baseTool.get().getDeps(resolver));
+    }
+    deps.addAll(resolver.filterBuildRuleInputs(getInputs()));
+    deps.addAll(extraDeps);
+    return deps.build();
   }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    ImmutableList.Builder<String> rules = ImmutableList.builder();
-    for (Arg arg : args) {
-      rules.add(arg.format(resolver));
+    ImmutableList.Builder<String> command = ImmutableList.builder();
+    if (baseTool.isPresent()) {
+      command.addAll(baseTool.get().getCommandPrefix(resolver));
     }
-    return rules.build();
+    for (Arg arg : args) {
+      command.add(arg.format(resolver));
+    }
+    return command.build();
   }
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
+        .setReflectively("baseTool", baseTool)
         .setReflectively("args", args)
         .setReflectively("extraInputs", extraInputs);
   }
@@ -88,11 +102,24 @@ public class CommandTool implements Tool {
   // Builder for a `CommandTool`.
   public static class Builder {
 
+    private final Optional<Tool> baseTool;
     private final ImmutableList.Builder<Arg> args = ImmutableList.builder();
     private final ImmutableSortedSet.Builder<SourcePath> extraInputs =
         ImmutableSortedSet.naturalOrder();
     private final ImmutableSortedSet.Builder<BuildRule> extraDeps =
         ImmutableSortedSet.naturalOrder();
+
+    public Builder(Optional<Tool> baseTool) {
+      this.baseTool = baseTool;
+    }
+
+    public Builder(Tool baseTool) {
+      this(Optional.of(baseTool));
+    }
+
+    public Builder() {
+      this(Optional.<Tool>absent());
+    }
 
     /**
      * Add a {@link String} argument represented by the format string to the command.  The
@@ -139,7 +166,7 @@ public class CommandTool implements Tool {
     }
 
     public CommandTool build() {
-      return new CommandTool(args.build(), extraInputs.build(), extraDeps.build());
+      return new CommandTool(baseTool, args.build(), extraInputs.build(), extraDeps.build());
     }
 
   }

@@ -205,17 +205,8 @@ public class PythonBuckConfig {
         BuckVersion.getVersion());
   }
 
-  public Path getPathToPexExecuter() {
-    Optional<Path> path = delegate.getPath(SECTION, "path_to_pex_executer");
-    if (!path.isPresent()) {
-      return Paths.get(getPythonInterpreter());
-    }
-    if (!isExecutableFile(path.get().toFile())) {
-      throw new HumanReadableException(
-          "%s is not executable (set in python.path_to_pex_executer in your config",
-          path.get().toString());
-    }
-    return path.get();
+  public Optional<Tool> getPathToPexExecuter(BuildRuleResolver resolver) {
+    return delegate.getTool(SECTION, "path_to_pex_executer", resolver);
   }
 
   public String getPexExtension() {

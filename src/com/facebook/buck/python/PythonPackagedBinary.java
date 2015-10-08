@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
@@ -48,7 +47,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private final Tool builder;
   @AddToRuleKey
   private final ImmutableList<String> buildArgs;
-  private final Path pathToPexExecuter;
+  private final Tool pathToPexExecuter;
   @AddToRuleKey
   private final String pexExtension;
   @AddToRuleKey
@@ -65,7 +64,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       PythonPlatform pythonPlatform,
       Tool builder,
       ImmutableList<String> buildArgs,
-      Path pathToPexExecuter,
+      Tool pathToPexExecuter,
       String pexExtension,
       PythonEnvironment pythonEnvironment,
       String mainModule,
@@ -98,8 +97,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(new PathSourcePath(getProjectFilesystem(), pathToPexExecuter))
+    return new CommandTool.Builder(pathToPexExecuter)
         .addArg(new BuildTargetSourcePath(getBuildTarget(), getBinPath()))
         .build();
   }

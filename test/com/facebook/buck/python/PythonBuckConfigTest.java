@@ -29,6 +29,8 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -222,23 +224,9 @@ public class PythonBuckConfigTest {
   }
 
   @Test
-  public void testPathToPexExecuterDefaultsToPython() throws IOException {
-    File python2 = temporaryFolder.newFile("python2");
-    assertTrue("Should be able to set file executable", python2.setExecutable(true));
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            new FakeBuckEnvironment(
-                ImmutableMap.<String, ImmutableMap<String, String>>of(),
-                ImmutableMap.<String, String>builder()
-                    .put("PATH", temporaryFolder.getRoot().getAbsolutePath())
-                    .put("PATHEXT", "")
-                    .build()),
-            new ExecutableFinder());
-    assertEquals(config.getPathToPexExecuter().toString(), config.getPythonInterpreter());
-  }
-
-  @Test
   public void testPathToPexExecuterUsesConfigSetting() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     DebuggableTemporaryFolder projectDir = new DebuggableTemporaryFolder();
     projectDir.create();
     Path pexExecuter = Paths.get("pex-exectuter");
@@ -260,33 +248,9 @@ public class PythonBuckConfigTest {
                         pexExecuter.toString())),
                 projectFilesystem),
             new ExecutableFinder());
-    assertEquals(config.getPathToPexExecuter(), projectFilesystem.resolve(pexExecuter));
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void testPathToPexExecuterNotExecutableThrows() throws IOException {
-    DebuggableTemporaryFolder projectDir = new DebuggableTemporaryFolder();
-    projectDir.create();
-    Path pexExecuter = Paths.get("pex-executer");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
-        new FakeClock(0),
-        projectDir.getRoot(),
-        ImmutableSet.of(pexExecuter));
-    Files.createFile(projectFilesystem.resolve(pexExecuter));
-    assumeTrue(
-        "Should be able to set file non-executable",
-        projectFilesystem.resolve(pexExecuter).toFile().setExecutable(false));
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            new FakeBuckConfig(
-                ImmutableMap.of(
-                    "python",
-                    ImmutableMap.of(
-                        "path_to_pex_executer",
-                        pexExecuter.toString())),
-                projectFilesystem),
-            new ExecutableFinder());
-    config.getPathToPexExecuter();
+    assertThat(
+        config.getPathToPexExecuter(resolver).get().getCommandPrefix(pathResolver),
+        Matchers.contains(pexExecuter.toString()));
   }
 
   @Test

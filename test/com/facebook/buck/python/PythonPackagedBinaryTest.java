@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
@@ -74,7 +75,7 @@ public class PythonPackagedBinaryTest {
         PythonTestUtils.PYTHON_PLATFORM,
         PEX,
         ImmutableList.<String>of(),
-        Paths.get("dummy_path_to_pex_runner"),
+        new HashedFileTool(Paths.get("dummy_path_to_pex_runner")),
         ".pex",
         new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("Python 2.7")),
         "main",
