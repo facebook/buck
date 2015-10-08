@@ -91,7 +91,7 @@ public class CxxPreprocessAndCompileStepTest {
   }
 
   @Test
-  public void errorProcessor() {
+  public void errorProcessorWithRelativePaths() {
     Path original = Paths.get("buck-out/foo#bar/world.h");
     Path replacement = Paths.get("hello/world.h");
 
@@ -128,7 +128,7 @@ public class CxxPreprocessAndCompileStepTest {
             Optional.<Function<String, Iterable<String>>>absent());
 
     Function<String, Iterable<String>> processor =
-        cxxPreprocessStep.createErrorLineProcessor(compilationDirectory);
+        cxxPreprocessStep.createErrorLineProcessor(compilationDirectory, false);
 
     // Fixup lines in included traces.
     assertThat(
@@ -170,6 +170,97 @@ public class CxxPreprocessAndCompileStepTest {
     // test.h isn't in the replacement map, so shouldn't be replaced.
     assertThat(
         ImmutableList.of("In file included from test.h:"),
+        equalTo(processor.apply("In file included from test.h:")));
+
+    // Don't modify lines without headers.
+    assertThat(
+        ImmutableList.of(" error message!"),
+        equalTo(processor.apply(" error message!")));
+  }
+
+  @Test
+  public void errorProcessorWithAbsolutePaths() {
+    Path original = Paths.get("buck-out/foo#bar/world.h");
+    Path replacement = Paths.get("hello/world.h");
+
+    // Setup some dummy values for inputs to the CxxPreprocessAndCompileStep
+    ImmutableList<String> compiler = ImmutableList.of("compiler");
+    Path output = Paths.get("test.ii");
+    Path depFile = Paths.get("test.dep");
+    Path input = Paths.get("test.cpp");
+
+    ImmutableMap<Path, Path> replacementPaths = ImmutableMap.of(original, replacement);
+
+    Path compilationDirectory = Paths.get("compDir");
+    Path sanitizedDir = Paths.get("hello");
+    Path unsanitizedDir = Paths.get("buck-out/foo#bar");
+    DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+        unsanitizedDir.toString().length(),
+        File.separatorChar,
+        compilationDirectory,
+        ImmutableBiMap.of(unsanitizedDir, sanitizedDir));
+
+    // Create our CxxPreprocessAndCompileStep to test.
+    CxxPreprocessAndCompileStep cxxPreprocessStep =
+        new CxxPreprocessAndCompileStep(
+            new FakeProjectFilesystem(),
+            CxxPreprocessAndCompileStep.Operation.COMPILE,
+            output,
+            depFile,
+            input,
+            CxxSource.Type.CXX,
+            Optional.<ImmutableList<String>>absent(),
+            Optional.of(compiler),
+            replacementPaths,
+            sanitizer,
+            Optional.<Function<String, Iterable<String>>>absent());
+
+    Function<String, Iterable<String>> processor =
+        cxxPreprocessStep.createErrorLineProcessor(compilationDirectory, true);
+
+    Path expected = replacement.toAbsolutePath();
+
+    // Fixup lines in included traces.
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s:", expected)),
+        equalTo(processor.apply(String.format("In file included from %s:", original))));
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s:3:2:", expected)),
+        equalTo(processor.apply(String.format("In file included from %s:3:2:", original))));
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s,", expected)),
+        equalTo(processor.apply(String.format("In file included from %s,", original))));
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s:7,", expected)),
+        equalTo(processor.apply(String.format("In file included from %s:7,", original))));
+    assertThat(
+        ImmutableList.of(String.format("   from %s:", expected)),
+        equalTo(processor.apply(String.format("   from %s:", original))));
+    assertThat(
+        ImmutableList.of(String.format("   from %s:3:2:", expected)),
+        equalTo(processor.apply(String.format("   from %s:3:2:", original))));
+    assertThat(
+        ImmutableList.of(String.format("   from %s,", expected)),
+        equalTo(processor.apply(String.format("   from %s,", original))));
+    assertThat(
+        ImmutableList.of(String.format("   from %s:7,", expected)),
+        equalTo(processor.apply(String.format("   from %s:7,", original))));
+
+    // Fixup lines in error messages.
+    assertThat(
+        ImmutableList.of(String.format("%s: something bad", expected)),
+        equalTo(processor.apply(String.format("%s: something bad", original))));
+    assertThat(
+        ImmutableList.of(String.format("%s:4: something bad", expected)),
+        equalTo(processor.apply(String.format("%s:4: something bad", original))));
+    assertThat(
+        ImmutableList.of(String.format("%s:4:2: something bad", expected)),
+        equalTo(processor.apply(String.format("%s:4:2: something bad", original))));
+
+    // test.h isn't in the replacement map, so shouldn't be replaced.
+    assertThat(
+        ImmutableList.of(String.format("In file included from %s:",
+                Paths.get("test.h").toAbsolutePath().toString())),
         equalTo(processor.apply("In file included from test.h:")));
 
     // Don't modify lines without headers.

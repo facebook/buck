@@ -73,6 +73,9 @@ public abstract class ExecutionContext implements Closeable {
   public abstract boolean isDebugEnabled();
 
   @Value.Parameter
+  public abstract boolean shouldReportAbsolutePaths();
+
+  @Value.Parameter
   public abstract ProcessExecutor getProcessExecutor();
 
   @Value.Parameter
@@ -185,6 +188,7 @@ public abstract class ExecutionContext implements Closeable {
     private long defaultTestTimeoutMillis = 0L;
     private boolean isCodeCoverageEnabled = false;
     private boolean isDebugEnabled = false;
+    private boolean shouldReportAbsolutePaths = false;
     @Nullable private ProcessExecutor processExecutor;
     @Nullable private BuckEventBus eventBus = null;
     @Nullable private Platform platform = null;
@@ -209,6 +213,7 @@ public abstract class ExecutionContext implements Closeable {
           defaultTestTimeoutMillis,
           isCodeCoverageEnabled,
           isDebugEnabled,
+          shouldReportAbsolutePaths,
           Preconditions.checkNotNull(processExecutor),
           Preconditions.checkNotNull(eventBus),
           Preconditions.checkNotNull(platform),
@@ -228,6 +233,7 @@ public abstract class ExecutionContext implements Closeable {
       setDefaultTestTimeoutMillis(executionContext.getDefaultTestTimeoutMillis());
       setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled());
       setDebugEnabled(executionContext.isDebugEnabled());
+      setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths());
       setEventBus(executionContext.getBuckEventBus());
       setPlatform(executionContext.getPlatform());
       setEnvironment(executionContext.getEnvironment());
@@ -274,6 +280,11 @@ public abstract class ExecutionContext implements Closeable {
 
     public Builder setDebugEnabled(boolean isDebugEnabled) {
       this.isDebugEnabled = isDebugEnabled;
+      return this;
+    }
+
+    public Builder setShouldReportAbsolutePaths(boolean shouldReportAbsolutePaths) {
+      this.shouldReportAbsolutePaths = shouldReportAbsolutePaths;
       return this;
     }
 

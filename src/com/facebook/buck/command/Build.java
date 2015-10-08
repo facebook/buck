@@ -111,6 +111,7 @@ public class Build implements Closeable {
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
       boolean isDebugEnabled,
+      boolean shouldReportAbsolutePaths,
       BuckEventBus eventBus,
       Platform platform,
       ImmutableMap<String, String> environment,
@@ -128,6 +129,7 @@ public class Build implements Closeable {
         .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
         .setDebugEnabled(isDebugEnabled)
+        .setShouldReportAbsolutePaths(shouldReportAbsolutePaths)
         .setEventBus(eventBus)
         .setPlatform(platform)
         .setEnvironment(environment)
@@ -184,6 +186,7 @@ public class Build implements Closeable {
         .setBuildId(executionContext.getBuildId())
         .putAllEnvironment(executionContext.getEnvironment())
         .setKeepGoing(isKeepGoing)
+        .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())
         .build();
 
     ImmutableSet<BuildTarget> targetsToBuild = FluentIterable.from(targetish)

@@ -89,6 +89,11 @@ public abstract class BuildContext {
     return false;
   }
 
+  @Value.Default
+  public boolean shouldReportAbsolutePaths() {
+    return false;
+  }
+
   /**
    * Creates an {@link OnDiskBuildInfo}.
    * <p>

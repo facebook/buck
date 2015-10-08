@@ -136,6 +136,7 @@ public class ProjectGenerator {
 
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
   private static final String BUILD_WITH_BUCK_TEMPLATE = "build-with-buck.st";
+  public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
 
   public enum Option {
     /** Use short BuildTarget name instead of full name for targets */
@@ -451,7 +452,7 @@ public class ProjectGenerator {
         compDir.length(),
         'f');
     String buildFlags = Joiner.on(' ').join(Iterables.transform(
-        buildWithBuckFlags,
+            getBuildWithBuckFlagsForXcodeIntegration(),
         Escaper.BASH_ESCAPER));
     String escapedBuildTarget = Escaper.escapeAsBashString(buildTarget.getFullyQualifiedName());
     Path resolvedBundleSource = projectFilesystem.resolve(
@@ -512,6 +513,16 @@ public class ProjectGenerator {
     project.getTargets().add(buildWithBuckTarget);
 
     targetNodeToGeneratedProjectTargetBuilder.put(targetNode, buildWithBuckTarget);
+  }
+
+  private ImmutableList<String> getBuildWithBuckFlagsForXcodeIntegration() {
+    if (buildWithBuckFlags.contains(REPORT_ABSOLUTE_PATHS)) {
+      return buildWithBuckFlags;
+    }
+    return ImmutableList.<String>builder()
+        .add(REPORT_ABSOLUTE_PATHS)   // Xcode requires absolute paths in errors
+        .addAll(buildWithBuckFlags)
+        .build();
   }
 
   static Path getScratchPathForAppBundle(BuildTarget targetToBuildWithBuck) {

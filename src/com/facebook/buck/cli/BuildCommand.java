@@ -76,6 +76,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
   private static final String DEEP_LONG_ARG = "--deep";
   private static final String SHALLOW_LONG_ARG = "--shallow";
+  private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
 
   @Option(
       name = KEEP_GOING_LONG_ARG,
@@ -117,6 +118,12 @@ public class BuildCommand extends AbstractCommand {
           " targets available.",
       forbids = DEEP_LONG_ARG)
   private boolean shallowBuild = false;
+
+  @Option(
+      name = REPORT_ABSOLUTE_PATHS,
+      usage =
+          "Reports errors using absolute paths to the source files instead of relative paths.")
+  private boolean shouldReportAbsolutePaths = false;
 
   @Argument
   private List<String> arguments = Lists.newArrayList();
@@ -161,6 +168,10 @@ public class BuildCommand extends AbstractCommand {
 
   public boolean isKeepGoing() {
     return keepGoing;
+  }
+
+  protected boolean shouldReportAbsolutePaths() {
+    return shouldReportAbsolutePaths;
   }
 
   public void setKeepGoing(boolean keepGoing) {
@@ -208,6 +219,7 @@ public class BuildCommand extends AbstractCommand {
         buckConfig.getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
         isDebugEnabled(),
+        shouldReportAbsolutePaths(),
         eventBus,
         platform,
         environment,
@@ -380,6 +392,9 @@ public class BuildCommand extends AbstractCommand {
     if (justBuildTarget != null) {
       builder.add(JUST_BUILD_LONG_ARG);
       builder.add(justBuildTarget);
+    }
+    if (shouldReportAbsolutePaths) {
+      builder.add(REPORT_ABSOLUTE_PATHS);
     }
     return builder.build();
   }

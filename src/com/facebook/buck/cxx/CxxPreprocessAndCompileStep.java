@@ -163,7 +163,9 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   @VisibleForTesting
-  Function<String, Iterable<String>> createErrorLineProcessor(final Path workingDir) {
+  Function<String, Iterable<String>> createErrorLineProcessor(
+      final Path workingDir,
+      final boolean shouldReportAbsolutePaths) {
     return CxxDescriptionEnhancer.createErrorMessagePathProcessor(
         new Function<String, String>() {
           @Override
@@ -177,10 +179,14 @@ public class CxxPreprocessAndCompileStep implements Step {
             }
 
             // And, of course, we need to fixup any replacement paths.
-            return Optional
+            String result = Optional
                 .fromNullable(replacementPaths.get(path))
                 .transform(Escaper.PATH_FOR_C_INCLUDE_STRING_ESCAPER)
                 .or(Escaper.escapePathForCIncludeString(path));
+            if (shouldReportAbsolutePaths) {
+              result = filesystem.getAbsolutifier().apply(Paths.get(result)).toString();
+            }
+            return result;
           }
         });
   }
@@ -300,14 +306,18 @@ public class CxxPreprocessAndCompileStep implements Step {
           new FunctionLineProcessorThread(
               preprocess.getErrorStream(),
               preprocessError,
-              createErrorLineProcessor(filesystem.getRootPath()));
+              createErrorLineProcessor(
+                  filesystem.getRootPath(),
+                  context.shouldReportAbsolutePaths()));
       errorProcessorPreprocess.start();
 
       errorProcessorCompile =
           new FunctionLineProcessorThread(
               compile.getErrorStream(),
               compileError,
-              createErrorLineProcessor(filesystem.getRootPath()));
+              createErrorLineProcessor(
+                  filesystem.getRootPath(),
+                  context.shouldReportAbsolutePaths()));
       errorProcessorCompile.start();
 
       lineDirectiveMunger =
@@ -409,7 +419,9 @@ public class CxxPreprocessAndCompileStep implements Step {
                new FunctionLineProcessorThread(
                    process.getErrorStream(),
                    error,
-                   createErrorLineProcessor(filesystem.getRootPath()))) {
+                   createErrorLineProcessor(
+                       filesystem.getRootPath(),
+                       context.shouldReportAbsolutePaths()))) {
         errorProcessor.start();
 
         // If we're preprocessing, we pipe the output through a processor to sanitize the line
