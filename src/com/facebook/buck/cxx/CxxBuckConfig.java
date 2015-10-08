@@ -223,7 +223,7 @@ public class CxxBuckConfig {
   public CxxCompilationDatabaseFormat getCompilationDatabaseFormat() {
     return delegate
         .getEnum(cxxSection, "compilation_database_format", CxxCompilationDatabaseFormat.class)
-        .or(CxxCompilationDatabaseFormat.NUCLIDE);
+        .or(CxxCompilationDatabaseFormat.CLANG);
   }
 
 }
