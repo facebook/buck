@@ -467,6 +467,33 @@ public class Parser {
       Console console,
       ImmutableMap<String, String> environment)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+    ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
+    for (BuildTarget target : getOrLoadBuildTargets(
+        buildFilePath,
+        parserConfig,
+        eventBus,
+        console,
+        environment)) {
+      builder.add(Preconditions.checkNotNull(getTargetNode(target)));
+    }
+    return builder.build();
+  }
+
+  @Nullable
+  public synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget)
+      throws IOException, InterruptedException {
+    return state.get(buildTarget);
+  }
+
+  public ImmutableList<BuildTarget> getOrLoadBuildTargets(
+      Path buildFilePath,
+      ParserConfig parserConfig,
+      BuckEventBus eventBus,
+      Console console,
+      ImmutableMap<String, String> environment)
+      throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
+    Preconditions.checkState(!buildFilePath.isAbsolute());
+
     Preconditions.checkState(!buildFilePath.isAbsolute());
 
     Path normalizedBuildFilePath = normalize(buildFilePath);
@@ -482,7 +509,7 @@ public class Parser {
           eventBus);
     }
 
-    ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
+    ImmutableList.Builder<BuildTarget> builder = ImmutableList.builder();
     for (Map<String, Object> buildFileTarget : buildFileTargets) {
       if (!buildFileTarget.containsKey("name")) {
         continue;
@@ -490,24 +517,17 @@ public class Parser {
 
       Optional<Path> basePath = buildFileTreeCache.get().getBasePathOfAncestorTarget(buildFilePath);
       Preconditions.checkState(basePath.isPresent());
-      Path targetBasePath =  MorePaths.relativize(
+      Path targetBasePath = MorePaths.relativize(
           cell.getFilesystem().getRootPath(),
           cell.getFilesystem().resolve(basePath.get()));
-      BuildTarget target = BuildTarget.builder(
-          // TODO(simons): Check that this is actually correct.
-          cell.getFilesystem().getRootPath(),
-          "//" + MorePaths.pathWithUnixSeparators(targetBasePath),
-          (String) buildFileTarget.get("name")).build();
-
-      builder.add(Preconditions.checkNotNull(getTargetNode(target)));
+      builder.add(BuildTarget.builder(
+              // TODO(simons): Check that this is actually correct.
+              cell.getFilesystem().getRootPath(),
+              "//" + MorePaths.pathWithUnixSeparators(targetBasePath),
+              (String) buildFileTarget.get("name")).build());
     }
-    return builder.build();
-  }
 
-  @Nullable
-  public synchronized TargetNode<?> getTargetNode(BuildTarget buildTarget)
-      throws IOException, InterruptedException {
-    return state.get(buildTarget);
+    return builder.build();
   }
 
   private SimplePerfEvent.Scope getTargetNodeEventScope(

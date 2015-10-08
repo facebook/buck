@@ -79,7 +79,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 
 import javax.annotation.Nullable;
@@ -716,24 +715,23 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     // Get all valid targets in our target directory by reading the build file.
-    List<Map<String, Object>> ruleObjects;
+    ImmutableList<BuildTarget> targetsInFile;
     try {
-      ruleObjects = parser.parseBuildFile(
-          params.getCell().getFilesystem().getRootPath(),
-          params.getCell().getAbsolutePathToBuildFile(buildTarget),
-          new ParserConfig(params.getBuckConfig()),
-          params.getEnvironment(),
+      ParserConfig config = new ParserConfig(params.getBuckConfig());
+      targetsInFile = parser.getOrLoadBuildTargets(
+          buildTarget.getBasePath().resolve(config.getBuildFileName()),
+          config,
+          params.getBuckEventBus(),
           params.getConsole(),
-          params.getBuckEventBus());
+          params.getEnvironment());
     } catch (BuildTargetException | BuildFileParseException e) {
       // TODO(devjasta): this doesn't smell right!
       return null;
     }
 
     // Check that the given target is a valid target.
-    for (Map<String, Object> rule : ruleObjects) {
-      String name = (String) Preconditions.checkNotNull(rule.get("name"));
-      if (name.equals(buildTarget.getShortNameAndFlavorPostfix())) {
+    for (BuildTarget candidate : targetsInFile) {
+      if (candidate.equals(buildTarget)) {
         return buildTarget.getFullyQualifiedName();
       }
     }
