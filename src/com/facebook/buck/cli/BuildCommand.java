@@ -179,7 +179,12 @@ public class BuildCommand extends AbstractCommand {
   }
 
   public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
-    return new ConcurrencyLimit(buckConfig.getNumThreads(), buckConfig.getLoadLimit());
+    Double loadLimit = this.loadLimit;
+    if (loadLimit == null) {
+      loadLimit = (double) buckConfig.getLoadLimit();
+    }
+
+    return new ConcurrencyLimit(buckConfig.getNumThreads(), loadLimit);
   }
 
   /**
