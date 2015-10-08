@@ -361,6 +361,12 @@ public class KnownBuildRuleTypes {
 
     cxxPlatformsMap = cxxPlatformsBuilder.build();
 
+    if (appleConfig.shouldAttemptToDetermineBestCxxPlatform()) {
+      defaultCxxPlatform = AppleCxxPlatforms.determineBestPlatform(
+          config.getEnvironment(),
+          defaultCxxPlatform,
+          cxxPlatformsMap);
+    }
 
     // Build up the final list of C/C++ platforms.
     FlavorDomain<CxxPlatform> cxxPlatforms = new FlavorDomain<>(

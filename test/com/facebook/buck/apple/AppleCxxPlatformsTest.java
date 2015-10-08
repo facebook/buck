@@ -29,6 +29,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessMode;
@@ -889,6 +890,70 @@ AppleSdkPaths appleSdkPaths =
         Sets.newHashSet(linkRukeKeys.values()),
         Matchers.hasSize(1));
 
+  }
+
+  @Test
+  public void testDeterminingBestCxxPlatform() {
+    ImmutableMap<String, String> env = ImmutableMap.<String, String>builder()
+        .put("arch", "arm64")
+        .put("PLATFORM_NAME", "iphoneos")
+        .build();
+
+    CxxPlatform defaultPlatform =
+        createCxxPlatformWithFlavor(ImmutableFlavor.builder().name("default").build());
+
+    ImmutableMap.Builder<Flavor, CxxPlatform> platformBuilder =
+        ImmutableMap.<Flavor, CxxPlatform>builder();
+    addCxxPlatformWithFlavour(
+        ImmutableFlavor.builder().name("iphoneos-arm64").build(),
+        platformBuilder);
+    addCxxPlatformWithFlavour(
+        ImmutableFlavor.builder().name("iphonesimulator-i386").build(),
+        platformBuilder);
+    addCxxPlatformWithFlavour(
+        ImmutableFlavor.builder().name("macosx-x86_64").build(),
+        platformBuilder);
+
+    CxxPlatform bestPlatform = AppleCxxPlatforms.determineBestPlatform(
+        env,
+        defaultPlatform,
+        platformBuilder.build());
+    assertThat(bestPlatform.getFlavor().getName(), Matchers.equalTo("iphoneos-arm64"));
+  }
+
+  @Test
+  public void testDeterminingBestCxxPlatformFallsBackToDefaultOneIfEnvsAreNotEnough() {
+    CxxPlatform defaultPlatform =
+        createCxxPlatformWithFlavor(ImmutableFlavor.builder().name("default").build());
+
+    ImmutableMap.Builder<Flavor, CxxPlatform> platformBuilder =
+        ImmutableMap.<Flavor, CxxPlatform>builder();
+    addCxxPlatformWithFlavour(
+        ImmutableFlavor.builder().name("iphoneos-arm64").build(),
+        platformBuilder);
+    addCxxPlatformWithFlavour(
+        ImmutableFlavor.builder().name("iphonesimulator-i386").build(),
+        platformBuilder);
+    addCxxPlatformWithFlavour(
+        ImmutableFlavor.builder().name("macosx-x86_64").build(),
+        platformBuilder);
+
+    CxxPlatform bestPlatform = AppleCxxPlatforms.determineBestPlatform(
+        ImmutableMap.<String, String>builder().build(),
+        defaultPlatform,
+        platformBuilder.build());
+    assertThat(bestPlatform.getFlavor().getName(), Matchers.equalTo("default"));
+  }
+
+  private void addCxxPlatformWithFlavour(
+      Flavor flavor,
+      ImmutableMap.Builder<Flavor, CxxPlatform> builder) {
+    builder.put(flavor,
+        createCxxPlatformWithFlavor(flavor));
+  }
+
+  private CxxPlatform createCxxPlatformWithFlavor(Flavor flavor) {
+    return CxxPlatform.builder().from(CxxPlatformUtils.DEFAULT_PLATFORM).setFlavor(flavor).build();
   }
 
 }
