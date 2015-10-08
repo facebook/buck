@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -36,16 +35,15 @@ abstract class AbstractClangCxxCompilationDatabaseEntry implements CxxCompilatio
   @Value.Parameter
   public abstract String getFile();
 
-  @JsonIgnore
   @Value.Parameter
-  public abstract ImmutableList<String> getArgs();
+  public abstract ImmutableList<String> getArguments();
 
   @Override
   @Value.Derived
   public String getCommand() {
     return Joiner.on(' ').join(
         Iterables.transform(
-            getArgs(),
+            getArguments(),
             Escaper.SHELL_ESCAPER));
   }
 
