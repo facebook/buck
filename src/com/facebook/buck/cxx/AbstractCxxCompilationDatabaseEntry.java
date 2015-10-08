@@ -26,25 +26,22 @@ import org.immutables.value.Value;
 
 @BuckStyleImmutable
 @Value.Immutable
-abstract class AbstractNuclideCompatibleCxxCompilationDatabaseEntry
-    implements CxxCompilationDatabaseEntry {
+abstract class AbstractCxxCompilationDatabaseEntry {
 
   @Value.Parameter
   public abstract String getDirectory();
 
-  @Override
   @Value.Parameter
   public abstract String getFile();
 
   @Value.Parameter
-  public abstract ImmutableList<String> getArgs();
+  public abstract ImmutableList<String> getArguments();
 
-  @Override
   @Value.Derived
   public String getCommand() {
     return Joiner.on(' ').join(
         Iterables.transform(
-            getArgs(),
+            getArguments(),
             Escaper.SHELL_ESCAPER));
   }
 

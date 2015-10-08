@@ -149,8 +149,7 @@ public class CxxBinaryDescription implements
           params,
           pathResolver,
           preprocessMode,
-          cxxLinkAndCompileRules.compileRules,
-          cxxBuckConfig.getCompilationDatabaseFormat());
+          cxxLinkAndCompileRules.compileRules);
     }
 
     if (flavors.contains(CxxInferEnhancer.INFER)) {

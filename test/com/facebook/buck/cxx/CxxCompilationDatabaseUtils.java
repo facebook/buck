@@ -59,12 +59,12 @@ public class CxxCompilationDatabaseUtils {
         .registerTypeAdapter(ImmutableList.class, new ArgsJsonDeserializer())
         .create();
     try (Reader fileReader = Files.newBufferedReader(compilationDatabase, defaultCharset())) {
-      List<ClangCxxCompilationDatabaseEntry> entries = gson
+      List<CxxCompilationDatabaseEntry> entries = gson
           .fromJson(
-              fileReader, new TypeToken<List<ClangCxxCompilationDatabaseEntry>>() {
+              fileReader, new TypeToken<List<CxxCompilationDatabaseEntry>>() {
               }.getType());
       Map<String, CxxCompilationDatabaseEntry> fileToEntry = Maps.newHashMap();
-      for (ClangCxxCompilationDatabaseEntry entry : entries) {
+      for (CxxCompilationDatabaseEntry entry : entries) {
         fileToEntry.put(entry.getFile(), entry);
       }
       return fileToEntry;

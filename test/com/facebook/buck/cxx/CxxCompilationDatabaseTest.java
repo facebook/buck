@@ -173,8 +173,7 @@ public class CxxCompilationDatabaseTest {
         testBuildRuleParams,
         testSourcePathResolver,
         strategy,
-        rules.build(),
-        CxxCompilationDatabaseFormat.CLANG);
+        rules.build());
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
@@ -193,9 +192,9 @@ public class CxxCompilationDatabaseTest {
         (CxxCompilationDatabase.GenerateCompilationCommandsJson) buildSteps.get(1);
     Iterable<CxxCompilationDatabaseEntry> observedEntries =
         step.createEntries();
-    Iterable<ClangCxxCompilationDatabaseEntry> expectedEntries =
+    Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
-          ClangCxxCompilationDatabaseEntry.of(
+          CxxCompilationDatabaseEntry.of(
               root,
               root + "/test.cpp",
               expectedArguments));
@@ -333,8 +332,7 @@ public class CxxCompilationDatabaseTest {
         testBuildRuleParams,
         testSourcePathResolver,
         CxxPreprocessMode.SEPARATE,
-        ImmutableSortedSet.of(testPreprocessRule, testCompileRule),
-        CxxCompilationDatabaseFormat.CLANG);
+        ImmutableSortedSet.of(testPreprocessRule, testCompileRule));
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
@@ -353,9 +351,9 @@ public class CxxCompilationDatabaseTest {
         (CxxCompilationDatabase.GenerateCompilationCommandsJson) buildSteps.get(1);
     Iterable<CxxCompilationDatabaseEntry> observedEntries =
         step.createEntries();
-    Iterable<ClangCxxCompilationDatabaseEntry> expectedEntries =
+    Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
-            ClangCxxCompilationDatabaseEntry.of(
+            CxxCompilationDatabaseEntry.of(
                 root,
                 root + "/test.cpp",
                 ImmutableList.of(

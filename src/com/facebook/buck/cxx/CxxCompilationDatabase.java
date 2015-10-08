@@ -59,15 +59,12 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
   private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
   @AddToRuleKey(stringify = true)
   private final Path outputJsonFile;
-  @AddToRuleKey
-  private final CxxCompilationDatabaseFormat compilationDatabaseFormat;
 
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
       CxxPreprocessMode preprocessMode,
-      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules,
-      CxxCompilationDatabaseFormat compilationDatabaseFormat) {
+      Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> compileRules = ImmutableSortedSet
         .naturalOrder();
@@ -84,8 +81,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
             params.getExtraDeps()),
         pathResolver,
         compileRules.build(),
-        preprocessMode,
-        compilationDatabaseFormat);
+        preprocessMode);
   }
 
   static BuildRuleParams paramsWithoutCompilationDatabaseFlavor(BuildRuleParams params) {
@@ -107,13 +103,11 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
-      CxxPreprocessMode preprocessMode,
-      CxxCompilationDatabaseFormat compilationDatabaseFormat) {
+      CxxPreprocessMode preprocessMode) {
     super(buildRuleParams, pathResolver);
     this.compileRules = compileRules;
     this.preprocessMode = preprocessMode;
     this.outputJsonFile = BuildTargets.getGenPath(buildRuleParams.getBuildTarget(), "__%s.json");
-    this.compilationDatabaseFormat = compilationDatabaseFormat;
   }
 
   @Override
@@ -184,14 +178,13 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasPost
       String fileToCompile = inputFilesystem
           .resolve(getResolver().getPath(inputSourcePath))
           .toString();
-      ImmutableList<String> args = preprocessRule.isPresent() ?
+      ImmutableList<String> arguments = preprocessRule.isPresent() ?
           compileRule.getCompileCommandCombinedWithPreprocessBuildRule(preprocessRule.get()) :
           compileRule.getCommand();
-      return compilationDatabaseFormat.createEntry(
-          getProjectFilesystem().getRootPath(),
-          getBuildTarget().getBasePath(),
+      return CxxCompilationDatabaseEntry.of(
+          inputFilesystem.getRootPath().toString(),
           fileToCompile,
-          args);
+          arguments);
     }
 
     private int writeOutput(

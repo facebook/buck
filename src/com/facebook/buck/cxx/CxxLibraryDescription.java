@@ -486,8 +486,7 @@ public class CxxLibraryDescription implements
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableSet<Path> frameworkSearchPaths,
-      CxxPreprocessMode preprocessMode,
-      CxxCompilationDatabaseFormat compilationDatabaseFormat) {
+      CxxPreprocessMode preprocessMode) {
     BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
         .paramsWithoutCompilationDatabaseFlavor(params);
     // Invoking requireObjects has the side-effect of invoking
@@ -516,8 +515,7 @@ public class CxxLibraryDescription implements
         params,
         pathResolver,
         preprocessMode,
-        objects.keySet(),
-        compilationDatabaseFormat);
+        objects.keySet());
   }
 
   @Override
@@ -733,8 +731,7 @@ public class CxxLibraryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args,
-      CxxPreprocessMode preprocessMode,
-      CxxCompilationDatabaseFormat compilationDatabaseFormat) {
+      CxxPreprocessMode preprocessMode) {
     return createCompilationDatabase(
         targetGraph,
         params,
@@ -765,8 +762,7 @@ public class CxxLibraryDescription implements
             args.frameworks,
             cxxPlatform,
             new SourcePathResolver(resolver)),
-        preprocessMode,
-        compilationDatabaseFormat);
+        preprocessMode);
   }
 
   public static TypeAndPlatform getTypeAndPlatform(
@@ -850,8 +846,7 @@ public class CxxLibraryDescription implements
               ? platform.get().getValue()
               : DefaultCxxPlatforms.build(cxxBuckConfig),
           args,
-          preprocessMode,
-          cxxBuckConfig.getCompilationDatabaseFormat());
+          preprocessMode);
     }
 
     if (params.getBuildTarget().getFlavors().contains(CxxInferEnhancer.INFER)) {
