@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 
 public class PythonBuckConfig {
 
-  public static final Flavor DEFAULT_PYTHON_PLATFORM = ImmutableFlavor.of("default");
+  public static final Flavor DEFAULT_PYTHON_PLATFORM = ImmutableFlavor.of("py-default");
 
   private static final String SECTION = "python";
   private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
