@@ -18,16 +18,18 @@ package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,12 +73,15 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           "--template",
           "'{date|hgdate}'");
 
-  private final ProcessExecutor processExecutor;
+  private ProcessExecutorFactory processExecutorFactory;
   private final File projectRoot;
   private final String hgCmd;
 
-  public HgCmdLineInterface(ProcessExecutor processExecutor, File projectRoot, String hgCmd) {
-    this.processExecutor = processExecutor;
+  public HgCmdLineInterface(
+      ProcessExecutorFactory processExecutorFactory,
+      File projectRoot,
+      String hgCmd) {
+    this.processExecutorFactory = processExecutorFactory;
     this.projectRoot = projectRoot;
     this.hgCmd = hgCmd;
   }
@@ -137,44 +142,45 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private String executeCommand(Iterable<String> command)
       throws VersionControlCommandFailedException, InterruptedException {
     command = replaceTemplateValue(command, HG_CMD_TEMPLATE, hgCmd);
+    String commandString = commandAsString(command);
+    LOG.debug("Executing command: " + commandString);
+
     ProcessExecutorParams processExecutorParams = ProcessExecutorParams.builder()
         .setCommand(command)
         .setDirectory(projectRoot)
         .build();
 
-    String commandString = commandAsString(command);
-    LOG.debug("Executing command: " + commandString);
+    ProcessExecutor.Result result;
+    try (
+        PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
+        PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
 
-    try {
-      ProcessExecutor.Result result =
-          processExecutor.launchAndExecute(
-              processExecutorParams,
-              // Must specify that stdout is expected or else output may be wrapped
-              // in Ansi escape chars.
-              ImmutableSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-              /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>absent(),
-              /* timeOutHandler */ Optional.<Function<Process, Void>>absent()
-          );
+      ProcessExecutor processExecutor =
+          processExecutorFactory.createProcessExecutor(stdout, stderr);
 
-      Optional<String> resultString = result.getStdout();
-
-      if (!resultString.isPresent()) {
-        throw new VersionControlCommandFailedException(
-            "Received no output from launched process for command: " +
-                commandString);
-      }
-
-      if (result.getExitCode() != 0) {
-        throw new VersionControlCommandFailedException(
-            "Received non-zero exit for for command:" +
-                commandString);
-      }
-
-      return cleanResultString(resultString.get());
+      result = processExecutor.launchAndExecute(processExecutorParams);
     } catch (IOException e) {
       throw new VersionControlCommandFailedException(e);
     }
+
+    Optional<String> resultString = result.getStdout();
+
+    if (!resultString.isPresent()) {
+      throw new VersionControlCommandFailedException(
+          "Received no output from launched process for command: " + commandString
+      );
+    }
+
+    if (result.getExitCode() != 0) {
+      Optional<String> stderr = result.getStderr();
+      String stdErrString = stderr.isPresent() ? stderr.get() : "";
+      throw new VersionControlCommandFailedException(
+          "Received non-zero exit for for command:" + commandString +
+          "\nStdErr: " + stdErrString
+      );
+    }
+
+    return cleanResultString(resultString.get());
   }
 
   private static String validateRevisionId(String revisionId)

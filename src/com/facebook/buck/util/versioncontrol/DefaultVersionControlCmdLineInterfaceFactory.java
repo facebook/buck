@@ -17,7 +17,7 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorFactory;
 
 import java.nio.file.Path;
 
@@ -26,22 +26,22 @@ public class DefaultVersionControlCmdLineInterfaceFactory
   private static final Logger LOG = Logger.get(DefaultVersionControlCmdLineInterfaceFactory.class);
 
   private final Path projectRoot;
-  private final ProcessExecutor processExecutor;
+  private final ProcessExecutorFactory processExecutorFactory;
   private final String hgCmd;
 
   public DefaultVersionControlCmdLineInterfaceFactory(
       Path projectRoot,
-      ProcessExecutor processExecutor,
+      ProcessExecutorFactory processExecutorFactory,
       VersionControlBuckConfig buckConfig) {
     this.projectRoot = projectRoot;
-    this.processExecutor = processExecutor;
+    this.processExecutorFactory = processExecutorFactory;
     this.hgCmd = buckConfig.getHgCmd();
   }
 
   @Override
   public VersionControlCmdLineInterface createCmdLineInterface() throws InterruptedException {
       HgCmdLineInterface hgCmdLineInterface =
-          new HgCmdLineInterface(processExecutor, projectRoot.toFile(), hgCmd);
+          new HgCmdLineInterface(processExecutorFactory, projectRoot.toFile(), hgCmd);
 
       try {
         hgCmdLineInterface.currentRevisionId();

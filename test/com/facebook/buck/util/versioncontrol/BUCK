@@ -17,6 +17,8 @@ java_test(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util/versioncontrol:versioncontrol',
     '//src/com/facebook/buck/util/versioncontrol:impl',
+    '//src/com/facebook/buck/util:util',
+    '//test/com/facebook/buck/util:testutil',
     '//src/com/facebook/buck/zip:unzip',
     '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/testutil:testutil',

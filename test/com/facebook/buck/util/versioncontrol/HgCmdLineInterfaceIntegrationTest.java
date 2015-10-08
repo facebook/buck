@@ -23,9 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.zip.Unzip;
 
 import org.junit.Assume;
@@ -188,7 +187,7 @@ public class HgCmdLineInterfaceIntegrationTest {
     DefaultVersionControlCmdLineInterfaceFactory vcFactory =
         new DefaultVersionControlCmdLineInterfaceFactory(
             tempFolder.getRoot().toPath(),
-            new ProcessExecutor(new TestConsole()),
+            new TestProcessExecutorFactory(),
             new VersionControlBuckConfig(new FakeBuckConfig()));
     VersionControlCmdLineInterface cmdLineInterface = vcFactory.createCmdLineInterface();
     assertEquals(NoOpCmdLineInterface.class, cmdLineInterface.getClass());
@@ -221,9 +220,9 @@ public class HgCmdLineInterfaceIntegrationTest {
       throws InterruptedException {
     DefaultVersionControlCmdLineInterfaceFactory vcFactory =
         new DefaultVersionControlCmdLineInterfaceFactory(
-          repoRootDir,
-          new ProcessExecutor(new TestConsole()),
-          new VersionControlBuckConfig(new FakeBuckConfig()));
+            repoRootDir,
+            new TestProcessExecutorFactory(),
+            new VersionControlBuckConfig(new FakeBuckConfig()));
     return vcFactory.createCmdLineInterface();
   }
 }

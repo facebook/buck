@@ -65,6 +65,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.PkillProcessManager;
+import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.PropertyFinder;
@@ -746,7 +747,7 @@ public final class Main {
             diskIoExecutorService,
             new DefaultVersionControlCmdLineInterfaceFactory(
                 rootCell.getFilesystem().getRootPath(),
-                processExecutor,
+                new PrintStreamProcessExecutorFactory(),
                 vcBuckConfig),
             buildEventBus
         );

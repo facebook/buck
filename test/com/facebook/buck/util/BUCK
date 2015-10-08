@@ -10,6 +10,7 @@ java_immutables_library(
     '//src/com/facebook/buck/util:io',
     '//src/com/facebook/buck/util:util',
     '//test/com/facebook/buck/timing:testutil',
+    '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jsr:jsr305',
