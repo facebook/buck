@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 
 public class FatJarMain {
-  public static final String BUCK_JAVA_BIN_KEY = "buck.java.java_bin";
 
   private FatJarMain() {}
 
@@ -54,23 +53,12 @@ public class FatJarMain {
   }
 
   /**
-   * Get the location of the java binary based off of java.home, or buck.java.java_bin
-   */
-  private static String getJavaBinPath() {
-    String defaultPath = Paths.get(System.getProperty("java.home"))
-      .resolve("bin")
-      .resolve("java")
-      .toString();
-    return System.getProperty(BUCK_JAVA_BIN_KEY, defaultPath);
-  }
-
-  /**
    * @return a command to start a new JVM process to execute the given main class.
    */
   private static List<String> getCommand(Path jar, String[] args) throws Exception {
     List<String> cmd = new ArrayList<String>();
-    // Lookup the Java binary used to start us or the overridden path
-    cmd.add(getJavaBinPath());
+    // Lookup the Java binary used to start us.
+    cmd.add(Paths.get(System.getProperty("java.home")).resolve("bin").resolve("java").toString());
     cmd.add("-jar");
     // Lookup our current JAR context.
     cmd.add(jar.toString());
@@ -105,7 +93,6 @@ public class FatJarMain {
       ProcessBuilder builder = new ProcessBuilder();
       builder.command(getCommand(jar, args));
       updateEnvironment(builder.environment(), temp.getPath());
-      builder.environment().put("JAVA_HOME", System.getProperty("java.home"));
       builder.inheritIO();
 
       // Wait for the inner process to finish, and propagate it's exit code, before cleaning

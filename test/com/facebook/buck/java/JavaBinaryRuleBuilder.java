@@ -32,8 +32,7 @@ public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescrip
     super(
         new JavaBinaryDescription(
             DEFAULT_JAVAC_OPTIONS,
-            DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig())),
-            Optional.<String>absent()),
+            DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()))),
         target);
   }
 

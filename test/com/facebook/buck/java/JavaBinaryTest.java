@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -84,8 +83,7 @@ public class JavaBinaryTest {
                 null,
                 /* blacklist */ ImmutableSet.<String>of(),
                 new DefaultDirectoryTraverser(),
-                ImmutableSetMultimap.<JavaLibrary, Path>of(),
-                Optional.<String>absent()));
+                ImmutableSetMultimap.<JavaLibrary, Path>of()));
 
     // Strip the trailing "." from the absolute path to the current directory.
     final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");
@@ -95,67 +93,6 @@ public class JavaBinaryTest {
     String expectedClasspath = basePath + javaBinary.getPathToOutput();
 
     List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
-    assertEquals(expectedCommand, javaBinary.getExecutableCommand().getCommandPrefix(pathResolver));
-
-    assertFalse(
-        "Library rules that are used exclusively by genrules should not be part of the classpath.",
-        expectedClasspath.contains(PATH_TO_GENERATOR_JAR.toString()));
-  }
-
-  @Test
-  public void testGetExecutableCommandWithJavaBinOverride() {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-
-    // prebuilt_jar //third_party/generator:generator
-    PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/generator:generator"))
-        .setBinaryJar(PATH_TO_GENERATOR_JAR)
-        .build(ruleResolver);
-
-    // prebuilt_jar //third_party/guava:guava
-    BuildRule guava = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
-        .setBinaryJar(PATH_TO_GUAVA_JAR)
-        .build(ruleResolver);
-
-    // java_library //java/com/facebook/base:base
-    BuildRule libraryRule = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
-        .addSrc(Paths.get("java/com/facebook/base/Base.java"))
-        .addDep(guava.getBuildTarget())
-        .build(ruleResolver);
-
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
-        BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
-        .setDeclaredDeps(ImmutableSortedSet.of(libraryRule))
-        .build();
-    // java_binary //java/com/facebook/base:Main
-    JavaBinary javaBinary =
-        ruleResolver.addToIndex(
-            new JavaBinary(
-                params,
-                new SourcePathResolver(ruleResolver),
-                "com.facebook.base.Main",
-                null,
-                /* merge manifests */ true,
-                null,
-                /* blacklist */ ImmutableSet.<String>of(),
-                new DefaultDirectoryTraverser(),
-                ImmutableSetMultimap.<JavaLibrary, Path>of(),
-                Optional.of("/usr/bin/my_java_wrapper.sh")));
-
-    // Strip the trailing "." from the absolute path to the current directory.
-    final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");
-
-    // Each classpath entry is specified via its absolute path so that the executable command can be
-    // run from a /tmp directory, if necessary.
-    String expectedClasspath = basePath + javaBinary.getPathToOutput();
-
-    List<String> expectedCommand = ImmutableList.of(
-        "/usr/bin/my_java_wrapper.sh",
-        "-jar",
-        expectedClasspath);
     assertEquals(expectedCommand, javaBinary.getExecutableCommand().getCommandPrefix(pathResolver));
 
     assertFalse(

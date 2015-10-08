@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -30,20 +29,6 @@ public class DefaultShellStep extends ShellStep {
   public DefaultShellStep(Path workingDirectory, List<String> args) {
     super(workingDirectory);
     this.args = ImmutableList.copyOf(args);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-    // When java commands are invoked, this sometimes needs to be passed through
-    // to ensure that the correct java env is run, rather than the system one
-    String javaHome = context.getEnvironment().get("JAVA_HOME");
-    if (javaHome == null) {
-      javaHome = System.getProperty("java.home");
-    }
-    return new ImmutableMap.Builder<String, String>()
-      .put("JAVA_HOME", javaHome)
-      .putAll(super.getEnvironmentVariables(context))
-      .build();
   }
 
   @Override

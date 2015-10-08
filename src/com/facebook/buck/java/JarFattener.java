@@ -66,22 +66,19 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   @AddToRuleKey
   private final ImmutableMap<String, SourcePath> nativeLibraries;
   private final Path output;
-  private final Optional<String> javaBinOverride;
 
   public JarFattener(
       BuildRuleParams params,
       SourcePathResolver resolver,
       JavacOptions javacOptions,
       SourcePath innerJar,
-      ImmutableMap<String, SourcePath> nativeLibraries,
-      Optional<String> javaBinOverride) {
+      ImmutableMap<String, SourcePath> nativeLibraries) {
     super(params, resolver);
     this.javacOptions = javacOptions;
     this.innerJar = innerJar;
     this.nativeLibraries = nativeLibraries;
     this.output = BuildTargets.getScratchPath(getBuildTarget(), "%s")
         .resolve(getBuildTarget().getShortName() + ".jar");
-    this.javaBinOverride = javaBinOverride;
   }
 
   @Override
@@ -218,17 +215,8 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
 
   @Override
   public Tool getExecutableCommand() {
-    CommandTool.Builder builder = new CommandTool.Builder()
-        .addArg("java");
-
-    if (javaBinOverride.isPresent()) {
-      builder.addArg(String.format(
-            "-D%s=%s",
-            FatJarMain.BUCK_JAVA_BIN_KEY,
-            javaBinOverride.get()));
-    }
-
-    return builder
+    return new CommandTool.Builder()
+        .addArg("java")
         .addArg("-jar")
         .addArg(new BuildTargetSourcePath(getBuildTarget()))
         .build();

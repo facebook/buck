@@ -55,19 +55,16 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
   private final Optional<Long> testRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
   private final Optional<Path> testTempDirOverride;
-  private final Optional<String> javaBinOverride;
 
   public JavaTestDescription(
       JavacOptions templateOptions,
       Optional<Long> testRuleTimeoutMs,
       CxxPlatform cxxPlatform,
-      Optional<Path> testTempDirOverride,
-      Optional<String> javaBinOverride) {
+      Optional<Path> testTempDirOverride) {
     this.templateOptions = templateOptions;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
     this.testTempDirOverride = testTempDirOverride;
-    this.javaBinOverride = javaBinOverride;
   }
 
   @Override
@@ -150,8 +147,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel,
-                testTempDirOverride,
-                javaBinOverride));
+                testTempDirOverride));
 
     resolver.addToIndex(
         CalculateAbi.of(

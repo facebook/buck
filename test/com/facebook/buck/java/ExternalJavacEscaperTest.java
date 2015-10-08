@@ -64,13 +64,6 @@ public class ExternalJavacEscaperTest {
     workspace.setUp();
 
     Path javac = Paths.get("/usr/bin/javac");
-    for (String binDir: System.getenv("PATH").split("[:;]")) {
-      Path newJavac = Paths.get(binDir, "javac");
-      if (Files.exists(newJavac)) {
-        javac = newJavac;
-        break;
-      }
-    }
     assumeTrue(Files.exists(javac));
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toString());
 

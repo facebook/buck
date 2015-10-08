@@ -16,11 +16,9 @@
 
 package com.facebook.buck.rules;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibrary;
@@ -32,8 +30,6 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.java.ExternalJavac;
-import com.facebook.buck.java.JavaBinaryDescription;
-import com.facebook.buck.java.JavaBinary;
 import com.facebook.buck.java.JavaLibraryDescription;
 import com.facebook.buck.java.Javac;
 import com.facebook.buck.java.Jsr199Javac;
@@ -187,9 +183,9 @@ public class KnownBuildRuleTypesTest {
         .build();
 
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
-    assertThat(
-        ((ExternalJavac) libraryRule.getJavacOptions().getJavac()).getPath(),
-        is(equalTo(javac.toPath())));
+    assertEquals(
+        javac.toPath(),
+        ((ExternalJavac) libraryRule.getJavacOptions().getJavac()).getPath());
   }
 
   @Test
@@ -278,48 +274,7 @@ public class KnownBuildRuleTypesTest {
     AndroidLibrary rule = (AndroidLibrary) description
         .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
 
-    assertThat(
-        ((ExternalJavac) rule.getJavacOptions().getJavac()).getPath(),
-        is(equalTo(javac.toPath())));
-  }
-
-  @Test
-  public void whenJavaBinIsSetInBuckConfigConfiguredRulesCreateJavaBinaryBuildRuleWithJavaBinSet()
-      throws IOException, NoSuchBuildTargetException, InterruptedException {
-    String javaBin = "/usr/bin/my_java_wrapper.sh";
-
-    ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
-        "java", ImmutableMap.of("java_bin", javaBin));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
-
-    ProcessExecutor processExecutor = createExecutor();
-    KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
-        buckConfig,
-        processExecutor,
-        new FakeAndroidDirectoryResolver(),
-        Optional.<Path>absent())
-        .build();
-    JavaBinaryDescription description =
-        (JavaBinaryDescription) buildRuleTypes.getDescription(JavaBinaryDescription.TYPE);
-
-    JavaBinaryDescription.Args arg = new JavaBinaryDescription.Args();
-    arg.deps = Optional.<ImmutableSortedSet<BuildTarget>>absent();
-    arg.mainClass = Optional.of("AClass");
-    arg.manifestFile = Optional.<SourcePath>absent();
-    arg.mergeManifests = Optional.<Boolean>absent();
-    arg.metaInfDirectory = Optional.<Path>absent();
-    arg.blacklist = Optional.<ImmutableSortedSet<String>>absent();
-
-    JavaBinary rule = (JavaBinary) description
-        .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
-
-    BuildRuleResolver buildResolver = new BuildRuleResolver();
-    SourcePathResolver sourceResolver = new SourcePathResolver(buildResolver);
-    buildResolver.addToIndex(rule);
-
-    ImmutableList<String> args = rule.getExecutableCommand().getCommandPrefix(sourceResolver);
-
-    assertThat(args.get(0), is(equalTo(javaBin)));
+    assertEquals(javac.toPath(), ((ExternalJavac) rule.getJavacOptions().getJavac()).getPath());
   }
 
   @Test
@@ -341,7 +296,7 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes buildRuleTypes = buildRuleTypesBuilder.build();
 
-    assertThat(
+    assertEquals(
         "Only one description should have wound up in the final KnownBuildRuleTypes",
         KnownBuildRuleTypes.builder()
             .setCxxPlatforms(cxxPlatforms)
@@ -350,17 +305,17 @@ public class KnownBuildRuleTypesTest {
             .getAllDescriptions()
             .size() +
             1,
-        is(equalTo(buildRuleTypes.getAllDescriptions().size())));
+        buildRuleTypes.getAllDescriptions().size());
 
     boolean foundTestDescription = false;
     for (Description<?> description : buildRuleTypes.getAllDescriptions()) {
       if (description.getBuildRuleType().equals(TestDescription.TYPE)) {
         assertFalse("Should only find one test description", foundTestDescription);
         foundTestDescription = true;
-        assertThat(
+        assertEquals(
             "Last description should have won",
-            ((TestDescription) description).getValue(),
-            is(equalTo("Raz")));
+            "Raz",
+            ((TestDescription) description).getValue());
       }
     }
   }

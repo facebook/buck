@@ -50,15 +50,12 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
 
   private final JavacOptions javacOptions;
   private final CxxPlatform cxxPlatform;
-  private final Optional<String> javaBinOverride;
 
   public JavaBinaryDescription(
       JavacOptions javacOptions,
-      CxxPlatform cxxPlatform,
-      Optional<String> javaBinOverride) {
+      CxxPlatform cxxPlatform) {
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
-    this.javaBinOverride = javaBinOverride;
   }
 
   @Override
@@ -104,8 +101,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
         args.metaInfDirectory.orNull(),
         args.blacklist.or(ImmutableSortedSet.<String>of()),
         new DefaultDirectoryTraverser(),
-        transitiveClasspathEntries,
-        javaBinOverride);
+        transitiveClasspathEntries);
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
     // up the original binary JAR and any required native libraries.
@@ -124,8 +120,7 @@ public class JavaBinaryDescription implements Description<JavaBinaryDescription.
           pathResolver,
           javacOptions,
           innerJar,
-          nativeLibraries,
-          javaBinOverride);
+          nativeLibraries);
     }
 
     return rule;
