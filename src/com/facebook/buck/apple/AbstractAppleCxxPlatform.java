@@ -22,6 +22,8 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
+import java.nio.file.Path;
+
 import org.immutables.value.Value;
 
 /**
@@ -51,4 +53,5 @@ abstract class AbstractAppleCxxPlatform {
   public abstract Optional<Tool> getOtest();
   public abstract Tool getDsymutil();
   public abstract Tool getLipo();
+  public abstract Optional<Path> getStubBinary();
 }

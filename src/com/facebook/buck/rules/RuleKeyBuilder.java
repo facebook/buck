@@ -317,6 +317,11 @@ public class RuleKeyBuilder {
       feed("]".getBytes());
     } else if (val instanceof Sha1HashCode) {
       setSingleValue(((Sha1HashCode) val).getHash());
+    } else if (val instanceof byte[]) {
+      if (logElms != null) {
+        logElms.add(String.format("byteArray(%s):", val));
+      }
+      feed((byte[]) val);
     } else {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
     }

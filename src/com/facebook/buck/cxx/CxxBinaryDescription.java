@@ -249,4 +249,5 @@ public class CxxBinaryDescription implements
     public Optional<Linker.LinkableDepType> linkStyle;
   }
 
+  public FlavorDomain<CxxPlatform> getCxxPlatforms() { return cxxPlatforms; }
 }

@@ -18,9 +18,12 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,6 +34,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -41,6 +45,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -118,15 +125,51 @@ public class AppleBinaryDescription
     if (fatBinaryInfo.isPresent()) {
       return createFatBinaryBuildRule(targetGraph, params, resolver, args, fatBinaryInfo.get());
     } else {
-      CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
-      AppleDescriptions.populateCxxBinaryDescriptionArg(
-          new SourcePathResolver(resolver),
-          delegateArg,
-          args,
-          params.getBuildTarget());
+      Optional<Path> stubBinaryPath = Optional.absent();
+      Optional<AppleCxxPlatform> appleCxxPlatform = getAppleCxxPlatformFromParams(params);
+      if (appleCxxPlatform.isPresent() && (!args.srcs.isPresent() || args.srcs.get().isEmpty())) {
+        stubBinaryPath = appleCxxPlatform.get().getStubBinary();
+      }
 
-      return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+      if (stubBinaryPath.isPresent()) {
+        try {
+          return new WriteFile(
+              params,
+              new SourcePathResolver(resolver),
+              Files.readAllBytes(stubBinaryPath.get()),
+              BuildTargets.getGenPath(params.getBuildTarget(), "%s"),
+              true);
+        } catch (IOException e) {
+          throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
+        }
+      } else {
+        CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
+        AppleDescriptions.populateCxxBinaryDescriptionArg(
+            new SourcePathResolver(resolver),
+
+            delegateArg,
+            args,
+            params.getBuildTarget());
+
+        return delegate.createBuildRule(targetGraph, params, resolver, delegateArg);
+      }
     }
+  }
+
+  private Optional<AppleCxxPlatform> getAppleCxxPlatformFromParams(BuildRuleParams params) {
+    Optional<CxxPlatform> cxxPlatform;
+    try {
+      cxxPlatform = delegate.getCxxPlatforms().getValue(params.getBuildTarget().getFlavors());
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
+    }
+
+    AppleCxxPlatform appleCxxPlatform = null;
+    if (cxxPlatform.isPresent()) {
+      appleCxxPlatform = platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.get().getFlavor());
+    }
+
+    return Optional.fromNullable(appleCxxPlatform);
   }
 
   /**

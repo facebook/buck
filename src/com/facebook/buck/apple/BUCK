@@ -17,6 +17,7 @@ java_immutables_library(
     '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
+    '//src/com/facebook/buck/file:rules',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/js:js',

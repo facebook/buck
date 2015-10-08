@@ -192,6 +192,18 @@ public class AppleCxxPlatforms {
         "apple-lipo",
         version);
 
+    Optional<Path> stubBinaryPath;
+    switch (targetSdk.getApplePlatform().getName()) {
+      case ApplePlatform.Name.WATCHOS:
+      case ApplePlatform.Name.WATCHSIMULATOR:
+        stubBinaryPath = Optional.of(
+            sdkPaths.getSdkPath().resolve("Library/Application Support/WatchKit/WK"));
+        break;
+      default:
+        stubBinaryPath = Optional.absent();
+        break;
+    }
+
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
     ImmutableFlavor targetFlavor = ImmutableFlavor.of(
@@ -257,6 +269,7 @@ public class AppleCxxPlatforms {
         .setOtest(otest)
         .setDsymutil(dsymutil)
         .setLipo(lipo)
+        .setStubBinary(stubBinaryPath)
         .build();
   }
 

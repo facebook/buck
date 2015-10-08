@@ -1,0 +1,17 @@
+apple_bundle(
+  name = 'DemoWatchApp',
+  binary = ':DemoWatchAppBinary',
+  deps = [':DemoWatchAppResources'],
+  extension = 'app',
+  info_plist = 'Info.plist',
+)
+
+apple_binary(
+  name = 'DemoWatchAppBinary',
+)
+
+apple_resource(
+  name = 'DemoWatchAppResources',
+  files = ['Interface.storyboard'],
+  dirs = [],
+)

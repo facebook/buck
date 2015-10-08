@@ -416,4 +416,27 @@ public class AppleBundleIntegrationTest {
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/AppViewController.nib")));
   }
+
+  @Test
+  public void watchApplicationBundle() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(
+            ApplePlatform.builder().setName(ApplePlatform.Name.WATCHOS).build()));
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "watch_application_bundle",
+        tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:DemoWatchApp").assertSuccess();
+
+    workspace.verify();
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoWatchApp/DemoWatchApp.app/DemoWatchApp")));
+  }
 }

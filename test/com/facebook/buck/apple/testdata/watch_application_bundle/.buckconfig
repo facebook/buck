@@ -1,0 +1,4 @@
+[cache]
+  mode = dir
+[cxx]
+  default_platform = watchsimulator-i386

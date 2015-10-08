@@ -27,13 +27,14 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 
 import java.nio.file.Path;
 
 public class WriteFile extends AbstractBuildRule {
 
   @AddToRuleKey
-  private final String fileContents;
+  private final byte[] fileContents;
   @AddToRuleKey(stringify = true)
   private final Path output;
   @AddToRuleKey
@@ -43,6 +44,15 @@ public class WriteFile extends AbstractBuildRule {
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       String fileContents,
+      Path output,
+      boolean executable) {
+    this(buildRuleParams, resolver, fileContents.getBytes(), output, executable);
+  }
+
+  public WriteFile(
+      BuildRuleParams buildRuleParams,
+      SourcePathResolver resolver,
+      byte[] fileContents,
       Path output,
       boolean executable) {
     super(buildRuleParams, resolver);
@@ -60,12 +70,15 @@ public class WriteFile extends AbstractBuildRule {
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
-        new WriteFileStep(getProjectFilesystem(), fileContents, output, executable));
+        new WriteFileStep(
+            getProjectFilesystem(),
+            ByteSource.wrap(fileContents),
+            output,
+            executable));
   }
 
   @Override
   public Path getPathToOutput() {
     return output;
   }
-
 }
