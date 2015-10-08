@@ -130,7 +130,7 @@ A <code>java_test()</code> rule is used to define a set of
   {param name: 'use_cxx_libraries' /}
   {param default: 'False' /}
   {param desc}
-  Whether or not to build and link against cxx_library dependencies when testing
+  Whether or not to build and link against {call buck.cxx_library /} dependencies when testing.
   {/param}
 {/call}
 
