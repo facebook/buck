@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.FakeProcess;
@@ -28,6 +29,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -52,6 +54,15 @@ public class AppleConfigTest {
         config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
     assertNotNull(supplier);
     assertEquals(Optional.of(Paths.get("/path/to/somewhere")), supplier.get());
+  }
+
+  @Test
+  public void getShouldAttemptToDetectBestPlatform() {
+    FakeBuckConfig buckConfig = new FakeBuckConfig(
+        ImmutableMap.of("apple",
+            ImmutableMap.of("attempt_to_detect_best_platform", "true")));
+    AppleConfig config = new AppleConfig(buckConfig);
+    assertThat(config.shouldAttemptToDetermineBestCxxPlatform(), Matchers.equalTo(true));
   }
 
   @Test

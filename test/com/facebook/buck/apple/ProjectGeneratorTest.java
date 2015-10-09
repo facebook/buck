@@ -2957,7 +2957,8 @@ public class ProjectGeneratorTest {
             return null;
           }
         },
-        getFakeBuckEventBus())
+        getFakeBuckEventBus(),
+        false)
         .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
         .setAdditionalCombinedTestTargets(
             ImmutableMultimap.of(
@@ -3157,7 +3158,8 @@ public class ProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         Functions.<Path>constant(null),
-        getFakeBuckEventBus());
+        getFakeBuckEventBus(),
+        false);
     projectGenerator.createXcodeProjects();
 
     PBXTarget buildWithBuckTarget = null;
@@ -3482,7 +3484,8 @@ public class ProjectGeneratorTest {
         PLATFORMS,
         DEFAULT_PLATFORM,
         Functions.<Path>constant(null),
-        getFakeBuckEventBus());
+        getFakeBuckEventBus(),
+        false);
   }
 
   private ImmutableSet<TargetNode<?>> setupSimpleLibraryWithResources(

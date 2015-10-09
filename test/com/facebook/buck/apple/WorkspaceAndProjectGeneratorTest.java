@@ -34,6 +34,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.cli.BuildTargetNodeToBuildRuleTransformer;
@@ -78,6 +79,7 @@ import com.google.common.collect.Maps;
 
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.core.AllOf;
 import org.junit.Before;
 import org.junit.Rule;
@@ -236,6 +238,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -304,6 +307,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -356,6 +360,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -437,6 +442,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -487,6 +493,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -519,6 +526,7 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -561,6 +569,55 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(buildWithBuckBuildableReference, is(notNullValue()));
 
     assertThat(buildWithBuckBuildableReference.getBuildableName(), equalTo("//foo:bin-Buck"));
+  }
+
+  @Test
+  public void buildWithBuckWithCxxPlatformDetection() throws IOException {
+    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("buck"),
+        ImmutableMap.<String, String>of());
+    assumeThat(buck.isPresent(), is(true));
+    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
+        projectFilesystem,
+        targetGraph,
+        workspaceNode.getConstructorArg(),
+        workspaceNode.getBuildTarget(),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
+            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
+        false /* combinedProject */,
+        true /* buildWithBuck */,
+        ImmutableList.<String>of(),
+        false /* parallelizeBuild */,
+        true /* attemptToDetermineBestCxxPlatform */,
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        "BUCK",
+        getOutputPathOfNodeFunction(targetGraph),
+        getFakeBuckEventBus());
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(projectGenerators);
+
+    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
+    assertThat(fooProjectGenerator, is(notNullValue()));
+
+    PBXTarget buildWithBuckTarget = null;
+    for (PBXTarget target : fooProjectGenerator.getGeneratedProject().getTargets()) {
+      if (target.getProductName() != null && target.getProductName().endsWith("-Buck")) {
+        buildWithBuckTarget = target;
+        break;
+      }
+    }
+    assertThat(buildWithBuckTarget, is(notNullValue()));
+    assertThat(buildWithBuckTarget, is(instanceOf(PBXAggregateTarget.class)));
+
+    // build with buck should contain script that would set config based on evironment variables
+    PBXShellScriptBuildPhase phase = (PBXShellScriptBuildPhase) buildWithBuckTarget
+        .getBuildPhases().get(0);
+    String script = phase.getShellScript();
+    assertThat(script.contains("--config cxx.default_platform=$PLATFORM_NAME-$arch"),
+        Matchers.equalTo(true));
   }
 
   @Test
@@ -625,6 +682,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1040,6 +1098,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1191,6 +1250,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         false /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,
@@ -1280,6 +1340,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* buildWithBuck */,
         ImmutableList.<String>of(),
         true /* parallelizeBuild */,
+        false /* attemptToDetermineBestCxxPlatform */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.<String, String>of(),
         PLATFORMS,

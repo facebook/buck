@@ -137,6 +137,9 @@ public class ProjectGenerator {
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
   private static final String BUILD_WITH_BUCK_TEMPLATE = "build-with-buck.st";
   public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
+  public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_NAME = "--config";
+  public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_VALUE =
+      "cxx.default_platform=$PLATFORM_NAME-$arch";
 
   public enum Option {
     /** Use short BuildTarget name instead of full name for targets */
@@ -235,6 +238,7 @@ public class ProjectGenerator {
       ImmutableSet.builder();
   private final Function<? super TargetNode<?>, Path> outputPathOfNode;
   private final BuckEventBus buckEventBus;
+  private boolean attemptToDetermineBestCxxPlatform;
 
   /**
    * Populated while generating project configurations, in order to collect the possible
@@ -259,7 +263,8 @@ public class ProjectGenerator {
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       Function<? super TargetNode<?>, Path> outputPathOfNode,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      boolean attemptToDetermineBestCxxPlatform) {
     this.sourcePathResolver = new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
@@ -282,6 +287,7 @@ public class ProjectGenerator {
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.outputPathOfNode = outputPathOfNode;
     this.buckEventBus = buckEventBus;
+    this.attemptToDetermineBestCxxPlatform = attemptToDetermineBestCxxPlatform;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
     this.pathRelativizer = new PathRelativizer(
@@ -451,9 +457,7 @@ public class ProjectGenerator {
         ":" + projectFilesystem.getRootPath().toString(),
         compDir.length(),
         'f');
-    String buildFlags = Joiner.on(' ').join(Iterables.transform(
-            getBuildWithBuckFlagsForXcodeIntegration(),
-        Escaper.BASH_ESCAPER));
+    String buildFlags = getBuildFlags();
     String escapedBuildTarget = Escaper.escapeAsBashString(buildTarget.getFullyQualifiedName());
     Path resolvedBundleSource = projectFilesystem.resolve(
         AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app"));
@@ -515,14 +519,18 @@ public class ProjectGenerator {
     targetNodeToGeneratedProjectTargetBuilder.put(targetNode, buildWithBuckTarget);
   }
 
-  private ImmutableList<String> getBuildWithBuckFlagsForXcodeIntegration() {
-    if (buildWithBuckFlags.contains(REPORT_ABSOLUTE_PATHS)) {
-      return buildWithBuckFlags;
+  private String getBuildFlags() {
+    ArrayList<String> flags = new ArrayList<>(buildWithBuckFlags);
+    if (!flags.contains(REPORT_ABSOLUTE_PATHS)) {
+      flags.add(0, REPORT_ABSOLUTE_PATHS);
     }
-    return ImmutableList.<String>builder()
-        .add(REPORT_ABSOLUTE_PATHS)   // Xcode requires absolute paths in errors
-        .addAll(buildWithBuckFlags)
-        .build();
+    flags = new ArrayList<String>(
+        FluentIterable.<String>from(flags).transform(Escaper.BASH_ESCAPER).toList());
+    if (attemptToDetermineBestCxxPlatform) {
+      flags.add(0, XCODE_BUILD_SCRIPT_CONFIG_ARG_NAME);
+      flags.add(1, XCODE_BUILD_SCRIPT_CONFIG_ARG_VALUE);
+    }
+    return Joiner.on(' ').join(flags);
   }
 
   static Path getScratchPathForAppBundle(BuildTarget targetToBuildWithBuck) {

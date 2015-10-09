@@ -779,6 +779,9 @@ public class ProjectCommand extends BuildCommand {
             "%s must be a xcode_workspace_config, apple_binary, apple_bundle, or apple_library",
             inputNode);
       }
+
+      AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+
       WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
           params.getCell().getFilesystem(),
           targetGraphAndTargets.getTargetGraph(),
@@ -788,7 +791,8 @@ public class ProjectCommand extends BuildCommand {
           combinedProject,
           buildWithBuck,
           buildWithBuckFlags,
-          !(new AppleConfig(params.getBuckConfig()).getXcodeDisableParallelizeBuild()),
+          !appleConfig.getXcodeDisableParallelizeBuild(),
+          appleConfig.shouldAttemptToDetermineBestCxxPlatform(),
           new ExecutableFinder(),
           params.getEnvironment(),
           params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),

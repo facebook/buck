@@ -259,4 +259,11 @@ public class AppleConfig {
       return Optional.absent();
     }
   }
+
+  public boolean shouldAttemptToDetermineBestCxxPlatform() {
+    return delegate.getBooleanValue(
+        "apple",
+        "attempt_to_detect_best_platform",
+        false);
+  }
 }

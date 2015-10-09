@@ -82,6 +82,7 @@ public class WorkspaceAndProjectGenerator {
   private final String buildFileName;
   private final Function<TargetNode<?>, Path> outputPathOfNode;
   private final BuckEventBus buckEventBus;
+  private final boolean attemptToDetermineBestCxxPlatform;
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
@@ -96,6 +97,7 @@ public class WorkspaceAndProjectGenerator {
       boolean buildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
       boolean parallelizeBuild,
+      boolean attemptToDetermineBestCxxPlatform,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
@@ -120,6 +122,7 @@ public class WorkspaceAndProjectGenerator {
     this.outputPathOfNode = outputPathOfNode;
     this.buckEventBus = buckEventBus;
     this.combinedProjectGenerator = Optional.absent();
+    this.attemptToDetermineBestCxxPlatform = attemptToDetermineBestCxxPlatform;
   }
 
   @VisibleForTesting
@@ -247,7 +250,8 @@ public class WorkspaceAndProjectGenerator {
           cxxPlatforms,
           defaultCxxPlatform,
           outputPathOfNode,
-          buckEventBus)
+          buckEventBus,
+          attemptToDetermineBestCxxPlatform)
           .setAdditionalCombinedTestTargets(groupedTests)
           .setTestsToGenerateAsStaticLibraries(groupableTests);
       combinedProjectGenerator = Optional.of(generator);
@@ -316,7 +320,8 @@ public class WorkspaceAndProjectGenerator {
               cxxPlatforms,
               defaultCxxPlatform,
               outputPathOfNode,
-              buckEventBus)
+              buckEventBus,
+              attemptToDetermineBestCxxPlatform)
               .setTestsToGenerateAsStaticLibraries(groupableTests);
 
           generator.createXcodeProjects();
@@ -350,7 +355,8 @@ public class WorkspaceAndProjectGenerator {
             cxxPlatforms,
             defaultCxxPlatform,
             outputPathOfNode,
-            buckEventBus);
+            buckEventBus,
+            attemptToDetermineBestCxxPlatform);
         combinedTestsProjectGenerator
             .setAdditionalCombinedTestTargets(groupedTests)
             .createXcodeProjects();
