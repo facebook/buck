@@ -176,6 +176,9 @@ public class TestCommand extends BuildCommand {
   @SuppressFieldNotInitialized
   private TestLabelOptions testLabelOptions;
 
+  @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
+  private List<String> withDashArguments = Lists.newArrayList();
+
   public boolean isRunAllTests() {
     return all || getArguments().isEmpty();
   }
@@ -264,6 +267,13 @@ public class TestCommand extends BuildCommand {
       Build build,
       Iterable<TestRule> testRules)
       throws InterruptedException, IOException {
+
+    if (!withDashArguments.isEmpty()) {
+      params.getBuckEventBus().post(
+          ConsoleEvent.severe("Unexpected arguments after \"--\" when using internal runner"));
+      return 1;
+    }
+
     ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(
         getNumTestThreads(params.getBuckConfig()),
         params.getBuckConfig().getLoadLimit());
@@ -321,6 +331,7 @@ public class TestCommand extends BuildCommand {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
             .addAllCommand(command)
+            .addAllCommand(withDashArguments)
             .addCommand("--buck-test-info", infoFile.toString())
             .setDirectory(params.getCell().getFilesystem().getRootPath().toFile())
             .build();

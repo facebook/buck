@@ -74,6 +74,21 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
+  public void extraArgs() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c", "test.external_runner=" + workspace.getPath("test_runner_echo.py"),
+            "//:pass",
+            "--",
+            "bobloblawlobslawbomb");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout().trim(),
+        Matchers.equalTo("bobloblawlobslawbomb"));
+  }
+
+  @Test
   public void runJavaTest() throws IOException {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(
