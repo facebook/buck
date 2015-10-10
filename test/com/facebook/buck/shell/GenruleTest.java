@@ -64,7 +64,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMock;
@@ -584,12 +583,14 @@ public class GenruleTest {
     // same.  This is because the input-based rule key for the consuming rule only cares about the
     // contents of the output this rule produces.
     resolver = new BuildRuleResolver();
+    Genrule extra =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:extra"))
+            .setOut("something")
+            .build(resolver);
     new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
         .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
-        .setResources(
-            ImmutableSet.<SourcePath>of(new PathSourcePath(filesystem, Paths.get("resource"))))
+        .setDeps(ImmutableSortedSet.of(extra.getBuildTarget()))
         .build(resolver, filesystem);
-    filesystem.writeContentsToPath("res", Paths.get("resource"));
     rule = ruleBuilder.build(resolver);
     defaultRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(

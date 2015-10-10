@@ -20,7 +20,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
+import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -38,6 +40,21 @@ public class ShBinaryDescriptionTest {
     assertThat(
         shBinary.getExecutableCommand().getInputs(),
         Matchers.hasItem(main));
+  }
+
+  @Test
+  public void resourcesAreIncludedInCommand() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    TestSourcePath main = new TestSourcePath("main.sh");
+    TestSourcePath resource = new TestSourcePath("resource.dat");
+    ShBinary shBinary =
+        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setMain(main)
+            .setResources(ImmutableSet.<SourcePath>of(resource))
+            .build(resolver);
+    assertThat(
+        shBinary.getExecutableCommand().getInputs(),
+        Matchers.hasItem(resource));
   }
 
 }
