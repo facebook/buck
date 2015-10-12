@@ -45,6 +45,7 @@ import com.facebook.buck.java.JavacOptions;
 import com.facebook.buck.log.CommandThreadAssociation;
 import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -566,6 +567,15 @@ public final class Main {
       commandSemaphoreAcquired = commandSemaphore.tryAcquire();
       if (!commandSemaphoreAcquired) {
         return BUSY_EXIT_CODE;
+      }
+      Optional<String> currentVersion =
+          filesystem.readFileIfItExists(BuckConstant.CURRENT_VERSION_FILE);
+      if (!currentVersion.isPresent() || !currentVersion.get().equals(BuckVersion.getVersion())) {
+        filesystem.deleteRecursivelyIfExists(BuckConstant.ANNOTATION_PATH);
+        filesystem.deleteRecursivelyIfExists(BuckConstant.GEN_PATH);
+        filesystem.deleteRecursivelyIfExists(BuckConstant.SCRATCH_PATH);
+        filesystem.mkdirs(BuckConstant.CURRENT_VERSION_FILE.getParent());
+        filesystem.writeContentsToPath(BuckVersion.getVersion(), BuckConstant.CURRENT_VERSION_FILE);
       }
     }
 

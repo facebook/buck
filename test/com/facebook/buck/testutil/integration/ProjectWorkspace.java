@@ -31,8 +31,10 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
@@ -43,21 +45,29 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.junit.rules.TemporaryFolder;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
@@ -135,9 +145,25 @@ public class ProjectWorkspace {
    * This will copy the template directory, renaming files named {@code foo.fixture} to {@code foo}
    * in the process. Files whose names end in {@code .expected} will not be copied.
    */
+  @SuppressWarnings("PMD.EmptyCatchBlock")
   public ProjectWorkspace setUp() throws IOException {
 
     MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
+
+    // Stamp the buck-out directory if it exists and isn't stamped already
+    try (OutputStream outputStream =
+             new BufferedOutputStream(
+                 Channels.newOutputStream(
+                     Files.newByteChannel(
+                         destPath.resolve(BuckConstant.CURRENT_VERSION_FILE),
+                         ImmutableSet.<OpenOption>of(
+                             StandardOpenOption.CREATE_NEW,
+                             StandardOpenOption.WRITE))))) {
+      outputStream.write(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
+    } catch (FileAlreadyExistsException | NoSuchFileException e) {
+      // If the current version file already exists we don't need to create it
+      // If buck-out doesn't exist we don't need to stamp it
+    }
 
     // If there's a local.properties in the host project but not in the destination, make a copy.
     Path localProperties = FileSystems.getDefault().getPath("local.properties");

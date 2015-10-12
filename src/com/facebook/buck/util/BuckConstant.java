@@ -30,6 +30,11 @@ public class BuckConstant {
    */
   public static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
   public static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
+  /**
+   * The version the buck output directory was created for
+   */
+  public static final Path CURRENT_VERSION_FILE =
+      BUCK_OUTPUT_PATH.resolve(".currentversion");
 
   // TODO(mbolin): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
   // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
