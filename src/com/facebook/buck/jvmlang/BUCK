@@ -1,0 +1,13 @@
+java_library(
+  name = 'jvmlang',
+  srcs = glob(['**/*.java']),
+  deps = [
+    '//src/com/facebook/buck/classpaths:classpaths',
+    '//src/com/facebook/buck/java:classhash',
+    '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//third-party/java/guava:guava',
+  ],
+  visibility = ['PUBLIC']
+)

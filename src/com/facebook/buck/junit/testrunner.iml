@@ -7,6 +7,7 @@
     </content>
     <content url="file://$MODULE_DIR$/../../../../../test/com/facebook/buck/junit">
       <sourceFolder url="file://$MODULE_DIR$/../../../../../test/com/facebook/buck/junit" isTestSource="true" packagePrefix="com.facebook.buck.junit" />
+      <excludeFolder url="file://$MODULE_DIR$/../../../../../test/com/facebook/buck/junit/testdata/simple_spock" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -16,4 +17,3 @@
     <orderEntry type="library" name="buck-lib" level="project" />
   </component>
 </module>
-

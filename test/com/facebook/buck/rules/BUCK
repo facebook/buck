@@ -92,6 +92,7 @@ java_test(
     '//src/com/facebook/buck/java:config',
     '//src/com/facebook/buck/java:rules',
     '//src/com/facebook/buck/java:support',
+    '//src/com/facebook/buck/jvmlang:jvmlang',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/parser:parser',
     '//src/com/facebook/buck/parser:rule_pattern',

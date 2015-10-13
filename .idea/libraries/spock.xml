@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="spock">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/spock/groovy-all-2.3.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/spock/spock-core-jar-0.7-groovy-2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
