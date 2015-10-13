@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.graph.Dot;
-import com.facebook.buck.java.HasClasspathEntries;
+import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;

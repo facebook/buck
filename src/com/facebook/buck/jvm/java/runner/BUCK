@@ -1,0 +1,13 @@
+java_library(
+  name = 'runner',
+  srcs = glob(['*.java']),
+  deps = [
+    # DO NOT ADD ANY DEPS.
+  ],
+  visibility = [
+    '//src/com/facebook/buck/jvm/java:steps',
+    '//src/com/facebook/buck/junit:junit',
+    '//test/com/facebook/buck/jvm/java:java',
+    '//test/com/facebook/buck/jvm/java/runner:runner',
+  ],
+)

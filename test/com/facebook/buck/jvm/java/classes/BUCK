@@ -1,0 +1,10 @@
+java_test(
+  name = 'classes',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/jvm/java/classes:classes',
+    '//src/com/facebook/buck/io:io',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+  ],
+)

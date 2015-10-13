@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;

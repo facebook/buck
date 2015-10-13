@@ -7,8 +7,8 @@ java_library(
   srcs = REPORT_FORMAT_SRCS,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/java:steps',
-    '//test/com/facebook/buck/java:java',
+    '//src/com/facebook/buck/jvm/java:steps',
+    '//test/com/facebook/buck/jvm/java:java',
   ],
 )
 

@@ -17,7 +17,7 @@
 package com.facebook.buck.maven;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.MavenPublishable;
+import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

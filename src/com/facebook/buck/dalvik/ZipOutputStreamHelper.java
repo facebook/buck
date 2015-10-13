@@ -16,7 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
-import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.jvm.java.classes.FileLike;
 
 import java.io.IOException;
 

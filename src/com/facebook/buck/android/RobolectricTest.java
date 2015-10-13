@@ -20,9 +20,9 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static com.facebook.buck.rules.BuildableProperties.Kind.TEST;
 
-import com.facebook.buck.java.JavaTest;
-import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.TestType;
+import com.facebook.buck.jvm.java.JavaTest;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;

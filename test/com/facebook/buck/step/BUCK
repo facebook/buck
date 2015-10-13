@@ -14,7 +14,7 @@ java_library(
     '//src/com/facebook/buck/util:util',
     '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/event:testutil',
-    '//test/com/facebook/buck/java:fakepackagefinder',
+    '//test/com/facebook/buck/jvm/java:fakepackagefinder',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson',
