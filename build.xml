@@ -978,7 +978,7 @@
     </exec>
   </target>
 
-  <target name="travis" depends="test, verify-javadoc, lint" />
+  <target name="travis" depends="verify-javadoc, lint" />
 
   <target name="client" description="install nailgun buckd c client (non Windows only)">
     <mkdir dir="${build.dir}" />
