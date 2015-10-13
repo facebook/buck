@@ -38,9 +38,9 @@ import java.nio.file.Paths;
  */
 public class ArtifactCacheBuckConfig {
   private static final String DEFAULT_CACHE_DIR = "buck-cache";
-  private static final String DEFAULT_DIR_CACHE_MODE = CacheMode.readwrite.name();
+  private static final String DEFAULT_DIR_CACHE_MODE = CacheReadMode.readwrite.name();
   private static final String DEFAULT_HTTP_URL = "http://localhost:8080";
-  private static final String DEFAULT_HTTP_CACHE_MODE = CacheMode.readwrite.name();
+  private static final String DEFAULT_HTTP_CACHE_MODE = CacheReadMode.readwrite.name();
   private static final String DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = "3";
 
   private final BuckConfig buckConfig;
@@ -120,23 +120,23 @@ public class ArtifactCacheBuckConfig {
     return true;
   }
 
-  public boolean getDirCacheReadMode() {
-    return readCacheMode("dir_mode", DEFAULT_DIR_CACHE_MODE);
+  public CacheReadMode getDirCacheReadMode() {
+    return getCacheReadMode("dir_mode", DEFAULT_DIR_CACHE_MODE);
   }
 
-  public boolean getHttpCacheReadMode() {
-    return readCacheMode("http_mode", DEFAULT_HTTP_CACHE_MODE);
+  public CacheReadMode getHttpCacheReadMode() {
+    return getCacheReadMode("http_mode", DEFAULT_HTTP_CACHE_MODE);
   }
 
-  private boolean readCacheMode(String fieldName, String defaultValue) {
+  private CacheReadMode getCacheReadMode(String fieldName, String defaultValue) {
     String cacheMode = buckConfig.getValue("cache", fieldName).or(defaultValue);
-    final boolean doStore;
+    final CacheReadMode result;
     try {
-      doStore = CacheMode.valueOf(cacheMode).isDoStore();
+      result = CacheReadMode.valueOf(cacheMode);
     } catch (IllegalArgumentException e) {
       throw new HumanReadableException("Unusable cache.%s: '%s'", fieldName, cacheMode);
     }
-    return doStore;
+    return result;
   }
 
   public enum ArtifactCacheMode {
@@ -144,14 +144,14 @@ public class ArtifactCacheBuckConfig {
     http
   }
 
-  private enum CacheMode {
+  public enum CacheReadMode {
     readonly(false),
     readwrite(true),
     ;
 
     private final boolean doStore;
 
-    private CacheMode(boolean doStore) {
+    private CacheReadMode(boolean doStore) {
       this.doStore = doStore;
     }
 

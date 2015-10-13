@@ -97,7 +97,9 @@ public class ArtifactCacheBuckConfigTest {
 
     assertThat(config.getHttpCacheTimeoutSeconds(), Matchers.is(42));
     assertThat(config.getHttpCacheUrl(), Matchers.equalTo(new URI("http://test.host:1234")));
-    assertThat(config.getHttpCacheReadMode(), Matchers.is(true));
+    assertThat(
+        config.getHttpCacheReadMode(),
+        Matchers.is(ArtifactCacheBuckConfig.CacheReadMode.readwrite));
   }
 
   @Test
@@ -109,7 +111,9 @@ public class ArtifactCacheBuckConfigTest {
         "dir_max_size = 1022B");
 
     assertThat(config.getCacheDir(), Matchers.equalTo(Paths.get("cache_dir").toAbsolutePath()));
-    assertThat(config.getDirCacheReadMode(), Matchers.is(false));
+    assertThat(
+        config.getDirCacheReadMode(),
+        Matchers.is(ArtifactCacheBuckConfig.CacheReadMode.readonly));
     assertThat(config.getCacheDirMaxSizeBytes(), Matchers.equalTo(Optional.of(1022L)));
   }
 

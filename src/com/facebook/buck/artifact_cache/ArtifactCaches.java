@@ -101,7 +101,7 @@ public class ArtifactCaches {
       ArtifactCacheBuckConfig buckConfig,
       ProjectFilesystem projectFilesystem) {
     Path cacheDir = buckConfig.getCacheDir();
-    boolean doStore = buckConfig.getDirCacheReadMode();
+    boolean doStore = buckConfig.getDirCacheReadMode().isDoStore();
     try {
       return new DirArtifactCache(
           "dir",
@@ -122,7 +122,7 @@ public class ArtifactCaches {
       ProjectFilesystem projectFilesystem) {
     URI uri = buckConfig.getHttpCacheUrl();
     int timeoutSeconds = buckConfig.getHttpCacheTimeoutSeconds();
-    boolean doStore = buckConfig.getHttpCacheReadMode();
+    boolean doStore = buckConfig.getHttpCacheReadMode().isDoStore();
     final String host = buckConfig.getHostToReportToRemoteCacheServer();
 
     // Setup the defaut client to use.
