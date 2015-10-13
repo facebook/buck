@@ -1,0 +1,10 @@
+java_library(
+  name = 'java_lib_1',
+  srcs = [ 'JavaLib1.java'],
+)
+
+java_library(
+  name = 'java_lib_2',
+  srcs = ['JavaLib2.java'],
+  deps = [':java_lib_1']
+)

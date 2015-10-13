@@ -32,6 +32,7 @@ java_library(
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/rules:types',
     '//test/com/facebook/buck/log/...',
+    '//test/com/facebook/buck/rules/...',
   ]
 ,
 )
