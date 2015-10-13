@@ -372,15 +372,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     for (Map.Entry<Long, Optional<? extends BuildRuleEvent>> entry : eventsByThread) {
       Optional<? extends BuildRuleEvent> startedEvent = entry.getValue();
 
-      if (!startedEvent.isPresent()) {
+      AtomicLong accumulatedTime = null;
+      if (startedEvent.isPresent()) {
+        accumulatedTime = accumulatedRuleTime.get(
+            startedEvent.get().getBuildRule().getBuildTarget());
+      }
+
+      if (!startedEvent.isPresent() || accumulatedTime == null) {
         lineBuilder.append("IDLE");
         lines.add(ansi.asSubtleText(lineBuilder.toString()));
       } else {
-        AtomicLong accumulatedTime = accumulatedRuleTime.get(
-            startedEvent.get().getBuildRule().getBuildTarget());
         long elapsedTimeMs =
-            (currentMillis - startedEvent.get().getTimestamp()) +
-                (accumulatedTime != null ? accumulatedTime.get() : 0);
+            currentMillis - startedEvent.get().getTimestamp() + accumulatedTime.get();
         Optional<? extends LeafEvent> leafEvent = threadsToRunningStep.get(entry.getKey());
 
         lineBuilder.append(startedEvent.get().getBuildRule().getFullyQualifiedName());
