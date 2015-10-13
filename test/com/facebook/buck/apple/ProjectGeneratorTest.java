@@ -3186,7 +3186,8 @@ public class ProjectGeneratorTest {
     assertThat(
         shellScriptBuildPhase.getShellScript(),
         containsString(
-            "buck build --flag 'value with spaces' " + binaryTarget.getFullyQualifiedName()));
+            "buck build --report-absolute-paths --flag 'value with spaces' " +
+                binaryTarget.getFullyQualifiedName()));
   }
 
   @Test
