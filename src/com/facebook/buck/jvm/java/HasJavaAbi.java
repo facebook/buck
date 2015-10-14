@@ -17,20 +17,10 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
 public interface HasJavaAbi extends HasBuildTarget {
-
-  /**
-   * Returns a SHA-1 hash that represents the ABI for the Java files that are compiled by this rule.
-   * The only requirement on the hash is that equal hashes imply equal ABIs.
-   * <p>
-   * Because the ABI is computed as part of the build process, this rule cannot be invoked until
-   * after this rule is built.
-   */
-  Sha1HashCode getAbiKey();
 
   /**
    * @return the {@link SourcePath} representing the ABI Jar for this rule.

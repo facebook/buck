@@ -20,13 +20,13 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Optional;
@@ -81,7 +81,7 @@ public class JavaLibraryRules {
     ImmutableSortedMap<String, HashCode> classHashes = AccumulateClassNamesStep.parseClassHashes(
         lines);
 
-    return new JavaLibrary.Data(abiKeyHash.get(), classHashes);
+    return new JavaLibrary.Data(classHashes);
   }
 
   private static Path getPathToClassHashes(BuildTarget buildTarget) {

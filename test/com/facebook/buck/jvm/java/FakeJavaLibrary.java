@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -120,11 +119,6 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   @Override
   public AnnotationProcessingParams getAnnotationProcessingParams() {
     return AnnotationProcessingParams.EMPTY;
-  }
-
-  @Override
-  public Sha1HashCode getAbiKey() {
-    throw new UnsupportedOperationException();
   }
 
   @Override

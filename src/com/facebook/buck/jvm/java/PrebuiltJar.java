@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
@@ -155,11 +154,6 @@ public class PrebuiltJar extends AbstractBuildRule
 
   public Optional<String> getJavadocUrl() {
     return javadocUrl;
-  }
-
-  @Override
-  public Sha1HashCode getAbiKey() {
-    return buildOutputInitializer.getBuildOutput().getAbiKey();
   }
 
   @Override
