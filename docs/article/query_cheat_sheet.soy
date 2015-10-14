@@ -78,7 +78,7 @@
   {/param}
   {param shortAnswer}
     <p><pre class="prettyprint lang-js">
-    {literal}buck query "deps(//foo:bar)" --output-attributes 'name' 'exportedHeaders'{/literal}
+    {literal}buck query "deps(//foo:bar)" --output-attributes 'name' 'exported_headers'{/literal}
     </pre></p>
   {/param}
   {param longAnswer}
@@ -95,11 +95,11 @@
 {literal}
 {
   "//foo/bar/lib:lib" : {
-    "exportedHeaders" : [ "App/util.h" ],
+    "exported_headers" : [ "App/util.h" ],
     "name" : "lib"
   },
   "//foo/bar:app" : {
-    "exportedHeaders" : [ "App/lib.h" ],
+    "exported_headers" : [ "App/lib.h" ],
     "name" : "app"
   }
 }

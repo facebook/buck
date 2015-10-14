@@ -27,6 +27,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
@@ -215,8 +216,9 @@ public class QueryCommand extends AbstractCommand {
         for (String attribute : outputAttributes.get()) {
           Pattern attrRegex = Pattern.compile(attribute);
           for (String key : sortedTargetRule.keySet()) {
-            if (attrRegex.matcher(key).matches()) {
-              attributes.put(key, sortedTargetRule.get(key));
+            String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
+            if (attrRegex.matcher(snakeCaseKey).matches()) {
+              attributes.put(snakeCaseKey, sortedTargetRule.get(key));
             }
           }
         }

@@ -556,7 +556,8 @@ public class QueryCommandIntegrationTest {
         "attrfilter(labels, 'e2e', '//example/...')",
         "--output-attributes",
         "buck.type",
-        "srcs");
+        "srcs",
+        "info_plist");
     result.assertSuccess();
     assertThat(
         parseJSON(result.getStdout()),
