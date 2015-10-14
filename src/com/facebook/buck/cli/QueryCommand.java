@@ -44,6 +44,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.regex.Pattern;
 
 public class QueryCommand extends AbstractCommand {
 
@@ -65,7 +66,8 @@ public class QueryCommand extends AbstractCommand {
   private boolean generateJsonOutput;
 
   @Option(name = "--output-attributes",
-      usage = "List of attributes to output, --output-attributes attr1 att2 ... attrN --other-opt",
+      usage = "List of attributes to output, --output-attributes attr1 att2 ... attrN. " +
+              "Attributes can be regular expressions. ",
       handler = StringSetOptionHandler.class)
   @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> outputAttributes;
@@ -209,9 +211,13 @@ public class QueryCommand extends AbstractCommand {
           continue;
         }
         SortedMap<String, Object> attributes = Maps.newTreeMap();
+
         for (String attribute : outputAttributes.get()) {
-          if (sortedTargetRule.containsKey(attribute)) {
-            attributes.put(attribute, sortedTargetRule.get(attribute));
+          Pattern attrRegex = Pattern.compile(attribute);
+          for (String key : sortedTargetRule.keySet()) {
+            if (attrRegex.matcher(key).matches()) {
+              attributes.put(key, sortedTargetRule.get(key));
+            }
           }
         }
         result.put(

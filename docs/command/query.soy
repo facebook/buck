@@ -643,8 +643,9 @@ $ dot -Tpng graph.dot -o graph.png
   Outputs the results as a JSON dictionary
   {sp}<code>build target -> attributes map</code>. The attributes map is a
   dictionary mapping the specified attributes to their values for the build
-  target. If an attribute (e.g. <code>srcs</code>) is not defined for a build
-  target, it is not present in the output. Example:
+  target. Attributes are regular expressions (e.g. '.*' matches all attributes).
+  If an attribute (e.g. <code>srcs</code>) is not defined for a build target,
+  it is not present in the output. Example:
   </p>
 
 <p><pre class="prettyprint lang-py">
