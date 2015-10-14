@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -33,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Collections;
 
 public class ReactNativeLibraryGraphEnhancer {
 
@@ -58,7 +60,11 @@ public class ReactNativeLibraryGraphEnhancer {
     BuildTarget depsFinderTarget = BuildTarget.builder(originalBuildTarget)
         .addFlavors(REACT_NATIVE_DEPS_FLAVOR)
         .build();
-    BuildRuleParams paramsForDepsFinder = params.copyWithBuildTarget(depsFinderTarget);
+    BuildRuleParams paramsForDepsFinder =
+        params.copyWithBuildTarget(depsFinderTarget).appendExtraDeps(
+            resolver.getAllRules(
+                SourcePaths.filterBuildTargetSourcePaths(
+                    Collections.singleton(buckConfig.getPackager()))));
     ReactNativeDeps depsFinder = new ReactNativeDeps(
         paramsForDepsFinder,
         sourcePathResolver,
@@ -79,13 +85,19 @@ public class ReactNativeLibraryGraphEnhancer {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 
     BuildTarget originalBuildTarget = params.getBuildTarget();
-    BuildRuleParams paramsForBundle =
-        params.copyWithBuildTarget(
+    BuildRuleParams paramsForBundle = params
+        .copyWithBuildTarget(
             BuildTarget.builder(originalBuildTarget)
                 .addFlavors(REACT_NATIVE_BUNDLE_FLAVOR)
                 .build())
-            .copyWithExtraDeps(
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(reactNativeDeps)));
+        .appendExtraDeps(
+            ImmutableList.<BuildRule>builder()
+                .add(reactNativeDeps)
+                .addAll(
+                    resolver.getAllRules(
+                        SourcePaths.filterBuildTargetSourcePaths(
+                            Collections.singleton(buckConfig.getPackager()))))
+                .build());
     ReactNativeBundle bundle = new ReactNativeBundle(
         paramsForBundle,
         sourcePathResolver,
@@ -145,7 +157,14 @@ public class ReactNativeLibraryGraphEnhancer {
         createReactNativeDeps(params, resolver, args, ReactNativePlatform.IOS);
 
     return new ReactNativeBundle(
-        params.appendExtraDeps(ImmutableList.of((BuildRule) reactNativeDeps)),
+        params.appendExtraDeps(
+            ImmutableList.<BuildRule>builder()
+                .add(reactNativeDeps)
+                .addAll(
+                    resolver.getAllRules(
+                        SourcePaths.filterBuildTargetSourcePaths(
+                            Collections.singleton(buckConfig.getPackager()))))
+                .build()),
         new SourcePathResolver(resolver),
         args.entryPath,
         ReactNativeFlavors.isDevMode(params.getBuildTarget()),

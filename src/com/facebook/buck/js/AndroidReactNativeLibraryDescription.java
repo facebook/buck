@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -23,22 +24,40 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
+
+import java.nio.file.Path;
+import java.util.Collections;
 
 @Beta
 public class AndroidReactNativeLibraryDescription
-    implements Description<AndroidReactNativeLibraryDescription.Args>, Flavored {
+    implements
+    Description<AndroidReactNativeLibraryDescription.Args>,
+    Flavored,
+    ImplicitDepsInferringDescription<AndroidReactNativeLibraryDescription.Args> {
 
   private static final BuildRuleType TYPE = BuildRuleType.of("android_react_native_library");
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
+  private final Supplier<SourcePath> packager;
 
-  public AndroidReactNativeLibraryDescription(ReactNativeBuckConfig buckConfig) {
+  public AndroidReactNativeLibraryDescription(final ReactNativeBuckConfig buckConfig) {
     this.enhancer = new ReactNativeLibraryGraphEnhancer(buckConfig);
+    this.packager = new Supplier<SourcePath>() {
+      @Override
+      public SourcePath get() {
+        return buckConfig.getPackager();
+      }
+    };
   }
 
   @Override
@@ -65,9 +84,18 @@ public class AndroidReactNativeLibraryDescription
     return ReactNativeFlavors.validateFlavors(flavors);
   }
 
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      Args constructorArg) {
+    return SourcePaths.filterBuildTargetSourcePaths(Collections.singleton(packager.get()));
+  }
+
   @SuppressFieldNotInitialized
   public static class Args extends ReactNativeLibraryArgs {
     @Hint(name = "package")
     public Optional<String> rDotJavaPackage;
   }
+
 }

@@ -4,6 +4,14 @@ ios_react_native_library(
   entry_path = 'app/sample.ios.js',
   bundle_name = 'Apps/DemoApp/DemoApp.bundle',
   visibility = [
-    'PUBLIC'
+    'PUBLIC',
+  ],
+)
+
+sh_binary(
+  name = 'packager',
+  main = 'packager.sh',
+  visibility = [
+    'PUBLIC',
   ],
 )

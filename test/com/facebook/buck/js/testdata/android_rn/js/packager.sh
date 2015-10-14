@@ -1,7 +1,6 @@
 #!/bin/bash
 
-THIS_DIR=$(dirname "$0")
-THIS_DIR=$(pwd)/$THIS_DIR
+THIS_DIR=$(pwd)/js
 LAST_ARG="${@: -1}"
 SECOND_LAST_ARG="${@: -3:1}"
 THIRD_LAST_ARG="${@: -5:1}"
