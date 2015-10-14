@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.DefaultJavaLibrary;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;

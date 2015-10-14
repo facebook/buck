@@ -17,7 +17,7 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.java.FakeJavaPackageFinder;
+import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.environment.Platform;

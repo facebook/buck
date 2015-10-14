@@ -39,7 +39,7 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
-import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.jvm.java.classes.FileLike;
 import com.google.common.collect.MapMaker;
 
 import java.io.InputStream;

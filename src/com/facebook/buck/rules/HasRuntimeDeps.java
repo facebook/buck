@@ -21,8 +21,8 @@ import com.google.common.collect.ImmutableSortedSet;
 /**
  * Provides a facility for a rule to list dependencies it'll need at runtime.
  * <p>
- * Consider the case of a Java test.  The {@link com.facebook.buck.java.JavaTest} rule itself is
- * just a {@link com.facebook.buck.java.DefaultJavaLibrary} and so only lists it's immediate compile
+ * Consider the case of a Java test.  The {@link com.facebook.buck.jvm.java.JavaTest} rule itself is
+ * just a {@link com.facebook.buck.jvm.java.DefaultJavaLibrary} and so only lists it's immediate compile
  * time deps as it's normal first-order dependencies.  However, to actually run a Java test, we need
  * it's entire transitive dependency tree locally on disk.  Since this is outside the contract of
  * normal build dependencies (e.g. a top-down build engine may decide not to pull a dependency

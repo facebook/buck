@@ -28,7 +28,7 @@ java_library(
     # This is an internal API used by the javac tracing support (TracingTaskListener).
     # TaskListeners are a kind of compiler plugin, so the same logic applies as the Tracing API
     # above. This is just a more specialized tracing API we've built for this one case.
-    '//src/com/facebook/buck/java/tracing:api',
+    '//src/com/facebook/buck/jvm/java/tracing:api',
   ],
   visibility = [
     '//test/...',

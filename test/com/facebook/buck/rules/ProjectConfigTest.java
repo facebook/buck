@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
-import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.Step;
 

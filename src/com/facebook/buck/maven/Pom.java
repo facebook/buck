@@ -16,8 +16,8 @@
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.java.HasMavenCoordinates;
-import com.facebook.buck.java.MavenPublishable;
+import com.facebook.buck.jvm.java.HasMavenCoordinates;
+import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.annotations.VisibleForTesting;

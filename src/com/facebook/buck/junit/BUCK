@@ -32,7 +32,7 @@ java_library(
     # test, as not to interfere with the results of the test.
     '//third-party/java/junit:junit',
     '//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner',
-    '//src/com/facebook/buck/java/runner:runner',
+    '//src/com/facebook/buck/jvm/java/runner:runner',
   ],
   visibility = [
     '//test/com/facebook/buck/junit:junit',

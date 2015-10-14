@@ -17,10 +17,10 @@
 package com.facebook.buck.dalvik;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.classes.ClasspathTraversal;
-import com.facebook.buck.java.classes.DefaultClasspathTraverser;
-import com.facebook.buck.java.classes.FileLike;
-import com.facebook.buck.java.classes.FileLikes;
+import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
+import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
+import com.facebook.buck.jvm.java.classes.FileLike;
+import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;

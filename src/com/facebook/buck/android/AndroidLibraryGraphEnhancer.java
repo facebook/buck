@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.AnnotationProcessingParams;
-import com.facebook.buck.java.CalculateAbi;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;

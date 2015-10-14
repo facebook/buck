@@ -16,11 +16,11 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.java.Javac.SRC_ZIP;
+import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.java.JarDirectoryStep;
+import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;

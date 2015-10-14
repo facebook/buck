@@ -17,11 +17,11 @@
 package com.facebook.buck.dalvik;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.classes.AbstractFileLike;
-import com.facebook.buck.java.classes.ClasspathTraversal;
-import com.facebook.buck.java.classes.ClasspathTraverser;
-import com.facebook.buck.java.classes.DefaultClasspathTraverser;
-import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.jvm.java.classes.AbstractFileLike;
+import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
+import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
+import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
+import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
