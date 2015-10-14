@@ -24,7 +24,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -58,13 +57,11 @@ public class TargetGraphHashing {
   public static ImmutableMap<BuildTarget, HashCode> hashTargetGraph(
       ProjectFilesystem projectFilesystem,
       TargetGraph targetGraph,
-      Function<BuildTarget, HashCode> buildTargetToRuleHashCode,
       BuildTarget... roots
     ) throws IOException {
     return hashTargetGraph(
         projectFilesystem,
         targetGraph,
-        buildTargetToRuleHashCode,
         ImmutableList.copyOf(roots)
     );
   }
@@ -77,7 +74,6 @@ public class TargetGraphHashing {
   public static ImmutableMap<BuildTarget, HashCode> hashTargetGraph(
       ProjectFilesystem projectFilesystem,
       TargetGraph targetGraph,
-      Function<BuildTarget, HashCode> buildTargetToRuleHashCode,
       Iterable<BuildTarget> roots
     ) throws IOException {
     try {
@@ -85,7 +81,6 @@ public class TargetGraphHashing {
       TargetGraphHashingTraversal traversal = new TargetGraphHashingTraversal(
           projectFilesystem,
           targetGraph,
-          buildTargetToRuleHashCode,
           buildTargetHashes);
       traversal.traverse(targetGraph.getAll(roots));
       return ImmutableMap.copyOf(buildTargetHashes);
@@ -98,17 +93,14 @@ public class TargetGraphHashing {
       extends AbstractAcyclicDepthFirstPostOrderTraversal<TargetNode<?>> {
     private final ProjectFilesystem projectFilesystem;
     private final TargetGraph targetGraph;
-    private final Function<BuildTarget, HashCode> buildTargetToRuleHashCode;
     private final Map<BuildTarget, HashCode> buildTargetHashes;
 
     public TargetGraphHashingTraversal(
         ProjectFilesystem projectFilesystem,
         TargetGraph targetGraph,
-        Function<BuildTarget, HashCode> buildTargetToRuleHashCode,
         Map<BuildTarget, HashCode> buildTargetHashes) {
       this.projectFilesystem = projectFilesystem;
       this.targetGraph = targetGraph;
-      this.buildTargetToRuleHashCode = buildTargetToRuleHashCode;
       this.buildTargetHashes = buildTargetHashes;
     }
 
@@ -142,7 +134,7 @@ public class TargetGraphHashing {
       LOG.verbose("Hashing node %s", node);
       // Hash the node's build target and rules.
       StringHashing.hashStringAndLength(hasher, node.getBuildTarget().toString());
-      HashCode targetRuleHashCode = buildTargetToRuleHashCode.apply(node.getBuildTarget());
+      HashCode targetRuleHashCode = node.getRawInputsHashCode();
       LOG.verbose("Got rules hash %s", targetRuleHashCode);
       hasher.putBytes(targetRuleHashCode.asBytes());
 

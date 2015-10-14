@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +32,7 @@ import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 
 import org.junit.Test;
 
@@ -261,6 +263,7 @@ public class TargetNodeVisibilityTest {
     BuildRuleFactoryParams params =
         NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(buildTarget);
     return new TargetNode<>(
+        Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
         description,
         arg,
         params,

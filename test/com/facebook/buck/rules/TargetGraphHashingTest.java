@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 
@@ -35,9 +34,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Unit tests for {@link TargetGraphHashing}.
- */
 public class TargetGraphHashingTest {
 
   @Test
@@ -46,11 +42,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
     assertThat(
-        TargetGraphHashing.hashTargetGraph(
-            projectFilesystem,
-            targetGraph,
-            Functions.forMap(ImmutableMap.<BuildTarget, HashCode>of()))
-            .entrySet(),
+        TargetGraphHashing.hashTargetGraph(projectFilesystem, targetGraph).entrySet(),
         empty());
   }
 
@@ -61,6 +53,7 @@ public class TargetGraphHashingTest {
     TargetNode<?> node = createJavaLibraryTargetNodeWithSrcs(
         projectFilesystem,
         BuildTargetFactory.newInstance("//foo:lib"),
+        HashCode.fromLong(64738),
         ImmutableMap.of(Paths.get("foo/FooLib.java"), "Hello world"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
@@ -73,10 +66,6 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            Functions.forMap(
-                ImmutableMap.of(
-                    BuildTargetFactory.newInstance("//foo:lib"),
-                    HashCode.fromLong(64738))),
             node.getBuildTarget()),
         equalTo(expectedTargetHashes));
   }
@@ -88,6 +77,7 @@ public class TargetGraphHashingTest {
     TargetNode<?> node = createJavaLibraryTargetNodeWithSrcs(
         projectFilesystem,
         BuildTargetFactory.newInstance("//foo:lib"),
+        HashCode.fromLong(64738),
         ImmutableMap.of(Paths.get("foo/FooLib.java"), "Goodbye world"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
@@ -100,10 +90,6 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            Functions.forMap(
-                ImmutableMap.of(
-                    BuildTargetFactory.newInstance("//foo:lib"),
-                    HashCode.fromLong(64738))),
             node.getBuildTarget()),
         equalTo(expectedTargetHashes));
   }
@@ -115,10 +101,12 @@ public class TargetGraphHashingTest {
     TargetNode<?> nodeA = createJavaLibraryTargetNodeWithSrcs(
         projectFilesystem,
         BuildTargetFactory.newInstance("//foo:lib"),
+        HashCode.fromLong(64738),
         ImmutableMap.of(Paths.get("foo/FooLib.java"), "Hello world"));
     TargetNode<?> nodeB = createJavaLibraryTargetNodeWithSrcs(
         projectFilesystem,
         BuildTargetFactory.newInstance("//bar:lib"),
+        HashCode.fromLong(49152),
         ImmutableMap.of(Paths.get("bar/BarLib.java"), "Hello world"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
 
@@ -133,12 +121,6 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            Functions.forMap(
-                ImmutableMap.of(
-                    BuildTargetFactory.newInstance("//foo:lib"),
-                    HashCode.fromLong(64738),
-                    BuildTargetFactory.newInstance("//bar:lib"),
-                    HashCode.fromLong(49152))),
             nodeA.getBuildTarget(),
             nodeB.getBuildTarget()),
         equalTo(expectedTargetHashes));
@@ -151,12 +133,14 @@ public class TargetGraphHashingTest {
     TargetNode<?> nodeA = createJavaLibraryTargetNodeWithSrcs(
         projectFilesystem,
         BuildTargetFactory.newInstance("//foo:lib"),
+        HashCode.fromLong(64738),
         ImmutableMap.of(Paths.get("foo/FooLib.java"), "Hello world"));
     // Same as twoNodeIndependentRootsTargetGraphHasExpectedHashes, except
     // now nodeB depends on nodeA.
     TargetNode<?> nodeB = createJavaLibraryTargetNodeWithSrcs(
         projectFilesystem,
         BuildTargetFactory.newInstance("//bar:lib"),
+        HashCode.fromLong(49152),
         ImmutableMap.of(Paths.get("bar/BarLib.java"), "Hello world"),
         nodeA);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
@@ -172,22 +156,17 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            Functions.forMap(
-                ImmutableMap.of(
-                    BuildTargetFactory.newInstance("//foo:lib"),
-                    HashCode.fromLong(64738),
-                    BuildTargetFactory.newInstance("//bar:lib"),
-                    HashCode.fromLong(49152))),
             nodeB.getBuildTarget()),
         equalTo(expectedTargetHashes));
   }
 
-  private static TargetNode<?> createJavaLibraryTargetNodeWithSrcs(
+  private TargetNode<?> createJavaLibraryTargetNodeWithSrcs(
       FakeProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
+      HashCode hashCode,
       ImmutableMap<Path, String> srcs,
       TargetNode<?>... deps) throws IOException {
-    JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget);
+    JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget, hashCode);
     for (TargetNode<?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }

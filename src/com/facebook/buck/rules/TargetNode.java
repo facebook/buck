@@ -30,6 +30,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -42,13 +43,14 @@ import java.nio.file.Path;
  */
 public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget {
 
+  private final HashCode rawInputsHashCode;
   private final BuildRuleFactoryParams ruleFactoryParams;
   private final Function<Optional<String>, Path> cellRoots;
   private final CellFilesystemResolver cellFilesystemResolver;
+
   private final Description<T> description;
 
   private final T constructorArg;
-
   private final ImmutableSet<Path> pathsReferenced;
   private final ImmutableSet<BuildTarget> declaredDeps;
   private final ImmutableSortedSet<BuildTarget> extraDeps;
@@ -56,6 +58,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
 
   @SuppressWarnings("unchecked")
   public TargetNode(
+      HashCode rawInputsHashCode,
       Description<T> description,
       T constructorArg,
       BuildRuleFactoryParams params,
@@ -64,6 +67,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       Function<Optional<String>, Path> cellRoots,
       CellFilesystemResolver cellFilesystemResolver)
       throws NoSuchBuildTargetException, InvalidSourcePathInputException {
+    this.rawInputsHashCode = rawInputsHashCode;
     this.description = description;
     this.constructorArg = constructorArg;
     this.ruleFactoryParams = params;
@@ -105,6 +109,13 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
 
     this.declaredDeps = declaredDeps;
     this.visibilityPatterns = visibilityPatterns;
+  }
+
+  /**
+   * @return A hash of the raw input from the build file used to construct the node.
+   */
+  public HashCode getRawInputsHashCode() {
+    return rawInputsHashCode;
   }
 
   public Description<T> getDescription() {
@@ -279,27 +290,6 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return getBuildTarget().getFullyQualifiedName();
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  public TargetNode<T> with(
-      Description<T> description,
-      T constructorArg,
-      BuildRuleFactoryParams ruleFactoryParams,
-      ImmutableSet declaredDeps,
-      ImmutableSet<BuildTargetPattern> visibilityPatterns) {
-    try {
-      return new TargetNode(
-          description,
-          constructorArg,
-          ruleFactoryParams,
-          declaredDeps,
-          visibilityPatterns,
-          cellRoots,
-          cellFilesystemResolver);
-    } catch (InvalidSourcePathInputException | NoSuchBuildTargetException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   /**
    * Return a copy of the current TargetNode, with the {@link Description} used for creating
    * {@link BuildRule} instances switched out.
@@ -308,6 +298,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   public TargetNode<?> withDescription(Description<?> description) {
     try {
       return new TargetNode(
+          rawInputsHashCode,
           description,
           constructorArg,
           ruleFactoryParams,

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
@@ -29,10 +31,14 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Collection;
+
+import javax.annotation.Nullable;
 
 /**
  * Support class for writing builders for nodes of a {@link TargetGraph}
@@ -45,14 +51,24 @@ public abstract class AbstractNodeBuilder<A> {
   protected final BuildTarget target;
   protected final A arg;
   private final Function<Optional<String>, Path> cellRoots;
+  @Nullable
+  private final HashCode rawHashCode;
 
   protected AbstractNodeBuilder(
       Description<A> description,
       BuildTarget target) {
+    this(description, target, null);
+  }
+
+  protected AbstractNodeBuilder(
+      Description<A> description,
+      BuildTarget target,
+      HashCode hashCode) {
     this.description = description;
     this.factoryParams = NonCheckingBuildRuleFactoryParams.createNonCheckingBuildRuleFactoryParams(
         target);
     this.target = target;
+    this.rawHashCode = hashCode;
 
     this.cellRoots = new Function<Optional<String>, Path>() {
       @Override
@@ -102,7 +118,13 @@ public abstract class AbstractNodeBuilder<A> {
 
   public TargetNode<A> build() {
     try {
+      HashCode hash = rawHashCode == null ?
+          Hashing.sha1().hashString(factoryParams.target.getFullyQualifiedName(), UTF_8) :
+          rawHashCode;
+
       return new TargetNode<>(
+          // This hash will do in a pinch.
+          hash,
           description,
           arg,
           factoryParams,

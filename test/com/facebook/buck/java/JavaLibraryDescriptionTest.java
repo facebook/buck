@@ -277,7 +277,7 @@ public class JavaLibraryDescriptionTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaLibrary = new JavaLibraryBuilder(target)
+    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target)
         .addDep(exportingRule.getBuildTarget())
         .build(resolver);
 
@@ -296,7 +296,7 @@ public class JavaLibraryDescriptionTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaLibrary = new JavaLibraryBuilder(target)
+    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target)
         .addProvidedDep(exportingRule.getBuildTarget())
         .build(resolver);
 

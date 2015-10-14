@@ -1743,7 +1743,7 @@ public class ParserTest extends EasyMockSupport {
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +
-        "java_library(name = 'lib2', deps = [], visibility=['PUBLIC'])\n")
+            "java_library(name = 'lib2', deps = [], visibility=['PUBLIC'])\n")
             .getBytes(UTF_8));
 
     BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
@@ -1859,7 +1859,7 @@ public class ParserTest extends EasyMockSupport {
     // to every call to get()..
     ImmutableList<BuildTarget> buildTargetsList = ImmutableList.copyOf(buildTargets);
     BuckConfig config = new FakeBuckConfig();
-    parser.buildTargetGraphForBuildTargets(
+    TargetGraph targetGraph = parser.buildTargetGraphForBuildTargets(
         buildTargetsList,
         new ParserConfig(config),
         BuckEventBusFactory.newInstance(),
@@ -1867,7 +1867,12 @@ public class ParserTest extends EasyMockSupport {
         config.getEnvironment(),
         /* enableProfiling */ false);
 
-    return parser.getBuildTargetHashCodeCache().getAll(buildTargetsList);
+    ImmutableMap.Builder<BuildTarget, HashCode> toReturn = ImmutableMap.builder();
+    for (TargetNode<?> node : targetGraph.getNodes()) {
+      toReturn.put(node.getBuildTarget(), node.getRawInputsHashCode());
+    }
+
+    return toReturn.build();
   }
 
   private ActionGraph buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {

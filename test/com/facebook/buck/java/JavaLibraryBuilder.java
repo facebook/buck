@@ -28,17 +28,23 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
 public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescription.Arg> {
 
-  protected JavaLibraryBuilder(BuildTarget target) {
-    super(new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS), target);
+  protected JavaLibraryBuilder(BuildTarget target, HashCode hashCode) {
+    super(new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS), target, hashCode);
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {
-    return new JavaLibraryBuilder(target);
+    return new JavaLibraryBuilder(target, null);
+  }
+
+
+  public static JavaLibraryBuilder createBuilder(BuildTarget target, HashCode hashCode) {
+    return new JavaLibraryBuilder(target, hashCode);
   }
 
   public JavaLibraryBuilder addDep(BuildTarget rule) {
