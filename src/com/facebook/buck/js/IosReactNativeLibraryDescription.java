@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSet;
 
@@ -32,11 +31,9 @@ public class IosReactNativeLibraryDescription
   public static final BuildRuleType TYPE = BuildRuleType.of("ios_react_native_library");
 
   private final ReactNativeLibraryGraphEnhancer enhancer;
-  private final ReactNativeBuckConfig buckConfig;
 
   public IosReactNativeLibraryDescription(ReactNativeBuckConfig buckConfig) {
     this.enhancer = new ReactNativeLibraryGraphEnhancer(buckConfig);
-    this.buckConfig = buckConfig;
   }
 
   @Override
@@ -63,7 +60,4 @@ public class IosReactNativeLibraryDescription
     return ReactNativeFlavors.validateFlavors(flavors);
   }
 
-  public SourcePath getReactNativePackager() {
-    return buckConfig.getPackager();
-  }
 }
