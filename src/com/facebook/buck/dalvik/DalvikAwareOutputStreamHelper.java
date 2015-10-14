@@ -19,7 +19,7 @@ package com.facebook.buck.dalvik;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.jvm.java.classes.FileLike;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;

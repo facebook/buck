@@ -25,9 +25,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.JavaBinaryRuleBuilder;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;

@@ -26,9 +26,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.dalvik.EstimateLinearAllocStep;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.FakeJavaLibrary;
-import com.facebook.buck.java.JavaLibrary;
-import com.facebook.buck.java.JavaLibraryBuilder;
+import com.facebook.buck.jvm.java.FakeJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
@@ -40,7 +40,6 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -75,11 +74,6 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
       @Override
       public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
         return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
-      }
-
-      @Override
-      public Sha1HashCode getAbiKey() {
-        return Sha1HashCode.of("f7f34ed13b881c6c6f663533cde4a436ea84435e");
       }
     };
     javaLibraryRule.setOutputFile("buck-out/gen/foo/bar.jar");

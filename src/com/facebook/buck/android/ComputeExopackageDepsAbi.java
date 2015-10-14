@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
-import com.facebook.buck.java.Keystore;
+import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;

@@ -29,10 +29,10 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/d/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/integration/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/gwt/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/java/intellij/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/java/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/js/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/junit/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/intellij/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ocaml/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/parser/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/python/testdata" />
@@ -43,7 +43,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/test/result/groups/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/thrift/testdata" />
     </content>
-    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="buck-lib" level="project" />
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
