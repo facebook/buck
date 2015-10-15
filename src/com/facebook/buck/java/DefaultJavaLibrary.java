@@ -335,19 +335,15 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    * @param commands List of steps to add to.
    */
   @VisibleForTesting
-  void createCommandsForJavac(
+  void createCommandsForJavacJar(
       Path outputDirectory,
       ImmutableSet<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
       ImmutableList.Builder<Step> commands,
-      BuildTarget target) {
-    // Make sure that this directory exists because ABI information will be written here.
-    Step mkdir = new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToAbiOutputDir());
-    commands.add(mkdir);
-
-    // Only run javac if there are .java files to compile.
-    if (!getJavaSrcs().isEmpty()) {
+      BuildTarget target,
+      Path pathToOutputFile,
+      ImmutableList<Step> intermediateCommands) {
       Path pathToSrcsList = BuildTargets.getGenPath(getBuildTarget(), "__%s__srcs");
       commands.add(new MkdirStep(getProjectFilesystem(), pathToSrcsList.getParent()));
 
@@ -356,7 +352,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       workingDirectory = Optional.of(scratchDir);
 
-      JavacStep javacStep = new JavacStep(
+      JavacToJarStepFactory javacToJarStepFactory = new JavacToJarStepFactory(
           outputDirectory,
           workingDirectory,
           getJavaSrcs(),
@@ -366,10 +362,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           target,
           suggestBuildRules,
           getResolver(),
-          getProjectFilesystem());
+          getProjectFilesystem(),
+          pathToOutputFile,
+          Collections.singleton(outputDirectory),
+          null,
+          null,
+          intermediateCommands);
 
-      commands.add(javacStep);
-    }
+      javacToJarStepFactory.getJavacToJarStep(commands);
   }
 
   /**
@@ -587,26 +587,16 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .addAll(provided)
         .build();
 
-    // This adds the javac command, along with any supporting commands.
-    createCommandsForJavac(
-        outputDirectory,
-        declared,
-        javacOptions,
-        suggestBuildRule,
-        steps,
-        target);
-
-    addPostprocessClassesCommands(
-        getProjectFilesystem().getRootPath(),
-        steps,
-        postprocessClassesCommands,
-        outputDirectory);
+    // Make sure that this directory exists because ABI information will be written here.
+    Step mkdir = new MakeCleanDirectoryStep(getProjectFilesystem(), getPathToAbiOutputDir());
+    steps.add(mkdir);
 
     // If there are resources, then link them to the appropriate place in the classes directory.
     JavaPackageFinder finder = context.getJavaPackageFinder();
     if (resourcesRoot.isPresent()) {
       finder = new ResourcesRootPackageFinder(resourcesRoot.get(), finder);
     }
+
     steps.add(
         new CopyResourcesStep(
             getProjectFilesystem(),
@@ -618,20 +608,41 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputJarDirPath(target)));
 
+    // Only run javac if there are .java files to compile.
+    if (!getJavaSrcs().isEmpty()) {
+      Path output = outputJar.get();
+      // This adds the javac command, along with any supporting commands.
+      createCommandsForJavacJar(
+          outputDirectory,
+          declared,
+          javacOptions,
+          suggestBuildRule,
+          steps,
+          target,
+          output,
+          addPostprocessClassesCommands(
+              getProjectFilesystem().getRootPath(),
+              postprocessClassesCommands,
+              outputDirectory));
+    }
+
+
     Path abiJar = getOutputJarDirPath(target)
         .resolve(String.format("%s-abi.jar", target.getShortNameAndFlavorPostfix()));
-    steps.add(new MkdirStep(getProjectFilesystem(), abiJar.getParent()));
 
     if (outputJar.isPresent()) {
       Path output = outputJar.get();
 
-      steps.add(
-          new JarDirectoryStep(
-              getProjectFilesystem(),
-              output,
-              Collections.singleton(outputDirectory),
+      // No source files, only resources
+      if (getJavaSrcs().isEmpty()) {
+        steps.add(
+            new JarDirectoryStep(
+                getProjectFilesystem(),
+                output,
+                Collections.singleton(outputDirectory),
           /* mainClass */ null,
           /* manifestFile */ null));
+      }
       buildableContext.recordArtifact(output);
 
       // Calculate the ABI.
@@ -797,22 +808,22 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    * is buck-out/bin/java/abc/lib__abc__classes/, then a contained class abc.AbcModule
    * should be at buck-out/bin/java/abc/lib__abc__classes/abc/AbcModule.class
    *
-   * @param commands the list of Steps we are building.
    * @param postprocessClassesCommands the list of commands to post-process .class files.
    * @param outputDirectory the directory that will contain all the javac output.
    */
   @VisibleForTesting
-  static void addPostprocessClassesCommands(
+  static ImmutableList<Step> addPostprocessClassesCommands(
       Path workingDirectory,
-      ImmutableList.Builder<Step> commands,
       List<String> postprocessClassesCommands,
       Path outputDirectory) {
+    ImmutableList.Builder<Step> commands = new ImmutableList.Builder<Step>();
     for (final String postprocessClassesCommand : postprocessClassesCommands) {
       BashStep bashStep = new BashStep(
           workingDirectory,
           postprocessClassesCommand + " " + outputDirectory);
       commands.add(bashStep);
     }
+    return commands.build();
   }
 
   @Override

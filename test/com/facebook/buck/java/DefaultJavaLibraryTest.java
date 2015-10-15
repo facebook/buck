@@ -1333,17 +1333,19 @@ public class DefaultJavaLibraryTest {
     DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    buildable.createCommandsForJavac(
+    buildable.createCommandsForJavacJar(
         buildable.getPathToOutput(),
         ImmutableSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
         DEFAULT_JAVAC_OPTIONS,
         Optional.<JavacStep.SuggestBuildRules>absent(),
         stepsBuilder,
-        libraryOneTarget);
+        libraryOneTarget,
+        buildable.getPathToOutput().resolve("output.jar"),
+        ImmutableList.<Step>of());
 
     List<Step> steps = stepsBuilder.build();
     assertEquals(steps.size(), 4);
-    assertTrue(((JavacStep) steps.get(3)).getJavac() instanceof Jsr199Javac);
+    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
   }
 
   @Test
@@ -1363,18 +1365,21 @@ public class DefaultJavaLibraryTest {
     DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    buildable.createCommandsForJavac(
+    buildable.createCommandsForJavacJar(
         buildable.getPathToOutput(),
         ImmutableSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
         buildable.getJavacOptions(),
         Optional.<JavacStep.SuggestBuildRules>absent(),
         stepsBuilder,
-        libraryOneTarget);
+        libraryOneTarget,
+        buildable.getPathToOutput().resolve("output.jar"),
+        ImmutableList.<Step>of()
+    );
 
     List<Step> steps = stepsBuilder.build();
     assertEquals(steps.size(), 4);
-    assertTrue(((JavacStep) steps.get(3)).getJavac() instanceof Jsr199Javac);
-    JarBackedJavac jsrJavac = ((JarBackedJavac) (((JavacStep) steps.get(3)).getJavac()));
+    assertTrue(((JavacStep) steps.get(2)).getJavac() instanceof Jsr199Javac);
+    JarBackedJavac jsrJavac = ((JarBackedJavac) (((JavacStep) steps.get(2)).getJavac()));
     assertEquals(
         jsrJavac.getCompilerClassPath(),
         ImmutableSet.of(
@@ -1387,11 +1392,11 @@ public class DefaultJavaLibraryTest {
     Path outputDirectory = SCRATCH_PATH.resolve("android/java/lib__java__classes");
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
-    DefaultJavaLibrary.addPostprocessClassesCommands(
-        new FakeProjectFilesystem().getRootPath(),
-        commands,
-        postprocessClassesCommands,
-        outputDirectory);
+    commands.addAll(
+        DefaultJavaLibrary.addPostprocessClassesCommands(
+            new FakeProjectFilesystem().getRootPath(),
+            postprocessClassesCommands,
+            outputDirectory));
 
     ImmutableList<Step> steps = commands.build();
     assertEquals(2, steps.size());

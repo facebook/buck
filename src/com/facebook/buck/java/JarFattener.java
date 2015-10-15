@@ -117,19 +117,6 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     Path fatJarMainSource = outputDir.resolve(Paths.get(FAT_JAR_MAIN_SRC_RESOURCE).getFileName());
     steps.add(writeFromResource(fatJarMainSource, FAT_JAR_MAIN_SRC_RESOURCE));
 
-    steps.add(
-        new JavacStep(
-            fatJarDir,
-            Optional.<Path>absent(),
-            ImmutableSet.of(fatJarSource, fatJarMainSource),
-            Optional.<Path>absent(),
-            /* declared classpath */ ImmutableSet.<Path>of(),
-            javacOptions,
-            getBuildTarget(),
-            Optional.<JavacStep.SuggestBuildRules>absent(),
-            getResolver(),
-            getProjectFilesystem()));
-
     // Symlink the inner JAR into it's place in the fat JAR.
     steps.add(
         new MkdirStep(
@@ -146,22 +133,34 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     // fat jar resources (e.g. native libs) using the "stored" compression level, to avoid
     // expensive compression on builds and decompression on startup.
     Path zipped = outputDir.resolve("contents.zip");
-    steps.add(
-        new ZipStep(
-            getProjectFilesystem(),
-            zipped,
-            ImmutableSet.<Path>of(),
+
+    Step zipStep = new ZipStep(
+        getProjectFilesystem(),
+        zipped,
+        ImmutableSet.<Path>of(),
             /* junkPaths */ false,
             /* compressionLevel */ 0,
-            fatJarDir));
-    steps.add(
-        new JarDirectoryStep(
-            getProjectFilesystem(),
-            getOutputPath(),
-            ImmutableSet.of(zipped),
-            FatJarMain.class.getName(),
-            /* manifestFile */ null));
+        fatJarDir);
 
+    JavacToJarStepFactory javacToJarStepFactory = new JavacToJarStepFactory(
+        fatJarDir,
+        Optional.<Path>absent(),
+        ImmutableSet.of(fatJarSource, fatJarMainSource),
+        Optional.<Path>absent(),
+        /* declared classpath */ ImmutableSet.<Path>of(),
+        javacOptions,
+        getBuildTarget(),
+        Optional.<JavacStep.SuggestBuildRules>absent(),
+        getResolver(),
+        getProjectFilesystem(),
+        getOutputPath(),
+        ImmutableSet.of(zipped),
+        FatJarMain.class.getName(),
+        /* manifestFile */ null,
+        ImmutableList.of(zipStep)
+    );
+
+    javacToJarStepFactory.getJavacToJarStep(steps);
     return steps.build();
   }
 
