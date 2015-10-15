@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -45,17 +46,15 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.ImmutableBuildContext;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShellStep;
@@ -79,7 +78,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -361,10 +359,6 @@ public class DefaultJavaLibraryTest {
     FakeJavaLibrary libraryOne = new FakeJavaLibrary(
         libraryOneTarget,
         new SourcePathResolver(new BuildRuleResolver())) {
-      @Override
-      public Sha1HashCode getAbiKey() {
-        return Sha1HashCode.of(Strings.repeat("cafebabe", 5));
-      }
 
       @Override
       public Optional<SourcePath> getAbiJar() {
@@ -622,12 +616,10 @@ public class DefaultJavaLibraryTest {
         .setOut("stuff.txt")
         .build(ruleResolver);
 
-    String commonLibAbiKeyHash = Strings.repeat("a", 40);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
 
     try {
       createDefaultJavaLibaryRuleWithAbiKey(
-          commonLibAbiKeyHash,
           buildTarget,
           // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
           /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
@@ -965,200 +957,7 @@ public class DefaultJavaLibraryTest {
     assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
   }
 
-  /**
-   * @see DefaultJavaLibrary#getAbiKey()
-   */
-  @Test
-  public void testGetAbiKeyInThePresenceOfExportedDeps() throws IOException {
-    // Create a java_library named //:commonlib with a hardcoded ABI key.
-    String commonLibAbiKeyHash = Strings.repeat("a", 40);
-    BuildRule commonLibrary = createDefaultJavaLibaryRuleWithAbiKey(
-        commonLibAbiKeyHash,
-        BuildTargetFactory.newInstance("//:commonlib"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
-
-    // Create two java_library rules, each of which depends on //:commonlib, but only one of which
-    // exports its deps.
-    String libWithExportAbiKeyHash = Strings.repeat("b", 40);
-    BuildRule libWithExport = createDefaultJavaLibaryRuleWithAbiKey(
-        libWithExportAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_with_export"),
-        /* srcs */ ImmutableSet.<String>of(),
-        /* deps */ ImmutableSortedSet.of(commonLibrary),
-        /* exportedDeps */ ImmutableSortedSet.of(commonLibrary));
-    String libNoExportAbiKeyHash = Strings.repeat("c", 40);
-    BuildRule libNoExport = createDefaultJavaLibaryRuleWithAbiKey(
-        /* abiHash */ libNoExportAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_no_export"),
-        /* srcs */ ImmutableSet.<String>of(),
-        /* deps */ ImmutableSortedSet.of(commonLibrary),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
-
-    // Verify getAbiKey() for the two //:lib_XXX rules.
-    String expectedLibWithExportAbiKeyHash = Hashing.sha1().newHasher()
-        .putUnencodedChars(commonLibAbiKeyHash)
-        .putUnencodedChars(libWithExportAbiKeyHash)
-        .hash()
-        .toString();
-    assertEquals(
-        "getAbiKey() should include the dependencies' ABI keys for the rule with export_deps=true.",
-        expectedLibWithExportAbiKeyHash,
-        ((HasJavaAbi) libWithExport).getAbiKey().getHash());
-
-    assertEquals(
-        "getAbiKey() should not include the dependencies' ABI keys for the rule with " +
-            "export_deps=false.",
-        libNoExportAbiKeyHash,
-        ((HasJavaAbi) libNoExport).getAbiKey().getHash());
-  }
-
-  /**
-   * @see DefaultJavaLibrary#getAbiKey()
-   */
-  @Test
-  public void testGetAbiKeyRecursiveExportedDeps() throws IOException {
-    String libAAbiKeyHash = Strings.repeat("a", 40);
-    String libBAbiKeyHash = Strings.repeat("b", 40);
-    String libCAbiKeyHash = Strings.repeat("c", 40);
-    String libDAbiKeyHash = Strings.repeat("d", 40);
-
-    // Test the following dependency graph:
-    // a(export_deps=true) -> b(export_deps=true) -> c(export_deps=true) -> d(export_deps=true)
-    BuildRule libD = createDefaultJavaLibaryRuleWithAbiKey(
-        libDAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_d"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* exporedtDeps */ ImmutableSortedSet.<BuildRule>of());
-    BuildRule libC = createDefaultJavaLibaryRuleWithAbiKey(
-        libCAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_c"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.of(libD),
-        /* exporedtDeps */ ImmutableSortedSet.of(libD));
-    BuildRule libB = createDefaultJavaLibaryRuleWithAbiKey(
-        libBAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_b"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.of(libC),
-        /* exportedDeps */ ImmutableSortedSet.of(libC));
-    BuildRule libA = createDefaultJavaLibaryRuleWithAbiKey(
-        libAAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_a"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.of(libB),
-        /* exportedDeps */ ImmutableSortedSet.of(libB));
-
-    assertEquals(
-        "If a rule has no dependencies its final ABI key should be the rule's own ABI key.",
-        libDAbiKeyHash,
-        ((HasJavaAbi) libD).getAbiKey().getHash());
-
-    String expectedLibCAbiKeyHash = Hashing.sha1().newHasher()
-        .putUnencodedChars(libDAbiKeyHash)
-        .putUnencodedChars(libCAbiKeyHash)
-        .hash()
-        .toString();
-    assertEquals(
-        "The ABI key for lib_c should contain lib_d's ABI key.",
-        expectedLibCAbiKeyHash,
-        ((HasJavaAbi) libC).getAbiKey().getHash());
-
-    String expectedLibBAbiKeyHash = Hashing.sha1().newHasher()
-        .putUnencodedChars(expectedLibCAbiKeyHash)
-        .putUnencodedChars(libDAbiKeyHash)
-        .putUnencodedChars(libBAbiKeyHash)
-        .hash()
-        .toString();
-    assertEquals(
-        "The ABI key for lib_b should contain lib_c's and lib_d's ABI keys.",
-        expectedLibBAbiKeyHash,
-        ((HasJavaAbi) libB).getAbiKey().getHash());
-
-    String expectedLibAAbiKeyHash = Hashing.sha1().newHasher()
-        .putUnencodedChars(expectedLibBAbiKeyHash)
-        .putUnencodedChars(expectedLibCAbiKeyHash)
-        .putUnencodedChars(libAAbiKeyHash)
-        .hash()
-        .toString();
-    assertEquals(
-        "The ABI key for lib_a should contain lib_b's, lib_c's and lib_d's ABI keys.",
-        expectedLibAAbiKeyHash,
-        ((HasJavaAbi) libA).getAbiKey().getHash());
-
-    // Test the following dependency graph:
-    // a(export_deps=true) -> b(export_deps=true) -> c(export_deps=false) -> d(export_deps=false)
-    libD = createDefaultJavaLibaryRuleWithAbiKey(
-        libDAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_d2"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of());
-    libC = createDefaultJavaLibaryRuleWithAbiKey(
-        libCAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_c2"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.of(libD),
-        /* exportDeps */ ImmutableSortedSet.<BuildRule>of());
-    libB = createDefaultJavaLibaryRuleWithAbiKey(
-        libBAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_b2"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.of(libC),
-        /* exportedDeps */ ImmutableSortedSet.of(libC));
-    libA = createDefaultJavaLibaryRuleWithAbiKey(
-        libAAbiKeyHash,
-        BuildTargetFactory.newInstance("//:lib_a2"),
-        // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
-        /* srcs */ ImmutableSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.of(libB),
-        /* exportedDeps */ ImmutableSortedSet.of(libB));
-
-    assertEquals(
-        "If export_deps is false, the final ABI key should be the rule's own ABI key.",
-        libDAbiKeyHash,
-        ((HasJavaAbi) libD).getAbiKey().getHash());
-
-    assertEquals(
-        "If export_deps is false, the final ABI key should be the rule's own ABI key.",
-        libCAbiKeyHash,
-        ((HasJavaAbi) libC).getAbiKey().getHash());
-
-    expectedLibBAbiKeyHash = Hashing.sha1().newHasher()
-        .putUnencodedChars(libCAbiKeyHash)
-        .putUnencodedChars(libBAbiKeyHash)
-        .hash()
-        .toString();
-    assertEquals(
-        "The ABI key for lib_b should contain lib_c's ABI key.",
-        expectedLibBAbiKeyHash,
-        ((HasJavaAbi) libB).getAbiKey().getHash());
-
-    expectedLibAAbiKeyHash = Hashing.sha1().newHasher()
-        .putUnencodedChars(expectedLibBAbiKeyHash)
-        .putUnencodedChars(libCAbiKeyHash)
-        .putUnencodedChars(libAAbiKeyHash)
-        .hash()
-        .toString();
-    assertEquals(
-        "The ABI key for lib_a should contain lib_b's, lib_c's and lib_d's ABI keys.",
-        expectedLibAAbiKeyHash,
-        ((HasJavaAbi) libA).getAbiKey().getHash());
-
-  }
-
   private static BuildRule createDefaultJavaLibaryRuleWithAbiKey(
-      @Nullable final String partialAbiHash,
       BuildTarget buildTarget,
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
@@ -1188,14 +987,6 @@ public class DefaultJavaLibraryTest {
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         /* tests */ ImmutableSortedSet.<BuildTarget>of()) {
-      @Override
-      public Sha1HashCode getAbiKey() {
-        if (partialAbiHash == null) {
-          return super.getAbiKey();
-        } else {
-          return createTotalAbiKey(Sha1HashCode.of(partialAbiHash));
-        }
-      }
     };
   }
 

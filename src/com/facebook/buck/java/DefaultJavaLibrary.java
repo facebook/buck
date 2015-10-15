@@ -26,7 +26,6 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -41,7 +40,6 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -63,11 +61,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.google.common.reflect.ClassPath;
 
 import java.io.IOException;
@@ -79,7 +74,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
 
 import javax.annotation.Nullable;
 
@@ -372,26 +366,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       javacToJarStepFactory.getJavacToJarStep(commands);
   }
 
-  /**
-   * Creates the total ABI key for this rule. If export_deps is true, the total key is computed by
-   * hashing the ABI keys of the dependencies together with the ABI key of this rule. If export_deps
-   * is false, the standalone ABI key for this rule is used as the total key.
-   * @param abiKey the standalone ABI key for this rule.
-   * @return total ABI key containing also the ABI keys of the dependencies.
-   */
-  protected Sha1HashCode createTotalAbiKey(Sha1HashCode abiKey) {
-    if (getExportedDeps().isEmpty()) {
-      return abiKey;
-    }
-
-    SortedSet<HasBuildTarget> depsForAbiKey = getDepsForAbiKey();
-
-    // Hash the ABI keys of all dependencies together with ABI key for the current rule.
-    Hasher hasher = createHasherWithAbiKeyForDeps(depsForAbiKey);
-    hasher.putUnencodedChars(abiKey.getHash());
-    return Sha1HashCode.of(hasher.hash().toString());
-  }
-
   private Path getPathToAbiOutputDir() {
     return BuildTargets.getGenPath(getBuildTarget(), "lib__%s__abi");
   }
@@ -414,59 +388,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
    */
   private static Path getClassesDir(BuildTarget target) {
     return BuildTargets.getScratchPath(target, "lib__%s__classes");
-  }
-
-  /**
-   * Returns a sorted set containing the dependencies which will be hashed in the final ABI key.
-   * @return the dependencies to be hashed in the final ABI key.
-   */
-  private SortedSet<HasBuildTarget> getDepsForAbiKey() {
-    SortedSet<HasBuildTarget> rulesWithAbiToConsider = Sets.newTreeSet(BUILD_TARGET_COMPARATOR);
-    for (BuildRule dep : Iterables.concat(getDepsForTransitiveClasspathEntries(), providedDeps)) {
-      // This looks odd. DummyJavaAbiRule contains a Buildable that isn't a JavaAbiRule.
-      if (dep instanceof HasJavaAbi) {
-        if (dep instanceof JavaLibrary) {
-          JavaLibrary javaRule = (JavaLibrary) dep;
-          rulesWithAbiToConsider.addAll(javaRule.getOutputClasspathEntries().keys());
-        } else {
-          rulesWithAbiToConsider.add(dep);
-        }
-      }
-    }
-
-    // We also need to iterate over inputs that are SourcePaths, since they're only listed as
-    // compile-time deps and not in the "deps" field. If any of these change, we should recompile
-    // the library, since we will (at least) need to repack it.
-    rulesWithAbiToConsider.addAll(
-        getResolver().filterBuildRuleInputs(Iterables.concat(srcs, resources)));
-
-    return rulesWithAbiToConsider;
-  }
-
-  /**
-   * Creates a Hasher containing the ABI keys of the dependencies.
-   * @param rulesWithAbiToConsider a sorted set containing the dependencies whose ABI key will be
-   *     added to the hasher.
-   * @return a Hasher containing the ABI keys of the dependencies.
-   */
-  private Hasher createHasherWithAbiKeyForDeps(SortedSet<HasBuildTarget> rulesWithAbiToConsider) {
-    Hasher hasher = Hashing.sha1().newHasher();
-
-    for (HasBuildTarget candidate : rulesWithAbiToConsider) {
-      if (candidate == this) {
-        continue;
-      }
-
-      if (candidate instanceof HasJavaAbi) {
-        Sha1HashCode abiKey = ((HasJavaAbi) candidate).getAbiKey();
-        hasher.putUnencodedChars(abiKey.getHash());
-      } else if (candidate instanceof BuildRule) {
-        HashCode hashCode = ((BuildRule) candidate).getRuleKey().getHashCode();
-        hasher.putBytes(hashCode.asBytes());
-      }
-    }
-
-    return hasher;
   }
 
   @Override
@@ -780,11 +701,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   public BuildOutputInitializer<Data> getBuildOutputInitializer() {
     return buildOutputInitializer;
-  }
-
-  @Override
-  public Sha1HashCode getAbiKey() {
-    return buildOutputInitializer.getBuildOutput().getAbiKey();
   }
 
   @Override
