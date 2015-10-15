@@ -243,8 +243,7 @@ public class AppleDescriptions {
       SourcePathResolver resolver,
       CxxLibraryDescription.Arg output,
       AppleNativeTargetDescriptionArg arg,
-      BuildTarget buildTarget,
-      boolean linkWhole) {
+      BuildTarget buildTarget) {
     populateCxxConstructorArg(
         resolver,
         output,
@@ -279,7 +278,7 @@ public class AppleDescriptions {
         PatternMatchedCollection.<ImmutableList<String>>of());
     output.soname = Optional.absent();
     output.forceStatic = Optional.of(false);
-    output.linkWhole = Optional.of(linkWhole);
+    output.linkWhole = arg.linkWhole;
     output.supportedPlatformsRegex = Optional.absent();
     output.canBeAsset = arg.canBeAsset;
   }
