@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
@@ -134,14 +135,12 @@ abstract class AbstractBuildFileSpec {
   /**
    * @return paths to build files that this spec match in the given {@link ProjectFilesystem}.
    */
-  public ImmutableSet<Path> findBuildFiles(
-      ProjectFilesystem filesystem,
-      String buildFileName) throws IOException {
+  public ImmutableSet<Path> findBuildFiles(Cell cell) throws IOException {
     final ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
 
     forEachBuildFile(
-        filesystem,
-        buildFileName,
+        cell.getFilesystem(),
+        cell.getBuildFileName(),
         new Function<Path, Void>() {
           @Override
           public Void apply(Path buildFile) {

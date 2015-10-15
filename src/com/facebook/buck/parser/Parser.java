@@ -265,9 +265,7 @@ public class Parser {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
 
     // Iterate over the build files the given target node spec returns.
-    for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(
-        cell.getFilesystem(),
-        cell.getBuildFileName())) {
+    for (Path buildFile : spec.getBuildFileSpec().findBuildFiles(cell)) {
 
       // Format a proper error message for non-existent build files.
       if (!cell.getFilesystem().isFile(buildFile)) {
