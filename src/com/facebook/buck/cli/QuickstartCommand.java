@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleSdk;
 import com.facebook.buck.apple.AppleSdkPaths;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -145,10 +146,8 @@ public class QuickstartCommand extends AbstractCommand {
       dir = new File(projectDir);
     }
     if (projectDir.isEmpty()) {
-      params
-          .getConsole()
-          .getStdErr()
-          .println("No project directory specified. Aborting quickstart.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "No project directory specified. Aborting quickstart."));
       return 1;
     }
 
@@ -166,10 +165,8 @@ public class QuickstartCommand extends AbstractCommand {
 
         File sdkLocationFile = new File(sdkLocation);
         if (!sdkLocationFile.isDirectory()) {
-          params
-              .getConsole()
-              .getStdErr()
-              .println("WARNING: That Android SDK directory does not exist.");
+          params.getBuckEventBus().post(ConsoleEvent.severe(
+              "WARNING: That Android SDK directory does not exist."));
         }
 
         sdkLocation = sdkLocationFile.getAbsoluteFile().toString();

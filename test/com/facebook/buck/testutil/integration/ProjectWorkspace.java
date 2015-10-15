@@ -28,6 +28,7 @@ import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
@@ -341,13 +342,20 @@ public class ProjectWorkspace {
     throws IOException {
     assertTrue("setUp() must be run before this method is invoked", isSetUp);
     CapturingPrintStream stdout = new CapturingPrintStream();
-    CapturingPrintStream stderr = new CapturingPrintStream();
+    final CapturingPrintStream stderr = new CapturingPrintStream();
 
     final ImmutableList.Builder<BuckEvent> capturedEventsListBuilder =
         new ImmutableList.Builder<>();
     BuckEventListener capturingEventListener = new BuckEventListener() {
       @Subscribe
       public void captureEvent(BuckEvent event) {
+        if (event instanceof ConsoleEvent) {
+          try {
+            stderr.write(((ConsoleEvent) event).getMessage().getBytes(Charsets.UTF_8));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
         capturedEventsListBuilder.add(event);
       }
 
@@ -404,7 +412,8 @@ public class ProjectWorkspace {
       Thread.currentThread().interrupt();
     }
 
-    return new ProcessResult(exitCode,
+    return new ProcessResult(
+        exitCode,
         stdout.getContentsAsString(Charsets.UTF_8),
         stderr.getContentsAsString(Charsets.UTF_8),
         capturedEventsListBuilder.build());

@@ -113,7 +113,7 @@ public class TargetsCommandIntegrationTest {
     result.assertFailure();
     assertThat(
         result.getStderr(),
-        containsString("BUILD FAILED: Must specify at least one build target.\n"));
+        containsString("Must specify at least one build target.\n"));
   }
 
   @Test
@@ -128,7 +128,7 @@ public class TargetsCommandIntegrationTest {
     result.assertFailure();
     assertThat(
         result.getStderr(),
-        containsString("BUILD FAILED: Must specify at least one build target.\n"));
+        containsString("Must specify at least one build target.\n"));
   }
 
   private String parseAndVerifyTargetAndHash(String target, String outputLine) {

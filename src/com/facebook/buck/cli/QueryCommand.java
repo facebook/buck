@@ -16,15 +16,17 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
@@ -100,7 +102,8 @@ public class QueryCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     if (arguments.isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least the query expression");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Must specify at least the query expression"));
       return 1;
     }
 
@@ -113,7 +116,8 @@ public class QueryCommand extends AbstractCommand {
         return runSingleQuery(params, env, queryFormat);
       }
     } catch (QueryException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
   }
@@ -130,8 +134,8 @@ public class QueryCommand extends AbstractCommand {
       boolean generateJsonOutput)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
-      params.getConsole().printBuildFailure(
-          "Specify one or more input targets after the query expression format");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Specify one or more input targets after the query expression format"));
       return 1;
     }
 

@@ -16,8 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.query.QueryException;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.query.QueryException;
+import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
@@ -54,7 +55,8 @@ public class AuditTestsCommand extends AbstractCommand {
         getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least one build target.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Must specify at least one build target."));
       return 1;
     }
 
@@ -77,7 +79,8 @@ public class AuditTestsCommand extends AbstractCommand {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();
       }
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(
+          ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
   }

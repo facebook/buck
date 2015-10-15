@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
@@ -44,6 +45,7 @@ import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -220,7 +222,8 @@ public class TargetsCommand extends AbstractCommand {
       try {
         buildRuleTypesBuilder.add(params.getCell().getBuildRuleType(name));
       } catch (IllegalArgumentException e) {
-        params.getConsole().printBuildFailure("Invalid build rule type: " + name);
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            "Invalid build rule type: " + name));
         return 1;
       }
     }
@@ -268,7 +271,8 @@ public class TargetsCommand extends AbstractCommand {
         graph = results.getSecond();
       }
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
@@ -302,7 +306,8 @@ public class TargetsCommand extends AbstractCommand {
       try {
         printJsonForTargets(params, matchingNodes, new ParserConfig(params.getBuckConfig()));
       } catch (BuildFileParseException e) {
-        params.getConsole().printBuildFailureWithoutStacktrace(e);
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return 1;
       }
     } else if (isPrint0()) {
@@ -552,7 +557,8 @@ public class TargetsCommand extends AbstractCommand {
    */
   private int doShowRules(CommandRunnerParams params) throws IOException, InterruptedException {
     if (getArguments().isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least one build target.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Must specify at least one build target."));
       return 1;
     }
 
@@ -573,7 +579,8 @@ public class TargetsCommand extends AbstractCommand {
       matchingBuildTargets = result.getFirst();
       targetGraph = result.getSecond();
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 

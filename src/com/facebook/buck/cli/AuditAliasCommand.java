@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
+
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -44,7 +46,7 @@ public class AuditAliasCommand extends AbstractCommand {
       return 0;
     }
 
-    params.getConsole().getStdErr().println("No query supplied.");
+    params.getBuckEventBus().post(ConsoleEvent.severe("No query supplied."));
     return 1;
   }
 

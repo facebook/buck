@@ -743,7 +743,8 @@ public final class Main {
           buildEventBus);
       consoleListener.setProgressEstimator(progressEstimator);
 
-      eventListeners = addEventListeners(buildEventBus,
+      eventListeners = addEventListeners(
+          buildEventBus,
           rootCell.getFilesystem(),
           buildId,
           rootCell.getBuckConfig(),

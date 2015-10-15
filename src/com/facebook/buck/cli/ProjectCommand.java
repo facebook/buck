@@ -26,6 +26,7 @@ import com.facebook.buck.apple.ProjectGenerator;
 import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.WorkspaceAndProjectGenerator;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.java.JavaBuckConfig;
@@ -63,6 +64,7 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
@@ -348,7 +350,8 @@ public class ProjectCommand extends BuildCommand {
               params.getEnvironment(),
               getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 

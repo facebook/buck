@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -43,6 +44,7 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
@@ -259,9 +261,9 @@ public class BuildCommand extends AbstractCommand {
       // build one of them. We show the user only the first 10 aliases.
       ImmutableSet<String> aliases = params.getBuckConfig().getAliases();
       if (!aliases.isEmpty()) {
-        params.getConsole().getStdErr().println(String.format(
-                "Try building one of the following targets:\n%s",
-                Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10))));
+        params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
+            "Try building one of the following targets:\n%s",
+            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)))));
       }
       return 1;
     }
@@ -304,7 +306,8 @@ public class BuildCommand extends AbstractCommand {
       actionGraph = targetGraphToActionGraph.apply(result.getSecond());
       resolvers = targetGraphToActionGraph.getRuleResolvers();
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
@@ -318,8 +321,8 @@ public class BuildCommand extends AbstractCommand {
       ImmutableSet<BuildTarget> actionGraphTargets =
           ImmutableSet.copyOf(Iterables.transform(actionGraphRules, HasBuildTarget.TO_TARGET));
       if (!actionGraphTargets.contains(explicitTarget)) {
-        params.getConsole().printBuildFailure(
-            "Targets specified via `--just-build` must be a subset of action graph.");
+        params.getBuckEventBus().post(ConsoleEvent.severe(
+            "Targets specified via `--just-build` must be a subset of action graph."));
         return 1;
       }
       buildTargets = ImmutableSet.of(explicitTarget);

@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.StackedDownloader;
@@ -36,6 +37,7 @@ import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.DefaultPropertyFinder;
+import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -48,7 +50,8 @@ public class FetchCommand extends BuildCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
 
     if (getArguments().isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least one build target to fetch.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Must specify at least one build target to fetch."));
       return 1;
     }
 
@@ -85,7 +88,8 @@ public class FetchCommand extends BuildCommand {
       actionGraph = transformer.apply(result.getSecond());
       buildTargets = ruleGenerator.getDownloadableTargets();
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 

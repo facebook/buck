@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -121,13 +123,15 @@ public class UninstallCommand extends AbstractCommand {
           params.getFileHashCache());
       actionGraph = targetGraphTransformer.apply(result.getSecond());
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
     // Make sure that only one build target is specified.
     if (buildTargets.size() != 1) {
-      params.getConsole().getStdErr().println("Must specify exactly one android_binary() rule.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Must specify exactly one android_binary() rule."));
       return 1;
     }
     BuildTarget buildTarget = Iterables.get(buildTargets, 0);
@@ -136,11 +140,10 @@ public class UninstallCommand extends AbstractCommand {
     BuildRule buildRule = Preconditions.checkNotNull(
         actionGraph.findBuildRuleByTarget(buildTarget));
     if (!(buildRule instanceof InstallableApk)) {
-      params.getConsole().printBuildFailure(
-          String.format(
-              "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
-              buildRule.getFullyQualifiedName(),
-              buildRule.getType()));
+      params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
+          "Specified rule %s must be of type android_binary() or apk_genrule() but was %s().\n",
+          buildRule.getFullyQualifiedName(),
+          buildRule.getType())));
       return 1;
     }
     InstallableApk installableApk = (InstallableApk) buildRule;

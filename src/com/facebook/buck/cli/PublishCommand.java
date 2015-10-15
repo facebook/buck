@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.java.JavaLibrary;
 import com.facebook.buck.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
@@ -79,8 +80,9 @@ public class PublishCommand extends BuildCommand {
 
     // Input validation
     if (remoteRepo == null && !toMavenCentral) {
-      printError(params, "Please specify a remote repository to publish to.\n" +
-              "Use " + REMOTE_REPO_LONG_ARG + " <URL> or " + TO_MAVEN_CENTRAL_LONG_ARG);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Please specify a remote repository to publish to.\n" +
+              "Use " + REMOTE_REPO_LONG_ARG + " <URL> or " + TO_MAVEN_CENTRAL_LONG_ARG));
       return 1;
     }
 
@@ -107,9 +109,8 @@ public class PublishCommand extends BuildCommand {
         getBuild().getActionGraph().findBuildRuleByTarget(buildTarget));
 
     if (!(buildRule instanceof MavenPublishable)) {
-      printError(
-          params,
-          "Cannot publish rule of type " + buildRule.getClass().getName());
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Cannot publish rule of type " + buildRule.getClass().getName()));
       return false;
     }
 
@@ -140,17 +141,13 @@ public class PublishCommand extends BuildCommand {
                         new Function<Artifact, String>() {
                           @Override
                           public String apply(Artifact input) {
-                            return atrifactToString(input);
+                            return artifactToString(input);
                           }
                         })));
     params.getConsole().getStdOut().println("\nDeployRequest:\n" + deployResult.getRequest());
   }
 
-  private static void printError(CommandRunnerParams params, String errorMessage) {
-    params.getConsole().printErrorText(errorMessage);
-  }
-
-  private static String atrifactToString(Artifact artifact) {
+  private static String artifactToString(Artifact artifact) {
     return artifact.toString() + " < " + artifact.getFile();
   }
 

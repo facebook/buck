@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
@@ -24,6 +25,7 @@ import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -156,6 +158,8 @@ public class AuditOwnerCommand extends AbstractCommand {
           isGuessForDeletedEnabled());
       printReport(params, report);
     } catch (BuildFileParseException | BuildTargetException e) {
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return BUILD_TARGET_ERROR;
     }
     return 0;

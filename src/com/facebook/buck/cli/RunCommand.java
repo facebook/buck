@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -93,8 +94,10 @@ public class RunCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     if (!hasTargetSpecified()) {
-      params.getConsole().printBuildFailure("No target given to run");
-      params.getConsole().getStdOut().println("buck run <target> <arg1> <arg2>...");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "No target given to run"));
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "buck run <target> <arg1> <arg2>..."));
       return 1;
     }
 
@@ -119,8 +122,8 @@ public class RunCommand extends AbstractCommand {
       binaryBuildRule = (BinaryBuildRule) targetRule;
     }
     if (binaryBuildRule == null) {
-      params.getConsole().printBuildFailure(
-          "target " + targetName + " is not a binary rule (only binary rules can be `run`)");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "target " + targetName + " is not a binary rule (only binary rules can be `run`)"));
       return 1;
     }
 

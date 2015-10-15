@@ -46,6 +46,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.UnixUserIdFetcher;
 import com.facebook.infer.annotation.Assertions;
@@ -175,8 +176,7 @@ public class InstallCommand extends BuildCommand {
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     // Make sure that only one build target is specified.
     if (getArguments().size() != 1) {
-      params.getConsole().getStdErr().println(
-          "Must specify exactly one rule.");
+      params.getBuckEventBus().post(ConsoleEvent.severe("Must specify exactly one rule."));
       return 1;
     }
 
@@ -210,7 +210,8 @@ public class InstallCommand extends BuildCommand {
         }
       }
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
@@ -249,12 +250,11 @@ public class InstallCommand extends BuildCommand {
           installResult.getLaunchedPid()));
       return installResult.getExitCode();
     } else {
-      params.getConsole().printBuildFailure(
-          String.format(
-              "Specified rule %s must be of type android_binary() or apk_genrule() or " +
-                  "apple_bundle() but was %s().\n",
-              buildRule.getFullyQualifiedName(),
-              buildRule.getType()));
+      params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
+          "Specified rule %s must be of type android_binary() or apk_genrule() or " +
+              "apple_bundle() but was %s().\n",
+          buildRule.getFullyQualifiedName(),
+          buildRule.getType())));
       return 1;
     }
   }

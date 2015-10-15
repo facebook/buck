@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.java.HasClasspathEntries;
 import com.facebook.buck.json.BuildFileParseException;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetGraphTransformer;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -113,7 +115,8 @@ public class AuditClasspathCommand extends AbstractCommand {
         .toSet();
 
     if (targets.isEmpty()) {
-      params.getConsole().printBuildFailure("Please specify at least one build target.");
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          "Please specify at least one build target."));
       return 1;
     }
 
@@ -127,7 +130,8 @@ public class AuditClasspathCommand extends AbstractCommand {
           params.getEnvironment(),
           getEnableProfiling());
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getConsole().printBuildFailureWithoutStacktrace(e);
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
