@@ -47,8 +47,9 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
    * to show up in the launcher.
    */
   private static final String XPATH_LAUNCHER_ACTIVITIES =
-      "/manifest/application/*[self::activity or" +
-      "  self::activity-alias[not(@android:enabled) or @android:enabled='true']]" +
+      "/manifest/application/*" +
+      "  [self::activity[not(@android:enabled) or @android:enabled='true'] or " +
+      "                 self::activity-alias[not(@android:enabled) or @android:enabled='true']]" +
       "  [intent-filter[action/@android:name='android.intent.action.MAIN' and " +
       "                 category/@android:name='android.intent.category.LAUNCHER']]" +
       "  /@android:name";
