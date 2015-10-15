@@ -1,0 +1,100 @@
+{namespace buck.halide_library}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'halide_library()' /}
+    {param prettify: true /}
+    {param description}
+      A halide_library() rule represents a set of Halide source files.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A halide_library() rule represents a set of Halide sources, along with the "compiler"
+code needed to compile them into object format (see <a href="http://halide-lang.org">
+the Halide site</a> for information about Halide and about static compilation of
+Halide pipelines). The object code will be generated for the target architecture.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {param desc}
+  The set of halide sources to compile for this rule. The sources will be
+  compiled and linked for the host architecture, and the resulting binary will
+  be run to produce the object code for the Halide pipeline.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default: '[]' /}
+  {param desc}
+  The dependencies of the generated halide pipeline code. This is useful if, for
+  exmaple, your pipeline calls an external function using Halide::Func::define_extern.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'compiler_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  The dependencies of the halide compiler itself. Targets that depend on the
+  halide_library rule will not include or link the outputs of these targets.
+  {/param}
+{/call}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.platform_compiler_flags_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call cxx_common.platform_linker_flags_arg /}
+
+{call buck.visibility_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+halide_library(
+  # Your library name.
+  name = 'brighter',
+
+  # Your pipeline + compiler sources.
+  srcs = ['halide/main.cpp'],
+
+  # Any dependencies for your compiler. Note that targets that depend on
+  # this rule WILL NOT include or link the output(s) of these targets.
+  compiler_deps = [
+    # You'll need libHalide to use this rule; in our example, we assume it's
+    # located in the 'third-party/halide' directory.
+    '//third-party/halide:halide'
+  ],
+
+  # Any dependencies for your generated shader. Targets that depend on this
+  # rule will include and/or link the output(s) of these targets.
+  deps = [
+    # ...
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}

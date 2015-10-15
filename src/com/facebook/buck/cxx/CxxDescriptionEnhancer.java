@@ -34,8 +34,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
@@ -361,11 +361,25 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args) {
+    return parseCxxSources(
+      params,
+      resolver,
+      cxxPlatform,
+      args.srcs.get(),
+      args.platformSrcs.get());
+  }
+
+  public static ImmutableMap<String, CxxSource> parseCxxSources(
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      ImmutableSortedSet<SourceWithFlags> srcs,
+      PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSrcs) {
     ImmutableMap.Builder<String, SourceWithFlags> sources = ImmutableMap.builder();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    putAllSources(args.srcs.get(), sources, pathResolver, params.getBuildTarget());
+    putAllSources(srcs, sources, pathResolver, params.getBuildTarget());
     for (ImmutableSortedSet<SourceWithFlags> sourcesWithFlags :
-        args.platformSrcs.get().getMatchingValues(cxxPlatform.getFlavor().toString())) {
+        platformSrcs.getMatchingValues(cxxPlatform.getFlavor().toString())) {
       putAllSources(sourcesWithFlags, sources, pathResolver, params.getBuildTarget());
     }
     return CxxCompilableEnhancer.resolveCxxSources(sources.build());
@@ -734,20 +748,6 @@ public class CxxDescriptionEnhancer {
        .toSet();
   }
 
-  static class CxxLinkAndCompileRules {
-    final CxxLink cxxLink;
-    final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
-    final Tool executable;
-    CxxLinkAndCompileRules(
-        CxxLink cxxLink,
-        ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
-        Tool executable) {
-      this.cxxLink = cxxLink;
-      this.compileRules = compileRules;
-      this.executable = executable;
-    }
-  }
-
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
       TargetGraph targetGraph,
       BuildRuleParams params,
@@ -760,9 +760,51 @@ public class CxxDescriptionEnhancer {
     ImmutableMap<Path, SourcePath> headers = parseHeaders(params, resolver, cxxPlatform, args);
     ImmutableMap<String, SourcePath> lexSrcs = parseLexSources(params, resolver, args);
     ImmutableMap<String, SourcePath> yaccSrcs = parseYaccSources(params, resolver, args);
+    return createBuildRulesForCxxBinary(
+      targetGraph,
+      params,
+      resolver,
+      cxxPlatform,
+      srcs,
+      headers,
+      lexSrcs,
+      yaccSrcs,
+      preprocessMode,
+      args.linkStyle.or(Linker.LinkableDepType.STATIC),
+      args.preprocessorFlags,
+      args.platformPreprocessorFlags,
+      args.langPreprocessorFlags,
+      args.frameworks,
+      args.compilerFlags,
+      args.platformCompilerFlags,
+      args.prefixHeader,
+      args.linkerFlags,
+      args.platformLinkerFlags,
+      args.cxxRuntimeType);
+  }
 
+  public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<String, CxxSource> srcs,
+      ImmutableMap<Path, SourcePath> headers,
+      ImmutableMap<String, SourcePath> lexSrcs,
+      ImmutableMap<String, SourcePath> yaccSrcs,
+      CxxPreprocessMode preprocessMode,
+      Linker.LinkableDepType linkStyle,
+      Optional<ImmutableList<String>> preprocessorFlags,
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags,
+      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags,
+      Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
+      Optional<ImmutableList<String>> compilerFlags,
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
+      Optional<SourcePath> prefixHeader,
+      Optional<ImmutableList<String>> linkerFlags,
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    Linker.LinkableDepType linkStyle = args.linkStyle.or(Linker.LinkableDepType.STATIC);
     Path linkOutput = getLinkOutputPath(params.getBuildTarget());
     ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
@@ -795,13 +837,13 @@ public class CxxDescriptionEnhancer {
             params,
             cxxPlatform,
             CxxFlags.getLanguageFlags(
-                args.preprocessorFlags,
-                args.platformPreprocessorFlags,
-                args.langPreprocessorFlags,
+                preprocessorFlags,
+                platformPreprocessorFlags,
+                langPreprocessorFlags,
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
             getFrameworkSearchPaths(
-                args.frameworks,
+                frameworks,
                 cxxPlatform,
                 new SourcePathResolver(resolver)),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -827,10 +869,10 @@ public class CxxDescriptionEnhancer {
             cxxPlatform,
             cxxPreprocessorInput,
             CxxFlags.getFlags(
-                args.compilerFlags,
-                args.platformCompilerFlags,
+                compilerFlags,
+                platformCompilerFlags,
                 cxxPlatform),
-            args.prefixHeader,
+            prefixHeader,
             preprocessMode,
             sources,
             linkStyle == Linker.LinkableDepType.STATIC ?
@@ -840,8 +882,8 @@ public class CxxDescriptionEnhancer {
     // Build up the linker flags.
     extraLdFlagsBuilder.addAll(
         CxxFlags.getFlags(
-            args.linkerFlags,
-            args.platformLinkerFlags,
+            linkerFlags,
+            platformLinkerFlags,
             cxxPlatform));
 
     // Special handling for dynamically linked binaries.
@@ -889,7 +931,7 @@ public class CxxDescriptionEnhancer {
             /* extraInputs */ ImmutableList.<SourcePath>of(),
             linkStyle,
             params.getDeps(),
-            args.cxxRuntimeType,
+            cxxRuntimeType,
             Optional.<SourcePath>absent(),
             ImmutableSet.<BuildTarget>of());
     resolver.addToIndex(cxxLink);

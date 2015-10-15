@@ -83,6 +83,7 @@ import com.facebook.buck.go.GoBinaryDescription;
 import com.facebook.buck.go.GoBuckConfig;
 import com.facebook.buck.go.GoLibraryDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
+import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.java.JavaBinaryDescription;
@@ -513,6 +514,10 @@ public class KnownBuildRuleTypes {
     builder.register(new GoBinaryDescription(goBuckConfig, defaultCxxPlatform));
     builder.register(new GoLibraryDescription(goBuckConfig));
     builder.register(new GwtBinaryDescription());
+    builder.register(
+      new HalideLibraryDescription(
+        cxxPlatforms,
+        cxxBuckConfig.getPreprocessMode()));
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));

@@ -109,7 +109,7 @@ public class CxxTestDescription implements
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Generate the link rule that builds the test binary.
-    final CxxDescriptionEnhancer.CxxLinkAndCompileRules cxxLinkAndCompileRules =
+    final CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             targetGraph,
             params,

@@ -199,6 +199,9 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
             'go_binary',
             'go_library',
         ],
+        'halide': [
+            'halide_library',
+        ],
         'ios': [
             'apple_asset_catalog',
             'apple_binary',
@@ -280,6 +283,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
     {call .platformBuildRuleLink}
         {param platform: 'Go' /}
         {param rules: $platformRulesMap['go'] /}
+    {/call}
+    {call .platformBuildRuleLink}
+        {param platform: 'Halide' /}
+        {param rules: $platformRulesMap['halide'] /}
     {/call}
     {call .platformBuildRuleLink}
         {param platform: 'iOS' /}
