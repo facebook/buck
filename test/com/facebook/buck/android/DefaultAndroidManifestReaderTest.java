@@ -128,4 +128,60 @@ public class DefaultAndroidManifestReaderTest {
     List<String> expected = ImmutableList.of(".ActivityAlias1");
     assertEquals(expected, found);
   }
+
+  @Test
+  public void testReadLauncherActivitiesDisabled() throws IOException {
+    AndroidManifestReader manifestReader = DefaultAndroidManifestReader.forString(
+        "<manifest xmlns:android='http://schemas.android.com/apk/res/android'" +
+        "          package='com.example'>" +
+        "  <application>" +
+        "    <activity android:name='.Activity1'>" +
+        "      <intent-filter>" +
+        "        <action android:name='android.intent.action.MAIN' />" +
+        "        <category android:name='android.intent.category.LAUNCHER' />" +
+        "      </intent-filter>" +
+        "    </activity>" +
+        "    <activity android:name='.Activity2' " +
+        "        android:enabled='true'>" +
+        "      <intent-filter>" +
+        "        <action android:name='android.intent.action.MAIN' />" +
+        "        <category android:name='android.intent.category.LAUNCHER' />" +
+        "      </intent-filter>" +
+        "    </activity>" +
+        "    <activity android:name='.Activity3' " +
+        "        android:enabled='false'>" +
+        "      <intent-filter>" +
+        "        <action android:name='android.intent.action.MAIN' />" +
+        "        <category android:name='android.intent.category.LAUNCHER' />" +
+        "      </intent-filter>" +
+        "    </activity>" +
+        "    <activity-alias android:name='.ActivityAlias1' " +
+        "        android:targetActivity='.Activity1'>" +
+        "      <intent-filter>" +
+        "        <category android:name='android.intent.category.LAUNCHER' />" +
+        "        <action android:name='android.intent.action.MAIN' />" +
+        "      </intent-filter>" +
+        "    </activity-alias>" +
+        "    <activity-alias android:name='.ActivityAlias2' " +
+        "        android:targetActivity='.Activity2' " +
+        "        android:enabled='true'>" +
+        "      <intent-filter>" +
+        "        <category android:name='android.intent.category.LAUNCHER' />" +
+        "        <action android:name='android.intent.action.MAIN' />" +
+        "      </intent-filter>" +
+        "    </activity-alias>" +
+        "    <activity-alias android:name='.ActivityAlias3' " +
+        "        android:targetActivity='.Activity3' " +
+        "        android:enabled='false'>" +
+        "      <intent-filter>" +
+        "        <category android:name='android.intent.category.LAUNCHER' />" +
+        "        <action android:name='android.intent.action.MAIN' />" +
+        "      </intent-filter>" +
+        "    </activity-alias>" +
+        "  </application>" +
+        "</manifest>");
+    List<String> found = manifestReader.getLauncherActivities();
+    List<String> expected = ImmutableList.of(".Activity1", ".Activity2", ".ActivityAlias1", ".ActivityAlias2");
+    assertEquals(expected, found);
+  }
 }
