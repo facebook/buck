@@ -25,7 +25,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -48,23 +47,6 @@ public class TargetGraphHashing {
 
   // Utility class; do not instantiate.
   private TargetGraphHashing() { }
-
-  /**
-   * Given a {@link TargetGraph} and any number of root nodes to traverse,
-   * returns a map of {@code (BuildTarget, HashCode)} pairs for all root
-   * build targets and their dependencies.
-   */
-  public static ImmutableMap<BuildTarget, HashCode> hashTargetGraph(
-      ProjectFilesystem projectFilesystem,
-      TargetGraph targetGraph,
-      BuildTarget... roots
-    ) throws IOException {
-    return hashTargetGraph(
-        projectFilesystem,
-        targetGraph,
-        ImmutableList.copyOf(roots)
-    );
-  }
 
   /**
    * Given a {@link TargetGraph} and any number of root nodes to traverse,

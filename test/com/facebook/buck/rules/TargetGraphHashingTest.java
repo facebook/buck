@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 
@@ -42,7 +43,11 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
 
     assertThat(
-        TargetGraphHashing.hashTargetGraph(projectFilesystem, targetGraph).entrySet(),
+        TargetGraphHashing.hashTargetGraph(
+            projectFilesystem,
+            targetGraph,
+            ImmutableList.<BuildTarget>of())
+            .entrySet(),
         empty());
   }
 
@@ -66,7 +71,7 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            node.getBuildTarget()),
+            ImmutableList.of(node.getBuildTarget())),
         equalTo(expectedTargetHashes));
   }
 
@@ -90,7 +95,7 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            node.getBuildTarget()),
+            ImmutableList.of(node.getBuildTarget())),
         equalTo(expectedTargetHashes));
   }
 
@@ -121,8 +126,9 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            nodeA.getBuildTarget(),
-            nodeB.getBuildTarget()),
+            ImmutableList.of(
+                nodeA.getBuildTarget(),
+                nodeB.getBuildTarget())),
         equalTo(expectedTargetHashes));
   }
 
@@ -156,7 +162,7 @@ public class TargetGraphHashingTest {
         TargetGraphHashing.hashTargetGraph(
             projectFilesystem,
             targetGraph,
-            nodeB.getBuildTarget()),
+            ImmutableList.of(nodeB.getBuildTarget())),
         equalTo(expectedTargetHashes));
   }
 
