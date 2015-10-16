@@ -196,7 +196,7 @@ public class AuditOwnerCommandTest {
   @Before
   public void setUp() {
     console = new TestConsole();
-    buckConfig = new FakeBuckConfig();
+    buckConfig = FakeBuckConfig.builder().build();
   }
 
   private CommandRunnerParams createAuditOwnerCommandRunnerParams(ProjectFilesystem filesystem)

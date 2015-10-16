@@ -126,7 +126,7 @@ public class AppleCxxPlatformsTest {
             "7.0",
             "armv7",
             appleSdkPaths,
-            new FakeBuckConfig(),
+            FakeBuckConfig.builder().build(),
             new FakeExecutableFinder(paths));
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -231,7 +231,7 @@ public class AppleCxxPlatformsTest {
             "2.0",
             "armv7k",
             appleSdkPaths,
-            new FakeBuckConfig(),
+            FakeBuckConfig.builder().build(),
             new FakeExecutableFinder(paths));
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -329,7 +329,7 @@ public class AppleCxxPlatformsTest {
             "7.0",
             "armv7",
             appleSdkPaths,
-            new FakeBuckConfig(),
+            FakeBuckConfig.builder().build(),
             new FakeExecutableFinder(paths));
 
     assertThat(appleCxxPlatform.getOtest().isPresent(), is(false));
@@ -379,7 +379,7 @@ public class AppleCxxPlatformsTest {
             "7.0",
             "cha+rs",
             appleSdkPaths,
-            new FakeBuckConfig(),
+            FakeBuckConfig.builder().build(),
             new FakeExecutableFinder(paths));
 
     assertEquals(
@@ -431,13 +431,13 @@ public class AppleCxxPlatformsTest {
             "7.0",
             "armv7",
             appleSdkPaths,
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
                     "cxx", ImmutableMap.of(
                         "cflags", "-std=gnu11",
                         "cppflags", "-DCTHING",
                         "cxxflags", "-std=c++11",
-                        "cxxppflags", "-DCXXTHING"))),
+                        "cxxppflags", "-DCXXTHING"))).build(),
             new FakeExecutableFinder(paths));
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -497,7 +497,7 @@ AppleSdkPaths appleSdkPaths =
 
     Flavor testFlavor = ImmutableFlavor.of("test-flavor");
 
-    BuckConfig config = new FakeBuckConfig(
+    BuckConfig config = FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
                     "cxx", ImmutableMap.of(
                         "cflags", "-std=gnu11",
@@ -509,7 +509,7 @@ AppleSdkPaths appleSdkPaths =
                         "cppflags", "-DCTHING2",
                         "cxxflags", "-Woption",
                         "cxxppflags", "-DCXXTHING2",
-                        "default_platform", "iphoneos8.0-armv7")));
+                        "default_platform", "iphoneos8.0-armv7"))).build();
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
@@ -572,7 +572,7 @@ AppleSdkPaths appleSdkPaths =
         "7.0",
         "armv7",
         appleSdkPaths,
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         new FakeExecutableFinder(ImmutableSet.<Path>of()));
   }
 
@@ -619,7 +619,7 @@ AppleSdkPaths appleSdkPaths =
             "7.0",
             "armv7",
             appleSdkPaths,
-            new FakeBuckConfig(),
+            FakeBuckConfig.builder().build(),
             new FakeExecutableFinder(paths));
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -676,7 +676,7 @@ AppleSdkPaths appleSdkPaths =
             "2.0",
             "armv7k",
             appleSdkPaths,
-            new FakeBuckConfig(),
+            FakeBuckConfig.builder().build(),
             new FakeExecutableFinder(paths));
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -832,7 +832,7 @@ AppleSdkPaths appleSdkPaths =
         "7.0",
         "armv7",
         appleSdkPaths,
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         new AlwaysFoundExecutableFinder());
   }
 

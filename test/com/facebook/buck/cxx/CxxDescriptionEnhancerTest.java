@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -68,13 +69,16 @@ public class CxxDescriptionEnhancerTest {
     filesystem.touch(lexPath);
     Path yaccPath = Paths.get("yacc");
     filesystem.touch(yaccPath);
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
         ImmutableMap.of(
             "cxx", ImmutableMap.of(
                 "lex", lexPath.toString(),
-                "yacc", yaccPath.toString())),
-        filesystem);
-    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+                "yacc", yaccPath.toString())))
+        .setFilesystem(filesystem)
+        .build();
+    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(buckConfig));
 
     // Setup the target name and build params.
     BuildTarget target = BuildTargetFactory.newInstance("//:test");

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
@@ -55,9 +56,11 @@ public class ThriftJavaEnhancerTest {
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#java");
   private static final BuildTarget JAVA_LIB_TARGET =
       BuildTargetFactory.newInstance("//java:library");
-  private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig(
-      ImmutableMap.of(
-          "thrift", ImmutableMap.of("java_library", JAVA_LIB_TARGET.toString())));
+  private static final BuckConfig BUCK_CONFIG = FakeBuckConfig.builder()
+      .setSections(
+          ImmutableMap.of(
+              "thrift", ImmutableMap.of("java_library", JAVA_LIB_TARGET.toString())))
+      .build();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
   private static final ThriftJavaEnhancer ENHANCER = new ThriftJavaEnhancer(
       THRIFT_BUCK_CONFIG,

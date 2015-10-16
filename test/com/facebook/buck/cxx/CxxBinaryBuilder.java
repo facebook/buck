@@ -30,7 +30,7 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<CxxBinaryDescript
     super(
         new CxxBinaryDescription(
             cxxBuckConfig,
-            new InferBuckConfig(new FakeBuckConfig()),
+            new InferBuckConfig(FakeBuckConfig.builder().build()),
             defaultCxxPlatform,
             cxxPlatforms,
             CxxPreprocessMode.SEPARATE),

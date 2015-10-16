@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -39,16 +40,16 @@ public class AppleConfigTest {
 
   @Test
   public void getUnspecifiedAppleDeveloperDirectorySupplier() {
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     AppleConfig config = new AppleConfig(buckConfig);
     assertNotNull(config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor()));
   }
 
   @Test
   public void getSpecifiedAppleDeveloperDirectorySupplier() {
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of("apple",
-            ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere")));
+            ImmutableMap.of("xcode_developer_dir", "/path/to/somewhere"))).build();
     AppleConfig config = new AppleConfig(buckConfig);
     Supplier<Optional<Path>> supplier =
         config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor());
@@ -58,16 +59,16 @@ public class AppleConfigTest {
 
   @Test
   public void getShouldAttemptToDetectBestPlatform() {
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of("apple",
-            ImmutableMap.of("attempt_to_detect_best_platform", "true")));
+            ImmutableMap.of("attempt_to_detect_best_platform", "true"))).build();
     AppleConfig config = new AppleConfig(buckConfig);
     assertThat(config.shouldAttemptToDetermineBestCxxPlatform(), Matchers.equalTo(true));
   }
 
   @Test
   public void getXcodeSelectDetectedAppleDeveloperDirectorySupplier() {
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     AppleConfig config = new AppleConfig(buckConfig);
     ProcessExecutorParams xcodeSelectParams =
         ProcessExecutorParams.builder()

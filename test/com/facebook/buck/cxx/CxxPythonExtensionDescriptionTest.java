@@ -93,7 +93,7 @@ public class CxxPythonExtensionDescriptionTest {
             ImmutableMap.of(
                 PY2.getFlavor(), PY2,
                 PY3.getFlavor(), PY3)),
-        new CxxBuckConfig(new FakeBuckConfig()),
+        new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxTestBuilder.createDefaultPlatforms());
   }
 

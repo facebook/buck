@@ -80,7 +80,7 @@ public class BuckQueryEnvironmentTest {
         new FakeAndroidDirectoryResolver(),
         new NoopArtifactCache(),
         BuckEventBusFactory.newInstance(),
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),

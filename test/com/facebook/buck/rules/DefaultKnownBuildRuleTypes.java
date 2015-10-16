@@ -63,7 +63,7 @@ public class DefaultKnownBuildRuleTypes {
 
   public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(ProjectFilesystem filesystem)
       throws InterruptedException, IOException {
-    BuckConfig config = new FakeBuckConfig(filesystem);
+    BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
     return KnownBuildRuleTypes.createInstance(
         config,

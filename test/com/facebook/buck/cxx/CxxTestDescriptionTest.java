@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -66,14 +67,14 @@ public class CxxTestDescriptionTest {
     return new CxxTestBuilder(
         BuildTargetFactory.newInstance("//:test"),
         new CxxBuckConfig(
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
                     "cxx",
                     ImmutableMap.of(
                         "gtest_dep", frameworkRule.getBuildTarget().toString(),
                         "gtest_default_test_main_dep",
                         frameworkRule.getBuildTarget().toString(),
-                        "boost_test_dep", frameworkRule.getBuildTarget().toString())))),
+                        "boost_test_dep", frameworkRule.getBuildTarget().toString()))).build()),
         CxxTestBuilder.createDefaultPlatform(),
         CxxTestBuilder.createDefaultPlatforms());
   }
@@ -83,14 +84,14 @@ public class CxxTestDescriptionTest {
     BuildTarget gtest = BuildTargetFactory.newInstance("//:gtest");
     BuildTarget gtestMain = BuildTargetFactory.newInstance("//:gtest_main");
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
             "cxx",
             ImmutableMap.of(
-                            "gtest_dep", gtest.toString(),
-                            "gtest_default_test_main_dep", gtestMain.toString()
-                            )
-                        ));
+                "gtest_dep", gtest.toString(),
+                "gtest_default_test_main_dep", gtestMain.toString()
+            )
+        )).build();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
     CxxTestDescription desc = new CxxTestDescription(

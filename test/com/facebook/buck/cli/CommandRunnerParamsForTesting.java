@@ -65,7 +65,7 @@ public class CommandRunnerParamsForTesting {
         cell,
         Main.createAndroidPlatformTargetSupplier(
             androidDirectoryResolver,
-            new AndroidBuckConfig(new FakeBuckConfig(), platform),
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
             eventBus),
         artifactCache,
         eventBus,
@@ -93,7 +93,7 @@ public class CommandRunnerParamsForTesting {
     private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
-    private BuckConfig config = new FakeBuckConfig();
+    private BuckConfig config = FakeBuckConfig.builder().build();
     private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     private Platform platform = Platform.detect();
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());

@@ -32,11 +32,11 @@ public class DefaultCxxPlatformsTest {
   public void lexYaccFlags() {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
                     "cxx", ImmutableMap.of(
                         "lexflags", "-lex -lex",
-                        "yaccflags", "-yacc -yacc")))));
+                        "yaccflags", "-yacc -yacc"))).build()));
     assertEquals(ImmutableList.of("-lex", "-lex"), cxxPlatform.getLexFlags());
     assertEquals(ImmutableList.of("-yacc", "-yacc"), cxxPlatform.getYaccFlags());
   }
@@ -46,13 +46,13 @@ public class DefaultCxxPlatformsTest {
   public void compilerFlagsPropagateToPreprocessorFlags() {
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
                     "cxx", ImmutableMap.of(
                         "cflags", "-std=gnu11",
                         "cppflags", "-DCFOO",
                         "cxxflags", "-std=c++11",
-                        "cxxppflags", "-DCXXFOO")))));
+                        "cxxppflags", "-DCXXFOO"))).build()));
     assertThat(
         cxxPlatform.getCflags(),
         containsInAnyOrder("-std=gnu11"));

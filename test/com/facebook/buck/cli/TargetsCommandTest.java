@@ -127,7 +127,7 @@ public class TargetsCommandTest {
         androidDirectoryResolver,
         artifactCache,
         eventBus,
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
@@ -143,7 +143,10 @@ public class TargetsCommandTest {
         "//",
         "test-library");
 
-    targetsCommand.printJsonForTargets(params, nodes, new ParserConfig(new FakeBuckConfig()));
+    targetsCommand.printJsonForTargets(
+        params,
+        nodes,
+        new ParserConfig(FakeBuckConfig.builder().build()));
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
         objectMapper.getJsonFactory().createJsonParser(observedOutput));
@@ -194,7 +197,10 @@ public class TargetsCommandTest {
       throws BuildFileParseException, IOException, InterruptedException {
     // nonexistent target should not exist.
     SortedMap<String, TargetNode<?>> buildRules = buildTargetNodes("//", "nonexistent");
-    targetsCommand.printJsonForTargets(params, buildRules, new ParserConfig(new FakeBuckConfig()));
+    targetsCommand.printJsonForTargets(
+        params,
+        buildRules,
+        new ParserConfig(FakeBuckConfig.builder().build()));
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);

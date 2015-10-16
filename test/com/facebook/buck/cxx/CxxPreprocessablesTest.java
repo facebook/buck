@@ -151,7 +151,8 @@ public class CxxPreprocessablesTest {
   @Test
   public void getTransitiveCxxPreprocessorInput() throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
     BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
@@ -244,7 +245,8 @@ public class CxxPreprocessablesTest {
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
       throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinal = "bottom";
@@ -276,7 +278,8 @@ public class CxxPreprocessablesTest {
   public void combiningTransitiveDependenciesThrowsForConflictingHeaders()
       throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
         .setIncludes(
@@ -324,7 +327,8 @@ public class CxxPreprocessablesTest {
   public void combiningTransitiveDependenciesDoesNotThrowForCompatibleHeaders()
       throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     CxxPreprocessorInput bottomInput = CxxPreprocessorInput.builder()
         .setIncludes(

@@ -49,7 +49,8 @@ public class ArchiveStepIntegrationTest {
   @SuppressWarnings("PMD.AvoidUsingOctalValues")
   public void thatGeneratedArchivesAreDeterministic() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform platform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
     ImmutableList<String> archiver =

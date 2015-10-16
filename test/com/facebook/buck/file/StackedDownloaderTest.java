@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -48,7 +49,7 @@ public class StackedDownloaderTest {
   @Test
   public void shouldCreateADownloaderEvenWithAnEmptyStack() {
     Downloader downloader = StackedDownloader.createFromConfig(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Optional.<Path>absent());
 
     assertNotNull(downloader);
@@ -60,7 +61,7 @@ public class StackedDownloaderTest {
   @Test
   public void shouldAddOnDiskAndroidReposIfPresentInSdk() throws IOException {
     Downloader downloader = StackedDownloader.createFromConfig(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Optional.<Path>absent());
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
@@ -76,7 +77,7 @@ public class StackedDownloaderTest {
     Files.createDirectories(googleM2);
 
     downloader = StackedDownloader.createFromConfig(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Optional.of(sdkRoot));
     downloaders = unpackDownloaders(downloader);
 
@@ -98,11 +99,13 @@ public class StackedDownloaderTest {
     // Set up a config so we expect to see both a local and a remote maven repo.
     Path projectRoot = vfs.getPath("/opt/local/src");
     Files.createDirectories(projectRoot);
-    FakeBuckConfig config = new FakeBuckConfig(
-        new ProjectFilesystem(projectRoot),
-        "[maven_repositories]",
-        "local = " + m2Root.toString(),
-        "central = https://repo1.maven.org/maven2");
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(new ProjectFilesystem(projectRoot))
+        .setSections(
+            "[maven_repositories]",
+            "local = " + m2Root.toString(),
+            "central = https://repo1.maven.org/maven2")
+        .build();
 
     Downloader downloader = StackedDownloader.createFromConfig(config, Optional.<Path>absent());
 
@@ -125,9 +128,11 @@ public class StackedDownloaderTest {
   @Test
   public void shouldFallBackToTheDeprecatedMechanismForCreatingMavenRepos() throws IOException {
     // Set up a config so we expect to see both a local and a remote maven repo.
-    FakeBuckConfig config = new FakeBuckConfig(
-        "[download]",
-        "maven_repo = https://repo1.maven.org/maven2");
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[download]",
+            "maven_repo = https://repo1.maven.org/maven2")
+        .build();
 
     Downloader downloader = StackedDownloader.createFromConfig(config, Optional.<Path>absent());
 

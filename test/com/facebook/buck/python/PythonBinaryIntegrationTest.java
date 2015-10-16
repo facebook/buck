@@ -152,7 +152,7 @@ public class PythonBinaryIntegrationTest {
   public void nativeLibsEnvVarIsPreserved() throws IOException {
     String nativeLibsEnvVarName =
         DefaultCxxPlatforms
-            .build(new CxxBuckConfig(new FakeBuckConfig()))
+            .build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
             .getLd()
             .searchPathEnvVar();
     String originalNativeLibsEnvVar = "something";

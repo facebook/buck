@@ -752,7 +752,7 @@ public class ProjectTest {
                 BuildTarget.TO_TARGET)),
         projectFilesystem,
         /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
-        new IntellijConfig(new FakeBuckConfig()),
+        new IntellijConfig(FakeBuckConfig.builder().build()),
         /* pathToPostProcessScript */ Optional.<String>absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
         new ObjectMapper(),

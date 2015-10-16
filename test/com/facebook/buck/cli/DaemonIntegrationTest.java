@@ -484,8 +484,8 @@ public class DaemonIntegrationTest {
 
     Object daemon = Main.getDaemon(
         new TestCellBuilder().setBuckConfig(
-            new FakeBuckConfig(
-                ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
+            FakeBuckConfig.builder().setSections(
+                ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
             .setFilesystem(filesystem)
             .build(),
         ParserConfig.GlobHandler.PYTHON,
@@ -495,8 +495,10 @@ public class DaemonIntegrationTest {
         "Daemon should not be replaced when config equal.", daemon,
         Main.getDaemon(
             new TestCellBuilder().setBuckConfig(
-                new FakeBuckConfig(
-                    ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))))
+                FakeBuckConfig.builder()
+                    .setSections(
+                        ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue")))
+                    .build())
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON,
@@ -507,10 +509,10 @@ public class DaemonIntegrationTest {
         "Daemon should be replaced when config not equal.", daemon,
         Main.getDaemon(
             new TestCellBuilder().setBuckConfig(
-                new FakeBuckConfig(
+                FakeBuckConfig.builder().setSections(
                     ImmutableMap.of(
                         "somesection",
-                        ImmutableMap.of("somename", "someothervalue"))))
+                        ImmutableMap.of("somename", "someothervalue"))).build())
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON,

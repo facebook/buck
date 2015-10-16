@@ -50,7 +50,8 @@ public class CxxCompileStepIntegrationTest {
 
   private void assertCompDir(Path compDir, Optional<String> failure) throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform platform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
     ImmutableList<String> compiler = platform.getCc().getCommandPrefix(

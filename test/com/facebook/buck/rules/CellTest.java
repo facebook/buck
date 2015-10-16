@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
@@ -65,10 +66,12 @@ public class CellTest {
     Files.createDirectories(repo2);
 
     ProjectFilesystem filesystem = new ProjectFilesystem(repo1.toAbsolutePath());
-    FakeBuckConfig config = new FakeBuckConfig(
-        filesystem,
-        "[repositories]",
-        "example = " + repo2.toAbsolutePath().toString());
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem)
+        .setSections(
+            "[repositories]",
+            "example = " + repo2.toAbsolutePath().toString())
+        .build();
 
     Cell repo = new TestCellBuilder().setBuckConfig(config).setFilesystem(
         filesystem).build();

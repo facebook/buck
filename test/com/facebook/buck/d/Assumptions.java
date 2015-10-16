@@ -27,7 +27,7 @@ abstract class Assumptions {
   public static void assumeDCompilerAvailable() throws InterruptedException, IOException {
     Throwable exception = null;
     try {
-      new DBuckConfig(new FakeBuckConfig()).getDCompiler();
+      new DBuckConfig(FakeBuckConfig.builder().build()).getDCompiler();
     } catch (HumanReadableException e) {
       exception = e;
     }

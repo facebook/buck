@@ -76,7 +76,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
 
     Iterable<TestRule> result = command.filterTestRules(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         ImmutableSet.<BuildTarget>of(),
         testRules);
     assertThat(result, contains(rule2));
@@ -102,7 +102,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
     Iterable<TestRule> result = command.filterTestRules(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         ImmutableSet.<BuildTarget>of(),
         testRules);
     assertEquals(ImmutableSet.of(rule1), result);
@@ -128,7 +128,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
     Iterable<TestRule> result = command.filterTestRules(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         ImmutableSet.<BuildTarget>of(),
         testRules);
     assertEquals(ImmutableSet.of(rule2), result);
@@ -150,7 +150,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule);
 
     Iterable<TestRule> result = command.filterTestRules(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         ImmutableSet.<BuildTarget>of(),
         testRules);
     assertEquals(ImmutableSet.of(), result);
@@ -172,7 +172,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule);
 
     Iterable<TestRule> result = command.filterTestRules(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         ImmutableSet.<BuildTarget>of(),
         testRules);
     assertEquals(ImmutableSet.of(), result);
@@ -203,7 +203,7 @@ public class TestCommandTest {
 
     List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2, rule3);
     Iterable<TestRule> filtered = command.filterTestRules(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         ImmutableSet.of(BuildTargetFactory.newInstance("//:wow")),
         testRules);
 
@@ -231,7 +231,7 @@ public class TestCommandTest {
 
     List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2);
     Iterable<TestRule> filtered = command.filterTestRules(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         ImmutableSet.of(
             BuildTargetFactory.newInstance("//:for"),
             BuildTargetFactory.newInstance("//:lulz")),
@@ -242,10 +242,10 @@ public class TestCommandTest {
 
   @Test
   public void testIfAGlobalExcludeExcludesALabel() throws CmdLineException {
-    BuckConfig config = new FakeBuckConfig(
+    BuckConfig config = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
             "test",
-            ImmutableMap.of("excluded_labels", "e2e")));
+            ImmutableMap.of("excluded_labels", "e2e"))).build();
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommand command = new TestCommand();
 
@@ -257,10 +257,10 @@ public class TestCommandTest {
   @Test
   public void testIfALabelIsIncludedItShouldNotBeExcludedEvenIfTheExcludeIsGlobal()
       throws CmdLineException {
-    BuckConfig config = new FakeBuckConfig(
+    BuckConfig config = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
             "test",
-            ImmutableMap.of("excluded_labels", "e2e")));
+            ImmutableMap.of("excluded_labels", "e2e"))).build();
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
     TestCommand command = new TestCommand();
 
@@ -272,10 +272,10 @@ public class TestCommandTest {
   @Test
   public void testIncludingATestOnTheCommandLineMeansYouWouldLikeItRun() throws CmdLineException {
     String excludedLabel = "exclude_me";
-    BuckConfig config = new FakeBuckConfig(
+    BuckConfig config = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
             "test",
-            ImmutableMap.of("excluded_labels", excludedLabel)));
+            ImmutableMap.of("excluded_labels", excludedLabel))).build();
     assertThat(config.getDefaultRawExcludedLabelSelectors(), contains(excludedLabel));
     TestCommand command = new TestCommand();
 
@@ -301,13 +301,15 @@ public class TestCommandTest {
     TestCommand command = getCommand("-j", "15");
 
     assertThat(
-        command.getNumTestThreads(new FakeBuckConfig(command.getConfigOverrides())),
+        command.getNumTestThreads(
+            FakeBuckConfig.builder().setSections(command.getConfigOverrides()).build()),
         Matchers.equalTo(15));
 
     command = getCommand("-j", "15", "--debug");
 
     assertThat(
-        command.getNumTestThreads(new FakeBuckConfig(command.getConfigOverrides())),
+        command.getNumTestThreads(
+            FakeBuckConfig.builder().setSections(command.getConfigOverrides()).build()),
         Matchers.equalTo(1));
   }
 }

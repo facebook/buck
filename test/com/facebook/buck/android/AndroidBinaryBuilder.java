@@ -39,7 +39,7 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
     super(
         new AndroidBinaryDescription(
             ANDROID_JAVAC_OPTIONS,
-            new ProGuardConfig(new FakeBuckConfig()),
+            new ProGuardConfig(FakeBuckConfig.builder().build()),
             ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
             MoreExecutors.newDirectExecutorService()),
         target);

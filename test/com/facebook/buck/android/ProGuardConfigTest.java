@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
@@ -44,11 +45,13 @@ public class ProGuardConfigTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.touch(proGuardJar);
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "tools",
-            ImmutableMap.of("proguard", proGuardJar.toString())),
-        filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "tools",
+                ImmutableMap.of("proguard", proGuardJar.toString())))
+        .setFilesystem(filesystem)
+        .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
     Optional<Path> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
@@ -62,11 +65,13 @@ public class ProGuardConfigTest {
     Path proGuardJar = Paths.get("proguard.jar");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "tools",
-            ImmutableMap.of("proguard", proGuardJar.toString())),
-        filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "tools",
+                ImmutableMap.of("proguard", proGuardJar.toString())))
+        .setFilesystem(filesystem)
+        .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
     Optional<Path> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
@@ -80,11 +85,13 @@ public class ProGuardConfigTest {
     String proGuardMaxHeapSize = "1234M";
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "tools",
-            ImmutableMap.of("proguard-max-heap-size", proGuardMaxHeapSize)),
-        filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "tools",
+                ImmutableMap.of("proguard-max-heap-size", proGuardMaxHeapSize)))
+        .setFilesystem(filesystem)
+        .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
     assertEquals(proGuardMaxHeapSize, proGuardConfig.getProguardMaxHeapSize());

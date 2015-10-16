@@ -377,7 +377,7 @@ public class OCamlIntegrationTest {
     BuildTarget cclib = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:cc");
 
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new CxxBuckConfig(new FakeBuckConfig()));
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
         workspace.getDestPath(),
         cclib,

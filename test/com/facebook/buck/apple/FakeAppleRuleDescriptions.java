@@ -102,7 +102,7 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "i386",
           DEFAULT_IPHONEOS_SDK_PATHS,
-          new FakeBuckConfig(),
+          FakeBuckConfig.builder().build(),
           EXECUTABLE_FINDER);
 
   private static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
@@ -111,7 +111,7 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "x86_64",
           DEFAULT_IPHONEOS_SDK_PATHS,
-          new FakeBuckConfig(),
+          FakeBuckConfig.builder().build(),
           EXECUTABLE_FINDER);
 
 
@@ -121,10 +121,10 @@ public class FakeAppleRuleDescriptions {
           "8.0",
           "x86_64",
           DEFAULT_MACOSX_SDK_PATHS,
-          new FakeBuckConfig(),
+          FakeBuckConfig.builder().build(),
           EXECUTABLE_FINDER);
 
-  private static final BuckConfig DEFAULT_BUCK_CONFIG = new FakeBuckConfig();
+  private static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder().build();
 
   private static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
       Platform.MACOS,

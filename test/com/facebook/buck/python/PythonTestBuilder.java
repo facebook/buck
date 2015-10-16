@@ -55,7 +55,7 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
       BuildTarget target,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder());
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     return new PythonTestBuilder(
         target,
         pythonBuckConfig,

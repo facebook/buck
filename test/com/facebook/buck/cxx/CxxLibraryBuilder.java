@@ -38,7 +38,7 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     super(
         new CxxLibraryDescription(
             cxxBuckConfig,
-            new InferBuckConfig(new FakeBuckConfig()),
+            new InferBuckConfig(FakeBuckConfig.builder().build()),
             cxxPlatforms,
             CxxPreprocessMode.SEPARATE),
         target);

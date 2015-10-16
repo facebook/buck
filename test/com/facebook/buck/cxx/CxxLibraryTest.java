@@ -64,7 +64,8 @@ public class CxxLibraryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform =
+        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Setup some dummy values for the header info.
     final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//:header");
@@ -182,7 +183,8 @@ public class CxxLibraryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform =
+        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     BuildTarget staticPicLibraryTarget =
         BuildTarget.builder(params.getBuildTarget())

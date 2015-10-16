@@ -355,20 +355,25 @@ public class NewNativeTargetProjectMutatorTest {
         phase.getShellScript());
   }
 
-@Test
+  @Test
   public void testScriptBuildPhaseWithReactNative() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
     BuildTarget depBuildTarget = BuildTargetFactory.newInstance("//foo:dep");
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(new FakeBuckConfig(
-        ImmutableMap.of("react-native", ImmutableMap.of("packager", "react-native/packager.sh")),
-        filesystem));
+    ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "react-native",
+                    ImmutableMap.of("packager", "react-native/packager.sh")))
+            .setFilesystem(filesystem)
+            .build());
     TargetNode<?> reactNativeNode =
         IosReactNativeLibraryBuilder.builder(depBuildTarget, buckConfig)
-        .setBundleName("Apps/Foo/FooBundle.js")
-        .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))
-        .build();
+            .setBundleName("Apps/Foo/FooBundle.js")
+            .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))
+            .build();
 
     mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(reactNativeNode));
     NewNativeTargetProjectMutator.Result result =

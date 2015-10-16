@@ -147,7 +147,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance(
         workspace.getDestPath(),
         "//:binary_using_generated_source");
@@ -206,7 +207,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedHeaderDoesNotChange() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_header");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:genheader");
@@ -270,7 +272,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
         "only tests \"separate\" preprocess mode",
         mode == CxxPreprocessMode.SEPARATE);
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
         workspace.getDestPath(),
@@ -312,7 +315,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:source_relative_header");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
         workspace.getDestPath(),

@@ -20,12 +20,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.Tool;
@@ -49,7 +50,7 @@ public class ThriftBuckConfigTest {
   public void getCompilerFailsIfNothingSet() {
     // Setup an empty thrift buck config, missing the compiler.
     BuildRuleResolver resolver = new BuildRuleResolver();
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should fail since nothing was set.
@@ -71,10 +72,13 @@ public class ThriftBuckConfigTest {
     filesystem.touch(thriftPath);
 
     // Setup an empty thrift buck config, missing the compiler.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "thrift", ImmutableMap.of("compiler", thriftPath.toString())),
-        filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "thrift", ImmutableMap.of("compiler", thriftPath.toString())))
+        .setFilesystem(filesystem)
+        .build();
+
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should succeed.
@@ -100,9 +104,9 @@ public class ThriftBuckConfigTest {
     resolver.addToIndex(thriftRule);
 
     // Setup an empty thrift buck config, missing the compiler.
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
         ImmutableMap.of(
-            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString())));
+            "thrift", ImmutableMap.of("compiler", thriftRule.getBuildTarget().toString()))).build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Now try to lookup the compiler, which should succeed.
@@ -121,13 +125,15 @@ public class ThriftBuckConfigTest {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
     // Setup an empty thrift buck config with thrift and thrift2 set..
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "thrift",
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
             ImmutableMap.of(
-                "compiler", "thrift1",
-                "compiler2", "thrift2")),
-        filesystem);
+                "thrift",
+                ImmutableMap.of(
+                    "compiler", "thrift1",
+                    "compiler2", "thrift2")))
+        .setFilesystem(filesystem)
+        .build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Verify that thrift1 and thrift2 are selected correctly.
@@ -147,11 +153,13 @@ public class ThriftBuckConfigTest {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
     // Setup an empty thrift buck config with thrift and thrift2 set..
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "thrift",
-            ImmutableMap.of("compiler", "thrift1")),
-        filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "thrift",
+                ImmutableMap.of("compiler", "thrift1")))
+        .setFilesystem(filesystem)
+        .build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
 
     // Verify that thrift2 falls back to the setting of thrift1.

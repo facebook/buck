@@ -19,6 +19,7 @@ package com.facebook.buck.thrift;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -60,7 +61,7 @@ import java.util.Map;
 public class ThriftCxxEnhancerTest {
 
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#cpp");
-  private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig();
+  private static final BuckConfig BUCK_CONFIG = FakeBuckConfig.builder().build();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
   private static final CxxBuckConfig CXX_BUCK_CONFIG = new CxxBuckConfig(BUCK_CONFIG);
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
@@ -219,8 +220,8 @@ public class ThriftCxxEnhancerTest {
     for (ImmutableMap.Entry<String, BuildTarget> ent : config.entrySet()) {
       strConfig.put(ent.getKey(), ent.getValue().toString());
     }
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of("thrift", strConfig.build()));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
+        ImmutableMap.of("thrift", strConfig.build())).build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftCxxEnhancer cppEnhancerWithSettings = new ThriftCxxEnhancer(
         thriftBuckConfig,

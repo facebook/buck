@@ -61,7 +61,7 @@ public class TestCellBuilder {
 
   public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
-    buckConfig = new FakeBuckConfig();
+    buckConfig = FakeBuckConfig.builder().build();
     androidDirectoryResolver = new FakeAndroidDirectoryResolver();
   }
 

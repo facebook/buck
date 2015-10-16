@@ -1853,10 +1853,15 @@ public class ProjectGeneratorTest {
   public void testAppleBundleRuleWithRNLibraryDependency() throws IOException {
     BuildTarget rnLibraryTarget = BuildTarget.builder(rootPath, "//foo", "rn_library").build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(new FakeBuckConfig(
-        ImmutableMap.of("react-native", ImmutableMap.of("packager", "react-native/packager.sh")),
-        filesystem));
-    TargetNode<?>  rnLibraryNode = IosReactNativeLibraryBuilder
+    ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "react-native",
+                    ImmutableMap.of("packager", "react-native/packager.sh")))
+            .setFilesystem(filesystem)
+            .build());
+    TargetNode<?> rnLibraryNode = IosReactNativeLibraryBuilder
         .builder(rnLibraryTarget, buckConfig)
         .setBundleName("Apps/Foo/FooBundle.js")
         .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))
@@ -1904,10 +1909,15 @@ public class ProjectGeneratorTest {
   public void testNoBundleFlavoredAppleBundleRuleWithRNLibraryDependency() throws IOException {
     BuildTarget rnLibraryTarget = BuildTarget.builder(rootPath, "//foo", "rn_library").build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
-    ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(new FakeBuckConfig(
-        ImmutableMap.of("react-native", ImmutableMap.of("packager", "react-native/packager.sh")),
-        filesystem));
-    TargetNode<?>  rnLibraryNode = IosReactNativeLibraryBuilder
+    ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "react-native",
+                    ImmutableMap.of("packager", "react-native/packager.sh")))
+            .setFilesystem(filesystem)
+            .build());
+    TargetNode<?> rnLibraryNode = IosReactNativeLibraryBuilder
         .builder(rnLibraryTarget, buckConfig)
         .setBundleName("Apps/Foo/FooBundle.js")
         .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))

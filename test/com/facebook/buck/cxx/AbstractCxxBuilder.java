@@ -31,7 +31,7 @@ public class AbstractCxxBuilder<T> extends AbstractNodeBuilder<T> {
   }
 
   public static CxxBuckConfig createDefaultConfig() {
-    BuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     return new CxxBuckConfig(buckConfig);
   }
 

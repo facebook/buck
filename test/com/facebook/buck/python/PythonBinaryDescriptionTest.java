@@ -139,10 +139,10 @@ public class PythonBinaryDescriptionTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     PythonBuckConfig config =
         new PythonBuckConfig(
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
                     "python",
-                    ImmutableMap.of("pex_extension", ".different_extension"))),
+                    ImmutableMap.of("pex_extension", ".different_extension"))).build(),
             new AlwaysFoundExecutableFinder());
     PythonBinaryBuilder builder =
         new PythonBinaryBuilder(
@@ -240,7 +240,7 @@ public class PythonBinaryDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     final Path executor = Paths.get("executor");
     PythonBuckConfig config =
-        new PythonBuckConfig(new FakeBuckConfig(), new AlwaysFoundExecutableFinder()) {
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
           @Override
           public Optional<Tool> getPathToPexExecuter(BuildRuleResolver resolver) {
             return Optional.<Tool>of(new HashedFileTool(executor));

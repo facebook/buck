@@ -30,7 +30,7 @@ abstract class GoAssumptions {
     Throwable exception = null;
     try {
       ProcessExecutor executor = new ProcessExecutor(new TestConsole());
-      new GoBuckConfig(new FakeBuckConfig(), executor).getGoCompiler().get();
+      new GoBuckConfig(FakeBuckConfig.builder().build(), executor).getGoCompiler().get();
     } catch (HumanReadableException e) {
       exception = e;
     }

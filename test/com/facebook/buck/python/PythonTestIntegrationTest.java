@@ -83,7 +83,7 @@ public class PythonTestIntegrationTest {
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message)
       throws InterruptedException {
     PythonVersion pythonVersion =
-        new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder())
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPythonEnvironment(new ProcessExecutor(new TestConsole()))
             .getPythonVersion();
     String actualVersion = Splitter.on(' ').splitToList(pythonVersion.getVersionString()).get(1);

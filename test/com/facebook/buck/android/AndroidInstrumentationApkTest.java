@@ -124,7 +124,7 @@ public class AndroidInstrumentationApkTest {
         .build();
     AndroidInstrumentationApk androidInstrumentationApk = (AndroidInstrumentationApk)
         new AndroidInstrumentationApkDescription(
-            new ProGuardConfig(new FakeBuckConfig()),
+            new ProGuardConfig(FakeBuckConfig.builder().build()),
             DEFAULT_JAVAC_OPTIONS,
             ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
             MoreExecutors.newDirectExecutorService())

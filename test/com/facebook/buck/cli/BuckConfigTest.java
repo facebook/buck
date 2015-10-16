@@ -193,7 +193,7 @@ public class BuckConfigTest {
    */
   @Test
   public void testEmptyConfig() {
-    BuckConfig emptyConfig = new FakeBuckConfig();
+    BuckConfig emptyConfig = FakeBuckConfig.builder().build();
     assertEquals(ImmutableMap.<String, String>of(), emptyConfig.getEntriesForSection("alias"));
     assertNull(emptyConfig.getBuildTargetForAliasAsString("fb4a"));
     assertEquals(ImmutableMap.<Path, String>of(), emptyConfig.getBasePathToAliasMap());
@@ -327,7 +327,7 @@ public class BuckConfigTest {
 
   @Test
   public void testGetDefaultTestTimeoutMillis() throws IOException {
-    assertEquals(0L, new FakeBuckConfig().getDefaultTestTimeoutMillis());
+    assertEquals(0L, FakeBuckConfig.builder().build().getDefaultTestTimeoutMillis());
 
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[test]",
@@ -340,7 +340,7 @@ public class BuckConfigTest {
 
   @Test
   public void testGetMaxTraces() throws IOException {
-    assertEquals(25, new FakeBuckConfig().getMaxTraces());
+    assertEquals(25, FakeBuckConfig.builder().build().getMaxTraces());
 
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[log]",
@@ -363,15 +363,20 @@ public class BuckConfigTest {
 
   @Test
   public void testCreateAnsi() {
-    FakeBuckConfig windowsConfig = new FakeBuckConfig(
-        Architecture.X86_64, Platform.WINDOWS);
+    BuckConfig windowsConfig = FakeBuckConfig.builder()
+        .setArchitecture(Architecture.X86_64)
+        .setPlatform(Platform.WINDOWS)
+        .build();
     // "auto" on Windows is equivalent to "never".
     assertFalse(windowsConfig.createAnsi(Optional.<String>absent()).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("auto")).isAnsiTerminal());
     assertTrue(windowsConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
 
-    FakeBuckConfig linuxConfig = new FakeBuckConfig(Architecture.I386, Platform.LINUX);
+    BuckConfig linuxConfig = FakeBuckConfig.builder()
+        .setArchitecture(Architecture.I386)
+        .setPlatform(Platform.LINUX)
+        .build();
     // We don't test "auto" on Linux, because the behavior would depend on how the test was run.
     assertTrue(linuxConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(linuxConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
@@ -381,9 +386,9 @@ public class BuckConfigTest {
   public void getEnvUsesSuppliedEnvironment() {
     String name = "SOME_ENVIRONMENT_VARIABLE";
     String value = "SOME_VALUE";
-    FakeBuckConfig config = new FakeBuckConfig(
-        ImmutableMap.<String, ImmutableMap<String, String>>of(),
-        ImmutableMap.of(name, value));
+    BuckConfig config = FakeBuckConfig.builder()
+        .setEnvironment(ImmutableMap.of(name, value))
+        .build();
     String[] expected = {value};
     assertArrayEquals("Should match value in environment.", expected, config.getEnv(name, ":"));
   }
@@ -406,15 +411,15 @@ public class BuckConfigTest {
 
   @Test
   public void testShouldSetNumberOfThreadsFromBuckConfig() {
-    BuckConfig buckConfig = new FakeBuckConfig(ImmutableMap.of(
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(ImmutableMap.of(
         "build",
-        ImmutableMap.of("threads", "3")));
+        ImmutableMap.of("threads", "3"))).build();
     assertThat(buckConfig.getNumThreads(), Matchers.equalTo(3));
   }
 
   @Test
   public void testDefaultsNumberOfBuildThreadsToOneAndAQuarterTheNumberOfAvailableProcessors() {
-    BuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     assertThat(
         buckConfig.getNumThreads(),
         Matchers.equalTo((int) (Runtime.getRuntime().availableProcessors() * 1.25)));
@@ -422,7 +427,7 @@ public class BuckConfigTest {
 
   @Test
   public void testDefaultsNumberOfBuildThreadsSpecified() {
-    BuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     assertThat(buckConfig.getNumThreads(42), Matchers.equalTo(42));
   }
 }

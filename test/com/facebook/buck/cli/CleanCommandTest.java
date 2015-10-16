@@ -130,7 +130,7 @@ public class CleanCommandTest extends EasyMockSupport {
         new DefaultClock(),
         Optional.<ProcessManager>absent(),
         Optional.<WebServer>absent(),
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         new NullFileHashCache());
   }
 

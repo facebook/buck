@@ -60,7 +60,8 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
     workspace.enableDirCache(); // enable the cache
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     String inputBuildTargetName =
         inputBuildTarget.withFlavors(CxxInferEnhancer.INFER).getFullyQualifiedName();
@@ -122,7 +123,8 @@ public class CxxBinaryIntegrationTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:simple");
     String inputBuildTargetName =
@@ -203,7 +205,8 @@ public class CxxBinaryIntegrationTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp);
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:binary_with_deps");
     String inputBuildTargetName =
@@ -428,7 +431,8 @@ public class CxxBinaryIntegrationTest {
     workspace.writeContentsToPath(
         String.format("[cxx]\npreprocess_mode = %s\n", preprocessMode),
         ".buckconfig");
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:simple");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
         workspace.getDestPath(),
@@ -564,7 +568,8 @@ public class CxxBinaryIntegrationTest {
         this, "simple", tmp);
     workspace.setUp();
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:simple_with_header");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
@@ -650,7 +655,8 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     // Setup variables pointing to the sources and targets of the top-level binary rule.
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(new FakeBuckConfig()));
+    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target =
         BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:binary_with_dep");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
@@ -880,7 +886,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void resolveHeadersBehindSymlinkTreesInPreprocessedOutput() throws IOException {
-    BuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

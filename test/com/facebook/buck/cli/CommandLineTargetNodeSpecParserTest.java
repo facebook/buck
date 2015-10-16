@@ -36,7 +36,7 @@ public class CommandLineTargetNodeSpecParserTest {
 
   private static final CommandLineTargetNodeSpecParser PARSER =
       new CommandLineTargetNodeSpecParser(
-          new FakeBuckConfig(),
+          FakeBuckConfig.builder().build(),
           new BuildTargetPatternTargetNodeParser(ImmutableSet.<Path>of()));
 
   @Test

@@ -1,6 +1,5 @@
 FAKE_BUCK_CONFIG_SRCS = [
   'FakeBuckConfig.java',
-  'FakeBuckEnvironment.java',
 ]
 
 STANDARD_TEST_SRCS = [

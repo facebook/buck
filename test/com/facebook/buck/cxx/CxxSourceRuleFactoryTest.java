@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -55,7 +56,7 @@ public class CxxSourceRuleFactoryTest {
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
   private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
-      new CxxBuckConfig(new FakeBuckConfig()));
+      new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
@@ -135,9 +136,10 @@ public class CxxSourceRuleFactoryTest {
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
-                    "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))));
+                    "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))
+                .build()));
 
     CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.EMPTY;
 
@@ -208,17 +210,20 @@ public class CxxSourceRuleFactoryTest {
     SourcePath cxxpp = new TestSourcePath("cxxpp");
     ImmutableList<String> cxxppflags = ImmutableList.of("-cxxppflag", "-cxxppflag");
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of(
-            "cxx", ImmutableMap.<String, String>builder()
-                .put("asppflags", space.join(asppflags))
-                .put("cpp", sourcePathResolver.getPath(cpp).toString())
-                .put("cppflags", space.join(cppflags))
-                .put("cxxpp", sourcePathResolver.getPath(cxxpp).toString())
-                .put("cxxppflags", space.join(cxxppflags))
-                .build()),
-        filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "cxx", ImmutableMap.<String, String>builder()
+                    .put("asppflags", space.join(asppflags))
+                    .put("cpp", sourcePathResolver.getPath(cpp).toString())
+                    .put("cppflags", space.join(cppflags))
+                    .put("cxxpp", sourcePathResolver.getPath(cxxpp).toString())
+                    .put("cxxppflags", space.join(cxxppflags))
+                    .build()))
+        .setFilesystem(filesystem)
+        .build();
+    CxxPlatform platform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -457,9 +462,10 @@ public class CxxSourceRuleFactoryTest {
     ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
     CxxPlatform platform = DefaultCxxPlatforms.build(
         new CxxBuckConfig(
-            new FakeBuckConfig(
+            FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(
-                    "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags))))));
+                    "cxx", ImmutableMap.of("cxxflags", Joiner.on(" ").join(platformFlags))))
+                .build()));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -529,7 +535,8 @@ public class CxxSourceRuleFactoryTest {
     SourcePath cxx = new TestSourcePath("cxx");
     ImmutableList<String> cxxflags = ImmutableList.of("-cxxflag", "-cxxflag");
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
+    BuckConfig buckConfig = FakeBuckConfig.builder()
+        .setSections(
         ImmutableMap.of(
             "cxx", ImmutableMap.<String, String>builder()
                 .put("as", sourcePathResolver.getPath(as).toString())
@@ -538,9 +545,11 @@ public class CxxSourceRuleFactoryTest {
                 .put("cflags", space.join(cflags))
                 .put("cxx", sourcePathResolver.getPath(cxx).toString())
                 .put("cxxflags", space.join(cxxflags))
-                .build()),
-        filesystem);
-    CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+                .build()))
+        .setFilesystem(filesystem)
+        .build();
+    CxxPlatform platform = DefaultCxxPlatforms.build(
+        new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         new CxxSourceRuleFactory(
@@ -776,7 +785,7 @@ public class CxxSourceRuleFactoryTest {
 
     ImmutableList<String> explicitCompilerFlags = ImmutableList.of("-fobjc-arc");
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
@@ -851,7 +860,7 @@ public class CxxSourceRuleFactoryTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     String prefixHeaderName = "test.pch";
@@ -894,7 +903,7 @@ public class CxxSourceRuleFactoryTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
-    FakeBuckConfig buckConfig = new FakeBuckConfig(filesystem);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
     CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
 
     CxxSourceRuleFactory cxxSourceRuleFactory =

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
@@ -150,7 +151,7 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJsr199Javac()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
@@ -171,7 +172,7 @@ public class KnownBuildRuleTypesTest {
 
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
 
@@ -196,7 +197,7 @@ public class KnownBuildRuleTypesTest {
 
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     KnownBuildRuleTypes buildRuleTypes =
         DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(new FakeProjectFilesystem());
@@ -227,7 +228,7 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateAndroidLibraryRuleWithJsr199Javac()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
     KnownBuildRuleTypes buildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
@@ -255,7 +256,7 @@ public class KnownBuildRuleTypesTest {
 
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
 
@@ -324,7 +325,7 @@ public class KnownBuildRuleTypesTest {
   public void createInstanceShouldReturnDifferentInstancesIfCalledWithDifferentParameters()
       throws IOException, InterruptedException {
     KnownBuildRuleTypes knownBuildRuleTypes1 = KnownBuildRuleTypes.createInstance(
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         createExecutor(),
         new FakeAndroidDirectoryResolver(),
         Optional.<Path>absent());
@@ -333,7 +334,7 @@ public class KnownBuildRuleTypesTest {
     javac.setExecutable(true);
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
 
@@ -351,7 +352,7 @@ public class KnownBuildRuleTypesTest {
         InterruptedException {
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "cxx", ImmutableMap.of("default_platform", "default"));
-    FakeBuckConfig buckConfig = new FakeBuckConfig(sections);
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     // This would throw if "default" weren't available as a platform.
     KnownBuildRuleTypes.createBuilder(

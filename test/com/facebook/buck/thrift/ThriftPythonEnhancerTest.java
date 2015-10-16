@@ -19,6 +19,7 @@ package com.facebook.buck.thrift;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -49,7 +50,7 @@ import java.nio.file.Paths;
 public class ThriftPythonEnhancerTest {
 
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#python");
-  private static final FakeBuckConfig BUCK_CONFIG = new FakeBuckConfig();
+  private static final BuckConfig BUCK_CONFIG = FakeBuckConfig.builder().build();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
   private static final ThriftPythonEnhancer ENHANCER = new ThriftPythonEnhancer(
       THRIFT_BUCK_CONFIG,
@@ -168,8 +169,8 @@ public class ThriftPythonEnhancerTest {
     for (ImmutableMap.Entry<String, BuildTarget> ent : config.entrySet()) {
       strConfig.put(ent.getKey(), ent.getValue().toString());
     }
-    FakeBuckConfig buckConfig = new FakeBuckConfig(
-        ImmutableMap.of("thrift", strConfig.build()));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
+        ImmutableMap.of("thrift", strConfig.build())).build();
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftPythonEnhancer enhancer = new ThriftPythonEnhancer(
         thriftBuckConfig,

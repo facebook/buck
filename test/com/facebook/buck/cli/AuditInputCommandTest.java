@@ -81,7 +81,7 @@ public class AuditInputCommandTest {
         new FakeAndroidDirectoryResolver(),
         artifactCache,
         eventBus,
-        new FakeBuckConfig(),
+        FakeBuckConfig.builder().build(),
         Platform.detect(),
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),

@@ -188,7 +188,7 @@ public class HgCmdLineInterfaceIntegrationTest {
         new DefaultVersionControlCmdLineInterfaceFactory(
             tempFolder.getRoot().toPath(),
             new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(new FakeBuckConfig()));
+            new VersionControlBuckConfig(FakeBuckConfig.builder().build()));
     VersionControlCmdLineInterface cmdLineInterface = vcFactory.createCmdLineInterface();
     assertEquals(NoOpCmdLineInterface.class, cmdLineInterface.getClass());
   }
@@ -222,7 +222,7 @@ public class HgCmdLineInterfaceIntegrationTest {
         new DefaultVersionControlCmdLineInterfaceFactory(
             repoRootDir,
             new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(new FakeBuckConfig()));
+            new VersionControlBuckConfig(FakeBuckConfig.builder().build()));
     return vcFactory.createCmdLineInterface();
   }
 }

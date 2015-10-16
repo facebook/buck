@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.file.ExplodingDownloader;
@@ -96,7 +97,7 @@ public class ResolverIntegrationTest {
   @BeforeClass
   public static void createParser() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FakeBuckConfig buckConfig = new FakeBuckConfig();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ParserConfig parserConfig = new ParserConfig(buckConfig);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
         buckConfig,

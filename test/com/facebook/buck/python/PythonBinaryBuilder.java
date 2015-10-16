@@ -49,7 +49,7 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
       BuildTarget target,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
     PythonBuckConfig pythonBuckConfig =
-        new PythonBuckConfig(new FakeBuckConfig(), new ExecutableFinder());
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
     return new PythonBinaryBuilder(
         target,
         pythonBuckConfig,
