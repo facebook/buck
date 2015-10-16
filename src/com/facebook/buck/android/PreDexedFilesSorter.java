@@ -20,7 +20,7 @@ import static com.facebook.buck.android.SmartDexingStep.DexInputHashesProvider;
 
 import com.facebook.buck.dalvik.CanaryFactory;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.java.classes.FileLike;
+import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.step.AbstractExecutionStep;

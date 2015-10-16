@@ -11,7 +11,7 @@ java_test(
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util:constants',
     '//test/com/facebook/buck/io:testutil',
-    '//test/com/facebook/buck/java:testutil',
+    '//test/com/facebook/buck/jvm/java:testutil',
     '//test/com/facebook/buck/model:BuildTargetFactory',
     '//test/com/facebook/buck/rules:testutil',
     '//test/com/facebook/buck/shell:testutil',

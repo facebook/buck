@@ -16,10 +16,10 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.java.CalculateAbiStep;
-import com.facebook.buck.java.HasJavaAbi;
-import com.facebook.buck.java.JavacOptions;
-import com.facebook.buck.java.JavacStep;
+import com.facebook.buck.jvm.java.CalculateAbiStep;
+import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;

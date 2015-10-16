@@ -14,7 +14,7 @@
   <property name="tracing-api.src.dir" value="com/facebook/buck/event/api/" />
   <property name="tracing-api.classes.dir" value="${build.dir}/tracing-api/classes" />
   <property name="tracing-api.jar" value="${build.dir}/tracing-api/tracing-api.jar"/>
-  <property name="javac-tracing.src.dir" value="com/facebook/buck/java/tracing" />
+  <property name="javac-tracing.src.dir" value="com/facebook/buck/jvm/java/tracing" />
   <property name="javac-tracing.classes.dir" value="${build.dir}/javac-tracing/classes" />
   <property name="javac-tracing.jar" value="${build.dir}/javac-tracing/javac-tracing-compiler-plugin.jar" />
   <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/pex.py" />
@@ -180,7 +180,7 @@
   <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
     <javac srcdir="${src.dir}"
-           includes="com/facebook/buck/junit/**,src/com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/java/runner/**"
+           includes="com/facebook/buck/junit/**,src/com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/jvm/java/runner/**"
            destdir="${testrunner.classes.dir}"
            classpathref="junit"
            debug="on"
@@ -204,6 +204,8 @@
       <javac-params>
         <include name="${bootstrapper.src.dir}/**/*.java" />
         <include name="${javac-tracing.src.dir}/JavacPhaseTracer.java" />
+        <include name="com/facebook/buck/util/exportedfiles/Nullable.java" />
+        <include name="com/facebook/buck/util/exportedfiles/Preconditions.java" />
       </javac-params>
     </ecj>
     <jar destfile="${bootstrapper.jar}">
@@ -249,6 +251,8 @@
     <mkdir dir="${javac-tracing.classes.dir}" />
     <ecj destdir="${javac-tracing.classes.dir}" classpathref="javac-tracing.classpath">
       <javac-params>
+        <include name="com/facebook/buck/util/exportedfiles/Nullable.java" />
+        <include name="com/facebook/buck/util/exportedfiles/Preconditions.java" />
         <include name="${javac-tracing.src.dir}/TracingTaskListener.java" />
       </javac-params>
     </ecj>
@@ -258,7 +262,7 @@
 
     <!-- Put the tracing jar in resources so it can be dynamically loaded at runtime. See
      TranslatingJavacPhaseTracer -->
-    <copy file="${javac-tracing.jar}" todir="${classes.dir}/com/facebook/buck/java/tracing" />
+    <copy file="${javac-tracing.jar}" todir="${classes.dir}/com/facebook/buck/jvm/java/tracing" />
   </target>
 
   <path id="immutables-classpath">
@@ -536,10 +540,10 @@
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.5.201505241946.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/asm/asm-debug-all-5.0.3.jar"/>
       <fileset dir="${classes.dir}">
-          <include name="com/facebook/buck/java/coverage/ReportGenerator.class"/>
+          <include name="com/facebook/buck/jvm/java/coverage/ReportGenerator.class"/>
       </fileset>
       <manifest>
-        <attribute name="Main-Class" value="com.facebook.buck.java.coverage.ReportGenerator" />
+        <attribute name="Main-Class" value="com.facebook.buck.jvm.java.coverage.ReportGenerator" />
       </manifest>
     </jar>
   </target>
@@ -630,7 +634,7 @@
         which lives in the javac-tracing-compiler-plugin.jar, which is loaded dynamically at
         runtime. This test is run in the Buck build, which is capable of more isolated testing
         than the Ant build is. -->
-        <exclude name="com/facebook/buck/java/tracing/TracingTaskListenerCleanerTest.java" />
+        <exclude name="com/facebook/buck/jvm/java/tracing/TracingTaskListenerCleanerTest.java" />
       </javac-params>
     </ecj>
   </target>
@@ -667,11 +671,11 @@
       <!-- Java and android -->
       <batchtest fork="yes">
         <fileset dir="${test.dir}">
-          <include name="com/facebook/buck/java/**/*${test.class}.java" />
+          <include name="com/facebook/buck/jvm/java/**/*${test.class}.java" />
           <include name="com/facebook/buck/android/**/*${test.class}.java" />
           <include name="com/facebook/buck/dalvik/**/*${test.class}.java" />
 
-          <exclude name="com/facebook/buck/java/tracing/TracingTaskListenerCleanerTest.java" />
+          <exclude name="com/facebook/buck/jvm/java/tracing/TracingTaskListenerCleanerTest.java" />
           <exclude name="**/testdata/**" />
         </fileset>
       </batchtest>
@@ -705,7 +709,7 @@
           <include name="**/*${test.class}.java" />
 
           <exclude name="**/testdata/**" />
-          <exclude name="com/facebook/buck/java/**" />
+          <exclude name="com/facebook/buck/jvm/java/**" />
           <exclude name="com/facebook/buck/android/**" />
           <exclude name="com/facebook/buck/dalvik/**" />
           <exclude name="com/facebook/buck/apple/**" />

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.thrift;
 
-import com.facebook.buck.java.CalculateAbi;
-import com.facebook.buck.java.DefaultJavaLibrary;
-import com.facebook.buck.java.Javac;
-import com.facebook.buck.java.JavacOptions;
+import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
