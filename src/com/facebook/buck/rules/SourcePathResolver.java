@@ -33,7 +33,6 @@ import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 
 public class SourcePathResolver {
@@ -254,7 +253,7 @@ public class SourcePathResolver {
         .toList();
   }
 
-  public Collection<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
+  public ImmutableCollection<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
     return filterBuildRuleInputs(Arrays.asList(sources));
   }
 

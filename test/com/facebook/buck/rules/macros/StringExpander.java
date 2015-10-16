@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 
-class StringExpander implements MacroExpander {
+public class StringExpander implements MacroExpander {
 
   private final String toReturn;
 
