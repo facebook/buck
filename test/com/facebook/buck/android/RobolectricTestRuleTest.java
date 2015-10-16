@@ -25,11 +25,14 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 
@@ -178,5 +181,31 @@ public class RobolectricTestRuleTest {
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), Matchers.containsString("not_there"));
     }
+  }
+
+  @Test
+  public void runtimeDepsIncludeTransitiveResources() throws IOException {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+
+    BuildTarget genRuleTarget = BuildTargetFactory.newInstance("//:gen");
+    BuildRule genRule = GenruleBuilder.newGenruleBuilder(genRuleTarget)
+        .setOut("out")
+        .build(resolver);
+
+    BuildTarget res2RuleTarget = BuildTargetFactory.newInstance("//:res2");
+    AndroidResourceBuilder.createBuilder(res2RuleTarget)
+        .setRes(new BuildTargetSourcePath(genRuleTarget))
+        .setRDotJavaPackage("foo.bar")
+        .build(resolver);
+
+    BuildTarget robolectricBuildTarget = BuildTargetFactory.newInstance(
+        "//java/src/com/facebook/base/robolectricTest:robolectricTest");
+    RobolectricTest robolectricTest = (RobolectricTest) RobolectricTestBuilder
+        .createBuilder(robolectricBuildTarget)
+        .addDep(res2RuleTarget)
+        .build(resolver, filesystem);
+
+    assertThat(robolectricTest.getRuntimeDeps(), Matchers.hasItem(genRule));
   }
 }
