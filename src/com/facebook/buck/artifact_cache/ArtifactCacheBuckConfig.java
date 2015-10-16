@@ -120,6 +120,10 @@ public class ArtifactCacheBuckConfig {
     return true;
   }
 
+  public boolean getServingLocalCacheEnabled() {
+    return buckConfig.getBooleanValue("cache", "serve_local_cache", false);
+  }
+
   public CacheReadMode getDirCacheReadMode() {
     return getCacheReadMode("dir_mode", DEFAULT_DIR_CACHE_MODE);
   }

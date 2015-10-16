@@ -336,8 +336,11 @@ public final class Main {
     /** @return true if the web server was started successfully. */
     private boolean initWebServer() {
       if (webServer.isPresent()) {
+        Optional<ArtifactCache> servedCache = ArtifactCaches.newServedCache(
+            new ArtifactCacheBuckConfig(cell.getBuckConfig()),
+            cell.getFilesystem());
         try {
-          webServer.get().start();
+          webServer.get().updateAndStartIfNeeded(servedCache);
           return true;
         } catch (WebServer.WebServerException e) {
           LOG.error(e);
@@ -423,6 +426,7 @@ public final class Main {
         Daemon.getValidWebServerPort(daemon.cell.getBuckConfig());
     Optional<Integer> portFromUpdatedConfig =
         Daemon.getValidWebServerPort(newCell.getBuckConfig());
+
     return portFromOldConfig.equals(portFromUpdatedConfig);
   }
 

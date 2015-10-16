@@ -16,6 +16,7 @@
 
 package com.facebook.buck.httpserver;
 
+import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -38,10 +39,21 @@ import java.util.Map;
 
 /**
  * A WebSocket server that reports events of buck.
+ *
+ * The WebServer can be modeled as:
+ *  a) a network listener/dispatcher which sits on the port and listens for incoming http requests.
+ *  b) static handlers - list of handlers that are bound to the current process
+ *  (list of traces/logs/socket),
+ *  c) 'normal' handlers, bound to the daemon state.
+ *
+ *  We would like the server to go down as infrequently as possible (this makes it simpler for
+ *  /ws users who would otherwise need to reconnect and potentially lose state) which is the reason
+ *  for section c) above.
  */
 public class WebServer {
 
   private static final String INDEX_CONTEXT_PATH = "/";
+  private static final String ARTIFACTS_CONTEXT_PATH = "/artifacts";
   private static final String STATIC_CONTEXT_PATH = "/static";
   private static final String TRACE_CONTEXT_PATH = "/trace";
   private static final String TRACES_CONTEXT_PATH = "/traces";
@@ -52,6 +64,7 @@ public class WebServer {
   private final String staticContentDirectory;
   private final Server server;
   private final StreamingWebSocketServlet streamingWebSocketServlet;
+  private final ArtifactCacheHandler artifactCacheHandler;
 
   /**
    * @param port If 0, then an <a href="http://en.wikipedia.org/wiki/Ephemeral_port">
@@ -68,6 +81,7 @@ public class WebServer {
     this.port = Optional.absent();
     this.server = new Server(port);
     this.streamingWebSocketServlet = new StreamingWebSocketServlet(objectMapper);
+    this.artifactCacheHandler = new ArtifactCacheHandler(projectFilesystem);
   }
 
   public Optional<Integer> getPort() {
@@ -91,7 +105,16 @@ public class WebServer {
     return streamingWebSocketServlet;
   }
 
-  public synchronized void start() throws WebServerException {
+  /**
+   * Update state and start the server if necessary.
+   *
+   * @param artifactCache cache to serve.
+   * @throws WebServerException
+   */
+  public synchronized void updateAndStartIfNeeded(
+      Optional<ArtifactCache> artifactCache) throws WebServerException {
+    artifactCacheHandler.setArtifactCache(artifactCache);
+
     if (server.isStarted()) {
       return;
     }
@@ -127,6 +150,7 @@ public class WebServer {
     contextPathToHandler.put(TRACES_CONTEXT_PATH, new TemplateHandler(
         new TracesHandlerDelegate(tracesHelper)));
     contextPathToHandler.put(TRACE_DATA_CONTEXT_PATH, new TraceDataHandler(tracesHelper));
+    contextPathToHandler.put(ARTIFACTS_CONTEXT_PATH, artifactCacheHandler);
 
     ImmutableList.Builder<ContextHandler> handlers = ImmutableList.builder();
     for (Map.Entry<String, Handler> entry : contextPathToHandler.entrySet()) {
