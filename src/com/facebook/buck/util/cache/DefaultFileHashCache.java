@@ -88,7 +88,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   private HashCode getDirHashCode(Path path) throws IOException {
     Hasher hasher = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher, projectFilesystem, ImmutableSet.of(path));
+    PathHashing.hashPaths(hasher, this, projectFilesystem, ImmutableSet.of(path));
     return hasher.hash();
   }
 

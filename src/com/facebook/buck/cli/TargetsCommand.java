@@ -668,6 +668,7 @@ public class TargetsCommand extends AbstractCommand {
         TargetGraphHashing.hashTargetGraph(
             params.getCell().getFilesystem(),
             projectGraphWithTests,
+            params.getFileHashCache(),
             matchingBuildTargetsWithTests);
 
     // Now that we've parsed all the BUCK files for the rules and their tests,

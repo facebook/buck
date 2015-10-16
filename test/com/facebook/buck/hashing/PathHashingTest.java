@@ -20,8 +20,12 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.NullFileHashCache;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -37,31 +41,48 @@ import java.nio.file.Paths;
  * Unit tests for {@link PathHashing}.
  */
 public class PathHashingTest {
+  FileHashCache fileHashCache = new FakeFileHashCache(
+      ImmutableMap.of(
+          Paths.get("foo/foo.txt"), HashCode.fromString("abcdef"),
+          Paths.get("foo/bar.txt"), HashCode.fromString("abcdef"),
+          Paths.get("foo/baz.txt"), HashCode.fromString("abcdef")));
+
+  FileHashCache modifiedFileHashCache = new FakeFileHashCache(
+      ImmutableMap.of(
+          Paths.get("foo/foo.txt"), HashCode.fromString("123456"),
+          Paths.get("foo/bar.txt"), HashCode.fromString("123456"),
+          Paths.get("foo/baz.txt"), HashCode.fromString("123456")));
+
   @Test
   public void emptyPathHasExpectedHash() throws IOException {
     Hasher hasher = Hashing.sha1().newHasher();
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     FakeProjectFilesystem emptyFilesystem = new FakeProjectFilesystem(clock);
-    PathHashing.hashPaths(hasher, emptyFilesystem, ImmutableSet.<Path>of());
+    PathHashing.hashPaths(
+        hasher,
+        new NullFileHashCache(),
+        emptyFilesystem,
+        ImmutableSet.<Path>of());
+    HashCode emptyStringHashCode = Hashing.sha1().newHasher().hash();
     assertThat(
         hasher.hash(),
-        equalTo(HashCode.fromString("da39a3ee5e6b4b0d3255bfef95601890afd80709")));
+        equalTo(emptyStringHashCode));
   }
 
   @Test
   public void sameContentsSameNameHaveSameHash() throws IOException {
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     FakeProjectFilesystem filesystem1 = new FakeProjectFilesystem(clock);
-    filesystem1.writeContentsToPath("Hello world", Paths.get("foo/bar.txt"));
+    filesystem1.touch(Paths.get("foo/bar.txt"));
 
     FakeProjectFilesystem filesystem2 = new FakeProjectFilesystem(clock);
-    filesystem2.writeContentsToPath("Hello world", Paths.get("foo/bar.txt"));
+    filesystem2.touch(Paths.get("foo/bar.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher1, filesystem1, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(hasher1, fileHashCache, filesystem1, ImmutableSet.of(Paths.get("foo")));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher2, filesystem2, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(hasher2, fileHashCache, filesystem2, ImmutableSet.of(Paths.get("foo")));
 
     assertThat(
         hasher1.hash(),
@@ -72,16 +93,16 @@ public class PathHashingTest {
   public void sameContentsDifferentNameHaveDifferentHashes() throws IOException {
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     FakeProjectFilesystem filesystem1 = new FakeProjectFilesystem(clock);
-    filesystem1.writeContentsToPath("Hello world", Paths.get("foo/bar.txt"));
+    filesystem1.touch(Paths.get("foo/bar.txt"));
 
     FakeProjectFilesystem filesystem2 = new FakeProjectFilesystem(clock);
-    filesystem2.writeContentsToPath("Hello world", Paths.get("foo/baz.txt"));
+    filesystem2.touch(Paths.get("foo/baz.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher1, filesystem1, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(hasher1, fileHashCache, filesystem1, ImmutableSet.of(Paths.get("foo")));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher2, filesystem2, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(hasher2, fileHashCache, filesystem2, ImmutableSet.of(Paths.get("foo")));
 
     assertThat(
         hasher1.hash(),
@@ -92,16 +113,24 @@ public class PathHashingTest {
   public void sameNameDifferentContentsHaveDifferentHashes() throws IOException {
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     FakeProjectFilesystem filesystem1 = new FakeProjectFilesystem(clock);
-    filesystem1.writeContentsToPath("Hello world", Paths.get("foo/bar.txt"));
+    filesystem1.touch(Paths.get("foo/bar.txt"));
 
     FakeProjectFilesystem filesystem2 = new FakeProjectFilesystem(clock);
-    filesystem2.writeContentsToPath("Goodbye world", Paths.get("foo/bar.txt"));
+    filesystem2.touch(Paths.get("foo/bar.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher1, filesystem1, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(
+        hasher1,
+        fileHashCache,
+        filesystem1,
+        ImmutableSet.of(Paths.get("foo")));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher2, filesystem2, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(
+        hasher2,
+        modifiedFileHashCache,
+        filesystem2,
+        ImmutableSet.of(Paths.get("foo")));
 
     assertThat(
         hasher1.hash(),
@@ -122,10 +151,10 @@ public class PathHashingTest {
     filesystem2.touch(Paths.get("foo/foo.txt"));
 
     Hasher hasher1 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher1, filesystem1, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(hasher1, fileHashCache, filesystem1, ImmutableSet.of(Paths.get("foo")));
 
     Hasher hasher2 = Hashing.sha1().newHasher();
-    PathHashing.hashPaths(hasher2, filesystem2, ImmutableSet.of(Paths.get("foo")));
+    PathHashing.hashPaths(hasher2, fileHashCache, filesystem2, ImmutableSet.of(Paths.get("foo")));
 
     assertThat(
         hasher1.hash(),

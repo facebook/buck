@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,22 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.util.cache;
+package com.facebook.buck.hashing;
 
-import com.facebook.buck.hashing.FileHashLoader;
+import com.google.common.hash.HashCode;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
-/**
- * A cache which maps Paths to cached hashes of their contents,
- * based on a simplified subset of the java.util.Map&lt;Path, HashCode&gt; interface.
- */
-public interface FileHashCache extends FileHashLoader {
+public interface FileHashLoader {
 
-  boolean willGet(Path path);
-
-  void invalidate(Path path);
-
-  void invalidateAll();
+  HashCode get(Path path) throws IOException;
 
 }
