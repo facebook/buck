@@ -286,7 +286,8 @@ public class NewNativeTargetProjectMutatorTest {
         .createBuilder(BuildTargetFactory.newInstance("//foo:script"))
         .setCmd("echo \"hello world!\"")
         .build();
-    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(postbuildNode));
+    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
+        ImmutableList.<TargetNode<?>>of(postbuildNode));
 
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
@@ -335,7 +336,8 @@ public class NewNativeTargetProjectMutatorTest {
         .setCmd("echo \"hello world!\"")
         .build();
 
-    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(prebuildNode));
+    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
+        ImmutableList.<TargetNode<?>>of(prebuildNode));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
 
@@ -375,7 +377,8 @@ public class NewNativeTargetProjectMutatorTest {
             .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))
             .build();
 
-    mutator.setPostBuildRunScriptPhases(ImmutableList.<TargetNode<?>>of(reactNativeNode));
+    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
+        ImmutableList.<TargetNode<?>>of(reactNativeNode));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
 

@@ -856,11 +856,11 @@ public class ProjectGenerator {
         preScriptPhases,
         postScriptPhases,
         skipRNBundle);
-    mutator.setPreBuildRunScriptPhases(preScriptPhases.build());
+    mutator.setPreBuildRunScriptPhasesFromTargetNodes(preScriptPhases.build());
     if (copyFilesPhases.isPresent()) {
       mutator.setCopyFilesPhases(copyFilesPhases.get());
     }
-    mutator.setPostBuildRunScriptPhases(postScriptPhases.build());
+    mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
     mutator.skipReactNativeBundle(skipRNBundle);
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;

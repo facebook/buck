@@ -108,9 +108,9 @@ public class NewNativeTargetProjectMutator {
   private ImmutableSet<AppleResourceDescription.Arg> directResources = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs = ImmutableSet.of();
-  private Iterable<TargetNode<?>> preBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<PBXShellScriptBuildPhase> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
-  private Iterable<TargetNode<?>> postBuildRunScriptPhases = ImmutableList.of();
+  private Iterable<PBXShellScriptBuildPhase> postBuildRunScriptPhases = ImmutableList.of();
   private boolean skipRNBundle = false;
 
   public NewNativeTargetProjectMutator(
@@ -203,7 +203,14 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setPreBuildRunScriptPhases(Iterable<TargetNode<?>> phases) {
+  public NewNativeTargetProjectMutator setPreBuildRunScriptPhasesFromTargetNodes(
+      Iterable<TargetNode<?>> nodes) {
+    preBuildRunScriptPhases = createScriptsForTargetNodes(nodes);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setPreBuildRunScriptPhases(
+      Iterable<PBXShellScriptBuildPhase> phases) {
     preBuildRunScriptPhases = phases;
     return this;
   }
@@ -213,7 +220,14 @@ public class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(Iterable<TargetNode<?>> phases) {
+  public NewNativeTargetProjectMutator setPostBuildRunScriptPhasesFromTargetNodes(
+      Iterable<TargetNode<?>> nodes) {
+    postBuildRunScriptPhases = createScriptsForTargetNodes(nodes);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setPostBuildRunScriptPhases(
+      Iterable<PBXShellScriptBuildPhase> phases) {
     postBuildRunScriptPhases = phases;
     return this;
   }
@@ -588,12 +602,12 @@ public class NewNativeTargetProjectMutator {
     }
   }
 
-  private void addRunScriptBuildPhases(
-      PBXNativeTarget target,
-      Iterable<TargetNode<?>> nodes) throws NoSuchBuildTargetException{
+  private ImmutableList<PBXShellScriptBuildPhase> createScriptsForTargetNodes(
+      Iterable<TargetNode<?>> nodes) throws IllegalStateException {
+    ImmutableList.Builder<PBXShellScriptBuildPhase> builder =
+      ImmutableList.builder();
     for (TargetNode<?> node : nodes) {
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
-      target.getBuildPhases().add(shellScriptBuildPhase);
       if (XcodePrebuildScriptDescription.TYPE.equals(node.getType()) ||
           XcodePostbuildScriptDescription.TYPE.equals(node.getType())) {
         XcodeScriptDescriptionArg arg = (XcodeScriptDescriptionArg) node.getConstructorArg();
@@ -613,6 +627,16 @@ public class NewNativeTargetProjectMutator {
         // unreachable
         throw new IllegalStateException("Invalid rule type for shell script build phase");
       }
+      builder.add(shellScriptBuildPhase);
+    }
+    return builder.build();
+  }
+
+  private void addRunScriptBuildPhases(
+      PBXNativeTarget target,
+      Iterable<PBXShellScriptBuildPhase> phases) {
+    for (PBXShellScriptBuildPhase phase : phases) {
+      target.getBuildPhases().add(phase);
     }
   }
 
