@@ -37,8 +37,6 @@
 
 {call genrule_common.out_arg /}
 
-{call genrule_common.deps_arg /}
-
 {call buck.visibility_arg /}
 
 {/param} // args
@@ -60,9 +58,6 @@ genrule(
   cmd_exe = 'python.exe $(exe //python/android:basic_to_full) ' \
       '%SRCDIR%\\AndroidManifest.xml > %OUT%',
   out = 'AndroidManifest.xml',
-  deps = [
-    '//python/android:basic_to_full',
-  ]
 )
 </pre>{/literal}
 
