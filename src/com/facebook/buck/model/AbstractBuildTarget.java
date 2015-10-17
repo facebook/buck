@@ -42,11 +42,9 @@ import javax.annotation.Nullable;
 @Value.Immutable
 abstract class AbstractBuildTarget
     implements
-        Comparable<AbstractBuildTarget>,
-        HasUnflavoredBuildTarget,
-        HasBuildTarget {
+    Comparable<AbstractBuildTarget>,
+    HasBuildTarget {
 
-  @Override
   @Value.Parameter
   public abstract UnflavoredBuildTarget getUnflavoredBuildTarget();
 

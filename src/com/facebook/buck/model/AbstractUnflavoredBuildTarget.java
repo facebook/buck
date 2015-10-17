@@ -30,8 +30,7 @@ import javax.annotation.Nullable;
 
 @BuckStyleImmutable
 @Value.Immutable
-abstract class AbstractUnflavoredBuildTarget
-    implements Comparable<AbstractUnflavoredBuildTarget>, HasUnflavoredBuildTarget {
+abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnflavoredBuildTarget> {
 
   public static final String BUILD_TARGET_PREFIX = "//";
 
@@ -147,11 +146,6 @@ abstract class AbstractUnflavoredBuildTarget
   public int compareTo(@Nullable AbstractUnflavoredBuildTarget target) {
     Preconditions.checkNotNull(target);
     return getFullyQualifiedName().compareTo(target.getFullyQualifiedName());
-  }
-
-  @Override
-  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
-    return UnflavoredBuildTarget.copyOf(this);
   }
 
 }
