@@ -164,31 +164,6 @@ public class AndroidResource extends AbstractBuildRule
       @Nullable SourcePath assets,
       ImmutableSortedSet<Path> assetsSrcs,
       @Nullable SourcePath manifestFile,
-      boolean hasWhitelistedStrings) {
-    this(
-        buildRuleParams,
-        resolver,
-        deps,
-        res,
-        resSrcs,
-        rDotJavaPackageArgument,
-        assets,
-        assetsSrcs,
-        manifestFile,
-        hasWhitelistedStrings,
-        Optional.<Supplier<Sha1HashCode>>absent());
-  }
-
-  public AndroidResource(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      final ImmutableSortedSet<BuildRule> deps,
-      @Nullable final SourcePath res,
-      ImmutableSortedSet<Path> resSrcs,
-      @Nullable String rDotJavaPackageArgument,
-      @Nullable SourcePath assets,
-      ImmutableSortedSet<Path> assetsSrcs,
-      @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
       Optional<Supplier<Sha1HashCode>> additionalAbiKey) {
     super(buildRuleParams, resolver);

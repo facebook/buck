@@ -41,6 +41,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -226,7 +227,8 @@ public class AndroidResourceTest {
         /* assets */ null,
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
         /* manifestFile */ null,
-        /* hasWhitelistedStrings */ false);
+        /* hasWhitelistedStrings */ false,
+        Optional.<Supplier<Sha1HashCode>>absent());
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
   }
 
@@ -245,7 +247,8 @@ public class AndroidResourceTest {
         /* manifestFile */ new PathSourcePath(
             projectFilesystem,
             Paths.get("foo/AndroidManifest.xml")),
-        /* hasWhitelistedStrings */ false);
+        /* hasWhitelistedStrings */ false,
+        Optional.<Supplier<Sha1HashCode>>absent());
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     onDiskBuildInfo.putMetadata(AndroidResource.METADATA_KEY_FOR_ABI, Strings.repeat("a", 40));
     onDiskBuildInfo.putMetadata(AndroidResource.METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE, "com.ex.pkg");

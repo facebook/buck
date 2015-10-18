@@ -28,12 +28,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -160,9 +162,9 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(
-                manifest,
-                assembleAssetsDirectories,
-                assembleResourceDirectories)),
+            manifest,
+            assembleAssetsDirectories,
+            assembleResourceDirectories)),
         Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     AndroidResource androidResource = new AndroidResource(
@@ -179,7 +181,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         new BuildTargetSourcePath(assembleAssetsDirectories.getBuildTarget()),
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
         new BuildTargetSourcePath(manifest.getBuildTarget()),
-        /* hasWhitelistedStrings */ false);
+        /* hasWhitelistedStrings */ false,
+        Optional.<Supplier<Sha1HashCode>>absent());
     aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));
 
     /* native_libraries */

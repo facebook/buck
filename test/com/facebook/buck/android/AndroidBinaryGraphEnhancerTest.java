@@ -47,6 +47,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -58,6 +59,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -445,18 +447,19 @@ public class AndroidBinaryGraphEnhancerTest {
 
     AndroidResource resource =
         ruleResolver.addToIndex(
-          new AndroidResource(
-              new FakeBuildRuleParamsBuilder("//:resources").build()
-                  .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
-              pathResolver,
-              ImmutableSortedSet.<BuildRule>of(),
-              new BuildTargetSourcePath(resourcesDep.getBuildTarget()),
-              ImmutableSortedSet.<Path>of(),
-              null,
-              null,
-              ImmutableSortedSet.<Path>of(),
-              new TestSourcePath("manifest"),
-              false));
+            new AndroidResource(
+                new FakeBuildRuleParamsBuilder("//:resources").build()
+                    .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
+                pathResolver,
+                ImmutableSortedSet.<BuildRule>of(),
+                new BuildTargetSourcePath(resourcesDep.getBuildTarget()),
+                ImmutableSortedSet.<Path>of(),
+                null,
+                null,
+                ImmutableSortedSet.<Path>of(),
+                new TestSourcePath("manifest"),
+                false,
+                Optional.<Supplier<Sha1HashCode>>absent()));
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
