@@ -619,7 +619,7 @@ public class DefaultJavaLibraryTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
 
     try {
-      createDefaultJavaLibaryRuleWithAbiKey(
+      createDefaultJavaLibraryRuleWithAbiKey(
           buildTarget,
           // Must have a source file or else its ABI will be AbiWriterProtocol.EMPTY_ABI_KEY.
           /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
@@ -957,7 +957,7 @@ public class DefaultJavaLibraryTest {
     assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
   }
 
-  private static BuildRule createDefaultJavaLibaryRuleWithAbiKey(
+  private static BuildRule createDefaultJavaLibraryRuleWithAbiKey(
       BuildTarget buildTarget,
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
