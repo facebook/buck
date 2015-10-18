@@ -27,11 +27,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -140,25 +138,6 @@ public class DummyRDotJavaTest {
         Optional.<String>absent());
     assertEquals(Paths.get("buck-out/bin/java/com/example/__library_rdotjava_bin__"),
         dummyRDotJava.getRDotJavaBinFolder());
-  }
-
-  @Test
-  public void testInitializeFromDisk() {
-    DummyRDotJava dummyRDotJava = new DummyRDotJava(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule")).build(),
-        new SourcePathResolver(new BuildRuleResolver()),
-        ImmutableSet.<HasAndroidResourceDeps>of(),
-        new TestSourcePath("abi.jar"),
-        ANDROID_JAVAC_OPTIONS,
-        Optional.<String>absent());
-
-    FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
-    String keyHash = Strings.repeat("a", 40);
-    onDiskBuildInfo.putMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, keyHash);
-
-    assertEquals(
-        keyHash,
-        dummyRDotJava.initializeFromDisk(onDiskBuildInfo).rDotTxtSha1.getHash());
   }
 
   private static String makeCleanDirDescription(Path dirname) {

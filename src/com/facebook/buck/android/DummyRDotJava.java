@@ -26,11 +26,8 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -54,7 +51,7 @@ import java.util.Set;
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
 public class DummyRDotJava extends AbstractBuildRule
-    implements AbiRule, HasJavaAbi, InitializableFromDisk<DummyRDotJava.BuildOutput> {
+    implements AbiRule, HasJavaAbi {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final SourcePath abiJar;
@@ -62,7 +59,6 @@ public class DummyRDotJava extends AbstractBuildRule
   private final JavacOptions javacOptions;
   @AddToRuleKey
   private final Optional<String> unionPackage;
-  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public DummyRDotJava(
       BuildRuleParams params,
@@ -77,7 +73,6 @@ public class DummyRDotJava extends AbstractBuildRule
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
     this.abiJar = abiJar;
     this.javacOptions = javacOptions;
-    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
     this.unionPackage = unionPackage;
   }
 
@@ -184,32 +179,8 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Optional<Sha1HashCode> abiKey = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
-    if (!abiKey.isPresent()) {
-      throw new IllegalStateException(String.format(
-          "Should not be initializing %s from disk if ABI key is not written",
-          this));
-    }
-    return new BuildOutput(abiKey.get());
-  }
-
-  @Override
-  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
-    return buildOutputInitializer;
-  }
-
-  @Override
   public Optional<SourcePath> getAbiJar() {
     return Optional.of(abiJar);
   }
 
-  public static class BuildOutput {
-    @VisibleForTesting
-    final Sha1HashCode rDotTxtSha1;
-
-    public BuildOutput(Sha1HashCode rDotTxtSha1) {
-      this.rDotTxtSha1 = rDotTxtSha1;
-    }
-  }
 }
