@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -271,7 +272,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
   }
 
   private ImmutableSet<BuildTarget> getImplicitDepsFromOptions(
-      BuildTarget target,
+      UnflavoredBuildTarget target,
       ImmutableSet<String> options) {
 
     ImmutableSet.Builder<BuildTarget> implicitDeps = ImmutableSet.builder();
@@ -295,9 +296,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     if (cpp2 && options.contains("compatibility")) {
       implicitDeps.add(thriftBuckConfig.getCppDep());
-      BuildTarget cppTarget = BuildTargets.createFlavoredBuildTarget(
-          target.getUnflavoredBuildTarget(),
-          CPP_FLAVOR);
+      BuildTarget cppTarget = BuildTargets.createFlavoredBuildTarget(target, CPP_FLAVOR);
       implicitDeps.add(cppTarget);
     }
 
@@ -313,7 +312,9 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       BuildTarget target,
       ThriftConstructorArg arg) {
     Optional<ImmutableSet<String>> options = cpp2 ? arg.cpp2Options : arg.cppOptions;
-    return getImplicitDepsFromOptions(target, options.or(ImmutableSet.<String>of()));
+    return getImplicitDepsFromOptions(
+        target.getUnflavoredBuildTarget(),
+        options.or(ImmutableSet.<String>of()));
   }
 
   @Override

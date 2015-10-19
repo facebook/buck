@@ -18,9 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 
@@ -42,10 +41,9 @@ public class BuildConfigsTest {
         "  public static final boolean IS_EXOPACKAGE = Boolean.parseBoolean(null);\n" +
         "  public static final int EXOPACKAGE_FLAGS = !Boolean.parseBoolean(null) ? 0 : 0;\n" +
         "}\n";
-    BuildTarget source = BuildTarget
-        .builder(BuildTargetFactory.newInstance("//java/com/example:build_config"))
-        .addFlavors(ImmutableFlavor.of("graph_enhanced_craziness"))
-        .build();
+    UnflavoredBuildTarget source =
+        BuildTargetFactory.newInstance("//java/com/example:build_config")
+            .getUnflavoredBuildTarget();
     String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(source, "com.example.buck");
     assertEquals(
         "Because the 'temporary' BuildConfig.java might be used in a unit test, " +
@@ -81,7 +79,9 @@ public class BuildConfigsTest {
         "  public static final boolean IS_EXOPACKAGE = !Boolean.parseBoolean(null);\n" +
         "  public static final int EXOPACKAGE_FLAGS = !Boolean.parseBoolean(null) ? 0 : 0;\n" +
         "}\n";
-    BuildTarget source = BuildTargetFactory.newInstance("//java/com/example:build_config");
+    UnflavoredBuildTarget source =
+        BuildTargetFactory.newInstance("//java/com/example:build_config")
+            .getUnflavoredBuildTarget();
     String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(
         source,
         "com.example",
@@ -112,10 +112,9 @@ public class BuildConfigsTest {
         "  public static final int EXOPACKAGE_FLAGS = 0;\n" +
         "  public static final boolean IS_EXOPACKAGE = false;\n" +
         "}\n";
-    BuildTarget source = BuildTarget
-        .builder(BuildTargetFactory.newInstance("//java/com/example:build_config"))
-        .addFlavors(ImmutableFlavor.of("graph_enhanced_craziness"))
-        .build();
+    UnflavoredBuildTarget source =
+        BuildTargetFactory.newInstance("//java/com/example:build_config")
+            .getUnflavoredBuildTarget();
     String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(
         source,
         "com.example",

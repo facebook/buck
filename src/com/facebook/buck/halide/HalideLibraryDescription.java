@@ -35,6 +35,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -59,6 +60,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -116,7 +118,7 @@ public class HalideLibraryDescription implements
       deps.addAll(constructorArg.compilerDeps.or(
         ImmutableSortedSet.<BuildTarget>of()));
     } else {
-      deps.add(createHalideCompilerBuildTarget(buildTarget));
+      deps.add(createHalideCompilerBuildTarget(buildTarget.getUnflavoredBuildTarget()));
     }
     return deps.build();
   }
@@ -126,14 +128,14 @@ public class HalideLibraryDescription implements
     return new Arg();
   }
 
-  public static BuildTarget createHalideCompilerBuildTarget(BuildTarget target) {
+  public static BuildTarget createHalideCompilerBuildTarget(UnflavoredBuildTarget target) {
     return BuildTarget
-      .builder(target.getUnflavoredBuildTarget())
+      .builder(target)
       .addFlavors(ImmutableFlavor.of("halide-compiler"))
       .build();
   }
 
-  private final CxxBinary requireHalideCompiler(
+  private CxxBinary requireHalideCompiler(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -144,7 +146,8 @@ public class HalideLibraryDescription implements
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
       Optional<ImmutableList<String>> linkerFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags) {
-    BuildTarget target = createHalideCompilerBuildTarget(params.getBuildTarget());
+    BuildTarget target = createHalideCompilerBuildTarget(
+        params.getBuildTarget().getUnflavoredBuildTarget());
 
     // Check the cache for the halide compiler rule.
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
@@ -289,7 +292,7 @@ public class HalideLibraryDescription implements
     // We implicitly depend on the #halide-compiler version of the rule (via
     // findDepsForTargetFromConstructorArgs) so it should always exist by the
     // time we get here.
-    BuildTarget compilerTarget = createHalideCompilerBuildTarget(target);
+    BuildTarget compilerTarget = createHalideCompilerBuildTarget(target.getUnflavoredBuildTarget());
     Optional<BuildRule> rule = resolver.getRuleOptional(compilerTarget);
     Preconditions.checkState(rule.isPresent());
     CxxBinary halideCompiler = (CxxBinary) rule.get();

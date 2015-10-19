@@ -91,7 +91,9 @@ public class CxxLexYaccIntegrationTest {
     String sourceName = "main.cpp";
     String yaccSourceName = "mainy.yy";
     String yaccSourceFull = "foo/" + yaccSourceName;
-    BuildTarget yaccTarget = CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName);
+    BuildTarget yaccTarget = CxxDescriptionEnhancer.createYaccBuildTarget(
+        target.getUnflavoredBuildTarget(),
+        yaccSourceName);
     BuildTarget yaccPreprocessTarget =
         cxxSourceRuleFactory.createPreprocessBuildTarget(
             yaccSourceName + ".cc",

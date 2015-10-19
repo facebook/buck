@@ -74,7 +74,7 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
     // Add arg and input for static library.
     final Path staticLibraryPath =
         OCamlBuildContext.getOutputPath(
-            staticLibraryTarget,
+            staticLibraryTarget.getUnflavoredBuildTarget(),
             /* isLibrary */ true);
     inputBuilder.addInputs(
         new BuildTargetSourcePath(ocamlLibraryBuild.getBuildTarget()));
@@ -92,7 +92,9 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
 
   @Override
   public Path getIncludeLibDir() {
-    return OCamlBuildContext.getCompileOutputDir(staticLibraryTarget, true);
+    return OCamlBuildContext.getCompileOutputDir(
+        staticLibraryTarget.getUnflavoredBuildTarget(),
+        true);
   }
 
   @Override

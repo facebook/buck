@@ -188,7 +188,8 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
                     .putAll(components.getNativeLibraries())
                     .build()));
     } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(params.getBuildTarget());
+      throw e.getHumanReadableExceptionForBuildTarget(
+          params.getBuildTarget().getUnflavoredBuildTarget());
     }
 
     BuildTarget scriptTarget =

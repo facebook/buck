@@ -68,7 +68,8 @@ public class AndroidBuildConfigTest {
     Step generateBuildConfigStep = steps.get(1);
     GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
         new FakeProjectFilesystem(),
-        /* source */ BuildTargetFactory.newInstance("//java/com/example:build_config"),
+        BuildTargetFactory.newInstance("//java/com/example:build_config")
+            .getUnflavoredBuildTarget(),
         /* javaPackage */ "com.example",
         /* useConstantExpressions */ false,
         /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),

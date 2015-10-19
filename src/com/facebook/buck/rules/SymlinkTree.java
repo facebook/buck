@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -133,11 +133,12 @@ public class SymlinkTree
       super(message);
     }
 
-    public HumanReadableException getHumanReadableExceptionForBuildTarget(BuildTarget buildTarget) {
+    public HumanReadableException getHumanReadableExceptionForBuildTarget(
+        UnflavoredBuildTarget buildTarget) {
       return new HumanReadableException(
           this,
           "Target '%s' has invalid symlink tree entry. %s",
-          buildTarget.getUnflavoredBuildTarget(),
+          buildTarget,
           getMessage());
     }
   }

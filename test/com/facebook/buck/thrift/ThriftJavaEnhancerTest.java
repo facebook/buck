@@ -177,7 +177,7 @@ public class ThriftJavaEnhancerTest {
 
     // Verify that the first thrift source created a source zip rule with correct deps.
     BuildRule srcZip1 = resolver.getRule(
-        ENHANCER.getSourceZipBuildTarget(TARGET, "test1.thrift"));
+        ENHANCER.getSourceZipBuildTarget(TARGET.getUnflavoredBuildTarget(), "test1.thrift"));
     assertNotNull(srcZip1);
     assertTrue(srcZip1 instanceof SrcZip);
     assertEquals(
@@ -186,7 +186,7 @@ public class ThriftJavaEnhancerTest {
 
     // Verify that the second thrift source created a source zip rule with correct deps.
     BuildRule srcZip2 = resolver.getRule(
-        ENHANCER.getSourceZipBuildTarget(TARGET, "test2.thrift"));
+        ENHANCER.getSourceZipBuildTarget(TARGET.getUnflavoredBuildTarget(), "test2.thrift"));
     assertNotNull(srcZip2);
     assertTrue(srcZip2 instanceof SrcZip);
     assertEquals(

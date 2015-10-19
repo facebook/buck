@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 
@@ -58,8 +58,9 @@ public class BuildConfigs {
   /**
    * Returns a list of fields (with values) that every {@code BuildConfig.java} should
    * declare. The default value of each constant may be overridden by the {@code userFields} passed
-   * to {@link #generateBuildConfigDotJava(BuildTarget, String, boolean, BuildConfigFields)} when
-   * generating a {@code BuildConfig.java}.
+   * to
+   * {@link #generateBuildConfigDotJava(UnflavoredBuildTarget, String, boolean, BuildConfigFields)}
+   * when generating a {@code BuildConfig.java}.
    */
   public static BuildConfigFields getDefaultBuildConfigFields() {
     return DEFAULT_BUILD_CONFIG_CONSTANTS;
@@ -69,7 +70,9 @@ public class BuildConfigs {
    * Generates the source code for an Android {@code BuildConfig.java} file with the default set of
    * fields specified by {@link #getDefaultBuildConfigFields()}.
    */
-  public static String generateBuildConfigDotJava(BuildTarget source, String javaPackage) {
+  public static String generateBuildConfigDotJava(
+      UnflavoredBuildTarget source,
+      String javaPackage) {
     return generateBuildConfigDotJava(
         source,
         javaPackage,
@@ -103,7 +106,7 @@ public class BuildConfigs {
    *     {@code BuildConfig} class.
    */
   public static String generateBuildConfigDotJava(
-      BuildTarget source,
+      UnflavoredBuildTarget source,
       String javaPackage,
       boolean useConstantExpressions,
       BuildConfigFields userFields) {

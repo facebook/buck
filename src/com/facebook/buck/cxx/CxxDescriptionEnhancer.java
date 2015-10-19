@@ -23,6 +23,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -422,9 +423,9 @@ public class CxxDescriptionEnhancer {
   }
 
   @VisibleForTesting
-  protected static BuildTarget createLexBuildTarget(BuildTarget target, String name) {
+  protected static BuildTarget createLexBuildTarget(UnflavoredBuildTarget target, String name) {
     return BuildTarget
-        .builder(target.getUnflavoredBuildTarget())
+        .builder(target)
         .addFlavors(
             ImmutableFlavor.of(
                 String.format(
@@ -434,9 +435,9 @@ public class CxxDescriptionEnhancer {
   }
 
   @VisibleForTesting
-  protected static BuildTarget createYaccBuildTarget(BuildTarget target, String name) {
+  protected static BuildTarget createYaccBuildTarget(UnflavoredBuildTarget target, String name) {
     return BuildTarget
-        .builder(target.getUnflavoredBuildTarget())
+        .builder(target)
         .addFlavors(
             ImmutableFlavor.of(
                 String.format(
@@ -449,7 +450,7 @@ public class CxxDescriptionEnhancer {
    * @return the output path prefix to use for yacc generated files.
    */
   @VisibleForTesting
-  protected static Path getYaccOutputPrefix(BuildTarget target, String name) {
+  protected static Path getYaccOutputPrefix(UnflavoredBuildTarget target, String name) {
     BuildTarget flavoredTarget = createYaccBuildTarget(target, name);
     return BuildTargets.getGenPath(flavoredTarget, "%s/" + name);
   }
@@ -458,7 +459,7 @@ public class CxxDescriptionEnhancer {
    * @return the output path to use for the lex generated C/C++ source.
    */
   @VisibleForTesting
-  protected static Path getLexSourceOutputPath(BuildTarget target, String name) {
+  protected static Path getLexSourceOutputPath(UnflavoredBuildTarget target, String name) {
     BuildTarget flavoredTarget = createLexBuildTarget(target, name);
     return BuildTargets.getGenPath(flavoredTarget, "%s/" + name + ".cc");
   }
@@ -467,7 +468,7 @@ public class CxxDescriptionEnhancer {
    * @return the output path to use for the lex generated C/C++ header.
    */
   @VisibleForTesting
-  protected static Path getLexHeaderOutputPath(BuildTarget target, String name) {
+  protected static Path getLexHeaderOutputPath(UnflavoredBuildTarget target, String name) {
     BuildTarget flavoredTarget = createLexBuildTarget(target, name);
     return BuildTargets.getGenPath(flavoredTarget, "%s/" + name + ".h");
   }
@@ -507,13 +508,15 @@ public class CxxDescriptionEnhancer {
 
     // Loop over all lex sources, generating build rule for each one and adding the sources
     // and headers it generates to our bookkeeping maps.
+    UnflavoredBuildTarget unflavoredBuildTarget =
+        params.getBuildTarget().getUnflavoredBuildTarget();
     for (ImmutableMap.Entry<String, SourcePath> ent : lexSrcs.entrySet()) {
       final String name = ent.getKey();
       final SourcePath source = ent.getValue();
 
-      BuildTarget target = createLexBuildTarget(params.getBuildTarget(), name);
-      Path outputSource = getLexSourceOutputPath(target, name);
-      Path outputHeader = getLexHeaderOutputPath(target, name);
+      BuildTarget target = createLexBuildTarget(unflavoredBuildTarget, name);
+      Path outputSource = getLexSourceOutputPath(unflavoredBuildTarget, name);
+      Path outputHeader = getLexHeaderOutputPath(unflavoredBuildTarget, name);
 
       // Create the build rule to run lex on this source and add it to the resolver.
       Lex lex = new Lex(
@@ -552,8 +555,10 @@ public class CxxDescriptionEnhancer {
       final String name = ent.getKey();
       final SourcePath source = ent.getValue();
 
-      BuildTarget target = createYaccBuildTarget(params.getBuildTarget(), name);
-      Path outputPrefix = getYaccOutputPrefix(target, Files.getNameWithoutExtension(name));
+      BuildTarget target = createYaccBuildTarget(unflavoredBuildTarget, name);
+      Path outputPrefix = getYaccOutputPrefix(
+          unflavoredBuildTarget,
+          Files.getNameWithoutExtension(name));
 
       // Create the build rule to run yacc on this source and add it to the resolver.
       Yacc yacc = new Yacc(

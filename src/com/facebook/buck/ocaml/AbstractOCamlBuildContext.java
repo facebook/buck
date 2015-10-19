@@ -19,7 +19,6 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -50,7 +49,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
 
   static final Path DEFAULT_OCAML_INTEROP_INCLUDE_DIR = Paths.get("/usr/local/lib/ocaml");
 
-  public abstract BuildTarget getBuildTarget();
+  public abstract UnflavoredBuildTarget getBuildTarget();
   public abstract boolean isLibrary();
   public abstract List<String> getFlags();
   public abstract List<Path> getInput();
@@ -121,19 +120,18 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
     return getOutputPath(getBuildTarget(), isLibrary());
   }
 
-  public static Path getOutputPath(BuildTarget target, boolean isLibrary) {
-    UnflavoredBuildTarget plainTarget = target.getUnflavoredBuildTarget();
+  public static Path getOutputPath(UnflavoredBuildTarget target, boolean isLibrary) {
     if (isLibrary) {
-      return getArchiveOutputPath(plainTarget);
+      return getArchiveOutputPath(target);
     } else {
       return BuildTargets.getScratchPath(
-          plainTarget,
-          "%s/" + plainTarget.getShortName() + ".opt");
+          target,
+          "%s/" + target.getShortName() + ".opt");
     }
   }
 
   public Path getBytecodeOutput() {
-    UnflavoredBuildTarget plainTarget = getBuildTarget().getUnflavoredBuildTarget();
+    UnflavoredBuildTarget plainTarget = getBuildTarget();
     if (isLibrary()) {
       return getArchiveBytecodeOutputPath(plainTarget);
     } else {
@@ -151,7 +149,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
     return getCompileOutputDir(getBuildTarget(), isLibrary());
   }
 
-  public static Path getCompileOutputDir(BuildTarget buildTarget, boolean isLibrary) {
+  public static Path getCompileOutputDir(UnflavoredBuildTarget buildTarget, boolean isLibrary) {
     return getOutputPath(buildTarget, isLibrary).getParent().resolve(
         OCAML_COMPILED_DIR);
   }

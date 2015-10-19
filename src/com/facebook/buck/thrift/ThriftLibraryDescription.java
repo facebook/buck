@@ -303,7 +303,7 @@ public class ThriftLibraryDescription
             includeRoot,
             includes);
       } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-        throw e.getHumanReadableExceptionForBuildTarget(target);
+        throw e.getHumanReadableExceptionForBuildTarget(target.getUnflavoredBuildTarget());
       }
       resolver.addToIndex(symlinkTree);
 

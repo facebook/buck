@@ -162,7 +162,7 @@ public class CxxPreprocessables {
             links);
       }
     } catch (SymlinkTree.InvalidSymlinkTreeException e) {
-      throw e.getHumanReadableExceptionForBuildTarget(target);
+      throw e.getHumanReadableExceptionForBuildTarget(target.getUnflavoredBuildTarget());
     }
   }
 

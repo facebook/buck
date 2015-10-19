@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -191,7 +192,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     @Override
     public BuildRule getRule(BuildTarget target) {
       try {
-        BuildRuleResolver toUse = getResolver(target).get();
+        BuildRuleResolver toUse = getResolver(target.getUnflavoredBuildTarget()).get();
         return toUse.getRule(target.withoutCell());
       } catch (IllegalStateException e) {
         LOG.warn(
@@ -216,7 +217,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
 
     @Override
     public Optional<BuildRule> getRuleOptional(BuildTarget target) {
-      Optional<BuildRuleResolver> toUse = getResolver(target);
+      Optional<BuildRuleResolver> toUse = getResolver(target.getUnflavoredBuildTarget());
 
       if (!toUse.isPresent()) {
         return Optional.absent();
@@ -228,7 +229,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     @Override
     public <T extends BuildRule> Optional<T> getRuleOptionalWithType(
         BuildTarget target, Class<T> cls) {
-      Optional<BuildRuleResolver> toUse = getResolver(target);
+      Optional<BuildRuleResolver> toUse = getResolver(target.getUnflavoredBuildTarget());
 
       if (toUse.isPresent()) {
         return toUse.get().getRuleOptionalWithType(target.withoutCell(), cls);
@@ -236,7 +237,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
       return Optional.absent();
     }
 
-    private Optional<BuildRuleResolver> getResolver(BuildTarget target) {
+    private Optional<BuildRuleResolver> getResolver(UnflavoredBuildTarget target) {
       // Handle the case where there's an actual honest-to-goodness cell name given. Avoid using the
       // normal mechanism to ensure that only rules visible from a cell are requested.
       if (target.getCell().isPresent()) {
@@ -248,7 +249,7 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
       // cell, so scan the available roots to figure out if we can find the right resolver to use.
       ProjectFilesystem filesystem = null;
       for (ProjectFilesystem pfs : ruleResolvers.asMap().keySet()) {
-        if (pfs.getRootPath().equals(target.getUnflavoredBuildTarget().getCellPath())) {
+        if (pfs.getRootPath().equals(target.getCellPath())) {
           filesystem = pfs;
           break;
         }
