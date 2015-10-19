@@ -16,10 +16,8 @@
 
 package com.facebook.buck.dalvik;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.classes.FileLike;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
@@ -27,6 +25,7 @@ import com.google.common.io.ByteStreams;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -43,7 +42,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   private final ZipOutputStream outStream;
   private final Set<String> entryNames = Sets.newHashSet();
   private final long linearAllocLimit;
-  private final Path reportFile;
+  private final Writer reportFileWriter;
   private final DalvikStatsCache dalvikStatsCache;
 
   private final Set<DalvikStatsTool.MethodReference> currentMethodReferences = Sets.newHashSet();
@@ -58,7 +57,8 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
     this.outStream =
         new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outputFile)));
     this.linearAllocLimit = linearAllocLimit;
-    this.reportFile = reportDir.resolve(outputFile.getFileName().toString() + ".txt");
+    Path reportFile = reportDir.resolve(outputFile.getFileName().toString() + ".txt");
+    this.reportFileWriter = Files.newBufferedWriter(reportFile, Charsets.UTF_8);
     this.dalvikStatsCache = dalvikStatsCache;
   }
 
@@ -106,12 +106,13 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
       String report = String.format(
           "%d %d %s\n",
           stats.estimatedLinearAllocSize, stats.methodReferences.size(), name);
-      MorePaths.append(reportFile, report, UTF_8);
+      reportFileWriter.append(report);
     }
   }
 
   @Override
   public void close() throws IOException {
     outStream.close();
+    reportFileWriter.close();
   }
 }
