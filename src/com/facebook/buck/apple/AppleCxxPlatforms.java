@@ -122,7 +122,7 @@ public class AppleCxxPlatforms {
     ImmutableList<String> asflags = cflagsBuilder.build();
 
     ImmutableList<String> ldflags =
-        ImmutableList.copyOf(Linkers.iXlinker("-sdk_version", targetSdk.getVersion(), "-ObjC"));
+        ImmutableList.copyOf(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
 
     ImmutableList.Builder<String> versionsBuilder = ImmutableList.builder();
     versionsBuilder.add(targetSdk.getVersion());
