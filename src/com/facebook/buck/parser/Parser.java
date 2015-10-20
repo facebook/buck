@@ -417,7 +417,7 @@ public class Parser {
    *
    * @return the target node associated with the given build target
    */
-  public TargetNode<?> getOrLoadTargetNode(
+  public TargetNode<?> getTargetNode(
       BuildTarget buildTarget,
       BuckEventBus eventBus,
       Console console,
@@ -453,7 +453,7 @@ public class Parser {
    *
    * @return a list of the target nodes associated with the given build file.
    */
-  public ImmutableList<TargetNode<?>> getOrLoadTargetNodes(
+  public ImmutableList<TargetNode<?>> getAllRawTargetNodes(
       Path buildFilePath,
       ParserConfig parserConfig,
       BuckEventBus eventBus,
@@ -461,7 +461,7 @@ public class Parser {
       ImmutableMap<String, String> environment)
       throws InterruptedException, BuildFileParseException, BuildTargetException, IOException {
     ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
-    for (BuildTarget target : getOrLoadBuildTargets(
+    for (BuildTarget target : getAllBuildTargets(
         buildFilePath,
         parserConfig,
         eventBus,
@@ -478,7 +478,7 @@ public class Parser {
     return state.get(buildTarget);
   }
 
-  public ImmutableList<BuildTarget> getOrLoadBuildTargets(
+  public ImmutableList<BuildTarget> getAllBuildTargets(
       Path buildFilePath,
       ParserConfig parserConfig,
       BuckEventBus eventBus,
@@ -524,7 +524,7 @@ public class Parser {
   }
 
   @Nullable
-  public SortedMap<String, Object> getOrLoadTargetNodeRules(
+  public SortedMap<String, Object> getRawTargetNode(
       TargetNode<?> targetNode,
       ParserConfig parserConfig,
       BuckEventBus eventBus,

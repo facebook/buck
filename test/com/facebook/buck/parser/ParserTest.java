@@ -1790,7 +1790,7 @@ public class ParserTest extends EasyMockSupport {
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.
-    TargetNode<?> targetNode = parser.getOrLoadTargetNode(
+    TargetNode<?> targetNode = parser.getTargetNode(
         fooLib1Target,
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
@@ -1799,7 +1799,7 @@ public class ParserTest extends EasyMockSupport {
 
     // Now, try to load the entire build file and get all TargetNodes.
     BuckConfig config = FakeBuckConfig.builder().build();
-    ImmutableList<TargetNode<?>> targetNodes = parser.getOrLoadTargetNodes(
+    ImmutableList<TargetNode<?>> targetNodes = parser.getAllRawTargetNodes(
         MorePaths.relativize(tempDir.getRoot(), testFooBuckFile),
         new ParserConfig(config),
         BuckEventBusFactory.newInstance(),
@@ -1832,7 +1832,7 @@ public class ParserTest extends EasyMockSupport {
         "java_library(name = 'lib')\n".getBytes(UTF_8));
     BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
 
-    TargetNode<?> targetNode = parser.getOrLoadTargetNode(
+    TargetNode<?> targetNode = parser.getTargetNode(
         fooLibTarget,
         BuckEventBusFactory.newInstance(),
         new TestConsole(),
@@ -1840,7 +1840,7 @@ public class ParserTest extends EasyMockSupport {
     assertThat(targetNode.getBuildTarget(), Matchers.equalTo(fooLibTarget));
 
     BuckConfig config = FakeBuckConfig.builder().build();
-    SortedMap<String, Object> rules = parser.getOrLoadTargetNodeRules(
+    SortedMap<String, Object> rules = parser.getRawTargetNode(
         targetNode,
         new ParserConfig(config),
         BuckEventBusFactory.newInstance(),

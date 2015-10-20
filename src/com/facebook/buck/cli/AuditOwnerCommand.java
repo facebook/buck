@@ -197,7 +197,7 @@ public class AuditOwnerCommand extends AbstractCommand {
         try {
           targetNodes.put(
               buckFile,
-              params.getParser().getOrLoadTargetNodes(
+              params.getParser().getAllRawTargetNodes(
                   buckFile,
                   parserConfig,
                   params.getBuckEventBus(),

@@ -126,7 +126,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   TargetNode<?> getNode(QueryTarget target) throws QueryException, InterruptedException {
     Preconditions.checkState(target instanceof QueryBuildTarget);
     try {
-      return params.getParser().getOrLoadTargetNode(
+      return params.getParser().getTargetNode(
           ((QueryBuildTarget) target).getBuildTarget(),
           params.getBuckEventBus(),
           params.getConsole(),

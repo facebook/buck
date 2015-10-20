@@ -473,7 +473,7 @@ public class TargetsCommand extends AbstractCommand {
 
       SortedMap<String, Object> sortedTargetRule = null;
       try {
-        sortedTargetRule = params.getParser().getOrLoadTargetNodeRules(
+        sortedTargetRule = params.getParser().getRawTargetNode(
             targetNode,
             parserConfig,
             params.getBuckEventBus(),
@@ -737,7 +737,7 @@ public class TargetsCommand extends AbstractCommand {
     ImmutableList<BuildTarget> targetsInFile;
     try {
       ParserConfig config = new ParserConfig(params.getBuckConfig());
-      targetsInFile = parser.getOrLoadBuildTargets(
+      targetsInFile = parser.getAllBuildTargets(
           buildTarget.getBasePath().resolve(config.getBuildFileName()),
           config,
           params.getBuckEventBus(),
