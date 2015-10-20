@@ -57,26 +57,6 @@ public class BuildTargets {
   }
 
   /**
-   * Return a path to a file in the buck-out/bin/ directory. {@code format} will be prepended with
-   * the {@link com.facebook.buck.util.BuckConstant#SCRATCH_DIR} and the target base path, then
-   * formatted with the target short name.
-   *
-   * @param target The {@link UnflavoredBuildTarget} to scope this path to.
-   * @param format {@link String#format} string for the path name.  It should contain one "%s",
-   *     which will be filled in with the rule's short name.  It should not start with a slash.
-   * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of
-   * {@code target}.
-   */
-  public static Path getScratchPath(UnflavoredBuildTarget target, String format) {
-    return Paths.get(
-        String.format(
-            "%s/%s" + format,
-            BuckConstant.SCRATCH_DIR,
-            target.getBasePathWithSlash(),
-            target.getShortName()));
-  }
-
-  /**
    * Return a path to a file in the buck-out/gen/ directory. {@code format} will be prepended with
    * the {@link com.facebook.buck.util.BuckConstant#GEN_DIR} and the target base path, then
    * formatted with the target short name.
@@ -92,24 +72,6 @@ public class BuildTargets {
         BuckConstant.GEN_DIR,
         target.getBasePathWithSlash(),
         target.getShortNameAndFlavorPostfix()));
-  }
-
-  /**
-   * Return a path to a file in the buck-out/gen/ directory. {@code format} will be prepended with
-   * the {@link com.facebook.buck.util.BuckConstant#GEN_DIR} and the target base path, then
-   * formatted with the target short name.
-   *
-   * @param target The {@link UnflavoredBuildTarget} to scope this path to.
-   * @param format {@link String#format} string for the path name.  It should contain one "%s",
-   *     which will be filled in with the rule's short name.  It should not start with a slash.
-   * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of
-   * {@code target}.
-   */
-  public static Path getGenPath(UnflavoredBuildTarget target, String format) {
-    return Paths.get(String.format("%s/%s" + format,
-            BuckConstant.GEN_DIR,
-            target.getBasePathWithSlash(),
-            target.getShortName()));
   }
 
   /**

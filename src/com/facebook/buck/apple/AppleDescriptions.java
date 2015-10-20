@@ -69,7 +69,7 @@ public class AppleDescriptions {
       TargetNode<? extends CxxLibraryDescription.Arg> targetNode,
       HeaderVisibility headerVisibility) {
     return BuildTargets.getGenPath(
-        targetNode.getBuildTarget().getUnflavoredBuildTarget(),
+        BuildTarget.of(targetNode.getBuildTarget().getUnflavoredBuildTarget()),
         "%s" + AppleHeaderVisibilities.getHeaderSymlinkTreeSuffix(headerVisibility));
   }
 

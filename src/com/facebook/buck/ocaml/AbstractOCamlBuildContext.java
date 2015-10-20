@@ -19,6 +19,7 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -106,13 +107,13 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
 
   private static Path getArchiveOutputPath(UnflavoredBuildTarget target) {
     return BuildTargets.getGenPath(
-        target,
+        BuildTarget.of(target),
         "%s/lib" + target.getShortName() + OCamlCompilables.OCAML_CMXA);
   }
 
   private static Path getArchiveBytecodeOutputPath(UnflavoredBuildTarget target) {
     return BuildTargets.getGenPath(
-        target,
+        BuildTarget.of(target),
         "%s/lib" + target.getShortName() + OCamlCompilables.OCAML_CMA);
   }
 
@@ -125,7 +126,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
       return getArchiveOutputPath(target);
     } else {
       return BuildTargets.getScratchPath(
-          target,
+          BuildTarget.of(target),
           "%s/" + target.getShortName() + ".opt");
     }
   }
@@ -136,7 +137,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
       return getArchiveBytecodeOutputPath(plainTarget);
     } else {
       return BuildTargets.getScratchPath(
-          plainTarget,
+          BuildTarget.of(plainTarget),
           "%s/" + plainTarget.getShortName());
     }
   }
