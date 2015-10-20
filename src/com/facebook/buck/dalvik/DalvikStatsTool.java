@@ -116,12 +116,66 @@ public class DalvikStatsTool {
     }
   }
 
+  public static class FieldReference {
+
+    public final String className;
+    public final String fieldName;
+    public final String fieldDesc;
+
+
+    public FieldReference(String className, String fieldName, String fieldDesc) {
+      this.className = className;
+      this.fieldName = fieldName;
+      this.fieldDesc = fieldDesc;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof FieldReference)) {
+        return false;
+      }
+
+      FieldReference that = (FieldReference) o;
+
+      if (className != null ? !className.equals(that.className) : that.className != null) {
+        return false;
+      }
+      if (fieldDesc != null ? !fieldDesc.equals(that.fieldDesc) : that.fieldDesc != null) {
+        return false;
+      }
+      if (fieldName != null ? !fieldName.equals(that.fieldName) : that.fieldName != null) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = className != null ? className.hashCode() : 0;
+      result = 31 * result + (fieldName != null ? fieldName.hashCode() : 0);
+      result = 31 * result + (fieldDesc != null ? fieldDesc.hashCode() : 0);
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      return className + "." + fieldName + ":" + fieldDesc;
+    }
+  }
+
   /**
    * Stats about a java class.
    */
   public static class Stats {
 
-    public static final Stats ZERO = new Stats(0, ImmutableSet.<MethodReference>of());
+    public static final Stats ZERO = new Stats(
+        0,
+        ImmutableSet.<MethodReference>of(),
+        ImmutableSet.<FieldReference>of());
 
     /** Estimated bytes the class will contribute to Dalvik linear alloc. */
     public final int estimatedLinearAllocSize;
@@ -129,9 +183,16 @@ public class DalvikStatsTool {
     /** Methods referenced by the class. */
     public final ImmutableSet<MethodReference> methodReferences;
 
-    public Stats(int estimatedLinearAllocSize, Set<MethodReference> methodReferences) {
+    /** Fields referenced by the class. */
+    public final ImmutableSet<FieldReference> fieldReferences;
+
+    public Stats(
+        int estimatedLinearAllocSize,
+        Set<MethodReference> methodReferences,
+        Set<FieldReference> fieldReferences) {
       this.estimatedLinearAllocSize = estimatedLinearAllocSize;
       this.methodReferences = ImmutableSet.copyOf(methodReferences);
+      this.fieldReferences = ImmutableSet.copyOf(fieldReferences);
     }
   }
 
@@ -180,7 +241,8 @@ public class DalvikStatsTool {
     classReader.accept(statsVisitor, ClassReader.SKIP_FRAMES);
     return new Stats(
         statsVisitor.footprint,
-        statsVisitor.methodReferenceBuilder.build());
+        statsVisitor.methodReferenceBuilder.build(),
+        statsVisitor.fieldReferenceBuilder.build());
   }
 
   private static class StatsClassVisitor extends ClassVisitor {
@@ -190,6 +252,7 @@ public class DalvikStatsTool {
     private int footprint;
     private boolean isInterface;
     private ImmutableSet.Builder<MethodReference> methodReferenceBuilder;
+    private ImmutableSet.Builder<FieldReference> fieldReferenceBuilder;
 
     @Nullable
     private String className;
@@ -198,6 +261,7 @@ public class DalvikStatsTool {
       super(Opcodes.ASM5);
       this.penalties = ImmutableMap.copyOf(penalties);
       this.methodReferenceBuilder = ImmutableSet.builder();
+      this.fieldReferenceBuilder = ImmutableSet.builder();
     }
 
     @Override
@@ -243,6 +307,8 @@ public class DalvikStatsTool {
         footprint += 16;
       }
 
+      fieldReferenceBuilder.add(new FieldReference(className, name, desc));
+
       return null;
     }
 
@@ -277,6 +343,11 @@ public class DalvikStatsTool {
     }
 
     private class StatsMethodVisitor extends MethodVisitor {
+      @Override
+      public void visitFieldInsn(int opcode, String owner, String name, String desc) {
+        super.visitFieldInsn(opcode, owner, name, desc);
+        fieldReferenceBuilder.add(new FieldReference(owner, name, desc));
+      }
 
       public StatsMethodVisitor() {
         super(Opcodes.ASM5);

@@ -86,6 +86,22 @@ public class DalvikStatsToolTest {
       "  }",
       "}");
 
+  private static final String TEST_CLASS_WITH_FIELDS = createSource(
+      "package test;",
+      "",
+      "public class TestClassWithFields {",
+      "",
+      "  private long f1;",
+      "",
+      "  public TestClassWithFields() {",
+      "    System.out.println(new Inner().f2);",
+      "  }",
+      "",
+      "  public static class Inner {",
+      "    public Object f2;",
+      "  }",
+      "}");
+
   @Rule
   public TemporaryFolder tmpDir = new TemporaryFolder();
 
@@ -97,7 +113,8 @@ public class DalvikStatsToolTest {
     compileSources(
         outputDir,
         new JavaSourceFromString("TestClass", TEST_CLASS),
-        new JavaSourceFromString("TestClassWithInner", TEST_CLASS_WITH_INNER));
+        new JavaSourceFromString("TestClassWithInner", TEST_CLASS_WITH_INNER),
+        new JavaSourceFromString("TestClassWithFields", TEST_CLASS_WITH_FIELDS));
   }
 
   @Test
@@ -105,7 +122,7 @@ public class DalvikStatsToolTest {
     File classFile = new File(outputDir, "test/TestClass.class");
     InputStream inputStream = new FileInputStream(classFile);
     DalvikStatsTool.Stats stats = DalvikStatsTool.getEstimate(inputStream);
-    assertMethodReferences(
+    assertReferences(
         stats.methodReferences,
         "test/TestClass.<init>:()V",
         "java/lang/StringBuilder.toString:()Ljava/lang/String;",
@@ -121,7 +138,7 @@ public class DalvikStatsToolTest {
     File classFileOuter = new File(outputDir, "test/TestClassWithInner.class");
     InputStream inputStreamOuter = new FileInputStream(classFileOuter);
     DalvikStatsTool.Stats statsOuter = DalvikStatsTool.getEstimate(inputStreamOuter);
-    assertMethodReferences(
+    assertReferences(
         statsOuter.methodReferences,
         "test/TestClassWithInner.<init>:()V",
         "java/lang/Object.<init>:()V",
@@ -134,7 +151,7 @@ public class DalvikStatsToolTest {
     File classFileInner = new File(outputDir, "test/TestClassWithInner$1.class");
     InputStream inputStreamInner = new FileInputStream(classFileInner);
     DalvikStatsTool.Stats statsInner = DalvikStatsTool.getEstimate(inputStreamInner);
-    assertMethodReferences(
+    assertReferences(
         statsInner.methodReferences,
         "test/TestClassWithInner$1.toString:()Ljava/lang/String;",
         "test/TestClassWithInner$1.<init>:(Ltest/TestClassWithInner;)V",
@@ -143,6 +160,26 @@ public class DalvikStatsToolTest {
         "java/lang/Long.toString:(J)Ljava/lang/String;",
         "test/TestClassWithInner.access$000:(Ltest/TestClassWithInner;)J" /* visitOuterClass */);
     assertEquals(172, statsInner.estimatedLinearAllocSize);
+  }
+
+  @Test
+  public void testClassWithFields() throws Exception {
+    File classFileOuter = new File(outputDir, "test/TestClassWithFields.class");
+    InputStream inputStreamOuter = new FileInputStream(classFileOuter);
+    DalvikStatsTool.Stats statsOuter = DalvikStatsTool.getEstimate(inputStreamOuter);
+    assertReferences(
+        statsOuter.fieldReferences,
+        "java/lang/System.out:Ljava/io/PrintStream;",
+        "test/TestClassWithFields.f1:J",
+        "test/TestClassWithFields$Inner.f2:Ljava/lang/Object;"
+        );
+
+    File classFileInner = new File(outputDir, "test/TestClassWithFields$Inner.class");
+    InputStream inputStreamInner = new FileInputStream(classFileInner);
+    DalvikStatsTool.Stats statsInner = DalvikStatsTool.getEstimate(inputStreamInner);
+    assertReferences(
+        statsInner.fieldReferences,
+        "test/TestClassWithFields$Inner.f2:Ljava/lang/Object;");
   }
 
   /**
@@ -222,8 +259,8 @@ public class DalvikStatsToolTest {
     return Joiner.on("\n").join(args);
   }
 
-  private static void assertMethodReferences(
-      Set<DalvikStatsTool.MethodReference> references,
+  private static void assertReferences(
+      Set<?> references,
       String... methods) {
     Set<String> actual = Sets.newHashSet(
         Iterables.transform(references, Functions.toStringFunction()));
@@ -236,13 +273,13 @@ public class DalvikStatsToolTest {
     }
     StringBuilder sbError = new StringBuilder();
     if (!onlyInExpected.isEmpty()) {
-      sbError.append("Missing method references:\n");
+      sbError.append("Missing references:\n");
       for (String s : onlyInExpected) {
         sbError.append("  ").append(s).append("\n");
       }
     }
     if (!onlyInActual.isEmpty()) {
-      sbError.append("Unexpected method references:\n");
+      sbError.append("Unexpected references:\n");
       for (String s : onlyInActual) {
         sbError.append("  ").append(s).append("\n");
       }
