@@ -22,7 +22,6 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -284,7 +283,7 @@ public class BuildCommand extends AbstractCommand {
 
     // Parse the build files to create a ActionGraph.
     ActionGraph actionGraph;
-    ImmutableMap<ProjectFilesystem, BuildRuleResolver> resolvers;
+    BuildRuleResolver resolver;
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
@@ -304,7 +303,7 @@ public class BuildCommand extends AbstractCommand {
               new BuildTargetNodeToBuildRuleTransformer(),
               params.getFileHashCache());
       actionGraph = targetGraphToActionGraph.apply(result.getSecond());
-      resolvers = targetGraphToActionGraph.getRuleResolvers();
+      resolver = targetGraphToActionGraph.getRuleResolver();
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -340,7 +339,7 @@ public class BuildCommand extends AbstractCommand {
                  params.getFileHashCache(),
                  getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
                  params.getBuckConfig().getBuildDepFiles(),
-                 resolvers),
+                 resolver),
              artifactCache,
              params.getConsole(),
              params.getBuckEventBus(),

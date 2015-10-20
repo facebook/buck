@@ -64,6 +64,10 @@ abstract class AbstractBuildTarget
     return getUnflavoredBuildTarget().getCell();
   }
 
+  public Path getCellPath() {
+    return getUnflavoredBuildTarget().getCellPath();
+  }
+
   @JsonProperty("baseName")
   public String getBaseName() {
     return getUnflavoredBuildTarget().getBaseName();

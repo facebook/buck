@@ -112,7 +112,7 @@ public class InterCellIntegrationTest {
 
     String config = primary.getFileContents(".buckconfig");
     Ini ini = new Ini(new StringReader(config));
-    ini.put("repositories", "secondary", secondary.getPath(".").normalize().toAbsolutePath());
+    ini.put("repositories", "secondary", secondary.getPath(".").normalize());
     StringWriter writer = new StringWriter();
     ini.store(writer);
     Files.write(primary.getPath(".buckconfig"), writer.toString().getBytes(UTF_8));

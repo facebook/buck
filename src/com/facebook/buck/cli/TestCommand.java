@@ -504,7 +504,7 @@ public class TestCommand extends BuildCommand {
               params.getFileHashCache(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getBuildDepFiles(),
-              targetGraphToActionGraph.getRuleResolvers());
+              targetGraphToActionGraph.getRuleResolver());
       try (Build build = createBuild(
           params.getBuckConfig(),
           graph,

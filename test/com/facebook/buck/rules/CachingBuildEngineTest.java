@@ -186,7 +186,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     // Add a build step so we can verify that the steps are executed.
     buildSteps.add(
@@ -287,7 +287,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
 
     BuildResult result = buildResult.get();
@@ -385,7 +385,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(
         CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
@@ -465,7 +465,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
     ListenableFuture<BuildResult> buildResult = cachingBuildEngine.build(buildContext, buildRule);
     buckEventBus.post(
         CommandEvent.finished(CommandEvent.started("build", ImmutableList.<String>of(), false), 0));
@@ -523,7 +523,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     // Run the build.
     replayAll();
@@ -618,7 +618,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.DEEP,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -748,7 +748,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -871,7 +871,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
@@ -913,7 +913,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
     assertThat(result.getSuccess(), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
@@ -964,7 +964,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY);
@@ -1047,7 +1046,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY);
@@ -1143,7 +1141,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             new FixedRuleKeyBuilderFactory(ImmutableMap.of(rule.getBuildTarget(), inputRuleKey)),
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY);
@@ -1228,7 +1225,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY,
             new FixedRuleKeyBuilderFactory(
@@ -1326,7 +1322,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY,
             new FixedRuleKeyBuilderFactory(
@@ -1437,7 +1432,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY,
             new DependencyFileRuleKeyBuilderFactory(
@@ -1530,7 +1524,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             NOOP_RULE_KEY_FACTORY,
             NOOP_RULE_KEY_FACTORY,
             new DependencyFileRuleKeyBuilderFactory(
@@ -1577,7 +1570,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1661,7 +1654,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.DEEP,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1763,7 +1756,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(filesystem, new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     // Run the build.
     BuildResult result = cachingBuildEngine.build(buildContext, rule).get();
@@ -1815,7 +1808,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             NOOP_RULE_KEY_FACTORY,
             new AbiRuleKeyBuilderFactory(fileHashCache, pathResolver),
             NOOP_RULE_KEY_FACTORY);
@@ -1867,7 +1859,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             NOOP_RULE_KEY_FACTORY,
             abiRuleKeyBuilderFactory,
             NOOP_RULE_KEY_FACTORY);
@@ -1917,7 +1908,6 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             fileHashCache,
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            filesystem,
             NOOP_RULE_KEY_FACTORY,
             abiRuleKeyBuilderFactory,
             NOOP_RULE_KEY_FACTORY);
@@ -1966,7 +1956,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             new NullFileHashCache(),
             CachingBuildEngine.BuildMode.SHALLOW,
             CachingBuildEngine.DepFiles.ENABLED,
-            ImmutableMap.of(rule1.getProjectFilesystem(), new BuildRuleResolver()));
+            new BuildRuleResolver());
 
     assertThat(
         cachingBuildEngine.getNumRulesToBuild(ImmutableList.of(rule1)),

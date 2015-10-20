@@ -16,7 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -90,8 +89,7 @@ public class GenruleDescriptionTest {
         params,
         declaredDeps.build(),
         visibilityPatterns.build(),
-        createCellRoots(projectFilesystem),
-        UNALIASED);
+        createCellRoots(projectFilesystem));
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of(

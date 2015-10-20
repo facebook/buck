@@ -130,18 +130,7 @@ public abstract class AbstractNodeBuilder<A> {
           factoryParams,
           getDepsFromArg(),
           ImmutableSet.<BuildTargetPattern>of(),
-          cellRoots,
-          new CellFilesystemResolver(
-              factoryParams.getProjectFilesystem(),
-              new Function<Optional<String>, ProjectFilesystem>() {
-                @Override
-                public ProjectFilesystem apply(Optional<String> input) {
-                  if (input.isPresent()) {
-                    throw new RuntimeException("No cross repo tests to be created this way");
-                  }
-                  return factoryParams.getProjectFilesystem();
-                }
-              }));
+          cellRoots);
     } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw Throwables.propagate(e);
     }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -118,8 +117,7 @@ public class AuditOwnerCommandTest {
           params,
           ImmutableSet.<BuildTarget>of(),
           ImmutableSet.<BuildTargetPattern>of(),
-          createCellRoots(params.getProjectFilesystem()),
-          UNALIASED);
+          createCellRoots(params.getProjectFilesystem()));
     } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
       throw new RuntimeException(e);
     }

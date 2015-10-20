@@ -36,7 +36,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -49,7 +48,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -110,26 +108,20 @@ public class CachingBuildEngine implements BuildEngine {
   private final BuildMode buildMode;
   private final DepFiles depFiles;
 
-  private final Map<ProjectFilesystem, RuleKeyFactories> ruleKeyFactories;
+  private final RuleKeyFactories ruleKeyFactories;
 
   public CachingBuildEngine(
       ListeningExecutorService service,
       FileHashCache fileHashCache,
       BuildMode buildMode,
       DepFiles depFiles,
-      ImmutableMap<ProjectFilesystem, BuildRuleResolver> pathResolver) {
+      BuildRuleResolver resolver) {
     this.service = service;
     this.fileHashCache = fileHashCache;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
 
-    ImmutableMap.Builder<ProjectFilesystem, RuleKeyFactories> factories = ImmutableMap.builder();
-    for (Map.Entry<ProjectFilesystem, BuildRuleResolver> entry : pathResolver.entrySet()) {
-      factories.put(
-          entry.getKey(),
-          RuleKeyFactories.build(fileHashCache, entry.getKey(), entry.getValue()));
-    }
-    this.ruleKeyFactories = factories.build();
+    this.ruleKeyFactories = RuleKeyFactories.build(fileHashCache, resolver);
   }
 
   @VisibleForTesting
@@ -138,7 +130,6 @@ public class CachingBuildEngine implements BuildEngine {
       FileHashCache fileHashCache,
       BuildMode buildMode,
       DepFiles depFiles,
-      ProjectFilesystem filesystem,
       RuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory,
       RuleKeyBuilderFactory abiRuleKeyBuilderFactory,
       RuleKeyBuilderFactory depFileRuleKeyBuilderFactory) {
@@ -147,12 +138,10 @@ public class CachingBuildEngine implements BuildEngine {
     this.buildMode = buildMode;
     this.depFiles = depFiles;
 
-    this.ruleKeyFactories = ImmutableMap.of(
-        filesystem,
-        new RuleKeyFactories(
+    this.ruleKeyFactories = new RuleKeyFactories(
             inputBasedRuleKeyBuilderFactory,
             abiRuleKeyBuilderFactory,
-            depFileRuleKeyBuilderFactory));
+            depFileRuleKeyBuilderFactory);
   }
 
   @VisibleForTesting
@@ -281,8 +270,7 @@ public class CachingBuildEngine implements BuildEngine {
               }
             }
 
-            RuleKeyFactories cellData = CachingBuildEngine.this.ruleKeyFactories.get(
-                rule.getProjectFilesystem());
+            RuleKeyFactories cellData = CachingBuildEngine.this.ruleKeyFactories;
             Preconditions.checkNotNull(cellData);
 
             // Input-based rule keys.
@@ -1043,7 +1031,7 @@ public class CachingBuildEngine implements BuildEngine {
       return Optional.absent();
     }
 
-    RuleKeyFactories cellData = this.ruleKeyFactories.get(rule.getProjectFilesystem());
+    RuleKeyFactories cellData = this.ruleKeyFactories;
     Preconditions.checkNotNull(cellData);
 
     // Add in the inputs explicitly listed in the dep file.  If any inputs are no longer on disk,
@@ -1108,12 +1096,10 @@ public class CachingBuildEngine implements BuildEngine {
 
     public static RuleKeyFactories build(
         FileHashCache sharedHashCache,
-        ProjectFilesystem filesystem,
         BuildRuleResolver ruleResolver) {
 
       ImmutableList.Builder<FileHashCache> caches = ImmutableList.builder();
       caches.add(sharedHashCache);
-      caches.add(new DefaultFileHashCache(filesystem));
 
       StackedFileHashCache fileHashCache = new StackedFileHashCache(caches.build());
       SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);

@@ -151,12 +151,15 @@ public class SourcePathTypeCoercerTest {
         pathRelativeToProjectRoot,
         "@hello//:hello");
 
+    // Note that the important thing is that the root of the target has been set to `helloRoot` so
+    // the cell name should be absent (otherwise, we'd look for a cell named `@hello` from the
+    // `@hello` cell. Yeah. My head hurts a little too.
     assertEquals(
         new BuildTargetSourcePath(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     helloRoot,
-                    Optional.of("hello"),
+                    Optional.<String>absent(),
                     "//",
                     "hello"),
                 ImmutableSortedSet.<Flavor>of())),

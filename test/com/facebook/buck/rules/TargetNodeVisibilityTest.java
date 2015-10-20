@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
@@ -269,7 +268,6 @@ public class TargetNodeVisibilityTest {
         params,
         ImmutableSet.<BuildTarget>of(),
         visibilityPatterns,
-        createCellRoots(filesystem),
-        UNALIASED);
+        createCellRoots(filesystem));
   }
 }

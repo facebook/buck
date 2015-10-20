@@ -116,8 +116,12 @@ public class BuildTargetParser {
 
     UnflavoredBuildTarget.Builder unflavoredBuilder =
         UnflavoredBuildTarget.builder(baseName, shortName)
-            .setCell(givenCellName)
-            .setCellPath(cellNames.apply(givenCellName));
+            // Set the cell path correctly. Because the cellNames comes from the owning cell we can
+            // be sure that if this doesn't throw an exception the target cell is visible to the
+            // owning cell.
+            .setCellPath(cellNames.apply(givenCellName))
+            // Because we've set the path properly, we don't need to set the cell.
+            .setCell(Optional.<String>absent());
 
     BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuilder.build());
     for (String flavor : flavorNames) {

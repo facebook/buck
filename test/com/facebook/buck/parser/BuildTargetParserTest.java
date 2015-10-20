@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -180,20 +181,24 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseWithRepoName() {
+    final Path localRepoRoot = Paths.get("/opt/local/repo");
+
     Function<Optional<String>, Path> cellRoots = new Function<Optional<String>, Path>() {
       @Override
       public Path apply(Optional<String> cellName) {
         if (!"localreponame".equals(cellName.orNull())) {
           throw new RuntimeException("Path should have been present");
         }
-        return Paths.get("/opt/local/repo");
+
+        return localRepoRoot;
       }
     };
     String targetStr = "@localreponame//foo/bar:baz";
 
     BuildTarget buildTarget = parser.parse(targetStr, fullyQualifiedParser, cellRoots);
-    assertEquals(targetStr, buildTarget.getFullyQualifiedName());
-    assertEquals("localreponame", buildTarget.getCell().get());
+    assertEquals("//foo/bar:baz", buildTarget.getFullyQualifiedName());
+    assertFalse(buildTarget.getCell().isPresent());
+    assertEquals(localRepoRoot, buildTarget.getCellPath());
   }
 
   @Test(expected = BuildTargetParseException.class)

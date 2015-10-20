@@ -44,7 +44,7 @@ public class TemporaryPaths extends ExternalResource {
 
   @Override
   protected void before() throws Throwable {
-    root = Files.createTempDirectory("junit-temp-path");
+    root = Files.createTempDirectory("junit-temp-path").toRealPath();
   }
 
   public Path getRoot() {

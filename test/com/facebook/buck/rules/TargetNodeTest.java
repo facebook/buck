@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import static com.facebook.buck.rules.TestCellBuilder.UNALIASED;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -66,8 +65,7 @@ public class TargetNodeTest {
         buildRuleFactoryParams,
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<BuildTargetPattern>of(),
-        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()),
-        UNALIASED);
+        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -105,8 +103,7 @@ public class TargetNodeTest {
         buildRuleFactoryParams,
         depsTargets,
         ImmutableSet.<BuildTargetPattern>of(),
-        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()),
-        UNALIASED);
+        createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
 
     assertThat(
         targetNode.getInputs(),

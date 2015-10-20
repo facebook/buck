@@ -438,7 +438,7 @@ public class Parser {
           useWatchmanGlob)) {
         buildFileParsers.setEnableProfiling(enableProfiling);
 
-        Cell targetCell = cell.getCell(buildTarget.getCell());
+        Cell targetCell = cell.getCell(buildTarget);
         ProjectBuildFileParser buildFileParser = buildFileParsers.create(targetCell);
         parseRawRulesInternal(
             cell.getFilesystem().getRootPath(),
@@ -1113,7 +1113,7 @@ public class Parser {
     private final ParserConfig.AllowSymlinks allowSymlinks;
 
     public CachedState(String buildFileName, ParserConfig.AllowSymlinks allowSymlinks) {
-      this.memoizedTargetNodes = CacheBuilder.newBuilder().<BuildTarget, TargetNode<?>>build();
+      this.memoizedTargetNodes = CacheBuilder.newBuilder().build();
       this.symlinkExistenceCache = Maps.newHashMap();
       this.buildInputPathsUnderSymlink = Sets.newHashSet();
       this.parsedBuildFiles = ArrayListMultimap.create();
@@ -1344,7 +1344,7 @@ public class Parser {
 
         this.pathsToBuildTargets.put(buildFilePath, buildTarget);
 
-        Cell targetCell = Parser.this.cell.getCell(buildTarget.getCell());
+        Cell targetCell = Parser.this.cell.getCell(buildTarget);
         BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
             targetCell.getFilesystem(),
             buildTarget.withoutCell(),
@@ -1380,8 +1380,7 @@ public class Parser {
                 factoryParams,
                 declaredDeps.build(),
                 visibilityPatterns.build(),
-                targetCell.getCellRoots(),
-                targetCell.getCellAliases());
+                targetCell.getCellRoots());
           }
         } catch (NoSuchBuildTargetException | TargetNode.InvalidSourcePathInputException e) {
           throw new HumanReadableException(e);
