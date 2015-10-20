@@ -800,7 +800,7 @@ public class Parser {
             cell.getAbsolutePathToBuildFile(target));
       }
 
-      state.put(target, map);
+      state.put(target.getBasePath(), map);
     }
     LOG.verbose("Finished parsing raw rules, state after parse %s", state);
   }
@@ -1102,8 +1102,6 @@ public class Parser {
     @Nullable
     private List<String> cacheDefaultIncludes;
 
-    private final Map<BuildTarget, Path> targetsToFile;
-
     /**
      * A map from absolute included files ({@code /jimp/BUILD_DEFS}, for example) to the build files
      * that depend on them (typically {@code /jimp/BUCK} files).
@@ -1119,7 +1117,6 @@ public class Parser {
       this.symlinkExistenceCache = Maps.newHashMap();
       this.buildInputPathsUnderSymlink = Sets.newHashSet();
       this.parsedBuildFiles = ArrayListMultimap.create();
-      this.targetsToFile = Maps.newHashMap();
       this.pathsToBuildTargets = ArrayListMultimap.create();
       this.buildFileDependents = ArrayListMultimap.create();
       this.buildFile = buildFileName;
@@ -1132,22 +1129,18 @@ public class Parser {
       symlinkExistenceCache.clear();
       buildInputPathsUnderSymlink.clear();
       memoizedTargetNodes.invalidateAll();
-      targetsToFile.clear();
-      pathsToBuildTargets.clear();
       buildFileDependents.clear();
     }
 
     @Override
     public String toString() {
       return String.format(
-          "%s memoized=%s symlinks=%s build files under symlink=%s parsed=%s targets-to-files=%s " +
-          "paths-to-targets=%s",
+          "%s memoized=%s symlinks=%s build files under symlink=%s parsed=%s paths-to-targets=%s",
           super.toString(),
           memoizedTargetNodes,
           symlinkExistenceCache,
           buildInputPathsUnderSymlink,
           parsedBuildFiles,
-          targetsToFile,
           pathsToBuildTargets);
     }
 
@@ -1279,15 +1272,10 @@ public class Parser {
       return Preconditions.checkNotNull(parsedBuildFiles.get(normalize(buildFile)));
     }
 
-    public void put(BuildTarget target, Map<String, Object> rawRules) {
-      Path normalized = normalize(target.getBasePath().resolve(buildFile));
+    public void put(Path basePath, Map<String, Object> rawRules) {
+      Path normalized = normalize(basePath.resolve(buildFile));
       LOG.verbose("Adding rules for parsed build file %s", normalized);
       parsedBuildFiles.put(normalized, rawRules);
-
-      targetsToFile.put(
-          target,
-          normalize(Paths.get((String) rawRules.get("buck.base_path")))
-              .resolve(buildFile).toAbsolutePath());
     }
 
     @Nullable
@@ -1312,7 +1300,6 @@ public class Parser {
       } catch (Cell.MissingBuildFileException e) {
         throw new HumanReadableException(e);
       }
-      UnflavoredBuildTarget unflavored = buildTarget.getUnflavoredBuildTarget();
       List<Map<String, Object>> rules = state.getRawRules(buildFilePath);
       for (Map<String, Object> map : rules) {
 
@@ -1321,17 +1308,12 @@ public class Parser {
         }
 
         BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(map);
-        targetsToFile.put(
-            BuildTarget.of(unflavored),
-            normalize(Paths.get((String) map.get("buck.base_path")))
-                .resolve(buildFile).toAbsolutePath());
-
         Description<?> description = cell.getDescription(buildRuleType);
         if (description == null) {
           throw new HumanReadableException("Unrecognized rule %s while parsing %s%s.",
               buildRuleType,
               UnflavoredBuildTarget.BUILD_TARGET_PREFIX,
-              MorePaths.pathWithUnixSeparators(unflavored.getBasePath().resolve(buildFile)));
+              MorePaths.pathWithUnixSeparators(buildTarget.getBasePath().resolve(buildFile)));
         }
 
         if (buildTarget.isFlavored()) {
@@ -1365,8 +1347,6 @@ public class Parser {
         Cell targetCell = Parser.this.cell.getCell(buildTarget.getCell());
         BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
             targetCell.getFilesystem(),
-            // Although we store the rule by its unflavoured name, when we construct it, we need the
-            // flavour.
             buildTarget.withoutCell(),
             buildFileTreeCache.get(),
             targetCell.isEnforcingBuckPackageBoundaries());
@@ -1433,7 +1413,8 @@ public class Parser {
         }
         synchronized (memoizedTargetNodes) {
           if (memoizedTargetNodes.getIfPresent(buildTarget) != null) {
-            throw new HumanReadableException("Duplicate definition for " + unflavored);
+            throw new HumanReadableException(
+                "Duplicate definition for " + buildTarget.getUnflavoredBuildTarget());
           }
           memoizedTargetNodes.put(buildTarget, targetNode);
         }
