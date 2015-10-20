@@ -77,6 +77,14 @@ compiled .class files and resources of the <code>java_library()</code>
 
 {call buck.visibility_arg /}
 
+{call buck.arg}
+  {param name: 'blacklist' /}
+  {param default: '[]' /}
+  {param desc}
+  A list of regular expressions of files to exclude from the final generated JAR file.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {/call} // close buck.rule
