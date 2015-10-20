@@ -432,4 +432,33 @@ public class MiniAaptTest {
             new FakeRDotTxtEntry(IdType.INT, RType.TRANSITION, "some_transition")),
         aapt.getResourceCollector().getResources());
   }
+
+  @Test
+  public void testDotSeparatedResourceNames() throws
+      IOException, XPathExpressionException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<LinearLayout>",
+        "<Button android:id=\"@+id/button1\" ",
+        "android:text=\"@string/com.buckbuild.taskname\" />",
+        "</LinearLayout>")
+        .build();
+
+    Path resource = Paths.get("resource.xml");
+    filesystem.writeLinesToPath(lines, resource);
+
+    MiniAapt aapt = new MiniAapt(
+        filesystem,
+        Paths.get("res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+
+    ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
+    aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
+
+    assertEquals(
+        references.build(),
+        ImmutableSet.<RDotTxtEntry>of(
+            new FakeRDotTxtEntry(IdType.INT, RType.STRING, "com_buckbuild_taskname")));
+  }
 }
