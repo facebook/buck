@@ -1,7 +1,9 @@
 java_library(
   name = 'rules',
   srcs = glob(['*.java']),
-  tests = [],
+  tests = [
+    '//test/com/facebook/buck/halide:halide',
+  ],
   deps = [
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
@@ -20,6 +22,6 @@ java_library(
     '//third-party/java/jsr:jsr305',
   ],
   visibility = [
-    '//src/com/facebook/buck/rules:types',
+    'PUBLIC',
   ],
 )

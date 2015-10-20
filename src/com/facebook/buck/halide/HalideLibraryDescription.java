@@ -72,7 +72,7 @@ public class HalideLibraryDescription implements
 
   private enum Type { EXPORTED_HEADERS, HALIDE_COMPILER };
 
-  private static final Flavor HALIDE_COMPILER_FLAVOR =
+  public static final Flavor HALIDE_COMPILER_FLAVOR =
     ImmutableFlavor.of("halide-compiler");
 
   private static final FlavorDomain<Type> LIBRARY_TYPE =
