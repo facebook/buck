@@ -33,8 +33,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -59,6 +61,9 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
   @AddToRuleKey
   private final String bundleName;
 
+  @AddToRuleKey
+  private final Optional<String> packagerFlags;
+
   private final ReactNativeDeps depsFinder;
   private final Path jsOutputDir;
   private final Path resource;
@@ -69,6 +74,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       SourcePath entryPath,
       boolean isDevMode,
       String bundleName,
+      Optional<String> packagerFlags,
       SourcePath jsPackager,
       ReactNativePlatform platform,
       ReactNativeDeps depsFinder) {
@@ -76,6 +82,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
     this.entryPath = entryPath;
     this.isDevMode = isDevMode;
     this.bundleName = bundleName;
+    this.packagerFlags = packagerFlags;
     this.jsPackager = jsPackager;
     this.platform = platform;
     this.depsFinder = depsFinder;
@@ -109,6 +116,7 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
                 getProjectFilesystem().resolve(getResolver().getPath(entryPath)),
                 platform,
                 isDevMode,
+                packagerFlags,
                 getProjectFilesystem().resolve(jsOutput).toString(),
                 getProjectFilesystem().resolve(resource).toString(),
                 getProjectFilesystem().resolve(sourceMapOutput).toString());
@@ -156,17 +164,27 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
       Path absoluteEntryPath,
       ReactNativePlatform platform,
       boolean isDevMode,
+      Optional<String> packagerFlags,
       String absoluteBundleOutputPath,
       String absoluteResourceOutputPath,
       String absoluteSourceMapOutputPath) {
-    return ImmutableList.of(
-        jsPackager.toString(),
-        "bundle",
-        "--entry-file", absoluteEntryPath.toString(),
-        "--platform", platform.toString(),
-        "--dev", isDevMode ? "true" : "false",
-        "--bundle-output", absoluteBundleOutputPath,
-        "--assets-dest", absoluteResourceOutputPath,
-        "--sourcemap-output", absoluteSourceMapOutputPath);
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.add(
+      jsPackager.toString(),
+      "bundle",
+      "--entry-file", absoluteEntryPath.toString(),
+      "--platform", platform.toString(),
+      "--dev", isDevMode ? "true" : "false",
+      "--bundle-output", absoluteBundleOutputPath,
+      "--assets-dest", absoluteResourceOutputPath,
+      "--sourcemap-output", absoluteSourceMapOutputPath
+    );
+
+    if (packagerFlags.isPresent()) {
+      builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));
+    }
+
+    return builder.build();
   }
 }

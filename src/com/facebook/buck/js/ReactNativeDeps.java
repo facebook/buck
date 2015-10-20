@@ -48,6 +48,7 @@ import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -66,6 +67,9 @@ public class ReactNativeDeps extends AbstractBuildRule
   private final ReactNativePlatform platform;
 
   @AddToRuleKey
+  private final Optional<String> packagerFlags;
+
+  @AddToRuleKey
   private final SourcePath jsPackager;
 
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
@@ -76,12 +80,14 @@ public class ReactNativeDeps extends AbstractBuildRule
       SourcePath jsPackager,
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath entryPath,
-      ReactNativePlatform platform) {
+      ReactNativePlatform platform,
+      Optional<String> packagerFlags) {
     super(ruleParams, resolver);
     this.jsPackager = jsPackager;
     this.srcs = srcs;
     this.entryPath = entryPath;
     this.platform = platform;
+    this.packagerFlags = packagerFlags;
     this.outputInitializer = new BuildOutputInitializer<>(ruleParams.getBuildTarget(), this);
   }
 
@@ -97,13 +103,22 @@ public class ReactNativeDeps extends AbstractBuildRule
     steps.add(new ShellStep(getProjectFilesystem().getRootPath()) {
       @Override
       protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-        return ImmutableList.of(
-            getResolver().getPath(jsPackager).toString(),
-            "list-dependencies",
-            platform.toString(),
-            getProjectFilesystem().resolve(getResolver().getPath(entryPath)).toString(),
-            "--output",
-            getProjectFilesystem().resolve(output).toString());
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+        builder.add(
+          getResolver().getPath(jsPackager).toString(),
+          "list-dependencies",
+          platform.toString(),
+          getProjectFilesystem().resolve(getResolver().getPath(entryPath)).toString(),
+          "--output",
+          getProjectFilesystem().resolve(output).toString()
+        );
+
+        if (packagerFlags.isPresent()) {
+          builder.addAll(Arrays.asList(packagerFlags.get().split(" ")));
+        }
+
+        return builder.build();
       }
 
       @Override

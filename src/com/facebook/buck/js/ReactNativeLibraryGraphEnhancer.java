@@ -71,7 +71,8 @@ public class ReactNativeLibraryGraphEnhancer {
         buckConfig.getPackager(),
         args.srcs.get(),
         args.entryPath,
-        platform);
+        platform,
+        args.packagerFlags);
     return resolver.addToIndex(depsFinder);
   }
 
@@ -104,6 +105,7 @@ public class ReactNativeLibraryGraphEnhancer {
         args.entryPath,
         ReactNativeFlavors.isDevMode(originalBuildTarget),
         args.bundleName,
+        args.packagerFlags,
         buckConfig.getPackager(),
         ReactNativePlatform.ANDROID,
         reactNativeDeps);
@@ -169,6 +171,7 @@ public class ReactNativeLibraryGraphEnhancer {
         args.entryPath,
         ReactNativeFlavors.isDevMode(params.getBuildTarget()),
         args.bundleName,
+        args.packagerFlags,
         buckConfig.getPackager(),
         ReactNativePlatform.IOS,
         reactNativeDeps);
