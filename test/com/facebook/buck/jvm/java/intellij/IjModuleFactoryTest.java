@@ -18,10 +18,12 @@ package com.facebook.buck.jvm.java.intellij;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -29,6 +31,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
@@ -37,6 +40,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -433,5 +437,32 @@ public class IjModuleFactoryTest {
 
     assertTrue(module.getAndroidFacet().isPresent());
     assertEquals(manifestPath, module.getAndroidFacet().get().getManifestPath().get());
+  }
+
+  @Test
+  public void testCxxLibrary() {
+    IjModuleFactory factory = new IjModuleFactory(Functions.constant(Optional.<Path>absent()));
+
+    String sourceName = "cpp/lib/foo.cpp";
+    TargetNode<?> cxxLibrary = new CxxLibraryBuilder(
+        BuildTargetFactory.newInstance("//cpp/lib:foo"))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath(sourceName))))
+        .build();
+
+    Path moduleBasePath = Paths.get("java/com/example/base");
+    IjModule module = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(cxxLibrary));
+
+    assertThat(
+        module.getFolders(),
+        Matchers.contains(
+            IjFolder.builder()
+                .setPath(Paths.get("cpp/lib"))
+                .setType(AbstractIjFolder.Type.SOURCE_FOLDER)
+                .setWantsPackagePrefix(false)
+                .setInputs(ImmutableSortedSet.of(Paths.get("cpp/lib/foo.cpp")))
+                .build())
+    );
   }
 }

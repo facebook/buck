@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.model.BuildTarget;
@@ -58,6 +59,7 @@ public class IjModuleFactory {
       AndroidBinaryDescription.TYPE,
       AndroidLibraryDescription.TYPE,
       AndroidResourceDescription.TYPE,
+      CxxLibraryDescription.TYPE,
       JavaLibraryDescription.TYPE,
       JavaTestDescription.TYPE,
       RobolectricTestDescription.TYPE);
@@ -232,6 +234,7 @@ public class IjModuleFactory {
     addToIndex(new AndroidBinaryModuleRule());
     addToIndex(new AndroidLibraryModuleRule());
     addToIndex(new AndroidResourceModuleRule());
+    addToIndex(new CxxLibraryModuleRule());
     addToIndex(new JavaLibraryModuleRule());
     addToIndex(new JavaTestModuleRule());
     addToIndex(new RobolectricTestModuleRule());
@@ -447,6 +450,23 @@ public class IjModuleFactory {
       if (arg.res.isPresent()) {
         androidFacetBuilder.addResourcePaths(arg.res.get());
       }
+    }
+  }
+
+  private static class CxxLibraryModuleRule implements IjModuleRule<CxxLibraryDescription.Arg> {
+
+    @Override
+    public BuildRuleType getType() {
+      return CxxLibraryDescription.TYPE;
+    }
+
+    @Override
+    public void apply(TargetNode<CxxLibraryDescription.Arg> target, ModuleBuildContext context) {
+      addSourceFolders(
+          getSourceFoldersToInputsIndex(target.getInputs()),
+          IjFolder.Type.SOURCE_FOLDER,
+          false /* wantsPackagePrefix */,
+          context);
     }
   }
 
