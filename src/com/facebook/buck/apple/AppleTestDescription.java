@@ -331,6 +331,7 @@ public class AppleTestDescription implements
             params.getExtraDeps()),
         sourcePathResolver,
         args.extension,
+        args.productName,
         args.infoPlist,
         args.infoPlistSubstitutions.get(),
         Optional.of(library),
@@ -450,6 +451,7 @@ public class AppleTestDescription implements
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
     public Optional<String> xcodeProductType;
+    public Optional<String> productName;
 
     public Optional<ImmutableMap<String, String>> destinationSpecifier;
 

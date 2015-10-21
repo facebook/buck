@@ -206,6 +206,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         bundleParamsWithFlavoredBinaryDep,
         sourcePathResolver,
         args.extension,
+        args.productName,
         args.infoPlist,
         args.infoPlistSubstitutions.get(),
         Optional.of(flavoredBinaryRule),
@@ -332,6 +333,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
     public Optional<String> xcodeProductType;
+    public Optional<String> productName;
 
     @Override
     public Either<AppleBundleExtension, String> getExtension() {

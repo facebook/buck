@@ -16,13 +16,15 @@
 
 package com.facebook.buck.apple.xcode;
 
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
+
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-
-import static org.junit.Assert.assertThat;
+import com.facebook.buck.util.environment.Platform;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -98,6 +100,21 @@ public class ProjectIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "project_generated_schemes_do_not_include_other_tests",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void productNameFromConfigIsUsed() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "application_bundle_with_product_name_and_config_product_name",
         temporaryFolder);
     workspace.setUp();
 

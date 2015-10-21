@@ -1,0 +1,37 @@
+CONFIGS_WITH_NAME = {
+  'Debug': {'PRODUCT_NAME': 'ConfigAppName'},
+  'Release': {'PRODUCT_NAME': 'ConfigAppName'},
+}
+
+apple_bundle(
+  name = 'DemoApp',
+  product_name = 'BrandNewProduct_should_be_ignored',
+  binary = ':DemoAppBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+)
+
+apple_binary(
+  name = 'DemoAppBinary',
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = glob([
+    '*.h',
+  ]),
+  srcs = glob([
+    '*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+  libraries = [
+    '$SDKROOT/usr/lib/libobjc.dylib',
+  ],
+  configs = CONFIGS_WITH_NAME,
+)
+
+xcode_workspace_config(
+  name = 'workspace',
+  src_target = '//App:DemoApp'
+)
+
