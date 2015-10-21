@@ -28,7 +28,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreThrowables;
@@ -44,7 +43,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 
 import java.io.BufferedReader;
@@ -54,7 +52,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
@@ -185,19 +182,13 @@ public class ProjectBuildFileParser implements AutoCloseable {
           ProjectBuildFileParser.class.getSimpleName(),
           new InputStreamConsumer(
               stderr,
-              // We don't want to copy the output to stderr directly;
-              // we'll post console events instead.
-              new PrintStream(ByteStreams.nullOutputStream()),
-              Ansi.withoutTty(),
-              /* flagOutputWrittenToStream */ true,
-              Optional.<InputStreamConsumer.Handler>of(
-                  new InputStreamConsumer.Handler() {
-                    @Override
-                    public void handleLine(String line) {
-                      buckEventBus.post(
-                          ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line));
-                    }
-                  })));
+              new InputStreamConsumer.Handler() {
+                @Override
+                public void handleLine(String line) {
+                  buckEventBus.post(
+                      ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line));
+                }
+              }));
       stderrConsumer.start();
 
       buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
