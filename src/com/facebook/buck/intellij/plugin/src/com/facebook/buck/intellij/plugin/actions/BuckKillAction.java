@@ -19,16 +19,16 @@ package com.facebook.buck.intellij.plugin.actions;
 import com.facebook.buck.intellij.plugin.build.BuckBuildManager;
 import com.facebook.buck.intellij.plugin.build.BuckCommand;
 import com.facebook.buck.intellij.plugin.build.BuckKillCommandHandler;
+import com.facebook.buck.intellij.plugin.config.BuckModule;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 
 /**
  * Run buck kill command.
  * It will force terminate all running buck commands and shut down the buck local http server.
  */
-public class BuckKillAction extends DumbAwareAction {
+public class BuckKillAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck kill";
   public static final String ACTION_DESCRIPTION = "Run buck kill command";
@@ -39,8 +39,8 @@ public class BuckKillAction extends DumbAwareAction {
 
   @Override
   public void update(AnActionEvent e) {
-    Project project = e.getProject();
-    if (project != null) {
+    if (preUpdateCheck(e)) {
+      Project project = e.getProject();
       BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
       e.getPresentation().setEnabled(!buildManager.isKilling() && buildManager.isBuilding());
     }
@@ -48,6 +48,9 @@ public class BuckKillAction extends DumbAwareAction {
 
   @Override
   public void actionPerformed(final AnActionEvent e) {
+    BuckModule mod = e.getProject().getComponent(BuckModule.class);
+    mod.disconnect("Killed!");
+
     BuckKillCommandHandler handler = new BuckKillCommandHandler(
         e.getProject(),
         e.getProject().getBaseDir(),

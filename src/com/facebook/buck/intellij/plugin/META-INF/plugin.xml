@@ -115,6 +115,8 @@
       <action class="com.facebook.buck.intellij.plugin.actions.BuckUninstallAction" id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
       </action>
+      <action class="com.facebook.buck.intellij.plugin.actions.ConnectToBuck" id="buck.connect" />
+      <action class="com.facebook.buck.intellij.plugin.actions.DisconnectFromBuck" id="buck.disconnect" />
     </group>
   </actions>
 
@@ -125,4 +127,10 @@
     </component>
   </application-components>
 
+    <project-components>
+        <component>
+            <implementation-class>com.facebook.buck.intellij.plugin.config.BuckModule</implementation-class>
+            <loadForDefaultProject />
+        </component>
+    </project-components>
 </idea-plugin>

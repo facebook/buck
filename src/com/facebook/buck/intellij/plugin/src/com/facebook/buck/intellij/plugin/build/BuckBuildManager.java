@@ -50,7 +50,6 @@ public class BuckBuildManager {
 
   public static final String NOT_BUCK_PROJECT_ERROR_MESSAGE = "Not a valid Buck project!\n";
 
-  private ProgressIndicator progressIndicator;
   private boolean isBuilding = false;
   private boolean isKilling = false;
 
@@ -59,11 +58,7 @@ public class BuckBuildManager {
   }
 
   public synchronized void setProgress(double fraction) {
-    if (progressIndicator == null) {
-      return;
-    }
-    progressIndicator.setFraction(fraction);
-    progressIndicator.checkCanceled();
+    return;
   }
 
   /**
@@ -157,7 +152,6 @@ public class BuckBuildManager {
     final ProgressManager manager = ProgressManager.getInstance();
     manager.run(new Task.Backgroundable(handler.project(), operationTitle, true) {
       public void run(final ProgressIndicator indicator) {
-        progressIndicator = indicator;
         runInCurrentThread(handler, indicator, true, operationTitle);
       }
     });

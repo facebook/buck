@@ -22,7 +22,6 @@ import com.facebook.buck.intellij.plugin.build.BuckCommand;
 import com.facebook.buck.intellij.plugin.config.BuckSettingsProvider;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 
 import java.util.regex.Matcher;
@@ -31,7 +30,7 @@ import java.util.regex.Pattern;
 /**
  * Run buck install command.
  */
-public class BuckInstallAction extends DumbAwareAction {
+public class BuckInstallAction extends BuckBaseAction {
 
   public static final String ACTION_TITLE = "Run buck install";
   public static final String ACTION_DESCRIPTION = "Run buck install command";
@@ -42,11 +41,10 @@ public class BuckInstallAction extends DumbAwareAction {
 
   @Override
   public void update(AnActionEvent e) {
-    Project project = e.getProject();
-    if (project != null) {
+    if (preUpdateCheck(e)) {
+      Project project = e.getProject();
       e.getPresentation().setEnabled(!BuckBuildManager.getInstance(project).isBuilding());
     }
-
   }
 
   @Override

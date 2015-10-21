@@ -21,6 +21,7 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
+import javax.swing.tree.DefaultTreeModel;
 
 public class BuckUIManager {
 
@@ -44,5 +45,13 @@ public class BuckUIManager {
           "buck", "buck", "buck", project);
     }
     return runnerLayoutUi;
+  }
+
+  private DefaultTreeModel mTreeModel;
+  public DefaultTreeModel getTreeModel() {
+    if (mTreeModel == null) {
+      mTreeModel = new DefaultTreeModel(null);
+    }
+    return mTreeModel;
   }
 }
