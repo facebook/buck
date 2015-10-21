@@ -27,8 +27,6 @@ import com.google.common.base.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-/**
- */
 public class ArtifactCachesTest {
   @Test
   public void testCreateHttpCacheOnly() throws Exception {
@@ -85,14 +83,15 @@ public class ArtifactCachesTest {
   public void testCreateDirCacheOnlyWhenOnBlacklistedWifi() throws Exception {
     ArtifactCacheBuckConfig cacheConfig = ArtifactCacheBuckConfigTest.createFromText(
         "[cache]",
-        "mode = dir");
+        "mode = dir, http",
+        "blacklisted_wifi_ssids = weevil, evilwifi");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
     ArtifactCache artifactCache = ArtifactCaches.newInstance(
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
+        Optional.of("evilwifi"));
     assertThat(artifactCache, Matchers.instanceOf(LoggingArtifactCacheDecorator.class));
     LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;
     assertThat(cacheDecorator.getDelegate(), Matchers.instanceOf(DirArtifactCache.class));

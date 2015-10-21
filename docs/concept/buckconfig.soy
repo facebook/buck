@@ -295,6 +295,33 @@ directory-based and http caching.
     serve_local_cache = true
 </pre>{/literal}
 
+<p>It is also possible to configure multiple http caches using the syntax below. The caches will be
+used <b>serially</b> in the order in which their names are specified in{sp}
+<code>http_cache_names</code>. If an artifact is found further along the list an attempt to store
+it earlier in the list will be made. In the example below, if the artifact is found in the{sp}
+<code>global</code> cache it will be stored in the <code>local</code> cache, but not in the{sp}
+<code>regional-ro</code> cache (as that one is not writeable).</p>
+
+{literal}<pre class="prettyprint lang-ini">
+[cache]
+    mode = http
+    http_cache_names = local, regional-ro, global
+
+[cache#regional-ro]
+    http_url = http://region.com/
+    http_timeout_seconds = 5
+    http_mode = readonly
+
+[cache#local]
+    http_url = http://local.co.uk/
+    http_timeout_seconds = 1
+
+[cache#global]
+    http_url = http://global.com/
+    http_timeout_seconds = 42
+</pre>{/literal}
+
+
 Buck communicates with the http cache using a
 {sp}<a href="{ROOT}concept/http_cache_api.html">simple API</a>.
 

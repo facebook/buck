@@ -93,14 +93,10 @@ public class ServedCacheIntegrationTest {
     }
   }
 
-  private ArtifactCacheBuckConfig createMockLocalHttpCacheConfig(int port) throws Exception {
+  private ArtifactCacheBuckConfig createMockLocalConfig(
+      String... configText) throws Exception {
     BuckConfig config = BuckConfigTestUtils.createFromReader(
-        new StringReader(
-            Joiner.on('\n').join(
-                "[cache]",
-                "mode = http",
-                String.format("http_url = http://127.0.0.1:%d/", port)
-            )),
+        new StringReader(Joiner.on('\n').join(configText)),
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
@@ -108,19 +104,18 @@ public class ServedCacheIntegrationTest {
     return new ArtifactCacheBuckConfig(config);
   }
 
+  private ArtifactCacheBuckConfig createMockLocalHttpCacheConfig(int port) throws Exception {
+    return createMockLocalConfig(
+        "[cache]",
+        "mode = http",
+        String.format("http_url = http://127.0.0.1:%d/", port));
+  }
+
   private ArtifactCacheBuckConfig createMockLocalDirCacheConfig() throws Exception {
-    BuckConfig config = BuckConfigTestUtils.createFromReader(
-        new StringReader(
-            Joiner.on('\n').join(
-                "[cache]",
-                "mode = dir",
-                "dir = test-cache"
-            )),
-        projectFilesystem,
-        Architecture.detect(),
-        Platform.detect(),
-        ImmutableMap.<String, String>of());
-    return new ArtifactCacheBuckConfig(config);
+    return createMockLocalConfig(
+        "[cache]",
+        "mode = dir",
+        "dir = test-cache");
   }
 
   @Test
@@ -294,5 +289,89 @@ public class ServedCacheIntegrationTest {
     assertThat(
         serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
         Matchers.equalTo(CacheResultType.ERROR));
+  }
+
+  @Test
+  public void testMultipleNamedCaches() throws Exception {
+    Path fetchedContents = tmpDir.newFile();
+    final RuleKey bFileRuleKey = new RuleKey("baadbeef");
+
+    webServer = new WebServer(
+        /* port */ 0,
+        projectFilesystem,
+        "/static/",
+        new ObjectMapper());
+    webServer.updateAndStartIfNeeded(Optional.of(dirCache));
+
+    ArtifactCache secondCache = new ArtifactCache() {
+      @Override
+      public CacheResult fetch(RuleKey ruleKey, Path output) throws InterruptedException {
+        if (ruleKey.equals(bFileRuleKey)) {
+          try {
+            projectFilesystem.writeContentsToPath("second", output);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+          return CacheResult.hit("secondCache");
+        }
+        return CacheResult.miss();
+      }
+
+      @Override
+      public void store(
+          ImmutableSet<RuleKey> ruleKeys,
+          ImmutableMap<String, String> metadata,
+          Path output) throws InterruptedException {
+      }
+
+      @Override
+      public boolean isStoreSupported() {
+        return true;
+      }
+
+      @Override
+      public void close() {
+        // Intentional no-op.
+      }
+    };
+    assertThat(
+        secondCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
+        Matchers.equalTo(CacheResultType.MISS));
+    assertThat(
+        secondCache.fetch(bFileRuleKey, fetchedContents).getType(),
+        Matchers.equalTo(CacheResultType.HIT));
+    WebServer secondWebServer = new WebServer(
+        /* port */ 0,
+        projectFilesystem,
+        "/static/",
+        new ObjectMapper());
+
+    try {
+      secondWebServer.updateAndStartIfNeeded(Optional.of(secondCache));
+
+      ArtifactCacheBuckConfig mutltiCacheConfig = createMockLocalConfig(
+          "[cache]",
+          "mode = http",
+          "http_cache_names = one, two",
+          "[cache#two]",
+          String.format("http_url = http://127.0.0.1:%d/", secondWebServer.getPort().get()),
+          "[cache#one]",
+          String.format("http_url = http://127.0.0.1:%d/", webServer.getPort().get()));
+
+      ArtifactCache serverBackedCache = ArtifactCaches.newInstance(
+          mutltiCacheConfig,
+          buckEventBus,
+          projectFilesystem,
+          Optional.<String>absent());
+
+      assertThat(
+          serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
+          Matchers.equalTo(CacheResultType.HIT));
+      assertThat(
+          serverBackedCache.fetch(bFileRuleKey, fetchedContents).getType(),
+          Matchers.equalTo(CacheResultType.HIT));
+    } finally {
+      secondWebServer.stop();
+    }
   }
 }

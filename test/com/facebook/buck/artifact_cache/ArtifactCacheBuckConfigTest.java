@@ -27,7 +27,9 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -43,21 +45,28 @@ public class ArtifactCacheBuckConfigTest {
   public void testWifiBlacklist() throws IOException {
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",
-        "dir = http",
+        "mode = http",
         "blacklisted_wifi_ssids = yolocoaster");
+    ImmutableSet<HttpCacheEntry> httpCaches = config.getHttpCaches();
+    assertThat(httpCaches, Matchers.hasSize(1));
+    HttpCacheEntry cacheEntry = FluentIterable.from(httpCaches).get(0);
+
     assertThat(
-        config.isWifiUsableForDistributedCache(Optional.of("yolocoaster")),
+        cacheEntry.isWifiUsableForDistributedCache(Optional.of("yolocoaster")),
         Matchers.is(false));
     assertThat(
-        config.isWifiUsableForDistributedCache(Optional.of("swagtastic")),
+        cacheEntry.isWifiUsableForDistributedCache(Optional.of("swagtastic")),
         Matchers.is(true));
 
     config = createFromText(
         "[cache]",
-        "dir = http");
+        "mode = http");
+    httpCaches = config.getHttpCaches();
+    assertThat(httpCaches, Matchers.hasSize(1));
+    cacheEntry = FluentIterable.from(httpCaches).get(0);
 
     assertThat(
-        config.isWifiUsableForDistributedCache(Optional.of("yolocoaster")),
+        cacheEntry.isWifiUsableForDistributedCache(Optional.of("yolocoaster")),
         Matchers.is(true));
   }
 
@@ -94,11 +103,14 @@ public class ArtifactCacheBuckConfigTest {
         "http_timeout_seconds = 42",
         "http_url = http://test.host:1234",
         "http_mode = readwrite");
+    ImmutableSet<HttpCacheEntry> httpCaches = config.getHttpCaches();
+    assertThat(httpCaches, Matchers.hasSize(1));
+    HttpCacheEntry cacheEntry = FluentIterable.from(httpCaches).get(0);
 
-    assertThat(config.getHttpCacheTimeoutSeconds(), Matchers.is(42));
-    assertThat(config.getHttpCacheUrl(), Matchers.equalTo(new URI("http://test.host:1234")));
+    assertThat(cacheEntry.getTimeoutSeconds(), Matchers.is(42));
+    assertThat(cacheEntry.getUrl(), Matchers.equalTo(new URI("http://test.host:1234")));
     assertThat(
-        config.getHttpCacheReadMode(),
+        cacheEntry.getCacheReadMode(),
         Matchers.is(ArtifactCacheBuckConfig.CacheReadMode.readwrite));
   }
 
@@ -123,7 +135,7 @@ public class ArtifactCacheBuckConfigTest {
         "[cache]",
         "http_url = notaurl");
 
-    config.getHttpCacheUrl();
+    config.getHttpCaches();
   }
 
   @Test(expected = HumanReadableException.class)
@@ -144,6 +156,64 @@ public class ArtifactCacheBuckConfigTest {
         "User home cache directory must be expanded.",
         config.getCacheDir(),
         Matchers.equalTo(MorePaths.expandHomeDir(Paths.get("~/cache_dir"))));
+  }
+
+  @Test
+  public void testNamedHttpCachesOnly() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "http_cache_names = bob, fred",
+        "",
+        "[cache#bob]",
+        "http_url = http://bob.com/",
+        "",
+        "[cache#fred]",
+        "http_url = http://fred.com/",
+        "http_timeout_seconds = 42",
+        "http_mode = readonly",
+        "blacklisted_wifi_ssids = yolo",
+        "",
+        "[cache#ignoreme]",
+        "http_url = http://ignored.com/");
+
+    assertThat(config.getHttpCaches(), Matchers.hasSize(2));
+
+    HttpCacheEntry bobCache = FluentIterable.from(config.getHttpCaches()).get(0);
+    assertThat(bobCache.getUrl(), Matchers.equalTo(URI.create("http://bob.com/")));
+    assertThat(bobCache.getCacheReadMode(), Matchers.equalTo(
+            ArtifactCacheBuckConfig.CacheReadMode.readwrite));
+    assertThat(bobCache.getTimeoutSeconds(), Matchers.is(3));
+
+    HttpCacheEntry fredCache = FluentIterable.from(config.getHttpCaches()).get(1);
+    assertThat(fredCache.getUrl(), Matchers.equalTo(URI.create("http://fred.com/")));
+    assertThat(fredCache.getTimeoutSeconds(), Matchers.is(42));
+    assertThat(fredCache.getCacheReadMode(), Matchers.equalTo(
+            ArtifactCacheBuckConfig.CacheReadMode.readonly));
+    assertThat(fredCache.isWifiUsableForDistributedCache(Optional.of("wsad")), Matchers.is(true));
+    assertThat(fredCache.isWifiUsableForDistributedCache(Optional.of("yolo")), Matchers.is(false));
+  }
+
+  @Test
+  public void testNamedAndLegacyCaches() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "http_timeout_seconds = 42",
+        "http_cache_names = bob",
+        "",
+        "[cache#bob]",
+        "http_url = http://bob.com/");
+
+    assertThat(config.getHttpCaches(), Matchers.hasSize(2));
+
+    HttpCacheEntry legacyCache = FluentIterable.from(config.getHttpCaches()).get(0);
+    assertThat(legacyCache.getUrl(), Matchers.equalTo(URI.create("http://localhost:8080/")));
+    assertThat(legacyCache.getTimeoutSeconds(), Matchers.is(42));
+
+    HttpCacheEntry bobCache = FluentIterable.from(config.getHttpCaches()).get(1);
+    assertThat(bobCache.getUrl(), Matchers.equalTo(URI.create("http://bob.com/")));
+    assertThat(bobCache.getCacheReadMode(), Matchers.equalTo(
+            ArtifactCacheBuckConfig.CacheReadMode.readwrite));
+    assertThat(bobCache.getTimeoutSeconds(), Matchers.is(3));
   }
 
   public static ArtifactCacheBuckConfig createFromText(String... lines) throws IOException {

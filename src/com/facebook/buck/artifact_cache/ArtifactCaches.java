@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -97,20 +98,21 @@ public class ArtifactCaches {
     }
 
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
-    boolean useDistributedCache = buckConfig.isWifiUsableForDistributedCache(wifiSsid);
     for (ArtifactCacheBuckConfig.ArtifactCacheMode mode : modes) {
       switch (mode) {
         case dir:
-          ArtifactCache dirArtifactCache = createDirArtifactCache(buckConfig, projectFilesystem);
-          builder.add(dirArtifactCache);
+          builder.add(createDirArtifactCache(buckConfig, projectFilesystem));
           break;
         case http:
-          if (useDistributedCache) {
-            ArtifactCache httpArtifactCache = createHttpArtifactCache(
-                buckConfig,
-                buckEventBus,
-                projectFilesystem);
-            builder.add(httpArtifactCache);
+          for (HttpCacheEntry cacheEntry : buckConfig.getHttpCaches()) {
+            if (!cacheEntry.isWifiUsableForDistributedCache(wifiSsid)) {
+              continue;
+            }
+            builder.add(createHttpArtifactCache(
+                    cacheEntry,
+                    buckConfig.getHostToReportToRemoteCacheServer(),
+                    buckEventBus,
+                    projectFilesystem));
           }
           break;
       }
@@ -145,13 +147,21 @@ public class ArtifactCaches {
   }
 
   private static ArtifactCache createHttpArtifactCache(
-      ArtifactCacheBuckConfig buckConfig,
+      HttpCacheEntry cacheDescription,
+      final String hostToReportToRemote,
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem) {
-    URI uri = buckConfig.getHttpCacheUrl();
-    int timeoutSeconds = buckConfig.getHttpCacheTimeoutSeconds();
-    boolean doStore = buckConfig.getHttpCacheReadMode().isDoStore();
-    final String host = buckConfig.getHostToReportToRemoteCacheServer();
+    String cacheName = cacheDescription.getName()
+        .transform(new Function<String, String>() {
+                     @Override
+                     public String apply(String input) {
+                       return "http-" + input;
+                     }
+                   })
+        .or("http");
+    URI url = cacheDescription.getUrl();
+    int timeoutSeconds = cacheDescription.getTimeoutSeconds();
+    boolean doStore = cacheDescription.getCacheReadMode().isDoStore();
 
     // Setup the defaut client to use.
     OkHttpClient client = new OkHttpClient();
@@ -162,7 +172,7 @@ public class ArtifactCaches {
             return chain.proceed(
                 chain.request().newBuilder()
                     .addHeader("X-BuckCache-User", System.getProperty("user.name", "<unknown>"))
-                    .addHeader("X-BuckCache-Host", host)
+                    .addHeader("X-BuckCache-Host", hostToReportToRemote)
                     .build());
           }
         });
@@ -183,10 +193,10 @@ public class ArtifactCaches {
     fetchClient.setReadTimeout(timeoutSeconds, TimeUnit.SECONDS);
 
     return new HttpArtifactCache(
-        "http",
+        cacheName,
         fetchClient,
         client,
-        uri,
+        url,
         doStore,
         projectFilesystem,
         buckEventBus);
