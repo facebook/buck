@@ -22,6 +22,7 @@ import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -42,7 +43,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Publisher {
 
@@ -100,17 +102,18 @@ public class Publisher {
         .getProjectFilesystem()
         .resolve(relativePathToOutput)
         .toFile();
-    if (coords.getClassifier().isEmpty()) {
-      try {
-        // If this is the "main" artifact (denoted by lack of classifier) generate and publish
-        // pom alongside
-        File pom = Pom.generatePomFile(publishable).toFile();
-        return publish(coords, mainItem, pom);
-      } catch (IOException e) {
-        throw Throwables.propagate(e);
-      }
-    } else {
-      return publish(coords, mainItem);
+
+    if (!coords.getClassifier().isEmpty()) {
+      return publish(coords, ImmutableList.of(mainItem));
+    }
+
+    try {
+      // If this is the "main" artifact (denoted by lack of classifier) generate and publish
+      // pom alongside
+      File pom = Pom.generatePomFile(publishable).toFile();
+      return publish(coords, ImmutableList.of(mainItem, pom));
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
     }
   }
 
@@ -119,7 +122,7 @@ public class Publisher {
    *
    * @see DefaultArtifact#DefaultArtifact(String)
    */
-  public DeployResult publish(String coords, File... toPublish) throws DeploymentException {
+  public DeployResult publish(String coords, List<File> toPublish) throws DeploymentException {
     return publish(new DefaultArtifact(coords), toPublish);
   }
 
@@ -127,7 +130,7 @@ public class Publisher {
       String groupId,
       String artifactId,
       String version,
-      File... toPublish)
+      List<File> toPublish)
       throws DeploymentException {
     return publish(new DefaultArtifact(groupId, artifactId, "", version), toPublish);
   }
@@ -140,7 +143,8 @@ public class Publisher {
    * @param toPublish {@link File}(s) to be published using the given coordinates. The filename
    *                  extension of each given file will be used as a maven "extension" coordinate
    */
-  public DeployResult publish(Artifact descriptor, File... toPublish) throws DeploymentException {
+  public DeployResult publish(Artifact descriptor, List<File> toPublish)
+      throws DeploymentException {
     String providedExtension = descriptor.getExtension();
     if (!providedExtension.isEmpty()) {
       LOG.warn(
@@ -149,14 +153,13 @@ public class Publisher {
           providedExtension,
           descriptor);
     }
-    Artifact[] artifacts = new Artifact[toPublish.length];
-    for (int i = 0; i < toPublish.length; i++) {
-      File file = toPublish[i];
-      artifacts[i] = new SubArtifact(
+    List<Artifact> artifacts = new ArrayList<>(toPublish.size());
+    for (File file : toPublish) {
+      artifacts.add(new SubArtifact(
           descriptor,
           descriptor.getClassifier(),
           Files.getFileExtension(file.getAbsolutePath()),
-          file);
+          file));
     }
     return publish(artifacts);
   }
@@ -166,7 +169,7 @@ public class Publisher {
    *                  coordinates in the corresponding {@link Artifact}.
    * @see Artifact#setFile
    */
-  public DeployResult publish(Artifact... toPublish) throws DeploymentException {
+  public DeployResult publish(List<Artifact> toPublish) throws DeploymentException {
     RepositorySystem repoSys = Preconditions.checkNotNull(
         locator.getService(RepositorySystem.class));
 
@@ -178,14 +181,14 @@ public class Publisher {
 
     if (dryRun) {
       return new DeployResult(deployRequest)
-          .setArtifacts(Arrays.asList(toPublish))
+          .setArtifacts(toPublish)
           .setMetadata(deployRequest.getMetadata());
     } else {
       return repoSys.deploy(session, deployRequest);
     }
   }
 
-  private DeployRequest createDeployRequest(Artifact[] toPublish) {
+  private DeployRequest createDeployRequest(List<Artifact> toPublish) {
     DeployRequest deployRequest = new DeployRequest().setRepository(remoteRepo);
     for (Artifact artifact : toPublish) {
       File file = artifact.getFile();
