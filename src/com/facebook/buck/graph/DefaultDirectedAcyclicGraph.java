@@ -23,6 +23,6 @@ public class DefaultDirectedAcyclicGraph<T> extends DefaultTraversableGraph<T>
 
   public DefaultDirectedAcyclicGraph(MutableDirectedGraph<T> graph) {
     super(graph);
-    Preconditions.checkArgument(graph.isAcyclic());
+    Preconditions.checkArgument(super.isAcyclic());
   }
 }
