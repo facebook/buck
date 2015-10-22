@@ -75,14 +75,14 @@ abstract class AbstractBuildFileSpec {
    * Find all build in the given {@link ProjectFilesystem}, and pass each to the given callable.
    */
   public void forEachBuildFile(
-      ProjectFilesystem filesystem,
+      final ProjectFilesystem filesystem,
       final String buildFileName,
       final Function<Path, Void> function)
       throws IOException {
 
     // If non-recursive, we just want the build file in the target spec's given base dir.
     if (!isRecursive()) {
-      function.apply(getBasePath().resolve(buildFileName));
+      function.apply(filesystem.resolve(getBasePath().resolve(buildFileName)));
       return;
     }
 
@@ -108,7 +108,7 @@ abstract class AbstractBuildFileSpec {
               BasicFileAttributes attrs)
               throws IOException {
             if (buildFileName.equals(file.getFileName().toString())) {
-              function.apply(file);
+              function.apply(filesystem.resolve(file));
             }
             return FileVisitResult.CONTINUE;
           }

@@ -50,8 +50,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 /**
@@ -61,6 +59,7 @@ import java.util.regex.Pattern;
 public class Cell {
 
   private final LoadingCache<Path, Cell> cells;
+  private final ImmutableSet<Path> knownRoots;
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
@@ -90,6 +89,17 @@ public class Cell {
     this.enforceBuckPackageBoundaries = parserConfig.getEnforceBuckPackageBoundary();
     this.tempFilePatterns = parserConfig.getTempFilePatterns();
 
+    ImmutableMap<String, String> allCells = getBuckConfig().getEntriesForSection("repositories");
+    ImmutableSet.Builder<Path> roots = ImmutableSet.builder();
+    roots.add(filesystem.getRootPath());
+    for (String path : allCells.values()) {
+      // Added the precondition check, though the resolve call can never return null.
+      Path cellRoot = Preconditions.checkNotNull(
+          getBuckConfig().resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(path)));
+      roots.add(cellRoot);
+    }
+    this.knownRoots = roots.build();
+
     PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
 
@@ -101,24 +111,7 @@ public class Cell {
           public Cell load(Path cellPath) throws Exception {
             cellPath = cellPath.toRealPath();
 
-            ImmutableMap<String, String> allCells = getBuckConfig()
-                .getEntriesForSection("repositories");
-
-            Path root = null;
-            Set<Path> knownRoots = new TreeSet<>();
-            for (String path : allCells.values()) {
-              // Added the precondition check, though the resolve call can never return null.
-              // TODO(user): Remove precondition check when possible.
-              Path cellRoot = Preconditions.checkNotNull(
-                  getBuckConfig().resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(path)));
-              if (cellPath.equals(cellRoot)) {
-                root = cellRoot;
-                break;
-              }
-              knownRoots.add(cellRoot);
-            }
-
-            if (root == null) {
+            if (!knownRoots.contains(cellPath)) {
               throw new HumanReadableException(
                   "Unable to find repository rooted at %s. Known roots are:\n  %s",
                   getFilesystem().getRootPath(),
@@ -128,10 +121,10 @@ public class Cell {
             // TODO(simons): Get the overrides from the parent config
             ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of();
             Config config = Config.createDefaultConfig(
-                root,
+                cellPath,
                 sections);
 
-            ProjectFilesystem cellFilesystem = new ProjectFilesystem(root, config);
+            ProjectFilesystem cellFilesystem = new ProjectFilesystem(cellPath, config);
 
             Cell parent = Cell.this;
             BuckConfig parentConfig = parent.getBuckConfig();
@@ -143,7 +136,7 @@ public class Cell {
                 parentConfig.getPlatform(),
                 parentConfig.getEnvironment());
 
-            Watchman.build(root, parentConfig.getEnvironment(), console, clock);
+            Watchman.build(cellPath, parentConfig.getEnvironment(), console, clock);
 
             return new Cell(
                 cellFilesystem,
@@ -163,6 +156,10 @@ public class Cell {
 
   public ProjectFilesystem getFilesystem() {
     return filesystem;
+  }
+
+  public Path getRoot() {
+    return getFilesystem().getRootPath();
   }
 
   public KnownBuildRuleTypes getKnownBuildRuleTypes() {
@@ -193,6 +190,13 @@ public class Cell {
       }
       throw e;
     }
+  }
+
+  public Optional<Cell> getCellIfKnown(BuildTarget target) {
+    if (knownRoots.contains(target.getCellPath())) {
+      return Optional.of(getCell(target));
+    }
+    return Optional.absent();
   }
 
   public Description<?> getDescription(BuildRuleType type) {
@@ -280,7 +284,7 @@ public class Cell {
   @SuppressWarnings("serial")
   public static class MissingBuildFileException extends BuildTargetException {
     public MissingBuildFileException(BuildTarget buildTarget, BuckConfig buckConfig) {
-      super(String.format("No build file at %s when resolving target %s.",
+      super(String.format("No build XXX at %s when resolving target %s.",
           buildTarget.getBasePathWithSlash() + new ParserConfig(buckConfig).getBuildFileName(),
           buildTarget.getFullyQualifiedName()));
     }

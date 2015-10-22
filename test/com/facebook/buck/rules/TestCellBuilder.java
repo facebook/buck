@@ -46,7 +46,6 @@ public class TestCellBuilder {
 
   public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
-    buckConfig = FakeBuckConfig.builder().build();
     androidDirectoryResolver = new FakeAndroidDirectoryResolver();
   }
 
@@ -73,6 +72,10 @@ public class TestCellBuilder {
   public Cell build() throws IOException, InterruptedException {
     ProcessExecutor executor = new ProcessExecutor(new TestConsole());
 
+    BuckConfig config = buckConfig == null ?
+        FakeBuckConfig.builder().setFilesystem(filesystem).build() :
+        buckConfig;
+
     KnownBuildRuleTypesFactory typesFactory = new KnownBuildRuleTypesFactory(
         executor,
         androidDirectoryResolver,
@@ -83,7 +86,7 @@ public class TestCellBuilder {
           filesystem,
           new TestConsole(),
           NULL_WATCHMAN,
-          buckConfig,
+          config,
           typesFactory,
           androidDirectoryResolver,
           new FakeClock(0));
@@ -93,7 +96,7 @@ public class TestCellBuilder {
         filesystem,
         new TestConsole(),
         NULL_WATCHMAN,
-        buckConfig,
+        config,
         typesFactory,
         androidDirectoryResolver,
         new FakeClock(0)) {

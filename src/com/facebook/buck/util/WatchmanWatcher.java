@@ -364,7 +364,7 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
   }
 
   private void postWatchEvent(WatchEvent<?> event) {
-    LOG.verbose("Posting WatchEvent: %s", event);
+    LOG.warn("Posting WatchEvent: %s", event);
     fileChangeEventBus.post(event);
   }
 

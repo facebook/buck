@@ -269,7 +269,7 @@ public class Parser {
 
       // Format a proper error message for non-existent build files.
       if (!cell.getFilesystem().isFile(buildFile)) {
-        throw new MissingBuildFileException(spec, buildFile);
+        throw new MissingBuildFileException(spec, cell.getRoot().relativize(buildFile));
       }
 
       ProjectBuildFileParser buildFileParser = buildFileParsers.create(cell);

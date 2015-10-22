@@ -941,7 +941,6 @@ public class ProjectFilesystem {
     }
   }
 
-
   @Override
   public boolean equals(Object other) {
     if (this == other) {

@@ -40,11 +40,11 @@ public class BuildFileSpecTest {
   @Test
   public void recursiveVsNonRecursive() throws IOException, InterruptedException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path buildFile = Paths.get("a", "BUCK");
+    Path buildFile = Paths.get("a", "BUCK").toAbsolutePath();
     filesystem.mkdirs(buildFile.getParent());
     filesystem.touch(buildFile);
 
-    Path nestedBuildFile = Paths.get("a", "b", "BUCK");
+    Path nestedBuildFile = Paths.get("a", "b", "BUCK").toAbsolutePath();
     filesystem.mkdirs(nestedBuildFile.getParent());
     filesystem.touch(nestedBuildFile);
 
@@ -67,7 +67,7 @@ public class BuildFileSpecTest {
     // NOTE(agallagher): FakeProjectFilesystem doesn't currently support a proper walkFileTree
     // method, so use a real one here to test ignore dirs.
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
-    Path buildFile = Paths.get("a", "BUCK");
+    Path buildFile = Paths.get("a", "BUCK").toAbsolutePath();
     filesystem.mkdirs(buildFile.getParent());
     filesystem.writeContentsToPath("", buildFile);
 

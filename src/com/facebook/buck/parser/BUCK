@@ -22,9 +22,12 @@ java_immutables_library(
     'AbstractBuildTargetSpec.java',
     'AbstractTargetNodePredicateSpec.java',
     'BuildTargetPatternTargetNodeParser.java',
+    'DaemonicParserState.java',
     'MissingBuildFileException.java',
     'ParseEvent.java',
     'Parser.java',
+    'ParserNg.java',
+    'PerBuildState.java',
     'TargetNodeSpec.java',
   ],
   tests = [
