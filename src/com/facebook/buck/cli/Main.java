@@ -693,6 +693,12 @@ public final class Main {
         new ProjectFilesystem(rootCell.getFilesystem().getRootPath())));
 
     for (Path root : FileSystems.getDefault().getRootDirectories()) {
+      if (!root.toFile().exists()) {
+        // On Windows, it is possible that the system will have a drive for something that does not
+        // exist such as a floppy disk or SD card.  The drive exists, but it does not contain
+        // anything useful, so Buck should not consider it as a cacheable location.
+        continue;
+      }
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.
