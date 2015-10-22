@@ -19,6 +19,7 @@ package com.facebook.buck.model;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -110,6 +111,17 @@ public class BuildTargets {
     return false;
   }
 
+  public static Predicate<BuildTarget> containsFlavors(final FlavorDomain<?> domain) {
+    return new Predicate<BuildTarget>() {
+      @Override
+      public boolean apply(BuildTarget input) {
+        ImmutableSet<Flavor> flavorSet =
+            Sets.intersection(domain.getFlavors(), input.getFlavors()).immutableCopy();
+        return !flavorSet.isEmpty();
+      }
+    };
+  }
+
   /**
    * Propagate flavors represented by the given {@link FlavorDomain} objects from a parent
    * target to its dependencies.
@@ -126,19 +138,16 @@ public class BuildTargets {
     for (FlavorDomain<?> domain : domains) {
 
       // Now extract all relevant domain flavors from our parent target.
-      Optional<Flavor> flavor;
-      try {
-        flavor = domain.getFlavor(ImmutableSet.copyOf(target.getFlavors()));
-      } catch (FlavorDomainException e) {
-        throw new HumanReadableException("%s: %s", target, e.getMessage());
-      }
-      if (!flavor.isPresent()) {
+      ImmutableSet<Flavor> flavorSet =
+          Sets.intersection(domain.getFlavors(), target.getFlavors()).immutableCopy();
+
+      if (flavorSet.isEmpty()) {
         throw new HumanReadableException(
             "%s: no flavor for \"%s\"",
             target,
             domain.getName());
       }
-      flavors.add(flavor.get());
+      flavors.addAll(flavorSet);
 
       // First verify that our deps are not already flavored for our given domains.
       for (BuildTarget dep : deps) {
@@ -154,7 +163,7 @@ public class BuildTargets {
               target,
               dep,
               domain.getName(),
-              flavor.get());
+              flavorSet.toString());
         }
       }
     }
@@ -168,5 +177,4 @@ public class BuildTargets {
 
     return flavoredDeps.build();
   }
-
 }

@@ -77,6 +77,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -141,7 +142,7 @@ public class ProjectGeneratorTest {
   private static final FlavorDomain<CxxPlatform> PLATFORMS =
       new FlavorDomain<>("C/C++ platform", ImmutableMap.<Flavor, CxxPlatform>of());
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
-
+  private static final Flavor DEFAULT_FLAVOR = ImmutableFlavor.of("default");
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private FakeProjectFilesystem fakeProjectFilesystem;
@@ -1725,7 +1726,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleWithPreBuildScriptDependency() throws IOException {
-    BuildTarget scriptTarget = BuildTarget.builder(rootPath, "//foo", "pre_build_script").build();
+    BuildTarget scriptTarget = BuildTarget.builder(rootPath, "//foo", "pre_build_script")
+        .addFlavors(DEFAULT_FLAVOR)
+        .build();
     TargetNode<?> scriptNode = XcodePrebuildScriptBuilder
         .createBuilder(scriptTarget)
         .setCmd("script.sh")
@@ -1788,7 +1791,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleWithPostBuildScriptDependency() throws IOException {
-    BuildTarget scriptTarget = BuildTarget.builder(rootPath, "//foo", "post_build_script").build();
+    BuildTarget scriptTarget = BuildTarget.builder(rootPath, "//foo", "post_build_script")
+        .addFlavors(DEFAULT_FLAVOR)
+        .build();
     TargetNode<?> scriptNode = XcodePostbuildScriptBuilder
         .createBuilder(scriptTarget)
         .setCmd("script.sh")
@@ -1851,7 +1856,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleBundleRuleWithRNLibraryDependency() throws IOException {
-    BuildTarget rnLibraryTarget = BuildTarget.builder(rootPath, "//foo", "rn_library").build();
+    BuildTarget rnLibraryTarget = BuildTarget.builder(rootPath, "//foo", "rn_library")
+        .addFlavors(DEFAULT_FLAVOR)
+        .build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(
         FakeBuckConfig.builder()
@@ -1907,7 +1914,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testNoBundleFlavoredAppleBundleRuleWithRNLibraryDependency() throws IOException {
-    BuildTarget rnLibraryTarget = BuildTarget.builder(rootPath, "//foo", "rn_library").build();
+    BuildTarget rnLibraryTarget = BuildTarget.builder(rootPath, "//foo", "rn_library")
+        .addFlavors(DEFAULT_FLAVOR)
+        .build();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     ReactNativeBuckConfig buckConfig = new ReactNativeBuckConfig(
         FakeBuckConfig.builder()
@@ -2006,7 +2015,9 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testAppleResourceWithVariantGroupSetsFileTypeBasedOnPath() throws IOException {
-    BuildTarget resourceTarget = BuildTarget.builder(rootPath, "//foo", "resource").build();
+    BuildTarget resourceTarget = BuildTarget.builder(rootPath, "//foo", "resource")
+        .addFlavors(DEFAULT_FLAVOR)
+        .build();
     TargetNode<?> resourceNode = AppleResourceBuilder
         .createBuilder(resourceTarget)
         .setFiles(ImmutableSet.<SourcePath>of())
@@ -2139,7 +2150,9 @@ public class ProjectGeneratorTest {
         .createBuilder(watchAppBinaryTarget)
         .build();
 
-    BuildTarget watchAppTarget = BuildTarget.builder(rootPath, "//foo", "WatchApp").build();
+    BuildTarget watchAppTarget = BuildTarget.builder(rootPath, "//foo", "WatchApp")
+        .addFlavors(DEFAULT_FLAVOR)
+        .build();
     TargetNode<?> watchAppNode = AppleBundleBuilder
         .createBuilder(watchAppTarget)
         .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))

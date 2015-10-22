@@ -53,7 +53,7 @@ public class BuildTargetsTest {
   }
 
   @Test
-  public void propagateFlavorDomain() {
+  public void propagateFlavorDomainWithSingleFlavor() {
     BuildTarget parent = BuildTargetFactory.newInstance("//:parent#flavor");
     Flavor flavor = ImmutableFlavor.of("flavor");
     FlavorDomain<?> domain = new FlavorDomain<>(
@@ -66,6 +66,27 @@ public class BuildTargetsTest {
         ImmutableList.of(child));
     assertEquals(
         ImmutableSortedSet.of(BuildTarget.builder(child).addFlavors(flavor).build()),
+        result);
+  }
+
+  @Test
+  public void propagateFlavorDomainWithMultipleFlavors() {
+    BuildTarget parent = BuildTargetFactory.newInstance("//:parent#flavor,flavor2");
+    Flavor flavor = ImmutableFlavor.of("flavor");
+    Flavor flavor2 = ImmutableFlavor.of("flavor2");
+    FlavorDomain<?> domain = new FlavorDomain<>(
+        "test",
+        ImmutableMap.of(flavor, "something", flavor2, "something2"));
+    BuildTarget child = BuildTargetFactory.newInstance("//:child");
+    ImmutableSortedSet<BuildTarget> result = BuildTargets.propagateFlavorDomains(
+        parent,
+        ImmutableList.<FlavorDomain<?>>of(domain),
+        ImmutableList.of(child));
+    assertEquals(
+        ImmutableSortedSet.of(BuildTarget.builder(child)
+                .addFlavors(flavor)
+                .addFlavors(flavor2)
+                .build()),
         result);
   }
 

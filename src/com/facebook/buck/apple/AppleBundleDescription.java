@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.js.ReactNativeFlavors;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -41,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -59,7 +62,9 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>, Flavored {
+public class AppleBundleDescription implements Description<AppleBundleDescription.Arg>,
+    Flavored,
+    ImplicitDepsInferringDescription<AppleBundleDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
 
   private static final ImmutableSet<Flavor> SUPPORTED_LIBRARY_FLAVORS = ImmutableSet.of(
@@ -324,13 +329,51 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     return extensionBundlePaths.build();
   }
 
+  /**
+   * Propagate the bundle's platform flavors to its dependents.
+   */
+
+  @Override
+  public ImmutableSet<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      Function<Optional<String>, Path> cellRoots,
+      AppleBundleDescription.Arg constructorArg) {
+    if (!constructorArg.deps.isPresent()) {
+      return ImmutableSet.of();
+    }
+
+    if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
+      buildTarget = BuildTarget.builder(buildTarget).addAllFlavors(
+          ImmutableSet.of(defaultCxxPlatform.getFlavor())).build();
+    }
+
+    FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps.get())
+        .filter(Predicates.not(Predicates.equalTo(constructorArg.binary)));
+
+    FluentIterable<BuildTarget> targetsWithFlavors = depsExcludingBinary.filter(
+        BuildTargets.containsFlavors(cxxPlatformFlavorDomain));
+
+    FluentIterable<BuildTarget> targetsWithoutFlavors = depsExcludingBinary.filter(
+        Predicates.not(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)));
+
+    return ImmutableSet.<BuildTarget>builder()
+        .addAll(targetsWithFlavors)
+        .addAll(
+            BuildTargets.propagateFlavorDomains(
+                buildTarget,
+                ImmutableSet.<FlavorDomain<?>>of(cxxPlatformFlavorDomain),
+                targetsWithoutFlavors))
+        .build();
+  }
+
+
   @SuppressFieldNotInitialized
   public static class Arg implements HasAppleBundleFields, HasTests {
     public Either<AppleBundleExtension, String> extension;
     public BuildTarget binary;
     public SourcePath infoPlist;
     public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> deps;
     @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
     public Optional<String> xcodeProductType;
     public Optional<String> productName;

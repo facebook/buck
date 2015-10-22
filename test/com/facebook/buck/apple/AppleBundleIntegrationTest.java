@@ -447,7 +447,7 @@ public class AppleBundleIntegrationTest {
         tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoWatchApp").assertSuccess();
+    workspace.runBuckCommand("build", "//:DemoWatchApp#watchsimulator-i386").assertSuccess();
 
     workspace.verify();
 
@@ -455,6 +455,13 @@ public class AppleBundleIntegrationTest {
         Files.exists(
             tmp.getRootPath()
                 .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoWatchApp/DemoWatchApp.app/DemoWatchApp")));
+                .resolve("DemoWatchApp#watchsimulator-i386/DemoWatchApp.app/DemoWatchApp")));
+
+    assertTrue(
+        Files.exists(
+            tmp.getRootPath()
+                .resolve(BuckConstant.GEN_DIR)
+                .resolve("DemoWatchApp#watchsimulator-i386/DemoWatchApp.app/" +
+                        "DemoWatchAppExtension.appex/DemoWatchAppExtension")));
   }
 }
