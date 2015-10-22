@@ -67,6 +67,20 @@ public class AndroidBinaryFlavorsIntegrationTest {
   }
 
   @Test
+  public void testPackageStringsOnlyFlavorOutput() throws IOException {
+    ProcessResult result = workspace.runBuckCommand(
+        "targets",
+        "--show-output",
+        "//apps/sample:app_str#package_string_assets");
+    String path =
+        "buck-out/bin/apps/sample/__strings_app_str#package_string_assets__/";
+    result.assertSuccess();
+    assertThat(
+        result.getStdout().trim().split(" ")[1],
+        equalTo(Paths.get(path).toString()));
+  }
+
+  @Test
   public void testPackageStringAssetsFlavorDoesNotExist() throws IOException {
     try {
       workspace.runBuckCommand(

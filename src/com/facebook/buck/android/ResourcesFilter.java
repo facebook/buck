@@ -66,6 +66,9 @@ public class ResourcesFilter extends AbstractBuildRule
   static enum ResourceCompressionMode {
     DISABLED(/* isCompressResources */ false, /* isStoreStringsAsAssets */ false),
     ENABLED(/* isCompressResources */ true, /* isStoreStringsAsAssets */ false),
+    ENABLED_STRINGS_ONLY(
+        /* isCompressResources */ false,
+        /* isStoreStringsAsAssets */ true),
     ENABLED_WITH_STRINGS_AS_ASSETS(
       /* isCompressResources */ true,
       /* isStoreStringsAsAssets */ true),
