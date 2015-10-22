@@ -679,18 +679,19 @@ public class TargetsCommand extends AbstractCommand {
           projectGraphWithTests.get(target),
           "Could not find target %s in project graph",
           target);
-      TargetGraph subGraph = projectGraphWithTests.getSubgraph(ImmutableSet.of(targetNode));
+      ImmutableSet<TargetNode<?>> dependencyClosure =
+          getDependencyClosure(projectGraphWithTests, targetNode);
 
       Hasher hasher = Hashing.sha1().newHasher();
       ImmutableSortedSet.Builder<TargetNode<?>> nodesWithDepsAndTests =
           ImmutableSortedSet.naturalOrder();
       // Add the target and its deps.
-      nodesWithDepsAndTests.addAll(subGraph.getNodes());
+      nodesWithDepsAndTests.addAll(dependencyClosure);
 
       if (isDetectTestChanges()) {
         // Add the tests and their deps.
         nodesWithDepsAndTests.addAll(FluentIterable
-                .from(subGraph.getNodes())
+                .from(dependencyClosure)
                 .transformAndConcat(
                     new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
                       @Override
@@ -715,6 +716,22 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     return 0;
+  }
+
+  private ImmutableSet<TargetNode<?>> getDependencyClosure(
+      final TargetGraph graph,
+      TargetNode<?> node) {
+    final ImmutableSet.Builder<TargetNode<?>> closure = ImmutableSet.builder();
+    new AbstractBreadthFirstTraversal<TargetNode<?>>(node) {
+      @Override
+      public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
+        closure.add(node);
+        ImmutableSet<TargetNode<?>> dependencies =
+            ImmutableSet.copyOf(graph.getAll(node.getDeps()));
+        return dependencies;
+      }
+    }.start();
+    return closure.build();
   }
 
   /**
