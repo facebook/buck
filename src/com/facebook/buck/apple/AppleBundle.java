@@ -55,12 +55,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -176,7 +176,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Optional<AppleAssetCatalog> assetCatalog,
       Set<BuildTarget> tests,
       AppleSdk sdk,
-      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities,
+      CodeSignIdentityStore codeSignIdentityStore,
       Optional<Path> provisioningProfileSearchPath,
       DebugInfoFormat debugInfoFormat) {
     super(params, resolver);
@@ -235,25 +235,16 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
           this.infoPlistSubstitutions);
       if (customIdentity.isPresent()) {
         LOG.debug("Bundle specifies custom code signing identity: " + customIdentity.get());
-        if (CodeSignIdentity.isHash(customIdentity.get())) {
-          for (CodeSignIdentity identity : allValidCodeSignIdentities) {
-            if (identity.getHash().equals(customIdentity.get())) {
-              foundIdentity = Optional.of(identity);
-              break;
-            }
-          }
+        if (CodeSignIdentity.isFingerprint(customIdentity.get())) {
+          foundIdentity =
+              codeSignIdentityStore.findIdentityMatchingFingerprint(customIdentity.get());
         } else {
-          for (CodeSignIdentity identity : allValidCodeSignIdentities) {
-            if (identity.getFullName().startsWith(customIdentity.get())) {
-              foundIdentity = Optional.of(identity);
-              break;
-            }
-          }
+          foundIdentity =
+              codeSignIdentityStore.findIdentityByCommonNamePrefix(customIdentity.get());
         }
-      } else if (!allValidCodeSignIdentities.isEmpty()) {
-        LOG.debug("Using default code signing identity");
-        Iterator<CodeSignIdentity> it = allValidCodeSignIdentities.iterator();
-        foundIdentity = Optional.of(it.next());
+      } else if (!codeSignIdentityStore.getIdentities().isEmpty()) {
+        LOG.debug("Using arbitrary code signing identity");
+        foundIdentity = Optional.of(Iterables.getLast(codeSignIdentityStore.getIdentities()));
       }
       if (!foundIdentity.isPresent()) {
         throw new HumanReadableException("The platform " + platformName + " for this target " +
@@ -482,7 +473,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               getProjectFilesystem().getRootPath(),
               bundleDestinationPath,
               signingEntitlementsTempPath,
-              codeSignIdentity.get().getHash()
+              codeSignIdentity.get().getFingerprint()
           )
       );
     }

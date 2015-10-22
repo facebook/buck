@@ -79,7 +79,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
-  private final ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities;
+  private final CodeSignIdentityStore codeSignIdentityStore;
   private final Optional<Path> provisioningProfileSearchPath;
 
   public AppleBundleDescription(
@@ -88,7 +88,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
-      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities,
+      CodeSignIdentityStore codeSignIdentityStore,
       Optional<Path> provisioningProfileSearchPath) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
@@ -96,7 +96,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     this.platformFlavorsToAppleCxxPlatforms =
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
-    this.allValidCodeSignIdentities = allValidCodeSignIdentities;
+    this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileSearchPath = provisioningProfileSearchPath;
   }
 
@@ -243,7 +243,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         assetCatalog,
         args.getTests(),
         appleCxxPlatform.getAppleSdk(),
-        allValidCodeSignIdentities,
+        codeSignIdentityStore,
         provisioningProfileSearchPath,
         AppleBundle.DebugInfoFormat.DSYM);
   }

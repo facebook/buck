@@ -188,7 +188,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
-          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC),
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           Optional.<Path>absent());
 
   /**
@@ -202,7 +202,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
-          ImmutableSet.<CodeSignIdentity>of(CodeSignIdentity.AD_HOC),
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           Optional.<Path>absent(),
           Suppliers.ofInstance(Optional.<Path>absent()));
 }

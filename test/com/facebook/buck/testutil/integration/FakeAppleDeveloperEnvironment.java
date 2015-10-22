@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.ProvisioningProfileCopyStep;
 import com.facebook.buck.apple.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
@@ -40,8 +40,9 @@ public class FakeAppleDeveloperEnvironment {
   private FakeAppleDeveloperEnvironment() { }
 
   private static final int numCodeSigningIdentities =
-      AppleConfig.createCodeSignIdentitiesSupplier(
-          new ProcessExecutor(new TestConsole())).get().size();
+      CodeSignIdentityStore.fromSystem(new ProcessExecutor(new TestConsole()))
+          .getIdentities()
+          .size();
 
   private static final boolean hasWildcardProvisioningProfile = Suppliers.memoize(
       new Supplier<Boolean>() {

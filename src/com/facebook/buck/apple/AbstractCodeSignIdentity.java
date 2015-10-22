@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
-  private static final Pattern STRICT_HASH_PATTERN = Pattern.compile("(^[A-F0-9]{40}$)");
+  private static final Pattern STRICT_HASH_PATTERN = Pattern.compile("(^[A-Fa-f0-9]{40}$)");
 
   /** A pseudo-identity for ad hoc code signing.
    *
@@ -43,33 +43,33 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
    * intended for Buck unit tests.
    */
   public static final CodeSignIdentity AD_HOC = CodeSignIdentity.builder()
-      .setHash("-").setFullName("Ad Hoc").build();
+      .setFingerprint("-").setSubjectCommonName("Ad Hoc").build();
 
   /** Returns the identity's certificate hash, defined to be unique for each identity.
    */
-  public abstract String getHash();
+  public abstract String getFingerprint();
 
   /** Returns the full name of the identity.
    * e.g. "iPhone Developer: John Doe (ABCDE12345)"
    *
    * Not guaranteed to be unique.
    */
-  public abstract String getFullName();
+  public abstract String getSubjectCommonName();
 
   /** Whether this is a hash identifier (or the special ad-hoc '-') or not.
    */
-  public static boolean isHash(String identifier) {
+  public static boolean isFingerprint(String identifier) {
     Matcher matcher = STRICT_HASH_PATTERN.matcher(identifier);
     return matcher.find() || identifier.equals("-");
   }
 
   @Value.Check
   protected void check() {
-    Preconditions.checkArgument(isHash(getHash()));
+    Preconditions.checkArgument(isFingerprint(getFingerprint()));
   }
 
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
-    return builder.setReflectively("code-sign-identity", getHash());
+    return builder.setReflectively("code-sign-identity", getFingerprint());
   }
 }

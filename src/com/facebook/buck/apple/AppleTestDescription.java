@@ -104,7 +104,7 @@ public class AppleTestDescription implements
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
-  private final ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities;
+  private final CodeSignIdentityStore codeSignIdentityStore;
   private final Optional<Path> provisioningProfileSearchPath;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
 
@@ -115,7 +115,7 @@ public class AppleTestDescription implements
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
-      ImmutableSet<CodeSignIdentity> allValidCodeSignIdentities,
+      CodeSignIdentityStore codeSignIdentityStore,
       Optional<Path> provisioningProfileSearchPath,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier) {
     this.appleConfig = appleConfig;
@@ -125,7 +125,7 @@ public class AppleTestDescription implements
     this.platformFlavorsToAppleCxxPlatforms =
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
-    this.allValidCodeSignIdentities = allValidCodeSignIdentities;
+    this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileSearchPath = provisioningProfileSearchPath;
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
   }
@@ -347,7 +347,7 @@ public class AppleTestDescription implements
         assetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),
-        allValidCodeSignIdentities,
+        codeSignIdentityStore,
         provisioningProfileSearchPath,
         AppleBundle.DebugInfoFormat.NONE);
 
