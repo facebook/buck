@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -61,6 +60,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
@@ -739,9 +739,20 @@ public class ExopackageInstaller {
   @VisibleForTesting
   static Optional<PackageInfo> parsePathAndPackageInfo(String packageName, String rawOutput) {
     Iterable<String> lines = Splitter.on("\r\n").omitEmptyStrings().split(rawOutput);
+    Iterator<String> lineIter = lines.iterator();
     String pmPathPrefix = "package:";
-    String pmPath = Iterables.getFirst(lines, null);
+
+    String pmPath = null;
+    if (lineIter.hasNext()) {
+      pmPath = lineIter.next();
+      if (pmPath.startsWith("WARNING: linker: ")) {
+        // Ignore silly linker warnings about non-PIC code on emulators
+        pmPath = lineIter.hasNext() ? lineIter.next() : null;
+      }
+    }
+
     if (pmPath == null || !pmPath.startsWith(pmPathPrefix)) {
+      LOG.warn("unable to locate package path for [" + packageName + "]");
       return Optional.absent();
     }
 
