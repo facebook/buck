@@ -132,17 +132,21 @@ public class ConstructorArgMarshaller {
       ParamInfo<T> paramInfo,
       final ImmutableSet.Builder<BuildTarget> declaredDeps,
       Object dto) {
-    paramInfo.traverse(
-        new ParamInfo.Traversal() {
-          @Override
-          public void traverse(Object object) {
-            if (!(object instanceof BuildTarget)) {
-              return;
+
+    if (paramInfo.isDep()) {
+      paramInfo.traverse(
+          new ParamInfo.Traversal() {
+            @Override
+            public void traverse(Object object) {
+              if (!(object instanceof BuildTarget)) {
+                return;
+              }
+              declaredDeps.add((BuildTarget) object);
             }
-            declaredDeps.add((BuildTarget) object);
-          }
-        },
-        (T) dto);
+          },
+          (T) dto);
+
+    }
   }
 
   @SuppressWarnings("unchecked")

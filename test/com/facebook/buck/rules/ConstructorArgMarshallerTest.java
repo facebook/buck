@@ -318,6 +318,68 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
+  public void onlyFieldNamedDepsAreConsideredDeclaredDeps()
+      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+
+    class Dto {
+      public Optional<Set<BuildTarget>> deps;
+      public Optional<Set<BuildTarget>> notdeps;
+    }
+
+    final String dep = "//is/a/declared:dep";
+    final String notDep = "//is/not/a/declared:dep";
+
+    BuildTarget declaredDep = BuildTargetFactory.newInstance(dep);
+
+    Dto dto = new Dto();
+    Map<String, Object> args = Maps.newHashMap();
+    args.put("deps", ImmutableList.of(dep));
+    args.put("notdeps", ImmutableList.of(notDep));
+
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+
+    marshaller.populate(
+        createCellRoots(filesystem),
+        filesystem,
+        buildRuleFactoryParams(),
+        dto,
+        declaredDeps,
+        ImmutableSet.<BuildTargetPattern>builder(),
+        args);
+
+    assertEquals(ImmutableSet.of(declaredDep), declaredDeps.build());
+  }
+
+  @Test
+  public void fieldsWithIsDepEqualsFalseHintAreNotTreatedAsDeps()
+      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+
+    class Dto {
+      @Hint(isDep = false)
+      public Optional<Set<BuildTarget>> deps;
+    }
+
+    final String dep = "//should/be:ignored";
+
+    Dto dto = new Dto();
+    Map<String, Object> args = Maps.newHashMap();
+    args.put("deps", ImmutableList.of(dep));
+
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+
+    marshaller.populate(
+        createCellRoots(filesystem),
+        filesystem,
+        buildRuleFactoryParams(),
+        dto,
+        declaredDeps,
+        ImmutableSet.<BuildTargetPattern>builder(),
+        args);
+
+    assertEquals(ImmutableSet.of(), declaredDeps.build());
+  }
+
+  @Test
   public void optionalCollectionsWithoutAValueWillBeSetToAnEmptyOptionalCollection()
       throws ConstructorArgMarshalException, NoSuchBuildTargetException {
 
