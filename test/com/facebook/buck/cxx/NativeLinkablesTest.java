@@ -26,7 +26,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -115,7 +118,7 @@ public class NativeLinkablesTest {
         "//:d",
         resolver,
         NativeLinkableInput.builder()
-            .addArgs("d")
+            .addArgs(new StringArg("d"))
             .build(),
         NativeLinkable.Linkage.ANY,
         ImmutableMap.<String, SourcePath>of());
@@ -124,7 +127,7 @@ public class NativeLinkablesTest {
         "//:c",
         resolver,
         NativeLinkableInput.builder()
-            .addArgs("c")
+            .addArgs(new StringArg("c"))
             .build(),
         NativeLinkable.Linkage.STATIC,
         ImmutableMap.<String, SourcePath>of(),
@@ -134,7 +137,7 @@ public class NativeLinkablesTest {
         "//:b",
         resolver,
         NativeLinkableInput.builder()
-            .addArgs("b")
+            .addArgs(new StringArg("b"))
             .build(),
         NativeLinkable.Linkage.ANY,
         ImmutableMap.<String, SourcePath>of(),
@@ -144,7 +147,7 @@ public class NativeLinkablesTest {
         "//:a",
         resolver,
         NativeLinkableInput.builder()
-            .addArgs("a")
+            .addArgs(new StringArg("a"))
             .build(),
         NativeLinkable.Linkage.ANY,
         ImmutableMap.<String, SourcePath>of(),
@@ -160,8 +163,16 @@ public class NativeLinkablesTest {
             Linker.LinkableDepType.SHARED,
             ImmutableSet.<BuildTarget>of(),
             /* reverse */ false);
-    assertThat(inputForTop.getArgs(), Matchers.containsInAnyOrder("a", "b", "d"));
-    assertThat(inputForTop.getArgs(), Matchers.not(Matchers.contains("c")));
+    assertThat(
+        FluentIterable.from(inputForTop.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList(),
+        Matchers.containsInAnyOrder("a", "b", "d"));
+    assertThat(
+        FluentIterable.from(inputForTop.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList(),
+        Matchers.not(Matchers.contains("c")));
 
     // However, when collecting the transitive native linkable input for `B`, we *should* have
     // input from `C`.
@@ -173,7 +184,11 @@ public class NativeLinkablesTest {
             Linker.LinkableDepType.SHARED,
             ImmutableSet.<BuildTarget>of(),
             /* reverse */ false);
-    assertThat(inputForB.getArgs(), Matchers.containsInAnyOrder("c", "d"));
+    assertThat(
+        FluentIterable.from(inputForB.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList(),
+        Matchers.containsInAnyOrder("c", "d"));
   }
 
   @Test

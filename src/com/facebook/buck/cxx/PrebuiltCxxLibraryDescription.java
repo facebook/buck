@@ -38,6 +38,8 @@ import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroFinder;
 import com.facebook.buck.rules.macros.MacroReplacer;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -276,17 +278,23 @@ public class PrebuiltCxxLibraryDescription
         cxxPlatform,
         params,
         pathResolver,
-        CxxFlags.getFlags(
-            args.exportedLinkerFlags,
-            args.exportedPlatformLinkerFlags,
-            cxxPlatform),
         sharedTarget,
         Linker.LinkType.SHARED,
         Optional.of(soname),
         builtSharedLibraryPath,
-        ImmutableList.<SourcePath>of(
-            new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath)),
-        /* extraInputs */ ImmutableList.<SourcePath>of(),
+        ImmutableList.<com.facebook.buck.rules.args.Arg>builder()
+            .addAll(
+                StringArg.from(
+                    CxxFlags.getFlags(
+                        args.exportedLinkerFlags,
+                        args.exportedPlatformLinkerFlags,
+                        cxxPlatform)))
+            .addAll(
+                cxxPlatform.getLd().linkWhole(
+                    new SourcePathArg(
+                        pathResolver,
+                        new PathSourcePath(params.getProjectFilesystem(), staticLibraryPath))))
+            .build(),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
         Optional.<Linker.CxxRuntimeType>absent(),

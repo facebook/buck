@@ -24,10 +24,10 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Functions;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
@@ -69,23 +69,22 @@ class OCamlStaticLibrary extends NoopBuildRule implements OCamlLibrary {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
     // Add linker flags.
-    inputBuilder.addAllArgs(linkerFlags);
+    inputBuilder.addAllArgs(StringArg.from(linkerFlags));
 
     // Add arg and input for static library.
-    final Path staticLibraryPath =
-        OCamlBuildContext.getOutputPath(
-            staticLibraryTarget.getUnflavoredBuildTarget(),
-            /* isLibrary */ true);
-    inputBuilder.addInputs(
-        new BuildTargetSourcePath(ocamlLibraryBuild.getBuildTarget()));
-    inputBuilder.addArgs(staticLibraryPath.toString());
+    inputBuilder.addArgs(
+        new SourcePathArg(
+            getResolver(),
+            new BuildTargetSourcePath(
+                ocamlLibraryBuild.getBuildTarget(),
+                OCamlBuildContext.getOutputPath(
+                    staticLibraryTarget.getUnflavoredBuildTarget(),
+                    /* isLibrary */ true))));
 
     // Add args and inputs for C object files.
-    inputBuilder.addAllInputs(objFiles);
-    inputBuilder.addAllArgs(
-        Iterables.transform(
-            getResolver().getAllPaths(objFiles),
-            Functions.toStringFunction()));
+    for (SourcePath objFile : objFiles) {
+      inputBuilder.addArgs(new SourcePathArg(getResolver(), objFile));
+    }
 
     return inputBuilder.build();
   }

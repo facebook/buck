@@ -24,7 +24,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.python.PythonPackageComponents;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.BuildRule;
@@ -40,6 +39,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -78,7 +79,6 @@ public class CxxLibraryTest {
 
     // Setup some dummy values for the library archive info.
     final BuildRule archive = new FakeBuildRule("//:archive", pathResolver);
-    final Path archiveOutput = Paths.get("output/path/lib.a");
 
     // Setup some dummy values for the library archive info.
     final BuildRule sharedLibrary = new FakeBuildRule("//:shared", pathResolver);
@@ -96,7 +96,6 @@ public class CxxLibraryTest {
         privateHeaderSymlinkTreeTarget,
         privateHeaderSymlinkTreeRoot,
         archive,
-        archiveOutput,
         sharedLibrary,
         sharedLibraryOutput,
         sharedLibrarySoname,
@@ -129,9 +128,10 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedStaticNativeLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(
-            new BuildTargetSourcePath(archive.getBuildTarget())),
-        ImmutableList.of(archiveOutput.toString()),
+        ImmutableList.<Arg>of(
+            new SourcePathArg(
+                pathResolver,
+                new BuildTargetSourcePath(archive.getBuildTarget()))),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
@@ -144,9 +144,10 @@ public class CxxLibraryTest {
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
     NativeLinkableInput expectedSharedNativeLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<SourcePath>of(
-            new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
-        ImmutableList.of(sharedLibraryOutput.toString()),
+        ImmutableList.<Arg>of(
+            new SourcePathArg(
+                pathResolver,
+                new BuildTargetSourcePath(sharedLibrary.getBuildTarget()))),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
     assertEquals(
@@ -204,9 +205,7 @@ public class CxxLibraryTest {
         pathResolver,
         /* headerOnly */ Predicates.<CxxPlatform>alwaysFalse(),
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
-        /* exportedLinkerFlags */ Functions.constant(new Pair<>(
-            ImmutableList.<String>of(),
-            ImmutableSet.<SourcePath>of())),
+        /* exportedLinkerFlags */ Functions.constant(ImmutableList.<Arg>of()),
         /* supportedPlatformsRegex */ Optional.<Pattern>absent(),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of(),
@@ -232,13 +231,10 @@ public class CxxLibraryTest {
     // Verify that
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
-            ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(staticPicLibraryTarget)),
-            ImmutableList.of(
-                CxxDescriptionEnhancer.getStaticLibraryPath(
-                    target,
-                    cxxPlatform.getFlavor(),
-                    CxxSourceRuleFactory.PicType.PIC).toString()),
+            ImmutableList.<Arg>of(
+                new SourcePathArg(
+                    pathResolver,
+                    new BuildTargetSourcePath(staticPicLibraryTarget))),
             ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
     assertEquals(

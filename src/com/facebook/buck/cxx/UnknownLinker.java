@@ -22,6 +22,7 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -61,7 +62,7 @@ public class UnknownLinker implements Linker {
   }
 
   @Override
-  public Iterable<String> linkWhole(String input) {
+  public Iterable<Arg> linkWhole(Arg input) {
     return ImmutableList.of(input);
   }
 

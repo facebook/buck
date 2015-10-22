@@ -37,10 +37,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -179,8 +181,9 @@ public class CxxPythonExtensionDescriptionTest {
     assertThat(
         rule.getDeps(),
         Matchers.hasItems(
-            pathResolver.filterBuildRuleInputs(depInput.getInputs())
-                .toArray(new BuildRule[depInput.getInputs().size()])));
+            FluentIterable.from(depInput.getArgs())
+                .transformAndConcat(Arg.getDepsFunction(pathResolver))
+                .toArray(BuildRule.class)));
   }
 
   @Test

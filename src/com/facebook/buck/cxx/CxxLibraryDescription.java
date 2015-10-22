@@ -31,7 +31,6 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -42,7 +41,9 @@ import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -436,28 +437,22 @@ public class CxxLibraryDescription implements
         cxxPlatform,
         params,
         pathResolver,
-        FluentIterable.from(extraLdFlags)
-            .transform(
-                MACRO_HANDLER.getExpander(
-                    params.getBuildTarget(),
-                    params.getCellRoots(),
-                    ruleResolver,
-                    params.getProjectFilesystem()))
-            .toList(),
         sharedTarget,
         linkType,
         Optional.of(sharedLibrarySoname),
         sharedLibraryPath,
-        objects.values(),
-        FluentIterable
-            .from(
-                getExtraMacroBuildInputs(
-                    params.getBuildTarget(),
-                    params.getCellRoots(),
-                    ruleResolver,
-                    extraLdFlags))
-            .transform(SourcePaths.getToBuildTargetSourcePath())
-            .toList(),
+        ImmutableList.<com.facebook.buck.rules.args.Arg>builder()
+            .addAll(
+                FluentIterable.from(extraLdFlags)
+                    .transform(
+                        MacroArg.toMacroArgFunction(
+                            MACRO_HANDLER,
+                            params.getBuildTarget(),
+                            params.getCellRoots(),
+                            ruleResolver,
+                            params.getProjectFilesystem())))
+            .addAll(SourcePathArg.from(pathResolver, objects.values()))
+            .build(),
         linkableDepType,
         params.getDeps(),
         cxxRuntimeType,
@@ -803,29 +798,8 @@ public class CxxLibraryDescription implements
         ImmutableSet.<BuildTarget>of());
   }
 
-  private static ImmutableList<BuildRule> getExtraMacroBuildInputs(
-      BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
-      BuildRuleResolver resolver,
-      Iterable<String> flags) {
-    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    try {
-      for (String flag : flags) {
-        deps.addAll(
-            MACRO_HANDLER.extractBuildTimeDeps(
-                target,
-                cellNames,
-                resolver,
-                flag));
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-    return deps.build();
-  }
-
   public <A extends Arg> BuildRule createBuildRule(
-      TargetGraph targetGraph,
+      final TargetGraph targetGraph,
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       final A args,
@@ -981,31 +955,23 @@ public class CxxLibraryDescription implements
                 input);
           }
         },
-        new Function<CxxPlatform, Pair<ImmutableList<String>, ImmutableSet<SourcePath>>>() {
+        new Function<CxxPlatform, ImmutableList<com.facebook.buck.rules.args.Arg>>() {
           @Override
-          public Pair<ImmutableList<String>, ImmutableSet<SourcePath>> apply(
+          public ImmutableList<com.facebook.buck.rules.args.Arg> apply(
               CxxPlatform input) {
             ImmutableList<String> flags = CxxFlags.getFlags(
                 args.exportedLinkerFlags,
                 args.exportedPlatformLinkerFlags,
                 input);
-            return new Pair<>(
-                FluentIterable.from(flags)
-                    .transform(
-                        MACRO_HANDLER.getExpander(
-                            params.getBuildTarget(),
-                            params.getCellRoots(),
-                            resolver,
-                            params.getProjectFilesystem()))
-                    .toList(),
-                FluentIterable.from(
-                    getExtraMacroBuildInputs(
+            return FluentIterable.from(flags)
+                .transform(
+                    MacroArg.toMacroArgFunction(
+                        MACRO_HANDLER,
                         params.getBuildTarget(),
                         params.getCellRoots(),
                         resolver,
-                        flags))
-                    .transform(SourcePaths.getToBuildTargetSourcePath())
-                    .toSet());
+                        params.getProjectFilesystem()))
+                .toList();
           }
         },
         args.supportedPlatformsRegex,

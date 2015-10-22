@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -64,21 +65,18 @@ public class DLibrary extends DCompileBuildRule implements NativeLinkable {
       TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
-
-    // Ensure the description for this rule has been generated.
-    BuildRule buildRule = CxxDescriptionEnhancer.requireBuildRule(
-        targetGraph,
-        params,
-        buildRuleResolver,
-        cxxPlatform.getFlavor(),
-        CxxDescriptionEnhancer.STATIC_FLAVOR);
-
-    // Generate the linker arguments required to link with this library.
-    ImmutableList<String> linkerArgs = ImmutableList.of(getPathToOutput().toString());
-
+    BuildRule buildRule =
+        CxxDescriptionEnhancer.requireBuildRule(
+            targetGraph,
+            params,
+            buildRuleResolver,
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.STATIC_FLAVOR);
     return NativeLinkableInput.of(
-        ImmutableList.of(new BuildTargetSourcePath(buildRule.getBuildTarget())),
-        linkerArgs,
+        ImmutableList.of(
+            new SourcePathArg(
+                getResolver(),
+                new BuildTargetSourcePath(buildRule.getBuildTarget()))),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
   }

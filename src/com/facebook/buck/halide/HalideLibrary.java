@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.step.Step;
@@ -164,13 +165,10 @@ public class HalideLibrary
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type) {
     Path libPath = outputDir.resolve(getBuildTarget().getShortName() + ".o");
-    ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
-    builder.add(new BuildTargetSourcePath(getBuildTarget(), libPath));
     return NativeLinkableInput.of(
-      builder.build(),
-      ImmutableList.<String>of(libPath.toString()),
-      ImmutableSet.<FrameworkPath>of(),
-      ImmutableSet.<FrameworkPath>of());
+        SourcePathArg.from(getResolver(), new BuildTargetSourcePath(getBuildTarget(), libPath)),
+        ImmutableSet.<FrameworkPath>of(),
+        ImmutableSet.<FrameworkPath>of());
   }
 
   @Override

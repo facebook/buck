@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -232,10 +233,11 @@ public class OCamlBuildRulesGenerator {
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(pathResolver.filterBuildRuleInputs(allInputs))
                 .addAll(
-                    pathResolver.filterBuildRuleInputs(ocamlContext.getLinkableInput().getInputs()))
+                    FluentIterable.from(ocamlContext.getLinkableInput().getArgs())
+                        .transformAndConcat(Arg.getDepsFunction(pathResolver)))
                 .addAll(
-                    pathResolver.filterBuildRuleInputs(
-                        ocamlContext.getNativeLinkableInput().getInputs()))
+                    FluentIterable.from(ocamlContext.getNativeLinkableInput().getArgs())
+                        .transformAndConcat(Arg.getDepsFunction(pathResolver)))
                 .build()),
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>of()));
@@ -281,16 +283,12 @@ public class OCamlBuildRulesGenerator {
                 .addAll(pathResolver.filterBuildRuleInputs(allInputs))
                 .addAll(ocamlContext.getBytecodeLinkDeps())
                 .addAll(
-                    FluentIterable
-                        .from(
-                            pathResolver.filterBuildRuleInputs(
-                                ocamlContext.getLinkableInput().getInputs()))
-                        .append(
-                            pathResolver.filterBuildRuleInputs(
-                                ocamlContext.getNativeLinkableInput().getInputs()))
+                    FluentIterable.from(ocamlContext.getLinkableInput().getArgs())
+                        .append(ocamlContext.getNativeLinkableInput().getArgs())
+                        .transformAndConcat(Arg.getDepsFunction(pathResolver))
                         .filter(Predicates.not(Predicates.instanceOf(OCamlBuild.class))))
                 .build()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     ImmutableList<String> linkerInputs = FluentIterable.from(allInputs)
         .transform(pathResolver.getPathFunction())

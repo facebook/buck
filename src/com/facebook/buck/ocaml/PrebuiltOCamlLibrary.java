@@ -28,9 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Functions;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -89,29 +89,23 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
 
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
-    ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
-    librariesBuilder.add(
-        new BuildTargetSourcePath(
-            getBuildTarget(),
-            getResolver().getPath(staticNativeLibraryPath)));
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+    argsBuilder.add(
+        new SourcePathArg(
+            getResolver(),
+            new BuildTargetSourcePath(
+                getBuildTarget(),
+                getResolver().getPath(staticNativeLibraryPath))));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
-      librariesBuilder.add(
-          new BuildTargetSourcePath(
-              getBuildTarget(),
-              getResolver().getPath(staticCLibraryPath)));
+      argsBuilder.add(
+          new SourcePathArg(
+              getResolver(),
+              new BuildTargetSourcePath(
+                  getBuildTarget(),
+                  getResolver().getPath(staticCLibraryPath))));
     }
-    final ImmutableList<SourcePath> libraries = librariesBuilder.build();
-
-    ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.add(staticNativeLibraryPath.toString());
-    linkerArgsBuilder.addAll(
-        FluentIterable.from(staticCLibraryPaths)
-            .transform(Functions.toStringFunction()));
-    final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
-
     return NativeLinkableInput.of(
-        libraries,
-        linkerArgs,
+        argsBuilder.build(),
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());
   }

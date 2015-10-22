@@ -29,11 +29,15 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SanitizedArg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
+import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -50,14 +54,20 @@ public class CxxLinkTest {
 
   private static final Linker DEFAULT_LINKER = new GnuLinker(new HashedFileTool(Paths.get("ld")));
   private static final Path DEFAULT_OUTPUT = Paths.get("test.exe");
-  private static final ImmutableList<SourcePath> DEFAULT_INPUTS = ImmutableList.<SourcePath>of(
-      new TestSourcePath("a.o"),
-      new TestSourcePath("b.o"),
-      new TestSourcePath("libc.a"));
-  private static final ImmutableList<String> DEFAULT_ARGS = ImmutableList.of(
-      "-rpath",
-      "/lib",
-      "libc.a");
+  private static final ImmutableList<Arg> DEFAULT_ARGS =
+      ImmutableList.of(
+          new StringArg("-rpath"),
+          new StringArg("/lib"),
+          new StringArg("libc.a"),
+          new SourcePathArg(
+              new SourcePathResolver(new BuildRuleResolver()),
+              new TestSourcePath("a.o")),
+          new SourcePathArg(
+              new SourcePathResolver(new BuildRuleResolver()),
+              new TestSourcePath("b.o")),
+          new SourcePathArg(
+              new SourcePathResolver(new BuildRuleResolver()),
+              new TestSourcePath("libc.a")));
   private static final ImmutableSet<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableSet.of(
       Paths.get("/System/Frameworks"));
   private static final ImmutableSet<Path> DEFAULT_LIBRARIES = ImmutableSet.of(
@@ -97,7 +107,6 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUTS,
             DEFAULT_ARGS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_LIBRARIES,
@@ -111,7 +120,6 @@ public class CxxLinkTest {
             pathResolver,
             new GnuLinker(new HashedFileTool(Paths.get("different"))),
             DEFAULT_OUTPUT,
-            DEFAULT_INPUTS,
             DEFAULT_ARGS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_LIBRARIES,
@@ -126,27 +134,11 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             Paths.get("different"),
-            DEFAULT_INPUTS,
             DEFAULT_ARGS,
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_LIBRARIES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, outputChange);
-
-    // Verify that changing the inputs causes a rulekey change.
-    RuleKey inputChange = generateRuleKey(
-        ruleKeyBuilderFactory,
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            ImmutableList.<SourcePath>of(new TestSourcePath("different")),
-            DEFAULT_ARGS,
-            DEFAULT_FRAMEWORK_ROOTS,
-            DEFAULT_LIBRARIES,
-            DEFAULT_SANITIZER));
-    assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the flags causes a rulekey change.
     RuleKey flagsChange = generateRuleKey(
@@ -156,8 +148,10 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUTS,
-            ImmutableList.of("-different"),
+            ImmutableList.<Arg>of(
+                new SourcePathArg(
+                    new SourcePathResolver(new BuildRuleResolver()),
+                    new TestSourcePath("different"))),
             DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_LIBRARIES,
             DEFAULT_SANITIZER));
@@ -172,7 +166,6 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUTS,
             DEFAULT_ARGS,
             ImmutableSet.of(Paths.get("/System/DifferentFrameworks")),
             DEFAULT_LIBRARIES,
@@ -187,7 +180,6 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUTS,
             DEFAULT_ARGS,
             DEFAULT_FRAMEWORK_ROOTS,
             ImmutableSet.of(Paths.get("/System/Libraries/libx.dynlib")),
@@ -228,7 +220,11 @@ public class CxxLinkTest {
             ImmutableBiMap.of(Paths.get("different"), Paths.get("A")));
 
     // Generate a rule with a path we need to sanitize to a consistent value.
-    ImmutableList<String> args1 = ImmutableList.of("-Lsomething/foo");
+    ImmutableList<Arg> args1 =
+        ImmutableList.<Arg>of(
+            new SanitizedArg(
+                sanitizer1.sanitize(Optional.<Path>absent()),
+                "-Lsomething/foo"));
     RuleKey ruleKey1 = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxLink(
@@ -236,7 +232,6 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUTS,
             args1,
             ImmutableSet.of(Paths.get("something/Frameworks")),
             DEFAULT_LIBRARIES,
@@ -244,7 +239,11 @@ public class CxxLinkTest {
 
     // Generate another rule with a different path we need to sanitize to the
     // same consistent value as above.
-    ImmutableList<String> args2 = ImmutableList.of("-Ldifferent/foo");
+    ImmutableList<Arg> args2 =
+        ImmutableList.<Arg>of(
+            new SanitizedArg(
+                sanitizer2.sanitize(Optional.<Path>absent()),
+                "-Ldifferent/foo"));
     RuleKey ruleKey2 = generateRuleKey(
         ruleKeyBuilderFactory,
         new CxxLink(
@@ -252,7 +251,6 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            DEFAULT_INPUTS,
             args2,
             ImmutableSet.of(Paths.get("different/Frameworks")),
             DEFAULT_LIBRARIES,

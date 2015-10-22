@@ -22,12 +22,19 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SanitizedArg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
@@ -50,14 +57,12 @@ public class CxxLinkableEnhancer {
       TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      ImmutableList<String> extraLdFlags,
+      final SourcePathResolver resolver,
       BuildTarget target,
       Linker.LinkType linkType,
       Optional<String> soname,
       Path output,
-      Iterable<SourcePath> inputs,
-      Iterable<SourcePath> extraInputs,
+      ImmutableList<Arg> args,
       Linker.LinkableDepType depType,
       Iterable<? extends BuildRule> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -82,61 +87,35 @@ public class CxxLinkableEnhancer {
             depType,
             blacklist,
             /* reverse */ true);
-    ImmutableList<SourcePath> allInputs =
-        ImmutableList.<SourcePath>builder()
-            .addAll(inputs)
-            .addAll(extraInputs)
-            .addAll(linkableInput.getInputs())
-            .build();
-
-    // Construct our link build rule params.  The important part here is combining the build rules
-    // that construct our object file inputs and also the deps that build our dependencies.
-    ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-    deps.addAll(resolver.filterBuildRuleInputs(allInputs));
-
-    // If this is being linked against a bundle loader created by another rule,
-    // add that rule to our deps.
-    if (bundleLoader.isPresent()) {
-      Optional<BuildRule> bundleLoaderRule = resolver.getRule(bundleLoader.get());
-      if (bundleLoaderRule.isPresent()) {
-        deps.add(bundleLoaderRule.get());
-      }
-    }
-
-    BuildRuleParams linkParams = params.copyWithChanges(
-        target,
-        // Add dependencies for build rules generating the object files and inputs from
-        // dependencies.
-        Suppliers.ofInstance(deps.build()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
 
     // Build up the arguments to pass to the linker.
-    ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
     // Pass any platform specific or extra linker flags.
-    argsBuilder.addAll(cxxPlatform.getLdflags());
-    argsBuilder.addAll(extraLdFlags);
+    argsBuilder.addAll(
+        SanitizedArg.from(
+            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()),
+            cxxPlatform.getLdflags()));
 
     // If we're doing a shared build, pass the necessary flags to the linker, including setting
     // the soname.
     if (linkType == Linker.LinkType.SHARED) {
-      argsBuilder.add("-shared");
+      argsBuilder.add(new StringArg("-shared"));
     } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
-      argsBuilder.add("-bundle");
+      argsBuilder.add(new StringArg("-bundle"));
       // It's possible to build a Mach-O bundle without a bundle loader (logic tests, for example).
       if (bundleLoader.isPresent()) {
-        argsBuilder.add("-bundle_loader", resolver.getPath(bundleLoader.get()).toString());
+        argsBuilder.add(
+            new StringArg("-bundle_loader"),
+            new SourcePathArg(resolver, bundleLoader.get()));
       }
     }
     if (soname.isPresent()) {
-      argsBuilder.addAll(linker.soname(soname.get()));
+      argsBuilder.addAll(StringArg.from(linker.soname(soname.get())));
     }
 
-    // Add all the top-level inputs.  We wrap these in the --whole-archive since any top-level
-    // inputs, even if archives, should be fully linked in.
-    for (SourcePath input : inputs) {
-      argsBuilder.addAll(linker.linkWhole(resolver.getPath(input).toString()));
-    }
+    // Add all the top-level arguments.
+    argsBuilder.addAll(args);
 
     // Add all arguments from our dependencies.
     argsBuilder.addAll(linkableInput.getArgs());
@@ -146,18 +125,30 @@ public class CxxLinkableEnhancer {
     if (cxxRuntimeType.or(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
       runtimeDepType = Linker.LinkableDepType.STATIC;
     }
-    argsBuilder.addAll(cxxPlatform.getRuntimeLdflags().get(runtimeDepType));
+    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
 
-    ImmutableList<String> args = argsBuilder.build();
+    final ImmutableList<Arg> allArgs = argsBuilder.build();
 
     // Build the C/C++ link step.
     return new CxxLink(
-        linkParams,
+        // Construct our link build rule params.  The important part here is combining the build
+        // rules that construct our object file inputs and also the deps that build our
+        // dependencies.
+        params.copyWithChanges(
+            target,
+            new Supplier<ImmutableSortedSet<BuildRule>>() {
+              @Override
+              public ImmutableSortedSet<BuildRule> get() {
+                return FluentIterable.from(allArgs)
+                    .transformAndConcat(Arg.getDepsFunction(resolver))
+                    .toSortedSet(Ordering.natural());
+              }
+            },
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         resolver,
         cxxPlatform.getLd(),
         output,
-        allInputs,
-        args,
+        allArgs,
         CxxDescriptionEnhancer.getFrameworkSearchPaths(
             Optional.of(ImmutableSortedSet.copyOf(linkableInput.getFrameworks())),
             cxxPlatform,

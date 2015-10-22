@@ -32,6 +32,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -50,7 +53,6 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final SourcePathResolver pathResolver;
   private final ImmutableList<Path> includeDirs;
   private final Optional<String> libDir;
   private final Optional<String> libName;
@@ -85,7 +87,6 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
-    this.pathResolver = pathResolver;
     this.includeDirs = includeDirs;
     this.libDir = libDir;
     this.libName = libName;
@@ -219,14 +220,13 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       Linker.LinkableDepType type) {
     // Build the library path and linker arguments that we pass through the
     // {@link NativeLinkable} interface for linking.
-    ImmutableList.Builder<SourcePath> librariesBuilder = ImmutableList.builder();
-    ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
+    ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
+    linkerArgsBuilder.addAll(
+        StringArg.from(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform))));
     if (!headerOnly) {
       if (provided || (type == Linker.LinkableDepType.SHARED && linkage != Linkage.STATIC)) {
-        SourcePath sharedLibrary = requireSharedLibrary(targetGraph, cxxPlatform);
-        librariesBuilder.add(sharedLibrary);
-        linkerArgsBuilder.add(pathResolver.getPath(sharedLibrary).toString());
+        linkerArgsBuilder.add(
+            new SourcePathArg(getResolver(), requireSharedLibrary(targetGraph, cxxPlatform)));
       } else {
         Path staticLibraryPath =
             type == Linker.LinkableDepType.STATIC_PIC ?
@@ -236,20 +236,21 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
                     cxxPlatform,
                     libDir,
                     libName);
-        librariesBuilder.add(new PathSourcePath(getProjectFilesystem(), staticLibraryPath));
+        SourcePathArg staticLibrary =
+            new SourcePathArg(
+                getResolver(),
+                new PathSourcePath(getProjectFilesystem(), staticLibraryPath));
         if (linkWhole) {
           Linker linker = cxxPlatform.getLd();
-          linkerArgsBuilder.addAll(linker.linkWhole(staticLibraryPath.toString()));
+          linkerArgsBuilder.addAll(linker.linkWhole(staticLibrary));
         } else {
-          linkerArgsBuilder.add(staticLibraryPath.toString());
+          linkerArgsBuilder.add(staticLibrary);
         }
       }
     }
-    final ImmutableList<SourcePath> libraries = librariesBuilder.build();
-    final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
+    final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
-        libraries,
         linkerArgs,
         ImmutableSet.<FrameworkPath>of(),
         ImmutableSet.<FrameworkPath>of());

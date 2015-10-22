@@ -31,6 +31,9 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -122,13 +125,14 @@ abstract class DDescriptionUtils {
         cxxPlatform,
         params,
         sourcePathResolver,
-        dBuckConfig.getLinkerFlagsForBinary(),
         buildTarget,
         Linker.LinkType.EXECUTABLE,
         Optional.<String>absent(),
         BuildTargets.getGenPath(buildTarget, "%s/" + buildTarget.getShortName()),
-        sourcePaths,
-        /* extraInputs */ ImmutableList.<SourcePath>of(),
+        ImmutableList.<Arg>builder()
+            .addAll(StringArg.from(dBuckConfig.getLinkerFlagsForBinary()))
+            .addAll(SourcePathArg.from(sourcePathResolver, sourcePaths))
+            .build(),
         Linker.LinkableDepType.STATIC,
         params.getDeps(),
         /* cxxRuntimeType */ Optional.<Linker.CxxRuntimeType>absent(),

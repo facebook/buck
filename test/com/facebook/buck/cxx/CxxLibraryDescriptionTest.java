@@ -20,10 +20,8 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
@@ -55,15 +53,19 @@ import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -71,24 +73,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class CxxLibraryDescriptionTest {
-
-  private static <T> void assertContains(List<T> container, Iterable<T> items) {
-    for (T item : items) {
-      assertThat(container, Matchers.hasItem(item));
-    }
-  }
-
-  private static <T> void assertNotContains(List<T> container, Iterable<T> items) {
-    for (T item : items) {
-      assertThat(container, Matchers.not(Matchers.hasItem(item)));
-    }
-  }
 
   private static Path getHeaderSymlinkTreeIncludePath(
       BuildTarget target,
@@ -153,7 +140,6 @@ public class CxxLibraryDescriptionTest {
     final Path privateHeaderSymlinkTreeRoot = Paths.get("private/symlink/tree/root");
 
     final BuildRule archive = new FakeBuildRule("//:archive", pathResolver);
-    final Path archiveOutput = Paths.get("output/path/lib.a");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
     AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
@@ -199,9 +185,10 @@ public class CxxLibraryDescriptionTest {
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return NativeLinkableInput.of(
-            ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(archive.getBuildTarget())),
-            ImmutableList.of(archiveOutput.toString()),
+            ImmutableList.<Arg>of(
+                new SourcePathArg(
+                    getResolver(),
+                    new BuildTargetSourcePath(archive.getBuildTarget()))),
             ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
       }
@@ -477,40 +464,28 @@ public class CxxLibraryDescriptionTest {
     String soname = "test_soname";
 
     // Generate the C++ library rules.
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            String.format("//:rule#shared,%s", CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
     AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> ruleBuilder = new CxxLibraryBuilder(target)
         .setSoname(soname)
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
-    CxxLibrary rule = (CxxLibrary) ruleBuilder
+    CxxLink rule = (CxxLink) ruleBuilder
         .build(
             resolver,
             filesystem,
             targetGraph);
-
     Linker linker = cxxPlatform.getLd();
-    NativeLinkableInput input = rule.getNativeLinkableInput(
-        targetGraph,
-        cxxPlatform,
-        Linker.LinkableDepType.SHARED);
-
-    ImmutableList<SourcePath> inputs = ImmutableList.copyOf(input.getInputs());
-    assertEquals(inputs.size(), 1);
-    SourcePath sourcePath = inputs.get(0);
-    assertTrue(sourcePath instanceof BuildTargetSourcePath);
-    BuildRule buildRule = new SourcePathResolver(resolver).getRule(sourcePath).get();
-    assertTrue(buildRule instanceof CxxLink);
-    CxxLink cxxLink = (CxxLink) buildRule;
-    ImmutableList<String> args = cxxLink.getArgs();
-    assertNotEquals(
-        -1,
-        Collections.indexOfSubList(
-            args,
-            ImmutableList.copyOf(linker.soname(soname))));
+    ImmutableList<String> sonameArgs = ImmutableList.copyOf(linker.soname(soname));
+    assertThat(
+        rule.getArgs(),
+        Matchers.hasItems(sonameArgs.toArray(new String[sonameArgs.size()])));
   }
 
   @Test
   public void linkWhole() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
 
@@ -518,30 +493,36 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
 
     // Lookup the link whole flags.
-    Path staticLib =
-        CxxDescriptionEnhancer.getStaticLibraryPath(
-            target,
-            cxxPlatform.getFlavor(),
-            CxxSourceRuleFactory.PicType.PDC);
     Linker linker = cxxPlatform.getLd();
-    Set<String> linkWholeFlags = Sets.newHashSet(linker.linkWhole(staticLib.toString()));
-    linkWholeFlags.remove(staticLib.toString());
+    ImmutableList<String> linkWholeFlags =
+        FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
+            .transform(Arg.stringifyFunction())
+            .filter(Predicates.not(Predicates.equalTo("sentinel")))
+            .toList();
 
     // First, create a cxx library without using link whole.
     CxxLibraryBuilder normalBuilder = new CxxLibraryBuilder(target);
     TargetGraph normalGraph = TargetGraphFactory.newInstance(normalBuilder.build());
     CxxLibrary normal = (CxxLibrary) normalBuilder
+        .setSrcs(
+            ImmutableSortedSet.<SourceWithFlags>of(
+                SourceWithFlags.of(new TestSourcePath("test.cpp"))))
         .build(
-            new BuildRuleResolver(),
+            resolver,
             filesystem,
             normalGraph);
 
     // Verify that the linker args contains the link whole flags.
-    assertNotContains(
-        normal
-            .getNativeLinkableInput(normalGraph, cxxPlatform, Linker.LinkableDepType.STATIC)
-            .getArgs(),
-        linkWholeFlags);
+    NativeLinkableInput input =
+        normal.getNativeLinkableInput(
+            normalGraph,
+            cxxPlatform,
+            Linker.LinkableDepType.STATIC);
+    assertThat(
+        FluentIterable.from(input.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList(),
+        Matchers.not(Matchers.hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()]))));
 
     // Create a cxx library using link whole.
     AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> linkWholeBuilder =
@@ -550,18 +531,27 @@ public class CxxLibraryDescriptionTest {
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo.cpp"))));
 
     TargetGraph linkWholeGraph = TargetGraphFactory.newInstance(linkWholeBuilder.build());
+    resolver = new BuildRuleResolver();
     CxxLibrary linkWhole = (CxxLibrary) linkWholeBuilder
+        .setSrcs(
+            ImmutableSortedSet.<SourceWithFlags>of(
+                SourceWithFlags.of(new TestSourcePath("test.cpp"))))
         .build(
-            new BuildRuleResolver(),
+            resolver,
             filesystem,
             linkWholeGraph);
 
     // Verify that the linker args contains the link whole flags.
-    assertContains(
-        linkWhole
-            .getNativeLinkableInput(linkWholeGraph, cxxPlatform, Linker.LinkableDepType.STATIC)
-            .getArgs(),
-        linkWholeFlags);
+    NativeLinkableInput linkWholeInput =
+        linkWhole.getNativeLinkableInput(
+            normalGraph,
+            cxxPlatform,
+            Linker.LinkableDepType.STATIC);
+    assertThat(
+        FluentIterable.from(linkWholeInput.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList(),
+        Matchers.hasItems(linkWholeFlags.toArray(new String[linkWholeFlags.size()])));
   }
 
   @Test
@@ -597,7 +587,6 @@ public class CxxLibraryDescriptionTest {
     final BuildRule headerSymlinkTree = new FakeBuildRule("//:symlink", pathResolver);
     final Path headerSymlinkTreeRoot = Paths.get("symlink/tree/root");
     final BuildRule staticLibraryDep = new FakeBuildRule("//:static", pathResolver);
-    final Path staticLibraryOutput = Paths.get("output/path/lib.a");
     final BuildRule sharedLibraryDep = new FakeBuildRule("//:shared", pathResolver);
     final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
     final String sharedLibrarySoname = "soname";
@@ -636,17 +625,19 @@ public class CxxLibraryDescriptionTest {
           Linker.LinkableDepType type) {
         return type == Linker.LinkableDepType.STATIC ?
             NativeLinkableInput.of(
-                ImmutableList.<SourcePath>of(
-                    new BuildTargetSourcePath(
-                        staticLibraryDep.getBuildTarget())),
-                ImmutableList.of(staticLibraryOutput.toString()),
+                ImmutableList.<Arg>of(
+                    new SourcePathArg(
+                        getResolver(),
+                        new BuildTargetSourcePath(
+                            staticLibraryDep.getBuildTarget()))),
                 ImmutableSet.<FrameworkPath>of(),
                 ImmutableSet.<FrameworkPath>of()) :
             NativeLinkableInput.of(
-                ImmutableList.<SourcePath>of(
-                    new BuildTargetSourcePath(
-                        sharedLibraryDep.getBuildTarget())),
-                ImmutableList.of(sharedLibraryOutput.toString()),
+                ImmutableList.<Arg>of(
+                    new SourcePathArg(
+                        getResolver(),
+                        new BuildTargetSourcePath(
+                            sharedLibraryDep.getBuildTarget()))),
                 ImmutableSet.<FrameworkPath>of(),
                 ImmutableSet.<FrameworkPath>of());
       }
@@ -1041,7 +1032,6 @@ public class CxxLibraryDescriptionTest {
   public void staticPicLibUsedForStaticPicLinkage() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleResolver resolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder libBuilder = new CxxLibraryBuilder(target);
     libBuilder.setSrcs(
@@ -1058,9 +1048,11 @@ public class CxxLibraryDescriptionTest {
             targetGraph,
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.STATIC_PIC);
-    SourcePath input = nativeLinkableInput.getInputs().get(0);
     assertThat(
-        pathResolver.getPath(input).toString(),
+        FluentIterable.from(nativeLinkableInput.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList()
+            .get(0),
         Matchers.containsString("static-pic"));
   }
 
@@ -1096,11 +1088,10 @@ public class CxxLibraryDescriptionTest {
             targetGraph);
 
     assertThat(lib.getDeps(), Matchers.hasItem(loc));
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    assertThat(pathResolver.filterBuildRuleInputs(lib.getInputs()), Matchers.hasItem(loc));
     assertThat(
         lib.getArgs(),
-        Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString())));
+        Matchers.hasItem(
+            Matchers.containsString(Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
   }
 
   @Test
@@ -1140,12 +1131,12 @@ public class CxxLibraryDescriptionTest {
             targetGraph);
 
     assertThat(lib.getDeps(), Matchers.hasItem(loc));
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    assertThat(pathResolver.filterBuildRuleInputs(lib.getInputs()), Matchers.hasItem(loc));
     assertThat(
         lib.getArgs(),
         Matchers.hasItem(
-            String.format("-Wl,--version-script=%s", loc.getPathToOutput().toAbsolutePath())));
+            String.format(
+                "-Wl,--version-script=%s",
+                Preconditions.checkNotNull(loc.getPathToOutput()).toAbsolutePath())));
     assertThat(
         lib.getArgs(),
         Matchers.not(Matchers.hasItem(loc.getPathToOutput().toAbsolutePath().toString())));
@@ -1188,13 +1179,12 @@ public class CxxLibraryDescriptionTest {
             targetGraph);
 
     assertThat(lib.getDeps(), Matchers.not(Matchers.hasItem(loc)));
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    assertThat(
-        pathResolver.filterBuildRuleInputs(lib.getInputs()),
-        Matchers.not(Matchers.hasItem(loc)));
     assertThat(
         lib.getArgs(),
-        Matchers.not(Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString()))));
+        Matchers.not(
+            Matchers.hasItem(
+                Matchers.containsString(
+                    Preconditions.checkNotNull(loc.getPathToOutput()).toString()))));
   }
 
   @Test
@@ -1231,11 +1221,17 @@ public class CxxLibraryDescriptionTest {
             Linker.LinkableDepType.SHARED);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     assertThat(
-        pathResolver.filterBuildRuleInputs(nativeLinkableInput.getInputs()),
+        FluentIterable.from(nativeLinkableInput.getArgs())
+            .transformAndConcat(Arg.getDepsFunction(pathResolver))
+            .toSet(),
         Matchers.hasItem(loc));
     assertThat(
-        nativeLinkableInput.getArgs(),
-        Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString())));
+        FluentIterable.from(nativeLinkableInput.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList(),
+        Matchers.hasItem(
+            Matchers.containsString(
+                Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
   }
 
   @Test
@@ -1277,11 +1273,17 @@ public class CxxLibraryDescriptionTest {
             Linker.LinkableDepType.SHARED);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     assertThat(
-        pathResolver.filterBuildRuleInputs(nativeLinkableInput.getInputs()),
+        FluentIterable.from(nativeLinkableInput.getArgs())
+            .transformAndConcat(Arg.getDepsFunction(pathResolver))
+            .toSet(),
         Matchers.hasItem(loc));
     assertThat(
-        nativeLinkableInput.getArgs(),
-        Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString())));
+        FluentIterable.from(nativeLinkableInput.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList(),
+        Matchers.hasItem(
+            Matchers.containsString(
+                Preconditions.checkNotNull(loc.getPathToOutput()).toString())));
   }
 
   @Test
@@ -1326,11 +1328,18 @@ public class CxxLibraryDescriptionTest {
             Linker.LinkableDepType.SHARED);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     assertThat(
-        pathResolver.filterBuildRuleInputs(nativeLinkableInput.getInputs()),
+        FluentIterable.from(nativeLinkableInput.getArgs())
+            .transformAndConcat(Arg.getDepsFunction(pathResolver))
+            .toSet(),
         Matchers.not(Matchers.hasItem(loc)));
     assertThat(
-        nativeLinkableInput.getArgs(),
-        Matchers.not(Matchers.hasItem(Matchers.containsString(loc.getPathToOutput().toString()))));
+        FluentIterable.from(nativeLinkableInput.getArgs())
+            .transform(Arg.stringifyFunction())
+            .toList(),
+        Matchers.not(
+            Matchers.hasItem(
+                Matchers.containsString(
+                    Preconditions.checkNotNull(loc.getPathToOutput()).toString()))));
   }
 
   @Test

@@ -55,6 +55,7 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -789,13 +790,13 @@ AppleSdkPaths appleSdkPaths =
               entry.getValue().getCxxPlatform(),
               new FakeBuildRuleParamsBuilder(target).build(),
               pathResolver,
-              ImmutableList.<String>of(),
               target,
               Linker.LinkType.EXECUTABLE,
               Optional.<String>absent(),
               Paths.get("output"),
-              ImmutableList.<SourcePath>of(new TestSourcePath("input.o")),
-              /* extraInputs */ ImmutableList.<SourcePath>of(),
+              SourcePathArg.from(
+                  pathResolver,
+                  new TestSourcePath("input.o")),
               Linker.LinkableDepType.SHARED,
               ImmutableList.<BuildRule>of(),
               Optional.<Linker.CxxRuntimeType>absent(),

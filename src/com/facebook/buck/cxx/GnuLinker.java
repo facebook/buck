@@ -22,6 +22,8 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -59,8 +61,11 @@ public class GnuLinker implements Linker {
   }
 
   @Override
-  public Iterable<String> linkWhole(String input) {
-    return ImmutableList.of("-Wl,--whole-archive", input, "-Wl,--no-whole-archive");
+  public Iterable<Arg> linkWhole(Arg input) {
+    return ImmutableList.of(
+        new StringArg("-Wl,--whole-archive"),
+        input,
+        new StringArg("-Wl,--no-whole-archive"));
   }
 
   @Override

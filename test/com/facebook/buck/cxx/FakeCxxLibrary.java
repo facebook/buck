@@ -29,6 +29,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +51,6 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
   private final BuildTarget privateHeaderSymlinkTreeTarget;
   private final Path privateHeaderSymlinkTreeRoot;
   private final BuildRule archive;
-  private final Path archiveOutput;
   private final BuildRule sharedLibrary;
   private final Path sharedLibraryOutput;
   private final String sharedLibrarySoname;
@@ -65,7 +66,6 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
       BuildTarget privateHeaderSymlinkTreeTarget,
       Path privateHeaderSymlinkTreeRoot,
       BuildRule archive,
-      Path archiveOutput,
       BuildRule sharedLibrary,
       Path sharedLibraryOutput,
       String sharedLibrarySoname,
@@ -78,7 +78,6 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
     this.privateHeaderSymlinkTreeTarget = privateHeaderSymlinkTreeTarget;
     this.privateHeaderSymlinkTreeRoot = privateHeaderSymlinkTreeRoot;
     this.archive = archive;
-    this.archiveOutput = archiveOutput;
     this.sharedLibrary = sharedLibrary;
     this.sharedLibraryOutput = sharedLibraryOutput;
     this.sharedLibrarySoname = sharedLibrarySoname;
@@ -133,14 +132,17 @@ public final class FakeCxxLibrary extends AbstractCxxLibrary {
       Linker.LinkableDepType type) {
     return type == Linker.LinkableDepType.STATIC ?
         NativeLinkableInput.of(
-            ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(archive.getBuildTarget())),
-            ImmutableList.of(archiveOutput.toString()),
+            ImmutableList.<Arg>of(
+                new SourcePathArg(
+                    getResolver(),
+                    new BuildTargetSourcePath(archive.getBuildTarget()))),
             ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of()) :
         NativeLinkableInput.of(
-            ImmutableList.<SourcePath>of(new BuildTargetSourcePath(sharedLibrary.getBuildTarget())),
-            ImmutableList.of(sharedLibraryOutput.toString()),
+            ImmutableList.<Arg>of(
+                new SourcePathArg(
+                    getResolver(),
+                    new BuildTargetSourcePath(sharedLibrary.getBuildTarget()))),
             ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
   }

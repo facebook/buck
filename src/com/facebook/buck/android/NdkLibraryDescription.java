@@ -232,11 +232,17 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.
-      deps.addAll(pathResolver.filterBuildRuleInputs(nativeLinkableInput.getInputs()));
+      deps.addAll(
+          FluentIterable.from(nativeLinkableInput.getArgs())
+              .transformAndConcat(com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)));
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
       // NDK build.
-      String localLdflags = Joiner.on(' ').join(escapeForMakefile(nativeLinkableInput.getArgs()));
+      String localLdflags =
+          Joiner.on(' ').join(
+              escapeForMakefile(
+                  FluentIterable.from(nativeLinkableInput.getArgs())
+                      .transform(com.facebook.buck.rules.args.Arg.stringifyFunction())));
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {

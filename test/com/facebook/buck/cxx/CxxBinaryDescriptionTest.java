@@ -46,6 +46,8 @@ import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -103,7 +105,6 @@ public class CxxBinaryDescriptionTest {
     final BuildRule headerSymlinkTree = createFakeBuildRule("//:symlink", pathResolver);
     final Path headerSymlinkTreeRoot = Paths.get("symlink/tree/root");
     final BuildRule archive = createFakeBuildRule("//:archive", pathResolver);
-    final Path archiveOutput = Paths.get("output/path/lib.a");
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
     AbstractCxxLibrary dep = new AbstractCxxLibrary(depParams, pathResolver) {
@@ -137,9 +138,10 @@ public class CxxBinaryDescriptionTest {
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         return NativeLinkableInput.of(
-            ImmutableList.<SourcePath>of(
-                new BuildTargetSourcePath(archive.getBuildTarget())),
-            ImmutableList.of(archiveOutput.toString()),
+            ImmutableList.<Arg>of(
+                new SourcePathArg(
+                    getResolver(),
+                    new BuildTargetSourcePath(archive.getBuildTarget()))),
             ImmutableSet.<FrameworkPath>of(),
             ImmutableSet.<FrameworkPath>of());
       }

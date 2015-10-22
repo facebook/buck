@@ -33,6 +33,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -63,8 +65,7 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
-  private final Function<? super CxxPlatform,
-      Pair<ImmutableList<String>, ImmutableSet<SourcePath>>> exportedLinkerFlags;
+  private final Function<? super CxxPlatform, ImmutableList<Arg>> exportedLinkerFlags;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
@@ -83,8 +84,7 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
-      Function<? super CxxPlatform,
-          Pair<ImmutableList<String>, ImmutableSet<SourcePath>>> exportedLinkerFlags,
+      Function<? super CxxPlatform, ImmutableList<Arg>> exportedLinkerFlags,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -172,62 +172,44 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
 
     if (headerOnly.apply(cxxPlatform)) {
       return NativeLinkableInput.of(
-          ImmutableList.<SourcePath>of(),
-          ImmutableList.<String>of(),
+          ImmutableList.<Arg>of(),
           Preconditions.checkNotNull(frameworks),
           ImmutableSet.<FrameworkPath>of());
     }
 
     // Build up the arguments used to link this library.  If we're linking the
     // whole archive, wrap the library argument in the necessary "ld" flags.
-    final Pair<ImmutableList<String>, ImmutableSet<SourcePath>> flagsAndBuildInputs =
-        exportedLinkerFlags.apply(cxxPlatform);
-    ImmutableList.Builder<String> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(flagsAndBuildInputs.getFirst());
+    ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
+    linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
 
-    final BuildRule libraryRule;
     if (type != Linker.LinkableDepType.SHARED || linkage == Linkage.STATIC) {
-      libraryRule = requireBuildRule(
-          targetGraph,
-          cxxPlatform.getFlavor(),
-          type == Linker.LinkableDepType.STATIC ?
-              CxxDescriptionEnhancer.STATIC_FLAVOR :
-              CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
-      Path staticLibraryPath =
-          CxxDescriptionEnhancer.getStaticLibraryPath(
-              getBuildTarget(),
+      BuildRule rule =
+          requireBuildRule(
+              targetGraph,
               cxxPlatform.getFlavor(),
               type == Linker.LinkableDepType.STATIC ?
-                  CxxSourceRuleFactory.PicType.PDC :
-                  CxxSourceRuleFactory.PicType.PIC);
+                  CxxDescriptionEnhancer.STATIC_FLAVOR :
+                  CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+      Arg library =
+          new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget()));
       if (linkWhole) {
         Linker linker = cxxPlatform.getLd();
-        linkerArgsBuilder.addAll(linker.linkWhole(staticLibraryPath.toString()));
+        linkerArgsBuilder.addAll(linker.linkWhole(library));
       } else {
-        linkerArgsBuilder.add(staticLibraryPath.toString());
+        linkerArgsBuilder.add(library);
       }
     } else {
-      String sharedLibrarySoname =
-          soname.or(
-              CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
-                  params.getBuildTarget(), cxxPlatform));
-      Path sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
-          getBuildTarget(),
-          sharedLibrarySoname,
-          cxxPlatform);
-      libraryRule = requireBuildRule(
-          targetGraph,
-          cxxPlatform.getFlavor(),
-          CxxDescriptionEnhancer.SHARED_FLAVOR);
-      linkerArgsBuilder.add(sharedLibraryPath.toString());
+      BuildRule rule =
+          requireBuildRule(
+              targetGraph,
+              cxxPlatform.getFlavor(),
+              CxxDescriptionEnhancer.SHARED_FLAVOR);
+      linkerArgsBuilder.add(
+          new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())));
     }
-    final ImmutableList<String> linkerArgs = linkerArgsBuilder.build();
+    final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
-        ImmutableList.<SourcePath>builder()
-            .add(new BuildTargetSourcePath(libraryRule.getBuildTarget()))
-            .addAll(flagsAndBuildInputs.getSecond())
-            .build(),
         linkerArgs,
         Preconditions.checkNotNull(frameworks),
         Preconditions.checkNotNull(libraries));

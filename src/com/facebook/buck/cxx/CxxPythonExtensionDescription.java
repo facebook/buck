@@ -33,6 +33,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -191,16 +193,21 @@ public class CxxPythonExtensionDescription implements
             allSources,
             CxxSourceRuleFactory.PicType.PIC);
 
-    ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
-    extraLdFlagsBuilder.addAll(
-        CxxFlags.getFlags(
-            args.linkerFlags,
-            args.platformLinkerFlags,
-            cxxPlatform));
+    ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
+    argsBuilder.addAll(
+        StringArg.from(
+            CxxFlags.getFlags(
+                args.linkerFlags,
+                args.platformLinkerFlags,
+                cxxPlatform)));
 
     // Embed a origin-relative library path into the binary so it can find the shared libraries.
-    extraLdFlagsBuilder.addAll(
-        Linkers.iXlinker("-rpath", String.format("%s/", cxxPlatform.getLd().libOrigin())));
+    argsBuilder.addAll(
+        StringArg.from(
+            Linkers.iXlinker("-rpath", String.format("%s/", cxxPlatform.getLd().libOrigin()))));
+
+    // Add object files into the args.
+    argsBuilder.addAll(SourcePathArg.from(pathResolver, picObjects.values()));
 
     // Setup the rules to link the shared library.
     String extensionName = getExtensionName(params.getBuildTarget());
@@ -214,7 +221,6 @@ public class CxxPythonExtensionDescription implements
         cxxPlatform,
         params,
         pathResolver,
-        extraLdFlagsBuilder.build(),
         getExtensionTarget(
             params.getBuildTarget(),
             pythonPlatform.getFlavor(),
@@ -222,8 +228,7 @@ public class CxxPythonExtensionDescription implements
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
         extensionPath,
-        picObjects.values(),
-        /* extraInputs */ ImmutableList.<SourcePath>of(),
+        argsBuilder.build(),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
         args.cxxRuntimeType,

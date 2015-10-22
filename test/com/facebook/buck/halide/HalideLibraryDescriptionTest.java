@@ -35,14 +35,14 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 import java.nio.file.Path;
@@ -115,22 +115,14 @@ public class HalideLibraryDescriptionTest {
         HeaderVisibility.PUBLIC));
 
     // Check that the library rule has the correct native linkable input.
-    String objectName = "rule.o";
-    Path objPath = BuildTargets.getGenPath(libTarget, "%s/" + objectName);
     NativeLinkableInput input = lib.getNativeLinkableInput(
-      targetGraph,
-      cxxPlatform,
-      Linker.LinkableDepType.STATIC);
-    ImmutableList<SourcePath> inputs = ImmutableList.copyOf(input.getInputs());
-    assertEquals(1, inputs.size());
-    SourcePath srcPath = inputs.get(0);
-    assertTrue(srcPath instanceof BuildTargetSourcePath);
-    assertEquals(
-      objPath,
-      ((BuildTargetSourcePath) srcPath).getResolvedPath().get());
-    BuildRule buildRule = new SourcePathResolver(resolver)
-      .getRule(srcPath)
-      .get();
+        targetGraph,
+        cxxPlatform,
+        Linker.LinkableDepType.STATIC);
+    BuildRule buildRule =
+        FluentIterable.from(input.getArgs())
+            .transformAndConcat(Arg.getDepsFunction(new SourcePathResolver(resolver)))
+            .get(0);
     assertTrue(buildRule instanceof HalideLibrary);
   }
 }

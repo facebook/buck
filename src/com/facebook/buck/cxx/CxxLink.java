@@ -27,13 +27,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -55,12 +55,9 @@ public class CxxLink
   private final Linker linker;
   @AddToRuleKey(stringify = true)
   private final Path output;
-  @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final ImmutableList<SourcePath> inputs;
-  // We need to make sure we sanitize paths in the arguments, so add them to the rule key
-  // in `appendToRuleKey` where we can first filter the args through the sanitizer.
-  private final ImmutableList<String> args;
+  private final ImmutableList<Arg> args;
+  // TODO(): merge framework roots into `args` array.
   private final ImmutableSet<Path> frameworkRoots;
   private final ImmutableSet<Path> libraries;
   private final DebugPathSanitizer sanitizer;
@@ -70,15 +67,13 @@ public class CxxLink
       SourcePathResolver resolver,
       Linker linker,
       Path output,
-      ImmutableList<SourcePath> inputs,
-      ImmutableList<String> args,
+      ImmutableList<Arg> args,
       ImmutableSet<Path> frameworkRoots,
       ImmutableSet<Path> libraries,
       DebugPathSanitizer sanitizer) {
     super(params, resolver);
     this.linker = linker;
     this.output = output;
-    this.inputs = inputs;
     this.args = args;
     this.frameworkRoots = frameworkRoots;
     this.libraries = libraries;
@@ -88,11 +83,6 @@ public class CxxLink
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
-        .setReflectively(
-            "args",
-            FluentIterable.from(args)
-                .transform(sanitizer.sanitize(Optional.<Path>absent()))
-                .toList())
         .setReflectively(
             "frameworkRoots",
             FluentIterable.from(frameworkRoots)
@@ -119,7 +109,9 @@ public class CxxLink
         new CxxPrepareForLinkStep(
             argFilePath,
             output,
-            args,
+            FluentIterable.from(args)
+                .transform(Arg.stringifyFunction())
+                .toList(),
             frameworkRoots,
             getLibrarySearchDirectories(),
             getLibraryNames()),
@@ -146,13 +138,11 @@ public class CxxLink
     return output;
   }
 
-  public ImmutableList<String> getArgs() {
-    return args;
-  }
-
   @VisibleForTesting
-  ImmutableList<SourcePath> getInputs() {
-    return inputs;
+  protected ImmutableList<String> getArgs() {
+    return FluentIterable.from(args)
+        .transform(Arg.stringifyFunction())
+        .toList();
   }
 
   private ImmutableSet<Path> getLibrarySearchDirectories() {

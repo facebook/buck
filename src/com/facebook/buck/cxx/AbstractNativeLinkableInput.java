@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -38,19 +38,14 @@ abstract class AbstractNativeLinkableInput {
 
   private static final NativeLinkableInput EMPTY =
       NativeLinkableInput.of(
-          ImmutableList.<SourcePath>of(),
-          ImmutableList.<String>of(),
+          ImmutableList.<Arg>of(),
           ImmutableSet.<FrameworkPath>of(),
           ImmutableSet.<FrameworkPath>of());
-
-  // Inputs used by linker.
-  @Value.Parameter
-  public abstract List<SourcePath> getInputs();
 
   // Arguments to pass to the linker.  In the future it'd be nice to make this more aware of
   // the differences between archives, objects, flags, etc.
   @Value.Parameter
-  public abstract List<String> getArgs();
+  public abstract List<Arg> getArgs();
 
   // Directories where frameworks are stored.
   @Value.Parameter
@@ -64,20 +59,17 @@ abstract class AbstractNativeLinkableInput {
    * Combine, in order, several {@link NativeLinkableInput} objects into a single one.
    */
   public static NativeLinkableInput concat(Iterable<NativeLinkableInput> items) {
-    ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
-    ImmutableList.Builder<String> args = ImmutableList.builder();
+    ImmutableList.Builder<Arg> args = ImmutableList.builder();
     ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
     ImmutableSet.Builder<FrameworkPath> libraries = ImmutableSet.builder();
 
     for (NativeLinkableInput item : items) {
-      inputs.addAll(item.getInputs());
       args.addAll(item.getArgs());
       frameworks.addAll(item.getFrameworks());
       libraries.addAll(item.getLibraries());
     }
 
     return NativeLinkableInput.of(
-        inputs.build(),
         args.build(),
         frameworks.build(),
         libraries.build());

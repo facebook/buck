@@ -250,7 +250,6 @@ java_immutables_library(
     ':build_rule',
     ':build_event',
     '//src/com/facebook/buck/android:exceptions',
-    '//src/com/facebook/buck/android:steps',
     '//src/com/facebook/buck/artifact_cache:artifact_cache',
     '//src/com/facebook/buck/cli:events',
     '//src/com/facebook/buck/event:event',

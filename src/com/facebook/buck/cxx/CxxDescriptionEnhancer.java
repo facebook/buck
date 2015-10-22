@@ -39,7 +39,10 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -363,11 +366,11 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       CxxConstructorArg args) {
     return parseCxxSources(
-      params,
-      resolver,
-      cxxPlatform,
-      args.srcs.get(),
-      args.platformSrcs.get());
+        params,
+        resolver,
+        cxxPlatform,
+        args.srcs.get(),
+        args.platformSrcs.get());
   }
 
   public static ImmutableMap<String, CxxSource> parseCxxSources(
@@ -766,26 +769,26 @@ public class CxxDescriptionEnhancer {
     ImmutableMap<String, SourcePath> lexSrcs = parseLexSources(params, resolver, args);
     ImmutableMap<String, SourcePath> yaccSrcs = parseYaccSources(params, resolver, args);
     return createBuildRulesForCxxBinary(
-      targetGraph,
-      params,
-      resolver,
-      cxxPlatform,
-      srcs,
-      headers,
-      lexSrcs,
-      yaccSrcs,
-      preprocessMode,
-      args.linkStyle.or(Linker.LinkableDepType.STATIC),
-      args.preprocessorFlags,
-      args.platformPreprocessorFlags,
-      args.langPreprocessorFlags,
-      args.frameworks,
-      args.compilerFlags,
-      args.platformCompilerFlags,
-      args.prefixHeader,
-      args.linkerFlags,
-      args.platformLinkerFlags,
-      args.cxxRuntimeType);
+        targetGraph,
+        params,
+        resolver,
+        cxxPlatform,
+        srcs,
+        headers,
+        lexSrcs,
+        yaccSrcs,
+        preprocessMode,
+        args.linkStyle.or(Linker.LinkableDepType.STATIC),
+        args.preprocessorFlags,
+        args.platformPreprocessorFlags,
+        args.langPreprocessorFlags,
+        args.frameworks,
+        args.compilerFlags,
+        args.platformCompilerFlags,
+        args.prefixHeader,
+        args.linkerFlags,
+        args.platformLinkerFlags,
+        args.cxxRuntimeType);
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
@@ -811,7 +814,7 @@ public class CxxDescriptionEnhancer {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     Path linkOutput = getLinkOutputPath(params.getBuildTarget());
-    ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Setup the rules to run lex/yacc.
@@ -885,11 +888,12 @@ public class CxxDescriptionEnhancer {
                 CxxSourceRuleFactory.PicType.PIC);
 
     // Build up the linker flags.
-    extraLdFlagsBuilder.addAll(
-        CxxFlags.getFlags(
-            linkerFlags,
-            platformLinkerFlags,
-            cxxPlatform));
+    argsBuilder.addAll(
+        StringArg.from(
+            CxxFlags.getFlags(
+                linkerFlags,
+                platformLinkerFlags,
+                cxxPlatform)));
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {
@@ -905,19 +909,23 @@ public class CxxDescriptionEnhancer {
                   Predicates.instanceOf(NativeLinkable.class)));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
-      extraLdFlagsBuilder.addAll(
-          Linkers.iXlinker(
-              "-rpath",
-              String.format(
-                  "%s/%s",
-                  cxxPlatform.getLd().origin(),
-                  linkOutput.getParent().relativize(sharedLibraries.getRoot()).toString())));
+      argsBuilder.addAll(
+          StringArg.from(
+              Linkers.iXlinker(
+                  "-rpath",
+                  String.format(
+                      "%s/%s",
+                      cxxPlatform.getLd().origin(),
+                      linkOutput.getParent().relativize(sharedLibraries.getRoot()).toString()))));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
       executableBuilder.addDep(sharedLibraries);
       executableBuilder.addInputs(sharedLibraries.getLinks().values());
     }
+
+    // Add object files into the args.
+    argsBuilder.addAll(SourcePathArg.from(sourcePathResolver, objects.values()));
 
     // Generate the final link rule.  We use the top-level target as the link rule's
     // target, so that it corresponds to the actual binary we build.
@@ -927,13 +935,11 @@ public class CxxDescriptionEnhancer {
             cxxPlatform,
             params,
             sourcePathResolver,
-            extraLdFlagsBuilder.build(),
             createCxxLinkTarget(params.getBuildTarget()),
             Linker.LinkType.EXECUTABLE,
             Optional.<String>absent(),
             linkOutput,
-            objects.values(),
-            /* extraInputs */ ImmutableList.<SourcePath>of(),
+            argsBuilder.build(),
             linkStyle,
             params.getDeps(),
             cxxRuntimeType,

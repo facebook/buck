@@ -20,8 +20,10 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -38,8 +40,8 @@ public class OCamlLinkStep extends ShellStep {
     public final ImmutableList<String> cxxCompiler;
     public final ImmutableList<String> flags;
     public final Path output;
-    public final ImmutableList<String> depInput;
-    public final ImmutableList<String> nativeDepInput;
+    public final ImmutableList<Arg> depInput;
+    public final ImmutableList<Arg> nativeDepInput;
     public final ImmutableList<String> input;
     public final boolean isLibrary;
     public final boolean isBytecode;
@@ -48,8 +50,8 @@ public class OCamlLinkStep extends ShellStep {
         ImmutableList<String> cxxCompiler,
         Path ocamlCompiler,
         Path output,
-        ImmutableList<String> depInput,
-        ImmutableList<String> nativeDepInput,
+        ImmutableList<Arg> depInput,
+        ImmutableList<Arg> nativeDepInput,
         ImmutableList<String> input,
         ImmutableList<String> flags,
         boolean isLibrary,
@@ -105,7 +107,8 @@ public class OCamlLinkStep extends ShellStep {
 
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
-    for (String linkInput : this.args.depInput) {
+    for (Arg linkInputArg : this.args.depInput) {
+      String linkInput = linkInputArg.stringify();
       if (this.args.isLibrary && linkInput.endsWith(OCamlCompilables.OCAML_CMXA)) {
         continue;
       }
@@ -147,7 +150,8 @@ public class OCamlLinkStep extends ShellStep {
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-cclib"),
-                args.nativeDepInput))
+                FluentIterable.from(args.nativeDepInput)
+                    .transform(Arg.stringifyFunction())))
         .build();
   }
 }

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -57,7 +58,7 @@ public class NdkLibraryDescriptionTest {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type) {
       return NativeLinkableInput.builder()
-          .addInputs(input)
+          .addArgs(new SourcePathArg(getResolver(), input))
           .build();
     }
 
@@ -82,6 +83,7 @@ public class NdkLibraryDescriptionTest {
 
     FakeBuildRule transitiveInput = resolver.addToIndex(
         new FakeBuildRule("//:transitive_input", pathResolver));
+    transitiveInput.setOutputFile("out");
     FakeNativeLinkable transitiveDep =
         resolver.addToIndex(
             new FakeNativeLinkable(
@@ -90,6 +92,7 @@ public class NdkLibraryDescriptionTest {
                 new BuildTargetSourcePath(transitiveInput.getBuildTarget())));
     FakeBuildRule firstOrderInput = resolver.addToIndex(
         new FakeBuildRule("//:first_order_input", pathResolver));
+    firstOrderInput.setOutputFile("out");
     FakeNativeLinkable firstOrderDep =
         resolver.addToIndex(
             new FakeNativeLinkable(
