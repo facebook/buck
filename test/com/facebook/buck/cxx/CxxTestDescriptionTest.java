@@ -34,6 +34,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -53,6 +55,7 @@ import org.junit.Test;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class CxxTestDescriptionTest {
 
@@ -102,10 +105,13 @@ public class CxxTestDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.framework = Optional.of(CxxTestType.GTEST);
-    constructorArg.env = Optional.absent();
-    constructorArg.args = Optional.absent();
+    constructorArg.env = Optional.of(ImmutableMap.<String, String>of());
+    constructorArg.args = Optional.of(ImmutableList.<String>of());
     constructorArg.useDefaultTestMain = Optional.of(true);
     constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
+    constructorArg.linkerFlags = Optional.of(ImmutableList.<String>of());
+    constructorArg.platformLinkerFlags =
+        Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     Iterable<BuildTarget> implicit = desc.findDepsForTargetFromConstructorArgs(
         target,
         TestCellBuilder.createCellRoots(new FakeProjectFilesystem()),
@@ -216,6 +222,102 @@ public class CxxTestDescriptionTest {
     assertThat(
         BuildRules.getTransitiveRuntimeDeps(cxxTest),
         Matchers.hasItem(cxxBinary));
+  }
+
+  @Test
+  public void locationMacro() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    CxxTestBuilder builder =
+        (CxxTestBuilder) createTestBuilder(resolver, filesystem, targetNodes)
+            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
+    assertThat(
+        builder.findImplicitDeps(),
+        Matchers.hasItem(dep.getBuildTarget()));
+    CxxTest test = (CxxTest) builder.build(resolver);
+    CxxLink binary =
+        (CxxLink) resolver.getRule(
+            CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
+    assertThat(
+        binary.getArgs(),
+        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+    assertThat(
+        binary.getDeps(),
+        Matchers.hasItem(dep));
+  }
+
+
+  @Test
+  public void platformLinkerFlagsLocationMacroWithMatch() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    CxxTestBuilder builder =
+        (CxxTestBuilder) createTestBuilder(resolver, filesystem, targetNodes)
+            .setPlatformLinkerFlags(
+                new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                    .add(
+                        Pattern.compile(
+                            Pattern.quote(
+                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString())),
+                        ImmutableList.of("--linker-script=$(location //:dep)"))
+                    .build());
+    assertThat(
+        builder.findImplicitDeps(),
+        Matchers.hasItem(dep.getBuildTarget()));
+    CxxTest test = (CxxTest) builder.build(resolver);
+    CxxLink binary =
+        (CxxLink) resolver.getRule(
+            CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
+    assertThat(
+        binary.getArgs(),
+        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+    assertThat(
+        binary.getDeps(),
+        Matchers.hasItem(dep));
+  }
+
+  @Test
+  public void platformLinkerFlagsLocationMacroWithoutMatch() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    Set<TargetNode<?>> targetNodes = Sets.newTreeSet();
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    CxxTestBuilder builder =
+        (CxxTestBuilder) createTestBuilder(resolver, filesystem, targetNodes)
+            .setPlatformLinkerFlags(
+                new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                    .add(
+                        Pattern.compile("nothing matches this string"),
+                        ImmutableList.of("--linker-script=$(location //:dep)"))
+                    .build());
+    assertThat(
+        builder.findImplicitDeps(),
+        Matchers.hasItem(dep.getBuildTarget()));
+    CxxTest test = (CxxTest) builder.build(resolver);
+    CxxLink binary =
+        (CxxLink) resolver.getRule(
+            CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
+    assertThat(
+        binary.getArgs(),
+        Matchers.not(
+            Matchers.hasItem(
+                String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
+    assertThat(
+        binary.getDeps(),
+        Matchers.not(Matchers.hasItem(dep)));
   }
 
 }

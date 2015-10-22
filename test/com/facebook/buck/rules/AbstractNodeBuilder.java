@@ -203,4 +203,11 @@ public abstract class AbstractNodeBuilder<A> {
       throw Throwables.propagate(error);
     }
   }
+
+  @SuppressWarnings("unchecked")
+  public Iterable<BuildTarget> findImplicitDeps() {
+    ImplicitDepsInferringDescription<A> desc = (ImplicitDepsInferringDescription<A>) description;
+    return desc.findDepsForTargetFromConstructorArgs(target, cellRoots, arg);
+  }
+
 }

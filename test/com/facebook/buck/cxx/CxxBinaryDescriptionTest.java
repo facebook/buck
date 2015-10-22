@@ -42,6 +42,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -62,6 +63,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class CxxBinaryDescriptionTest {
 
@@ -329,6 +331,86 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         BuildRules.getTransitiveRuntimeDeps(topLevelCxxBinary),
         Matchers.hasItem(leafCxxBinary));
+  }
+
+  @Test
+  public void linkerFlagsLocationMacro() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    CxxBinaryBuilder builder =
+        (CxxBinaryBuilder) new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
+    assertThat(
+        builder.findImplicitDeps(),
+        Matchers.hasItem(dep.getBuildTarget()));
+    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    assertThat(
+        binary.getArgs(),
+        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+    assertThat(
+        binary.getDeps(),
+        Matchers.hasItem(dep));
+  }
+
+  @Test
+  public void platformLinkerFlagsLocationMacroWithMatch() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    CxxBinaryBuilder builder =
+        (CxxBinaryBuilder) new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setPlatformLinkerFlags(
+                new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                    .add(
+                        Pattern.compile(
+                            Pattern.quote(
+                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString())),
+                        ImmutableList.of("--linker-script=$(location //:dep)"))
+                    .build());
+    assertThat(
+        builder.findImplicitDeps(),
+        Matchers.hasItem(dep.getBuildTarget()));
+    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    assertThat(
+        binary.getArgs(),
+        Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+    assertThat(
+        binary.getDeps(),
+        Matchers.hasItem(dep));
+  }
+
+  @Test
+  public void platformLinkerFlagsLocationMacroWithoutMatch() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    Genrule dep =
+        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(resolver);
+    CxxBinaryBuilder builder =
+        (CxxBinaryBuilder) new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setPlatformLinkerFlags(
+                new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                    .add(
+                        Pattern.compile("nothing matches this string"),
+                        ImmutableList.of("--linker-script=$(location //:dep)"))
+                    .build());
+    assertThat(
+        builder.findImplicitDeps(),
+        Matchers.hasItem(dep.getBuildTarget()));
+    CxxLink binary = ((CxxBinary) builder.build(resolver)).getRule();
+    assertThat(
+        binary.getArgs(),
+        Matchers.not(
+            Matchers.hasItem(
+                String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
+    assertThat(
+        binary.getDeps(),
+        Matchers.not(Matchers.hasItem(dep)));
   }
 
 }

@@ -31,10 +31,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
@@ -59,11 +56,6 @@ public class CxxTestDescription implements
 
   private static final BuildRuleType TYPE = BuildRuleType.of("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
-
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
-              "location", new LocationMacroExpander()));
 
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
@@ -131,7 +123,7 @@ public class CxxTestDescription implements
             return ImmutableMap.copyOf(
                 Maps.transformValues(
                     args.env.or(ImmutableMap.<String, String>of()),
-                    MACRO_HANDLER.getExpander(
+                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
                         params.getCellRoots(),
                         resolver,
@@ -146,7 +138,7 @@ public class CxxTestDescription implements
           public ImmutableList<String> get() {
             return FluentIterable.from(args.args.or(ImmutableList.<String>of()))
                 .transform(
-                    MACRO_HANDLER.getExpander(
+                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
                         params.getCellRoots(),
                         resolver,
@@ -173,7 +165,7 @@ public class CxxTestDescription implements
                     args.env.or(ImmutableMap.<String, String>of()).values())) {
               try {
                 deps.addAll(
-                    MACRO_HANDLER.extractBuildTimeDeps(
+                    CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
                         params.getBuildTarget(),
                         params.getCellRoots(),
                         resolver,
@@ -245,13 +237,21 @@ public class CxxTestDescription implements
       deps.add(cxxBuckConfig.getLexDep());
     }
 
-    // Extract parse time deps from args and environment parameters.
-    for (String part :
-          Iterables.concat(
-              constructorArg.args.or(ImmutableList.<String>of()),
-              constructorArg.env.or(ImmutableMap.<String, String>of()).values())) {
+    // Extract parse time deps from flags, args, and environment parameters.
+    Iterable<Iterable<String>> macroStrings =
+        ImmutableList.<Iterable<String>>builder()
+            .add(constructorArg.linkerFlags.get())
+            .addAll(constructorArg.platformLinkerFlags.get().getValues())
+            .add(constructorArg.args.get())
+            .add(constructorArg.env.get().values())
+            .build();
+    for (String macroString : Iterables.concat(macroStrings)) {
       try {
-        deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, part));
+        deps.addAll(
+            CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
+                buildTarget,
+                cellRoots,
+                macroString));
       } catch (MacroException e) {
         throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
       }

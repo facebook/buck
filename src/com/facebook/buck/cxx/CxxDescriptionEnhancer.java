@@ -41,6 +41,10 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.annotations.VisibleForTesting;
@@ -83,6 +87,11 @@ public class CxxDescriptionEnhancer {
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
   public static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
+
+  protected static final MacroHandler MACRO_HANDLER =
+      new MacroHandler(
+          ImmutableMap.<String, MacroExpander>of(
+              "location", new LocationMacroExpander()));
 
   private CxxDescriptionEnhancer() {}
 
@@ -887,13 +896,21 @@ public class CxxDescriptionEnhancer {
                 CxxSourceRuleFactory.PicType.PDC :
                 CxxSourceRuleFactory.PicType.PIC);
 
-    // Build up the linker flags.
+    // Build up the linker flags, which support macro expansion.
+    ImmutableList<String> resolvedLinkerFlags =
+        CxxFlags.getFlags(
+            linkerFlags,
+            platformLinkerFlags,
+            cxxPlatform);
     argsBuilder.addAll(
-        StringArg.from(
-            CxxFlags.getFlags(
-                linkerFlags,
-                platformLinkerFlags,
-                cxxPlatform)));
+        FluentIterable.from(resolvedLinkerFlags)
+            .transform(
+                MacroArg.toMacroArgFunction(
+                    MACRO_HANDLER,
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    resolver,
+                    params.getProjectFilesystem())));
 
     // Special handling for dynamically linked binaries.
     if (linkStyle == Linker.LinkableDepType.SHARED) {

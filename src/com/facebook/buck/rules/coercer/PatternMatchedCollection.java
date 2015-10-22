@@ -43,6 +43,14 @@ public class PatternMatchedCollection<T> {
     return values;
   }
 
+  public ImmutableList<T> getValues() {
+    ImmutableList.Builder<T> vals = ImmutableList.builder();
+    for (Pair<Pattern, T> value : values) {
+      vals.add(value.getSecond());
+    }
+    return vals.build();
+  }
+
   public static <T> PatternMatchedCollection<T> of() {
     return new PatternMatchedCollection<>(ImmutableList.<Pair<Pattern, T>>of());
   }

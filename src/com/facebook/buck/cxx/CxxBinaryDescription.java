@@ -29,11 +29,14 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
@@ -217,6 +220,23 @@ public class CxxBinaryDescription implements
 
     if (!constructorArg.lexSrcs.get().isEmpty()) {
       deps.add(cxxBuckConfig.getLexDep());
+    }
+
+    Iterable<Iterable<String>> macroStrings =
+        ImmutableList.<Iterable<String>>builder()
+            .add(constructorArg.linkerFlags.get())
+            .addAll(constructorArg.platformLinkerFlags.get().getValues())
+            .build();
+    for (String macroString : Iterables.concat(macroStrings)) {
+      try {
+        deps.addAll(
+            CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
+                buildTarget,
+                cellRoots,
+                macroString));
+      } catch (MacroException e) {
+        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
+      }
     }
 
     return deps.build();
