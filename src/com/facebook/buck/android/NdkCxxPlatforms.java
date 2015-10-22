@@ -122,6 +122,13 @@ public class NdkCxxPlatforms {
     ImmutableMap.Builder<TargetCpuType, NdkCxxPlatform> ndkCxxPlatformBuilder =
         ImmutableMap.builder();
 
+    // ARM Platform
+    ImmutableList<String> armeabiArchFlags =
+        ImmutableList.of(
+            "-march=armv5te",
+            "-mtune=xscale",
+            "-msoft-float",
+            "-mthumb");
     NdkCxxPlatform armeabi =
         build(
             ImmutableFlavor.of("android-arm"),
@@ -134,23 +141,25 @@ public class NdkCxxPlatforms {
                 .setTargetAppPlatform(androidPlatform)
                 .setCompiler(compiler)
                 .setToolchainTarget(ToolchainTarget.ARM_LINUX_ANDROIDEABI)
+                .putAssemblerFlags(Compiler.Type.GCC, armeabiArchFlags)
+                .putAssemblerFlags(
+                    Compiler.Type.CLANG,
+                    ImmutableList.<String>builder()
+                        .add("-target", "armv5te-none-linux-androideabi")
+                        .addAll(armeabiArchFlags)
+                        .build())
                 .putCompilerFlags(
                     Compiler.Type.GCC,
-                    ImmutableList.of(
-                        "-march=armv5te",
-                        "-mtune=xscale",
-                        "-msoft-float",
-                        "-mthumb",
-                        "-Os"))
+                    ImmutableList.<String>builder()
+                        .add("-Os")
+                        .addAll(armeabiArchFlags)
+                        .build())
                 .putCompilerFlags(
                     Compiler.Type.CLANG,
-                    ImmutableList.of(
-                        "-target", "armv5te-none-linux-androideabi",
-                        "-march=armv5te",
-                        "-mtune=xscale",
-                        "-msoft-float",
-                        "-mthumb",
-                        "-Os"))
+                    ImmutableList.<String>builder()
+                        .add("-target", "armv5te-none-linux-androideabi", "-Os")
+                        .addAll(armeabiArchFlags)
+                        .build())
                 .putLinkerFlags(
                     Compiler.Type.GCC,
                     ImmutableList.of(
@@ -166,6 +175,14 @@ public class NdkCxxPlatforms {
             cxxRuntime,
             executableFinder);
     ndkCxxPlatformBuilder.put(TargetCpuType.ARM, armeabi);
+
+    // ARMv7 Platform
+    ImmutableList<String> armeabiv7ArchFlags =
+        ImmutableList.of(
+            "-march=armv7-a",
+            "-mfpu=vfpv3-d16",
+            "-mfloat-abi=softfp",
+            "-mthumb");
     NdkCxxPlatform armeabiv7 =
         build(
             ImmutableFlavor.of("android-armv7"),
@@ -178,35 +195,37 @@ public class NdkCxxPlatforms {
                 .setTargetAppPlatform(androidPlatform)
                 .setCompiler(compiler)
                 .setToolchainTarget(ToolchainTarget.ARM_LINUX_ANDROIDEABI)
+                .putAssemblerFlags(Compiler.Type.GCC, armeabiv7ArchFlags)
+                .putAssemblerFlags(
+                    Compiler.Type.CLANG,
+                    ImmutableList.<String>builder()
+                        .add("-target", "armv7-none-linux-androideabi")
+                        .addAll(armeabiv7ArchFlags)
+                        .build())
                 .putCompilerFlags(
                     Compiler.Type.GCC,
-                    ImmutableList.of(
-                        "-finline-limit=64",
-                        "-march=armv7-a",
-                        "-mfpu=vfpv3-d16",
-                        "-mfloat-abi=softfp",
-                        "-mthumb",
-                        "-Os"))
+                    ImmutableList.<String>builder()
+                        .add("-finline-limit=64", "-Os")
+                        .addAll(armeabiv7ArchFlags)
+                        .build())
                 .putCompilerFlags(
                     Compiler.Type.CLANG,
-                    ImmutableList.of(
-                        "-target", "armv7-none-linux-androideabi",
-                        "-march=armv7-a",
-                        "-mfpu=vfpv3-d16",
-                        "-mfloat-abi=softfp",
-                        "-mthumb",
-                        "-Os"))
+                    ImmutableList.<String>builder()
+                        .add("-target", "armv7-none-linux-androideabi", "-Os")
+                        .addAll(armeabiv7ArchFlags)
+                        .build())
                 .putLinkerFlags(
                     Compiler.Type.GCC,
                     ImmutableList.<String>of())
                 .putLinkerFlags(
                     Compiler.Type.CLANG,
-                    ImmutableList.of(
-                        "-target", "armv7-none-linux-androideabi"))
+                    ImmutableList.of("-target", "armv7-none-linux-androideabi"))
                 .build(),
             cxxRuntime,
             executableFinder);
     ndkCxxPlatformBuilder.put(TargetCpuType.ARMV7, armeabiv7);
+
+    // x86 Platform
     NdkCxxPlatform x86 =
         build(
             ImmutableFlavor.of("android-x86"),
@@ -219,6 +238,8 @@ public class NdkCxxPlatforms {
                 .setTargetAppPlatform(androidPlatform)
                 .setCompiler(compiler)
                 .setToolchainTarget(ToolchainTarget.I686_LINUX_ANDROID)
+                .putAssemblerFlags(Compiler.Type.GCC, ImmutableList.<String>of())
+                .putAssemblerFlags(Compiler.Type.CLANG, ImmutableList.<String>of())
                 .putCompilerFlags(
                     Compiler.Type.GCC,
                     ImmutableList.of(
@@ -292,8 +313,7 @@ public class NdkCxxPlatforms {
     cxxPlatformBuilder
         .setFlavor(flavor)
         .setAs(getGccTool(ndkRoot, targetConfiguration, host, "as", version, executableFinder))
-        // Default assembler flags added by the NDK to enforce the NX (no execute) security feature.
-        .addAsflags("-Xassembler", "--noexecstack")
+        .addAllAsflags(getAsflags(ndkRoot, targetConfiguration, host))
         .setAspp(
             compilerType.preprocessorFromTool(
                 getCTool(
@@ -798,6 +818,18 @@ public class NdkCxxPlatforms {
             .toString());
   }
 
+  private static ImmutableList<String> getAsflags(
+      Path ndkRoot,
+      TargetConfiguration targetConfiguration,
+      Host host) {
+    return ImmutableList.<String>builder()
+        .addAll(getCommonFlags(ndkRoot, targetConfiguration, host))
+        // Default assembler flags added by the NDK to enforce the NX (no execute) security feature.
+        .add("-Xassembler", "--noexecstack")
+        .addAll(targetConfiguration.getAssemblerFlags(targetConfiguration.getCompiler().getType()))
+        .build();
+  }
+
   private static ImmutableList<String> getCppflags(
       Path ndkRoot,
       TargetConfiguration targetConfiguration,
@@ -1117,7 +1149,12 @@ public class NdkCxxPlatforms {
     public abstract String getTargetAppPlatform();
     public abstract Compiler getCompiler();
     public abstract ImmutableMap<Compiler.Type, ImmutableList<String>> getCompilerFlags();
+    public abstract ImmutableMap<Compiler.Type, ImmutableList<String>> getAssemblerFlags();
     public abstract ImmutableMap<Compiler.Type, ImmutableList<String>> getLinkerFlags();
+
+    public ImmutableList<String> getAssemblerFlags(Compiler.Type type) {
+      return Optional.fromNullable(getAssemblerFlags().get(type)).or(ImmutableList.<String>of());
+    }
 
     public ImmutableList<String> getCompilerFlags(Compiler.Type type) {
       return Optional.fromNullable(getCompilerFlags().get(type)).or(ImmutableList.<String>of());
