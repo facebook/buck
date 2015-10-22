@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
-import static com.facebook.buck.testutil.WatchEvents.createPathEvent;
+import static com.facebook.buck.testutil.WatchEventsForTests.createPathEvent;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
@@ -62,7 +62,7 @@ import com.facebook.buck.rules.TargetGraphToActionGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.WatchEvents;
+import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.Console;
@@ -468,7 +468,7 @@ public class ParserTest extends EasyMockSupport {
         false /* enableProfiling */);
 
     // Process event.
-    WatchEvent<Object> event = WatchEvents.createOverflowEvent();
+    WatchEvent<Object> event = WatchEventsForTests.createOverflowEvent();
     parser.onFileSystemChange(event);
 
     // Call filterAllTargetsInProject to request cached rules.

@@ -71,8 +71,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
@@ -815,16 +813,6 @@ public class ProjectFilesystem {
     return Hashing.sha256().hashBytes(Files.readAllBytes(fileToHash)).toString();
   }
 
-  /**
-   * @param event The event to be tested.
-   * @return true if event is a path change notification.
-   */
-  public boolean isPathChangeEvent(WatchEvent<?> event) {
-    return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
-        event.kind() == StandardWatchEventKinds.ENTRY_MODIFY ||
-        event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
-  }
-
   public void copy(Path source, Path target, CopySourceMode sourceMode) throws IOException {
     switch (sourceMode) {
       case FILE:
@@ -951,19 +939,6 @@ public class ProjectFilesystem {
         zip.closeEntry();
       }
     }
-  }
-
-  /**
-   *
-   * @param event the event to format.
-   * @return the formatted event context string.
-   */
-  public String createContextString(WatchEvent<?> event) {
-    if (isPathChangeEvent(event)) {
-      Path path = (Path) event.context();
-      return path.toAbsolutePath().normalize().toString();
-    }
-    return String.valueOf(event.context());
   }
 
 

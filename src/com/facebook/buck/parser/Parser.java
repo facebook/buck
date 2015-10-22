@@ -28,6 +28,7 @@ import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -83,7 +84,6 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Collection;
 import java.util.HashMap;
@@ -889,13 +889,13 @@ public class Parser {
       LOG.verbose(
           "Parser watched event %s %s",
           event.kind(),
-          cell.getFilesystem().createContextString(event));
+          WatchEvents.createContextString(event));
     }
 
-    if (cell.getFilesystem().isPathChangeEvent(event)) {
+    if (WatchEvents.isPathChangeEvent(event)) {
       Path path = (Path) event.context();
 
-      if (isPathCreateOrDeleteEvent(event)) {
+      if (WatchEvents.isPathCreateOrDeleteEvent(event)) {
 
         if (path.endsWith(new ParserConfig(cell.getBuckConfig()).getBuildFileName())) {
 
@@ -970,11 +970,6 @@ public class Parser {
               buildFile.resolve(
                   new ParserConfig(cell.getBuckConfig()).getBuildFileName())));
     }
-  }
-
-  private boolean isPathCreateOrDeleteEvent(WatchEvent<?> event) {
-    return event.kind() == StandardWatchEventKinds.ENTRY_CREATE ||
-        event.kind() == StandardWatchEventKinds.ENTRY_DELETE;
   }
 
   /**

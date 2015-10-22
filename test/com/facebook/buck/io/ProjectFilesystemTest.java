@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.Config;
 import com.facebook.buck.cli.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
-import com.facebook.buck.testutil.WatchEvents;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.BuckConstant;
@@ -57,8 +56,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFileAttributes;
@@ -308,43 +305,6 @@ public class ProjectFilesystemTest {
   }
 
   @Test
-  public void testCreateContextStringForModifyEvent() throws IOException {
-    Path file = tmp.newFile("foo.txt");
-    WatchEvent<Path> modifyEvent = WatchEvents.createPathEvent(
-        file,
-        StandardWatchEventKinds.ENTRY_MODIFY);
-    assertEquals(
-        file.toAbsolutePath().toString(),
-        filesystem.createContextString(modifyEvent));
-  }
-
-  @Test
-  public void testCreateContextStringForOverflowEvent() {
-    WatchEvent<Object> overflowEvent = new WatchEvent<Object>() {
-      @Override
-      public Kind<Object> kind() {
-        return StandardWatchEventKinds.OVERFLOW;
-      }
-
-      @Override
-      public int count() {
-        return 0;
-      }
-
-      @Override
-      public Object context() {
-        return new Object() {
-          @Override
-          public String toString() {
-            return "I am the context string.";
-          }
-        };
-      }
-    };
-    assertEquals("I am the context string.", filesystem.createContextString(overflowEvent));
-  }
-
-  @Test
   public void testWalkFileTreeWhenProjectRootIsNotWorkingDir() throws IOException {
     tmp.newFolder("dir");
     tmp.newFile("dir/file.txt");
@@ -413,15 +373,6 @@ public class ProjectFilesystemTest {
     assertThat(
         filePaths.build(),
         containsInAnyOrder(Paths.get("dir/file.txt"), Paths.get("linkdir/file.txt")));
-  }
-
-  @Test
-  public void whenContextNullThenCreateContextStringReturnsValidString() {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
-    assertThat(
-        "Context string should contain null.",
-        projectFilesystem.createContextString(WatchEvents.createOverflowEvent()),
-        Matchers.containsString("null"));
   }
 
   @Test

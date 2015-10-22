@@ -22,8 +22,8 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
 
-public class WatchEvents {
-  private WatchEvents() {}
+public class WatchEventsForTests {
+  private WatchEventsForTests() {}
 
   public static WatchEvent<Path> createPathEvent(final Path file, final Kind<Path> kind) {
     return new WatchEvent<Path>() {
