@@ -143,7 +143,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   @AddToRuleKey
   private final DebugInfoFormat debugInfoFormat;
 
-  private final ImmutableSet<SourcePath> extensionBundlePaths;
+  // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
+  @AddToRuleKey
+  private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
   private final Optional<AppleAssetCatalog> assetCatalog;
 
@@ -166,7 +168,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Set<SourcePath> resourceDirs,
       Set<SourcePath> resourceFiles,
       Set<SourcePath> dirsContainingResourceDirs,
-      ImmutableSet<SourcePath> extensionBundlePaths,
+      ImmutableMap<SourcePath, String> extensionBundlePaths,
       Optional<ImmutableSet<SourcePath>> resourceVariantFiles,
       Tool ibtool,
       Tool dsymutil,
@@ -532,14 +534,14 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
   public void addStepsToCopyExtensionBundlesDependencies(
       ImmutableList.Builder<Step> stepsBuilder) {
-    for (SourcePath sourcePath : extensionBundlePaths) {
-      Path plugInsDestPath = bundleRoot.resolve(destinations.getPlugInsPath());
-      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), plugInsDestPath));
+    for (Map.Entry<SourcePath, String> entry : extensionBundlePaths.entrySet()) {
+      Path destPath = bundleRoot.resolve(entry.getValue());
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), destPath));
       stepsBuilder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),
-            getResolver().getPath(sourcePath),
-            plugInsDestPath,
+            getResolver().getPath(entry.getKey()),
+            destPath,
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
   }

@@ -219,8 +219,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                             bundleVariantFiles))))
             .build());
 
-    ImmutableSet<SourcePath> extensionBundlePaths = collectFirstLevelAppleDependencyBundles(
-        params.getDeps());
+    ImmutableMap<SourcePath, String> extensionBundlePaths = collectFirstLevelAppleDependencyBundles(
+        params.getDeps(),
+        destinations);
 
     return new AppleBundle(
         bundleParamsWithFlavoredBinaryDep,
@@ -320,9 +321,10 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
                 .toSortedSet(Ordering.natural())));
   }
 
-  private ImmutableSet<SourcePath> collectFirstLevelAppleDependencyBundles(
-      ImmutableSortedSet<BuildRule> deps) {
-    ImmutableSet.Builder<SourcePath> extensionBundlePaths = ImmutableSet.builder();
+  private ImmutableMap<SourcePath, String> collectFirstLevelAppleDependencyBundles(
+      ImmutableSortedSet<BuildRule> deps,
+      AppleBundleDestinations destinations) {
+    ImmutableMap.Builder<SourcePath, String> extensionBundlePaths = ImmutableMap.builder();
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.
     for (BuildRule rule : deps) {
@@ -337,7 +339,20 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
           SourcePath sourcePath = new BuildTargetSourcePath(
               appleBundle.getBuildTarget(),
               outputPath);
-          extensionBundlePaths.add(sourcePath);
+
+          Path destinationPath;
+
+          String platformName = appleBundle.getPlatformName();
+
+          if ((platformName.equals(ApplePlatform.Name.WATCHOS) ||
+              platformName.equals(ApplePlatform.Name.WATCHSIMULATOR)) &&
+              appleBundle.getExtension().equals(AppleBundleExtension.APP.toFileExtension())) {
+            destinationPath = destinations.getWatchAppPath();
+          } else {
+            destinationPath = destinations.getPlugInsPath();
+          }
+
+          extensionBundlePaths.put(sourcePath, destinationPath.toString());
         }
       }
     }

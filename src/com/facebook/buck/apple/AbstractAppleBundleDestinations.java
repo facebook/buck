@@ -43,6 +43,9 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
   @Value.Parameter
   public abstract Path getPlugInsPath();
 
+  @Value.Parameter
+  public abstract Path getWatchAppPath();
+
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
@@ -50,7 +53,8 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
         .setReflectively("resources_path", getResourcesPath().toString())
         .setReflectively("executables_path", getExecutablesPath().toString())
         .setReflectively("frameworks_path", getFrameworksPath().toString())
-        .setReflectively("plugins_path", getPlugInsPath().toString());
+        .setReflectively("plugins_path", getPlugInsPath().toString())
+        .setReflectively("watch_app_path", getWatchAppPath().toString());
   }
 
   private static final Path OSX_CONTENTS_PATH = Paths.get("Contents");
@@ -61,6 +65,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setExecutablesPath(OSX_CONTENTS_PATH.resolve("MacOS"))
           .setFrameworksPath(OSX_CONTENTS_PATH.resolve("Frameworks"))
           .setPlugInsPath(OSX_CONTENTS_PATH.resolve("PlugIns"))
+          .setWatchAppPath(OSX_CONTENTS_PATH)
           .build();
 
   private static final Path IOS_CONTENTS_PATH = Paths.get("");
@@ -70,7 +75,8 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .setResourcesPath(IOS_CONTENTS_PATH)
           .setExecutablesPath(IOS_CONTENTS_PATH)
           .setFrameworksPath(IOS_CONTENTS_PATH)
-          .setPlugInsPath(IOS_CONTENTS_PATH)
+          .setPlugInsPath(IOS_CONTENTS_PATH.resolve("PlugIns"))
+          .setWatchAppPath(IOS_CONTENTS_PATH.resolve("Watch"))
           .build();
 
   public static AppleBundleDestinations platformDestinations(ApplePlatform platform) {
