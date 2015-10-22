@@ -49,6 +49,11 @@ public class AppleBundleDescriptionTest {
     BuildTarget flavoredDepNotInDomainAfterPropagation =
         BuildTargetFactory.newInstance("//bar:dep3#iphoneos-x86_64,otherflavor");
 
+    BuildTarget watchDep = BuildTargetFactory.newInstance(
+        "//bar:watch#watch");
+    BuildTarget watchDepAfterPropagation = BuildTargetFactory.newInstance(
+        "//bar:watch#watchos-armv7k");
+
     BuildTarget binary =
         BuildTargetFactory.newInstance("//bar:binary");
 
@@ -56,7 +61,12 @@ public class AppleBundleDescriptionTest {
     AppleBundleDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.binary = binary;
     constructorArg.deps = Optional.of(
-        ImmutableSortedSet.of(binary, unflavoredDep, flavoredDep, flavoredDepNotInDomain));
+        ImmutableSortedSet.of(
+            binary,
+            unflavoredDep,
+            flavoredDep,
+            flavoredDepNotInDomain,
+            watchDep));
 
     // Now call the find deps methods and verify it returns the targets with flavors.
     Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
@@ -69,6 +79,7 @@ public class AppleBundleDescriptionTest {
             .add(unflavoredDepAfterPropagation)
             .add(flavoredDep)
             .add(flavoredDepNotInDomainAfterPropagation)
+            .add(watchDepAfterPropagation)
             .build(),
         ImmutableSet.copyOf(results));
   }

@@ -46,6 +46,10 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
     return name.startsWith(Name.IPHONEOS);
   }
 
+  public static boolean isSimulator(String name) {
+    return name.startsWith(Name.IPHONESIMULATOR) || name.startsWith(Name.WATCHSIMULATOR);
+  }
+
   @Override
   public int compareTo(AbstractApplePlatform other) {
     return getName().compareTo(other.getName());

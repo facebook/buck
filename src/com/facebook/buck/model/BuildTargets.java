@@ -122,6 +122,16 @@ public class BuildTargets {
     };
   }
 
+  public static Predicate<BuildTarget> containsFlavor(final Flavor flavor) {
+    return new Predicate<BuildTarget>() {
+      @Override
+      public boolean apply(BuildTarget input) {
+        return input.getFlavors().contains(flavor);
+      }
+    };
+  }
+
+
   /**
    * Propagate flavors represented by the given {@link FlavorDomain} objects from a parent
    * target to its dependencies.

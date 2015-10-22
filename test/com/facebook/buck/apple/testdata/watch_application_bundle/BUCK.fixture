@@ -29,7 +29,7 @@ apple_bundle(
   binary = ':DemoWatchAppBinary',
   deps = [':DemoWatchAppResources', ':DemoWatchAppExtension'],
   extension = 'app',
-  info_plist = 'Info.plist',
+  info_plist = 'WatchApplication/Info.plist',
   xcode_product_type = 'com.apple.product-type.application.watchapp2',
 )
 
@@ -39,6 +39,31 @@ apple_binary(
 
 apple_resource(
   name = 'DemoWatchAppResources',
-  files = ['Interface.storyboard'],
+  files = ['WatchApplication/Interface.storyboard'],
   dirs = [],
+)
+
+apple_binary(
+  name = 'DemoAppBinary',
+  compiler_flags = ['-fobjc-arc'],
+  headers = glob([
+    '*.h',
+  ]),
+  srcs = glob([
+    '*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/CoreGraphics.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/WatchConnectivity.framework',
+  ],
+)
+
+apple_bundle(
+  name = 'DemoApp',
+  binary = ':DemoAppBinary',
+  deps = [':DemoWatchApp#watch'],
+  extension = 'app',
+  info_plist = 'Info.plist',
 )

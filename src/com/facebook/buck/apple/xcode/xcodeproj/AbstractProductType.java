@@ -39,6 +39,8 @@ abstract class AbstractProductType {
       "com.apple.product-type.application");
   public static final ProductType WATCH_APPLICATION = ProductType.of(
       "com.apple.product-type.application.watchapp2");
+  public static final ProductType WATCH_EXTENSION = ProductType.of(
+      "com.apple.product-type.watchkit2-extension");
   public static final ProductType UNIT_TEST = ProductType.of(
       "com.apple.product-type.bundle.unit-test");
   public static final ProductType APP_EXTENSION = ProductType.of(

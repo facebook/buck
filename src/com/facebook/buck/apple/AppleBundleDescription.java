@@ -27,6 +27,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.HasTests;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -66,6 +67,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     Flavored,
     ImplicitDepsInferringDescription<AppleBundleDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_bundle");
+
+  private static final Flavor WATCH = ImmutableFlavor.of("watch");
 
   private static final ImmutableSet<Flavor> SUPPORTED_LIBRARY_FLAVORS = ImmutableSet.of(
       CxxDescriptionEnhancer.STATIC_FLAVOR,
@@ -122,37 +125,49 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     return appleBinaryDescription.hasFlavors(flavorBuilder.build());
   }
 
+  /** Only works with thin binaries. */
+  private CxxPlatform getCxxPlatformForBuildTarget(BuildTarget target) {
+    CxxPlatform cxxPlatform;
+    try {
+      cxxPlatform = cxxPlatformFlavorDomain
+          .getValue(target.getFlavors())
+          .or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+
+    return cxxPlatform;
+  }
+
+  private AppleCxxPlatform getAppleCxxPlatformForBuildTarget(BuildTarget target) {
+    Optional<FatBinaryInfo> fatBinaryInfo =
+        FatBinaryInfo.create(platformFlavorsToAppleCxxPlatforms, target);
+    AppleCxxPlatform appleCxxPlatform;
+    if (fatBinaryInfo.isPresent()) {
+      appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
+    } else {
+      CxxPlatform cxxPlatform = getCxxPlatformForBuildTarget(target);
+      appleCxxPlatform =
+          platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
+      if (appleCxxPlatform == null) {
+        throw new HumanReadableException(
+            "%s: Apple bundle requires an Apple platform, found '%s'",
+            target,
+            cxxPlatform.getFlavor().getName());
+      }
+    }
+
+    return appleCxxPlatform;
+  }
+
+
   @Override
   public <A extends Arg> AppleBundle createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-
-    Optional<FatBinaryInfo> fatBinaryInfo =
-        FatBinaryInfo.create(platformFlavorsToAppleCxxPlatforms, params.getBuildTarget());
-    AppleCxxPlatform appleCxxPlatform;
-    if (fatBinaryInfo.isPresent()) {
-      appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
-    } else {
-      CxxPlatform cxxPlatform;
-      try {
-        cxxPlatform = cxxPlatformFlavorDomain
-            .getValue(params.getBuildTarget().getFlavors())
-            .or(defaultCxxPlatform);
-      } catch (FlavorDomainException e) {
-        throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
-      }
-      appleCxxPlatform =
-          platformFlavorsToAppleCxxPlatforms.get(cxxPlatform.getFlavor());
-      if (appleCxxPlatform == null) {
-        throw new HumanReadableException(
-            "%s: Apple bundle requires an Apple platform, found '%s'",
-            params.getBuildTarget(),
-            cxxPlatform.getFlavor().getName());
-      }
-    }
-
+    AppleCxxPlatform appleCxxPlatform = getAppleCxxPlatformForBuildTarget(params.getBuildTarget());
     AppleBundleDestinations destinations =
         AppleBundleDestinations.platformDestinations(
             appleCxxPlatform.getAppleSdk().getApplePlatform());
@@ -313,7 +328,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     for (BuildRule rule : deps) {
       if (rule instanceof AppleBundle) {
         AppleBundle appleBundle = (AppleBundle) rule;
-        if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension())) {
+        if (AppleBundleExtension.APPEX.toFileExtension().equals(appleBundle.getExtension()) ||
+            AppleBundleExtension.APP.toFileExtension().equals(appleBundle.getExtension())) {
           Path outputPath = Preconditions.checkNotNull(
               appleBundle.getPathToOutput(),
               "Path cannot be null for AppleBundle [%s].",
@@ -347,22 +363,60 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
           ImmutableSet.of(defaultCxxPlatform.getFlavor())).build();
     }
 
+    Optional<FatBinaryInfo> fatBinaryInfo =
+        FatBinaryInfo.create(platformFlavorsToAppleCxxPlatforms, buildTarget);
+    CxxPlatform cxxPlatform;
+    if (fatBinaryInfo.isPresent()) {
+      AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
+      cxxPlatform = appleCxxPlatform.getCxxPlatform();
+    } else {
+      cxxPlatform = getCxxPlatformForBuildTarget(buildTarget);
+    }
+
+    String platformName = cxxPlatform.getFlavor().getName();
+    final Flavor actualWatchFlavor;
+    if (ApplePlatform.isSimulator(platformName)) {
+      actualWatchFlavor = ImmutableFlavor.builder().name("watchsimulator-i386").build();
+    } else if (platformName.startsWith(ApplePlatform.Name.IPHONEOS) ||
+        platformName.startsWith(ApplePlatform.Name.WATCHOS)) {
+      actualWatchFlavor = ImmutableFlavor.builder().name("watchos-armv7k").build();
+    } else {
+      actualWatchFlavor = ImmutableFlavor.builder().name(platformName).build();
+    }
+
     FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps.get())
         .filter(Predicates.not(Predicates.equalTo(constructorArg.binary)));
 
-    FluentIterable<BuildTarget> targetsWithFlavors = depsExcludingBinary.filter(
+    FluentIterable<BuildTarget> targetsWithPlatformFlavors = depsExcludingBinary.filter(
         BuildTargets.containsFlavors(cxxPlatformFlavorDomain));
 
-    FluentIterable<BuildTarget> targetsWithoutFlavors = depsExcludingBinary.filter(
+    FluentIterable<BuildTarget> targetsWithoutPlatformFlavors = depsExcludingBinary.filter(
         Predicates.not(BuildTargets.containsFlavors(cxxPlatformFlavorDomain)));
 
+    FluentIterable<BuildTarget> watchTargets = targetsWithoutPlatformFlavors
+        .filter(BuildTargets.containsFlavor(WATCH))
+        .transform(
+            new Function<BuildTarget, BuildTarget>() {
+              @Override
+              public BuildTarget apply(BuildTarget input) {
+                return BuildTarget.builder(
+                    input.withoutFlavors(ImmutableSet.of(WATCH)))
+                    .addFlavors(actualWatchFlavor)
+                    .build();
+              }
+            });
+
+    targetsWithoutPlatformFlavors = targetsWithoutPlatformFlavors
+        .filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));
+
     return ImmutableSet.<BuildTarget>builder()
-        .addAll(targetsWithFlavors)
+        .addAll(targetsWithPlatformFlavors)
+        .addAll(watchTargets)
         .addAll(
             BuildTargets.propagateFlavorDomains(
                 buildTarget,
                 ImmutableSet.<FlavorDomain<?>>of(cxxPlatformFlavorDomain),
-                targetsWithoutFlavors))
+                targetsWithoutPlatformFlavors))
         .build();
   }
 
