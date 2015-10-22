@@ -565,7 +565,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
     if (platformName.contains("osx")) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(false));
-    } else {
+    } else if (!platformName.contains("watch")) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(true));
     }
 
