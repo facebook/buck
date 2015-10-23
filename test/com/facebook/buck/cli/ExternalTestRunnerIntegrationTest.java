@@ -106,6 +106,13 @@ public class ExternalTestRunnerIntegrationTest {
                 "    <stdout>passed!",
                 "</stdout>",
                 "  </test>",
+                "</testcase>",
+                "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
+                "<testcase name=\"SimpleTest2\">",
+                "  <test name=\"passingTest\" success=\"true\" time=\"\\d*\" type=\"SUCCESS\">",
+                "    <stdout>passed!",
+                "</stdout>",
+                "  </test>",
                 "</testcase>") + System.lineSeparator()));
   }
 

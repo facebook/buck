@@ -147,7 +147,9 @@ public abstract class BaseRunner {
     StreamResult streamResult = new StreamResult(output);
     DOMSource source = new DOMSource(doc);
     trans.transform(source, streamResult);
-    output.close();
+    if (outputDirectory != null) {
+      output.close();
+    }
   }
 
   private String stackTraceToString(Throwable exc) {
