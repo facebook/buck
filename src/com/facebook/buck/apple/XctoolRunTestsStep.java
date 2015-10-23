@@ -21,6 +21,8 @@ import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.test.selectors.TestDescription;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
@@ -29,17 +31,23 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -73,6 +81,57 @@ public class XctoolRunTestsStep implements Step {
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
   private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
+  private final TestSelectorList testSelectorList;
+
+  // Helper class to parse the output of `xctool -listTestsOnly` then
+  // store it in a multimap of {target: [testDesc1, testDesc2, ...], ... } pairs.
+  //
+  // We need to remember both the target name and the test class/method names, since
+  // `xctool -only` requires the format `TARGET:className/methodName,...`
+  private static class ListTestsOnlyHandler implements XctoolOutputParsing.XctoolEventCallback {
+    private String currentTestTarget;
+    public Multimap<String, TestDescription> testTargetsToDescriptions;
+
+    public ListTestsOnlyHandler() {
+      this.currentTestTarget = null;
+      // We use a LinkedListMultimap to make the order deterministic for testing.
+      this.testTargetsToDescriptions = LinkedListMultimap.create();
+    }
+
+    @Override
+    public void handleBeginOcunitEvent(XctoolOutputParsing.BeginOcunitEvent event) {
+      // Signals the start of listing all tests belonging to a single target.
+      this.currentTestTarget = event.targetName;
+    }
+
+    @Override
+    public void handleEndOcunitEvent(XctoolOutputParsing.EndOcunitEvent event) {
+      Preconditions.checkNotNull(this.currentTestTarget);
+      Preconditions.checkState(this.currentTestTarget.equals(event.targetName));
+      // Signals the end of listing all tests belonging to a single target.
+      this.currentTestTarget = null;
+    }
+
+    @Override
+    public void handleBeginTestSuiteEvent(XctoolOutputParsing.BeginTestSuiteEvent event) {
+    }
+
+    @Override
+    public void handleEndTestSuiteEvent(XctoolOutputParsing.EndTestSuiteEvent event) {
+    }
+
+    @Override
+    public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
+      Preconditions.checkNotNull(this.currentTestTarget);
+      testTargetsToDescriptions.put(
+          this.currentTestTarget,
+          new TestDescription(event.className, event.methodName));
+    }
+
+    @Override
+    public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {
+    }
+  }
 
   public XctoolRunTestsStep(
       ProjectFilesystem filesystem,
@@ -84,7 +143,8 @@ public class XctoolRunTestsStep implements Step {
       Map<Path, Path> appTestBundleToHostAppPaths,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
-      Supplier<Optional<Path>> xcodeDeveloperDirSupplier) {
+      Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
+      TestSelectorList testSelectorList) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty() &&
           appTestBundleToHostAppPaths.isEmpty()),
@@ -117,6 +177,7 @@ public class XctoolRunTestsStep implements Step {
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
     this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
+    this.testSelectorList = testSelectorList;
   }
 
   @Override
@@ -138,12 +199,40 @@ public class XctoolRunTestsStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    ProcessExecutorParams processExecutorParams = ProcessExecutorParams.builder()
-        .setCommand(command)
+    ImmutableMap<String, String> env = getEnv(context);
+
+    ProcessExecutorParams.Builder processExecutorParamsBuilder = ProcessExecutorParams.builder()
+        .addAllCommand(command)
         .setDirectory(filesystem.getRootPath().toAbsolutePath().toFile())
         .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
-        .setEnvironment(getEnv(context))
-        .build();
+        .setEnvironment(env);
+
+    if (!testSelectorList.isEmpty()) {
+      try {
+        List<String> xctoolFilterParams = listAndFilterTestsThenFormatXctoolParams(
+            context.getProcessExecutor(),
+            testSelectorList,
+            // Copy the entire xctool command and environment but add a -listTestsOnly arg.
+            ProcessExecutorParams.builder()
+                .from(processExecutorParamsBuilder.build())
+                .addCommand("-listTestsOnly")
+                .build());
+        if (xctoolFilterParams.isEmpty()) {
+          context.getConsole().printBuildFailure(
+              String.format(
+                  "No tests found matching specified filter (%s)",
+                  testSelectorList.getExplanation()));
+          return 1;
+        }
+        processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
+      } catch (IOException e) {
+        context.getConsole().printErrorText("Failed to get list of tests from test bundle");
+        context.getConsole().printBuildFailureWithStacktrace(e);
+        return 1;
+      }
+    }
+
+    ProcessExecutorParams processExecutorParams = processExecutorParamsBuilder.build();
 
     // Only launch one instance of xctool at the time
     final AtomicBoolean stutterLockIsNotified = new AtomicBoolean(false);
@@ -186,7 +275,7 @@ public class XctoolRunTestsStep implements Step {
         return exitCode;
 
       } catch (Exception e) {
-        LOG.error(e, "Exception while running %s", command);
+        LOG.error(e, "Exception while running %s", processExecutorParams.getCommand());
         MoreThrowables.propagateIfInterrupt(e);
         context.getConsole().printBuildFailureWithStacktrace(e);
         return 1;
@@ -199,6 +288,69 @@ public class XctoolRunTestsStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return Joiner.on(' ').join(Iterables.transform(command, Escaper.SHELL_ESCAPER));
+  }
+
+  private static List<String> listAndFilterTestsThenFormatXctoolParams(
+      ProcessExecutor processExecutor,
+      TestSelectorList testSelectorList,
+      ProcessExecutorParams listTestsOnlyParams) throws IOException, InterruptedException {
+    Preconditions.checkArgument(!testSelectorList.isEmpty());
+    LOG.debug("Filtering tests with selector list: %s", testSelectorList.getExplanation());
+
+    LOG.debug("Listing tests with command: %s", listTestsOnlyParams);
+    ProcessExecutor.LaunchedProcess launchedProcess =
+        processExecutor.launchProcess(listTestsOnlyParams);
+
+    ListTestsOnlyHandler listTestsOnlyHandler = new ListTestsOnlyHandler();
+    try (InputStreamReader isr =
+         new InputStreamReader(
+             launchedProcess.getInputStream(),
+             StandardCharsets.UTF_8);
+         BufferedReader br = new BufferedReader(isr)) {
+      XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
+    }
+
+    int listTestsResult = processExecutor.waitForLaunchedProcess(launchedProcess);
+    if (listTestsResult != 0) {
+      throw new IOException(
+          String.format(
+              "Process %s exited with error %d",
+              listTestsOnlyParams.getCommand(),
+              listTestsResult));
+    }
+
+    return formatXctoolFilterParams(
+        testSelectorList, listTestsOnlyHandler.testTargetsToDescriptions);
+  }
+
+  private static List<String> formatXctoolFilterParams(
+      TestSelectorList testSelectorList,
+      Multimap<String, TestDescription> testTargetsToDescriptions) {
+    ImmutableList.Builder<String> filterParamsBuilder = ImmutableList.builder();
+    for (String testTarget : testTargetsToDescriptions.keySet()) {
+      StringBuilder sb = new StringBuilder();
+      boolean matched = false;
+      for (TestDescription testDescription : testTargetsToDescriptions.get(testTarget)) {
+        if (!testSelectorList.isIncluded(testDescription)) {
+          continue;
+        }
+        if (!matched) {
+          matched = true;
+          sb.append(testTarget);
+          sb.append(':');
+        } else {
+          sb.append(',');
+        }
+        sb.append(testDescription.getClassName());
+        sb.append('/');
+        sb.append(testDescription.getMethodName());
+      }
+      if (matched) {
+        filterParamsBuilder.add("-only");
+        filterParamsBuilder.add(sb.toString());
+      }
+    }
+    return filterParamsBuilder.build();
   }
 
   private static ImmutableList<String> createCommandArgs(

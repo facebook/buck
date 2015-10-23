@@ -1,0 +1,16 @@
+{"scheme":null,"workspace":null,"timestamp":1445614905.858547,"event":"begin-action","project":null,"name":"run-tests"}
+{"message":"Collecting info for testables...","timestamp":1445614905.858756,"level":"Info","event":"begin-status"}
+{"message":"Collecting info for testables...","timestamp":1445614906.03462,"level":"Info","event":"end-status"}
+{"bundleName":"FooTest.xctest","sdkName":"iphonesimulator9.0","timestamp":1445614906.034712,"event":"begin-ocunit","targetName":"/path/to/FooTest.xctest","testType":"logic-test"}
+{"test":"-[FooTest testMagicValue]","className":"FooTest","timestamp":1445614906.034817,"event":"begin-test","methodName":"testMagicValue"}
+{"result":"success","test":"-[FooTest testMagicValue]","className":"FooTest","succeeded":"1","event":"end-test","methodName":"testMagicValue","totalDuration":"0","timestamp":1445614906.034864}
+{"test":"-[FooTest testAnotherMagicValue]","className":"FooTest","timestamp":1445614906.034865,"event":"begin-test","methodName":"testAnotherMagicValue"}
+{"result":"success","test":"-[FooTest testAnotherMagicValue]","className":"FooTest","succeeded":"1","event":"end-test","methodName":"testMagicValue","totalDuration":"0","timestamp":1445614906.034866}
+{"bundleName":"FooTest.xctest","succeeded":true,"event":"end-ocunit","message":null,"targetName":"/path/to/FooTest.xctest","testType":"logic-test","sdkName":"iphonesimulator9.0","timestamp":1445614906.034911}
+{"bundleName":"BarTest.xctest","sdkName":"iphonesimulator9.0","timestamp":1445614906.034912,"event":"begin-ocunit","targetName":"/path/to/BarTest.xctest","testType":"logic-test"}
+{"test":"-[BarTest testYetAnotherMagicValue]","className":"BarTest","timestamp":1445614906.034913,"event":"begin-test","methodName":"testYetAnotherMagicValue"}
+{"result":"success","test":"-[BarTest testYetAnotherMagicValue]","className":"BarTest","succeeded":"1","event":"end-test","methodName":"testYetAnotherMagicValue","totalDuration":"0","timestamp":1445614906.034914}
+{"test":"-[BarTest testDontRunThis]","className":"BarTest","timestamp":1445614906.034915,"event":"begin-test","methodName":"testDontRunThis"}
+{"result":"success","test":"-[BarTest testDontRunThis]","className":"BarTest","succeeded":"1","event":"end-test","methodName":"testDontRunThis","totalDuration":"0","timestamp":1445614906.034916}
+{"bundleName":"BarTest.xctest","succeeded":true,"event":"end-ocunit","message":null,"targetName":"/path/to/BarTest.xctest","testType":"logic-test","sdkName":"iphonesimulator9.0","timestamp":1445614906.034917}
+{"scheme":null,"succeeded":true,"event":"end-action","workspace":null,"project":null,"duration":0.1764647620148025,"timestamp":1445614906.034978,"name":"run-tests"}

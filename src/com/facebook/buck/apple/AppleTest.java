@@ -201,6 +201,7 @@ public class AppleTest
 
   public Pair<ImmutableList<Step>, ExternalTestRunnerTestSpec> getTestCommand(
       ExecutionContext context,
+      TestRunningOptions options,
       TestRule.TestReportingCallback testReportingCallback) {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -273,7 +274,8 @@ public class AppleTest
               appTestPathsToHostAppsBuilder.build(),
               resolvedTestOutputPath,
               xctoolStdoutReader,
-              xcodeDeveloperDirSupplier);
+              xcodeDeveloperDirSupplier,
+              options.getTestSelectorList());
       steps.add(xctoolStep);
       externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());
@@ -312,7 +314,7 @@ public class AppleTest
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {
-    return getTestCommand(executionContext, testReportingCallback).getFirst();
+    return getTestCommand(executionContext, options, testReportingCallback).getFirst();
   }
 
   @Override
@@ -397,7 +399,8 @@ public class AppleTest
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext, TestRunningOptions testRunningOptions) {
-    return getTestCommand(executionContext, NOOP_REPORTING_CALLBACK).getSecond();
+    return getTestCommand(
+        executionContext, testRunningOptions, NOOP_REPORTING_CALLBACK).getSecond();
   }
 
 }

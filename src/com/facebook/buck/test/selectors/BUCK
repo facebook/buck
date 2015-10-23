@@ -21,6 +21,7 @@ java_library(
     '//src/com/facebook/buck/python:rules',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/test:test',
+    '//test/com/facebook/buck/apple:apple',
     '//test/com/facebook/buck/cxx:cxx',
     '//test/com/facebook/buck/event:event',
     '//test/com/facebook/buck/event/listener:listener',
