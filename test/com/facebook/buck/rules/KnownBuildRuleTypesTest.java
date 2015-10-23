@@ -72,6 +72,8 @@ public class KnownBuildRuleTypesTest {
   @Rule public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
 
   private static final String FAKE_XCODE_DEV_PATH = "/Fake/Path/To/Xcode.app/Contents/Developer";
+  private static final ImmutableMap<String, String> environment =
+      ImmutableMap.copyOf(System.getenv());
 
   private static BuildRuleParams buildRuleParams;
 
@@ -200,7 +202,8 @@ public class KnownBuildRuleTypesTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     KnownBuildRuleTypes buildRuleTypes =
-        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(new FakeProjectFilesystem());
+        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(
+            new FakeProjectFilesystem(), environment);
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
@@ -379,7 +382,9 @@ public class KnownBuildRuleTypesTest {
 
     addXcodeSelectProcess(processMap, FAKE_XCODE_DEV_PATH);
 
-    processMap.putAll(DefaultKnownBuildRuleTypes.getPythonProcessMap());
+    processMap.putAll(
+        DefaultKnownBuildRuleTypes.getPythonProcessMap(
+            DefaultKnownBuildRuleTypes.getPaths(environment)));
 
     return new FakeProcessExecutor(processMap);
   }

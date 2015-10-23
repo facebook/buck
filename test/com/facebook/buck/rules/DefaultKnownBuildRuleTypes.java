@@ -23,13 +23,20 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DefaultKnownBuildRuleTypes {
 
@@ -49,28 +56,43 @@ public class DefaultKnownBuildRuleTypes {
           "python2", "2.6.5",
           "python3", "3.5.0");
 
-  protected static ImmutableMap<ProcessExecutorParams, FakeProcess> getPythonProcessMap() {
+  protected static ImmutableMap<ProcessExecutorParams, FakeProcess> getPythonProcessMap(
+      List<String> paths) {
+    Set<String> uniquePaths = new HashSet<>(paths);
     ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> processMap = ImmutableMap.builder();
     for (Map.Entry<String, String> python : PYTHONS.entrySet()) {
-      processMap.put(
-          ProcessExecutorParams.builder()
-              .setCommand(ImmutableList.of("/usr/bin/" + python.getKey(), "-V"))
-              .build(),
-          new FakeProcess(0, "Python " + python.getValue(), ""));
+      for (String path : uniquePaths) {
+        processMap.put(
+            ProcessExecutorParams.builder()
+                .setCommand(ImmutableList.of(path + File.separator + python.getKey(), "-V"))
+                .build(),
+            new FakeProcess(0, "Python " + python.getValue(), ""));
+      }
     }
     return processMap.build();
   }
 
-  public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(ProjectFilesystem filesystem)
-      throws InterruptedException, IOException {
+  @VisibleForTesting
+  public static List<String> getPaths(ImmutableMap<String, String> environemnt) {
+    String pathEnv = environemnt.get("PATH");
+    if (pathEnv == null) {
+      return Collections.emptyList();
+    }
+
+    return Arrays.asList(pathEnv.split(File.pathSeparator));
+  }
+
+  public static KnownBuildRuleTypes getDefaultKnownBuildRuleTypes(ProjectFilesystem filesystem,
+      ImmutableMap<String, String> environment) throws InterruptedException, IOException {
     BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
+    List<String> paths = getPaths(environment);
 
     return KnownBuildRuleTypes.createInstance(
         config,
         new FakeProcessExecutor(
             ImmutableMap.<ProcessExecutorParams, FakeProcess>builder()
                 .put(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)
-                .putAll(getPythonProcessMap())
+                .putAll(getPythonProcessMap(paths))
                 .build()),
         new FakeAndroidDirectoryResolver(),
         Optional.<Path>absent());

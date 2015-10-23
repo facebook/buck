@@ -62,6 +62,7 @@ public class JavaSymbolFinderIntegrationTest {
     workspace.setUp();
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
+    ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
     Config rawConfig = Config.createDefaultConfig(
         projectFilesystem.getRootPath(),
         ImmutableMap.<String, ImmutableMap<String, String>>of());
@@ -70,7 +71,7 @@ public class JavaSymbolFinderIntegrationTest {
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()));
+        environment);
 
     ParserConfig parserConfig = new ParserConfig(config);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
@@ -78,7 +79,7 @@ public class JavaSymbolFinderIntegrationTest {
         new ExecutableFinder());
     ImmutableSet<Description<?>> allDescriptions =
         DefaultKnownBuildRuleTypes
-        .getDefaultKnownBuildRuleTypes(projectFilesystem)
+        .getDefaultKnownBuildRuleTypes(projectFilesystem, environment)
         .getAllDescriptions();
     SrcRootsFinder srcRootsFinder = new SrcRootsFinder(projectFilesystem);
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
@@ -100,7 +101,7 @@ public class JavaSymbolFinderIntegrationTest {
         config,
         buckEventBus,
         new TestConsole(),
-        ImmutableMap.copyOf(System.getenv()));
+        environment);
 
     SetMultimap<String, BuildTarget> foundTargets =
         finder.findTargetsForSymbols(ImmutableSet.of("com.example.a.A"));
