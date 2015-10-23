@@ -95,7 +95,9 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     expr.collectTargetPatterns(targetLiterals);
     try {
       targetPatternEvaluator.preloadTargetPatterns(targetLiterals);
-    } catch (BuildTargetException | BuildFileParseException | IOException e) {
+    } catch (IOException e) {
+      throw new QueryException("Error in preloading targets. %s: %s", e.getClass(), e.getMessage());
+    } catch (BuildTargetException | BuildFileParseException e) {
       throw new QueryException("Error in preloading targets. %s", e.getMessage());
     }
     return expr.eval(this);
