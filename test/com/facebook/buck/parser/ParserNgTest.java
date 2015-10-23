@@ -55,6 +55,7 @@ import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -1601,11 +1602,13 @@ public class ParserNgTest {
   }
 
   private ActionGraph buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
-    return new TargetGraphToActionGraph(
-        eventBus,
-        new BuildTargetNodeToBuildRuleTransformer(),
-        new NullFileHashCache())
-        .apply(targetGraph);
+    return Preconditions.checkNotNull(
+        new TargetGraphToActionGraph(
+            eventBus,
+            new BuildTargetNodeToBuildRuleTransformer(),
+            new NullFileHashCache())
+            .apply(targetGraph))
+        .getFirst();
   }
 
   /**

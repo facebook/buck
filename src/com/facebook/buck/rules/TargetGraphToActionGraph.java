@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
@@ -44,11 +45,10 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
   private final BuckEventBus eventBus;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   private final FileHashCache fileHashCache;
-  private final BuildRuleResolver resolver;
-  private volatile int hashOfTargetGraph;
 
+  private volatile int hashOfTargetGraph;
   @Nullable
-  private volatile ActionGraph actionGraph;
+  private volatile Pair<ActionGraph, BuildRuleResolver> result;
 
 
   public TargetGraphToActionGraph(
@@ -58,28 +58,29 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
     this.eventBus = eventBus;
     this.buildRuleGenerator = buildRuleGenerator;
     this.fileHashCache = fileHashCache;
-
-    this.resolver = new BuildRuleResolver();
   }
 
   @Override
-  public synchronized ActionGraph apply(TargetGraph targetGraph) {
-    if (actionGraph != null) {
+  public synchronized Pair<ActionGraph, BuildRuleResolver> apply(TargetGraph targetGraph) {
+    if (result != null) {
       if (targetGraph.hashCode() == hashOfTargetGraph) {
-        return actionGraph;
+        return result;
       }
       LOG.info("Flushing cached action graph. May be a performance hit.");
     }
 
-    actionGraph = createActionGraph(targetGraph);
+    result = createActionGraph(targetGraph);
     hashOfTargetGraph = targetGraph.hashCode();
 
-    return actionGraph;
+    return result;
   }
 
-  private ActionGraph createActionGraph(final TargetGraph targetGraph) {
+  private Pair<ActionGraph, BuildRuleResolver> createActionGraph(
+      final TargetGraph targetGraph) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
+
+    final BuildRuleResolver resolver = new BuildRuleResolver();
 
     // I think this could be a little more verbose, but I'm not quite sure how.
     final LoadingCache<ProjectFilesystem, RuleKeyBuilderFactory>
@@ -141,12 +142,11 @@ public class TargetGraphToActionGraph implements TargetGraphTransformer {
         };
     bottomUpTraversal.traverse();
 
-    ActionGraph result = new ActionGraph(resolver.getBuildRules());
+    Pair<ActionGraph, BuildRuleResolver> result = new Pair<>(
+        new ActionGraph(resolver.getBuildRules()),
+        resolver);
     eventBus.post(ActionGraphEvent.finished(started));
     return result;
   }
 
-  public BuildRuleResolver getRuleResolver() {
-    return resolver;
-  }
 }

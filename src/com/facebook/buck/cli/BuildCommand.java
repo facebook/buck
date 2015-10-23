@@ -281,8 +281,7 @@ public class BuildCommand extends AbstractCommand {
     }
 
     // Parse the build files to create a ActionGraph.
-    ActionGraph actionGraph;
-    BuildRuleResolver resolver;
+    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver;
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
@@ -299,8 +298,8 @@ public class BuildCommand extends AbstractCommand {
               params.getBuckEventBus(),
               new BuildTargetNodeToBuildRuleTransformer(),
               params.getFileHashCache());
-      actionGraph = targetGraphToActionGraph.apply(result.getSecond());
-      resolver = targetGraphToActionGraph.getRuleResolver();
+      actionGraphAndResolver = Preconditions.checkNotNull(
+          targetGraphToActionGraph.apply(result.getSecond()));
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -313,7 +312,8 @@ public class BuildCommand extends AbstractCommand {
           justBuildTarget,
           BuildTargetPatternParser.fullyQualified(),
           params.getCell().getCellRoots());
-      Iterable<BuildRule> actionGraphRules = Preconditions.checkNotNull(actionGraph.getNodes());
+      Iterable<BuildRule> actionGraphRules =
+          Preconditions.checkNotNull(actionGraphAndResolver.getFirst().getNodes());
       ImmutableSet<BuildTarget> actionGraphTargets =
           ImmutableSet.copyOf(Iterables.transform(actionGraphRules, HasBuildTarget.TO_TARGET));
       if (!actionGraphTargets.contains(explicitTarget)) {
@@ -329,14 +329,14 @@ public class BuildCommand extends AbstractCommand {
         getConcurrencyLimit(params.getBuckConfig()));
          Build build = createBuild(
              params.getBuckConfig(),
-             actionGraph,
+             actionGraphAndResolver.getFirst(),
              params.getAndroidPlatformTargetSupplier(),
              new CachingBuildEngine(
                  pool.getExecutor(),
                  params.getFileHashCache(),
                  getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
                  params.getBuckConfig().getBuildDepFiles(),
-                 resolver),
+                 actionGraphAndResolver.getSecond()),
              artifactCache,
              params.getConsole(),
              params.getBuckEventBus(),

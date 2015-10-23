@@ -28,6 +28,7 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
@@ -473,10 +474,13 @@ public class TestCommand extends BuildCommand {
             params.getBuckEventBus(),
             new BuildTargetNodeToBuildRuleTransformer(),
             params.getFileHashCache());
-    ActionGraph graph = targetGraphToActionGraph.apply(targetGraph);
+    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
+        Preconditions.checkNotNull(targetGraphToActionGraph.apply(targetGraph));
 
     // Look up all of the test rules in the action graph.
-    Iterable<TestRule> testRules = Iterables.filter(graph.getNodes(), TestRule.class);
+    Iterable<TestRule> testRules = Iterables.filter(
+        actionGraphAndResolver.getFirst().getNodes(),
+        TestRule.class);
 
     // Unless the user requests that we build filtered tests, filter them out here, before
     // the build.
@@ -496,10 +500,10 @@ public class TestCommand extends BuildCommand {
               params.getFileHashCache(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getBuildDepFiles(),
-              targetGraphToActionGraph.getRuleResolver());
+              actionGraphAndResolver.getSecond());
       try (Build build = createBuild(
           params.getBuckConfig(),
-          graph,
+          actionGraphAndResolver.getFirst(),
           params.getAndroidPlatformTargetSupplier(),
           cachingBuildEngine,
           params.getArtifactCache(),

@@ -1416,8 +1416,8 @@ public class WorkspaceAndProjectGeneratorTest {
         TargetGraph subgraph = targetGraph.getSubgraph(
             ImmutableSet.of(
                 input));
-        ActionGraph actionGraph = Preconditions.checkNotNull(
-            targetGraphToActionGraph.apply(subgraph));
+        ActionGraph actionGraph =
+            Preconditions.checkNotNull(targetGraphToActionGraph.apply(subgraph)).getFirst();
         BuildRule rule = Preconditions.checkNotNull(
             actionGraph.findBuildRuleByTarget(input.getBuildTarget()));
         return rule.getPathToOutput();

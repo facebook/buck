@@ -176,7 +176,8 @@ public class AuditClasspathCommand extends AbstractCommand {
       TargetGraph targetGraph,
       TargetGraphTransformer targetGraphTransformer,
       ImmutableSet<BuildTarget> targets) {
-    ActionGraph graph = targetGraphTransformer.apply(targetGraph);
+    ActionGraph graph =
+        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getFirst();
     SortedSet<Path> classpathEntries = Sets.newTreeSet();
 
     for (BuildTarget target : targets) {
@@ -204,7 +205,8 @@ public class AuditClasspathCommand extends AbstractCommand {
       TargetGraphTransformer targetGraphTransformer,
       ImmutableSet<BuildTarget> targets)
       throws IOException {
-    ActionGraph graph = targetGraphTransformer.apply(targetGraph);
+    ActionGraph graph =
+        Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getFirst();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {

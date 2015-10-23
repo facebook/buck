@@ -579,7 +579,8 @@ public class TargetsCommand extends AbstractCommand {
             params.getBuckEventBus(),
             new BuildTargetNodeToBuildRuleTransformer(),
             params.getFileHashCache());
-        actionGraph = Optional.of(targetGraphTransformer.apply(targetGraph));
+        actionGraph = Optional.of(
+            Preconditions.checkNotNull(targetGraphTransformer.apply(targetGraph)).getFirst());
       } else {
         actionGraph = Optional.absent();
       }
