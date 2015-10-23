@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.AbstractGenruleStep.CommandString;
 import com.facebook.buck.step.ExecutionContext;
@@ -43,8 +44,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -112,13 +111,12 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   @AddToRuleKey
   protected final ImmutableList<SourcePath> srcs;
 
-  protected final Function<String, String> macroExpander;
   @AddToRuleKey
-  protected final Optional<String> cmd;
+  protected final Optional<Arg> cmd;
   @AddToRuleKey
-  protected final Optional<String> bash;
+  protected final Optional<Arg> bash;
   @AddToRuleKey
-  protected final Optional<String> cmdExe;
+  protected final Optional<Arg> cmdExe;
 
   protected final Map<Path, Path> srcsToAbsolutePaths;
 
@@ -132,24 +130,17 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
   private final Path absolutePathToSrcDirectory;
   protected final Function<Path, Path> relativeToAbsolutePathFunction;
 
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  @AddToRuleKey
-  private final Supplier<ImmutableList<Object>> macroRuleKeyAppendables;
-
   protected Genrule(
       BuildRuleParams params,
       SourcePathResolver resolver,
       List<SourcePath> srcs,
-      Function<String, String> macroExpander,
-      Optional<String> cmd,
-      Optional<String> bash,
-      Optional<String> cmdExe,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe,
       String out,
-      final Function<Path, Path> relativeToAbsolutePathFunction,
-      Supplier<ImmutableList<Object>> macroRuleKeyAppendables) {
+      final Function<Path, Path> relativeToAbsolutePathFunction) {
     super(params, resolver);
     this.srcs = ImmutableList.copyOf(srcs);
-    this.macroExpander = macroExpander;
     this.cmd = cmd;
     this.bash = bash;
     this.cmdExe = cmdExe;
@@ -191,7 +182,6 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     this.absolutePathToSrcDirectory = relativeToAbsolutePathFunction.apply(pathToSrcDirectory);
 
     this.relativeToAbsolutePathFunction = relativeToAbsolutePathFunction;
-    this.macroRuleKeyAppendables = Suppliers.memoize(macroRuleKeyAppendables);
   }
 
   /** @return the absolute path to the output file */
@@ -292,9 +282,9 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     return new AbstractGenruleStep(
         getBuildTarget(),
         new CommandString(
-            cmd.transform(macroExpander),
-            bash.transform(macroExpander),
-            cmdExe.transform(macroExpander)),
+            cmd.transform(Arg.stringifyFunction()),
+            bash.transform(Arg.stringifyFunction()),
+            cmdExe.transform(Arg.stringifyFunction())),
         absolutePathToSrcDirectory) {
       @Override
       protected void addEnvironmentVariables(

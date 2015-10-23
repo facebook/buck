@@ -25,12 +25,11 @@ import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -62,24 +61,20 @@ public class ApkGenrule extends Genrule implements InstallableApk {
       BuildRuleParams params,
       SourcePathResolver resolver,
       List<SourcePath> srcs,
-      Function<String, String> macroExpander,
-      Optional<String> cmd,
-      Optional<String> bash,
-      Optional<String> cmdExe,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe,
       Function<Path, Path> relativeToAbsolutePathFunction,
-      Supplier<ImmutableList<Object>> macroRuleKeyAppendables,
       InstallableApk apk) {
     super(
         params,
         resolver,
         srcs,
-        macroExpander,
         cmd,
         bash,
         cmdExe,
         /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk",
-        relativeToAbsolutePathFunction,
-        macroRuleKeyAppendables);
+        relativeToAbsolutePathFunction);
 
     this.apk = apk;
   }

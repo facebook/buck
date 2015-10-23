@@ -16,7 +16,6 @@
 
 package com.facebook.buck.shell;
 
-
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -25,7 +24,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -46,28 +44,24 @@ public class GenruleDescription extends AbstractGenruleDescription<AbstractGenru
 
   @Override
   protected <A extends Arg> BuildRule createBuildRule(
-      final BuildRuleParams params,
-      final BuildRuleResolver resolver,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
       A args,
       ImmutableList<SourcePath> srcs,
-      Function<String, String> macroExpander,
-      Optional<String> cmd,
-      Optional<String> bash,
-      Optional<String> cmdExe,
+      Optional<com.facebook.buck.rules.args.Arg> cmd,
+      Optional<com.facebook.buck.rules.args.Arg> bash,
+      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
       String out,
-      final Function<Path, Path> relativeToAbsolutePathFunction,
-      Supplier<ImmutableList<Object>> macroRuleKeyAppendables) {
+      Function<Path, Path> relativeToAbsolutePathFunction) {
     return new Genrule(
         params,
         new SourcePathResolver(resolver),
         srcs,
-        macroExpander,
         cmd,
         bash,
         cmdExe,
         out,
-        relativeToAbsolutePathFunction,
-        macroRuleKeyAppendables);
+        relativeToAbsolutePathFunction);
   }
 
 }

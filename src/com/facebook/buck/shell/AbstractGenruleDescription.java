@@ -25,6 +25,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -36,6 +37,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,13 +60,11 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final BuildRuleResolver resolver,
       A args,
       ImmutableList<SourcePath> srcs,
-      Function<String, String> macroExpander,
-      Optional<String> cmd,
-      Optional<String> bash,
-      Optional<String> cmdExe,
+      Optional<com.facebook.buck.rules.args.Arg> cmd,
+      Optional<com.facebook.buck.rules.args.Arg> bash,
+      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
       String out,
-      final Function<Path, Path> relativeToAbsolutePathFunction,
-      Supplier<ImmutableList<Object>> macroRuleKeyAppendables);
+      final Function<Path, Path> relativeToAbsolutePathFunction);
 
   @Override
   public <A extends T> BuildRule createBuildRule(
@@ -73,6 +73,17 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final BuildRuleResolver resolver,
       final A args) {
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
+        MacroArg.toMacroArgFunction(
+            MACRO_HANDLER,
+            params.getBuildTarget(),
+            params.getCellRoots(),
+            resolver,
+            params.getProjectFilesystem());
+    final Optional<com.facebook.buck.rules.args.Arg> cmd = args.cmd.transform(macroArgFunction);
+    final Optional<com.facebook.buck.rules.args.Arg> bash = args.bash.transform(macroArgFunction);
+    final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
+        args.cmdExe.transform(macroArgFunction);
     return createBuildRule(
         params.copyWithExtraDeps(
             new Supplier<ImmutableSortedSet<BuildRule>>() {
@@ -80,73 +91,23 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               public ImmutableSortedSet<BuildRule> get() {
                 return ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
-                        // Attach any extra dependencies found from macro expansion.
+                    // Attach any extra dependencies found from macro expansion.
                     .addAll(
-                        findExtraDepsFromArgs(
-                            params.getBuildTarget(),
-                            params.getCellRoots(),
-                            resolver,
-                            args))
+                        FluentIterable
+                            .from(Optional.presentInstances(ImmutableList.of(cmd, bash, cmdExe)))
+                            .transformAndConcat(
+                                com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)))
                     .build();
               }
             }),
         resolver,
         args,
         args.srcs.get(),
-        MACRO_HANDLER.getExpander(
-            params.getBuildTarget(),
-            params.getCellRoots(),
-            resolver,
-            params.getProjectFilesystem()),
-        args.cmd,
-        args.bash,
-        args.cmdExe,
+        cmd,
+        bash,
+        cmdExe,
         args.out,
-        params.getProjectFilesystem().getAbsolutifier(),
-        new Supplier<ImmutableList<Object>>() {
-          @Override
-          public ImmutableList<Object> get() {
-            return findRuleKeyAppendables(
-                params.getBuildTarget(),
-                params.getCellRoots(),
-                resolver,
-                args);
-          }
-        });
-  }
-
-  protected ImmutableList<Object> findRuleKeyAppendables(
-      BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
-      BuildRuleResolver resolver,
-      T arg) {
-    ImmutableList.Builder<Object> deps = ImmutableList.builder();
-    try {
-      for (String val :
-          Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(MACRO_HANDLER.extractRuleKeyAppendables(target, cellNames, resolver, val));
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-    return deps.build();
-  }
-
-  protected ImmutableList<BuildRule> findExtraDepsFromArgs(
-      BuildTarget target,
-      Function<Optional<String>, Path> cellNames,
-      BuildRuleResolver resolver,
-      T arg) {
-    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    try {
-      for (String val :
-          Optional.presentInstances(ImmutableList.of(arg.bash, arg.cmd, arg.cmdExe))) {
-        deps.addAll(MACRO_HANDLER.extractBuildTimeDeps(target, cellNames, resolver, val));
-      }
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
-    return deps.build();
+        params.getProjectFilesystem().getAbsolutifier());
   }
 
   @Override

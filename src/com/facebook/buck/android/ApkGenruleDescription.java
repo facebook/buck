@@ -56,13 +56,11 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       BuildRuleResolver resolver,
       A args,
       ImmutableList<SourcePath> srcs,
-      Function<String, String> macroExpander,
-      Optional<String> cmd,
-      Optional<String> bash,
-      Optional<String> cmdExe,
+      Optional<com.facebook.buck.rules.args.Arg> cmd,
+      Optional<com.facebook.buck.rules.args.Arg> bash,
+      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
       String out,
-      Function<Path, Path> relativeToAbsolutePathFunction,
-      Supplier<ImmutableList<Object>> macroRuleKeyAppendables) {
+      Function<Path, Path> relativeToAbsolutePathFunction) {
 
     final BuildRule installableApk = resolver.getRule(args.apk);
     if (!(installableApk instanceof InstallableApk)) {
@@ -88,12 +86,10 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
                 })),
         new SourcePathResolver(resolver),
         srcs,
-        macroExpander,
         cmd,
         bash,
         cmdExe,
         relativeToAbsolutePathFunction,
-        macroRuleKeyAppendables,
         (InstallableApk) installableApk);
   }
 
