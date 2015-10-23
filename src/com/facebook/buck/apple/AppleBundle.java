@@ -173,7 +173,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Set<BuildTarget> tests,
       AppleSdk sdk,
       CodeSignIdentityStore codeSignIdentityStore,
-      Optional<Path> provisioningProfileSearchPath,
+      Path provisioningProfileSearchPath,
       DebugInfoFormat debugInfoFormat) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
@@ -204,18 +204,10 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     // We need to resolve the possible set of profiles and code sign identity at construction time
     // because they form part of the rule key.
     if (binary.isPresent() && ApplePlatform.needsCodeSign(this.platformName)) {
-      final Path searchPath;
-      if (provisioningProfileSearchPath.isPresent()) {
-        searchPath = provisioningProfileSearchPath.get();
-      } else {
-        searchPath = Paths.get(System.getProperty("user.home") +
-                "/Library/MobileDevice/Provisioning Profiles");
-      }
-
       Optional<ImmutableSet<ProvisioningProfileMetadata>> provisioningProfiles;
       try {
         provisioningProfiles = Optional.of(
-            ProvisioningProfileCopyStep.findProfilesInPath(searchPath));
+            ProvisioningProfileCopyStep.findProfilesInPath(provisioningProfileSearchPath));
       } catch (InterruptedException e) {
         // We get here if the user pressed Ctrl-C during the profile discovery step.
         // In this case, we'll fail anyway since the set of profiles will be empty.

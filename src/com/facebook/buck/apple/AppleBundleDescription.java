@@ -80,7 +80,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
-  private final Optional<Path> provisioningProfileSearchPath;
+  private final Path provisioningProfileSearchPath;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
@@ -89,7 +89,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      Optional<Path> provisioningProfileSearchPath) {
+      Path provisioningProfileSearchPath) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;

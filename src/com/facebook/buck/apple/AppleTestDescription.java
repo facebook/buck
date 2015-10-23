@@ -105,7 +105,7 @@ public class AppleTestDescription implements
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
-  private final Optional<Path> provisioningProfileSearchPath;
+  private final Path provisioningProfileSearchPath;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
 
   public AppleTestDescription(
@@ -116,7 +116,7 @@ public class AppleTestDescription implements
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      Optional<Path> provisioningProfileSearchPath,
+      Path provisioningProfileSearchPath,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier) {
     this.appleConfig = appleConfig;
     this.appleBundleDescription = appleBundleDescription;

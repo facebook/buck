@@ -183,8 +183,10 @@ public class AppleConfig {
     return delegate.getBuildTarget("apple", "device_helper_target");
   }
 
-  public Optional<Path> getProvisioningProfileSearchPath() {
-    return getOptionalPath("apple", "provisioning_profile_search_path");
+  public Path getProvisioningProfileSearchPath() {
+    return getOptionalPath("apple", "provisioning_profile_search_path")
+        .or(Paths.get(System.getProperty("user.home") +
+                    "/Library/MobileDevice/Provisioning Profiles"));
   }
 
   private Optional<Path> getOptionalPath(String sectionName, String propertyName) {
