@@ -44,7 +44,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -65,6 +64,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -170,7 +170,8 @@ class DaemonicParserState {
       BuckEventBus eventBus,
       Cell cell,
       ProjectBuildFileParser parser,
-      Path buildFile) throws BuildFileParseException, InterruptedException {
+      Path buildFile,
+      TargetNodeListener nodeListener) throws BuildFileParseException, InterruptedException {
     Preconditions.checkState(buildFile.isAbsolute());
     invalidateIfProjectBuildFileParserStateChanged(cell);
     try {
@@ -180,7 +181,7 @@ class DaemonicParserState {
       for (Map<String, Object> rawNode : allRawNodes) {
         UnflavoredBuildTarget unflavored = parseBuildTargetFromRawRule(cell.getRoot(), rawNode);
         BuildTarget target = BuildTarget.of(unflavored);
-        nodes.add(createTargetNode(eventBus, cell, target, rawNode));
+        nodes.add(createTargetNode(eventBus, cell, buildFile, target, rawNode, nodeListener));
       }
       return nodes.build();
     } catch (UncheckedExecutionException | ExecutionException e) {
@@ -193,7 +194,8 @@ class DaemonicParserState {
       final Cell cell,
       final ProjectBuildFileParser parser,
       final Path buildFile,
-      final BuildTarget target) throws BuildFileParseException, InterruptedException {
+      final BuildTarget target,
+      final TargetNodeListener nodeListener) throws BuildFileParseException, InterruptedException {
     Preconditions.checkState(buildFile.isAbsolute());
     invalidateIfProjectBuildFileParserStateChanged(cell);
     try {
@@ -204,44 +206,20 @@ class DaemonicParserState {
             public TargetNode<?> call() throws Exception {
               List<Map<String, Object>> rawNodes = loadRawNodes(cell, buildFile, parser);
 
-              TargetNode<?> toReturn = null;
-              Set<Object> seen = new HashSet<>();
-              Set<Object> duplicates = new HashSet<>();
               for (Map<String, Object> rawNode : rawNodes) {
                 Object shortName = rawNode.get("name");
 
-                if (!seen.add(shortName)) {
-                  duplicates.add(shortName);
+                if (target.getShortName().equals(shortName)) {
+                  return createTargetNode(
+                      eventBus,
+                      cell,
+                      buildFile,
+                      target,
+                      rawNode,
+                      nodeListener);
                 }
-
-                if (!target.getShortName().equals(shortName)) {
-                  continue;
-                }
-
-                toReturn = createTargetNode(eventBus, cell, target, rawNode);
               }
 
-              if (!duplicates.isEmpty()) {
-                StringBuilder message = new StringBuilder("In build file for '")
-                    .append(target)
-                    .append("' (")
-                    .append(buildFile)
-                    .append(") the following duplicate targets were found: ");
-                Joiner.on(", ").appendTo(
-                    message,
-                    FluentIterable.from(duplicates).transform(
-                        new Function<Object, String>() {
-                          @Override
-                          public String apply(Object input) {
-                            return target.getBaseName() + ":" + input;
-                          }
-                        }));
-                throw new HumanReadableException(message.toString());
-              }
-
-              if (toReturn != null) {
-                return toReturn;
-              }
               throw new HumanReadableException(
                   NoSuchBuildTargetException.createForMissingBuildRule(
                       target,
@@ -343,8 +321,10 @@ class DaemonicParserState {
   private TargetNode<?> createTargetNode(
       BuckEventBus eventBus,
       Cell cell,
+      Path buildFile,
       BuildTarget target,
-      Map<String, Object> rawNode) {
+      Map<String, Object> rawNode,
+      TargetNodeListener nodeListener) {
     BuildRuleType buildRuleType = parseBuildRuleTypeFromRawRule(cell, rawNode);
 
     // Because of the way that the parser works, we know this can never return null.
@@ -412,7 +392,7 @@ class DaemonicParserState {
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
         targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
-        return new TargetNode(
+        TargetNode<?> node = new TargetNode(
             hasher.hash(),
             description,
             constructorArg,
@@ -420,12 +400,17 @@ class DaemonicParserState {
             declaredDeps.build(),
             visibilityPatterns.build(),
             targetCell.getCellRoots());
+        nodeListener.onCreate(buildFile, node);
+        return node;
       }
-    } catch (NoSuchBuildTargetException |
+    } catch (
+        NoSuchBuildTargetException |
         TargetNode.InvalidSourcePathInputException e) {
       throw new HumanReadableException(e);
     } catch (ConstructorArgMarshalException e) {
       throw new HumanReadableException("%s: %s", target, e.getMessage());
+    } catch (IOException e) {
+      throw new HumanReadableException(e.getMessage(), e);
     }
   }
 

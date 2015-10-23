@@ -64,6 +64,7 @@ class PerBuildState implements AutoCloseable {
    * paths contain an element which exists in {@code symlinkExistenceCache}.
    */
   private final Set<Path> buildInputPathsUnderSymlink;
+  private final TargetNodeListener symlinkCheckers;
 
   /**
    * Cache of (symlink path: symlink target) pairs used to avoid repeatedly
@@ -85,9 +86,16 @@ class PerBuildState implements AutoCloseable {
     this.buildInputPathsUnderSymlink = Sets.newHashSet();
     this.symlinkExistenceCache = new ConcurrentHashMap<>();
 
-    stdout = new PrintStream(ByteStreams.nullOutputStream());
-    stderr = new PrintStream(ByteStreams.nullOutputStream());
+    this.stdout = new PrintStream(ByteStreams.nullOutputStream());
+    this.stderr = new PrintStream(ByteStreams.nullOutputStream());
     this.console = new Console(Verbosity.STANDARD_INFORMATION, stdout, stderr, Ansi.withoutTty());
+
+    this.symlinkCheckers = new TargetNodeListener() {
+      @Override
+      public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
+        registerInputsUnderSymlinks(buildFile, node);
+      }
+    };
 
     register(rootCell);
   }
@@ -100,14 +108,13 @@ class PerBuildState implements AutoCloseable {
 
     ProjectBuildFileParser parser = getBuildFileParser(owningCell);
 
-    TargetNode<?> node = permState.getTargetNode(
+    return permState.getTargetNode(
         eventBus,
         owningCell,
         parser,
         buildFile,
-        target);
-    registerInputsUnderSymlinks(buildFile, node);
-    return node;
+        target,
+        symlinkCheckers);
   }
 
   public ImmutableSet<TargetNode<?>> getAllTargetNodes(Cell cell, Path buildFile)
@@ -116,15 +123,12 @@ class PerBuildState implements AutoCloseable {
 
     ProjectBuildFileParser parser = getBuildFileParser(cell);
 
-    ImmutableSet<TargetNode<?>> allTargetNodes = permState.getAllTargetNodes(
+    return permState.getAllTargetNodes(
         eventBus,
         cell,
         parser,
-        buildFile);
-    for (TargetNode<?> node : allTargetNodes) {
-      registerInputsUnderSymlinks(buildFile, node);
-    }
-    return allTargetNodes;
+        buildFile,
+        symlinkCheckers);
   }
 
   public ImmutableList<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)

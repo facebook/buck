@@ -28,6 +28,7 @@ java_immutables_library(
     'Parser.java',
     'ParserNg.java',
     'PerBuildState.java',
+    'TargetNodeListener.java',
     'TargetNodeSpec.java',
   ],
   tests = [
