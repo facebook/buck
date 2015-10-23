@@ -9,6 +9,7 @@ java_immutables_library(
   ],
   resources = [
     'build-with-buck.st',
+    'halide-compiler.st',
     'rn-package.st',
     'fix_uuid.py',
   ],
@@ -20,6 +21,7 @@ java_immutables_library(
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/file:rules',
     '//src/com/facebook/buck/graph:graph',
+    '//src/com/facebook/buck/halide:rules',
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/js:js',
     '//src/com/facebook/buck/log:api',

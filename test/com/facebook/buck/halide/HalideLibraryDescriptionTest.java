@@ -17,6 +17,7 @@
 package com.facebook.buck.halide;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxBinary;
@@ -49,6 +50,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class HalideLibraryDescriptionTest {
+  @Test
+  public void testIsHalideCompilerTarget() {
+    BuildTarget target = BuildTargetFactory.newInstance("//:foo");
+    assertFalse(HalideLibraryDescription.isHalideCompilerTarget(target));
+    target = BuildTargetFactory.newInstance("//:foo#halide-compiler");
+    assertTrue(HalideLibraryDescription.isHalideCompilerTarget(target));
+  }
+
   @Test
   public void testCreateBuildRule() {
     // Set up a #halide-compiler rule, then set up a halide_library rule, and

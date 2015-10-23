@@ -65,6 +65,8 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.halide.HalideLibraryDescription;
+import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -805,6 +807,39 @@ public class ProjectGeneratorTest {
         FluentIterable.from(target.getBuildPhases())
             .filter(PBXResourcesBuildPhase.class)
             .isEmpty());
+  }
+
+  @Test
+  public void testHalideLibraryRule() throws IOException {
+    BuildTarget compilerTarget = BuildTarget.builder(rootPath, "//foo", "lib")
+      .addFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR)
+      .build();
+    TargetNode<?> compiler = new HalideLibraryBuilder(compilerTarget)
+      .setSrcs(
+        ImmutableSortedSet.of(
+          SourceWithFlags.of(new TestSourcePath("main.cpp")),
+          SourceWithFlags.of(new TestSourcePath("filter.cpp"))))
+      .build();
+
+    BuildTarget libTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> lib = new HalideLibraryBuilder(libTarget).build();
+
+    ProjectGenerator projectGenerator =
+      createProjectGeneratorForCombinedProject(
+        ImmutableSet.<TargetNode<?>>of(compiler, lib));
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+      projectGenerator.getGeneratedProject(),
+      "//foo:lib");
+    assertThat(target.isa(), equalTo("PBXNativeTarget"));
+    assertHasConfigurations(target, "Debug", "Release", "Profile");
+    assertEquals(1, target.getBuildPhases().size());
+    PBXShellScriptBuildPhase scriptPhase = getSingletonPhaseByType(
+      target,
+      PBXShellScriptBuildPhase.class);
+    assertEquals(0, scriptPhase.getInputPaths().size());
+    assertEquals(0, scriptPhase.getOutputPaths().size());
   }
 
   @Test

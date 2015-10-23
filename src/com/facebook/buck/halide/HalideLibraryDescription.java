@@ -35,7 +35,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -72,6 +71,7 @@ public class HalideLibraryDescription implements
 
   private enum Type { EXPORTED_HEADERS, HALIDE_COMPILER };
 
+  // The flavor used for the Halide compiler version of the rule.
   public static final Flavor HALIDE_COMPILER_FLAVOR =
     ImmutableFlavor.of("halide-compiler");
 
@@ -97,6 +97,10 @@ public class HalideLibraryDescription implements
     this.preprocessMode = preprocessMode;
   }
 
+  public static boolean isHalideCompilerTarget(BuildTarget target) {
+    return target.getFlavors().contains(HALIDE_COMPILER_FLAVOR);
+  }
+
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return cxxPlatforms.containsAnyOf(flavors) ||
@@ -118,7 +122,7 @@ public class HalideLibraryDescription implements
       deps.addAll(constructorArg.compilerDeps.or(
         ImmutableSortedSet.<BuildTarget>of()));
     } else {
-      deps.add(createHalideCompilerBuildTarget(buildTarget.getUnflavoredBuildTarget()));
+      deps.add(createHalideCompilerBuildTarget(buildTarget));
     }
     return deps.build();
   }
@@ -128,9 +132,9 @@ public class HalideLibraryDescription implements
     return new Arg();
   }
 
-  public static BuildTarget createHalideCompilerBuildTarget(UnflavoredBuildTarget target) {
+  public static BuildTarget createHalideCompilerBuildTarget(BuildTarget target) {
     return BuildTarget
-      .builder(target)
+      .builder(target.getUnflavoredBuildTarget())
       .addFlavors(ImmutableFlavor.of("halide-compiler"))
       .build();
   }
@@ -146,8 +150,7 @@ public class HalideLibraryDescription implements
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
       Optional<ImmutableList<String>> linkerFlags,
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags) {
-    BuildTarget target = createHalideCompilerBuildTarget(
-        params.getBuildTarget().getUnflavoredBuildTarget());
+    BuildTarget target = createHalideCompilerBuildTarget(params.getBuildTarget());
 
     // Check the cache for the halide compiler rule.
     Optional<BuildRule> rule = ruleResolver.getRuleOptional(target);
@@ -292,7 +295,7 @@ public class HalideLibraryDescription implements
     // We implicitly depend on the #halide-compiler version of the rule (via
     // findDepsForTargetFromConstructorArgs) so it should always exist by the
     // time we get here.
-    BuildTarget compilerTarget = createHalideCompilerBuildTarget(target.getUnflavoredBuildTarget());
+    BuildTarget compilerTarget = createHalideCompilerBuildTarget(target);
     Optional<BuildRule> rule = resolver.getRuleOptional(compilerTarget);
     Preconditions.checkState(rule.isPresent());
     CxxBinary halideCompiler = (CxxBinary) rule.get();

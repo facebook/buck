@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.graph.AbstractAcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
@@ -55,7 +56,8 @@ public final class AppleBuildRules {
           CxxLibraryDescription.TYPE,
           AppleBinaryDescription.TYPE,
           AppleBundleDescription.TYPE,
-          AppleTestDescription.TYPE);
+          AppleTestDescription.TYPE,
+          HalideLibraryDescription.TYPE);
 
   private static final ImmutableSet<Class<? extends BuildRule>> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
       ImmutableSet.<Class<? extends BuildRule>>of(AppleTest.class);
