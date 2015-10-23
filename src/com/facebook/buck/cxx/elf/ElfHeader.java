@@ -44,37 +44,37 @@ public class ElfHeader {
   // CHECKSTYLE.OFF: MemberName
   public final EIClass ei_class;
   public final EIData ei_data;
-  public final short e_type;
-  public final short e_machine;
-  public final int e_version;
+  public final int e_type;
+  public final int e_machine;
+  public final long e_version;
   public final long e_entry;
   public final long e_phoff;
   public final long e_shoff;
-  public final int e_flags;
-  public final short e_ehsize;
-  public final short e_phentsize;
-  public final short e_phnum;
-  public final short e_shentsize;
-  public final short e_shnum;
-  public final short e_shstrndx;
+  public final long e_flags;
+  public final int e_ehsize;
+  public final int e_phentsize;
+  public final int e_phnum;
+  public final int e_shentsize;
+  public final int e_shnum;
+  public final int e_shstrndx;
   // CHECKSTYLE.ON: MemberName
 
   ElfHeader(
       EIClass ei_class,
       EIData ei_data,
-      short e_type,
-      short e_machine,
-      int e_version,
+      int e_type,
+      int e_machine,
+      long e_version,
       long e_entry,
       long e_phoff,
       long e_shoff,
-      int e_flags,
-      short e_ehsize,
-      short e_phentsize,
-      short e_phnum,
-      short e_shentsize,
-      short e_shnum,
-      short e_shstrndx) {
+      long e_flags,
+      int e_ehsize,
+      int e_phentsize,
+      int e_phnum,
+      int e_shentsize,
+      int e_shnum,
+      int e_shstrndx) {
     this.ei_class = ei_class;
     this.ei_data = ei_data;
     this.e_type = e_type;
@@ -90,6 +90,14 @@ public class ElfHeader {
     this.e_shentsize = e_shentsize;
     this.e_shnum = e_shnum;
     this.e_shstrndx = e_shstrndx;
+  }
+
+  private static long getUnsignedInt(ByteBuffer buffer) {
+    return (buffer.getInt() & 0xffffffffL);
+  }
+
+  private static int getUnsignedShort(ByteBuffer buffer) {
+    return (buffer.getShort() & 0xffff);
   }
 
   /**
@@ -109,7 +117,7 @@ public class ElfHeader {
     return ei_class.parseHeader(ei_data, buffer);
   }
 
-  public static enum EIClass {
+  public enum EIClass {
 
     ELFCLASSNONE(0) {
       @Override
@@ -124,19 +132,19 @@ public class ElfHeader {
         return new ElfHeader(
             this,
             ei_data,
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getInt(),
-            buffer.getInt(),
-            buffer.getInt(),
-            buffer.getInt(),
-            buffer.getInt(),
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getShort());
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedInt(buffer),
+            getUnsignedInt(buffer),
+            getUnsignedInt(buffer),
+            getUnsignedInt(buffer),
+            getUnsignedInt(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer));
       }
     },
 
@@ -146,19 +154,19 @@ public class ElfHeader {
         return new ElfHeader(
             this,
             ei_data,
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getInt(),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedInt(buffer),
             buffer.getLong(),
             buffer.getLong(),
             buffer.getLong(),
-            buffer.getInt(),
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getShort(),
-            buffer.getShort());
+            getUnsignedInt(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer),
+            getUnsignedShort(buffer));
       }
     }
 
@@ -166,7 +174,7 @@ public class ElfHeader {
 
     private final int value;
 
-    private EIClass(int value) {
+    EIClass(int value) {
       this.value = value;
     }
 
@@ -183,7 +191,7 @@ public class ElfHeader {
 
   }
 
-  public static enum EIData {
+  public enum EIData {
 
     ELFDATANONE(0) {
       @Override
@@ -210,7 +218,7 @@ public class ElfHeader {
 
     private final int value;
 
-    private EIData(int value) {
+    EIData(int value) {
       this.value = value;
     }
 
