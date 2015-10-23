@@ -132,7 +132,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final String sdkName;
 
   @AddToRuleKey
-  private final Optional<ImmutableSet<ProvisioningProfileMetadata>> provisioningProfiles;
+  private final ProvisioningProfileStore provisioningProfileStore;
 
   @AddToRuleKey
   private final Optional<CodeSignIdentity> codeSignIdentity;
@@ -173,7 +173,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Set<BuildTarget> tests,
       AppleSdk sdk,
       CodeSignIdentityStore codeSignIdentityStore,
-      Path provisioningProfileSearchPath,
+      ProvisioningProfileStore provisioningProfileStore,
       DebugInfoFormat debugInfoFormat) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
@@ -204,16 +204,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     // We need to resolve the possible set of profiles and code sign identity at construction time
     // because they form part of the rule key.
     if (binary.isPresent() && ApplePlatform.needsCodeSign(this.platformName)) {
-      Optional<ImmutableSet<ProvisioningProfileMetadata>> provisioningProfiles;
-      try {
-        provisioningProfiles = Optional.of(
-            ProvisioningProfileCopyStep.findProfilesInPath(provisioningProfileSearchPath));
-      } catch (InterruptedException e) {
-        // We get here if the user pressed Ctrl-C during the profile discovery step.
-        // In this case, we'll fail anyway since the set of profiles will be empty.
-        provisioningProfiles = Optional.of(ImmutableSet.<ProvisioningProfileMetadata>of());
-      }
-      this.provisioningProfiles = provisioningProfiles;
+      this.provisioningProfileStore = provisioningProfileStore;
 
       Optional<CodeSignIdentity> foundIdentity = Optional.absent();
       Optional<String> customIdentity = InfoPlistSubstitution.getVariableExpansionForPlatform(
@@ -240,7 +231,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       LOG.debug("Code signing identity is " + foundIdentity.toString());
       this.codeSignIdentity = foundIdentity;
     } else {
-      this.provisioningProfiles = Optional.absent();
+      this.provisioningProfileStore = ProvisioningProfileStore.fromProvisioningProfiles(
+          ImmutableList.<ProvisioningProfileMetadata>of());
       this.codeSignIdentity = Optional.absent();
     }
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
@@ -419,7 +411,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     }
 
     // Copy the .mobileprovision file if the platform requires it.
-    if (provisioningProfiles.isPresent()) {
+    if (codeSignIdentity.isPresent()) {
       Optional<Path> entitlementsPlist = Optional.absent();
       final Path srcRoot = getProjectFilesystem().getRootPath().resolve(
           getBuildTarget().getBasePath());
@@ -446,7 +438,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               infoPlistOutputPath,
               Optional.<String>absent(),  // Provisioning profile UUID -- find automatically.
               entitlementsPlist,
-              provisioningProfiles.get(),
+              provisioningProfileStore,
               bundleDestinationPath.resolve("embedded.mobileprovision"),
               signingEntitlementsTempPath)
       );

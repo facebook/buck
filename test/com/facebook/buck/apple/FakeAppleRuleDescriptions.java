@@ -189,7 +189,8 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
-          Paths.get("."));
+          ProvisioningProfileStore.fromProvisioningProfiles(
+              ImmutableList.<ProvisioningProfileMetadata>of()));
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.
@@ -203,6 +204,7 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_PLATFORM_FLAVORS_TO_APPLE_CXX_PLATFORMS,
           DEFAULT_PLATFORM,
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
-          Paths.get("."),
+          ProvisioningProfileStore.fromProvisioningProfiles(
+              ImmutableList.<ProvisioningProfileMetadata>of()),
           Suppliers.ofInstance(Optional.<Path>absent()));
 }

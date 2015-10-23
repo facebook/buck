@@ -20,26 +20,17 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
-
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Date;
 
 /**
  * Class to handle:
@@ -53,14 +44,13 @@ import java.util.Date;
 public class ProvisioningProfileCopyStep implements Step {
   private static final String KEYCHAIN_ACCESS_GROUPS = "keychain-access-groups";
   private static final String APPLICATION_IDENTIFIER = "application-identifier";
-  private static final Logger LOG = Logger.get(ProvisioningProfileCopyStep.class);
 
   private final ProjectFilesystem filesystem;
   private final Optional<Path> entitlementsPlist;
   private final Optional<String> provisioningProfileUUID;
   private final Path provisioningProfileDestination;
   private final Path signingEntitlementsTempPath;
-  private final ImmutableSet<ProvisioningProfileMetadata> profiles;
+  private final ProvisioningProfileStore provisioningProfileStore;
   private final Path infoPlist;
 
   /**
@@ -69,7 +59,7 @@ public class ProvisioningProfileCopyStep implements Step {
    *                                 auto-detect and attempt to use {@code UUID.mobileprovision}.
    * @param entitlementsPlist        Optional. If specified, use the metadata in this
    *                                 {@code Entitlements.plist} file to determine app prefix.
-   * @param profiles                 Set of {@link ProvisioningProfileMetadata} that are candidates.
+   * @param provisioningProfileStore  Known provisioning profiles to choose from.
    * @param provisioningProfileDestination  Where to copy the {@code .mobileprovision} file,
    *                                        normally the bundle root.
    * @param signingEntitlementsTempPath     Where to copy the code signing entitlements file,
@@ -80,7 +70,7 @@ public class ProvisioningProfileCopyStep implements Step {
       Path infoPlist,
       Optional<String> provisioningProfileUUID,
       Optional<Path> entitlementsPlist,
-      ImmutableSet<ProvisioningProfileMetadata> profiles,
+      ProvisioningProfileStore provisioningProfileStore,
       Path provisioningProfileDestination,
       Path signingEntitlementsTempPath) {
     this.filesystem = filesystem;
@@ -88,91 +78,8 @@ public class ProvisioningProfileCopyStep implements Step {
     this.infoPlist = infoPlist;
     this.provisioningProfileUUID = provisioningProfileUUID;
     this.entitlementsPlist = entitlementsPlist;
-    this.profiles = profiles;
+    this.provisioningProfileStore = provisioningProfileStore;
     this.signingEntitlementsTempPath = signingEntitlementsTempPath;
-  }
-
-  public static ImmutableSet<ProvisioningProfileMetadata> findProfilesInPath(Path searchPath)
-   throws InterruptedException {
-    final ImmutableSet.Builder<ProvisioningProfileMetadata> profilesBuilder =
-        ImmutableSet.builder();
-    try {
-      Files.walkFileTree(
-          searchPath.toAbsolutePath(), new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                throws IOException {
-              if (file.toString().endsWith(".mobileprovision")) {
-                try {
-                  ProvisioningProfileMetadata profile =
-                      ProvisioningProfileMetadata.fromProvisioningProfilePath(file);
-                  profilesBuilder.add(profile);
-                } catch (IOException | IllegalArgumentException e) {
-                  LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
-                } catch (InterruptedException e) {
-                  throw new IOException(e);
-                }
-              }
-
-              return FileVisitResult.CONTINUE;
-            }
-          });
-    } catch (IOException e) {
-      if (e.getCause() instanceof InterruptedException) {
-        throw ((InterruptedException) e.getCause());
-      }
-      LOG.error(e, "Error while searching for mobileprovision files");
-    }
-
-    return profilesBuilder.build();
-  }
-
-
-  // If multiple valid ones, find the one which matches the most specifically.  I.e.,
-  // XXXXXXXXXX.com.example.* will match over XXXXXXXXXX.* for com.example.TestApp
-  // TODO(user): Account for differences between development and distribution certificates.
-  public static Optional<ProvisioningProfileMetadata> getBestProvisioningProfile(
-      ImmutableSet<ProvisioningProfileMetadata> profiles,
-      String bundleID,
-      Optional<String> provisioningProfileUUID,
-      Optional<String> prefix) {
-    int bestMatchLength = -1;
-    Optional<ProvisioningProfileMetadata> bestMatch =
-        Optional.<ProvisioningProfileMetadata>absent();
-
-    for (ProvisioningProfileMetadata profile : profiles) {
-      if (provisioningProfileUUID.isPresent() &&
-          profile.getUUID().equals(provisioningProfileUUID.get())) {
-        return Optional.<ProvisioningProfileMetadata>of(profile);
-      }
-
-      if (profile.getExpirationDate().after(new Date())) {
-        Pair<String, String> appID = profile.getAppID();
-
-        LOG.debug("Looking at provisioning profile " + profile.getUUID() + "," + appID.toString());
-
-        if (!prefix.isPresent() || prefix.get().equals(appID.getFirst())) {
-          String profileBundleID = appID.getSecond();
-          boolean match;
-          if (profileBundleID.endsWith("*")) {
-            // Chop the ending * if wildcard.
-            profileBundleID =
-                profileBundleID.substring(0, profileBundleID.length() - 1);
-            match = bundleID.startsWith(profileBundleID);
-          } else {
-            match = (bundleID.equals(profileBundleID));
-          }
-
-          if (match && profileBundleID.length() > bestMatchLength) {
-            bestMatchLength = profileBundleID.length();
-            bestMatch = Optional.<ProvisioningProfileMetadata>of(profile);
-          }
-        }
-      }
-    }
-
-    LOG.debug("Found provisioning profile " + bestMatch.toString());
-    return bestMatch;
   }
 
   @Override
@@ -216,8 +123,10 @@ public class ProvisioningProfileCopyStep implements Step {
       prefix = Optional.<String>absent();
     }
 
-    Optional<ProvisioningProfileMetadata> bestProfile = getBestProvisioningProfile(profiles,
-        bundleID, provisioningProfileUUID, prefix);
+    Optional<ProvisioningProfileMetadata> bestProfile =
+        provisioningProfileUUID.isPresent()
+            ? provisioningProfileStore.getProvisioningProfileByUUID(provisioningProfileUUID.get())
+            : provisioningProfileStore.getBestProvisioningProfile(bundleID, prefix);
 
     if (!bestProfile.isPresent()) {
       throw new HumanReadableException("No valid non-expired provisioning profiles match for " +

@@ -17,8 +17,8 @@
 package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.apple.CodeSignIdentityStore;
-import com.facebook.buck.apple.ProvisioningProfileCopyStep;
 import com.facebook.buck.apple.ProvisioningProfileMetadata;
+import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
@@ -26,7 +26,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,17 +53,10 @@ public class FakeAppleDeveloperEnvironment {
             LOG.warn("Provisioning profile search path " + searchPath + " doesn't exist!");
             return false;
           }
-          try {
-            ImmutableSet<ProvisioningProfileMetadata> profiles =
-                ProvisioningProfileCopyStep.findProfilesInPath(searchPath);
-            Optional<ProvisioningProfileMetadata> profile =
-                ProvisioningProfileCopyStep.getBestProvisioningProfile(
-                    profiles, "*",
-                    Optional.<String>absent(), Optional.<String>absent());
-            return profile.isPresent();
-          } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-          }
+          ProvisioningProfileStore store = ProvisioningProfileStore.fromSearchPath(searchPath);
+          Optional<ProvisioningProfileMetadata> profile =
+              store.getBestProvisioningProfile("*", Optional.<String>absent());
+          return profile.isPresent();
         }
       }).get().booleanValue();
 

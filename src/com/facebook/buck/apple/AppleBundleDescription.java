@@ -80,7 +80,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
-  private final Path provisioningProfileSearchPath;
+  private final ProvisioningProfileStore provisioningProfileStore;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
@@ -89,7 +89,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      Path provisioningProfileSearchPath) {
+      ProvisioningProfileStore provisioningProfileStore) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -97,7 +97,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
-    this.provisioningProfileSearchPath = provisioningProfileSearchPath;
+    this.provisioningProfileStore = provisioningProfileStore;
   }
 
   @Override
@@ -243,7 +243,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.getTests(),
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
-        provisioningProfileSearchPath,
+        provisioningProfileStore,
         AppleBundle.DebugInfoFormat.DSYM);
   }
 

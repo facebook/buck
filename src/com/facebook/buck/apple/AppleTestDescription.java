@@ -105,7 +105,7 @@ public class AppleTestDescription implements
   private final ImmutableMap<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
-  private final Path provisioningProfileSearchPath;
+  private final ProvisioningProfileStore provisioningProfileStore;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
 
   public AppleTestDescription(
@@ -116,7 +116,7 @@ public class AppleTestDescription implements
       Map<Flavor, AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
-      Path provisioningProfileSearchPath,
+      ProvisioningProfileStore provisioningProfileStore,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier) {
     this.appleConfig = appleConfig;
     this.appleBundleDescription = appleBundleDescription;
@@ -126,7 +126,7 @@ public class AppleTestDescription implements
         ImmutableMap.copyOf(platformFlavorsToAppleCxxPlatforms);
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
-    this.provisioningProfileSearchPath = provisioningProfileSearchPath;
+    this.provisioningProfileStore = provisioningProfileStore;
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
   }
 
@@ -347,7 +347,7 @@ public class AppleTestDescription implements
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
-        provisioningProfileSearchPath,
+        provisioningProfileStore,
         AppleBundle.DebugInfoFormat.NONE);
 
 

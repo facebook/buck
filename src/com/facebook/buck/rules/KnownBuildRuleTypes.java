@@ -54,6 +54,7 @@ import com.facebook.buck.apple.AppleToolchain;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.CoreDataModelDescription;
+import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
@@ -453,6 +454,8 @@ public class KnownBuildRuleTypes {
 
     CodeSignIdentityStore codeSignIdentityStore =
         CodeSignIdentityStore.fromSystem(processExecutor);
+    ProvisioningProfileStore provisioningProfileStore =
+        ProvisioningProfileStore.fromSearchPath(appleConfig.getProvisioningProfileSearchPath());
 
     builder.register(new AndroidAarDescription(new AndroidManifestDescription(), ndkCxxPlatforms));
     builder.register(
@@ -484,7 +487,7 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
             codeSignIdentityStore,
-            appleConfig.getProvisioningProfileSearchPath());
+            provisioningProfileStore);
     builder.register(appleBundleDescription);
     builder.register(new AppleResourceDescription());
     builder.register(
@@ -496,7 +499,7 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform,
             codeSignIdentityStore,
-            appleConfig.getProvisioningProfileSearchPath(),
+            provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplier(processExecutor)));
     builder.register(new CoreDataModelDescription());
     builder.register(new CSharpLibraryDescription());
