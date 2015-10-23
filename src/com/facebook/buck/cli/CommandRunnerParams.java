@@ -20,8 +20,8 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.jvm.java.JavaPackageFinder;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.parser.ParserNg;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.timing.Clock;
@@ -42,7 +42,7 @@ class CommandRunnerParams {
   private final ArtifactCache artifactCache;
   private final Console console;
   private final ImmutableMap<String, String> environment;
-  private final Parser parser;
+  private final ParserNg parser;
   private final BuckEventBus eventBus;
   private final Platform platform;
   private final Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier;
@@ -61,7 +61,7 @@ class CommandRunnerParams {
       Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
-      Parser parser,
+      ParserNg parser,
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
@@ -100,7 +100,7 @@ class CommandRunnerParams {
     return artifactCache;
   }
 
-  public Parser getParser() {
+  public ParserNg getParser() {
     return parser;
   }
 

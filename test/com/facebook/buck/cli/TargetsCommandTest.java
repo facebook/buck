@@ -41,7 +41,6 @@ import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.PathSourcePath;
@@ -148,8 +147,7 @@ public class TargetsCommandTest {
 
     targetsCommand.printJsonForTargets(
         params,
-        nodes,
-        new ParserConfig(FakeBuckConfig.builder().build()));
+        nodes);
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = objectMapper.readTree(
         objectMapper.getJsonFactory().createJsonParser(observedOutput));
@@ -202,8 +200,7 @@ public class TargetsCommandTest {
     SortedMap<String, TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
     targetsCommand.printJsonForTargets(
         params,
-        buildRules,
-        new ParserConfig(FakeBuckConfig.builder().build()));
+        buildRules);
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[\n]\n", output);

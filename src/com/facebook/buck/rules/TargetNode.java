@@ -37,7 +37,7 @@ import java.nio.file.Path;
 
 /**
  * A {@link TargetNode} represents a node in the target graph which is created by the
- * {@link com.facebook.buck.parser.Parser} as a result of parsing BUCK files in a project. It is
+ * {@link com.facebook.buck.parser.ParserNg} as a result of parsing BUCK files in a project. It is
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */

@@ -19,13 +19,11 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserNg;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 
@@ -38,15 +36,13 @@ public class ProjectGraphParsers {
 
   /**
    * Creates a {@link ProjectGraphParser} which calls into a
-   * concrete {@link Parser} object to create {@link TargetGraph}s
+   * concrete {@link ParserNg} object to create {@link TargetGraph}s
    * for a build project.
    */
   public static ProjectGraphParser createProjectGraphParser(
-      final Parser parser,
-      final ParserConfig parserConfig,
+      final ParserNg parser,
+      final Cell rootCell,
       final BuckEventBus buckEventBus,
-      final Console console,
-      final ImmutableMap<String, String> environment,
       final boolean enableProfiling
   ) throws IOException, InterruptedException {
     return new ProjectGraphParser() {
@@ -56,12 +52,10 @@ public class ProjectGraphParsers {
         throws IOException, InterruptedException {
         try {
           return parser.buildTargetGraphForTargetNodeSpecs(
-              targetNodeSpecs,
-              parserConfig,
               buckEventBus,
-              console,
-              environment,
-              enableProfiling).getSecond();
+              rootCell,
+              enableProfiling,
+              targetNodeSpecs).getSecond();
         } catch (BuildTargetException | BuildFileParseException e) {
           throw new HumanReadableException(e);
         }

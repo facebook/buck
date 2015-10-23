@@ -39,6 +39,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -84,7 +85,7 @@ public class ParserNg {
       Cell cell,
       boolean enableProfiling,
       Path buildFile) throws InterruptedException, IOException, BuildFileParseException {
-    Preconditions.checkState(buildFile.isAbsolute());
+    Preconditions.checkState(buildFile.isAbsolute(), "Build should be absolute: %s", buildFile);
     Preconditions.checkState(
         buildFile.startsWith(cell.getRoot()),
         "Roots do not match %s -> %s",
@@ -110,6 +111,7 @@ public class ParserNg {
     }
   }
 
+  @Nullable
   public SortedMap<String, Object> getRawTargetNode(
       BuckEventBus eventBus,
       Cell cell,
@@ -140,7 +142,7 @@ public class ParserNg {
     } catch (Cell.MissingBuildFileException e) {
       throw new RuntimeException("Deeply unlikely to be true: the cell is missing: " + targetNode);
     }
-    throw new HumanReadableException("Unable to find raw node of %s", targetNode);
+    return null;
   }
 
   public TargetGraph buildTargetGraph(
@@ -350,6 +352,7 @@ public class ParserNg {
         "target", buildTarget);
   }
 
+  @Subscribe
   public void onFileSystemChange(WatchEvent<?> event) throws InterruptedException {
     if (LOG.isVerboseEnabled()) {
       LOG.verbose(

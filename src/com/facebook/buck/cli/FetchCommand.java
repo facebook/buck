@@ -26,7 +26,6 @@ import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
@@ -76,15 +75,13 @@ public class FetchCommand extends BuildCommand {
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableProfiling(),
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   params.getCell().getFilesystem().getIgnorePaths(),
-                  getArguments()),
-              new ParserConfig(params.getBuckConfig()),
-              params.getBuckEventBus(),
-              params.getConsole(),
-              params.getEnvironment(),
-              getEnableProfiling());
+                  getArguments()));
       actionGraph = transformer.apply(result.getSecond());
       buildTargets = ruleGenerator.getDownloadableTargets();
     } catch (BuildTargetException | BuildFileParseException e) {

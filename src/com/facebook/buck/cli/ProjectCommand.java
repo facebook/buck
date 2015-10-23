@@ -29,6 +29,7 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -38,7 +39,6 @@ import com.facebook.buck.jvm.java.intellij.IjModuleGraph;
 import com.facebook.buck.jvm.java.intellij.IjProject;
 import com.facebook.buck.jvm.java.intellij.IntellijConfig;
 import com.facebook.buck.jvm.java.intellij.Project;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -340,15 +340,13 @@ public class ProjectCommand extends BuildCommand {
     try {
        traversalResult = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableProfiling(),
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   params.getCell().getFilesystem().getIgnorePaths(),
-                  getArguments()),
-              new ParserConfig(params.getBuckConfig()),
-              params.getBuckEventBus(),
-              params.getConsole(),
-              params.getEnvironment(),
-              getEnableProfiling());
+                  getArguments()));
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -358,10 +356,8 @@ public class ProjectCommand extends BuildCommand {
     ImmutableSet<BuildTarget> passedInTargetsSet = traversalResult.getFirst();
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
         params.getParser(),
-        new ParserConfig(params.getBuckConfig()),
+        params.getCell(),
         params.getBuckEventBus(),
-        params.getConsole(),
-        params.getEnvironment(),
         getEnableProfiling());
 
     Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orNull();

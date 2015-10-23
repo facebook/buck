@@ -489,7 +489,6 @@ public class DaemonIntegrationTest {
             .setFilesystem(filesystem)
             .build(),
         ParserConfig.GlobHandler.PYTHON,
-        ParserConfig.AllowSymlinks.ALLOW,
         new ObjectMapper());
     assertEquals(
         "Daemon should not be replaced when config equal.", daemon,
@@ -502,7 +501,6 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
 
     assertNotEquals(
@@ -516,7 +514,6 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
   }
 
@@ -558,7 +555,6 @@ public class DaemonIntegrationTest {
             .setFilesystem(filesystem)
             .build(),
         ParserConfig.GlobHandler.PYTHON,
-        ParserConfig.AllowSymlinks.ALLOW,
         new ObjectMapper());
 
     assertNotEquals(
@@ -573,7 +569,6 @@ public class DaemonIntegrationTest {
                 .setFilesystem(filesystem)
                 .build(),
             ParserConfig.GlobHandler.PYTHON,
-            ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
   }
 }

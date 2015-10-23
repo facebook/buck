@@ -22,7 +22,7 @@ import com.facebook.buck.rules.TargetGraph;
 import java.io.IOException;
 
 /**
- * Testable wrapper for {@link com.facebook.buck.parser.Parser}
+ * Testable wrapper for {@link com.facebook.buck.parser.ParserNg}
  * to create a {@link TargetGraph} from {@link TargetNodeSpec}s.
  */
 interface ProjectGraphParser {
