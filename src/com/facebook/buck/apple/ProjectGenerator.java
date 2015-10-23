@@ -136,6 +136,7 @@ public class ProjectGenerator {
 
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
   private static final String BUILD_WITH_BUCK_TEMPLATE = "build-with-buck.st";
+  private static final String FIX_UUID_PY_RESOURCE = "fix_uuid.py";
   public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_NAME = "--config";
   public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_VALUE =
@@ -469,6 +470,9 @@ public class ProjectGenerator {
         AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "dSYM"));
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
     Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
+    String fixUuidScriptPath = Resources.getResource(
+        ProjectGenerator.class,
+        FIX_UUID_PY_RESOURCE).getPath();
 
     template.add("repo_root", projectFilesystem.getRootPath());
     template.add("path_to_buck", pathToBuck);
@@ -482,6 +486,7 @@ public class ProjectGenerator {
     template.add("resolved_dsym_source", resolvedDsymSource);
     template.add("resolved_dsym_destination", resolvedDsymDestination);
     template.add("binary_name", binaryName);
+    template.add("path_to_fix_uuid_script", fixUuidScriptPath);
 
     shellScriptBuildPhase.setShellScript(template.render());
 

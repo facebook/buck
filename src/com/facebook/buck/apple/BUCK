@@ -10,6 +10,7 @@ java_immutables_library(
   resources = [
     'build-with-buck.st',
     'rn-package.st',
+    'fix_uuid.py',
   ],
   deps = [
     '//src/com/facebook/buck/apple/clang:headermap',
@@ -53,6 +54,20 @@ java_immutables_library(
   ],
   visibility = [
     'PUBLIC'
-  ]
-,
+  ],
+)
+
+python_library(
+  name = 'fixuuid',
+  srcs = [
+    'fix_uuid.py',
+  ],
+  deps = [],
+)
+
+python_test(
+  name = 'fixuuid_test',
+  srcs = ['fix_uuid_test.py'],
+  resources = glob(['uuid_test_app/**/*']),
+  deps = [':fixuuid'],
 )
