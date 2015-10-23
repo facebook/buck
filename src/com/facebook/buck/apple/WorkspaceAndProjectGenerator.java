@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -812,14 +811,10 @@ public class WorkspaceAndProjectGenerator {
       Optional<String> runnablePath;
       Optional<BuildTarget> targetToBuildWithBuck = getTargetToBuildWithBuck();
       if (buildWithBuck && targetToBuildWithBuck.isPresent()) {
-        Optional<String> productName = getProductNameForBuildTarget(
-            schemeNameToSrcTargetNode.get(schemeName),
-            targetToBuildWithBuck);
-        String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
         runnablePath = Optional.of(
             projectFilesystem.resolve(
-                ProjectGenerator.getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName)
-            ).toString());
+                ProjectGenerator.getScratchPathForAppBundle(
+                    targetToBuildWithBuck.get())).toString());
       } else {
         runnablePath = Optional.absent();
       }
@@ -849,39 +844,5 @@ public class WorkspaceAndProjectGenerator {
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
-  }
-
-  private Optional<String> getProductNameForBuildTarget(
-      ImmutableSet<Optional<TargetNode<?>>> targetNodes,
-      Optional<BuildTarget> targetToBuildWithBuck) {
-    Optional<String> productName = Optional.absent();
-    Optional<TargetNode<?>> buildWithBuckTargetNode = getTargetNodeForBuildTarget(
-        targetToBuildWithBuck,
-        targetNodes);
-    if (buildWithBuckTargetNode.isPresent()) {
-      Optional<TargetNode<AppleBundleDescription.Arg>> appleBundleNode =
-          buildWithBuckTargetNode.get().castArg(AppleBundleDescription.Arg.class);
-      if (appleBundleNode.isPresent()) {
-        productName = appleBundleNode.get().getConstructorArg().productName;
-      }
-    }
-    return productName;
-  }
-
-  private Optional<TargetNode<?>> getTargetNodeForBuildTarget(
-      Optional<BuildTarget> targetToBuildWithBuck,
-      ImmutableSet<Optional<TargetNode<?>>> targetNodes) {
-    Optional<TargetNode<?>> buildWithBuckTargetNode = Optional.absent();
-    for (Optional<TargetNode<?>> targetNode : targetNodes) {
-      if (targetNode.isPresent()) {
-        UnflavoredBuildTarget unflavoredBuildTarget =
-            targetNode.get().getBuildTarget().getUnflavoredBuildTarget();
-        if (unflavoredBuildTarget.equals(targetToBuildWithBuck.get().getUnflavoredBuildTarget())) {
-          buildWithBuckTargetNode = targetNode;
-          break;
-        }
-      }
-    }
-    return buildWithBuckTargetNode;
   }
 }

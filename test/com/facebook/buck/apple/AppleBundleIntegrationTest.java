@@ -389,24 +389,6 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void productNameChangesBundleAndBinaryNames() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "application_bundle_with_product_name",
-        tmp);
-    workspace.setUp();
-
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64").assertSuccess();
-
-    assertTrue(
-        Files.exists(
-            tmp.getRootPath()
-                .resolve(BuckConstant.GEN_DIR)
-                .resolve("DemoApp#iphonesimulator-x86_64/BrandNewProduct.app/BrandNewProduct")));
-  }
-
-  @Test
   public void infoPlistWithUnrecognizedVariableFails() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(

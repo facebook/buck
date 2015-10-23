@@ -8,7 +8,6 @@ java_test(
   deps = [
     '//src/com/facebook/buck/apple/xcode:xcode',
     '//src/com/facebook/buck/util:exceptions',
-    '//src/com/facebook/buck/util/environment:platform',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//third-party/java/dd-plist:dd-plist',
     '//third-party/java/guava:guava',

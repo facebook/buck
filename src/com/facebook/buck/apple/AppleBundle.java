@@ -90,9 +90,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final String extension;
 
   @AddToRuleKey
-  private final Optional<String> productName;
-
-  @AddToRuleKey
   private final SourcePath infoPlist;
 
   @AddToRuleKey
@@ -160,7 +157,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       BuildRuleParams params,
       SourcePathResolver resolver,
       Either<AppleBundleExtension, String> extension,
-      Optional<String> productName,
       SourcePath infoPlist,
       Map<String, String> infoPlistSubstitutions,
       Optional<BuildRule> binary,
@@ -183,7 +179,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
         extension.getRight();
-    this.productName = productName;
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
@@ -197,8 +192,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.dsymutil = dsymutil;
     this.strip = strip;
     this.assetCatalog = assetCatalog;
-    this.binaryName = getBinaryName(getBuildTarget(), this.productName);
-    this.bundleRoot = getBundleRoot(getBuildTarget(), this.binaryName, this.extension);
+    this.binaryName = getBinaryName(getBuildTarget());
+    this.bundleRoot = getBundleRoot(getBuildTarget(), this.extension);
     this.binaryPath = this.destinations.getExecutablesPath()
         .resolve(this.binaryName);
     this.tests = ImmutableSortedSet.copyOf(tests);
@@ -264,18 +259,14 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
   }
 
-  public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
-    if (productName.isPresent()) {
-      return productName.get();
-    } else {
-      return buildTarget.getShortName();
-    }
+  public static String getBinaryName(BuildTarget buildTarget) {
+    return buildTarget.getShortName();
   }
 
-  public static Path getBundleRoot(BuildTarget buildTarget, String binaryName, String extension) {
+  public static Path getBundleRoot(BuildTarget buildTarget, String extension) {
     return BuildTargets
         .getGenPath(buildTarget, "%s")
-        .resolve(binaryName + "." + extension);
+        .resolve(getBinaryName(buildTarget) + "." + extension);
   }
 
   public String getExtension() {
