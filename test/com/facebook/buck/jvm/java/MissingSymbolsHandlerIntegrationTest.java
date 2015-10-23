@@ -74,7 +74,7 @@ public class MissingSymbolsHandlerIntegrationTest {
         environment);
     ImmutableSet<Description<?>> allDescriptions =
         DefaultKnownBuildRuleTypes
-        .getDefaultKnownBuildRuleTypes(projectFilesystem)
+        .getDefaultKnownBuildRuleTypes(projectFilesystem, environment)
         .getAllDescriptions();
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
 
