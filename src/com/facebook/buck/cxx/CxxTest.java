@@ -36,6 +36,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -61,6 +62,7 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
   private final ImmutableSet<String> contacts;
   private final ImmutableSet<BuildRule> sourceUnderTest;
   private final boolean runTestSeparately;
+  private final Optional<Long> testRuleTimeoutMs;
 
   public CxxTest(
       BuildRuleParams params,
@@ -71,7 +73,8 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
-      boolean runTestSeparately) {
+      boolean runTestSeparately,
+      Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
     this.env = Suppliers.memoize(env);
     this.args = Suppliers.memoize(args);
@@ -80,6 +83,7 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
     this.contacts = contacts;
     this.sourceUnderTest = sourceUnderTest;
     this.runTestSeparately = runTestSeparately;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
   /**
@@ -133,7 +137,8 @@ public abstract class CxxTest extends NoopBuildRule implements TestRule, HasRunt
                 .build(),
             env.get(),
             getPathToTestExitCode(),
-            getPathToTestOutput()));
+            getPathToTestOutput(),
+            testRuleTimeoutMs));
   }
 
   protected abstract ImmutableList<TestResultSummary> parseResults(

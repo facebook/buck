@@ -60,14 +60,17 @@ public class CxxTestDescription implements
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final Optional<Long> testRuleTimeoutMs;
 
   public CxxTestDescription(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      Optional<Long> testRuleTimeoutMs) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
+    this.testRuleTimeoutMs = testRuleTimeoutMs;
   }
 
   @Override
@@ -199,6 +202,7 @@ public class CxxTestDescription implements
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()),
             args.runTestSeparately.or(false),
+            testRuleTimeoutMs,
             cxxBuckConfig.getMaximumTestOutputSize());
         break;
       }
@@ -213,7 +217,8 @@ public class CxxTestDescription implements
             args.labels.get(),
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()),
-            args.runTestSeparately.or(false));
+            args.runTestSeparately.or(false),
+            testRuleTimeoutMs);
         break;
       }
       default: {

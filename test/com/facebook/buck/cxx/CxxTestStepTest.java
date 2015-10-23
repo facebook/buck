@@ -22,12 +22,14 @@ import static org.junit.Assert.assertSame;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.FileInputStream;
@@ -40,6 +42,9 @@ public class CxxTestStepTest {
 
   @Rule
   public TemporaryFolder tmpDir = new TemporaryFolder();
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   private Path exitCode;
   private Path output;
@@ -73,7 +78,8 @@ public class CxxTestStepTest {
             ImmutableList.of("true"),
             ImmutableMap.<String, String>of(),
             exitCode,
-            output);
+            output,
+            /* testRuleTimeoutMs */ Optional.<Long>absent());
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, "");
@@ -87,7 +93,8 @@ public class CxxTestStepTest {
             ImmutableList.of("false"),
             ImmutableMap.<String, String>of(),
             exitCode,
-            output);
+            output,
+            /* testRuleTimeoutMs */ Optional.<Long>absent());
     step.execute(context);
     assertSame(1, readExitCode(exitCode));
     assertContents(output, "");
@@ -102,10 +109,24 @@ public class CxxTestStepTest {
             ImmutableList.of("echo", stdout),
             ImmutableMap.<String, String>of(),
             exitCode,
-            output);
+            output,
+            /* testRuleTimeoutMs */ Optional.<Long>absent());
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, stdout + System.lineSeparator());
   }
 
+  @Test
+  public void timeout() throws IOException, InterruptedException {
+    CxxTestStep step =
+        new CxxTestStep(
+            filesystem,
+            ImmutableList.of("sleep", "1"),
+            ImmutableMap.<String, String>of(),
+            exitCode,
+            output,
+            /* testRuleTimeoutMs */ Optional.of(10L));
+    expectedException.expectMessage("Timed out running test command");
+    step.execute(context);
+  }
 }

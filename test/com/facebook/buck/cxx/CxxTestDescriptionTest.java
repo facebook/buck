@@ -100,7 +100,8 @@ public class CxxTestDescriptionTest {
     CxxTestDescription desc = new CxxTestDescription(
         cxxBuckConfig,
         cxxPlatform,
-        new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of()));
+        new FlavorDomain<>("platform", ImmutableMap.<Flavor, CxxPlatform>of()),
+        /* testRuleTimeoutMs */ Optional.<Long>absent());
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();

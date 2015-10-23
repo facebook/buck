@@ -854,6 +854,10 @@ The value given is in milliseconds.
   # via its `@Test` annotation.
   timeout = 300000
 
+  # This specifies a maximum timeout of 20 minutes (1200000 milliseconds) per test rule. This means
+  # all tests within a single test target must complete under 20 minutes.
+  rule_timeout = 1200000
+
   # Specify an external test runner command to use instead of Buck's built-in
   # test runner.  The external test runner is invoked by Buck after it has
   # built all the test rules, passing the test runner the path to file which

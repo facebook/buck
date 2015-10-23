@@ -79,7 +79,8 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
-      boolean runTestSeparately) {
+      boolean runTestSeparately,
+      Optional<Long> testRuleTimeoutMs) {
     super(
         params,
         resolver,
@@ -89,7 +90,8 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         labels,
         contacts,
         sourceUnderTest,
-        runTestSeparately);
+        runTestSeparately,
+        testRuleTimeoutMs);
     this.executable = executable;
   }
 

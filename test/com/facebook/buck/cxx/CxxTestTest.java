@@ -37,6 +37,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,6 +52,8 @@ import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
 public class CxxTestTest {
+
+  private static final Optional<Long> TEST_TIMEOUT_MS = Optional.of(24L);
 
   private abstract static class FakeCxxTest extends CxxTest {
 
@@ -69,7 +72,8 @@ public class CxxTestTest {
           ImmutableSet.<Label>of(),
           ImmutableSet.<String>of(),
           ImmutableSet.<BuildRule>of(),
-          /* runTestSeparately */ false);
+          /* runTestSeparately */ false,
+          TEST_TIMEOUT_MS);
     }
 
     @Override
@@ -124,7 +128,8 @@ public class CxxTestTest {
             command,
             ImmutableMap.<String, String>of(),
             cxxTest.getPathToTestExitCode(),
-            cxxTest.getPathToTestOutput());
+            cxxTest.getPathToTestOutput(),
+            TEST_TIMEOUT_MS);
 
     assertEquals(cxxTestStep, Iterables.getLast(actualSteps));
   }

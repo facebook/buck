@@ -29,7 +29,13 @@ public class CxxTestBuilder extends AbstractCxxSourceBuilder<CxxTestDescription.
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms), target);
+    super(
+        new CxxTestDescription(
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            /* testRuleTimeoutMs */ Optional.<Long>absent()),
+        target);
   }
 
   public CxxTestBuilder(BuildTarget target) {

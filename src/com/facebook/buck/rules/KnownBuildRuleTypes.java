@@ -504,7 +504,12 @@ public class KnownBuildRuleTypes {
     builder.register(cxxLibraryDescription);
     builder.register(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
-    builder.register(new CxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms));
+    builder.register(
+        new CxxTestDescription(
+            cxxBuckConfig,
+            defaultCxxPlatform,
+            cxxPlatforms,
+            testRuleTimeoutMs));
     builder.register(new DBinaryDescription(dBuckConfig, defaultCxxPlatform));
     builder.register(new DLibraryDescription(dBuckConfig));
     builder.register(new DTestDescription(dBuckConfig, defaultCxxPlatform));

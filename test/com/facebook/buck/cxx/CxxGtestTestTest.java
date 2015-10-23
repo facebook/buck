@@ -36,6 +36,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -91,6 +92,7 @@ public class CxxGtestTestTest {
         ImmutableSet.<String>of(),
         ImmutableSet.<BuildRule>of(),
         /* runTestSeparately */ false,
+        /* testRuleTimeoutMs */ Optional.<Long>absent(),
         /* maxTestOutputSize */ 100L);
 
     ExecutionContext context = TestExecutionContext.newInstance();

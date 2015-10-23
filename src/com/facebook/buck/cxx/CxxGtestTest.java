@@ -77,6 +77,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       ImmutableSet<String> contacts,
       ImmutableSet<BuildRule> sourceUnderTest,
       boolean runTestSeparately,
+      Optional<Long> testRuleTimeoutMs,
       long maxTestOutputSize) {
     super(
         params,
@@ -87,7 +88,8 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         labels,
         contacts,
         sourceUnderTest,
-        runTestSeparately);
+        runTestSeparately,
+        testRuleTimeoutMs);
     this.executable = executable;
     this.maxTestOutputSize = maxTestOutputSize;
   }
