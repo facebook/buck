@@ -16,6 +16,7 @@ java_library(
     'GoTestMain.java',
     'GoTestMainStep.java',
     'GoTestStep.java',
+    'GoTool.java',
   ],
   deps = [
     '//src/com/facebook/buck/cli:config',

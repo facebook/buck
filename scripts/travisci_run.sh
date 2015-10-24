@@ -14,8 +14,7 @@ export TERM=dumb
 # Until we get https://github.com/facebook/buck/pull/479, we cannot run the
 # Go tests in Travis
 ./bin/buck test \
-  --num-threads=3 \
-  --test-selectors '!GoBinaryIntegrationTest|GoTestIntegrationTest'
+  --num-threads=3
 
 # Run all the other checks with ant.
 ant travis

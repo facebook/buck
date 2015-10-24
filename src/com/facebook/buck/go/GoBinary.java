@@ -38,7 +38,7 @@ import java.nio.file.Path;
 public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
 
   @AddToRuleKey
-  private final Tool linker;
+  private final GoTool linker;
   @AddToRuleKey
   private final ImmutableList<String> linkerFlags;
   @AddToRuleKey
@@ -55,7 +55,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
       Linker cxxLinker,
       GoSymlinkTree linkTree,
       GoLinkable mainObject,
-      Tool linker,
+      GoTool linker,
       ImmutableList<String> linkerFlags) {
     super(params, resolver);
     this.cxxLinker = cxxLinker;
@@ -86,6 +86,7 @@ public class GoBinary extends AbstractBuildRule implements BinaryBuildRule {
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new GoLinkStep(
             getProjectFilesystem().getRootPath(),
+            linker.getGoRoot(),
             cxxLinker.getCommandPrefix(getResolver()),
             linker.getCommandPrefix(getResolver()),
             linkerFlags,
