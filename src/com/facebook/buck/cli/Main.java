@@ -469,7 +469,7 @@ public final class Main {
         eventListener.outputTrace(buildId);
       } catch (RuntimeException e) {
         PrintStream stdErr = console.getStdErr();
-        stdErr.println("Skipping over non-fatal error");
+        stdErr.println("Ignoring non-fatal error!  The stack trace is below:");
         e.printStackTrace(stdErr);
       }
     }
