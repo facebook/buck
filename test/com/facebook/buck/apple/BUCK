@@ -58,6 +58,7 @@ java_test(
     '//third-party/java/dd-plist:dd-plist',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/immutables:processor',
     '//third-party/java/infer-annotations:infer-annotations',
     '//third-party/java/jackson:jackson',
     '//third-party/java/jsr:jsr305',

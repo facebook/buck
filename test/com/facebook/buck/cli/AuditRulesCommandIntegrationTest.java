@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -42,18 +44,18 @@ public class AuditRulesCommandIntegrationTest {
     // Print all of the rules in a file.
     ProcessResult result1 = workspace.runBuckCommand("audit", "rules", "example/BUCK");
     result1.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout.all"), result1.getStdout());
+    assertThat(result1.getStdout(), is(equalTo(workspace.getFileContents("stdout.all"))));
 
     // Print all of the rules filtered by type.
     ProcessResult result2 = workspace.runBuckCommand(
         "audit", "rules", "--type", "genrule", "example/BUCK");
     result2.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout.genrule"), result2.getStdout());
+    assertThat(result2.getStdout(), is(equalTo(workspace.getFileContents("stdout.genrule"))));
 
     // Print all of the rules using multiple filters.
     ProcessResult result3 = workspace.runBuckCommand(
         "audit", "rules", "-t", "genrule", "-t", "keystore", "example/BUCK");
     result3.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout.all"), result3.getStdout());
+    assertThat(result3.getStdout(), is(equalTo(workspace.getFileContents("stdout.all"))));
   }
 }

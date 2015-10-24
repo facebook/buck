@@ -21,7 +21,6 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 public class ApkGenruleBuilder extends AbstractNodeBuilder<ApkGenruleDescription.Arg> {
 
@@ -55,11 +54,6 @@ public class ApkGenruleBuilder extends AbstractNodeBuilder<ApkGenruleDescription
 
   public ApkGenruleBuilder setSrcs(ImmutableList<SourcePath> srcs) {
     arg.srcs = Optional.of(srcs);
-    return this;
-  }
-
-  public ApkGenruleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
     return this;
   }
 

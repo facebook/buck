@@ -38,6 +38,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -68,7 +69,9 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     BuildRule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .setSrcs(
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(dep.getBuildTarget())))
             .build(resolver);
 
     dep.setRuleKey(new RuleKey("aaaa"));

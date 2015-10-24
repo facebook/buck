@@ -17,7 +17,6 @@ java_binary(
 
 genrule(
   name = 'generate_java_sources',
-  deps = ['//:run_zip'],
   bash = '$(exe :run_zip) $OUT',
   cmd_exe = '$(exe :run_zip) %OUT%',
   out = 'output.src.zip',

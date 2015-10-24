@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -185,12 +188,14 @@ public class TargetsCommandTest {
         .enable(Feature.ALLOW_COMMENTS)
     );
 
-    assertEquals("Output from targets command should match expected JSON.", expected, observed);
-    assertEquals(
+    assertThat(
+        "Output from targets command should match expected JSON.",
+        observed,
+        is(equalTo(expected)));
+    assertThat(
       "Nothing should be printed to stderr.",
-      "",
-      console.getTextWrittenToStdErr()
-    );
+        console.getTextWrittenToStdErr(),
+        is(equalTo("")));
   }
 
   @Test

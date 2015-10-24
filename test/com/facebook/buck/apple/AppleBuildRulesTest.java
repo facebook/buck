@@ -29,14 +29,17 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -262,7 +265,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setDeps(ImmutableSortedSet.of(fooLibTarget))
+        .setSrcs(ImmutableList.<SourcePath>of(new BuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =
@@ -312,7 +315,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setDeps(ImmutableSortedSet.of(fooLibTarget))
+        .setSrcs(ImmutableList.<SourcePath>of(new BuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =
@@ -362,7 +365,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setDeps(ImmutableSortedSet.of(fooLibTarget))
+        .setSrcs(ImmutableList.<SourcePath>of(new BuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =

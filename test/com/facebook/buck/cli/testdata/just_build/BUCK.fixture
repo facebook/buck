@@ -8,7 +8,7 @@ genrule(
   name = 'foo',
   out = 'foo',
   cmd = 'touch $OUT',
-  deps = [
+  srcs = [
     ':bar',
   ],
 )

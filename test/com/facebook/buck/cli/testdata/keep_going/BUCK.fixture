@@ -2,7 +2,7 @@ genrule(
   name = 'rule_with_output',
   out = 'rule_with_output.txt',
   bash = 'touch $OUT',
-  deps = [
+  srcs = [
     ':common_dependency',
   ],
 )
@@ -19,7 +19,7 @@ genrule(
   name = 'failing_rule',
   out = 'failing_rule.txt',
   bash = 'touch $OUT && exit 2',
-  deps = [
+  srcs = [
     ':common_dependency',
   ],
 )

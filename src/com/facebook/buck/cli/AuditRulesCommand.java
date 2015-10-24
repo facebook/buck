@@ -21,8 +21,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
+import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.BuckPyFunction;
@@ -186,7 +186,7 @@ public class AuditRulesCommand extends AbstractCommand {
       properties.addAll(customProperties);
 
       // Add common properties that should be displayed last.
-      properties.addAll(LAST_PROPERTIES);
+      properties.addAll(Sets.intersection(LAST_PROPERTIES, rawRule.keySet()));
 
       // Write out the properties and their corresponding values.
       for (String property : properties) {

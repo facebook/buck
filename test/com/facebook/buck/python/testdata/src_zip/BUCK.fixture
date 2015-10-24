@@ -10,9 +10,6 @@ genrule(
     srcs=[
        'file.py',
     ],
-    deps=[
-       ':zip',
-    ],
 )
 
 python_library(

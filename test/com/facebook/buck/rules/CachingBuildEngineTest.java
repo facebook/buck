@@ -1941,12 +1941,16 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     BuildRule rule2 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule2"))
             .setOut("out2")
-            .setDeps(ImmutableSortedSet.of(rule3.getBuildTarget()))
+            .setSrcs(
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(rule3.getBuildTarget())))
             .build(resolver);
     BuildRule rule1 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule1"))
             .setOut("out1")
-            .setDeps(ImmutableSortedSet.of(rule2.getBuildTarget()))
+            .setSrcs(
+                ImmutableList.<SourcePath>of(
+                    new BuildTargetSourcePath(rule2.getBuildTarget())))
             .build(resolver);
 
     // Create the build engine.

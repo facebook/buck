@@ -147,8 +147,6 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     public Optional<String> cmd;
     public Optional<String> cmdExe;
     public Optional<ImmutableList<SourcePath>> srcs;
-
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }
 
 }

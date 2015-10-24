@@ -2,7 +2,4 @@ genrule(
   name = 'create_output_using_node',
   cmd = '$(exe //node:node) arg1 arg2 > $OUT',
   out = 'output.txt',
-  deps = [
-    '//node:node',
-  ],
 )

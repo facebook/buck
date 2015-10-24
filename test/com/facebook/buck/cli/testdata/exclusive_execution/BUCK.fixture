@@ -4,7 +4,6 @@ genrule(
   bash = 'sleep 1s',
   cmd_exe = 'powershell -command "Start-Sleep -s 1"',
   out = 'sleep',
-  deps = [],
 )
 
 java_test(

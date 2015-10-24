@@ -97,4 +97,5 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
   public static class Arg extends AbstractGenruleDescription.Arg {
     public BuildTarget apk;
   }
+
 }

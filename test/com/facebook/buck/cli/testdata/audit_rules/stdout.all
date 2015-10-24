@@ -9,8 +9,6 @@ genrule(
   srcs = [
     "foo.txt",
     "bar.txt",
-  ],
-  deps = [
     "//fake:rule",
   ],
   visibility = [

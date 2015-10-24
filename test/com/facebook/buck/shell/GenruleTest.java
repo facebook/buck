@@ -35,6 +35,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
@@ -244,7 +245,8 @@ public class GenruleTest {
             BuildTargetFactory.newInstance("//foo:baz"))
         .setBash("cat $DEPS > $OUT")
         .setOut("deps.txt")
-        .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+        .setSrcs(
+            ImmutableList.<SourcePath>of(new BuildTargetSourcePath(dep.getBuildTarget())))
         .build(resolver, filesystem);
 
     AbstractGenruleStep genruleStep = ((Genrule) genrule).createGenruleStep();
