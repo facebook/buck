@@ -26,12 +26,12 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -69,26 +69,43 @@ public class StackedDownloader implements Downloader {
               new OnDiskMavenDownloader(
                   config.resolvePathThatMayBeOutsideTheProjectFilesystem(
                       Paths.get(url.getPath()))));
+        } catch (FileNotFoundException e) {
+          throw new HumanReadableException(e, "Error occurred when attempting to use %s " +
+              "as a local Maven repository as configured in .buckconfig.  See " +
+              "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to " +
+              "configure this setting", repo);
         } catch (MalformedURLException e) {
           throw new HumanReadableException("Unable to determine path from %s", repo);
         }
       } else {
-        downloaders.add(
-            new OnDiskMavenDownloader(
-                config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(repo))));
+        try {
+          downloaders.add(
+              new OnDiskMavenDownloader(
+                  config.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(repo))));
+        } catch (FileNotFoundException e) {
+          throw new HumanReadableException(e, "Error occurred when attempting to use %s " +
+              "as a local Maven repository as configured in .buckconfig.  See " +
+              "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to " +
+              "configure this setting", repo);
+        }
       }
     }
 
     if (androidSdkRoot.isPresent()) {
       Path androidMavenRepo = androidSdkRoot.get().resolve("extras/android/m2repository");
-      if (Files.exists(androidMavenRepo)) {
+      try {
         downloaders.add(new OnDiskMavenDownloader(androidMavenRepo));
+      } catch (FileNotFoundException e) {
+        LOG.warn("Android Maven repo %s doesn't exist", androidMavenRepo.toString());
       }
 
       Path googleMavenRepo = androidSdkRoot.get().resolve("extras/google/m2repository");
-      if (Files.exists(googleMavenRepo)) {
+      try {
         downloaders.add(new OnDiskMavenDownloader(googleMavenRepo));
+      } catch (FileNotFoundException e) {
+        LOG.warn("Google Maven repo '%s' doesn't exist", googleMavenRepo.toString());
       }
+
     }
 
     // Add a default downloader

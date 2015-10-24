@@ -26,6 +26,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
@@ -33,6 +34,8 @@ import com.google.common.jimfs.Jimfs;
 
 import org.easymock.EasyMock;
 import org.junit.Test;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -45,6 +48,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class StackedDownloaderTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void shouldCreateADownloaderEvenWithAnEmptyStack() {
@@ -190,4 +196,43 @@ public class StackedDownloaderTest {
       throw new RuntimeException(e);
     }
   }
+
+  @Test
+  public void shouldThrowReadableExceptionWhenUrlPathDoesntExist() {
+    String pathNotExist = "file://not/a/valid/path";
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[download]",
+            String.format("maven_repo = %s", pathNotExist))
+        .build();
+
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        String.format(
+            "Error occurred when attempting to use %s " +
+                "as a local Maven repository as configured", pathNotExist));
+
+    StackedDownloader.createFromConfig(config, Optional.<Path>absent());
+  }
+
+  @Test
+  public void shouldThrowReadableExceptionWhenPathDoesntExist() {
+    String pathNotExist = "//not/a/valid/path";
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[download]",
+            String.format("maven_repo = %s", pathNotExist))
+        .build();
+
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        String.format(
+            "Error occurred when attempting to use %s " +
+                "as a local Maven repository as configured", pathNotExist));
+
+    StackedDownloader.createFromConfig(config, Optional.<Path>absent());
+  }
+
 }
