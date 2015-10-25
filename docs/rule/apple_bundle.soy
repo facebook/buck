@@ -28,6 +28,15 @@ Optionally the generated bundle can also be signed using specified provisioning 
 {/call}
 
 {call buck.arg}
+  {param name: 'product_name' /}
+  {param desc}
+  The name of the resulting bundle and binary. The setting behaves like PRODUCT_NAME Xcode build setting.
+  For example, if your rule is named "MyApp" and extension is "app", by default buck will generate MyApp.app bundle.
+  But if you will set product name to "SuperApp", bundle will get "SuperApp.app" name.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'extension' /}
   {param desc}
   The extension of the generated bundle. For example <code>'app'</code> for an application bundle

@@ -143,6 +143,7 @@ public class ProjectGenerator {
   public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_VALUE =
       "cxx.default_platform=$PLATFORM_NAME-$arch";
   private static final String HALIDE_COMPILER_TEMPLATE = "halide-compiler.st";
+  public static final String PRODUCT_NAME = "PRODUCT_NAME";
 
   public enum Option {
     /** Use short BuildTarget name instead of full name for targets */
@@ -442,10 +443,13 @@ public class ProjectGenerator {
     }
 
     final BuildTarget buildTarget = targetNode.getBuildTarget();
-    String productName = getXcodeTargetName(buildTarget) + BUILD_WITH_BUCK_POSTFIX;
-    String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get());
-    Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get());
-    Path dsymDestination = getScratchPathForDsymBundle(targetToBuildWithBuck.get());
+
+    String buckTargetProductName = getXcodeTargetName(buildTarget) + BUILD_WITH_BUCK_POSTFIX;
+
+    Optional<String> productName = getProductNameForTargetNode(targetNode);
+    String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
+    Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName);
+    Path dsymDestination = getScratchPathForDsymBundle(targetToBuildWithBuck.get(), binaryName);
 
     PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
     ST template = new ST(Resources.toString(
@@ -463,9 +467,9 @@ public class ProjectGenerator {
     String buildFlags = getBuildFlags();
     String escapedBuildTarget = Escaper.escapeAsBashString(buildTarget.getFullyQualifiedName());
     Path resolvedBundleSource = projectFilesystem.resolve(
-        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "app"));
+        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "app"));
     Path resolvedDsymSource = projectFilesystem.resolve(
-        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), "dSYM"));
+        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "dSYM"));
     Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
     Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
     String fixUuidScriptPath = Resources.getResource(
@@ -517,13 +521,23 @@ public class ProjectGenerator {
       configuration.setBuildSettings(inlineSettings);
     }
 
-    PBXAggregateTarget buildWithBuckTarget = new PBXAggregateTarget(productName);
-    buildWithBuckTarget.setProductName(productName);
+    PBXAggregateTarget buildWithBuckTarget = new PBXAggregateTarget(buckTargetProductName);
+    buildWithBuckTarget.setProductName(buckTargetProductName);
     buildWithBuckTarget.getBuildPhases().add(shellScriptBuildPhase);
     buildWithBuckTarget.setBuildConfigurationList(configurationList);
     project.getTargets().add(buildWithBuckTarget);
 
     targetNodeToGeneratedProjectTargetBuilder.put(targetNode, buildWithBuckTarget);
+  }
+
+  private static Optional<String> getProductNameForTargetNode(TargetNode<?> targetNode) {
+    Optional<String> productName = Optional.absent();
+    Optional<TargetNode<AppleBundleDescription.Arg>> appleBundleNode =
+        targetNode.castArg(AppleBundleDescription.Arg.class);
+    if (appleBundleNode.isPresent()) {
+      productName = appleBundleNode.get().getConstructorArg().productName;
+    }
+    return productName;
   }
 
   private String getBuildFlags() {
@@ -540,16 +554,16 @@ public class ProjectGenerator {
     return Joiner.on(' ').join(flags);
   }
 
-  static Path getScratchPathForAppBundle(BuildTarget targetToBuildWithBuck) {
+  static Path getScratchPathForAppBundle(BuildTarget targetToBuildWithBuck, String binaryName) {
     return BuildTargets
         .getScratchPath(targetToBuildWithBuck, "/%s-unsanitised")
-        .resolve(AppleBundle.getBinaryName(targetToBuildWithBuck) + ".app");
+        .resolve(binaryName + ".app");
   }
 
-  static Path getScratchPathForDsymBundle(BuildTarget targetToBuildWithBuck) {
+  static Path getScratchPathForDsymBundle(BuildTarget targetToBuildWithBuck, String binaryName) {
     return BuildTargets
         .getScratchPath(targetToBuildWithBuck, "/%s-unsanitised")
-        .resolve(AppleBundle.getBinaryName(targetToBuildWithBuck) + ".dSYM");
+        .resolve(binaryName + ".dSYM");
   }
 
   @SuppressWarnings("unchecked")
@@ -625,7 +639,7 @@ public class ProjectGenerator {
       PBXProject project,
       TargetNode<HalideLibraryDescription.Arg> targetNode) throws IOException {
     final BuildTarget buildTarget = targetNode.getBuildTarget();
-    String productName = getProductName(buildTarget);
+    String productName = getProductNameForBuildTarget(buildTarget);
     Path outputPath = getHalideOutputPath(buildTarget);
     BuildTarget compilerTarget =
       HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
@@ -664,7 +678,7 @@ public class ProjectGenerator {
     defaultSettingsBuilder.put(
       "REPO_ROOT",
       projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
-    defaultSettingsBuilder.put("PRODUCT_NAME", productName);
+    defaultSettingsBuilder.put(PRODUCT_NAME, productName);
 
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
       getXcodeBuildConfigurationsForTargetNode(
@@ -868,7 +882,7 @@ public class ProjectGenerator {
     TargetNode<?> buildTargetNode = bundle.isPresent() ? bundle.get() : targetNode;
     final BuildTarget buildTarget = buildTargetNode.getBuildTarget();
 
-    String productName = getProductName(buildTarget);
+    String buildTargetName = getProductNameForBuildTarget(buildTarget);
     CxxLibraryDescription.Arg arg = targetNode.getConstructorArg();
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
@@ -880,8 +894,8 @@ public class ProjectGenerator {
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(
             productType,
-            productName,
-            Paths.get(String.format(productOutputFormat, productName)))
+            buildTargetName,
+            Paths.get(String.format(productOutputFormat, buildTargetName)))
         .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs.get()))
         .setPublicHeaders(exportedHeaders)
         .setPrivateHeaders(headers)
@@ -973,11 +987,11 @@ public class ProjectGenerator {
     // -- configurations
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
     extraSettingsBuilder
-        .put("TARGET_NAME", getProductName(buildTarget))
+        .put("TARGET_NAME", buildTargetName)
         .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
     if (bundleLoaderNode.isPresent()) {
       TargetNode<AppleBundleDescription.Arg> bundleLoader = bundleLoaderNode.get();
-      String bundleLoaderProductName = getProductName(bundleLoader.getBuildTarget());
+      String bundleLoaderProductName = getProductNameForBuildTarget(bundleLoader.getBuildTarget());
       String bundleName = bundleLoaderProductName + "." +
           getExtensionString(bundleLoader.getConstructorArg().getExtension());
       String bundleLoaderOutputPath = Joiner.on('/').join(
@@ -1006,7 +1020,7 @@ public class ProjectGenerator {
     defaultSettingsBuilder.put(
         "REPO_ROOT",
         projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
-    defaultSettingsBuilder.put("PRODUCT_NAME", getProductName(buildTarget));
+    defaultSettingsBuilder.put(PRODUCT_NAME, getProductName(buildTargetNode, buildTarget));
     if (bundle.isPresent()) {
       defaultSettingsBuilder.put(
           "WRAPPER_EXTENSION",
@@ -1148,6 +1162,11 @@ public class ProjectGenerator {
     return target;
   }
 
+  public static String getProductName(TargetNode<?> buildTargetNode, BuildTarget buildTarget) {
+    return getProductNameForTargetNode(buildTargetNode).or(
+        getProductNameForBuildTarget(buildTarget));
+  }
+
   private Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>>
   getXcodeBuildConfigurationsForTargetNode(
       TargetNode<?> targetNode,
@@ -1286,7 +1305,7 @@ public class ProjectGenerator {
         key.getConfigs().get(),
         overrideBuildSettingsBuilder.build(),
         ImmutableMap.of(
-            "PRODUCT_NAME", productName,
+            PRODUCT_NAME, productName,
             "WRAPPER_EXTENSION", getExtensionString(key.getExtension())),
         ImmutableMap.of(
             "FRAMEWORK_SEARCH_PATHS",
@@ -1714,7 +1733,7 @@ public class ProjectGenerator {
     return xcodeprojDir;
   }
 
-  private static String getProductName(BuildTarget buildTarget) {
+  private static String getProductNameForBuildTarget(BuildTarget buildTarget) {
     return buildTarget.getShortName();
   }
 
@@ -2104,7 +2123,7 @@ public class ProjectGenerator {
   }
 
   private SourceTreePath getProductsSourceTreePath(TargetNode<?> targetNode) {
-    String productName = getProductName(targetNode.getBuildTarget());
+    String productName = getProductNameForBuildTarget(targetNode.getBuildTarget());
     String productOutputName;
 
     if (targetNode.getType().equals(AppleLibraryDescription.TYPE) ||
@@ -2165,7 +2184,7 @@ public class ProjectGenerator {
         Paths.get(getBuiltProductsRelativeTargetOutputPath(test)).resolve(
             String.format(
                 AppleBuildRules.getOutputFileNameFormatForLibrary(false),
-                getProductName(test.getBuildTarget()))),
+                getProductNameForBuildTarget(test.getBuildTarget()))),
         Optional.<String>absent());
     return project.getMainGroup()
         .getOrCreateChildGroupByName("Test Libraries")

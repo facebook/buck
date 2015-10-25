@@ -2146,6 +2146,41 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testAppleBundleRuleWithCustomXcodeProductNameFromConfigs() throws IOException {
+    BuildTarget sharedLibraryTarget = BuildTarget
+        .builder(rootPath, "//dep", "shared")
+        .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .build();
+    TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
+        .createBuilder(sharedLibraryTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of("PRODUCT_NAME", "FancyFramework"))))
+        .build();
+
+    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "custombundle").build();
+    TargetNode<?> node = AppleBundleBuilder
+        .createBuilder(buildTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new TestSourcePath("Info.plist"))
+        .setBinary(sharedLibraryTarget)
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(sharedLibraryNode, node),
+        ImmutableSet.<ProjectGenerator.Option>of());
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
+
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+    assertThat(buildSettings.get("PRODUCT_NAME"), Matchers.equalTo("FancyFramework"));
+  }
+
+  @Test
   public void testCoreDataModelRuleAddsReference() throws IOException {
     BuildTarget modelTarget = BuildTarget.builder(rootPath, "//foo", "model").build();
     TargetNode<?> modelNode = CoreDataModelBuilder
