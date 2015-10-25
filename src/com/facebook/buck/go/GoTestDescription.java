@@ -107,7 +107,7 @@ public class GoTestDescription implements Description<GoTestDescription.Arg> {
             .addFlavors(ImmutableFlavor.of("test-library"))
             .build();
 
-    Path defaultPackageName = params.getBuildTarget().getBasePath();
+    Path defaultPackageName = goBuckConfig.getDefaultPackageName(params.getBuildTarget());
     defaultPackageName = defaultPackageName.resolveSibling(
         defaultPackageName.getFileName() + "_test");
 

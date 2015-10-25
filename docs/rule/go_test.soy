@@ -36,7 +36,7 @@
 
 {call buck.arg}
   {param name : 'package_name' /}
-  {param default : 'path relative to the buck root + "_test"' /}
+  {param default : 'go.prefix + path relative to the buck root + "_test"' /}
   {param desc}
   Sets the full name of the test package being compiled. This defaults to the path from the buck
   root with "_test" appended. (e.g. given a ./.buckconfig, a rule in ./a/b/BUCK defaults to package "a/b_test")

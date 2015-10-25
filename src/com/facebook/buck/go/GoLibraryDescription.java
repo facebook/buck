@@ -66,7 +66,7 @@ public class GoLibraryDescription implements Description<GoLibraryDescription.Ar
         resolver,
         goBuckConfig,
         args.packageName.transform(MorePaths.TO_PATH)
-            .or(params.getBuildTarget().getBasePath()),
+            .or(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
         args.srcs,
         args.compilerFlags.or(ImmutableList.<String>of()),
         args.tests.get()
