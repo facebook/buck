@@ -7,7 +7,7 @@ prebuilt_jar(
     '//third-party/java/hamcrest:hamcrest-junit',
   ],
   visibility = [
-    '//src/com/facebook/buck/junit:junit',
+    '//src/com/facebook/buck/testrunner:junit',
     '//test/...',
     '//third-party/java/aosp/...',
   ],

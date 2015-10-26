@@ -53,7 +53,7 @@ BUCK_CORE_RESOURCES = {
     'path_to_pywatchman': '//third-party/py/pywatchman:pywatchman-archive',
     'path_to_sh_binary_template': '//src/com/facebook/buck/shell:sh_binary_template',
     'report_generator_jar': '//src/com/facebook/buck/jvm/java/coverage:report-generator',
-    'testrunner_classes': '//src/com/facebook/buck/junit:junit-bin-fixed',
+    'testrunner_classes': '//src/com/facebook/buck/testrunner:testrunner-bin-fixed',
 
     # TODO(#5448619): We currently don't have a great way of packaging up
     # entire directories into a PEX file, so for now, we aren't pulling in

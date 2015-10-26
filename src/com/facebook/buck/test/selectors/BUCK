@@ -5,7 +5,7 @@ java_library(
     '//test/com/facebook/buck/test/selectors:selectors',
   ],
   deps = [
-    # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/junit/BUCK.
+    # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/testrunner/BUCK.
   ],
   visibility = [
     '//src/com/facebook/buck/android:rules',
@@ -15,7 +15,7 @@ java_library(
     '//src/com/facebook/buck/event/listener:listener',
     '//src/com/facebook/buck/jvm/java:steps',
     '//src/com/facebook/buck/jvm/java:rules',
-    '//src/com/facebook/buck/junit:base',
+    '//src/com/facebook/buck/testrunner:base',
     '//src/com/facebook/buck/rules:rules',
     '//src/com/facebook/buck/shell:rules',
     '//src/com/facebook/buck/python:rules',

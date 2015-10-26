@@ -19,7 +19,6 @@
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/cli/quickstart" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij/plugin" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/junit" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/xcode/testdata" />
@@ -30,7 +29,6 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/integration/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/gwt/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/js/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/junit/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/intellij/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/ocaml/testdata" />
@@ -41,6 +39,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/test/cache/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/test/labels/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/test/result/groups/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testrunner/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/thrift/testdata" />
     </content>
     <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
@@ -63,5 +62,7 @@
     <orderEntry type="library" name="maven-lib" level="project" />
     <orderEntry type="library" name="android-tools-24.2.3" level="project" />
     <orderEntry type="library" name="oracle-jdk-stubs" level="project" />
+    <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="library" name="testng" level="project" />
   </component>
 </module>

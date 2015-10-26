@@ -15,9 +15,9 @@ java_library(
   name = 'concurrent_for_junit_runner',
   srcs = [ 'MoreExecutors.java' ],
   deps = [
-    # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/junit/BUCK.
+    # IMPORTANT! This list is to remain empty. See src/com/facebook/buck/testrunner/BUCK.
   ],
   visibility = [
-    '//src/com/facebook/buck/junit:junit',
+    '//src/com/facebook/buck/testrunner:junit',
   ],
 )
