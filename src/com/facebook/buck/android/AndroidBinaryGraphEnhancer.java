@@ -199,7 +199,7 @@ public class AndroidBinaryGraphEnhancer {
       resourceRules = ImmutableSortedSet.<BuildRule>of(resourcesFilter);
     } else {
       filteredResourcesProvider = new IdentityResourcesProvider(
-          pathResolver.getAllPaths(resourceDetails.getResourceDirectories()));
+          pathResolver.deprecatedAllPaths(resourceDetails.getResourceDirectories()));
     }
 
     // Create the AaptPackageResourcesBuildable.
@@ -348,7 +348,8 @@ public class AndroidBinaryGraphEnhancer {
         .setComputeExopackageDepsAbi(computeExopackageDepsAbi)
         .setClasspathEntriesToDex(
             ImmutableSet.<Path>builder()
-                .addAll(pathResolver.getAllPaths(packageableCollection.getClasspathEntriesToDex()))
+                .addAll(pathResolver.deprecatedAllPaths(
+                        packageableCollection.getClasspathEntriesToDex()))
                 .addAll(buildConfigJarFiles)
                 .build())
         .setFinalDeps(enhancedDeps.build())

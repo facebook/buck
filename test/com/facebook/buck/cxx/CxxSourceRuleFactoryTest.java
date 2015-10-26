@@ -215,9 +215,9 @@ public class CxxSourceRuleFactoryTest {
             ImmutableMap.of(
                 "cxx", ImmutableMap.<String, String>builder()
                     .put("asppflags", space.join(asppflags))
-                    .put("cpp", sourcePathResolver.getPath(cpp).toString())
+                    .put("cpp", sourcePathResolver.deprecatedGetPath(cpp).toString())
                     .put("cppflags", space.join(cppflags))
-                    .put("cxxpp", sourcePathResolver.getPath(cxxpp).toString())
+                    .put("cxxpp", sourcePathResolver.deprecatedGetPath(cxxpp).toString())
                     .put("cxxppflags", space.join(cxxppflags))
                     .build()))
         .setFilesystem(filesystem)
@@ -539,11 +539,11 @@ public class CxxSourceRuleFactoryTest {
         .setSections(
         ImmutableMap.of(
             "cxx", ImmutableMap.<String, String>builder()
-                .put("as", sourcePathResolver.getPath(as).toString())
+                .put("as", sourcePathResolver.deprecatedGetPath(as).toString())
                 .put("asflags", space.join(asflags))
-                .put("cc", sourcePathResolver.getPath(cc).toString())
+                .put("cc", sourcePathResolver.deprecatedGetPath(cc).toString())
                 .put("cflags", space.join(cflags))
-                .put("cxx", sourcePathResolver.getPath(cxx).toString())
+                .put("cxx", sourcePathResolver.deprecatedGetPath(cxx).toString())
                 .put("cxxflags", space.join(cxxflags))
                 .build()))
         .setFilesystem(filesystem)

@@ -88,7 +88,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     assertThat(copyNativeLibraries.getFilteredNativeLibraries(), Matchers.anEmptyMap());
     assertThat(
         FluentIterable.from(copyNativeLibraries.getNativeLibDirectories())
-            .transform(sourcePathResolver.getPathFunction())
+            .transform(sourcePathResolver.deprecatedPathFunction())
             .toList(),
         Matchers.contains(
             ndkLibrary.getLibraryPath()

@@ -69,7 +69,7 @@ public class FatBinary extends AbstractBuildRule {
     commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
     commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
     for (SourcePath thinBinary : thinBinaries) {
-      commandBuilder.add(getResolver().getResolvedPath(thinBinary).toString());
+      commandBuilder.add(getResolver().getAbsolutePath(thinBinary).toString());
     }
     return ImmutableList.<Step>of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),

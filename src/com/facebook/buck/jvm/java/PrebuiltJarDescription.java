@@ -142,7 +142,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     }
     ImmutableCollection<SourcePath> inputsToCompareToOutput =
         ImmutableSet.of(inputToCompareToOutput);
-    final Path pathToExistingJarFile = resolver.getPath(inputToCompareToOutput);
+    final Path pathToExistingJarFile = resolver.deprecatedGetPath(inputToCompareToOutput);
 
     class ExistingOuputs extends AbstractBuildRule {
       @AddToRuleKey

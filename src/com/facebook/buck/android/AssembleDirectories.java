@@ -55,7 +55,7 @@ public class AssembleDirectories extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), destinationDirectory));
     for (SourcePath directory : originalDirectories) {
-      Path resolvedPath = getResolver().getPath(directory);
+      Path resolvedPath = getResolver().deprecatedGetPath(directory);
       steps.add(CopyStep.forDirectory(
               getProjectFilesystem(),
               resolvedPath,

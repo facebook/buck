@@ -95,14 +95,14 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
             getResolver(),
             new BuildTargetSourcePath(
                 getBuildTarget(),
-                getResolver().getPath(staticNativeLibraryPath))));
+                getResolver().deprecatedGetPath(staticNativeLibraryPath))));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
       argsBuilder.add(
           new SourcePathArg(
               getResolver(),
               new BuildTargetSourcePath(
                   getBuildTarget(),
-                  getResolver().getPath(staticCLibraryPath))));
+                  getResolver().deprecatedGetPath(staticCLibraryPath))));
     }
     return NativeLinkableInput.of(
         argsBuilder.build(),

@@ -264,7 +264,7 @@ public class AndroidResource extends AbstractBuildRule
           "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is " +
               "null. This should already be enforced by the constructor.");
       steps.add(new ExtractFromAndroidManifestStep(
-          getResolver().getPath(manifestFile),
+          getResolver().deprecatedGetPath(manifestFile),
           getProjectFilesystem(),
           buildableContext,
           METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE));
@@ -277,7 +277,7 @@ public class AndroidResource extends AbstractBuildRule
     steps.add(
         new MiniAapt(
             getProjectFilesystem(),
-            getResolver().getPath(Preconditions.checkNotNull(res)),
+            getResolver().deprecatedGetPath(Preconditions.checkNotNull(res)),
             Preconditions.checkNotNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps));
 

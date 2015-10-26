@@ -74,7 +74,7 @@ public class RobolectricTest extends JavaTest {
     @Override
     public Path apply(HasAndroidResourceDeps input) {
       return Optional.fromNullable(input.getRes())
-          .transform(getResolver().getPathFunction())
+          .transform(getResolver().deprecatedPathFunction())
           .get();
     }
   };

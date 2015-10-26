@@ -58,7 +58,7 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
         new MergeAndroidResourceSourcesStep(
             getProjectFilesystem(),
             FluentIterable.from(originalDirectories)
-                .transform(getResolver().getPathFunction())
+                .transform(getResolver().deprecatedPathFunction())
                 .toList(),
             destinationDirectory
         ));

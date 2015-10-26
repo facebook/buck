@@ -119,7 +119,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName {
         .add(
             CopyStep.forFile(
                 getProjectFilesystem(),
-                getResolver().getResolvedPath(src),
+                getResolver().getAbsolutePath(src),
                 out));
 
     buildableContext.recordArtifact(out);

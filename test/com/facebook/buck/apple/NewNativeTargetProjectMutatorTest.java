@@ -87,14 +87,14 @@ public class NewNativeTargetProjectMutatorTest {
     sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     pathRelativizer = new PathRelativizer(
         Paths.get("_output"),
-        sourcePathResolver.getPathFunction());
+        sourcePathResolver.deprecatedPathFunction());
   }
 
   @Test
   public void shouldCreateTargetAndTargetGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
-        sourcePathResolver.getPathFunction());
+        sourcePathResolver.deprecatedPathFunction());
     mutator
         .setTargetName("TestTarget")
         .setProduct(
@@ -111,7 +111,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void shouldCreateTargetAndCustomTargetGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
-        sourcePathResolver.getPathFunction());
+        sourcePathResolver.deprecatedPathFunction());
     mutator
         .setTargetName("TestTarget")
         .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
@@ -396,7 +396,7 @@ public class NewNativeTargetProjectMutatorTest {
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
         pathRelativizer,
-        sourcePathResolver.getPathFunction());
+        sourcePathResolver.deprecatedPathFunction());
     mutator
         .setTargetName("TestTarget")
         .setProduct(

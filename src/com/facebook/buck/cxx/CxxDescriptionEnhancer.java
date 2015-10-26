@@ -754,7 +754,7 @@ public class CxxDescriptionEnhancer {
     ImmutableSet<Path> searchPaths = FluentIterable.from(frameworks.get())
         .transform(
             FrameworkPath.getUnexpandedSearchPathFunction(
-                resolver.getPathFunction(),
+                resolver.deprecatedPathFunction(),
                 Functions.<Path>identity()))
         .toSet();
 

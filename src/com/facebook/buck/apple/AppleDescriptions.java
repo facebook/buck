@@ -185,12 +185,12 @@ public class AppleDescriptions {
         ImmutableSortedMap.<String, SourcePath>naturalOrder()
             .putAll(
                 convertAppleHeadersToPublicCxxHeaders(
-                    resolver.getPathFunction(),
+                    resolver.deprecatedPathFunction(),
                     headerPathPrefix,
                     arg))
             .putAll(
                 convertAppleHeadersToPrivateCxxHeaders(
-                    resolver.getPathFunction(),
+                    resolver.deprecatedPathFunction(),
                     headerPathPrefix,
                     arg))
             .build();
@@ -254,14 +254,14 @@ public class AppleDescriptions {
     output.headers = Optional.of(
         SourceList.ofNamedSources(
             convertAppleHeadersToPrivateCxxHeaders(
-                resolver.getPathFunction(),
+                resolver.deprecatedPathFunction(),
                 headerPathPrefix,
                 arg)));
     output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags;
     output.exportedHeaders = Optional.of(
         SourceList.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
-                resolver.getPathFunction(),
+                resolver.deprecatedPathFunction(),
                 headerPathPrefix,
                 arg)));
     output.exportedPlatformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
@@ -293,7 +293,8 @@ public class AppleDescriptions {
       public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
         return FluentIterable
             .from(input)
-            .transformAndConcat(linkerFlagsForFrameworkPathFunction(resolver.getPathFunction()))
+            .transformAndConcat(
+                linkerFlagsForFrameworkPathFunction(resolver.deprecatedPathFunction()))
             .toList();
       }
     };
@@ -308,7 +309,7 @@ public class AppleDescriptions {
       public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
         return FluentIterable
             .from(input)
-            .transformAndConcat(linkerFlagsForLibraryFunction(resolver.getPathFunction()))
+            .transformAndConcat(linkerFlagsForLibraryFunction(resolver.deprecatedPathFunction()))
             .toList();
       }
     };
@@ -327,7 +328,7 @@ public class AppleDescriptions {
             .from(frameworkPaths)
             .transform(
                 FrameworkPath.getExpandedSearchPathFunction(
-                    resolver.getPathFunction(),
+                    resolver.deprecatedPathFunction(),
                     appleSdkPaths.resolveFunction()))
             .toList();
       }

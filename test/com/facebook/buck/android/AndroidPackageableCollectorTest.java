@@ -137,7 +137,7 @@ public class AndroidPackageableCollectorTest {
             BuckConstant.GEN_PATH.resolve(
                 "java/src/com/facebook/lib__example__output/example.jar")),
         FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
-            .transform(pathResolver.getPathFunction())
+            .transform(pathResolver.deprecatedPathFunction())
             .toSet());
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
@@ -150,7 +150,7 @@ public class AndroidPackageableCollectorTest {
             "substantial regression in the startup time for the fb4a app.",
         ImmutableSet.of(Paths.get("buck-out/gen/third_party/jsr-305/jsr-305.jar")),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
-            .transform(pathResolver.getPathFunction())
+            .transform(pathResolver.deprecatedPathFunction())
             .toSet());
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
@@ -322,7 +322,7 @@ public class AndroidPackageableCollectorTest {
         ImmutableSet.of(
             BuckConstant.GEN_PATH.resolve("java/com/facebook/base/lib__base__output/base.jar")),
         FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
-            .transform(pathResolver.getPathFunction())
+            .transform(pathResolver.deprecatedPathFunction())
             .toSet());
   }
 }

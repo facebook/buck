@@ -585,7 +585,7 @@ public class IjModuleGraphTest {
         new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolver.getPath(path);
+            return sourcePathResolver.deprecatedGetPath(path);
           }
 
           @Override

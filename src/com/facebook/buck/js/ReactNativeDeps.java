@@ -106,10 +106,10 @@ public class ReactNativeDeps extends AbstractBuildRule
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
         builder.add(
-          getResolver().getPath(jsPackager).toString(),
+          getResolver().deprecatedGetPath(jsPackager).toString(),
           "list-dependencies",
           platform.toString(),
-          getProjectFilesystem().resolve(getResolver().getPath(entryPath)).toString(),
+          getProjectFilesystem().resolve(getResolver().deprecatedGetPath(entryPath)).toString(),
           "--output",
           getProjectFilesystem().resolve(output).toString()
         );

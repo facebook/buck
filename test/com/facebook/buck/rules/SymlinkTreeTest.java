@@ -202,7 +202,7 @@ public class SymlinkTreeTest {
     Path existingFile =
         projectFilesystem.resolve(
             new SourcePathResolver(new BuildRuleResolver())
-                .getPath(links.values().asList().get(0)));
+                .deprecatedGetPath(links.values().asList().get(0)));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key

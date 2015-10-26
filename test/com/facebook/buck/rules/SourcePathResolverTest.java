@@ -49,7 +49,7 @@ public class SourcePathResolverTest {
     Path expectedPath = Paths.get("foo");
     SourcePath sourcePath = new PathSourcePath(projectFilesystem, expectedPath);
 
-    assertEquals(expectedPath, pathResolver.getPath(sourcePath));
+    assertEquals(expectedPath, pathResolver.deprecatedGetPath(sourcePath));
   }
 
   @Test
@@ -64,7 +64,7 @@ public class SourcePathResolverTest {
     resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget());
 
-    assertEquals(expectedPath, pathResolver.getPath(sourcePath));
+    assertEquals(expectedPath, pathResolver.deprecatedGetPath(sourcePath));
   }
 
   @Test
@@ -79,7 +79,7 @@ public class SourcePathResolverTest {
     resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget(), expectedPath);
 
-    assertEquals(expectedPath, pathResolver.getPath(sourcePath));
+    assertEquals(expectedPath, pathResolver.deprecatedGetPath(sourcePath));
   }
 
   @Test
@@ -111,7 +111,7 @@ public class SourcePathResolverTest {
             pathSourcePathExpectedPath,
             buildTargetSourcePathExpectedPath,
             buildRuleWithOverriddenOutputPathExpectedPath),
-        pathResolver.getAllPaths(
+        pathResolver.deprecatedAllPaths(
             ImmutableList.of(
                 pathSourcePath,
                 buildTargetSourcePath,
@@ -148,11 +148,11 @@ public class SourcePathResolverTest {
     Path expectedPath = Paths.get("foo");
     SourcePath sourcePath = new PathSourcePath(projectFilesystem, expectedPath);
 
-    assertEquals(Optional.of(expectedPath), pathResolver.getRelativePath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
   }
 
   @Test
-  public void getRelativePathCannotGetRelativePathOfBuildTargetSourcePath() {
+  public void relativePathForABuildTargetSourcePathIsTheRulesOutputPath() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRule rule = new OutputOnlyBuildRule(
@@ -162,7 +162,7 @@ public class SourcePathResolverTest {
     resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget());
 
-    assertEquals(Optional.<Path>absent(), pathResolver.getRelativePath(sourcePath));
+    assertEquals(rule.getPathToOutput(), pathResolver.getRelativePath(sourcePath));
   }
 
   @Test
@@ -321,6 +321,18 @@ public class SourcePathResolverTest {
         rule.getBuildTarget(),
         "srcs",
         ImmutableList.of(sourcePath1, sourcePath2));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void getRelativePathCanOnlyReturnARelativePath() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    PathSourcePath path = new PathSourcePath(
+        new FakeProjectFilesystem(),
+        Paths.get("cheese").toAbsolutePath());
+
+    pathResolver.getRelativePath(path);
   }
 
   private static class PathReferenceRule extends AbstractBuildRule {

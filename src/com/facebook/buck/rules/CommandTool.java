@@ -186,7 +186,7 @@ public class CommandTool implements Tool {
       return String.format(
           format,
           (Object[]) FluentIterable.from(ImmutableList.copyOf(inputs))
-              .transform(resolver.getResolvedPathFunction())
+              .transform(resolver.getAbsolutePathFunction())
               .toArray(Path.class));
     }
 

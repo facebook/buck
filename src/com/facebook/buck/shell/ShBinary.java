@@ -106,14 +106,16 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
                     .join(Collections.nCopies(levelsBelowRoot, ".."));
 
                 ImmutableList<String> resourceStrings = FluentIterable
-                    .from(getResolver().getAllPaths(resources))
+                    .from(getResolver().deprecatedAllPaths(resources))
                     .transform(Functions.toStringFunction())
                     .transform(Escaper.BASH_ESCAPER)
                     .toList();
 
                 return input
                     .add("path_back_to_root", pathBackToRoot)
-                    .add("script_to_run", Escaper.escapeAsBashString(getResolver().getPath(main)))
+                    .add(
+                        "script_to_run",
+                        Escaper.escapeAsBashString(getResolver().deprecatedGetPath(main)))
                     .add("resources", resourceStrings);
               }
             }),

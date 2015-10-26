@@ -111,9 +111,9 @@ public class AndroidBinaryTest {
 
     androidBinary.addProguardCommands(
         ImmutableSet.copyOf(
-            pathResolver.getAllPaths(packageableCollection.getClasspathEntriesToDex())),
+            pathResolver.deprecatedAllPaths(packageableCollection.getClasspathEntriesToDex())),
         ImmutableSet.copyOf(
-            pathResolver.getAllPaths(packageableCollection.getProguardConfigs())),
+            pathResolver.deprecatedAllPaths(packageableCollection.getProguardConfigs())),
         commands,
         buildableContext);
 

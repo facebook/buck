@@ -132,7 +132,8 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             getResolver().getMappedPaths(components.getModules()),
             getResolver().getMappedPaths(components.getResources()),
             getResolver().getMappedPaths(components.getNativeLibraries()),
-            ImmutableSet.copyOf(getResolver().getAllPaths(components.getPrebuiltLibraries())),
+            ImmutableSet.copyOf(
+                getResolver().deprecatedAllPaths(components.getPrebuiltLibraries())),
             components.isZipSafe().or(true)));
 
     // Record the executable package for caching.

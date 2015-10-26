@@ -53,7 +53,7 @@ public class AppleDescriptionsTest {
             "prefix/a_file.h", new TestSourcePath("different/path/to/a_file.h"),
             "prefix/file.h", new TestSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             Paths.get("prefix"),
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.<SourcePath>of(
@@ -72,7 +72,7 @@ public class AppleDescriptionsTest {
             "a_file.h", new TestSourcePath("different/path/to/a_file.h"),
             "file.h", new TestSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.<SourcePath>of(
                     new TestSourcePath("path/to/some_file.h"),
@@ -91,7 +91,7 @@ public class AppleDescriptionsTest {
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             Paths.get("prefix"),
             SourceList.ofNamedSources(headerMap)));
   }
@@ -106,7 +106,7 @@ public class AppleDescriptionsTest {
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             SourceList.ofNamedSources(headerMap)));
   }
 
@@ -120,7 +120,7 @@ public class AppleDescriptionsTest {
             "prefix/file.h", new TestSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get("prefix"),
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             ImmutableSet.<SourcePath>of(
                 new TestSourcePath("path/to/some_file.h"),
                 new TestSourcePath("path/to/another_file.h"),
@@ -138,7 +138,7 @@ public class AppleDescriptionsTest {
             "file.h", new TestSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get(""),
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction(),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction(),
             ImmutableSet.<SourcePath>of(
                 new TestSourcePath("path/to/some_file.h"),
                 new TestSourcePath("path/to/another_file.h"),

@@ -54,7 +54,7 @@ public class SrcZipAwareFileBundler {
     ImmutableMap.Builder<Path, Path> links = ImmutableMap.builder();
 
     for (SourcePath sourcePath : toCopy) {
-      Path resolved = resolver.getPath(sourcePath);
+      Path resolved = resolver.deprecatedGetPath(sourcePath);
 
       if (resolved.toString().endsWith(Javac.SRC_ZIP) ||
           resolved.toString().endsWith(Javac.SRC_JAR)) {

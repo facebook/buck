@@ -283,7 +283,7 @@ public class Project {
         AndroidPackageableCollection packageableCollection =
             androidBinary.getAndroidPackageableCollection();
         noDxJarsBuilder.addAll(
-            resolver.getAllPaths(packageableCollection.getNoDxClasspathEntries()));
+            resolver.deprecatedAllPaths(packageableCollection.getNoDxClasspathEntries()));
       }
 
       final Optional<Path> rJava;
@@ -427,7 +427,7 @@ public class Project {
         module.resFolder =
             createRelativeResourcesPath(
                 Optional.fromNullable(androidResource.getRes())
-                    .transform(resolver.getPathFunction())
+                    .transform(resolver.deprecatedPathFunction())
                     .orNull(),
                 target);
         module.isAndroidLibraryProject = true;
@@ -731,7 +731,7 @@ public class Project {
             Sets.intersection(
                 noDxJars,
                 FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
-                    .transform(resolver.getPathFunction())
+                    .transform(resolver.deprecatedPathFunction())
                     .toSet()));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
@@ -924,7 +924,7 @@ public class Project {
     String name;
     if (rule instanceof PrebuiltJar) {
       PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
-      String binaryJar = resolver.getPath(prebuiltJar.getBinaryJar()).toString();
+      String binaryJar = resolver.deprecatedGetPath(prebuiltJar.getBinaryJar()).toString();
       return getIntellijNameForBinaryJar(binaryJar);
     } else {
       Path basePath = rule.getBuildTarget().getBasePath();
@@ -986,9 +986,9 @@ public class Project {
 
       PrebuiltJar prebuiltJar = (PrebuiltJar) libraryJar;
 
-      String binaryJar = resolver.getPath(prebuiltJar.getBinaryJar()).toString();
+      String binaryJar = resolver.deprecatedGetPath(prebuiltJar.getBinaryJar()).toString();
       String sourceJar = prebuiltJar.getSourceJar().isPresent()
-          ? resolver.getPath(prebuiltJar.getSourceJar().get()).toString()
+          ? resolver.deprecatedGetPath(prebuiltJar.getSourceJar().get()).toString()
           : null;
       String javadocUrl = prebuiltJar.getJavadocUrl().orNull();
       libraries.add(new SerializablePrebuiltJarRule(name, binaryJar, sourceJar, javadocUrl));

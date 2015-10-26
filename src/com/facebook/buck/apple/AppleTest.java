@@ -266,7 +266,7 @@ public class AppleTest
       XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
               getProjectFilesystem(),
-              getResolver().getResolvedPath(xctool.get()),
+              getResolver().getAbsolutePath(xctool.get()),
               xctoolStutterTimeout,
               platformName,
               destinationSpecifierArg,

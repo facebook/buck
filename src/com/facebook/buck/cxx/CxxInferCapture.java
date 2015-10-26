@@ -125,7 +125,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
                 FluentIterable.from(prefixHeader.asSet())
-                    .transform(getResolver().getPathFunction())
+                    .transform(getResolver().deprecatedPathFunction())
                     .transform(Functions.toStringFunction())))
         .addAll(
             MoreIterables.zipAndConcat(
@@ -161,7 +161,7 @@ public class CxxInferCapture extends AbstractBuildRule implements RuleKeyAppenda
         .add("-x", inputType.getLanguage())
         .add("-o", output.toString()) // TODO(martinoluca): Use -fsyntax-only for better perf
         .add("-c")
-        .add(getResolver().getPath(input).toString())
+        .add(getResolver().deprecatedGetPath(input).toString())
         .build();
   }
 

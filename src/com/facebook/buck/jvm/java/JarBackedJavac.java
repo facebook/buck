@@ -95,7 +95,7 @@ public class JarBackedJavac extends Jsr199Javac {
                     if (rule instanceof JavaLibrary) {
                       paths.addAll(((JavaLibrary) rule).getTransitiveClasspathEntries().values());
                     } else {
-                      paths.add(resolver.getPath(input));
+                      paths.add(resolver.deprecatedGetPath(input));
                     }
                     return paths;
                   }

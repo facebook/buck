@@ -38,7 +38,7 @@ public class PathRelativizerTest {
     outputPath = Paths.get("output0/output1");
     pathRelativizer = new PathRelativizer(
         outputPath,
-        new SourcePathResolver(new BuildRuleResolver()).getPathFunction());
+        new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction());
   }
 
   @Test

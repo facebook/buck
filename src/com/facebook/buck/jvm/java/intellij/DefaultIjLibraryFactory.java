@@ -41,7 +41,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
   public interface IjLibraryFactoryResolver {
     /**
-     * see {@link SourcePathResolver#getPath(SourcePath)}
+     * see {@link SourcePathResolver#deprecatedGetPath(SourcePath)}
      */
     Path getPath(SourcePath path);
 

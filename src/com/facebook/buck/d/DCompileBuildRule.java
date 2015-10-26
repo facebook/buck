@@ -86,7 +86,7 @@ public class DCompileBuildRule extends AbstractBuildRule {
             compiler.getCommandPrefix(getResolver()),
             compilerFlags,
             outputPath,
-            sourcePathResolver.getAllPaths(sources)));
+            sourcePathResolver.deprecatedAllPaths(sources)));
     return steps.build();
   }
 

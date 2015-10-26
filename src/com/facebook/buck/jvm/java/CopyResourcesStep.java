@@ -115,7 +115,7 @@ public class CopyResourcesStep implements Step {
 
 
       Optional<BuildRule> underlyingRule = resolver.getRule(rawResource);
-      Path pathToResource = resolver.getPath(rawResource);
+      Path pathToResource = resolver.deprecatedGetPath(rawResource);
 
       String resource = null;
 
@@ -155,7 +155,7 @@ public class CopyResourcesStep implements Step {
                   "%s%s%s",
                   targetPackageDir,
                   targetPackageDir.isEmpty() ? "" : "/",
-                  resolver.getPath(rawResource).getFileName()));
+                  resolver.deprecatedGetPath(rawResource).getFileName()));
         } else {
           relativeSymlinkPath = Paths.get(resource.substring(lastIndex));
         }

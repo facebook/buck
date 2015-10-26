@@ -84,7 +84,7 @@ public class Lex extends AbstractBuildRule {
             flags,
             outputSource,
             outputHeader,
-            getResolver().getPath(input)));
+            getResolver().deprecatedGetPath(input)));
   }
 
   @Nullable

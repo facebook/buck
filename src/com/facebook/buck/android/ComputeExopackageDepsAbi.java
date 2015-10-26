@@ -36,6 +36,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -163,15 +164,16 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
 
               // Same deal for native libs as assets.
               for (SourcePath libDir : packageableCollection.getNativeLibAssetsDirectories()) {
-                for (Path nativeFile :
-                     getProjectFilesystem().getFilesUnderPath(getResolver().getPath(libDir))) {
+                ImmutableSet<Path> allNativeFiles = getProjectFilesystem()
+                    .getFilesUnderPath(getResolver().deprecatedGetPath(libDir));
+                for (Path nativeFile : allNativeFiles) {
                   filesToHash.put(nativeFile, "native_lib_as_asset");
                 }
               }
 
               // Resources get copied from third-party JARs, so hash them.
               for (SourcePath jar : packageableCollection.getPathsToThirdPartyJars()) {
-                filesToHash.put(getResolver().getPath(jar), "third-party jar");
+                filesToHash.put(getResolver().deprecatedGetPath(jar), "third-party jar");
               }
 
               // The last input is the keystore.

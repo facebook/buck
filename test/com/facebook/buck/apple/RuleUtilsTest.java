@@ -46,7 +46,7 @@ public class RuleUtilsTest {
 
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     ImmutableList<GroupedSource> sources = RuleUtils.createGroupsFromSourcePaths(
-        resolver.getPathFunction(),
+        resolver.deprecatedPathFunction(),
         input,
         /* extraXcodeSources */ ImmutableSortedSet.<SourcePath>of(),
         /* publicHeaders */ ImmutableSortedSet.<SourcePath>of(),
@@ -131,7 +131,7 @@ public class RuleUtilsTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver.getPathFunction(),
+            resolver.deprecatedPathFunction(),
             ImmutableList.<SourceWithFlags>of(),
             ImmutableSortedSet.<SourcePath>of(),
             ImmutableList.<SourcePath>of(),
@@ -166,7 +166,7 @@ public class RuleUtilsTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver.getPathFunction(),
+            resolver.deprecatedPathFunction(),
             ImmutableList.<SourceWithFlags>of(),
             ImmutableSortedSet.<SourcePath>of(),
             ImmutableList.<SourcePath>of(),
@@ -187,7 +187,7 @@ public class RuleUtilsTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver.getPathFunction(),
+            resolver.deprecatedPathFunction(),
             ImmutableList.<SourceWithFlags>of(),
             ImmutableList.<SourcePath>of(),
             ImmutableList.<SourcePath>of(),
@@ -203,7 +203,7 @@ public class RuleUtilsTest {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver.getPathFunction(),
+            resolver.deprecatedPathFunction(),
             ImmutableList.<SourceWithFlags>of(),
             ImmutableList.<SourcePath>of(),
             ImmutableList.<SourcePath>of(),
@@ -290,7 +290,7 @@ public class RuleUtilsTest {
         subgroups,
         entries,
         new RuleUtils.GroupedSourceNameComparator(
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction()),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction()),
         Paths.get("root"),
         Paths.get("root"));
 
@@ -341,7 +341,7 @@ public class RuleUtilsTest {
         subgroups,
         entries,
         new RuleUtils.GroupedSourceNameComparator(
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction()),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction()),
         Paths.get("root"),
         Paths.get("root"));
 
@@ -362,7 +362,7 @@ public class RuleUtilsTest {
         subgroups,
         entries,
         new RuleUtils.GroupedSourceNameComparator(
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction()),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction()),
         Paths.get("root"),
         Paths.get("root"));
 
@@ -380,7 +380,7 @@ public class RuleUtilsTest {
         subgroups,
         entries,
         new RuleUtils.GroupedSourceNameComparator(
-            new SourcePathResolver(new BuildRuleResolver()).getPathFunction()),
+            new SourcePathResolver(new BuildRuleResolver()).deprecatedPathFunction()),
         Paths.get("root"),
         Paths.get("root"));
 

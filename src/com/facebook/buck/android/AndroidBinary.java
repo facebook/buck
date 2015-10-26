@@ -400,7 +400,7 @@ public class AndroidBinary
       for (SourcePath nativeLibDir : packageableCollection.getNativeLibAssetsDirectories()) {
         CopyNativeLibraries.copyNativeLibrary(
             getProjectFilesystem(),
-            getResolver().getPath(nativeLibDir),
+            getResolver().deprecatedGetPath(nativeLibDir),
             libSubdirectory,
             cpuFilters,
             steps);
@@ -543,7 +543,7 @@ public class AndroidBinary
         nativeLibraryDirectories,
         zipFiles.build(),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
-            .transform(getResolver().getPathFunction())
+            .transform(getResolver().deprecatedPathFunction())
             .toSet(),
         keystore.getPathToStore(),
         keystore.getPathToPropertiesFile(),
@@ -670,7 +670,7 @@ public class AndroidBinary
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
           ImmutableSet.copyOf(
-              getResolver().getAllPaths(packageableCollection.getProguardConfigs())),
+              getResolver().deprecatedAllPaths(packageableCollection.getProguardConfigs())),
           steps,
           buildableContext);
     }
@@ -826,7 +826,7 @@ public class AndroidBinary
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(getResolver().getPath(proguardConfig.get()));
+      proguardConfigsBuilder.add(getResolver().deprecatedGetPath(proguardConfig.get()));
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.
@@ -940,10 +940,13 @@ public class AndroidBinary
           proguardFullConfigFile,
           proguardMappingFile,
           dexSplitMode,
-          dexSplitMode.getPrimaryDexScenarioFile().transform(getResolver().getPathFunction()),
-          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver().getPathFunction()),
-          dexSplitMode.getSecondaryDexHeadClassesFile().transform(getResolver().getPathFunction()),
-          dexSplitMode.getSecondaryDexTailClassesFile().transform(getResolver().getPathFunction()),
+          dexSplitMode.getPrimaryDexScenarioFile()
+              .transform(getResolver().deprecatedPathFunction()),
+          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver().deprecatedPathFunction()),
+          dexSplitMode.getSecondaryDexHeadClassesFile()
+              .transform(getResolver().deprecatedPathFunction()),
+          dexSplitMode.getSecondaryDexTailClassesFile()
+              .transform(getResolver().deprecatedPathFunction()),
           zipSplitReportDir);
       steps.add(splitZipCommand);
 

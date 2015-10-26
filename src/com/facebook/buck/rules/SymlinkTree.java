@@ -71,7 +71,7 @@ public class SymlinkTree
   private ImmutableMap<Path, Path> resolveLinks() {
     ImmutableMap.Builder<Path, Path> resolvedLinks = ImmutableMap.builder();
     for (ImmutableMap.Entry<Path, SourcePath> entry : links.entrySet()) {
-      resolvedLinks.put(entry.getKey(), getResolver().getPath(entry.getValue()));
+      resolvedLinks.put(entry.getKey(), getResolver().deprecatedGetPath(entry.getValue()));
     }
     return resolvedLinks.build();
   }
@@ -90,7 +90,7 @@ public class SymlinkTree
     for (Map.Entry<Path, SourcePath> entry : links.entrySet()) {
       builder.setReflectively(
           "link(" + entry.getKey().toString() + ")",
-          getResolver().getPath(entry.getValue()).toString());
+          getResolver().deprecatedGetPath(entry.getValue()).toString());
     }
     return builder;
   }

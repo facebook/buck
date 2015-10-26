@@ -130,7 +130,7 @@ public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactor
     protected RuleKeyBuilder setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
         deps.addAll(pathResolver.getRule(sourcePath).asSet());
-        setSingleValue(pathResolver.getPath(sourcePath));
+        setSingleValue(pathResolver.deprecatedGetPath(sourcePath));
       }
       return this;
     }

@@ -40,7 +40,7 @@ public class SourcePathArg extends Arg {
 
   @Override
   public String stringify() {
-    return pathResolver.getPath(path).toString();
+    return pathResolver.deprecatedGetPath(path).toString();
   }
 
   @Override

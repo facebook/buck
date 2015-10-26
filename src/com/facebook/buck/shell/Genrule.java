@@ -146,7 +146,7 @@ public class Genrule extends AbstractBuildRule implements HasOutputName, Support
     this.cmdExe = cmdExe;
     this.srcsToAbsolutePaths = FluentIterable
         .from(srcs)
-        .transform(resolver.getPathFunction())
+        .transform(resolver.deprecatedPathFunction())
         .toMap(new Function<Path, Path>() {
           @Override
           public Path apply(Path src) {

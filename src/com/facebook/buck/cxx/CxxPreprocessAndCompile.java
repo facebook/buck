@@ -298,7 +298,9 @@ public class CxxPreprocessAndCompile
     try {
       for (Map.Entry<Path, SourcePath> entry :
            CxxHeaders.concat(includes).getFullNameToPathMap().entrySet()) {
-        replacementPathsBuilder.put(entry.getKey(), getResolver().getPath(entry.getValue()));
+        replacementPathsBuilder.put(
+            entry.getKey(),
+            getResolver().deprecatedGetPath(entry.getValue()));
       }
     } catch (CxxHeaders.ConflictingHeadersException e) {
       throw e.getHumanReadableExceptionForBuildTarget(getBuildTarget());
@@ -335,7 +337,7 @@ public class CxxPreprocessAndCompile
         operation,
         output,
         getDepFilePath(),
-        getResolver().getPath(input),
+        getResolver().deprecatedGetPath(input),
         inputType,
         preprocessorCommand,
         compilerCommand,
@@ -384,7 +386,7 @@ public class CxxPreprocessAndCompile
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-include"),
                 FluentIterable.from(prefixHeader.asSet())
-                    .transform(getResolver().getPathFunction())
+                    .transform(getResolver().deprecatedPathFunction())
                     .transform(Functions.toStringFunction())))
         .addAll(
             MoreIterables.zipAndConcat(
@@ -437,7 +439,7 @@ public class CxxPreprocessAndCompile
     cmd.add("-x", preprocessBuildRule.inputType.getLanguage());
     cmd.add("-c");
     cmd.add("-o", output.toString());
-    cmd.add(getResolver().getPath(preprocessBuildRule.input).toString());
+    cmd.add(getResolver().deprecatedGetPath(preprocessBuildRule.input).toString());
     return cmd.build();
   }
 
@@ -499,22 +501,22 @@ public class CxxPreprocessAndCompile
     if (preprocessor.isPresent()) {
       inputs.addAll(
           Ordering.natural().immutableSortedCopy(
-              resolver.getAllPaths(preprocessor.get().getInputs())));
+              resolver.deprecatedAllPaths(preprocessor.get().getInputs())));
     }
 
     // If present, include all inputs coming from the compiler tool.
     if (compiler.isPresent()) {
       inputs.addAll(
           Ordering.natural().immutableSortedCopy(
-              resolver.getAllPaths(compiler.get().getInputs())));
+              resolver.deprecatedAllPaths(compiler.get().getInputs())));
     }
 
     // Add the input.
-    inputs.add(resolver.getPath(input));
+    inputs.add(resolver.deprecatedGetPath(input));
 
     // Add prefix header.
     if (prefixHeader.isPresent()) {
-      inputs.add(resolver.getPath(prefixHeader.get()));
+      inputs.add(resolver.deprecatedGetPath(prefixHeader.get()));
     }
 
     // Add all dynamically detected header dependencies.
@@ -534,7 +536,7 @@ public class CxxPreprocessAndCompile
     for (HeaderSymlinkTree headerSymlinkTree :
         Iterables.filter(getDeps(), HeaderSymlinkTree.class)) {
       for (Map.Entry<Path, Path> entry : Maps
-          .transformValues(headerSymlinkTree.getFullLinks(), getResolver().getPathFunction())
+          .transformValues(headerSymlinkTree.getFullLinks(), getResolver().deprecatedPathFunction())
           .entrySet()) {
         fullHeaderMapBuilder.put(entry.getValue().toString(), entry.getKey().toString());
       }

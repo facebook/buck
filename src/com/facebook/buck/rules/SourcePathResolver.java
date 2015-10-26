@@ -43,8 +43,11 @@ public class SourcePathResolver {
     this.ruleResolver = ruleResolver;
   }
 
-  // TODO(simons): This must always return an absolute path
-  public Path getPath(SourcePath sourcePath) {
+  /**
+   * Use either {@link #getRelativePath(SourcePath)} or {@link #getAbsolutePath(SourcePath)}
+   * depending on your needs.
+   */
+  public Path deprecatedGetPath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
       return ((PathSourcePath) sourcePath).getRelativePath();
     }
@@ -65,24 +68,24 @@ public class SourcePathResolver {
     return path;
   }
 
-  public Function<SourcePath, Path> getPathFunction() {
+  public Function<SourcePath, Path> deprecatedPathFunction() {
     return new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
-        return getPath(input);
+        return deprecatedGetPath(input);
       }
     };
   }
 
-  public ImmutableList<Path> getAllPaths(Iterable<? extends SourcePath> sourcePaths) {
+  public ImmutableList<Path> deprecatedAllPaths(Iterable<? extends SourcePath> sourcePaths) {
     // Maintain ordering and duplication if necessary.
-    return FluentIterable.from(sourcePaths).transform(getPathFunction()).toList();
+    return FluentIterable.from(sourcePaths).transform(deprecatedPathFunction()).toList();
   }
 
   public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
     ImmutableMap.Builder<T, Path> paths = ImmutableMap.builder();
     for (ImmutableMap.Entry<T, SourcePath> entry : sourcePathMap.entrySet()) {
-      paths.put(entry.getKey(), getPath(entry.getValue()));
+      paths.put(entry.getKey(), deprecatedGetPath(entry.getValue()));
     }
     return paths.build();
   }
@@ -91,8 +94,8 @@ public class SourcePathResolver {
    * @return the {@link Path} for this {@code sourcPath}, resolved using its associated
    *     {@link com.facebook.buck.io.ProjectFilesystem}.
    */
-  public Path getResolvedPath(SourcePath sourcePath) {
-    Path relative = getPath(sourcePath);
+  public Path getAbsolutePath(SourcePath sourcePath) {
+    Path relative = getRelativePath(sourcePath);
 
     Optional<BuildRule> rule = getRule(sourcePath);
     if (rule.isPresent()) {
@@ -102,11 +105,49 @@ public class SourcePathResolver {
     return ((PathSourcePath) sourcePath).getFilesystem().resolve(relative);
   }
 
-  public Function<SourcePath, Path> getResolvedPathFunction() {
+  public Function<SourcePath, Path> getAbsolutePathFunction() {
     return new Function<SourcePath, Path>() {
       @Override
       public Path apply(SourcePath input) {
-        return getResolvedPath(input);
+        return getAbsolutePath(input);
+      }
+    };
+  }
+
+  /**
+   * @return The {@link Path} the {@code sourcePath} refers to, relative to its owning
+   * {@link com.facebook.buck.io.ProjectFilesystem}.
+   */
+  public Path getRelativePath(SourcePath sourcePath) {
+    Path toReturn = null;
+
+    if (sourcePath instanceof PathSourcePath) {
+      toReturn = ((PathSourcePath) sourcePath).getRelativePath();
+    } else {
+      Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
+      BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+      Optional<Path> resolvedPath = buildTargetSourcePath.getResolvedPath();
+      if (resolvedPath.isPresent()) {
+        toReturn = resolvedPath.get();
+      } else {
+        toReturn = ruleResolver.getRule(buildTargetSourcePath.getTarget()).getPathToOutput();
+      }
+    }
+
+    if (toReturn == null) {
+      throw new HumanReadableException("No known output for: %s", sourcePath);
+    }
+
+    Preconditions.checkState(!toReturn.isAbsolute());
+
+    return toReturn;
+  }
+
+  public Function<SourcePath, Path> getRelativePathFunction() {
+    return new Function<SourcePath, Path>() {
+      @Override
+      public Path apply(SourcePath input) {
+        return getRelativePath(input);
       }
     };
   }
@@ -122,18 +163,6 @@ public class SourcePathResolver {
     }
     Preconditions.checkState(sourcePath instanceof BuildTargetSourcePath);
     return Optional.of(ruleResolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget()));
-  }
-
-  /**
-   * @return An {@link Optional} containing the {@link Path} the {@code sourcePath} refers to if it
-   *         doesn't refer to the output of a {@link BuildRule}, or {@code absent} if it does.
-   */
-  public Optional<Path> getRelativePath(SourcePath sourcePath) {
-    if (sourcePath instanceof BuildTargetSourcePath) {
-      return Optional.absent();
-    }
-    Preconditions.checkState(sourcePath instanceof PathSourcePath);
-    return Optional.of(((PathSourcePath) sourcePath).getRelativePath());
   }
 
   /**

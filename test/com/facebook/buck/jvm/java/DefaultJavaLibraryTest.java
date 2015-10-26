@@ -716,7 +716,9 @@ public class DefaultJavaLibraryTest {
             .addSrc(Paths.get("Source.java"))
             .build(resolver, filesystem);
     filesystem.writeContentsToPath("JAR contents", dep.getPathToOutput());
-    filesystem.writeContentsToPath("ABI JAR contents", pathResolver.getPath(dep.getAbiJar().get()));
+    filesystem.writeContentsToPath(
+        "ABI JAR contents",
+        pathResolver.deprecatedGetPath(dep.getAbiJar().get()));
     JavaLibrary library =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep.getBuildTarget())
@@ -758,7 +760,7 @@ public class DefaultJavaLibraryTest {
             .build(resolver, filesystem);
     filesystem.writeContentsToPath(
         "changed ABI JAR contents",
-        pathResolver.getPath(dep.getAbiJar().get()));
+        pathResolver.deprecatedGetPath(dep.getAbiJar().get()));
     library =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
             .addDep(dep.getBuildTarget())
@@ -790,7 +792,7 @@ public class DefaultJavaLibraryTest {
     filesystem.writeContentsToPath("JAR contents", exportedDep.getPathToOutput());
     filesystem.writeContentsToPath(
         "ABI JAR contents",
-        pathResolver.getPath(exportedDep.getAbiJar().get()));
+        pathResolver.deprecatedGetPath(exportedDep.getAbiJar().get()));
     JavaLibrary dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addExportedDep(exportedDep.getBuildTarget())
@@ -841,7 +843,7 @@ public class DefaultJavaLibraryTest {
             .build(resolver, filesystem);
     filesystem.writeContentsToPath(
         "changed ABI JAR contents",
-        pathResolver.getPath(exportedDep.getAbiJar().get()));
+        pathResolver.deprecatedGetPath(exportedDep.getAbiJar().get()));
     dep =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addExportedDep(exportedDep.getBuildTarget())
@@ -877,7 +879,7 @@ public class DefaultJavaLibraryTest {
     filesystem.writeContentsToPath("JAR contents", exportedDep.getPathToOutput());
     filesystem.writeContentsToPath(
         "ABI JAR contents",
-        pathResolver.getPath(exportedDep.getAbiJar().get()));
+        pathResolver.deprecatedGetPath(exportedDep.getAbiJar().get()));
     JavaLibrary dep2 =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep2"))
             .addExportedDep(exportedDep.getBuildTarget())
@@ -936,7 +938,7 @@ public class DefaultJavaLibraryTest {
             .build(resolver, filesystem);
     filesystem.writeContentsToPath(
         "changed ABI JAR contents",
-        pathResolver.getPath(exportedDep.getAbiJar().get()));
+        pathResolver.deprecatedGetPath(exportedDep.getAbiJar().get()));
     dep2 =
         (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep2"))
             .addExportedDep(exportedDep.getBuildTarget())

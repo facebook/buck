@@ -203,7 +203,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(
         new MkdirAndSymlinkFileStep(
             getProjectFilesystem(),
-            getResolver().getPath(manifest),
+            getResolver().deprecatedGetPath(manifest),
             getAndroidManifestXml()));
 
     // Copy the transitive closure of files in assets to a single directory, if any.
@@ -218,7 +218,7 @@ public class AaptPackageResources extends AbstractBuildRule
         ImmutableList.Builder<Step> commands = ImmutableList.builder();
         try {
           createAllAssetsDirectory(
-              ImmutableSet.copyOf(getResolver().getAllPaths(assetsDirectories)),
+              ImmutableSet.copyOf(getResolver().deprecatedAllPaths(assetsDirectories)),
               commands,
               getProjectFilesystem());
         } catch (IOException e) {

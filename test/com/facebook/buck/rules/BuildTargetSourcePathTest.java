@@ -41,7 +41,7 @@ public class BuildTargetSourcePathTest {
     BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
 
     try {
-      pathResolver.getPath(path);
+      pathResolver.deprecatedGetPath(path);
       fail();
     } catch (HumanReadableException e) {
       assertEquals("No known output for: " + target.getFullyQualifiedName(), e.getMessage());
@@ -62,7 +62,7 @@ public class BuildTargetSourcePathTest {
 
     BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
 
-    Path resolved = pathResolver.getPath(path);
+    Path resolved = pathResolver.deprecatedGetPath(path);
 
     assertEquals(Paths.get("cheese"), resolved);
   }
@@ -85,7 +85,7 @@ public class BuildTargetSourcePathTest {
         rule.getBuildTarget(),
         path);
     assertEquals(target, buildTargetSourcePath.getTarget());
-    assertEquals(path, pathResolver.getPath(buildTargetSourcePath));
+    assertEquals(path, pathResolver.deprecatedGetPath(buildTargetSourcePath));
   }
 
   @Test

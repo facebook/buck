@@ -90,7 +90,7 @@ public class Yacc extends AbstractBuildRule {
             yacc.getCommandPrefix(getResolver()),
             flags,
             outputPrefix,
-            getResolver().getPath(input)));
+            getResolver().deprecatedGetPath(input)));
   }
 
   @Nullable

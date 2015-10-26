@@ -160,7 +160,7 @@ public class AaptPackageResourcesTest {
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory =
         aaptPackageResources.createAllAssetsDirectory(
-            ImmutableSet.copyOf(pathResolver.getAllPaths(assetsDirectories)),
+            ImmutableSet.copyOf(pathResolver.deprecatedAllPaths(assetsDirectories)),
             commands,
             filesystem);
     EasyMock.verify(resourcesFilter);
@@ -256,7 +256,7 @@ public class AaptPackageResourcesTest {
     // Invoke createAllAssetsDirectory(), the method under test.
     Optional<Path> allAssetsDirectory =
         aaptPackageResources.createAllAssetsDirectory(
-            ImmutableSet.copyOf(pathResolver.getAllPaths(assetsDirectories)),
+            ImmutableSet.copyOf(pathResolver.deprecatedAllPaths(assetsDirectories)),
             commands,
             filesystem);
     EasyMock.verify(resourcesFilter);

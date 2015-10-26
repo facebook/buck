@@ -397,7 +397,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public ImmutableSortedSet<Path> getJavaSrcs() {
-    return ImmutableSortedSet.copyOf(getResolver().getAllPaths(srcs));
+    return ImmutableSortedSet.copyOf(getResolver().deprecatedAllPaths(srcs));
   }
 
   @Override

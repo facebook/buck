@@ -27,7 +27,6 @@ import com.facebook.buck.util.hash.AppendingHasher;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
@@ -98,9 +97,10 @@ public class RuleKeyBuilder {
       feed(sourcePath.toString().getBytes());
       return setSingleValue(buildRule.get());
     } else {
-      Optional<Path> relativePath = resolver.getRelativePath(sourcePath);
-      Preconditions.checkState(relativePath.isPresent());
-      Path path = relativePath.get();
+      // The original version of this expected the path to be relative, however, sometimes the
+      // deprecated method returned an absolute path, which is obviously less than ideal. Maintain
+      // the old behaviour until we root out the places where things aren't working as expected.
+      Path path = resolver.deprecatedGetPath(sourcePath);
       return setSingleValue(path);
     }
   }

@@ -251,7 +251,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
           }
         } else {
-          builder.setJavacPath(resolver.getPath(right));
+          builder.setJavacPath(resolver.deprecatedGetPath(right));
         }
       }
     } else {

@@ -71,7 +71,7 @@ public class Archive extends AbstractBuildRule {
             getProjectFilesystem().getRootPath(),
             archiver.getCommandPrefix(getResolver()),
             output,
-            getResolver().getAllPaths(inputs)),
+            getResolver().deprecatedAllPaths(inputs)),
         new FileScrubberStep(getProjectFilesystem(), output, archiver.getScrubbers()));
   }
 

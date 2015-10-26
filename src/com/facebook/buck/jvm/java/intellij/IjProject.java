@@ -84,7 +84,7 @@ public class IjProject {
             if (rule.isPresent()) {
               requiredBuildTargets.add(rule.get().getBuildTarget());
             }
-            return sourcePathResolver.getPath(path);
+            return sourcePathResolver.deprecatedGetPath(path);
           }
 
           @Override
@@ -114,7 +114,7 @@ public class IjProject {
 
           @Override
           public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode) {
-            return sourcePathResolver.getPath(targetNode.getConstructorArg().manifest);
+            return sourcePathResolver.deprecatedGetPath(targetNode.getConstructorArg().manifest);
           }
 
           @Override
@@ -123,7 +123,7 @@ public class IjProject {
             return targetNode
                 .getConstructorArg()
                 .proguardConfig
-                .transform(sourcePathResolver.getPathFunction());
+                .transform(sourcePathResolver.deprecatedPathFunction());
           }
 
           @Override
@@ -132,7 +132,7 @@ public class IjProject {
             return targetNode
                 .getConstructorArg()
                 .res
-                .transform(sourcePathResolver.getPathFunction());
+                .transform(sourcePathResolver.deprecatedPathFunction());
           }
         };
     IjModuleGraph moduleGraph = IjModuleGraph.from(

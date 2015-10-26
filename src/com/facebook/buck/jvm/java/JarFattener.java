@@ -109,7 +109,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
       steps.add(
           new SymlinkFileStep(
               getProjectFilesystem(),
-              getResolver().getPath(entry.getValue()),
+              getResolver().deprecatedGetPath(entry.getValue()),
               fatJarDir.resolve(resource),
               /* useAbsolutePaths */ false));
     }
@@ -138,7 +138,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     steps.add(
         new SymlinkFileStep(
             getProjectFilesystem(),
-            getResolver().getPath(innerJar),
+            getResolver().deprecatedGetPath(innerJar),
             fatJarDir.resolve(FAT_JAR_INNER_JAR),
             /* useAbsolutePaths */ false));
 

@@ -114,7 +114,7 @@ public class ThriftCompiler extends AbstractBuildRule {
                 .addAll(flags)
                 .build(),
             outputDir,
-            getResolver().getPath(input),
+            getResolver().deprecatedGetPath(input),
             language,
             options,
             FluentIterable.from(headerMaps)

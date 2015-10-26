@@ -99,7 +99,7 @@ public class CommandToolTest {
             .build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
-        Matchers.contains(pathResolver.getResolvedPath(path).toString()));
+        Matchers.contains(pathResolver.getAbsolutePath(path).toString()));
 
     // Test command and inputs when using the path in a format.
     tool =
@@ -108,7 +108,7 @@ public class CommandToolTest {
             .build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
-        Matchers.contains("prefix:" + pathResolver.getResolvedPath(path)));
+        Matchers.contains("prefix:" + pathResolver.getAbsolutePath(path)));
   }
 
   @Test

@@ -83,7 +83,7 @@ public class CalculateAbi extends AbstractBuildRule implements SupportsInputBase
         new CalculateAbiStep(
             buildableContext,
             getProjectFilesystem(),
-            getResolver().getPath(binaryJar),
+            getResolver().deprecatedGetPath(binaryJar),
             getPathToOutput()));
   }
 
