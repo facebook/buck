@@ -2,6 +2,6 @@ prebuilt_jar(
   name = 'testng',
   binary_jar = 'testng-6.8.jar',
   visibility = [
-    '//src/com/facebook/buck/junit:testng',
+    '//src/com/facebook/buck/testrunner:testng',
   ],
 )

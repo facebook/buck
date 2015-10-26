@@ -6,7 +6,7 @@ java_library(
   ],
   visibility = [
     '//src/com/facebook/buck/jvm/java:steps',
-    '//src/com/facebook/buck/junit:junit',
+    '//src/com/facebook/buck/testrunner:junit',
     '//test/com/facebook/buck/jvm/java:java',
     '//test/com/facebook/buck/jvm/java/runner:runner',
   ],

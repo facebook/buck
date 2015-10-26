@@ -52,10 +52,10 @@ public class JUnitStep extends ShellStep {
   // Note that the default value is used when `buck test --all` is run on Buck itself.
   @VisibleForTesting
   static final String JUNIT_TEST_RUNNER_CLASS_NAME =
-      "com.facebook.buck.junit.JUnitMain";
+      "com.facebook.buck.testrunner.JUnitMain";
   @VisibleForTesting
   static final String TESTNG_TEST_RUNNER_CLASS_NAME =
-      "com.facebook.buck.junit.TestNGMain";
+      "com.facebook.buck.testrunner.TestNGMain";
 
   private static final Path TESTRUNNER_CLASSES =
       Paths.get(
