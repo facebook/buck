@@ -16,7 +16,9 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
+import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
+import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.DummyRDotJava;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -29,7 +31,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -96,10 +97,10 @@ public class IjProject {
             return Optional.fromNullable(rule.getPathToOutput());
           }
         });
-    IjModuleFactory moduleFactory = new IjModuleFactory(
-        new Function<TargetNode<?>, Optional<Path>>() {
+    IjModuleFactory.IjModuleFactoryResolver moduleFactoryResolver =
+        new IjModuleFactory.IjModuleFactoryResolver() {
           @Override
-          public Optional<Path> apply(TargetNode<?> targetNode) {
+          public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {
             BuildTarget dummyRDotJavaTarget = AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
                 targetNode.getBuildTarget());
             Optional<BuildRule> dummyRDotJavaRule =
@@ -110,11 +111,34 @@ public class IjProject {
             }
             return Optional.absent();
           }
-        });
+
+          @Override
+          public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode) {
+            return sourcePathResolver.getPath(targetNode.getConstructorArg().manifest);
+          }
+
+          @Override
+          public Optional<Path> getProguardConfigPath(
+              TargetNode<AndroidBinaryDescription.Arg> targetNode) {
+            return targetNode
+                .getConstructorArg()
+                .proguardConfig
+                .transform(sourcePathResolver.getPathFunction());
+          }
+
+          @Override
+          public Optional<Path> getAndroidResourcePath(
+              TargetNode<AndroidResourceDescription.Arg> targetNode) {
+            return targetNode
+                .getConstructorArg()
+                .res
+                .transform(sourcePathResolver.getPathFunction());
+          }
+        };
     IjModuleGraph moduleGraph = IjModuleGraph.from(
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
-        moduleFactory,
+        new IjModuleFactory(moduleFactoryResolver),
         aggregationMode);
     JavaPackageFinder parsingJavaPackageFinder = ParsingJavaPackageFinder.preparse(
         javaFileParser,

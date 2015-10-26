@@ -21,7 +21,9 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
@@ -576,7 +578,7 @@ public class IjModuleGraphTest {
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?>> targets,
       final ImmutableMap<TargetNode<?>, Path> javaLibraryPaths,
-      Function<? super TargetNode<?>, Optional<Path>> rDotJavaClassPathResolver,
+      final Function<? super TargetNode<?>, Optional<Path>> rDotJavaClassPathResolver,
       IjModuleGraph.AggregationMode aggregationMode) {
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
     DefaultIjLibraryFactory.IjLibraryFactoryResolver sourceOnlyResolver =
@@ -591,7 +593,30 @@ public class IjModuleGraphTest {
             return Optional.fromNullable(javaLibraryPaths.get(targetNode));
           }
         };
-    IjModuleFactory moduleFactory = new IjModuleFactory(rDotJavaClassPathResolver);
+    IjModuleFactory moduleFactory = new IjModuleFactory(
+        new IjModuleFactory.IjModuleFactoryResolver() {
+          @Override
+          public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {
+            return rDotJavaClassPathResolver.apply(targetNode);
+          }
+
+          @Override
+          public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode) {
+            return Paths.get("TestAndroidManifest.xml");
+          }
+
+          @Override
+          public Optional<Path> getProguardConfigPath(
+              TargetNode<AndroidBinaryDescription.Arg> targetNode) {
+            return Optional.absent();
+          }
+
+          @Override
+          public Optional<Path> getAndroidResourcePath(
+              TargetNode<AndroidResourceDescription.Arg> targetNode) {
+            return Optional.absent();
+          }
+        });
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraph.from(
         TargetGraphFactory.newInstance(targets),

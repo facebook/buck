@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.intellij;
 
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 
@@ -35,12 +34,12 @@ abstract class AbstractIjModuleAndroidFacet {
   /**
    * @return path to the AndroidManifest.xml file.
    */
-  public abstract Optional<SourcePath> getManifestPath();
+  public abstract Optional<Path> getManifestPath();
 
   /**
    * @return paths to resources (usually stuff under the res/ folder).
    */
-  public abstract Set<SourcePath> getResourcePaths();
+  public abstract Set<Path> getResourcePaths();
 
   /**
    * @return paths to assets (usually stuff under the assets/ folder).
@@ -48,12 +47,7 @@ abstract class AbstractIjModuleAndroidFacet {
   public abstract Set<Path> getAssetPaths();
 
   /**
-   * @return paths to native libraries to be included in the apk.
-   */
-  public abstract Set<Path> getNativeLibsPaths();
-
-  /**
    * @return paths to the proguard configuration.
    */
-  public abstract Optional<SourcePath> getProguardConfigPath();
+  public abstract Optional<Path> getProguardConfigPath();
 }

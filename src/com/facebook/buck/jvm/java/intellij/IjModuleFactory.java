@@ -73,6 +73,37 @@ public class IjModuleFactory {
       };
 
   /**
+   * Provides the {@link IjModuleFactory} with {@link Path}s to various elements of the project.
+   */
+  public interface IjModuleFactoryResolver {
+    /**
+     * @param targetNode node to generate the path to
+     * @return  the project-relative path to a directory structure under which the R.class file can
+     *     be found (the structure will be the same as the package path of the R class). A path
+     *     should be returned only if the given TargetNode requires the R.class to compile.
+     */
+    Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode);
+
+    /**
+     * @param targetNode node describing the Android binary to get the manifest of.
+     * @return path on disk to the AndroidManifest.
+     */
+    Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode);
+
+    /**
+     * @param targetNode node describing the Android binary to get the Proguard config of.
+     * @return path on disk to the proguard config.
+     */
+    Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescription.Arg> targetNode);
+
+    /**
+     * @param targetNode node describing the Android resources to get the path of.
+     * @return path on disk to the resources folder.
+     */
+    Optional<Path> getAndroidResourcePath(TargetNode<AndroidResourceDescription.Arg> targetNode);
+  }
+
+  /**
    * Holds all of the mutable state required during {@link IjModule} creation.
    */
   private static class ModuleBuildContext {
@@ -220,17 +251,12 @@ public class IjModuleFactory {
   }
 
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
-  private final Function<? super TargetNode<?>, Optional<Path>> dummyRDotJavaClassPathResolver;
+  private final IjModuleFactoryResolver moduleFactoryResolver;
 
   /**
-   * @param dummyRDotJavaClassPathResolver function to find the project-relative path to a
-   *                                       directory structure under which the R.class file can be
-   *                                       found (the structure will be the same as the package path
-   *                                       of the R class). A path should be returned only if the
-   *                                       given TargetNode requires the R.class to compile.
+   * @param moduleFactoryResolver see {@link IjModuleFactoryResolver}.
    */
-  public IjModuleFactory(
-      Function<? super TargetNode<?>, Optional<Path>> dummyRDotJavaClassPathResolver) {
+  public IjModuleFactory(IjModuleFactoryResolver moduleFactoryResolver) {
     addToIndex(new AndroidBinaryModuleRule());
     addToIndex(new AndroidLibraryModuleRule());
     addToIndex(new AndroidResourceModuleRule());
@@ -239,7 +265,7 @@ public class IjModuleFactory {
     addToIndex(new JavaTestModuleRule());
     addToIndex(new RobolectricTestModuleRule());
 
-    this.dummyRDotJavaClassPathResolver = dummyRDotJavaClassPathResolver;
+    this.moduleFactoryResolver = moduleFactoryResolver;
 
     Preconditions.checkState(
         moduleRuleIndex.keySet().equals(SUPPORTED_MODULE_TYPES));
@@ -379,7 +405,7 @@ public class IjModuleFactory {
     }
   }
 
-  private static class AndroidBinaryModuleRule
+  private class AndroidBinaryModuleRule
       implements IjModuleRule<AndroidBinaryDescription.Arg> {
 
     @Override
@@ -391,12 +417,10 @@ public class IjModuleFactory {
     public void apply(TargetNode<AndroidBinaryDescription.Arg> target, ModuleBuildContext context) {
       context.addDeps(target.getDeps(), IjModuleGraph.DependencyType.PROD);
 
-      AndroidBinaryDescription.Arg arg = target.getConstructorArg();
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
-      // TODO(mkosiba): Add arg.keystore and arg.noDx.
       androidFacetBuilder
-          .setManifestPath(arg.manifest)
-          .setProguardConfigPath(arg.proguardConfig);
+          .setManifestPath(moduleFactoryResolver.getAndroidManifestPath(target))
+          .setProguardConfigPath(moduleFactoryResolver.getProguardConfigPath(target));
     }
   }
 
@@ -417,8 +441,7 @@ public class IjModuleFactory {
           true /* wantsPackagePrefix */,
           context);
       addCompiledShadowIfNeeded(target, context);
-      Optional<Path> dummyRDotJavaClassPath =
-          dummyRDotJavaClassPathResolver.apply(target);
+      Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
       if (dummyRDotJavaClassPath.isPresent()) {
         context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
       }
@@ -426,7 +449,7 @@ public class IjModuleFactory {
     }
   }
 
-  private static class AndroidResourceModuleRule
+  private class AndroidResourceModuleRule
       implements IjModuleRule<AndroidResourceDescription.Arg> {
 
     @Override
@@ -447,9 +470,8 @@ public class IjModuleFactory {
       if (arg.assets.isPresent()) {
         androidFacetBuilder.addAssetPaths(arg.assets.get());
       }
-      if (arg.res.isPresent()) {
-        androidFacetBuilder.addResourcePaths(arg.res.get());
-      }
+      androidFacetBuilder.addAllResourcePaths(
+          moduleFactoryResolver.getAndroidResourcePath(target).asSet());
     }
   }
 
