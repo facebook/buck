@@ -37,6 +37,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
@@ -188,15 +189,13 @@ public class InstallCommand extends BuildCommand {
           getArguments()).get(0);
 
       BuildTarget target = params.getParser().resolveTargetSpec(
+          spec,
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
-          params.getCell(),
-          getEnableProfiling(),
-          spec).iterator().next();
-      TargetNode<?> node = params.getParser().getTargetNode(
-          params.getBuckEventBus(),
-          params.getCell(),
-          getEnableProfiling(),
-          target);
+          params.getConsole(),
+          params.getEnvironment(),
+          getEnableProfiling()).iterator().next();
+      TargetNode<?> node = params.getParser().getTargetNode(target);
       if (node != null &&
           node.getDescription().getBuildRuleType().equals(AppleBundleDescription.TYPE)) {
         for (Flavor flavor : node.getBuildTarget().getFlavors()) {

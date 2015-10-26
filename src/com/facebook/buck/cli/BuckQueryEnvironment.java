@@ -17,17 +17,18 @@
 package com.facebook.buck.cli;
 
 
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryEnvironment;
+import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.query.QueryEnvironment;
-import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryExpression;
-import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
@@ -54,6 +55,7 @@ import java.util.Set;
  */
 public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   private final CommandRunnerParams params;
+  private final ParserConfig parserConfig;
   private final BuildFileTree buildFileTree;
   private TargetGraph graph = TargetGraph.EMPTY;
 
@@ -69,14 +71,19 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       boolean enableProfiling) {
     this.params = params;
     this.enableProfiling = enableProfiling;
+    this.parserConfig = new ParserConfig(params.getBuckConfig());
     this.buildFileTree = new FilesystemBackedBuildFileTree(
         params.getCell().getFilesystem(),
-        params.getCell().getBuildFileName());
+        parserConfig.getBuildFileName());
     this.targetPatternEvaluator = new TargetPatternEvaluator(params, enableProfiling);
   }
 
   public CommandRunnerParams getParams() {
     return params;
+  }
+
+  public ParserConfig getParserConfig() {
+    return parserConfig;
   }
 
   public TargetGraph getTargetGraph() {
@@ -122,10 +129,10 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     Preconditions.checkState(target instanceof QueryBuildTarget);
     try {
       return params.getParser().getTargetNode(
+          ((QueryBuildTarget) target).getBuildTarget(),
           params.getBuckEventBus(),
-          params.getCell(),
-          enableProfiling,
-          ((QueryBuildTarget) target).getBuildTarget());
+          params.getConsole(),
+          enableProfiling);
     } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error getting target node for %s\n%s", target, e.getMessage());
     }
@@ -204,12 +211,14 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   private void buildGraphForBuildTargets(Set<BuildTarget> targets)
       throws QueryException, InterruptedException {
     try {
-      graph = params.getParser().buildTargetGraph(
+      graph = params.getParser().buildTargetGraphForBuildTargets(
+          targets,
+          parserConfig,
           params.getBuckEventBus(),
-          params.getCell(),
-          enableProfiling,
-          targets);
-    } catch (BuildFileParseException | IOException e) {
+          params.getConsole(),
+          params.getEnvironment(),
+          enableProfiling);
+    } catch (BuildTargetException | BuildFileParseException | IOException e) {
       throw new QueryException("Error in building depencency graph");
     }
   }
@@ -250,6 +259,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     try {
       AuditOwnerCommand.OwnersReport report = AuditOwnerCommand.buildOwnersReport(
           params,
+          parserConfig,
           buildFileTree,
           files,
           /* guessForDeletedEnabled */ false);

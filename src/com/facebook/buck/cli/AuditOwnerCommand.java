@@ -18,11 +18,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.MoreExceptions;
@@ -145,12 +145,14 @@ public class AuditOwnerCommand extends AbstractCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
         params.getCell().getFilesystem(),
-        params.getCell().getBuildFileName());
+        parserConfig.getBuildFileName());
     try {
       OwnersReport report = buildOwnersReport(
           params,
+          parserConfig,
           buildFileTree,
           getArguments(),
           isGuessForDeletedEnabled());
@@ -165,14 +167,14 @@ public class AuditOwnerCommand extends AbstractCommand {
 
   static OwnersReport buildOwnersReport(
       CommandRunnerParams params,
+      ParserConfig parserConfig,
       BuildFileTree buildFileTree,
       Iterable<String> arguments,
       boolean guessForDeletedEnabled)
       throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
-    final Path rootPath = cellFilesystem.getRootPath();
+    final Path rootPath = params.getCell().getFilesystem().getRootPath();
     Preconditions.checkState(rootPath.isAbsolute());
-    Map<Path, ImmutableSet<TargetNode<?>>> targetNodes = Maps.newHashMap();
+    Map<Path, List<TargetNode<?>>> targetNodes = Maps.newHashMap();
     OwnersReport report = OwnersReport.emptyReport();
 
     for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
@@ -187,21 +189,21 @@ public class AuditOwnerCommand extends AbstractCommand {
         continue;
       }
 
-      Path buckFile = cellFilesystem.resolve(basePath.get())
-          .resolve(params.getCell().getBuildFileName());
-      Preconditions.checkState(cellFilesystem.exists(buckFile));
+      Path buckFile = basePath.get().resolve(parserConfig.getBuildFileName());
+      Preconditions.checkState(params.getCell().getFilesystem().exists(buckFile));
 
       // Parse buck files and load target nodes.
       if (!targetNodes.containsKey(buckFile)) {
         try {
           targetNodes.put(
               buckFile,
-              params.getParser().getAllTargetNodes(
+              params.getParser().getAllRawTargetNodes(
+                  buckFile,
+                  parserConfig,
                   params.getBuckEventBus(),
-                  params.getCell(),
-                  /* enable profiling */ false,
-                  buckFile));
-        } catch (BuildFileParseException e) {
+                  params.getConsole(),
+                  params.getEnvironment()));
+        } catch (BuildFileParseException | BuildTargetException e) {
           Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
           String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
 

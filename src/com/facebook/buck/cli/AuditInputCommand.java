@@ -21,8 +21,10 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
@@ -106,12 +108,14 @@ public class AuditInputCommand extends AbstractCommand {
 
     TargetGraph graph;
     try {
-      graph = params.getParser().buildTargetGraph(
+      graph = params.getParser().buildTargetGraphForBuildTargets(
+          targets,
+          new ParserConfig(params.getBuckConfig()),
           params.getBuckEventBus(),
-          params.getCell(),
-          getEnableProfiling(),
-          targets);
-    } catch (BuildFileParseException e) {
+          params.getConsole(),
+          params.getEnvironment(),
+          getEnableProfiling());
+    } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;

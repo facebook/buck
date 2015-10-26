@@ -30,7 +30,7 @@ public interface ProjectBuildFileParserFactory {
    *
    * @return Parser instance.
    */
-  ProjectBuildFileParser createParser(
+  public ProjectBuildFileParser createParser(
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus);

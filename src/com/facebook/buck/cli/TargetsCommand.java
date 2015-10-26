@@ -31,13 +31,12 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.ParserNg;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphHashing;
@@ -237,6 +236,7 @@ public class TargetsCommand extends AbstractCommand {
     // know which targets can refer to the specified targets or their dependencies in their
     // 'source_under_test'. Once we migrate from 'source_under_test' to 'tests', this should no
     // longer be necessary.
+    ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
     ImmutableSet<BuildTarget> matchingBuildTargets;
     TargetGraph graph;
     try {
@@ -244,25 +244,29 @@ public class TargetsCommand extends AbstractCommand {
         matchingBuildTargets = ImmutableSet.of();
         graph = params.getParser()
             .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableProfiling(),
                 ImmutableList.of(
                     TargetNodePredicateSpec.of(
                         Predicates.<TargetNode<?>>alwaysTrue(),
                         BuildFileSpec.fromRecursivePath(
                             Paths.get(""),
-                            params.getCell().getFilesystem().getIgnorePaths())))).getSecond();
+                            params.getCell().getFilesystem().getIgnorePaths()))),
+                parserConfig,
+                params.getBuckEventBus(),
+                params.getConsole(),
+                params.getEnvironment(),
+                getEnableProfiling()).getSecond();
       } else {
         Pair<ImmutableSet<BuildTarget>, TargetGraph> results = params.getParser()
             .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableProfiling(),
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
                     params.getCell().getFilesystem().getIgnorePaths(),
-                    getArguments()));
+                    getArguments()),
+                parserConfig,
+                params.getBuckEventBus(),
+                params.getConsole(),
+                params.getEnvironment(),
+                getEnableProfiling());
         matchingBuildTargets = results.getFirst();
         graph = results.getSecond();
       }
@@ -281,7 +285,6 @@ public class TargetsCommand extends AbstractCommand {
       matchingNodes = ImmutableSortedMap.of();
     } else {
       ImmutableSet<BuildRuleType> buildRuleTypes = buildRuleTypesBuilder.build();
-      ParserConfig parserConfig = new ParserConfig(params.getBuckConfig());
 
       matchingNodes = getMatchingNodes(
           graph,
@@ -301,7 +304,7 @@ public class TargetsCommand extends AbstractCommand {
     // Print out matching targets in alphabetical order.
     if (getPrintJson()) {
       try {
-        printJsonForTargets(params, matchingNodes);
+        printJsonForTargets(params, matchingNodes, new ParserConfig(params.getBuckConfig()));
       } catch (BuildFileParseException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -456,7 +459,8 @@ public class TargetsCommand extends AbstractCommand {
   @VisibleForTesting
   void printJsonForTargets(
       CommandRunnerParams params,
-      SortedMap<String, TargetNode<?>> buildIndex)
+      SortedMap<String, TargetNode<?>> buildIndex,
+      ParserConfig parserConfig)
       throws BuildFileParseException, IOException, InterruptedException {
     // Print the JSON representation of the build node for the specified target(s).
     params.getConsole().getStdOut().println("[");
@@ -468,11 +472,19 @@ public class TargetsCommand extends AbstractCommand {
       TargetNode<?> targetNode = valueIterator.next();
 
       SortedMap<String, Object> sortedTargetRule = null;
-      sortedTargetRule = params.getParser().getRawTargetNode(
-          params.getBuckEventBus(),
-          params.getCell(),
-          getEnableProfiling(),
-          targetNode);
+      try {
+        sortedTargetRule = params.getParser().getRawTargetNode(
+            targetNode,
+            parserConfig,
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment());
+      } catch (BuildTargetException e) {
+        LOG.debug(
+            "While loading rules for target %s: %e",
+            targetNode.getBuildTarget(),
+            e);
+      }
       if (sortedTargetRule == null) {
         params.getConsole().printErrorText(
             "unable to find rule for target " +
@@ -555,13 +567,15 @@ public class TargetsCommand extends AbstractCommand {
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
           .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
-              params.getCell(),
-              getEnableProfiling(),
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
                   params.getCell().getFilesystem().getIgnorePaths(),
-                  getArguments()));
+                  getArguments()),
+              new ParserConfig(params.getBuckConfig()),
+              params.getBuckEventBus(),
+              params.getConsole(),
+              params.getEnvironment(),
+              getEnableProfiling());
       matchingBuildTargets = result.getFirst();
       targetGraph = result.getSecond();
     } catch (BuildTargetException | BuildFileParseException e) {
@@ -616,8 +630,10 @@ public class TargetsCommand extends AbstractCommand {
 
     ProjectGraphParser projectGraphParser = ProjectGraphParsers.createProjectGraphParser(
         params.getParser(),
-        params.getCell(),
+        new ParserConfig(params.getBuckConfig()),
         params.getBuckEventBus(),
+        params.getConsole(),
+        params.getEnvironment(),
         getEnableProfiling());
 
     // Parse the BUCK files for the targets passed in from the command line and their deps.
@@ -727,7 +743,7 @@ public class TargetsCommand extends AbstractCommand {
   String validateBuildTargetForFullyQualifiedTarget(
       CommandRunnerParams params,
       String target,
-      ParserNg parser) throws IOException, InterruptedException {
+      Parser parser) throws IOException, InterruptedException {
     BuildTarget buildTarget;
     try {
       buildTarget = getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);
@@ -735,30 +751,24 @@ public class TargetsCommand extends AbstractCommand {
       return null;
     }
 
-    Cell owningCell = params.getCell().getCell(buildTarget);
-    Path buildFile = null;
-    try {
-      buildFile = owningCell.getAbsolutePathToBuildFile(buildTarget);
-    } catch (Cell.MissingBuildFileException e) {
-      return null;
-    }
-
     // Get all valid targets in our target directory by reading the build file.
-    ImmutableSet<TargetNode<?>> targetNodes;
+    ImmutableList<BuildTarget> targetsInFile;
     try {
-      targetNodes = parser.getAllTargetNodes(
+      ParserConfig config = new ParserConfig(params.getBuckConfig());
+      targetsInFile = parser.getAllBuildTargets(
+          buildTarget.getBasePath().resolve(config.getBuildFileName()),
+          config,
           params.getBuckEventBus(),
-          owningCell,
-          getEnableProfiling(),
-          buildFile);
-    } catch (BuildFileParseException e) {
+          params.getConsole(),
+          params.getEnvironment());
+    } catch (BuildTargetException | BuildFileParseException e) {
       // TODO(devjasta): this doesn't smell right!
       return null;
     }
 
     // Check that the given target is a valid target.
-    for (TargetNode<?> candidate : targetNodes) {
-      if (candidate.getBuildTarget().equals(buildTarget)) {
+    for (BuildTarget candidate : targetsInFile) {
+      if (candidate.equals(buildTarget)) {
         return buildTarget.getFullyQualifiedName();
       }
     }
