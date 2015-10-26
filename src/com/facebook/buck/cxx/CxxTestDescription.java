@@ -60,17 +60,17 @@ public class CxxTestDescription implements
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public CxxTestDescription(
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> defaultTestRuleTimeoutMs) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
-    this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -202,7 +202,7 @@ public class CxxTestDescription implements
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()),
             args.runTestSeparately.or(false),
-            testRuleTimeoutMs,
+            args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
             cxxBuckConfig.getMaximumTestOutputSize());
         break;
       }
@@ -218,7 +218,7 @@ public class CxxTestDescription implements
             args.contacts.get(),
             resolver.getAllRules(args.sourceUnderTest.get()),
             args.runTestSeparately.or(false),
-            testRuleTimeoutMs);
+            args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
         break;
       }
       default: {
@@ -314,6 +314,7 @@ public class CxxTestDescription implements
     public Optional<ImmutableList<String>> args;
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> useDefaultTestMain;
+    public Optional<Long> testRuleTimeoutMs;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

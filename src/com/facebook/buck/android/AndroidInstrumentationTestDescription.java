@@ -39,10 +39,10 @@ public class AndroidInstrumentationTestDescription
 
   public static final BuildRuleType TYPE = BuildRuleType.of("android_instrumentation_test");
 
-  private final Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
 
-  public AndroidInstrumentationTestDescription(Optional<Long> testRuleTimeoutMs) {
-    this.testRuleTimeoutMs = testRuleTimeoutMs;
+  public AndroidInstrumentationTestDescription(Optional<Long> defaultTestRuleTimeoutMs) {
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
 
   @Override
@@ -80,7 +80,7 @@ public class AndroidInstrumentationTestDescription
         args.labels.get(),
         args.contacts.get(),
         resolver.getAllRules(args.sourceUnderTest.get()),
-        testRuleTimeoutMs);
+        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
   }
 
   public static ImmutableSet<BuildRule> validateAndGetSourcesUnderTest(
@@ -101,6 +101,7 @@ public class AndroidInstrumentationTestDescription
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
+    public Optional<Long> testRuleTimeoutMs;
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

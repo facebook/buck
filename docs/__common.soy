@@ -740,6 +740,13 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {call .cmd_link}{param name : 'uninstall' /}{/call}
 {/template}
 
+/**
+ * @param section
+ */
+{template .concept_buckconfig_section}
+<a href="{ROOT}concept/buckconfig.html#{$section}"><code>.buckconfig</code></a>
+{/template}
+
 /***/
 {template .concept_buckconfig}
 <a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>
@@ -798,6 +805,19 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   for integration tests which access a physical device or other limited
   resource.)
   <p>If unset, the test(s) in this rule in parallel with all other tests.</p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .test_rule_timeout_ms}
+{call buck.arg}
+  {param name: 'test_rule_timeout_ms' /}
+  {param default: '[]' /}
+  {param desc}
+  If set specifies the maximum amount of time (in milliseconds) in which all of the tests in this
+  rule should complete. This overrides the default <code>rule_timeout</code> if any has been
+  specified in {call buck.concept_buckconfig_section}{param section : 'test' /}{/call}.
   {/param}
 {/call}
 {/template}

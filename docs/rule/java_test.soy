@@ -106,6 +106,8 @@ A <code>java_test()</code> rule is used to define a set of
 
 {call buck.run_test_separately_arg /}
 
+{call buck.test_rule_timeout_ms /}
+
 {call buck.arg}
   {param name: 'std_out_log_level' /}
   {param default : 'FINE' /}

@@ -52,17 +52,17 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
   public static final BuildRuleType TYPE = BuildRuleType.of("java_test");
 
   private final JavacOptions templateOptions;
-  private final Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
   private final Optional<Path> testTempDirOverride;
 
   public JavaTestDescription(
       JavacOptions templateOptions,
-      Optional<Long> testRuleTimeoutMs,
+      Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform,
       Optional<Path> testTempDirOverride) {
     this.templateOptions = templateOptions;
-    this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
     this.testTempDirOverride = testTempDirOverride;
   }
@@ -143,7 +143,7 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
                     resolver),
                 args.resourcesRoot,
                 args.mavenCoords,
-                testRuleTimeoutMs,
+                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel,
@@ -193,6 +193,8 @@ public class JavaTestDescription implements Description<JavaTestDescription.Arg>
     public Optional<Level> stdOutLogLevel;
     public Optional<String> pathToJavaAgent;
     public Optional<Boolean> useCxxLibraries;
+    public Optional<Long> testRuleTimeoutMs;
+
 
     @Override
     public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {

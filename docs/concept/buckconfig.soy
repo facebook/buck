@@ -850,12 +850,14 @@ The value given is in milliseconds.
 [test]
 
   # This specifies a maximum timeout of 5 minutes (300000
-  # milliseconds) per test. A JUnit test can override this
+  # milliseconds) per test.  A JUnit test can override this
   # via its `@Test` annotation.
   timeout = 300000
 
-  # This specifies a maximum timeout of 20 minutes (1200000 milliseconds) per test rule. This means
-  # all tests within a single test target must complete under 20 minutes.
+  # This specifies a maximum timeout of 20 minutes (1200000
+  # milliseconds) per test rule.  This means that all tests
+  # within a single test target must complete under 20
+  # minutes.  Individual test rules may override this value.
   rule_timeout = 1200000
 
   # Specify an external test runner command to use instead of Buck's built-in

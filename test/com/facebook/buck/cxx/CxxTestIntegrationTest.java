@@ -37,7 +37,7 @@ public class CxxTestIntegrationTest {
   public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
 
   @Test
-  public void spinningTestTimesOut() throws IOException {
+  public void spinningTestTimesOutWithGlobalTimeout() throws IOException {
     assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX, Platform.MACOS));
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -51,6 +51,21 @@ public class CxxTestIntegrationTest {
             "[cxx]",
             "gtest_dep = //:fake-gtest"),
         ".buckconfig");
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
+    result.assertSpecialExitCode("test should fail", 42);
+    String stderr = result.getStderr();
+    assertThat(stderr, Matchers.containsString("Timed out running test command"));
+  }
+
+  @Test
+  public void spinningTestTimesOutWithPerRuleTimeout() throws IOException {
+    assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX, Platform.MACOS));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "slow_cxx_tests_per_rule_timeout",
+        temp);
+    workspace.setUp();
 
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
     result.assertSpecialExitCode("test should fail", 42);

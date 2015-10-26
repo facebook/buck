@@ -49,17 +49,17 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
   public static final BuildRuleType TYPE = BuildRuleType.of("robolectric_test");
 
   private final JavacOptions templateOptions;
-  private final Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
   private final Optional<Path> testTempDirOverride;
 
   public RobolectricTestDescription(
       JavacOptions templateOptions,
-      Optional<Long> testRuleTimeoutMs,
+      Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform,
       Optional<Path> testTempDirOverride) {
     this.templateOptions = templateOptions;
-    this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
     this.testTempDirOverride = testTempDirOverride;
   }
@@ -163,7 +163,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 args.resourcesRoot,
                 args.mavenCoords,
                 dummyRDotJava,
-                testRuleTimeoutMs,
+                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.getRunTestSeparately(),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel,
