@@ -189,7 +189,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testWithJni() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeTrue(Platform.detect() == Platform.LINUX);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "test_with_jni",
