@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -50,23 +51,15 @@ public class AppleBundleIntegrationTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  private boolean checkCodeSigning(ProjectWorkspace workspace, String relativeBundlePath)
+  private boolean checkCodeSigning(String relativeBundlePath)
       throws IOException, InterruptedException {
-    String absoluteBundlePath = tmp.getRootPath()
+    Path absoluteBundlePath = tmp.getRootPath()
         .resolve(BuckConstant.GEN_DIR)
-        .resolve(Paths.get(relativeBundlePath))
-        .toString();
+        .resolve(Paths.get(relativeBundlePath));
 
-    ProcessExecutor.Result result = workspace.runCommand("codesign", "-vvvv", absoluteBundlePath);
-    if (result.getExitCode() != 0) {
-      return false;
-    }
-
-    if (result.getStderr().isPresent()) {
-      return result.getStderr().get().contains(": satisfies its Designated Requirement");
-    } else {
-      return false;
-    }
+    return CodeSigning.hasValidSignature(
+        new ProcessExecutor(new TestConsole()),
+        absoluteBundlePath);
   }
 
   @Test
@@ -88,7 +81,7 @@ public class AppleBundleIntegrationTest {
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphonesimulator-x86_64/DemoApp.app/DemoApp")));
 
-    assertFalse(checkCodeSigning(workspace, "DemoApp#iphonesimulator-x86_64/DemoApp.app"));
+    assertFalse(checkCodeSigning("DemoApp#iphonesimulator-x86_64/DemoApp.app"));
   }
 
   @Test
@@ -112,7 +105,7 @@ public class AppleBundleIntegrationTest {
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphoneos-arm64/DemoApp.app/DemoApp")));
 
-    assertTrue(checkCodeSigning(workspace, "DemoApp#iphoneos-arm64/DemoApp.app"));
+    assertTrue(checkCodeSigning("DemoApp#iphoneos-arm64/DemoApp.app"));
   }
 
   @Test
@@ -137,7 +130,7 @@ public class AppleBundleIntegrationTest {
                 .resolve(BuckConstant.GEN_DIR)
                 .resolve("DemoApp#iphoneos-arm64/DemoApp.app/DemoApp")));
 
-    assertTrue(checkCodeSigning(workspace, "DemoApp#iphoneos-arm64/DemoApp.app"));
+    assertTrue(checkCodeSigning("DemoApp#iphoneos-arm64/DemoApp.app"));
   }
 
   @Test

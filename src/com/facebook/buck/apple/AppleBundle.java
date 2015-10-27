@@ -51,6 +51,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -335,11 +336,14 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
           new MkdirStep(
               getProjectFilesystem(),
               bundleRoot.resolve(this.destinations.getExecutablesPath())));
-      Path bundleBinaryPath = bundleRoot.resolve(binaryPath);
+
+      Path binaryOutputPath = binary.get().getPathToOutput();
+      Preconditions.checkNotNull(binaryOutputPath);
+
       stepsBuilder.add(
           CopyStep.forFile(
               getProjectFilesystem(),
-              binary.get().getPathToOutput(),
+              binaryOutputPath,
               bundleBinaryPath));
       if (debugInfoFormat == DebugInfoFormat.DSYM) {
         buildableContext.recordArtifact(dsymPath);
@@ -350,14 +354,40 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
                 bundleBinaryPath,
                 dsymPath));
       }
+
       stepsBuilder.add(
-          new DefaultShellStep(
-              getProjectFilesystem().getRootPath(),
-              ImmutableList.<String>builder()
-                  .addAll(strip.getCommandPrefix(getResolver()))
-                  .add("-S")
-                  .add(getProjectFilesystem().resolve(bundleBinaryPath).toString())
-                  .build()));
+          new Step() {
+            @Override
+            public int execute(ExecutionContext context) throws IOException, InterruptedException {
+              // Don't strip binaries which are already code-signed.
+              if (!CodeSigning.hasValidSignature(context.getProcessExecutor(), bundleBinaryPath)) {
+                return (new DefaultShellStep(
+                    getProjectFilesystem().getRootPath(),
+                    ImmutableList.<String>builder()
+                        .addAll(strip.getCommandPrefix(getResolver()))
+                        .add("-S")
+                        .add(getProjectFilesystem().resolve(bundleBinaryPath).toString())
+                        .build()))
+                    .execute(context);
+              } else {
+                LOG.info("Not stripping code-signed binary.");
+                return 0;
+              }
+            }
+
+            @Override
+            public String getShortName() {
+              return "strip binary";
+            }
+
+            @Override
+            public String getDescription(ExecutionContext context) {
+              return String.format(
+                  "strip debug symbols from binary '%s'",
+                  bundleRoot);
+            }
+          }
+      );
     }
 
     Path bundleDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
