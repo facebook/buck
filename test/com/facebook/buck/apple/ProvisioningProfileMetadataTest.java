@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple;
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDate;
@@ -26,6 +26,8 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.HashCode;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,6 +75,9 @@ public class ProvisioningProfileMetadataTest {
     assertThat(data.getAppID(), is(equalTo(new Pair<>("ABCDE12345", "com.example.TestApp"))));
     assertThat(data.getUUID(), is(equalTo("00000000-0000-0000-0000-000000000000")));
     assertThat(data.getProfilePath().get(), is(equalTo(testFile)));
+    assertThat(
+        data.getDeveloperCertificateFingerprints(),
+        equalTo(ImmutableSet.of(HashCode.fromString("be16fc419bfb6b59a86bc08755ba0f332ec574fb"))));
 
     thrown.expect(HumanReadableException.class);
     ProvisioningProfileMetadata.fromProvisioningProfilePath(
