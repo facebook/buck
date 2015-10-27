@@ -30,6 +30,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -226,7 +227,12 @@ public class BserDeserializer {
     buffer.limit(buffer.position() + len);
 
     try {
-      return utf8Decoder.decode(buffer).toString();
+      // We'll likely have many duplicates of this string. Java 7 and
+      // up have not-insane behavior of String.intern(), so we'll use
+      // it to deduplicate the String instances.
+      //
+      // See: http://java-performance.info/string-intern-in-java-6-7-8/
+      return utf8Decoder.decode(buffer).toString().intern();
     } finally {
       buffer.limit(buffer.capacity());
     }
@@ -235,6 +241,9 @@ public class BserDeserializer {
   private List<Object> deserializeArray(ByteBuffer buffer) throws IOException {
     byte intType = buffer.get();
     int numItems = deserializeIntLen(buffer, intType);
+    if (numItems == 0) {
+      return Collections.emptyList();
+    }
     ArrayList<Object> list = new ArrayList<>(numItems);
     for (int i = 0; i < numItems; i++) {
       list.add(deserializeRecursive(buffer));
@@ -245,6 +254,9 @@ public class BserDeserializer {
   private Map<String, Object> deserializeObject(ByteBuffer buffer) throws IOException {
     byte intType = buffer.get();
     int numItems = deserializeIntLen(buffer, intType);
+    if (numItems == 0) {
+      return Collections.emptyMap();
+    }
     Map<String, Object> map;
     if (keyOrdering == KeyOrdering.UNSORTED) {
       map = new LinkedHashMap<>(numItems);

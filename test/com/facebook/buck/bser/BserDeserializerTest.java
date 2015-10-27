@@ -21,9 +21,11 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 
 import java.io.ByteArrayInputStream;
@@ -79,6 +81,25 @@ public class BserDeserializerTest {
   }
 
   @Test
+  public void deserializeEmptyArray() throws IOException {
+    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    List<Object> deserialized = (List<Object>) deserializer.deserializeBserValue(
+        getByteStream("00010303000300"));
+    List<Object> expected = ImmutableList.of();
+    assertThat(deserialized, equalTo(expected));
+  }
+
+  @Test
+  public void deserializeEmptyArrayTwiceReturnsSameArray() throws IOException {
+    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    List<Object> deserialized = (List<Object>) deserializer.deserializeBserValue(
+        getByteStream("00010303000300"));
+    List<Object> deserialized2 = (List<Object>) deserializer.deserializeBserValue(
+        getByteStream("00010303000300"));
+    assertThat(deserialized, is(sameInstance(deserialized2)));
+  }
+
+  @Test
   public void deserializeArrayOfInt8() throws IOException {
     BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
     List<Object> deserialized = (List<Object>) deserializer.deserializeBserValue(
@@ -94,6 +115,35 @@ public class BserDeserializerTest {
         getByteStream("0001030E02030B68656C6C6F20776F726C64"));
     String expected = "hello world";
     assertThat(deserialized, equalTo(expected));
+  }
+
+  @Test
+  public void sameStringDeserializedTwiceReturnsSameInstance() throws IOException {
+    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    String deserialized = (String) deserializer.deserializeBserValue(
+        getByteStream("0001030E02030B68656C6C6F20776F726C64"));
+    String deserialized2 = (String) deserializer.deserializeBserValue(
+        getByteStream("0001030E02030B68656C6C6F20776F726C64"));
+    assertThat(deserialized, is(sameInstance(deserialized2)));
+  }
+
+  @Test
+  public void deserializeEmptyMap() throws IOException {
+    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    Map<String, Object> deserialized = (Map<String, Object>) deserializer.deserializeBserValue(
+        getByteStream("00010303010300"));
+    Map<String, Object> expected = ImmutableMap.of();
+    assertThat(deserialized, equalTo(expected));
+  }
+
+  @Test
+  public void deserializeEmptyMapTwiceReturnsSameMap() throws IOException {
+    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    Map<String, Object> deserialized = (Map<String, Object>) deserializer.deserializeBserValue(
+        getByteStream("00010303010300"));
+    Map<String, Object> deserialized2 = (Map<String, Object>) deserializer.deserializeBserValue(
+        getByteStream("00010303010300"));
+    assertThat(deserialized, is(sameInstance(deserialized2)));
   }
 
   @Test
@@ -123,6 +173,15 @@ public class BserDeserializerTest {
     BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
     Byte deserialized = (Byte) deserializer.deserializeBserValue(getByteStream("000103020342"));
     assertThat(deserialized, equalTo((byte) 0x42));
+  }
+
+  @Test
+  public void sameInt8DeserializedTwiceReturnsSameInstance() throws IOException {
+    // Java actually interns small integer values for us. How nice!
+    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    Byte deserialized = (Byte) deserializer.deserializeBserValue(getByteStream("000103020342"));
+    Byte deserialized2 = (Byte) deserializer.deserializeBserValue(getByteStream("000103020342"));
+    assertThat(deserialized, is(sameInstance(deserialized2)));
   }
 
   @Test
