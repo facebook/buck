@@ -6,8 +6,8 @@ if 'JAVA_HOME' in os.environ:
   cppflags = [
     '-DUSE_JNI_H',
     '-I' + os.environ['JAVA_HOME'] + '/include',
-    '-I' + os.environ['JAVA_HOME'] + '/include/darwin',
     '-I' + os.environ['JAVA_HOME'] + '/include/linux',
+    '-I' + os.environ['JAVA_HOME'] + '/include/darwin', # For MacOS.
   ]
 else:
   cppflags = []
