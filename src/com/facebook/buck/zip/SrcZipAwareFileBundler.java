@@ -54,25 +54,26 @@ public class SrcZipAwareFileBundler {
     ImmutableMap.Builder<Path, Path> links = ImmutableMap.builder();
 
     for (SourcePath sourcePath : toCopy) {
-      Path resolved = resolver.deprecatedGetPath(sourcePath);
+      Path absolute = resolver.getAbsolutePath(sourcePath);
 
-      if (resolved.toString().endsWith(Javac.SRC_ZIP) ||
-          resolved.toString().endsWith(Javac.SRC_JAR)) {
-        steps.add(new UnzipStep(filesystem, resolved, destinationDir));
+      if (absolute.toString().endsWith(Javac.SRC_ZIP) ||
+          absolute.toString().endsWith(Javac.SRC_JAR)) {
+        steps.add(new UnzipStep(filesystem, absolute, destinationDir));
         continue;
       }
 
-      if (Files.isDirectory(resolved)) {
-        throw new HumanReadableException("Cowardly refusing to copy a directory: " + resolved);
+      if (Files.isDirectory(absolute)) {
+        throw new HumanReadableException("Cowardly refusing to copy a directory: " + absolute);
       }
 
       Path destination;
-      if (!junkPaths && resolved.startsWith(basePath)) {
-        destination = basePath.relativize(resolved);
+      Path relative = resolver.getRelativePath(sourcePath);
+      if (!junkPaths && relative.startsWith(basePath)) {
+        destination = basePath.relativize(relative);
       } else {
-        destination = resolved.getFileName();
+        destination = absolute.getFileName();
       }
-      links.put(destination, resolved);
+      links.put(destination, absolute);
     }
     steps.add(new SymlinkTreeStep(filesystem, destinationDir, links.build()));
   }

@@ -40,7 +40,9 @@ public class UnzipStep implements Step {
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
-    Path zip = filesystem.getPathForRelativeExistingPath(zipFile).toAbsolutePath();
+    Path zip = zipFile.isAbsolute() ?
+        zipFile :
+        filesystem.getPathForRelativeExistingPath(zipFile).toAbsolutePath();
     Path out = filesystem.getPathForRelativeExistingPath(destinationDirectory).toAbsolutePath();
 
     try {
