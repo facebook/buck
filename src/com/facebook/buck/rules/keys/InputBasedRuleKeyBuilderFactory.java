@@ -34,13 +34,9 @@ import com.google.common.collect.ImmutableSet;
 import javax.annotation.Nonnull;
 
 /**
- * A factory for generating input-based {@link RuleKey}s for {@link BuildRule}s which enumerate
- * their dependencies implicitly through their inputs, which are described by {@link SourcePath}s
- * added to their {@link RuleKey}.
+ * A factory for generating input-based {@link RuleKey}s.
  *
- * Input-based rule keys are generally more accurate than normal rule keys, as they won't
- * necessarily change if the rule key of a dependency changed.  Instead, they only change if a
- * the actual inputs to the rule change.
+ * @see SupportsInputBasedRuleKey
  */
 public class InputBasedRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
 
