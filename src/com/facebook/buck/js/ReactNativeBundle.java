@@ -112,8 +112,8 @@ public class ReactNativeBundle extends AbstractBuildRule implements AbiRule {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return getBundleScript(
-                getResolver().deprecatedGetPath(jsPackager),
-                getProjectFilesystem().resolve(getResolver().deprecatedGetPath(entryPath)),
+                getResolver().getAbsolutePath(jsPackager),
+                getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
                 platform,
                 isDevMode,
                 packagerFlags,
