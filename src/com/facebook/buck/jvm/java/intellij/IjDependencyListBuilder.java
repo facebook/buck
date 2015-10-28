@@ -178,7 +178,7 @@ public class IjDependencyListBuilder {
             .setSortOrder(SortOrder.COMPILED_SHADOW)
             .setData(DependencyEntryData.builder()
                     .setName(name)
-                    .setScope(Scope.PROVIDED)
+                    .setScope(Scope.COMPILE)
                     .setExported(true)
                     .build())
             .build());
