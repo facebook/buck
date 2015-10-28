@@ -100,7 +100,7 @@ public class TargetsCommand extends AbstractCommand {
 
   @Option(name = "--detect-test-changes",
       usage = "Modifies the --referenced-file and --show-target-hash flags to pretend that " +
-          "tarets depend on their tests (experimental)")
+          "targets depend on their tests (experimental)")
   private boolean isDetectTestChanges;
 
   @Option(name = "--type",
