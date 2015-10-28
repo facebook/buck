@@ -117,7 +117,6 @@ java_immutables_library(
     'ConstructorArgMarshalException.java',
     'DefaultOnDiskBuildInfo.java',
     'Description.java',
-    'FlavorableDescription.java',
     'ExportDependencies.java',
     'HashedFileTool.java',
     'HasPostBuildSteps.java',

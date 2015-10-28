@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -31,9 +30,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FlavorableDescription;
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -52,8 +49,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 
-public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>,
-    FlavorableDescription<JavaLibraryDescription.Arg>, Flavored {
+public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>, Flavored {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("java_library");
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
@@ -179,6 +175,12 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
             params,
             new BuildTargetSourcePath(defaultJavaLibrary.getBuildTarget())));
 
+    addGwtModule(
+        resolver,
+        pathResolver,
+        params,
+        args);
+
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;
     } else {
@@ -268,57 +270,28 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   /**
-   * A {@link JavaLibrary} registers the ability to create {@link JavaLibrary#SRC_JAR}s when source
-   * is present and also {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
-   */
-  @Override
-  public void registerFlavors(
-      Arg arg,
-      BuildRule buildRule,
-      Function<Optional<String>, Path> cellRoots,
-      ProjectFilesystem projectFilesystem,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory,
-      BuildRuleResolver ruleResolver) {
-    BuildTarget originalBuildTarget = buildRule.getBuildTarget();
-
-    Optional<GwtModule> gwtModuleOptional = tryCreateGwtModule(
-        cellRoots,
-        new SourcePathResolver(ruleResolver),
-        originalBuildTarget,
-        projectFilesystem,
-        ruleKeyBuilderFactory,
-        arg);
-    if (!gwtModuleOptional.isPresent()) {
-      return;
-    }
-
-    GwtModule gwtModule = gwtModuleOptional.get();
-    ruleResolver.addToIndex(gwtModule);
-  }
-
-  /**
    * Creates a {@link BuildRule} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
    * <p>
    * If {@code arg.srcs} or {@code arg.resources} is non-empty, then the return value will not be
    * absent.
    */
   @VisibleForTesting
-  static Optional<GwtModule> tryCreateGwtModule(
-      Function<Optional<String>, Path> cellRoots,
-      SourcePathResolver resolver,
-      BuildTarget originalBuildTarget,
-      ProjectFilesystem projectFilesystem,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory,
+  static Optional<GwtModule> addGwtModule(
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      BuildRuleParams javaLibraryParams,
       Arg arg) {
+    BuildTarget libraryTarget = javaLibraryParams.getBuildTarget();
+
     if (arg.srcs.get().isEmpty() &&
         arg.resources.get().isEmpty() &&
-        !originalBuildTarget.isFlavored()) {
+        !libraryTarget.isFlavored()) {
       return Optional.absent();
     }
 
-    BuildTarget gwtModuleBuildTarget = BuildTargets.createFlavoredBuildTarget(
-        originalBuildTarget.getUnflavoredBuildTarget(),
-        JavaLibrary.GWT_MODULE_FLAVOR);
+    BuildTarget gwtModuleBuildTarget = BuildTarget.of(
+        libraryTarget.getUnflavoredBuildTarget(),
+        ImmutableSet.of(JavaLibrary.GWT_MODULE_FLAVOR));
     ImmutableSortedSet<SourcePath> filesForGwtModule = ImmutableSortedSet
         .<SourcePath>naturalOrder()
         .addAll(arg.srcs.get())
@@ -328,17 +301,15 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     // If any of the srcs or resources are BuildTargetSourcePaths, then their respective BuildRules
     // must be included as deps.
     ImmutableSortedSet<BuildRule> deps =
-        ImmutableSortedSet.copyOf(resolver.filterBuildRuleInputs(filesForGwtModule));
+        ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(filesForGwtModule));
     GwtModule gwtModule = new GwtModule(
-        new BuildRuleParams(
+        javaLibraryParams.copyWithChanges(
             gwtModuleBuildTarget,
             Suppliers.ofInstance(deps),
-            /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-            projectFilesystem,
-            cellRoots,
-            ruleKeyBuilderFactory),
-        resolver,
+            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        pathResolver,
         filesForGwtModule);
+    resolver.addToIndex(gwtModule);
     return Optional.of(gwtModule);
   }
 

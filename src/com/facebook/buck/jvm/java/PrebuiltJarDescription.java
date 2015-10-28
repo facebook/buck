@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -30,26 +29,22 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.FlavorableDescription;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg>,
-    FlavorableDescription<PrebuiltJarDescription.Arg>{
+public class PrebuiltJarDescription implements Description<PrebuiltJarDescription.Arg> {
 
   @SuppressFieldNotInitialized
   public static class Arg {
@@ -93,7 +88,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
             params,
             args.binaryJar));
 
-    return new PrebuiltJar(
+    BuildRule prebuilt = new PrebuiltJar(
         params,
         pathResolver,
         args.binaryJar,
@@ -102,28 +97,18 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         args.gwtJar,
         args.javadocUrl,
         args.mavenCoords);
-  }
 
-  @Override
-  public void registerFlavors(
-      Arg arg,
-      BuildRule buildRule,
-      Function<Optional<String>, Path> cellRoots,
-      ProjectFilesystem projectFilesystem,
-      RuleKeyBuilderFactory ruleKeyBuilderFactory,
-      BuildRuleResolver ruleResolver) {
-    UnflavoredBuildTarget prebuiltJarBuildTarget = buildRule.getBuildTarget().checkUnflavored();
+    UnflavoredBuildTarget prebuiltJarBuildTarget = params.getBuildTarget().checkUnflavored();
     BuildTarget flavoredBuildTarget = BuildTargets.createFlavoredBuildTarget(
         prebuiltJarBuildTarget, JavaLibrary.GWT_MODULE_FLAVOR);
-    BuildRuleParams params = new BuildRuleParams(
+    BuildRuleParams gwtParams = params.copyWithChanges(
         flavoredBuildTarget,
-        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(buildRule)),
-        /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        projectFilesystem,
-        cellRoots,
-        ruleKeyBuilderFactory);
-    BuildRule gwtModule = createGwtModule(params, new SourcePathResolver(ruleResolver), arg);
-    ruleResolver.addToIndex(gwtModule);
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)),
+        /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+    BuildRule gwtModule = createGwtModule(gwtParams, pathResolver, args);
+    resolver.addToIndex(gwtModule);
+
+    return prebuilt;
   }
 
   @VisibleForTesting
@@ -132,28 +117,30 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     // is a BuildTargetSourcePath), we make the PrebuiltJar a dependency of the GWT module. If this
     // becomes a performance issue in practice, then we will explore reducing the dependencies of
     // the GWT module.
-    final SourcePath inputToCompareToOutput;
+    final SourcePath input;
     if (arg.gwtJar.isPresent()) {
-      inputToCompareToOutput = arg.gwtJar.get();
+      input = arg.gwtJar.get();
     } else if (arg.sourceJar.isPresent()) {
-      inputToCompareToOutput = arg.sourceJar.get();
+      input = arg.sourceJar.get();
     } else {
-      inputToCompareToOutput = arg.binaryJar;
+      input = arg.binaryJar;
     }
-    ImmutableCollection<SourcePath> inputsToCompareToOutput =
-        ImmutableSet.of(inputToCompareToOutput);
-    final Path pathToExistingJarFile = resolver.deprecatedGetPath(inputToCompareToOutput);
 
     class ExistingOuputs extends AbstractBuildRule {
       @AddToRuleKey
-      private final ImmutableCollection<SourcePath> inputs;
+      private final SourcePath source;
+      private final Path output;
 
       protected ExistingOuputs(
-          BuildRuleParams buildRuleParams,
+          BuildRuleParams params,
           SourcePathResolver resolver,
-          ImmutableCollection<SourcePath> inputs) {
-        super(buildRuleParams, resolver);
-        this.inputs = inputs;
+          SourcePath source) {
+        super(params, resolver);
+        this.source = source;
+        BuildTarget target = params.getBuildTarget();
+        this.output = BuildTargets.getGenPath(
+            target,
+            String.format("%s/%%s-gwt.jar", target.getShortName()));
       }
 
       @Override
@@ -161,14 +148,22 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
           BuildContext context,
           BuildableContext buildableContext) {
         buildableContext.recordArtifact(getPathToOutput());
-        return ImmutableList.of();
+
+        ImmutableList.Builder<Step> steps = ImmutableList.builder();
+        steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
+        steps.add(CopyStep.forFile(
+                getProjectFilesystem(),
+                getResolver().getAbsolutePath(source),
+                output));
+
+        return steps.build();
       }
 
       @Override
       public Path getPathToOutput() {
-        return pathToExistingJarFile;
+        return output;
       }
-    };
-    return new ExistingOuputs(params, resolver, inputsToCompareToOutput);
+    }
+    return new ExistingOuputs(params, resolver, input);
   }
 }
