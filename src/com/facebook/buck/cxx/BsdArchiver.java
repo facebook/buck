@@ -48,9 +48,10 @@ public class BsdArchiver implements Archiver {
           "invalid global header");
 
       byte[] marker = ObjectFileScrubbers.getBytes(map, 3);
-      ObjectFileScrubbers.checkArchive(
-          Arrays.equals(LONG_NAME_MARKER, marker),
-          "unexpected short symbol table name");
+      if (!Arrays.equals(LONG_NAME_MARKER, marker)) {
+        // This file isn't actually made with BSD ar; skip scrubbing it.
+        return;
+      }
 
       int nameLength = ObjectFileScrubbers.getDecimalStringAsInt(map, 13);
 

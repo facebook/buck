@@ -32,6 +32,9 @@ public class OsoSymbolsScrubber implements FileScrubber {
 
   @Override
   public void scrubFile(FileChannel file) throws IOException, ScrubException {
+    if (!Machos.isMacho(file)) {
+      return;
+    }
     try {
       Machos.relativizeOsoSymbols(file, linkingDirectory);
     } catch (Machos.MachoException e) {

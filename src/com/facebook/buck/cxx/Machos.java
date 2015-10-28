@@ -70,6 +70,14 @@ public class Machos {
     throw new MachoException("LC_UUID command not found");
   }
 
+  static boolean isMacho(FileChannel file) throws IOException {
+    MappedByteBuffer map = file.map(FileChannel.MapMode.READ_ONLY, 0, MH_MAGIC.length);
+
+    byte[] magic = ObjectFileScrubbers.getBytes(map, MH_MAGIC.length);
+    return Arrays.equals(MH_MAGIC, magic) || Arrays.equals(MH_CIGAM, magic) ||
+        Arrays.equals(MH_MAGIC_64, magic) || Arrays.equals(MH_CIGAM_64, magic);
+  }
+
   static void relativizeOsoSymbols(FileChannel file, Path linkingDirectory)
       throws IOException, MachoException {
     Preconditions.checkState(linkingDirectory.isAbsolute());
