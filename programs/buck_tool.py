@@ -133,6 +133,9 @@ class BuckTool(object):
             elif use_buckd and not has_watchman:
                 print("Not using buckd because watchman isn't installed.",
                       file=sys.stderr)
+            elif not use_buckd:
+                print("Not using buckd because NO_BUCKD is set.",
+                      file=sys.stderr)
 
             env = self._environ_for_buck()
             env['BUCK_BUILD_ID'] = build_id
@@ -142,7 +145,6 @@ class BuckTool(object):
 
             if use_buckd and self._is_buckd_running() and os.path.exists(buck_client_file) and \
                     os.path.exists(buck_socket_path):
-                print("Using buckd.", file=sys.stderr)
                 command = [buck_client_file]
                 command.append("--nailgun-server")
                 # We don't use buck_socket_path because it's absolute,
