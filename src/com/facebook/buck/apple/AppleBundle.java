@@ -296,7 +296,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
     Path metadataPath = getMetadataPath();
 
-    Path infoPlistInputPath = getResolver().deprecatedGetPath(infoPlist);
+    Path infoPlistInputPath = getResolver().getAbsolutePath(infoPlist);
     Path infoPlistSubstitutionTempPath =
         BuildTargets.getScratchPath(getBuildTarget(), "%s.plist");
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
@@ -396,7 +396,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              getResolver().deprecatedGetPath(dir),
+              getResolver().getAbsolutePath(dir),
               bundleDestinationPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
@@ -405,13 +405,14 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              getResolver().deprecatedGetPath(dir),
+              getResolver().getAbsolutePath(dir),
               bundleDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
     for (SourcePath file : resourceFiles) {
       stepsBuilder.add(new MkdirStep(getProjectFilesystem(), bundleDestinationPath));
-      Path resolvedFilePath = getResolver().deprecatedGetPath(file);
+      // TODO(simons): Check that this work cross-cell
+      Path resolvedFilePath = getResolver().getRelativePath(file);
       Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       addResourceProcessingSteps(resolvedFilePath, destinationPath, stepsBuilder);
     }
@@ -420,7 +421,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
     if (resourceVariantFiles.isPresent()) {
       for (SourcePath variantSourcePath : resourceVariantFiles.get()) {
-        Path variantFilePath = getResolver().deprecatedGetPath(variantSourcePath);
+        // TODO(simons): Ensure this works cross-cell, as relative path begins with "buck-out"
+        Path variantFilePath = getResolver().getRelativePath(variantSourcePath);
 
         Path variantDirectory = variantFilePath.getParent();
         if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
@@ -545,7 +547,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       stepsBuilder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),
-            getResolver().deprecatedGetPath(entry.getKey()),
+            getResolver().getAbsolutePath(entry.getKey()),
             destPath,
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
