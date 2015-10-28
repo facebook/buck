@@ -115,7 +115,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
                     .add("path_back_to_root", pathBackToRoot)
                     .add(
                         "script_to_run",
-                        Escaper.escapeAsBashString(getResolver().deprecatedGetPath(main)))
+                        Escaper.escapeAsBashString(getResolver().getRelativePath(main)))
                     .add("resources", resourceStrings);
               }
             }),

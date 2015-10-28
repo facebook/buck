@@ -69,7 +69,7 @@ public class GoLibrary extends GoLinkable {
       BuildableContext buildableContext) {
     ImmutableList.Builder<Path> compileSrcList = ImmutableList.builder();
     for (SourcePath path : srcs) {
-      Path outputPath = getResolver().deprecatedGetPath(path);
+      Path outputPath = getResolver().getAbsolutePath(path);
       compileSrcList.add(outputPath);
     }
 

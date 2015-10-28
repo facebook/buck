@@ -115,7 +115,7 @@ public class ShTest
     // Return a single command that runs an .sh file with no arguments.
     Step runTest = new RunShTestAndRecordResultStep(
         getProjectFilesystem(),
-        getResolver().deprecatedGetPath(test),
+        getResolver().getAbsolutePath(test),
         args,
         getPathToTestOutputResult());
 
