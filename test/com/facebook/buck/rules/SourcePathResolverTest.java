@@ -72,10 +72,8 @@ public class SourcePathResolverTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path expectedPath = Paths.get("foo");
-    BuildRule rule = new OutputOnlyBuildRule(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build(),
-        pathResolver,
-        Paths.get("notfoo"));
+    FakeBuildRule rule = new FakeBuildRule("//:foo", pathResolver);
+    rule.setOutputFile("notfoo");
     resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget(), expectedPath);
 
@@ -122,10 +120,8 @@ public class SourcePathResolverTest {
   public void getRuleCanGetRuleOfBuildRuleSoucePath() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRule rule = new OutputOnlyBuildRule(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build(),
-        pathResolver,
-        Paths.get("foo"));
+    FakeBuildRule rule = new FakeBuildRule("//:foo", pathResolver);
+    rule.setOutputFile("foo");
     resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget());
 
@@ -155,10 +151,8 @@ public class SourcePathResolverTest {
   public void relativePathForABuildTargetSourcePathIsTheRulesOutputPath() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildRule rule = new OutputOnlyBuildRule(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:foo")).build(),
-        pathResolver,
-        Paths.get("foo"));
+    FakeBuildRule rule = new FakeBuildRule("//:foo", pathResolver);
+    rule.setOutputFile("foo");
     resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget());
 
