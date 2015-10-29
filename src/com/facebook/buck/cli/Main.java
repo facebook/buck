@@ -329,7 +329,11 @@ public final class Main {
       synchronized (parser) {
         parser.recordParseStartTime(eventBus);
         fileEventBus.post(commandEvent);
-        watchmanWatcher.postEvents(eventBus);
+        ImmutableSet.Builder<String> encounteredWatchmanWarningsBuilder = ImmutableSet.builder();
+        watchmanWatcher.postEvents(eventBus, encounteredWatchmanWarningsBuilder);
+
+        // TODO(user): Pass encountered Watchman warnings to parser so Watchman glob can
+        // ignore them.
       }
     }
 

@@ -32,6 +32,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.ByteStreams;
@@ -211,12 +212,18 @@ public class WatchmanWatcher {
    * (and so typically caches must be cleared to avoid inconsistency). Interruptions and
    * IOExceptions are propagated to callers, but typically if overflow events are handled
    * conservatively by subscribers then no other remedial action is required.
+   *
+   * Any warnings posted by Watchman are added to watchmanWarningsBuilder.
    */
-  public void postEvents(BuckEventBus buckEventBus) throws IOException, InterruptedException {
+  public void postEvents(
+      BuckEventBus buckEventBus,
+      ImmutableSet.Builder<String> watchmanWarningsBuilder
+  ) throws IOException, InterruptedException {
     ProcessExecutor.LaunchedProcess watchmanProcess = processExecutor.launchProcess(
         ProcessExecutorParams.builder()
             .addCommand("watchman", "--server-encoding=json", "--no-pretty", "-j")
             .build());
+
     try {
       LOG.debug("Writing query to Watchman: %s", query);
       watchmanProcess.getOutputStream().write(query.getBytes(Charsets.US_ASCII));
@@ -251,6 +258,7 @@ public class WatchmanWatcher {
        * the object end token will be ignored.
        */
       int eventCount = 0;
+
       while (token != null) {
         boolean shouldOverflow = false;
         if (eventCount > overflow) {
@@ -317,6 +325,7 @@ public class WatchmanWatcher {
                 buckEventBus.post(
                     ConsoleEvent.warning("Watchman has produced a warning: %s", message));
                 LOG.warn("Watchman has produced a warning: %s", message);
+                watchmanWarningsBuilder.add(message);
                 break;
             }
             break;
