@@ -39,6 +39,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -62,6 +63,7 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
+  private final Iterable<? extends NativeLinkable> exportedDeps;
   private final Predicate<CxxPlatform> headerOnly;
   private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
       exportedPreprocessorFlags;
@@ -81,6 +83,7 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      Iterable<? extends NativeLinkable> exportedDeps,
       Predicate<CxxPlatform> headerOnly,
       Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
           exportedPreprocessorFlags,
@@ -96,6 +99,7 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
+    this.exportedDeps = exportedDeps;
     this.headerOnly = headerOnly;
     this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
@@ -158,6 +162,17 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
       cxxPreprocessorInputCache.put(key, result);
     }
     return result;
+  }
+
+  @Override
+  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    return FluentIterable.from(getDeclaredDeps())
+        .filter(NativeLinkable.class);
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+    return exportedDeps;
   }
 
   @Override

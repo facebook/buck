@@ -32,6 +32,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -50,6 +51,18 @@ public class NdkLibraryDescriptionTest {
         BuildRule... deps) {
       super(target, resolver, deps);
       this.input = input;
+    }
+
+    @Override
+    public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+      return FluentIterable.from(getDeclaredDeps())
+          .filter(NativeLinkable.class);
+    }
+
+    @Override
+    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+      return FluentIterable.from(getDeclaredDeps())
+          .filter(NativeLinkable.class);
     }
 
     @Override

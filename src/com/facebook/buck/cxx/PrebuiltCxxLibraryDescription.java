@@ -369,6 +369,9 @@ public class PrebuiltCxxLibraryDescription
         params,
         resolver,
         pathResolver,
+        FluentIterable.from(args.exportedDeps.get())
+            .transform(resolver.getRuleFunction())
+            .filter(NativeLinkable.class),
         includeDirs,
         args.libDir,
         args.libName,
@@ -419,6 +422,7 @@ public class PrebuiltCxxLibraryDescription
     public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
     public Optional<String> soname;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
   }
 
 }

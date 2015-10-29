@@ -38,6 +38,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -53,6 +54,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
+  private final Iterable<? extends NativeLinkable> exportedDeps;
   private final ImmutableList<Path> includeDirs;
   private final Optional<String> libDir;
   private final Optional<String> libName;
@@ -73,6 +75,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      Iterable<? extends NativeLinkable> exportedDeps,
       ImmutableList<Path> includeDirs,
       Optional<String> libDir,
       Optional<String> libName,
@@ -87,6 +90,7 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
     super(params, pathResolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
+    this.exportedDeps = exportedDeps;
     this.includeDirs = includeDirs;
     this.libDir = libDir;
     this.libName = libName;
@@ -211,6 +215,17 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
       cxxPreprocessorInputCache.put(key, result);
     }
     return result;
+  }
+
+  @Override
+  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    return FluentIterable.from(getDeclaredDeps())
+        .filter(NativeLinkable.class);
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+    return exportedDeps;
   }
 
   @Override

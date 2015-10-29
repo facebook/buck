@@ -95,11 +95,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .from(arg.includeDirs.or(ImmutableList.of("include")))
         .transform(
             new Function<String, Path>() {
-               @Override
-               public Path apply(String input) {
-                 return TARGET.getBasePath().resolve(input);
-               }
-             })
+              @Override
+              public Path apply(String input) {
+                return TARGET.getBasePath().resolve(input);
+              }
+            })
         .toList();
   }
 
@@ -734,6 +734,43 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         cxxLink.getArgs(),
         Matchers.hasItem("--some-flag"));
+  }
+
+  @Test
+  public void nativeLinkableDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    PrebuiltCxxLibrary dep =
+        (PrebuiltCxxLibrary) new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    PrebuiltCxxLibrary rule =
+        (PrebuiltCxxLibrary) new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:r"))
+            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform()),
+        Matchers.<NativeLinkable>contains(dep));
+    assertThat(
+        ImmutableList.copyOf(
+            rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform())),
+        Matchers.<NativeLinkable>empty());
+  }
+
+  @Test
+  public void nativeLinkableExportedDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    PrebuiltCxxLibrary dep =
+        (PrebuiltCxxLibrary) new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    PrebuiltCxxLibrary rule =
+        (PrebuiltCxxLibrary) new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:r"))
+            .setExportedDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        ImmutableList.copyOf(rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform())),
+        Matchers.<NativeLinkable>empty());
+    assertThat(
+        rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform()),
+        Matchers.<NativeLinkable>contains(dep));
   }
 
 }

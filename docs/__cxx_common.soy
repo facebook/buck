@@ -260,3 +260,16 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .exported_deps_arg}
+{call buck.arg}
+  {param name : 'exported_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  Dependencies that will also appear to belong to any rules that depend on this one.  Currently, this
+  only affects linking: exported dependencies will also be included in the link line of dependents of
+  this rules, but normal dependencies will not.
+  {/param}
+{/call}
+{/template}

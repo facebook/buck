@@ -180,6 +180,18 @@ public class CxxLibraryDescriptionTest {
       }
 
       @Override
+      public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+        return FluentIterable.from(getDeclaredDeps())
+            .filter(NativeLinkable.class);
+      }
+
+      @Override
+      public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+        return FluentIterable.from(getDeclaredDeps())
+            .filter(NativeLinkable.class);
+      }
+
+      @Override
       public NativeLinkableInput getNativeLinkableInput(
           TargetGraph targetGraph,
           CxxPlatform cxxPlatform,
@@ -607,7 +619,6 @@ public class CxxLibraryDescriptionTest {
             .build();
       }
 
-
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
           TargetGraph targetGraph,
@@ -616,6 +627,18 @@ public class CxxLibraryDescriptionTest {
         return ImmutableMap.of(
             getBuildTarget(),
             getCxxPreprocessorInput(targetGraph, cxxPlatform, headerVisibility));
+      }
+
+      @Override
+      public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+        return FluentIterable.from(getDeclaredDeps())
+            .filter(NativeLinkable.class);
+      }
+
+      @Override
+      public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+        return FluentIterable.from(getDeclaredDeps())
+            .filter(NativeLinkable.class);
       }
 
       @Override
@@ -1384,4 +1407,42 @@ public class CxxLibraryDescriptionTest {
         lib.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()),
         is(empty()));
   }
+
+  @Test
+  public void nativeLinkableDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    CxxLibrary dep =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    CxxLibrary rule =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform()),
+        Matchers.<NativeLinkable>contains(dep));
+    assertThat(
+        ImmutableList.copyOf(
+            rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform())),
+        Matchers.<NativeLinkable>empty());
+  }
+
+  @Test
+  public void nativeLinkableExportedDeps() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    CxxLibrary dep =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    CxxLibrary rule =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setExportedDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .build(resolver);
+    assertThat(
+        ImmutableList.copyOf(rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform())),
+        Matchers.<NativeLinkable>empty());
+    assertThat(
+        rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform()),
+        Matchers.<NativeLinkable>contains(dep));
+  }
+
 }

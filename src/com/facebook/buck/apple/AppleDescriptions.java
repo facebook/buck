@@ -257,6 +257,7 @@ public class AppleDescriptions {
                 resolver.deprecatedPathFunction(),
                 headerPathPrefix,
                 arg)));
+    output.exportedDeps = arg.exportedDeps;
     output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags;
     output.exportedHeaders = Optional.of(
         SourceList.ofNamedSources(

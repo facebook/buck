@@ -44,6 +44,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -203,6 +204,8 @@ public class CxxLibraryTest {
         params,
         ruleResolver,
         pathResolver,
+        FluentIterable.from(params.getDeclaredDeps().get())
+            .filter(NativeLinkable.class),
         /* headerOnly */ Predicates.<CxxPlatform>alwaysFalse(),
         Functions.constant(ImmutableMultimap.<CxxSource.Type, String>of()),
         /* exportedLinkerFlags */ Functions.constant(ImmutableList.<Arg>of()),

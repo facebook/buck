@@ -26,6 +26,10 @@ import com.google.common.collect.ImmutableMap;
  */
 public interface NativeLinkable {
 
+  Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform);
+
+  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform);
+
   NativeLinkableInput getNativeLinkableInput(
       TargetGraph targetGraph,
       CxxPlatform cxxPlatform,

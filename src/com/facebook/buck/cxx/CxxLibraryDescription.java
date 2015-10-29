@@ -521,6 +521,7 @@ public class CxxLibraryDescription implements
   public static Arg createEmptyConstructorArg() {
     Arg arg = new Arg();
     arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.exportedDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
     arg.srcs = Optional.of(ImmutableSortedSet.<SourceWithFlags>of());
     arg.platformSrcs = Optional.of(
         PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
@@ -944,6 +945,9 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         pathResolver,
+        FluentIterable.from(args.exportedDeps.get())
+            .transform(resolver.getRuleFunction())
+            .filter(NativeLinkable.class),
         Predicates.not(hasObjects),
         new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
           @Override

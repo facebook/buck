@@ -94,4 +94,9 @@ public class CxxLibraryBuilder extends AbstractCxxSourceBuilder<CxxLibraryDescri
     return this;
   }
 
+  public CxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
+    arg.exportedDeps = Optional.of(exportedDeps);
+    return this;
+  }
+
 }

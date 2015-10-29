@@ -60,6 +60,18 @@ public class NativeLinkablesTest {
     }
 
     @Override
+    public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+      return FluentIterable.from(getDeclaredDeps())
+          .filter(NativeLinkable.class);
+    }
+
+    @Override
+    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+      return FluentIterable.from(getDeclaredDeps())
+          .filter(NativeLinkable.class);
+    }
+
+    @Override
     public NativeLinkableInput getNativeLinkableInput(
         TargetGraph targetGraph,
         CxxPlatform cxxPlatform,

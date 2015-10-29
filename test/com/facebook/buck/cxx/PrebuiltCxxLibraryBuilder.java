@@ -108,4 +108,9 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
+    arg.exportedDeps = Optional.of(exportedDeps);
+    return this;
+  }
+
 }
