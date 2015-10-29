@@ -55,9 +55,9 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /**
- * A ProjectFilesystemWatcher implementation that uses a local watchman service.
+ * Queries Watchman for changes to a path.
  */
-public class WatchmanWatcher implements ProjectFilesystemWatcher {
+public class WatchmanWatcher {
 
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
   private static final int DEFAULT_OVERFLOW_THRESHOLD = 10000;
@@ -212,7 +212,6 @@ public class WatchmanWatcher implements ProjectFilesystemWatcher {
    * IOExceptions are propagated to callers, but typically if overflow events are handled
    * conservatively by subscribers then no other remedial action is required.
    */
-  @Override
   public void postEvents(BuckEventBus buckEventBus) throws IOException, InterruptedException {
     ProcessExecutor.LaunchedProcess watchmanProcess = processExecutor.launchProcess(
         ProcessExecutorParams.builder()
