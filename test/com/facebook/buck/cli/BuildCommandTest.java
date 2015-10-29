@@ -70,7 +70,7 @@ public class BuildCommandTest {
     };
     ruleToResult.put(
         rule1,
-        Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.skip())));
+        Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
     BuildRule rule2 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule2"),

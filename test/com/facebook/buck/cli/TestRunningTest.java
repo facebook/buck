@@ -439,7 +439,7 @@ public class TestRunningTest {
         ImmutableSortedSet.<BuildRule>of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = BuildResult.success(testRule, BUILT_LOCALLY, CacheResult.skip());
+    BuildResult result = BuildResult.success(testRule, BUILT_LOCALLY, CacheResult.miss());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine);
@@ -479,7 +479,7 @@ public class TestRunningTest {
     expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(false);
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
-    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.skip());
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
     expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
         .andReturn(result);
     replay(executionContext, cachingBuildEngine, testRuleKeyFileHelper);
@@ -590,11 +590,11 @@ public class TestRunningTest {
     FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
         ImmutableMap.of(
             separateTest1Target,
-            BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.skip()),
+            BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.miss()),
             separateTest2Target,
-            BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.skip()),
+            BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.miss()),
             separateTest3Target,
-            BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.skip())
+            BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss())
         ),
         ImmutableMap.of(
             separateTest1Target, new RuleKey("00"),
@@ -791,22 +791,22 @@ public class TestRunningTest {
         ImmutableMap.<BuildTarget, BuildResult>builder()
             .put(
                 separateTest1Target,
-                BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest1, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 separateTest2Target,
-                BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest2, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 separateTest3Target,
-                BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 parallelTest1Target,
-                BuildResult.success(parallelTest1, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest1, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 parallelTest2Target,
-                BuildResult.success(parallelTest2, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest2, BUILT_LOCALLY, CacheResult.miss()))
             .put(
                 parallelTest3Target,
-                BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.skip()))
+                BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.miss()))
             .build(),
         ImmutableMap.<BuildTarget, RuleKey>builder()
             .put(separateTest1Target, new RuleKey("00"))
@@ -937,7 +937,7 @@ public class TestRunningTest {
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
     FakeBuildEngine fakeBuildEngine = new FakeBuildEngine(
         ImmutableMap.of(
-            failingTestTarget, BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.skip())
+            failingTestTarget, BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.miss())
         ),
         ImmutableMap.of(
             failingTestTarget, new RuleKey("00")

@@ -204,7 +204,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     cachingBuildEngine.setBuildRuleResult(
         dep,
         BuildRuleSuccessType.FETCHED_FROM_CACHE,
-        CacheResult.skip());
+        CacheResult.miss());
 
     BuildResult result = cachingBuildEngine.build(context, ruleToTest).get();
     assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
