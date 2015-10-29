@@ -48,7 +48,7 @@ public class CodeSigning {
 
     // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options =
-        EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+        EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT);
 
     ProcessExecutor.Result result = processExecutor.launchAndExecute(
         processExecutorParams,
