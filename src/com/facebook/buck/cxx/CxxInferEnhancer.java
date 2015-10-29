@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -152,7 +153,6 @@ public final class CxxInferEnhancer {
       preprocessorInputs = computePreprocessorInputForCxxBinaryDescriptionArg(
           targetGraph,
           paramsWithoutInferFlavor,
-          pathResolver,
           cxxPlatform,
           (CxxBinaryDescription.Arg) args,
           headerSymlinkTree);
@@ -254,7 +254,6 @@ public final class CxxInferEnhancer {
   computePreprocessorInputForCxxBinaryDescriptionArg(
       TargetGraph targetGraph,
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
       HeaderSymlinkTree headerSymlinkTree) {
@@ -268,10 +267,7 @@ public final class CxxInferEnhancer {
             args.langPreprocessorFlags,
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            args.frameworks,
-            cxxPlatform,
-            pathResolver),
+        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             targetGraph,
             cxxPlatform,
@@ -298,7 +294,7 @@ public final class CxxInferEnhancer {
             args.langPreprocessorFlags,
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.<FrameworkPath>of(),
         CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
             targetGraph,
             params,
@@ -311,10 +307,7 @@ public final class CxxInferEnhancer {
                 args.exportedLangPreprocessorFlags,
                 cxxPlatform),
             CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
-            CxxDescriptionEnhancer.getFrameworkSearchPaths(
-                args.frameworks,
-                cxxPlatform,
-                pathResolver)));
+            args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of())));
   }
 
   private static ImmutableSet<CxxInferCapture> createInferCaptureBuildRules(

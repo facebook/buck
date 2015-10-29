@@ -55,7 +55,6 @@ public class CxxBinaryTest {
                 bin,
                 ImmutableList.<Arg>of(),
                 ImmutableSet.<Path>of(),
-                ImmutableSet.<Path>of(),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getDebugPathSanitizer()));
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:target").build();

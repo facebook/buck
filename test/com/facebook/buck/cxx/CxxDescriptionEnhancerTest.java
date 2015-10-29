@@ -40,6 +40,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -191,7 +192,7 @@ public class CxxDescriptionEnhancerTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
             ImmutableList.<HeaderSymlinkTree>of(),
-            ImmutableSet.<Path>of(),
+            ImmutableSet.<FrameworkPath>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 TargetGraph.EMPTY,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -242,7 +243,7 @@ public class CxxDescriptionEnhancerTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMultimap.<CxxSource.Type, String>of(),
             ImmutableList.<HeaderSymlinkTree>of(),
-            ImmutableSet.<Path>of(),
+            ImmutableSet.<FrameworkPath>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 TargetGraph.EMPTY,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -269,5 +270,4 @@ public class CxxDescriptionEnhancerTest {
             target2,
             CxxPlatformUtils.DEFAULT_PLATFORM));
   }
-
 }

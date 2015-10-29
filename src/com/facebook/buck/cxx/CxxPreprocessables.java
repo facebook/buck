@@ -177,7 +177,6 @@ public class CxxPreprocessables {
       HeaderVisibility headerVisibility,
       IncludeType includeType,
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      CxxPlatform cxxPlatform,
       Iterable<FrameworkPath> frameworks) {
     BuildRule rule = CxxDescriptionEnhancer.requireBuildRule(
         targetGraph,
@@ -195,11 +194,7 @@ public class CxxPreprocessables {
                 .setNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getLinks()))
                 .setFullNameToPathMap(ImmutableSortedMap.copyOf(symlinkTree.getFullLinks()))
                 .build())
-        .addAllFrameworkRoots(CxxDescriptionEnhancer.getFrameworkSearchPaths(
-                Optional.of(ImmutableSortedSet.copyOf(frameworks)),
-                cxxPlatform,
-                new SourcePathResolver(ruleResolver)
-            ));
+        .addAllFrameworks(frameworks);
     switch(includeType) {
       case LOCAL:
         builder.addIncludeRoots(symlinkTree.getIncludePath());

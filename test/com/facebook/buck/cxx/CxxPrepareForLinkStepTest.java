@@ -75,8 +75,8 @@ public class CxxPrepareForLinkStepTest {
         "a.o",
         "libb.a",
         "-lsysroot",
-        "/Library/Application Support/blabla");
-    Path frameworkRoot = Paths.get("/System/Frameworks");
+        "/Library/Application Support/blabla",
+        "-F/System/Frameworks");
     final Path librarySearchPath = Paths.get("/System/libraries");
     final String library = "z";
 
@@ -86,7 +86,6 @@ public class CxxPrepareForLinkStepTest {
         argFilePath,
         output,
         args,
-        ImmutableSet.of(frameworkRoot),
         ImmutableSet.of(librarySearchPath),
         ImmutableSet.of(library));
 
@@ -96,7 +95,6 @@ public class CxxPrepareForLinkStepTest {
 
     ImmutableList<String> expectedFileContents = ImmutableList.<String>builder()
         .add("-o", output.toString())
-        .add("-F", frameworkRoot.toString())
         .add("-L", librarySearchPath.toString())
         .add("-l" + library)
         .add("-rpath")
@@ -105,6 +103,7 @@ public class CxxPrepareForLinkStepTest {
         .add("libb.a")
         .add("-lsysroot")
         .add("\"/Library/Application Support/blabla\"")
+        .add("-F/System/Frameworks")
         .build();
     List<String> fileContents = Files.readAllLines(argFilePath, StandardCharsets.UTF_8);
     assertThat(fileContents, Matchers.<List<String>>equalTo(expectedFileContents));

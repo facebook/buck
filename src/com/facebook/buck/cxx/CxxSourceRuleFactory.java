@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -132,13 +133,13 @@ public class CxxSourceRuleFactory {
             }
           });
 
-  private final Supplier<ImmutableSet<Path>> frameworkRoots =
+  private final Supplier<ImmutableSet<FrameworkPath>> frameworks =
       Suppliers.memoize(
-          new Supplier<ImmutableSet<Path>>() {
+          new Supplier<ImmutableSet<FrameworkPath>>() {
             @Override
-            public ImmutableSet<Path> get() {
+            public ImmutableSet<FrameworkPath> get() {
               return FluentIterable.from(cxxPreprocessorInput)
-                  .transformAndConcat(CxxPreprocessorInput.GET_FRAMEWORK_ROOTS)
+                  .transformAndConcat(CxxPreprocessorInput.GET_FRAMEWORKS)
                   .toSet();
             }
           });
@@ -280,7 +281,10 @@ public class CxxSourceRuleFactory {
         includeRoots.get(),
         systemIncludeRoots.get(),
         headerMaps.get(),
-        frameworkRoots.get(),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(
+            Optional.of(ImmutableSortedSet.<FrameworkPath>copyOf(frameworks.get())),
+            cxxPlatform,
+            pathResolver),
         prefixHeader,
         includes.get(),
         cxxPlatform.getDebugPathSanitizer());
@@ -591,7 +595,10 @@ public class CxxSourceRuleFactory {
         includeRoots.get(),
         systemIncludeRoots.get(),
         headerMaps.get(),
-        frameworkRoots.get(),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(
+            Optional.of(ImmutableSortedSet.<FrameworkPath>copyOf(frameworks.get())),
+            cxxPlatform,
+            pathResolver),
         prefixHeader,
         inferTools,
         cxxPlatform.getDebugPathSanitizer());
@@ -639,7 +646,10 @@ public class CxxSourceRuleFactory {
         includeRoots.get(),
         systemIncludeRoots.get(),
         headerMaps.get(),
-        frameworkRoots.get(),
+        CxxDescriptionEnhancer.getFrameworkSearchPaths(
+            Optional.of(
+                ImmutableSortedSet.copyOf(
+                    frameworks.get())), cxxPlatform, pathResolver),
         prefixHeader,
         includes.get(),
         cxxPlatform.getDebugPathSanitizer(),

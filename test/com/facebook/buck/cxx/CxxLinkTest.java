@@ -68,8 +68,6 @@ public class CxxLinkTest {
           new SourcePathArg(
               new SourcePathResolver(new BuildRuleResolver()),
               new TestSourcePath("libc.a")));
-  private static final ImmutableSet<Path> DEFAULT_FRAMEWORK_ROOTS = ImmutableSet.of(
-      Paths.get("/System/Frameworks"));
   private static final ImmutableSet<Path> DEFAULT_LIBRARIES = ImmutableSet.of(
       Paths.get("/System/Libraries/libz.dynlib"));
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
@@ -108,7 +106,6 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             DEFAULT_ARGS,
-            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_LIBRARIES,
             DEFAULT_SANITIZER));
 
@@ -121,7 +118,6 @@ public class CxxLinkTest {
             new GnuLinker(new HashedFileTool(Paths.get("different"))),
             DEFAULT_OUTPUT,
             DEFAULT_ARGS,
-            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_LIBRARIES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, linkerChange);
@@ -135,7 +131,6 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             Paths.get("different"),
             DEFAULT_ARGS,
-            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_LIBRARIES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, outputChange);
@@ -152,25 +147,9 @@ public class CxxLinkTest {
                 new SourcePathArg(
                     new SourcePathResolver(new BuildRuleResolver()),
                     new TestSourcePath("different"))),
-            DEFAULT_FRAMEWORK_ROOTS,
             DEFAULT_LIBRARIES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, flagsChange);
-
-
-    // Verify that changing the framework roots causes a rulekey change.
-    RuleKey frameworkRootsChange = generateRuleKey(
-        ruleKeyBuilderFactory,
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            DEFAULT_ARGS,
-            ImmutableSet.of(Paths.get("/System/DifferentFrameworks")),
-            DEFAULT_LIBRARIES,
-            DEFAULT_SANITIZER));
-    assertNotEquals(defaultRuleKey, frameworkRootsChange);
 
     // Verify that changing the libraries causes a rulekey change.
     RuleKey librariesRootsChange = generateRuleKey(
@@ -181,7 +160,6 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             DEFAULT_ARGS,
-            DEFAULT_FRAMEWORK_ROOTS,
             ImmutableSet.of(Paths.get("/System/Libraries/libx.dynlib")),
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, librariesRootsChange);
@@ -233,7 +211,6 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             args1,
-            ImmutableSet.of(Paths.get("something/Frameworks")),
             DEFAULT_LIBRARIES,
             sanitizer1));
 
@@ -252,7 +229,6 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             args2,
-            ImmutableSet.of(Paths.get("different/Frameworks")),
             DEFAULT_LIBRARIES,
             sanitizer2));
 

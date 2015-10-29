@@ -47,7 +47,7 @@ abstract class AbstractNativeLinkableInput {
   @Value.Parameter
   public abstract List<Arg> getArgs();
 
-  // Directories where frameworks are stored.
+  // Frameworks that are used by the linkable to link with.
   @Value.Parameter
   public abstract Set<FrameworkPath> getFrameworks();
 

@@ -133,7 +133,6 @@ public class CxxLibrary extends AbstractCxxLibrary implements HasRuntimeDeps {
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
         exportedPreprocessorFlags.apply(cxxPlatform),
-        cxxPlatform,
         frameworks);
   }
 

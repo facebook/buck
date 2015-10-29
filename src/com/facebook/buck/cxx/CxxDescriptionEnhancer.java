@@ -618,7 +618,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
-      ImmutableSet<Path> frameworkSearchPaths,
+      ImmutableSet<FrameworkPath> frameworks,
       Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps) {
 
     // Add the private includes of any rules which list this rule as a test.
@@ -672,7 +672,7 @@ public class CxxDescriptionEnhancer {
                     .build())
             .addAllIncludeRoots(allIncludeRoots.build())
             .addAllHeaderMaps(allHeaderMaps.build())
-            .addAllFrameworkRoots(frameworkSearchPaths)
+            .addAllFrameworks(frameworks)
             .build();
 
     return ImmutableList.<CxxPreprocessorInput>builder()
@@ -859,10 +859,7 @@ public class CxxDescriptionEnhancer {
                 langPreprocessorFlags,
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
-            getFrameworkSearchPaths(
-                frameworks,
-                cxxPlatform,
-                new SourcePathResolver(resolver)),
+            frameworks.get(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 targetGraph,
                 cxxPlatform,
@@ -961,7 +958,8 @@ public class CxxDescriptionEnhancer {
             params.getDeps(),
             cxxRuntimeType,
             Optional.<SourcePath>absent(),
-            ImmutableSet.<BuildTarget>of());
+            ImmutableSet.<BuildTarget>of(),
+            frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));
     resolver.addToIndex(cxxLink);
 
     // Add the output of the link as the lone argument needed to invoke this binary as a tool.

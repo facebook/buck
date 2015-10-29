@@ -32,6 +32,8 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -41,12 +43,8 @@ import com.facebook.buck.rules.macros.MacroException;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.rules.args.MacroArg;
-import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -58,7 +56,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -135,7 +132,7 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       ImmutableMap<Path, SourcePath> exportedHeaders,
-      ImmutableSet<Path> frameworkSearchPaths) {
+      ImmutableSet<FrameworkPath> frameworks) {
 
     // Check if there is a target node representative for the library in the action graph and,
     // if so, grab the cached transitive C/C++ preprocessor input from that.  We===
@@ -179,7 +176,7 @@ public class CxxLibraryDescription implements
                     .build())
             .addIncludeRoots(symlinkTree.getIncludePath())
             .addAllHeaderMaps(symlinkTree.getHeaderMap().asSet())
-            .addAllFrameworkRoots(frameworkSearchPaths)
+            .addAllFrameworks(frameworks)
             .build());
     for (BuildRule rule : params.getDeps()) {
       if (rule instanceof CxxPreprocessorDep) {
@@ -208,7 +205,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
-      ImmutableSet<Path> frameworkSearchPaths,
+      ImmutableSet<FrameworkPath> frameworks,
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) {
 
@@ -240,7 +237,7 @@ public class CxxLibraryDescription implements
             cxxPlatform,
             preprocessorFlags,
             ImmutableList.of(headerSymlinkTree),
-            ImmutableSet.<Path>of(),
+            ImmutableSet.<FrameworkPath>of(),
             getTransitiveCxxPreprocessorInput(
                 targetGraph,
                 params,
@@ -249,7 +246,7 @@ public class CxxLibraryDescription implements
                 cxxPlatform,
                 exportedPreprocessorFlags,
                 exportedHeaders,
-                frameworkSearchPaths));
+                frameworks));
 
     ImmutableMap<String, CxxSource> allSources =
         ImmutableMap.<String, CxxSource>builder()
@@ -291,7 +288,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
-      ImmutableSet<Path> frameworkSearchPaths,
+      ImmutableSet<FrameworkPath> frameworks,
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) {
 
@@ -311,7 +308,7 @@ public class CxxLibraryDescription implements
         exportedHeaders,
         compilerFlags,
         sources,
-        frameworkSearchPaths,
+        frameworks,
         preprocessMode,
         pic);
 
@@ -369,7 +366,7 @@ public class CxxLibraryDescription implements
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
       ImmutableList<String> linkerFlags,
-      ImmutableSet<Path> frameworkSearchPaths,
+      ImmutableSet<FrameworkPath> frameworks,
       Optional<String> soname,
       CxxPreprocessMode preprocessMode,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -394,7 +391,7 @@ public class CxxLibraryDescription implements
         exportedHeaders,
         compilerFlags,
         sources,
-        frameworkSearchPaths,
+        frameworks,
         preprocessMode,
         CxxSourceRuleFactory.PicType.PIC);
 
@@ -426,10 +423,6 @@ public class CxxLibraryDescription implements
         cxxPlatform);
     ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
     extraLdFlagsBuilder.addAll(linkerFlags);
-    extraLdFlagsBuilder.addAll(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle("-F"),
-            Iterables.transform(frameworkSearchPaths, Functions.toStringFunction())));
     ImmutableList<String> extraLdFlags = extraLdFlagsBuilder.build();
 
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -457,7 +450,8 @@ public class CxxLibraryDescription implements
         params.getDeps(),
         cxxRuntimeType,
         bundleLoader,
-        blacklist);
+        blacklist,
+        frameworks);
   }
 
   /**
@@ -480,7 +474,7 @@ public class CxxLibraryDescription implements
       ImmutableMap<Path, SourcePath> exportedHeaders,
       ImmutableList<String> compilerFlags,
       ImmutableMap<String, CxxSource> sources,
-      ImmutableSet<Path> frameworkSearchPaths,
+      ImmutableSet<FrameworkPath> frameworks,
       CxxPreprocessMode preprocessMode) {
     BuildRuleParams paramsWithoutCompilationDatabaseFlavor = CxxCompilationDatabase
         .paramsWithoutCompilationDatabaseFlavor(params);
@@ -502,7 +496,7 @@ public class CxxLibraryDescription implements
         exportedHeaders,
         compilerFlags,
         sources,
-        frameworkSearchPaths,
+        frameworks,
         preprocessMode,
         CxxSourceRuleFactory.PicType.PIC);
 
@@ -641,10 +635,7 @@ public class CxxLibraryDescription implements
             args.platformCompilerFlags,
             cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            args.frameworks,
-            cxxPlatform,
-            new SourcePathResolver(resolver)),
+        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         preprocessMode,
         pic);
   }
@@ -704,10 +695,7 @@ public class CxxLibraryDescription implements
             cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
         linkerFlags.build(),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            args.frameworks,
-            cxxPlatform,
-            new SourcePathResolver(resolver)),
+        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.soname,
         preprocessMode,
         args.cxxRuntimeType,
@@ -754,10 +742,7 @@ public class CxxLibraryDescription implements
             args.platformCompilerFlags,
             cxxPlatform),
         CxxDescriptionEnhancer.parseCxxSources(params, resolver, cxxPlatform, args),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            args.frameworks,
-            cxxPlatform,
-            new SourcePathResolver(resolver)),
+        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         preprocessMode);
   }
 

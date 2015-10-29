@@ -29,11 +29,11 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -57,8 +57,6 @@ public class CxxLink
   private final Path output;
   @AddToRuleKey
   private final ImmutableList<Arg> args;
-  // TODO(): merge framework roots into `args` array.
-  private final ImmutableSet<Path> frameworkRoots;
   private final ImmutableSet<Path> libraries;
   private final DebugPathSanitizer sanitizer;
 
@@ -68,14 +66,12 @@ public class CxxLink
       Linker linker,
       Path output,
       ImmutableList<Arg> args,
-      ImmutableSet<Path> frameworkRoots,
       ImmutableSet<Path> libraries,
       DebugPathSanitizer sanitizer) {
     super(params, resolver);
     this.linker = linker;
     this.output = output;
     this.args = args;
-    this.frameworkRoots = frameworkRoots;
     this.libraries = libraries;
     this.sanitizer = sanitizer;
   }
@@ -83,12 +79,6 @@ public class CxxLink
   @Override
   public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
     return builder
-        .setReflectively(
-            "frameworkRoots",
-            FluentIterable.from(frameworkRoots)
-                .transform(Functions.toStringFunction())
-                .transform(sanitizer.sanitize(Optional.<Path>absent()))
-                .toList())
         .setReflectively(
             "libraries",
             FluentIterable.from(libraries)
@@ -112,7 +102,6 @@ public class CxxLink
             FluentIterable.from(args)
                 .transform(Arg.stringifyFunction())
                 .toList(),
-            frameworkRoots,
             getLibrarySearchDirectories(),
             getLibraryNames()),
         new CxxLinkStep(

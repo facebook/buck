@@ -175,7 +175,6 @@ public class PrebuiltCxxLibrary extends AbstractCxxLibrary {
                     headerVisibility,
                     CxxPreprocessables.IncludeType.SYSTEM,
                     exportedPreprocessorFlags.apply(cxxPlatform),
-                    cxxPlatform,
                     /* frameworks */ ImmutableList.<FrameworkPath>of()))
             // Just pass the include dirs as system includes.
             .addAllSystemIncludeRoots(ImmutableSortedSet.copyOf(includeDirs))

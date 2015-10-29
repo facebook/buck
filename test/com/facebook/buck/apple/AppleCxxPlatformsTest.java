@@ -52,6 +52,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.HumanReadableException;
@@ -801,7 +802,8 @@ AppleSdkPaths appleSdkPaths =
               ImmutableList.<BuildRule>of(),
               Optional.<Linker.CxxRuntimeType>absent(),
               Optional.<SourcePath>absent(),
-              ImmutableSet.<BuildTarget>of());
+              ImmutableSet.<BuildTarget>of(),
+              ImmutableSet.<FrameworkPath>of());
       RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(rule);
       ruleKeys.put(entry.getKey(), builder.build());
     }

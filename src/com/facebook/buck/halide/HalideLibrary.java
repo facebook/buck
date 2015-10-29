@@ -128,7 +128,6 @@ public class HalideLibrary
               headerVisibility,
               CxxPreprocessables.IncludeType.SYSTEM,
               ImmutableMultimap.<CxxSource.Type, String>of(), /* exportedPreprocessorFlags */
-              cxxPlatform,
               ImmutableList.<FrameworkPath>of())) /* frameworks */
           .build();
       case PRIVATE:

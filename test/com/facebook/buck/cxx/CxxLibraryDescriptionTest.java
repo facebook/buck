@@ -247,10 +247,12 @@ public class CxxLibraryDescriptionTest {
         ImmutableList.of(
             header, headerSymlinkTree, privateHeader, privateHeaderSymlinkTree, archive, dep));
 
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
-        new FakeProjectFilesystem().getRootPath(),
+        filesystem.getRootPath(),
         target,
         cxxPlatform);
     String headerName = "test/bar.h";
@@ -280,7 +282,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder
         .build(
             resolver,
-            new FakeProjectFilesystem(),
+            filesystem,
             targetGraph);
 
     Path headerRoot =
@@ -320,9 +322,11 @@ public class CxxLibraryDescriptionTest {
                     target,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC))
-            .addFrameworkRoots(
-                Paths.get("/some/framework/path"),
-                Paths.get("/another/framework/path"))
+            .addFrameworks(
+                FrameworkPath.ofSourcePath(
+                    new PathSourcePath(filesystem, Paths.get("/some/framework/path/s.dylib"))),
+                FrameworkPath.ofSourcePath(
+                    new PathSourcePath(filesystem, Paths.get("/another/framework/path/a.dylib"))))
             .build(),
         rule.getCxxPreprocessorInput(
             targetGraph,
@@ -360,9 +364,11 @@ public class CxxLibraryDescriptionTest {
                     target,
                     cxxPlatform,
                     HeaderVisibility.PRIVATE))
-            .addFrameworkRoots(
-                Paths.get("/some/framework/path"),
-                Paths.get("/another/framework/path"))
+            .addFrameworks(
+                FrameworkPath.ofSourcePath(
+                    new PathSourcePath(filesystem, Paths.get("/some/framework/path/s.dylib"))),
+                FrameworkPath.ofSourcePath(
+                    new PathSourcePath(filesystem, Paths.get("/another/framework/path/a.dylib"))))
             .build(),
         rule.getCxxPreprocessorInput(
             targetGraph,
@@ -775,9 +781,11 @@ public class CxxLibraryDescriptionTest {
                     target,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC))
-            .addFrameworkRoots(
-                Paths.get("/some/framework/path"),
-                Paths.get("/another/framework/path"))
+            .addFrameworks(
+                FrameworkPath.ofSourcePath(
+                    new PathSourcePath(filesystem, Paths.get("/some/framework/path/s.dylib"))),
+                FrameworkPath.ofSourcePath(
+                    new PathSourcePath(filesystem, Paths.get("/another/framework/path/a.dylib"))))
             .build(),
         rule.getCxxPreprocessorInput(targetGraph, cxxPlatform, HeaderVisibility.PUBLIC));
 

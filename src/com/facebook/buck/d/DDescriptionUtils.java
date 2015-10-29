@@ -34,6 +34,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -137,7 +138,8 @@ abstract class DDescriptionUtils {
         params.getDeps(),
         /* cxxRuntimeType */ Optional.<Linker.CxxRuntimeType>absent(),
         /* bundleLoader */ Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
   }
 
   /**

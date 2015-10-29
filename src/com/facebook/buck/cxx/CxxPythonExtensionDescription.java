@@ -32,6 +32,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -164,7 +165,7 @@ public class CxxPythonExtensionDescription implements
                 args.langPreprocessorFlags,
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
-            ImmutableSet.<Path>of(),
+            ImmutableSet.<FrameworkPath>of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 targetGraph,
                 cxxPlatform,
@@ -233,7 +234,8 @@ public class CxxPythonExtensionDescription implements
         params.getDeps(),
         args.cxxRuntimeType,
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));
   }
 
   @Override

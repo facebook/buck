@@ -26,6 +26,9 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -67,7 +70,8 @@ public class CxxLinkableEnhancer {
       Iterable<? extends BuildRule> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
-      ImmutableSet<BuildTarget> blacklist) {
+      ImmutableSet<BuildTarget> blacklist,
+      ImmutableSet<FrameworkPath> frameworks) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
@@ -120,6 +124,13 @@ public class CxxLinkableEnhancer {
     // Add all arguments from our dependencies.
     argsBuilder.addAll(linkableInput.getArgs());
 
+    // Add framework args - from both linkable dependancies and the frameworks for the binary
+    addFrameworkLinkerArgs(
+        cxxPlatform,
+        resolver,
+        mergeFrameworks(linkableInput, frameworks),
+        argsBuilder);
+
     // Add all arguments needed to link in the C/C++ platform runtime.
     Linker.LinkableDepType runtimeDepType = depType;
     if (cxxRuntimeType.or(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
@@ -150,14 +161,74 @@ public class CxxLinkableEnhancer {
         output,
         allArgs,
         CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            Optional.of(ImmutableSortedSet.copyOf(linkableInput.getFrameworks())),
-            cxxPlatform,
-            resolver),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
             Optional.of(ImmutableSortedSet.copyOf(linkableInput.getLibraries())),
             cxxPlatform,
             resolver),
         cxxPlatform.getDebugPathSanitizer());
+  }
+
+  private static ImmutableSortedSet<FrameworkPath> mergeFrameworks(
+      NativeLinkableInput nativeLinkable,
+      ImmutableSet<FrameworkPath> frameworkPaths) {
+    return ImmutableSortedSet.<FrameworkPath>naturalOrder()
+        .addAll(nativeLinkable.getFrameworks())
+        .addAll(frameworkPaths)
+        .build();
+  }
+
+  private static void addFrameworkLinkerArgs(
+      CxxPlatform cxxPlatform,
+      SourcePathResolver resolver,
+      ImmutableSortedSet<FrameworkPath> allFrameworks,
+      ImmutableList.Builder<Arg> argsBuilder) {
+
+    Optional<ImmutableSortedSet<FrameworkPath>> frameworks = Optional.of(allFrameworks);
+    // Add all framework search path args
+    ImmutableSet<Path> frameworkSearchPaths = CxxDescriptionEnhancer.getFrameworkSearchPaths(
+        frameworks,
+        cxxPlatform,
+        resolver);
+    for (Path unsanitizedFrameworkSearchPath : frameworkSearchPaths) {
+      argsBuilder.add(new StringArg("-F"));
+      argsBuilder.add(
+          new SanitizedArg(
+              cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()),
+              unsanitizedFrameworkSearchPath.toString()));
+    }
+
+    // Add all framework link args
+    ImmutableList<String> frameworkStringArgs = frameworks
+        .transform(frameworksToLinkerFlagsFunction(resolver))
+        .get();
+    for (String frameworkStringArg : frameworkStringArgs) {
+      argsBuilder.add(new StringArg(frameworkStringArg));
+    }
+  }
+
+  @VisibleForTesting
+  static Function<
+      ImmutableSortedSet<FrameworkPath>,
+      ImmutableList<String>> frameworksToLinkerFlagsFunction(final SourcePathResolver resolver) {
+    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<String>>() {
+      @Override
+      public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
+        return FluentIterable
+            .from(input)
+            .transformAndConcat(
+                linkerFlagsForFrameworkPathFunction(resolver.deprecatedPathFunction()))
+            .toList();
+      }
+    };
+  }
+
+  private static Function<FrameworkPath, Iterable<String>> linkerFlagsForFrameworkPathFunction(
+      final Function<SourcePath, Path> resolver) {
+    return new Function<FrameworkPath, Iterable<String>>() {
+      @Override
+      public Iterable<String> apply(FrameworkPath input) {
+        return ImmutableList.of("-framework", input.getName(resolver));
+      }
+    };
   }
 
 }

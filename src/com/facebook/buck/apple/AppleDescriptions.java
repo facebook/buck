@@ -209,8 +209,7 @@ public class AppleDescriptions {
     output.langPreprocessorFlags = arg.langPreprocessorFlags;
     output.linkerFlags = Optional.of(
         FluentIterable
-            .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
-            .append(arg.libraries.transform(librariesToLinkerFlagsFunction(resolver)).get())
+            .from(arg.libraries.transform(librariesToLinkerFlagsFunction(resolver)).get())
             .append(arg.linkerFlags.get())
             .toList());
     output.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
@@ -272,8 +271,7 @@ public class AppleDescriptions {
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
     output.exportedLinkerFlags = Optional.of(
         FluentIterable
-            .from(arg.frameworks.transform(frameworksToLinkerFlagsFunction(resolver)).get())
-            .append(arg.libraries.transform(librariesToLinkerFlagsFunction(resolver)).get())
+            .from(arg.libraries.transform(librariesToLinkerFlagsFunction(resolver)).get())
             .append(arg.exportedLinkerFlags.get())
             .toList());
     output.exportedPlatformLinkerFlags = Optional.of(
@@ -283,22 +281,6 @@ public class AppleDescriptions {
     output.linkWhole = Optional.of(linkWhole);
     output.supportedPlatformsRegex = Optional.absent();
     output.canBeAsset = arg.canBeAsset;
-  }
-
-  @VisibleForTesting
-  static Function<
-      ImmutableSortedSet<FrameworkPath>,
-      ImmutableList<String>> frameworksToLinkerFlagsFunction(final SourcePathResolver resolver) {
-    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<String>>() {
-      @Override
-      public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
-        return FluentIterable
-            .from(input)
-            .transformAndConcat(
-                linkerFlagsForFrameworkPathFunction(resolver.deprecatedPathFunction()))
-            .toList();
-      }
-    };
   }
 
   @VisibleForTesting
@@ -348,16 +330,6 @@ public class AppleDescriptions {
             .from(flags)
             .transform(appleSdkPaths.replaceSourceTreeReferencesFunction())
             .toList();
-      }
-    };
-  }
-
-  private static Function<FrameworkPath, Iterable<String>> linkerFlagsForFrameworkPathFunction(
-      final Function<SourcePath, Path> resolver) {
-    return new Function<FrameworkPath, Iterable<String>>() {
-      @Override
-      public Iterable<String> apply(FrameworkPath input) {
-        return ImmutableList.of("-framework", input.getName(resolver));
       }
     };
   }

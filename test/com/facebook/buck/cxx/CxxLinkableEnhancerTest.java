@@ -25,7 +25,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -34,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -44,6 +48,8 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -170,7 +176,8 @@ public class CxxLinkableEnhancerTest {
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
@@ -209,7 +216,8 @@ public class CxxLinkableEnhancerTest {
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
 
     // Verify that the archive rules dependencies are empty.
     assertEquals(cxxLink.getDeps(), ImmutableSortedSet.<BuildRule>of());
@@ -258,7 +266,8 @@ public class CxxLinkableEnhancerTest {
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
 
     // Verify that the fake build rule made it in as a dep.
     assertTrue(cxxLink.getDeps().contains(fakeBuildRule));
@@ -289,7 +298,8 @@ public class CxxLinkableEnhancerTest {
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
     assertFalse(executable.getArgs().contains("-shared"));
     assertEquals(Collections.indexOfSubList(executable.getArgs(), sonameArgs), -1);
 
@@ -308,7 +318,8 @@ public class CxxLinkableEnhancerTest {
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
     assertTrue(shared.getArgs().contains("-shared"));
     assertEquals(Collections.indexOfSubList(shared.getArgs(), sonameArgs), -1);
 
@@ -327,7 +338,8 @@ public class CxxLinkableEnhancerTest {
         ImmutableSortedSet.<BuildRule>of(),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
     assertTrue(sharedWithSoname.getArgs().contains("-shared"));
     assertNotEquals(Collections.indexOfSubList(sharedWithSoname.getArgs(), sonameArgs), -1);
   }
@@ -369,7 +381,8 @@ public class CxxLinkableEnhancerTest {
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
     assertTrue(staticLink.getArgs().contains(staticArg) ||
         staticLink.getArgs().contains("-Wl," + staticArg));
     assertFalse(staticLink.getArgs().contains(sharedArg));
@@ -390,11 +403,13 @@ public class CxxLinkableEnhancerTest {
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
     assertFalse(sharedLink.getArgs().contains(staticArg));
     assertFalse(sharedLink.getArgs().contains("-Wl," + staticArg));
-    assertTrue(sharedLink.getArgs().contains(sharedArg) ||
-        sharedLink.getArgs().contains("-Wl," + sharedArg));
+    assertTrue(
+        sharedLink.getArgs().contains(sharedArg) ||
+            sharedLink.getArgs().contains("-Wl," + sharedArg));
   }
 
   @Test
@@ -435,7 +450,8 @@ public class CxxLinkableEnhancerTest {
           ImmutableSortedSet.<BuildRule>of(),
           runtimeTypes.get(i),
           Optional.<SourcePath>absent(),
-          ImmutableSet.<BuildTarget>of());
+          ImmutableSet.<BuildTarget>of(),
+          ImmutableSet.<FrameworkPath>of());
 
       assertTrue(
           "\"" + lib.getArgs().toString() + "\" contains " + expectedLibc[i],
@@ -511,7 +527,8 @@ public class CxxLinkableEnhancerTest {
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>of(new TestSourcePath("path/to/MyBundleLoader")),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
     assertThat(
         cxxLink.getArgs(),
         hasItem("-bundle"));
@@ -542,7 +559,8 @@ public class CxxLinkableEnhancerTest {
         EMPTY_DEPS,
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
     resolver.addToIndex(bundleLoaderRule);
 
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
@@ -564,11 +582,38 @@ public class CxxLinkableEnhancerTest {
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>of(
             new BuildTargetSourcePath(bundleLoaderRule.getBuildTarget())),
-            ImmutableSet.<BuildTarget>of());
+            ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
 
     // Ensure the bundle depends on the bundle loader rule.
     assertThat(
         bundleRule.getDeps(),
         hasItem(bundleLoaderRule));
+  }
+
+  @Test
+  public void frameworksToLinkerFlagsTransformer() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
+    Function<
+        ImmutableSortedSet<FrameworkPath>,
+        ImmutableList<String>> frameworksToLinkerFlagsTransformer =
+        CxxLinkableEnhancer.frameworksToLinkerFlagsFunction(resolver);
+
+    ImmutableList<String> linkerFlags = frameworksToLinkerFlagsTransformer.apply(
+        ImmutableSortedSet.of(
+            FrameworkPath.ofSourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.DEVELOPER_DIR,
+                    Paths.get("Library/Frameworks/XCTest.framework"),
+                    Optional.<String>absent())),
+            FrameworkPath.ofSourcePath(
+                new PathSourcePath(projectFilesystem, Paths.get("Vendor/Bar/Bar.framework")))));
+
+    assertEquals(
+        ImmutableList.of(
+            "-framework", "XCTest",
+            "-framework", "Bar"),
+        linkerFlags);
   }
 }

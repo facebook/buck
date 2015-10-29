@@ -147,32 +147,6 @@ public class AppleDescriptionsTest {
   }
 
   @Test
-  public void frameworksToLinkerFlagsTransformer() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-    Function<
-        ImmutableSortedSet<FrameworkPath>,
-        ImmutableList<String>> frameworksToLinkerFlagsTransformer =
-        AppleDescriptions.frameworksToLinkerFlagsFunction(resolver);
-
-    ImmutableList<String> linkerFlags = frameworksToLinkerFlagsTransformer.apply(
-        ImmutableSortedSet.of(
-            FrameworkPath.ofSourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.DEVELOPER_DIR,
-                    Paths.get("Library/Frameworks/XCTest.framework"),
-                    Optional.<String>absent())),
-            FrameworkPath.ofSourcePath(
-                new PathSourcePath(projectFilesystem, Paths.get("Vendor/Bar/Bar.framework")))));
-
-    assertEquals(
-        ImmutableList.of(
-            "-framework", "XCTest",
-            "-framework", "Bar"),
-        linkerFlags);
-  }
-
-  @Test
   public void frameworksToSearchPathsTransformer() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());

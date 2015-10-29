@@ -46,7 +46,6 @@ public class CxxPrepareForLinkStep implements Step {
   private final Path argFilePath;
   private final Path output;
   private final ImmutableList<String> args;
-  private final ImmutableSet<Path> frameworkRoots;
   private final ImmutableSet<Path> librarySearchDirectories;
   private final ImmutableSet<String> libraries;
 
@@ -56,13 +55,11 @@ public class CxxPrepareForLinkStep implements Step {
       Path argFilePath,
       Path output,
       ImmutableList<String> args,
-      ImmutableSet<Path> frameworkRoots,
       ImmutableSet<Path> librarySearchDirectories,
       ImmutableSet<String> libraries) {
     this.argFilePath = argFilePath;
     this.output = output;
     this.args = args;
-    this.frameworkRoots = frameworkRoots;
     this.librarySearchDirectories = librarySearchDirectories;
     this.libraries = libraries;
   }
@@ -93,10 +90,6 @@ public class CxxPrepareForLinkStep implements Step {
   private ImmutableList<String> getLinkerOptions() {
     return ImmutableList.<String>builder()
         .add("-o", output.toString())
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-F"),
-                Iterables.transform(frameworkRoots, Functions.toStringFunction())))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-L"),

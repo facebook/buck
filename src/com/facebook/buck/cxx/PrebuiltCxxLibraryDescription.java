@@ -32,6 +32,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.MacroException;
@@ -299,7 +300,8 @@ public class PrebuiltCxxLibraryDescription
         params.getDeps(),
         Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.<FrameworkPath>of());
   }
 
   @Override
