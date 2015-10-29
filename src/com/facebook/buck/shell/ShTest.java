@@ -29,6 +29,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -61,14 +62,14 @@ public class ShTest
   @AddToRuleKey
   private final SourcePath test;
   @AddToRuleKey
-  private final ImmutableList<String> args;
+  private final ImmutableList<Arg> args;
   private final ImmutableSet<Label> labels;
 
   protected ShTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath test,
-      ImmutableList<String> args,
+      ImmutableList<Arg> args,
       Set<Label> labels) {
     super(params, resolver);
     this.test = test;
@@ -113,11 +114,14 @@ public class ShTest
         getPathToTestOutputDirectory());
 
     // Return a single command that runs an .sh file with no arguments.
-    Step runTest = new RunShTestAndRecordResultStep(
-        getProjectFilesystem(),
-        getResolver().getAbsolutePath(test),
-        args,
-        getPathToTestOutputResult());
+    Step runTest =
+        new RunShTestAndRecordResultStep(
+            getProjectFilesystem(),
+            getResolver().getAbsolutePath(test),
+            FluentIterable.from(args)
+                .transform(Arg.stringifyFunction())
+                .toList(),
+            getPathToTestOutputResult());
 
     return ImmutableList.of(mkdirClean, runTest);
   }
@@ -202,10 +206,18 @@ public class ShTest
         .setTarget(getBuildTarget())
         .setType("custom")
         .addCommand(getResolver().getAbsolutePath(test).toString())
-        .addAllCommand(args)
+        .addAllCommand(
+            FluentIterable.from(args)
+                .transform(Arg.stringifyFunction())
+                .toList())
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
+  }
+
+  @VisibleForTesting
+  protected ImmutableList<Arg> getArgs() {
+    return args;
   }
 
 }
