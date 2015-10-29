@@ -39,7 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -85,7 +85,7 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotJavaSrcFolder));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
-    Set<Path> javaSourceFilePaths;
+    ImmutableSortedSet<Path> javaSourceFilePaths;
     if (androidResourceDeps.isEmpty()) {
       // In this case, the user is likely running a Robolectric test that does not happen to
       // depend on any resources. However, if Robolectric doesn't find an R.java file, it flips
@@ -101,7 +101,7 @@ public class DummyRDotJava extends AbstractBuildRule
               "package com.facebook;\n public class R {}\n",
               emptyRDotJava,
               /* executable */ false));
-      javaSourceFilePaths = ImmutableSet.of(emptyRDotJava);
+      javaSourceFilePaths = ImmutableSortedSet.of(emptyRDotJava);
     } else {
       MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
           getProjectFilesystem(),
@@ -109,8 +109,7 @@ public class DummyRDotJava extends AbstractBuildRule
           rDotJavaSrcFolder,
           unionPackage);
       steps.add(mergeStep);
-      javaSourceFilePaths =
-          ImmutableSet.copyOf(mergeStep.getRDotJavaFiles());
+      javaSourceFilePaths = mergeStep.getRDotJavaFiles();
     }
 
     // Clear out the directory where the .class files will be generated.

@@ -124,7 +124,7 @@ public class ExternalJavac implements Javac {
   @Override
   public String getDescription(
       ImmutableList<String> options,
-      ImmutableSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList) {
     StringBuilder builder = new StringBuilder(pathToJavac.toString());
     builder.append(" ");
@@ -165,7 +165,7 @@ public class ExternalJavac implements Javac {
       SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
       Optional<Path> workingDirectory) throws InterruptedException {
     ImmutableList.Builder<String> command = ImmutableList.builder();

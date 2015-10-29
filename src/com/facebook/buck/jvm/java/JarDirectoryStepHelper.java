@@ -28,7 +28,7 @@ import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
@@ -61,7 +61,7 @@ public class JarDirectoryStepHelper {
   public static int createJarFile(
       ProjectFilesystem filesystem,
       Path pathToOutputFile,
-      ImmutableSet<Path> entriesToJar,
+      ImmutableSortedSet<Path> entriesToJar,
       @Nullable String mainClass,
       @Nullable Path manifestFile,
       boolean mergeManifests,

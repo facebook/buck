@@ -36,6 +36,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -136,7 +137,7 @@ public class GenAidl extends AbstractBuildRule {
         new JarDirectoryStep(
             getProjectFilesystem(),
             output,
-            ImmutableSet.of(outputDirectory),
+            ImmutableSortedSet.of(outputDirectory),
             /* main class */ null,
             /* manifest */ null));
     buildableContext.recordArtifact(output);

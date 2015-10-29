@@ -118,7 +118,7 @@ public class JavaBinary extends AbstractBuildRule
     Step mkdir = new MkdirStep(getProjectFilesystem(), outputDirectory);
     commands.add(mkdir);
 
-    ImmutableSet<Path> includePaths;
+    ImmutableSortedSet<Path> includePaths;
     if (metaInfDirectory != null) {
       Path stagingRoot = outputDirectory.resolve("meta_inf_staging");
       Path stagingTarget = stagingRoot.resolve("META-INF");
@@ -134,12 +134,12 @@ public class JavaBinary extends AbstractBuildRule
           stagingTarget);
       commands.add(link);
 
-      includePaths = ImmutableSet.<Path>builder()
+      includePaths = ImmutableSortedSet.<Path>naturalOrder()
           .add(stagingRoot)
           .addAll(getTransitiveClasspathEntries().values())
           .build();
     } else {
-      includePaths = ImmutableSet.copyOf(getTransitiveClasspathEntries().values());
+      includePaths = ImmutableSortedSet.copyOf(getTransitiveClasspathEntries().values());
     }
 
     Path outputFile = getPathToOutput();

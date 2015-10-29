@@ -71,7 +71,7 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step = new JarDirectoryStep(
         new ProjectFilesystem(zipup),
         Paths.get("output.jar"),
-        ImmutableSet.of(first.getFileName(), second.getFileName()),
+        ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
         "com.example.Main",
         /* manifest file */ null);
     ExecutionContext context = TestExecutionContext.newInstance();
@@ -97,7 +97,7 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step = new JarDirectoryStep(
         new ProjectFilesystem(zipup),
         Paths.get("output.jar"),
-        ImmutableSet.of(zip.getFileName()),
+        ImmutableSortedSet.of(zip.getFileName()),
         "com.example.MissingMain",
         /* manifest file */ null);
     TestConsole console = new TestConsole();
@@ -127,7 +127,7 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step = new JarDirectoryStep(
         new ProjectFilesystem(zipup),
         Paths.get("output.jar"),
-        ImmutableSet.of(first.getFileName(), second.getFileName()),
+        ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
         "com.example.Main",
         /* manifest file */ null);
 
@@ -174,7 +174,7 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step = new JarDirectoryStep(
         new ProjectFilesystem(tmp),
         Paths.get("output.jar"),
-        ImmutableSet.of(Paths.get("input.jar")),
+        ImmutableSortedSet.of(Paths.get("input.jar")),
         /* main class */ null,
         Paths.get("manifest"),
         /* merge manifest */ true,
@@ -202,7 +202,7 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step = new JarDirectoryStep(
         new ProjectFilesystem(zipup),
         Paths.get("output.jar"),
-        ImmutableSet.of(zipup),
+        ImmutableSortedSet.of(zipup),
         /* main class */ null,
         /* manifest file */ null);
     ExecutionContext context = TestExecutionContext.newInstance();
@@ -259,7 +259,7 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step = new JarDirectoryStep(
         new ProjectFilesystem(zipup),
         Paths.get("output.jar"),
-        ImmutableSet.of(first.getFileName()),
+        ImmutableSortedSet.of(first.getFileName()),
         "com.example.Main",
         /* manifest file */ null,
         /* merge manifests */ true,
@@ -292,7 +292,7 @@ public class JarDirectoryStepTest {
         new JarDirectoryStep(
             new ProjectFilesystem(folder.getRoot()),
             outputJar,
-            ImmutableSet.of(zipup),
+            ImmutableSortedSet.of(zipup),
             /* main class */ null,
             /* manifest file */ null);
     ExecutionContext context = TestExecutionContext.newInstance();

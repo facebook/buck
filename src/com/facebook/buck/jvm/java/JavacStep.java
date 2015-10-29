@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,13 +52,13 @@ public class JavacStep implements Step {
 
   private final Optional<Path> workingDirectory;
 
-  private final ImmutableSet<Path> javaSourceFilePaths;
+  private final ImmutableSortedSet<Path> javaSourceFilePaths;
 
   private final Optional<Path> pathToSrcsList;
 
   private final JavacOptions javacOptions;
 
-  private final ImmutableSet<Path> declaredClasspathEntries;
+  private final ImmutableSortedSet<Path> declaredClasspathEntries;
 
   private final BuildTarget invokingRule;
 
@@ -71,8 +70,8 @@ public class JavacStep implements Step {
 
   /**
    * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, ProjectFilesystem,
-   * SourcePathResolver, BuildTarget, ImmutableList, ImmutableSet, Optional, Optional)} has been
-   * invoked.
+   * SourcePathResolver, BuildTarget, ImmutableList, ImmutableSortedSet, Optional, Optional)} has
+   * been invoked.
    */
   private AtomicBoolean isExecuted = new AtomicBoolean(false);
 
@@ -102,17 +101,16 @@ public class JavacStep implements Step {
   @Nullable
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
-  public static interface SuggestBuildRules {
-    public ImmutableSet<String> suggest(ProjectFilesystem filesystem,
-        ImmutableSet<String> failedImports);
+  public interface SuggestBuildRules {
+    ImmutableSet<String> suggest(ProjectFilesystem filesystem, ImmutableSet<String> failedImports);
   }
 
   public JavacStep(
       Path outputDirectory,
       Optional<Path> workingDirectory,
-      Set<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
-      Set<Path> declaredClasspathEntries,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
       Optional<SuggestBuildRules> suggestBuildRules,
@@ -120,11 +118,11 @@ public class JavacStep implements Step {
       ProjectFilesystem filesystem) {
     this.outputDirectory = outputDirectory;
     this.workingDirectory = workingDirectory;
-    this.javaSourceFilePaths = ImmutableSet.copyOf(javaSourceFilePaths);
+    this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.javacOptions = javacOptions;
 
-    this.declaredClasspathEntries = ImmutableSet.copyOf(declaredClasspathEntries);
+    this.declaredClasspathEntries = declaredClasspathEntries;
     this.invokingRule = invokingRule;
     this.suggestBuildRules = suggestBuildRules;
     this.resolver = resolver;
@@ -251,7 +249,7 @@ public class JavacStep implements Step {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       ExecutionContext context,
-      Set<Path> buildClasspathEntries) {
+      ImmutableSortedSet<Path> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     javacOptions.appendOptionsToList(builder, filesystem.getAbsolutifier());
@@ -282,12 +280,12 @@ public class JavacStep implements Step {
    * @return The classpath entries used to invoke javac.
    */
   @VisibleForTesting
-  ImmutableSet<Path> getClasspathEntries() {
+  ImmutableSortedSet<Path> getClasspathEntries() {
     return declaredClasspathEntries;
   }
 
   @VisibleForTesting
-  ImmutableSet<Path> getSrcs() {
+  ImmutableSortedSet<Path> getSrcs() {
     return javaSourceFilePaths;
   }
 }

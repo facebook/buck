@@ -39,6 +39,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
@@ -158,16 +159,16 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     JavacToJarStepFactory javacToJarStepFactory = new JavacToJarStepFactory(
         fatJarDir,
         Optional.<Path>absent(),
-        ImmutableSet.copyOf(javaSourceFilePaths),
+        ImmutableSortedSet.copyOf(javaSourceFilePaths),
         Optional.<Path>absent(),
-        /* declared classpath */ ImmutableSet.<Path>of(),
+        /* declared classpath */ ImmutableSortedSet.<Path>of(),
         javacOptions,
         getBuildTarget(),
         Optional.<JavacStep.SuggestBuildRules>absent(),
         getResolver(),
         getProjectFilesystem(),
         getOutputPath(),
-        ImmutableSet.of(zipped),
+        ImmutableSortedSet.of(zipped),
         FatJarMain.class.getName(),
         /* manifestFile */ null,
         ImmutableList.of(zipStep)

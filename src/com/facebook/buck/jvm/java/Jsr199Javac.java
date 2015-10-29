@@ -36,6 +36,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -81,7 +82,7 @@ public abstract class Jsr199Javac implements Javac {
   @Override
   public String getDescription(
       ImmutableList<String> options,
-      ImmutableSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList) {
     StringBuilder builder = new StringBuilder("javac ");
     Joiner.on(" ").appendTo(builder, options);
@@ -117,7 +118,7 @@ public abstract class Jsr199Javac implements Javac {
       SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
       Optional<Path> workingDirectory) {
     JavaCompiler compiler = createCompiler(context, resolver);

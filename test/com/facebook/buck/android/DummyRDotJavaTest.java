@@ -41,6 +41,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
 import org.easymock.EasyMock;
@@ -50,7 +51,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
 
 public class DummyRDotJavaTest {
 
@@ -147,7 +147,7 @@ public class DummyRDotJavaTest {
   private static String javacInMemoryDescription(
       String rDotJavaClassesFolder,
       SourcePathResolver resolver) {
-    Set<Path> javaSourceFiles = ImmutableSet.of(
+    ImmutableSortedSet<Path> javaSourceFiles = ImmutableSortedSet.of(
         Paths.get("buck-out/bin/java/base/__rule_rdotjava_src__/com/facebook/R.java"));
     return RDotJava.createJavacStepForDummyRDotJavaFiles(
         javaSourceFiles,

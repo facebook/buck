@@ -101,7 +101,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);
   }
 
-  private static ImmutableSet<Path> toOutputPaths(Iterable<? extends BuildRule> rules) {
+  private static ImmutableSortedSet<Path> toOutputPaths(Iterable<? extends BuildRule> rules) {
     return FluentIterable
           .from(rules)
           .transform(
@@ -117,7 +117,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
                 }
               })
           .filter(Predicates.notNull())
-          .toSet();
+          .toSortedSet(Ordering.<Path>natural());
   }
 
   @Override

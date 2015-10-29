@@ -22,11 +22,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -34,9 +34,9 @@ public class JavacToJarStepFactory {
   // JavacStep parameters
   private Path outputDirectory;
   private Optional<Path> workingDirectory;
-  private Set<Path> javaSourceFilePaths;
+  private ImmutableSortedSet<Path> javaSourceFilePaths;
   private Optional<Path> pathToSrcsList;
-  private Set<Path> declaredClasspathEntries;
+  private ImmutableSortedSet<Path> declaredClasspathEntries;
   private JavacOptions javacOptions;
   private BuildTarget invokingRule;
   private Optional<JavacStep.SuggestBuildRules> suggestBuildRules;
@@ -45,7 +45,7 @@ public class JavacToJarStepFactory {
 
   // JarDirectoryStep parameters
   private Path pathToOutputFile;
-  private Set<Path> entriesToJar;
+  private ImmutableSortedSet<Path> entriesToJar;
   @Nullable private String mainClass;
   @Nullable private Path manifestFile;
 
@@ -53,16 +53,16 @@ public class JavacToJarStepFactory {
 
   public JavacToJarStepFactory(Path outputDirectory,
       Optional<Path> workingDirectory,
-      Set<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
-      Set<Path> declaredClasspathEntries,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
       Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       Path pathToOutputFile,
-      Set<Path> entriesToJar,
+      ImmutableSortedSet<Path> entriesToJar,
       @Nullable String mainClass,
       @Nullable Path manifestFile,
       List<Step> intermediateCommands

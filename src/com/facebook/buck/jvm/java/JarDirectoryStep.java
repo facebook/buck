@@ -21,6 +21,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -41,7 +42,7 @@ public class JarDirectoryStep implements Step {
   private final Path pathToOutputFile;
 
   /** A collection of directories/ZIP/JAR files to include in the generated JAR file. */
-  private final ImmutableSet<Path> entriesToJar;
+  private final ImmutableSortedSet<Path> entriesToJar;
 
   /** If specified, the Main-Class to list in the manifest of the generated JAR file. */
   @Nullable
@@ -58,7 +59,7 @@ public class JarDirectoryStep implements Step {
   public JarDirectoryStep(
       ProjectFilesystem filesystem,
       Path pathToOutputFile,
-      Set<Path> entriesToJar,
+      ImmutableSortedSet<Path> entriesToJar,
       @Nullable String mainClass,
       @Nullable Path manifestFile) {
     this(
@@ -88,14 +89,14 @@ public class JarDirectoryStep implements Step {
   public JarDirectoryStep(
       ProjectFilesystem filesystem,
       Path pathToOutputFile,
-      Set<Path> entriesToJar,
+      ImmutableSortedSet<Path> entriesToJar,
       @Nullable String mainClass,
       @Nullable Path manifestFile,
       boolean mergeManifests,
       Set<String> blacklist) {
     this.filesystem = filesystem;
     this.pathToOutputFile = pathToOutputFile;
-    this.entriesToJar = ImmutableSet.copyOf(entriesToJar);
+    this.entriesToJar = entriesToJar;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;

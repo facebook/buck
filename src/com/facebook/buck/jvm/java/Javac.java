@@ -27,7 +27,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -51,13 +51,13 @@ public interface Javac extends RuleKeyAppendable, Tool {
       SourcePathResolver resolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
       Optional<Path> workingDirectory) throws InterruptedException;
 
   String getDescription(
       ImmutableList<String> options,
-      ImmutableSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList);
 
   String getShortName();

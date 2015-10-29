@@ -1128,7 +1128,7 @@ public class DefaultJavaLibraryTest {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     buildable.createCommandsForJavacJar(
         buildable.getPathToOutput(),
-        ImmutableSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
+        ImmutableSortedSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
         DEFAULT_JAVAC_OPTIONS,
         Optional.<JavacStep.SuggestBuildRules>absent(),
         stepsBuilder,
@@ -1160,7 +1160,7 @@ public class DefaultJavaLibraryTest {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     buildable.createCommandsForJavacJar(
         buildable.getPathToOutput(),
-        ImmutableSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
+        ImmutableSortedSet.copyOf(buildable.getDeclaredClasspathEntries().values()),
         buildable.getJavacOptions(),
         Optional.<JavacStep.SuggestBuildRules>absent(),
         stepsBuilder,
@@ -1358,7 +1358,7 @@ public class DefaultJavaLibraryTest {
           .build();
 
       ImmutableList<String> options = javacCommand.getOptions(executionContext,
-          /* buildClasspathEntries */ ImmutableSet.<Path>of());
+          /* buildClasspathEntries */ ImmutableSortedSet.<Path>of());
 
       return options;
     }

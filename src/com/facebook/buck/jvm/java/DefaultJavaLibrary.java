@@ -71,7 +71,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -331,7 +330,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @VisibleForTesting
   void createCommandsForJavacJar(
       Path outputDirectory,
-      ImmutableSet<Path> declaredClasspathEntries,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
       JavacOptions javacOptions,
       Optional<JavacStep.SuggestBuildRules> suggestBuildRules,
       ImmutableList.Builder<Step> commands,
@@ -358,7 +357,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           getResolver(),
           getProjectFilesystem(),
           pathToOutputFile,
-          Collections.singleton(outputDirectory),
+          ImmutableSortedSet.of(outputDirectory),
           null,
           null,
           intermediateCommands);
@@ -503,7 +502,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .filter(Predicates.notNull())
         .toSet();
 
-    ImmutableSet<Path> declared = ImmutableSet.<Path>builder()
+    ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
         .addAll(declaredClasspathEntries.values())
         .addAll(provided)
         .build();
@@ -560,7 +559,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
             new JarDirectoryStep(
                 getProjectFilesystem(),
                 output,
-                Collections.singleton(outputDirectory),
+                ImmutableSortedSet.of(outputDirectory),
           /* mainClass */ null,
           /* manifestFile */ null));
       }

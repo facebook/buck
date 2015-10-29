@@ -44,6 +44,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -120,10 +121,11 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
     // Create our Uber-jar, and place it in the tmp folder.
-    commands.add(new JarDirectoryStep(
+    commands.add(
+        new JarDirectoryStep(
             getProjectFilesystem(),
             temp.resolve("classes.jar"),
-            ImmutableSet.copyOf(getTransitiveClasspathEntries().values()),
+            ImmutableSortedSet.copyOf(getTransitiveClasspathEntries().values()),
             null,
             null));
 

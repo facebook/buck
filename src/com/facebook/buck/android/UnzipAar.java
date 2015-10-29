@@ -43,7 +43,7 @@ import com.facebook.buck.zip.UnzipStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -131,7 +131,7 @@ public class UnzipAar extends AbstractBuildRule
           }
         } else {
           // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
-          ImmutableSet.Builder<Path> entriesToJarBuilder = ImmutableSet.builder();
+          ImmutableSortedSet.Builder<Path> entriesToJarBuilder = ImmutableSortedSet.naturalOrder();
           entriesToJarBuilder.add(classesJar);
           try {
             entriesToJarBuilder.addAll(
@@ -141,7 +141,7 @@ public class UnzipAar extends AbstractBuildRule
             return 1;
           }
 
-          ImmutableSet<Path> entriesToJar = entriesToJarBuilder.build();
+          ImmutableSortedSet<Path> entriesToJar = entriesToJarBuilder.build();
           try {
             JarDirectoryStepHelper.createJarFile(
                 getProjectFilesystem(),

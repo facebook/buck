@@ -36,7 +36,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
@@ -54,7 +54,8 @@ import java.util.Map;
 
 public class ExternalJavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
-  public static final ImmutableSet<Path> SOURCE_PATHS = ImmutableSet.of(Paths.get("foobar.java"));
+  public static final ImmutableSortedSet<Path> SOURCE_PATHS =
+      ImmutableSortedSet.of(Paths.get("foobar.java"));
 
   @Rule
   public DebuggableTemporaryFolder root = new DebuggableTemporaryFolder();

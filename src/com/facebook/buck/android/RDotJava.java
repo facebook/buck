@@ -24,10 +24,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 /**
  * Creates the {@link Step}s needed to generate an uber {@code R.java} file.
@@ -43,7 +42,7 @@ public class RDotJava {
   private RDotJava() {}
 
   static JavacStep createJavacStepForUberRDotJavaFiles(
-      Set<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Path outputDirectory,
       JavacOptions javacOptions,
       BuildTarget buildTarget,
@@ -59,7 +58,7 @@ public class RDotJava {
   }
 
   static JavacStep createJavacStepForDummyRDotJavaFiles(
-      Set<Path> javaSourceFilePaths,
+      ImmutableSortedSet<Path> javaSourceFilePaths,
       Path outputDirectory,
       JavacOptions javacOptions,
       BuildTarget buildTarget,
@@ -71,7 +70,7 @@ public class RDotJava {
         Optional.<Path>absent(),
         javaSourceFilePaths,
         Optional.<Path>absent(),
-        /* declared classpath */ ImmutableSet.<Path>of(),
+        /* declared classpath */ ImmutableSortedSet.<Path>of(),
         JavacOptions.builder(javacOptions)
             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
             .build(),

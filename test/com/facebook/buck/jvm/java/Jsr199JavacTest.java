@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
@@ -32,7 +32,8 @@ import java.nio.file.Paths;
 
 public class Jsr199JavacTest extends EasyMockSupport {
   private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
-  public static final ImmutableSet<Path> SOURCE_FILES = ImmutableSet.of(Paths.get("foobar.java"));
+  public static final ImmutableSortedSet<Path> SOURCE_FILES =
+      ImmutableSortedSet.of(Paths.get("foobar.java"));
 
   @Test
   public void testJavacCommand() {

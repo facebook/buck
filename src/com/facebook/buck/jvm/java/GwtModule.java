@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
@@ -86,7 +85,7 @@ public class GwtModule extends AbstractBuildRule {
         new JarDirectoryStep(
             getProjectFilesystem(),
             outputFile,
-        /* entriesToJar */ ImmutableSet.of(tempJarFolder),
+        /* entriesToJar */ ImmutableSortedSet.of(tempJarFolder),
         /* mainClass */ null,
         /* manifestFile */ null));
 

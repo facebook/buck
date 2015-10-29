@@ -39,6 +39,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 
 import org.junit.Before;
@@ -67,7 +68,8 @@ public class Jsr199JavacIntegrationTest {
 
   private static final SourcePathResolver PATH_RESOLVER =
       new SourcePathResolver(new BuildRuleResolver());
-  public static final ImmutableSet<Path> SOURCE_PATHS = ImmutableSet.of(Paths.get("Example.java"));
+  public static final ImmutableSortedSet<Path> SOURCE_PATHS =
+      ImmutableSortedSet.of(Paths.get("Example.java"));
   @Rule
   public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
