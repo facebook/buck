@@ -378,6 +378,7 @@ public class ProjectWorkspace {
         "ANDROID_NDK",
         "ANDROID_NDK_REPOSITORY",
         "ANDROID_SDK",
+        "NDK_HOME",
         "PATH",
         "PATHEXT",
 

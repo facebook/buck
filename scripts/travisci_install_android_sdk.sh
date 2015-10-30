@@ -3,7 +3,7 @@ set -x
 
 export ANDROID_TOOL=${ANDROID_HOME}/tools/android
 
-# Because we cache ANDROID_HOME in Travis, we cannot test for the existance of
+# Because we cache ANDROID_HOME in Travis, we cannot test for the existence of
 # the directory; it always gets created before we run.  Instead, check for the
 # tool we care about, and if it doesn't exist, download the SDK.
 if [ ! -x ${ANDROID_TOOL} ]; then

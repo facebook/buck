@@ -18,11 +18,14 @@ addons:
 
 before_install:
   # Set up the Android environment.
+  - export NDK_HOME=${HOME}/android-ndk-linux
+  - ./scripts/travisci_install_android_ndk.sh
   - export ANDROID_HOME=${HOME}/android-sdk-linux
   - ./scripts/travisci_install_android_sdk.sh
 
 cache:
   directories:
+    - $HOME/android-ndk-linux
     - $HOME/android-sdk-linux
 
 script:
