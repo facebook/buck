@@ -28,7 +28,7 @@ do
   --filter \
 tools,\
 platform-tools,\
-build-tools-23.0.1,\
+build-tools-23.0.2,\
 android-23,\
 addon-google_apis-google-23,\
 android-21,\
