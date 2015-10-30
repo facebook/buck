@@ -9,6 +9,7 @@ if [ ! -f ${NDK_HOME}/RELEASE.TXT ]; then
   chmod a+x android-ndk-r10e-linux-x86_64.bin
   # Suppress the output to not spam the logs.
   ./android-ndk-r10e-linux-x86_64.bin > /dev/null
+  rm android-ndk-r10e-linux-x86_64.bin
   rm -rf ${NDK_HOME}
   mv android-ndk-r10e ${NDK_HOME}
 fi

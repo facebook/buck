@@ -9,6 +9,7 @@ export ANDROID_TOOL=${ANDROID_HOME}/tools/android
 if [ ! -x ${ANDROID_TOOL} ]; then
   wget http://dl.google.com/android/android-sdk_r23-linux.tgz
   tar -zxf android-sdk_r23-linux.tgz
+  rm android-sdk_r23-linux.tgz
   rm -rf ${ANDROID_HOME}
   mv android-sdk-linux ${ANDROID_HOME}
 fi
