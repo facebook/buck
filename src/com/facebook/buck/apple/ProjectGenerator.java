@@ -2066,7 +2066,7 @@ public class ProjectGenerator {
                     String shortName = buildTarget.getShortName();
                     Path libPath = pathRelativizer
                       .outputDirToRootRelative(getHalideOutputPath(buildTarget))
-                      .resolve(shortName + ".o");
+                      .resolve(shortName + ".a");
                     builder.add(libPath.toString());
                   }
                   return builder.build();
