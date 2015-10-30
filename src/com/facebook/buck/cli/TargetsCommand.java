@@ -18,6 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.hashing.FileHashLoader;
+import com.facebook.buck.hashing.FilePathHashLoader;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
@@ -134,6 +137,28 @@ public class TargetsCommand extends AbstractCommand {
       usage = "Print a stable hash of each target after the target name.")
   private boolean isShowTargetHash;
 
+  private enum TargetHashFileMode {
+    PATHS_AND_CONTENTS,
+    PATHS_ONLY,
+  }
+
+  @Option(name = "--target-hash-file-mode",
+      usage = "Modifies computation of target hashes. If set to PATHS_AND_CONTENTS (the " +
+          "default), the contents of all files referenced from the targets will be used to " +
+          "compute the target hash. If set to PATHS_ONLY, only files' paths contribute to the " +
+          "hash. See also --target-hash-modified-paths.")
+  private TargetHashFileMode targetHashFileMode = TargetHashFileMode.PATHS_AND_CONTENTS;
+
+  @Option(name = "--target-hash-modified-paths",
+      usage = "Modifies computation of target hashes. Only effective when " +
+          "--target-hash-file-mode is set to PATHS_ONLY. If a target or its dependencies " +
+          "reference a file from this set, the target's hash will be different than if this " +
+          "option was omitted. Otherwise, the target's hash will be the same as if this option " +
+          "was omitted.",
+      handler = StringSetOptionHandler.class)
+  @SuppressFieldNotInitialized
+  private Supplier<ImmutableSet<String>> targetHashModifiedPaths;
+
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
@@ -186,6 +211,22 @@ public class TargetsCommand extends AbstractCommand {
   /** @return {@code true} if {@code --show-targethash} was specified. */
   public boolean isShowTargetHash() {
     return isShowTargetHash;
+  }
+
+  /** @return mode passed to {@code --target-hash-file-mode}. */
+  public TargetHashFileMode getTargetHashFileMode() {
+    return targetHashFileMode;
+  }
+
+  /**
+   * @return set of paths passed to {@code --assume-modified-files} if either
+   *         {@code --assume-modified-files} or {@code --assume-no-modified-files} is used,
+   *         absent otherwise.
+   */
+  public ImmutableSet<Path> getTargetHashModifiedPaths() throws IOException {
+    return FluentIterable.from(targetHashModifiedPaths.get())
+        .transform(MorePaths.TO_PATH)
+        .toSet();
   }
 
   /** @return the name of the build target identified by the specified alias or {@code null}. */
@@ -664,12 +705,29 @@ public class TargetsCommand extends AbstractCommand {
       projectGraphWithTests = projectGraph;
     }
 
+    TargetHashFileMode targetHashFileMode = getTargetHashFileMode();
+    FileHashLoader fileHashLoader = null;
+    switch (targetHashFileMode) {
+      case PATHS_AND_CONTENTS:
+        fileHashLoader = params.getFileHashCache();
+        break;
+      case PATHS_ONLY:
+        fileHashLoader = new FilePathHashLoader(
+            params.getCell().getRoot(),
+            getTargetHashModifiedPaths());
+        break;
+    }
+    if (fileHashLoader == null) {
+      throw new IllegalStateException(
+          "Invalid value for target hash file mode: " + targetHashFileMode);
+    }
+
     // Hash each target's rule description and contents of any files.
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes =
         TargetGraphHashing.hashTargetGraph(
             params.getCell().getFilesystem(),
             projectGraphWithTests,
-            params.getFileHashCache(),
+            fileHashLoader,
             matchingBuildTargetsWithTests);
 
     // Now that we've parsed all the BUCK files for the rules and their tests,

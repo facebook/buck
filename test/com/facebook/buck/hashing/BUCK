@@ -10,6 +10,7 @@ java_test(
     '//test/com/facebook/buck/timing:testutil',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
+    '//third-party/java/jimfs:jimfs',
     '//third-party/java/junit:junit',
   ]
 )
