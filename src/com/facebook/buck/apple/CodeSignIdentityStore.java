@@ -24,6 +24,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -56,7 +57,7 @@ public class CodeSignIdentityStore {
   /**
    * Find an identity with a particular SHA1 hash of the certificate.
    */
-  public Optional<CodeSignIdentity> findIdentityMatchingFingerprint(String fingerprint) {
+  public Optional<CodeSignIdentity> findIdentityMatchingFingerprint(HashCode fingerprint) {
     for (CodeSignIdentity identity : getIdentities()) {
       if (identity.getFingerprint().equals(fingerprint)) {
         return Optional.of(identity);
@@ -76,7 +77,6 @@ public class CodeSignIdentityStore {
     }
     return Optional.absent();
   }
-
 
   /**
    * Construct a store by asking the system keychain for all stored code sign identities.
@@ -119,10 +119,17 @@ public class CodeSignIdentityStore {
             Matcher matcher = CODE_SIGN_IDENTITY_PATTERN.matcher(result.getStdout().get());
             ImmutableList.Builder<CodeSignIdentity> builder = ImmutableList.builder();
             while (matcher.find()) {
-              String hash = matcher.group(1);
+              Optional<HashCode> fingerprint = CodeSignIdentity.toFingerprint(matcher.group(1));
+              if (!fingerprint.isPresent()) {
+                // security should always output a valid fingerprint string.
+                LOG.warn("Code sign identity fingerprint is invalid, ignored: " + matcher.group(1));
+                break;
+              }
               String subjectCommonName = matcher.group(2);
               CodeSignIdentity identity = CodeSignIdentity.builder()
-                  .setFingerprint(hash).setSubjectCommonName(subjectCommonName).build();
+                  .setFingerprint(fingerprint)
+                  .setSubjectCommonName(subjectCommonName)
+                  .build();
               builder.add(identity);
               LOG.debug("Found code signing identity: " + identity.toString());
             }

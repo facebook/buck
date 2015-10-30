@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 
 import java.io.IOException;
@@ -219,9 +220,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
           this.infoPlistSubstitutions);
       if (customIdentity.isPresent()) {
         LOG.debug("Bundle specifies custom code signing identity: " + customIdentity.get());
-        if (CodeSignIdentity.isFingerprint(customIdentity.get())) {
-          foundIdentity =
-              codeSignIdentityStore.findIdentityMatchingFingerprint(customIdentity.get());
+        Optional<HashCode> fingerprint = CodeSignIdentity.toFingerprint(customIdentity.get());
+        if (fingerprint.isPresent()) {
+          foundIdentity = codeSignIdentityStore.findIdentityMatchingFingerprint(fingerprint.get());
         } else {
           foundIdentity =
               codeSignIdentityStore.findIdentityByCommonNamePrefix(customIdentity.get());
@@ -491,9 +492,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               getProjectFilesystem().getRootPath(),
               bundleDestinationPath,
               signingEntitlementsTempPath,
-              codeSignIdentity.get().getFingerprint()
-          )
-      );
+              codeSignIdentity.get()));
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.

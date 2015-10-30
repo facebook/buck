@@ -33,13 +33,13 @@ public class CodeSignStep implements Step {
   private final Path workingDirectory;
   private final Path pathToSign;
   private final Path pathToSigningEntitlements;
-  private final String codeSignIdentity;
+  private final CodeSignIdentity codeSignIdentity;
 
   public CodeSignStep(
       Path workingDirectory,
       Path pathToSign,
       Path pathToSigningEntitlements,
-      String codeSignIdentity) {
+      CodeSignIdentity codeSignIdentity) {
     this.workingDirectory = workingDirectory;
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
@@ -54,7 +54,7 @@ public class CodeSignStep implements Step {
                 ImmutableList.of(
                     "codesign",
                     "--force",
-                    "--sign", codeSignIdentity,
+                    "--sign", getIdentityArg(codeSignIdentity),
                     "--entitlements", pathToSigningEntitlements.toString(),
                     pathToSign.toString()))
             .setDirectory(workingDirectory.toFile())
@@ -90,5 +90,16 @@ public class CodeSignStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format("code-sign %s",
         pathToSign);
+  }
+
+  /**
+   * Convert a {@link CodeSignIdentity} into a string argument for the codesign tool.
+   */
+  private static String getIdentityArg(CodeSignIdentity identity) {
+    if (identity.getFingerprint().isPresent()) {
+      return identity.getFingerprint().get().toString().toUpperCase();
+    } else {
+      return "-"; // ad-hoc
+    }
   }
 }
