@@ -52,7 +52,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.file.Files;
@@ -81,22 +80,15 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private static final Path PATH_TO_PYWATCHMAN = Paths.get(
       System.getProperty(
           "buck.path_to_pywatchman",
-          "build/pywatchman"));
+          "third-party/py/pywatchman"));
 
   private static final Logger LOG = Logger.get(ProjectBuildFileParser.class);
-
-  private enum BuckPyOutputFormat {
-    JSON,
-    BSER
-  };
 
   private final ImmutableMap<String, String> environment;
 
   private Optional<Path> pathToBuckPy;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
-  private BuckPyOutputFormat buckPyOutputFormat;
-  @Nullable BuildFileToJsonParser buckPyStdoutParser;
   @Nullable private BufferedWriter buckPyStdinWriter;
 
   private final ProjectBuildFileParserOptions options;
@@ -192,19 +184,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
       stderrConsumer.start();
 
       buckPyStdinWriter = new BufferedWriter(new OutputStreamWriter(stdin));
-
-      Reader reader = new InputStreamReader(buckPyProcess.getInputStream(), Charsets.UTF_8);
-      // We explicitly do not close this reader, since it closes the underlying stream.
-      BufferedReader bufferedReader = new BufferedReader(reader);
-      String format = bufferedReader.readLine();
-      if (format == null) {
-        throw new RuntimeException("Cannot determine buck.py output format");
-      }
-      buckPyOutputFormat = BuckPyOutputFormat.valueOf(format);
-
-      if (buckPyOutputFormat == BuckPyOutputFormat.JSON) {
-        buckPyStdoutParser = new BuildFileToJsonParser(reader);
-      }
     }
   }
 
@@ -310,21 +289,16 @@ public class ProjectBuildFileParser implements AutoCloseable {
     buckPyStdinWriter.newLine();
     buckPyStdinWriter.flush();
 
-    LOG.debug("Parsing output of process %s using format %s...", buckPyProcess, buckPyOutputFormat);
+    LOG.debug("Parsing output of process %s...", buckPyProcess);
     List<Map<String, Object>> result;
-    if (buckPyOutputFormat == BuckPyOutputFormat.BSER) {
-      try {
-        Object deserializedValue = bserDeserializer.deserializeBserValue(
-            buckPyProcess.getInputStream());
-        Preconditions.checkState(deserializedValue instanceof List<?>);
-        result = (List<Map<String, Object>>) deserializedValue;
-      } catch (BserDeserializer.BserEofException e) {
-        LOG.warn(e, "Parser exited while decoding BSER data");
-        throw new IOException("Parser exited unexpectedly", e);
-      }
-    } else {
-      Preconditions.checkNotNull(buckPyStdoutParser);
-      result = buckPyStdoutParser.nextRules();
+    try {
+      Object deserializedValue = bserDeserializer.deserializeBserValue(
+          buckPyProcess.getInputStream());
+      Preconditions.checkState(deserializedValue instanceof List<?>);
+      result = (List<Map<String, Object>>) deserializedValue;
+    } catch (BserDeserializer.BserEofException e) {
+      LOG.warn(e, "Parser exited while decoding BSER data");
+      throw new IOException("Parser exited unexpectedly", e);
     }
     LOG.verbose("Got rules: %s", result);
     int numRules = result.size();
@@ -346,14 +320,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
         // Check isInitialized implications (to avoid Eradicate warnings).
         Preconditions.checkNotNull(buckPyStdinWriter);
         Preconditions.checkNotNull(buckPyProcess);
-
-        if (buckPyStdoutParser != null) {
-          try {
-            buckPyStdoutParser.close();
-          } catch (IOException e) {
-            // This is bad, but we swallow this so we can still close the other objects.
-          }
-        }
 
         // Allow buck.py to terminate gracefully.
         try {

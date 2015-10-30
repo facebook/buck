@@ -10,11 +10,11 @@ import __future__
 import functools
 import imp
 import inspect
-import json
 from pathlib import Path, PureWindowsPath, PurePath
 import optparse
 import os
 import os.path
+from pywatchman import bser
 import subprocess
 import sys
 
@@ -123,7 +123,7 @@ def add_rule(rule, build_env):
         .format(rule['buck.type']))
 
     # Include the base path of the BUILD file so the reader consuming this
-    # JSON will know which BUILD file the rule came from.
+    # output will know which BUILD file the rule came from.
     if 'name' not in rule:
         raise ValueError(
             'rules must contain the field \'name\'.  Found %s.' % rule)
@@ -630,12 +630,12 @@ def cygwin_adjusted_path(path):
 # directories of generated files produced by Buck.
 #
 # All of the build rules that are parsed from the BUILD files will be printed
-# to stdout by a JSON parser. That means that printing out other information
-# for debugging purposes will likely break the JSON parsing, so be careful!
+# to stdout encoded in BSER. That means that printing out other information
+# for debugging purposes will break the BSER encoding, so be careful!
 
 
 def main():
-    # Our parent expects to read JSON from our stdout, so if anyone
+    # Our parent expects to read BSER from our stdout, so if anyone
     # uses print, buck will complain with a helpful "but I wanted an
     # array!" message and quit.  Redirect stdout to stderr so that
     # doesn't happen.  Actually dup2 the file handle so that writing
@@ -701,8 +701,6 @@ def main():
 
     watchman_client = None
     watchman_error = None
-    output_format = 'JSON'
-    output_encode = lambda val: json.dumps(val, sort_keys=True)
     if options.use_watchman_glob:
         import pywatchman
         client_args = {}
@@ -712,12 +710,6 @@ def main():
             client_args['timeout'] = max(0.0, options.watchman_query_timeout_ms / 1000.0)
         watchman_client = pywatchman.client(**client_args)
         watchman_error = pywatchman.WatchmanError
-        try:
-            import pywatchman.bser as bser
-        except ImportError, e:
-            import pywatchman.pybser as bser
-        output_format = 'BSER'
-        output_encode = lambda val: bser.dumps(val)
 
     buildFileProcessor = BuildFileProcessor(
         project_root,
@@ -731,20 +723,17 @@ def main():
 
     buildFileProcessor.install_builtins(__builtin__.__dict__)
 
-    to_parent.write(output_format + '\n')
-    to_parent.flush()
-
     for build_file in args:
         build_file = cygwin_adjusted_path(build_file)
         values = buildFileProcessor.process(build_file)
-        to_parent.write(output_encode(values))
+        to_parent.write(bser.dumps(values))
         to_parent.flush()
 
     # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
     for build_file in iter(sys.stdin.readline, ''):
         build_file = cygwin_adjusted_path(build_file)
         values = buildFileProcessor.process(build_file.rstrip())
-        to_parent.write(output_encode(values))
+        to_parent.write(bser.dumps(values))
         to_parent.flush()
 
     # Python tries to flush/close stdout when it quits, and if there's a dead

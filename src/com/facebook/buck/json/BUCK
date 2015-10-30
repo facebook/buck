@@ -1,26 +1,6 @@
-RAW_PARSER_SRCS = [
-  'RawParser.java',
-]
-
-java_library(
-  name = 'raw_parser',
-  srcs = RAW_PARSER_SRCS,
-  tests = [
-    '//test/com/facebook/buck/json:json',
-  ],
-  deps = [
-    '//third-party/java/guava:guava',
-    '//third-party/java/jsr:jsr305',
-    '//third-party/java/gson:gson',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
 java_immutables_library(
   name = 'json',
-  srcs = glob(['*.java'], excludes = RAW_PARSER_SRCS),
+  srcs = glob(['*.java']),
   tests = [
     '//test/com/facebook/buck/json:json',
   ],
@@ -28,7 +8,6 @@ java_immutables_library(
     "buck.py",
   ],
   deps = [
-    ':raw_parser',
     '//src/com/facebook/buck/bser:bser',
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/io:io',

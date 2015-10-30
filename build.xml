@@ -42,6 +42,9 @@
 
   <property name="pathlib.dir" value="${third-party.dir}/py/pathlib" />
   <property name="unittest2.dir" value="${third-party.dir}/py/unittest2" />
+  <property name="pywatchman.dir" value="${third-party.dir}/py/pywatchman" />
+
+  <property name="buck.pythonpath" value="${pathlib.dir}:${pywatchman.dir}" />
 
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.0.21.jar" />
   <property name="immutables.gensrc.dir" value="${build.dir}/immutables" />
@@ -727,14 +730,14 @@
 
   <target name="buck-py-test" description="tests the BUCK parser">
     <exec executable="python" failonerror="true">
-      <env key="PYTHONPATH" path="${pathlib.dir}" />
+      <env key="PYTHONPATH" path="${buck.pythonpath}" />
       <arg value="src/com/facebook/buck/json/buck_test.py" />
     </exec>
   </target>
 
   <target name="class-loader-py-test" description="tests BUCK's class loader setup">
       <exec executable="python" failonerror="true">
-          <env key="PYTHONPATH" path="${pathlib.dir}" />
+          <env key="PYTHONPATH" path="${buck.pythonpath}" />
           <arg value="test/com/facebook/buck/cli/bootstrapper/class_loader_test.py" />
       </exec>
   </target>
