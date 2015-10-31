@@ -171,7 +171,6 @@ public class FakeAppleRuleDescriptions {
   public static final AppleBinaryDescription BINARY_DESCRIPTION =
     new AppleBinaryDescription(
         new CxxBinaryDescription(
-            new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
             new InferBuckConfig(DEFAULT_BUCK_CONFIG),
             DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
             DEFAULT_APPLE_FLAVOR_DOMAIN,

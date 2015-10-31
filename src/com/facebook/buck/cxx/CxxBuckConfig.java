@@ -74,20 +74,6 @@ public class CxxBuckConfig {
   }
 
   /**
-   * @return the {@link BuildTarget} which represents the lex library.
-   */
-  public BuildTarget getLexDep() {
-    return delegate.getRequiredBuildTarget(cxxSection, "lex_dep");
-  }
-
-  /**
-   * @return the {@link BuildTarget} which represents the python library.
-   */
-  public BuildTarget getPythonDep() {
-    return delegate.getRequiredBuildTarget(cxxSection, "python_dep");
-  }
-
-  /**
    * @return the {@link BuildTarget} which represents the gtest library.
    */
   public BuildTarget getGtestDep() {

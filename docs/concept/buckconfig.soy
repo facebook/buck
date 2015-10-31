@@ -404,12 +404,6 @@ This section configures the paths to the C++ toolchain's binaries.
   # Platform for the archiver which is one of {MACOS, LINUX, WINDOWS, UNKNOWN}
   # Note that the platform is normally auto-detected
   archiver_platform = MACOS
-
-  # Path to the lexer
-  lex = /usr/bin/flex
-
-  # Path to the compiler compiler
-  yacc = /usr/bin/bison
 </pre>{/literal}
 
 It also configures configures the default flags to pass to all invocations of said binaries.
@@ -439,12 +433,6 @@ It also configures configures the default flags to pass to all invocations of sa
 
   # Flags to pass to the archiver
   arflags =
-
-  # Flags to pass to the lexer
-  lexflags =
-
-  # Flags to pass to the compiler compiler
-  yaccflags =
 </pre>{/literal}
 
 Adding a section with header [cxx#<i>flavor</i>] to the .buckconfig will add

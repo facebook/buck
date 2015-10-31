@@ -158,9 +158,6 @@ public class CxxLibraryDescription implements
             ruleResolver,
             pathResolver,
             cxxPlatform,
-            /* includeLexYaccHeaders */ false,
-            ImmutableMap.<String, SourcePath>of(),
-            ImmutableMap.<String, SourcePath>of(),
             exportedHeaders,
             HeaderVisibility.PUBLIC);
     Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
@@ -196,8 +193,6 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Optional<SourcePath> prefixHeader,
@@ -209,24 +204,12 @@ public class CxxLibraryDescription implements
       CxxPreprocessMode preprocessMode,
       CxxSourceRuleFactory.PicType pic) {
 
-    CxxHeaderSourceSpec lexYaccSources =
-        CxxDescriptionEnhancer.requireLexYaccSources(
-            params,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            lexSources,
-            yaccSources);
-
     HeaderSymlinkTree headerSymlinkTree =
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params,
             ruleResolver,
             pathResolver,
             cxxPlatform,
-            /* includeLexYaccHeaders */ true,
-            lexSources,
-            yaccSources,
             headers,
             HeaderVisibility.PRIVATE);
 
@@ -248,12 +231,6 @@ public class CxxLibraryDescription implements
                 exportedHeaders,
                 frameworks));
 
-    ImmutableMap<String, CxxSource> allSources =
-        ImmutableMap.<String, CxxSource>builder()
-            .putAll(sources)
-            .putAll(lexYaccSources.getCxxSources())
-            .build();
-
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
         params,
@@ -264,7 +241,7 @@ public class CxxLibraryDescription implements
         compilerFlags,
         prefixHeader,
         preprocessMode,
-        allSources,
+        sources,
         pic);
   }
 
@@ -279,8 +256,6 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Optional<SourcePath> prefixHeader,
@@ -299,8 +274,6 @@ public class CxxLibraryDescription implements
         ruleResolver,
         pathResolver,
         cxxPlatform,
-        lexSources,
-        yaccSources,
         preprocessorFlags,
         exportedPreprocessorFlags,
         prefixHeader,
@@ -356,8 +329,6 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Optional<SourcePath> prefixHeader,
@@ -382,8 +353,6 @@ public class CxxLibraryDescription implements
         ruleResolver,
         pathResolver,
         cxxPlatform,
-        lexSources,
-        yaccSources,
         preprocessorFlags,
         exportedPreprocessorFlags,
         prefixHeader,
@@ -465,8 +434,6 @@ public class CxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableMultimap<CxxSource.Type, String> exportedPreprocessorFlags,
       Optional<SourcePath> prefixHeader,
@@ -487,8 +454,6 @@ public class CxxLibraryDescription implements
         ruleResolver,
         pathResolver,
         cxxPlatform,
-        lexSources,
-        yaccSources,
         preprocessorFlags,
         exportedPreprocessorFlags,
         prefixHeader,
@@ -546,8 +511,6 @@ public class CxxLibraryDescription implements
     arg.cxxRuntimeType = Optional.absent();
     arg.forceStatic = Optional.absent();
     arg.linkWhole = Optional.absent();
-    arg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    arg.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     arg.headerNamespace = Optional.absent();
     arg.soname = Optional.absent();
     arg.frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
@@ -568,12 +531,8 @@ public class CxxLibraryDescription implements
       A args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
-        resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        /* includeLexYaccHeaders */ true,
-        CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PRIVATE);
   }
@@ -588,12 +547,8 @@ public class CxxLibraryDescription implements
       A args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
-        resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        /* includeLexYaccHeaders */ false,
-        ImmutableMap.<String, SourcePath>of(),
-        ImmutableMap.<String, SourcePath>of(),
         CxxDescriptionEnhancer.parseExportedHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC);
   }
@@ -615,8 +570,6 @@ public class CxxLibraryDescription implements
         resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
             args.platformPreprocessorFlags,
@@ -674,8 +627,6 @@ public class CxxLibraryDescription implements
         resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
             args.platformPreprocessorFlags,
@@ -722,8 +673,6 @@ public class CxxLibraryDescription implements
         resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxFlags.getLanguageFlags(
             args.preprocessorFlags,
             args.platformPreprocessorFlags,
@@ -908,9 +857,7 @@ public class CxxLibraryDescription implements
       }
     }
 
-    boolean hasObjectsForAnyPlatform = !args.srcs.get().isEmpty() ||
-        !args.lexSrcs.get().isEmpty() ||
-        !args.yaccSrcs.get().isEmpty();
+    boolean hasObjectsForAnyPlatform = !args.srcs.get().isEmpty();
     Predicate<CxxPlatform> hasObjects;
     if (hasObjectsForAnyPlatform) {
       hasObjects = Predicates.alwaysTrue();
@@ -984,10 +931,6 @@ public class CxxLibraryDescription implements
       Function<Optional<String>, Path> cellRoots,
       Arg constructorArg) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-
-    if (constructorArg.lexSrcs.isPresent() && !constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep());
-    }
 
     try {
       for (ImmutableList<String> values :

@@ -17,30 +17,14 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
 public class DefaultCxxPlatformsTest {
-
-  @Test
-  public void lexYaccFlags() {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new CxxBuckConfig(
-            FakeBuckConfig.builder().setSections(
-                ImmutableMap.of(
-                    "cxx", ImmutableMap.of(
-                        "lexflags", "-lex -lex",
-                        "yaccflags", "-yacc -yacc"))).build()));
-    assertEquals(ImmutableList.of("-lex", "-lex"), cxxPlatform.getLexFlags());
-    assertEquals(ImmutableList.of("-yacc", "-yacc"), cxxPlatform.getYaccFlags());
-  }
-
 
   @Test
   public void compilerFlagsPropagateToPreprocessorFlags() {

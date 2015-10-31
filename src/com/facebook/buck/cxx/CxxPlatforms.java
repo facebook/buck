@@ -44,8 +44,6 @@ public class CxxPlatforms {
   private static final ImmutableList<String> DEFAULT_CXXPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_ARFLAGS = ImmutableList.of();
-  private static final ImmutableList<String> DEFAULT_LEX_FLAGS = ImmutableList.of();
-  private static final ImmutableList<String> DEFAULT_YACC_FLAGS = ImmutableList.of("-y");
   private static final ImmutableList<String> DEFAULT_COMPILER_ONLY_FLAGS = ImmutableList.of();
 
   @VisibleForTesting
@@ -77,8 +75,6 @@ public class CxxPlatforms {
       ImmutableList<String> asppflags,
       ImmutableList<String> cflags,
       ImmutableList<String> cppflags,
-      Optional<Tool> lex,
-      Optional<Tool> yacc,
       String sharedLibraryExtension,
       Optional<DebugPathSanitizer> debugPathSanitizer,
       ImmutableMap<String, String> flagMacros) {
@@ -101,8 +97,6 @@ public class CxxPlatforms {
         .addAllLdflags(ldFlags)
         .setAr(getTool(flavor, "ar", config).transform(getArchiver(ar.getClass(), config)).or(ar))
         .setStrip(getTool(flavor, "strip", config).or(strip))
-        .setLex(getTool(flavor, "lex", config).or(lex))
-        .setYacc(getTool(flavor, "yacc", config).or(yacc))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setDebugPathSanitizer(debugPathSanitizer.or(CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER))
         .setFlagMacros(flagMacros);
@@ -157,8 +151,6 @@ public class CxxPlatforms {
                 .transform(getArchiver(defaultPlatform.getAr().getClass(), config))
                 .or(defaultPlatform.getAr()))
         .setStrip(getTool(flavor, "strip", config).or(defaultPlatform.getStrip()))
-        .setLex(getTool(flavor, "lex", config).or(defaultPlatform.getLex()))
-        .setYacc(getTool(flavor, "yacc", config).or(defaultPlatform.getYacc()))
         .setSharedLibraryExtension(defaultPlatform.getSharedLibraryExtension())
         .setDebugPathSanitizer(defaultPlatform.getDebugPathSanitizer());
 
@@ -248,9 +240,7 @@ public class CxxPlatforms {
         .addAllCxxppflags(config.getFlags("cxxppflags").or(DEFAULT_CXXPPFLAGS))
         .addAllCxxppflags(cxxflags)
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
-        .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
-        .addAllLexFlags(config.getFlags("lexflags").or(DEFAULT_LEX_FLAGS))
-        .addAllYaccFlags(config.getFlags("yaccflags").or(DEFAULT_YACC_FLAGS));
+        .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS));
   }
 
   public static void addToolFlagsFromCxxPlatform(
@@ -267,9 +257,7 @@ public class CxxPlatforms {
         .addAllCxxppflags(platform.getCxxflags())
         .addAllCxxppflags(platform.getCxxppflags())
         .addAllLdflags(platform.getLdflags())
-        .addAllArflags(platform.getArflags())
-        .addAllLexFlags(platform.getLexFlags())
-        .addAllYaccFlags(platform.getYaccFlags());
+        .addAllArflags(platform.getArflags());
   }
 
   public static CxxPlatform getConfigDefaultCxxPlatform(

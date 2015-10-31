@@ -185,8 +185,6 @@ public class HalideLibraryDescription implements
         cxxPlatform,
         srcs,
         /* headers */ ImmutableMap.<Path, SourcePath>of(),
-        /* lexSrcs */ ImmutableMap.<String, SourcePath>of(),
-        /* yaccSrcs */ ImmutableMap.<String, SourcePath>of(),
         preprocessMode,
         Linker.LinkableDepType.STATIC,
         preprocessorFlags,
@@ -250,12 +248,8 @@ public class HalideLibraryDescription implements
           new BuildTargetSourcePath(unflavoredTarget, outputPath));
         return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           params,
-          resolver,
           new SourcePathResolver(resolver),
           cxxPlatform.get().getValue(),
-          /* includeLexYaccHeaders */ false,
-          ImmutableMap.<String, SourcePath>of(),
-          ImmutableMap.<String, SourcePath>of(),
           headersBuilder.build(),
           HeaderVisibility.PUBLIC);
       } else if (type.get().getValue() == Type.HALIDE_COMPILER) {

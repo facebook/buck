@@ -252,8 +252,6 @@ public class AppleCxxPlatforms {
         ImmutableList.<String>of(),
         cflags,
         ImmutableList.<String>of(),
-        getOptionalTool("lex", toolSearchPaths, executableFinder, version),
-        getOptionalTool("yacc", toolSearchPaths, executableFinder, version),
         "dylib",
         Optional.of(debugPathSanitizer),
         macros);

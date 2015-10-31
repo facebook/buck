@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.TestRule;
@@ -109,7 +108,6 @@ public class CxxTestDescriptionTest {
     constructorArg.env = Optional.of(ImmutableMap.<String, String>of());
     constructorArg.args = Optional.of(ImmutableList.<String>of());
     constructorArg.useDefaultTestMain = Optional.of(true);
-    constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     constructorArg.linkerFlags = Optional.of(ImmutableList.<String>of());
     constructorArg.platformLinkerFlags =
         Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());

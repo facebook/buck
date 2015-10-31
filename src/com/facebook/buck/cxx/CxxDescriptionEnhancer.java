@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -40,7 +39,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
@@ -64,7 +62,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -86,7 +83,6 @@ public class CxxDescriptionEnhancer {
       ImmutableFlavor.of("shared-library-symlink-tree");
 
   public static final Flavor CXX_LINK_BINARY_FLAVOR = ImmutableFlavor.of("binary");
-  public static final Flavor LEX_YACC_SOURCE_FLAVOR = ImmutableFlavor.of("lex_yacc_sources");
 
   protected static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
@@ -95,57 +91,10 @@ public class CxxDescriptionEnhancer {
 
   private CxxDescriptionEnhancer() {}
 
-  private static BuildTarget createLexYaccSourcesBuildTarget(BuildTarget target) {
-    return BuildTarget.builder(target).addFlavors(LEX_YACC_SOURCE_FLAVOR).build();
-  }
-
-  public static CxxHeaderSourceSpec requireLexYaccSources(
-      BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      CxxPlatform cxxPlatform,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources) {
-    BuildTarget lexYaccTarget = createLexYaccSourcesBuildTarget(params.getBuildTarget());
-
-    // Check the cache...
-    Optional<BuildRule> rule = ruleResolver.getRuleOptional(lexYaccTarget);
-    if (rule.isPresent()) {
-      @SuppressWarnings("unchecked")
-      ContainerBuildRule<CxxHeaderSourceSpec> containerRule =
-          (ContainerBuildRule<CxxHeaderSourceSpec>) rule.get();
-      return containerRule.get();
-    }
-
-    // Setup the rules to run lex/yacc.
-    CxxHeaderSourceSpec lexYaccSources =
-        CxxDescriptionEnhancer.createLexYaccBuildRules(
-            params,
-            ruleResolver,
-            cxxPlatform,
-            ImmutableList.<String>of(),
-            lexSources,
-            ImmutableList.<String>of(),
-            yaccSources);
-
-    ruleResolver.addToIndex(
-        ContainerBuildRule.of(
-            params,
-            pathResolver,
-            lexYaccTarget,
-            lexYaccSources));
-
-    return lexYaccSources;
-  }
-
   public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      boolean includeLexYaccHeaders,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility) {
 
@@ -169,29 +118,13 @@ public class CxxDescriptionEnhancer {
                   headerVisibility));
     }
 
-    CxxHeaderSourceSpec lexYaccSources;
-    if (includeLexYaccHeaders) {
-      lexYaccSources = requireLexYaccSources(
-          params,
-          ruleResolver,
-          pathResolver,
-          cxxPlatform,
-          lexSources,
-          yaccSources);
-    } else {
-      lexYaccSources = CxxHeaderSourceSpec.builder().build();
-    }
-
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         pathResolver,
         headerSymlinkTreeTarget,
         params,
         headerSymlinkTreeRoot,
         headerMapLocation,
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(headers)
-            .putAll(lexYaccSources.getCxxHeaders())
-            .build());
+        headers);
   }
 
   public static HeaderSymlinkTree requireHeaderSymlinkTree(
@@ -199,9 +132,6 @@ public class CxxDescriptionEnhancer {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
-      boolean includeLexYaccHeaders,
-      ImmutableMap<String, SourcePath> lexSources,
-      ImmutableMap<String, SourcePath> yaccSources,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility) {
     BuildTarget headerSymlinkTreeTarget =
@@ -219,12 +149,8 @@ public class CxxDescriptionEnhancer {
 
     HeaderSymlinkTree symlinkTree = createHeaderSymlinkTree(
         params,
-        ruleResolver,
         pathResolver,
         cxxPlatform,
-        includeLexYaccHeaders,
-        lexSources,
-        yaccSources,
         headers,
         headerVisibility);
 
@@ -412,206 +338,6 @@ public class CxxDescriptionEnhancer {
             SourceWithFlags.TO_SOURCE_PATH));
   }
 
-  public static ImmutableMap<String, SourcePath> parseLexSources(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxConstructorArg args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    return pathResolver.getSourcePathNames(
-        params.getBuildTarget(),
-        "lexSrcs",
-        args.lexSrcs.or(ImmutableList.<SourcePath>of()));
-  }
-
-  public static ImmutableMap<String, SourcePath> parseYaccSources(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxConstructorArg args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    return pathResolver.getSourcePathNames(
-        params.getBuildTarget(),
-        "yaccSrcs",
-        args.yaccSrcs.or(ImmutableList.<SourcePath>of()));
-  }
-
-  @VisibleForTesting
-  protected static BuildTarget createLexBuildTarget(UnflavoredBuildTarget target, String name) {
-    return BuildTarget
-        .builder(target)
-        .addFlavors(
-            ImmutableFlavor.of(
-                String.format(
-                    "lex-%s",
-                    name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))))
-        .build();
-  }
-
-  @VisibleForTesting
-  protected static BuildTarget createYaccBuildTarget(UnflavoredBuildTarget target, String name) {
-    return BuildTarget
-        .builder(target)
-        .addFlavors(
-            ImmutableFlavor.of(
-                String.format(
-                    "yacc-%s",
-                    name.replace('/', '-').replace('.', '-').replace('+', '-').replace(' ', '-'))))
-        .build();
-  }
-
-  /**
-   * @return the output path prefix to use for yacc generated files.
-   */
-  @VisibleForTesting
-  protected static Path getYaccOutputPrefix(UnflavoredBuildTarget target, String name) {
-    BuildTarget flavoredTarget = createYaccBuildTarget(target, name);
-    return BuildTargets.getGenPath(flavoredTarget, "%s/" + name);
-  }
-
-  /**
-   * @return the output path to use for the lex generated C/C++ source.
-   */
-  @VisibleForTesting
-  protected static Path getLexSourceOutputPath(UnflavoredBuildTarget target, String name) {
-    BuildTarget flavoredTarget = createLexBuildTarget(target, name);
-    return BuildTargets.getGenPath(flavoredTarget, "%s/" + name + ".cc");
-  }
-
-  /**
-   * @return the output path to use for the lex generated C/C++ header.
-   */
-  @VisibleForTesting
-  protected static Path getLexHeaderOutputPath(UnflavoredBuildTarget target, String name) {
-    BuildTarget flavoredTarget = createLexBuildTarget(target, name);
-    return BuildTargets.getGenPath(flavoredTarget, "%s/" + name + ".h");
-  }
-
-  /**
-   * Generate {@link Lex} and {@link Yacc} rules generating C/C++ sources from the
-   * given lex/yacc sources.
-   *
-   * @return {@link CxxHeaderSourceSpec} containing the generated headers/sources
-   */
-  public static CxxHeaderSourceSpec createLexYaccBuildRules(
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
-      ImmutableList<String> lexFlags,
-      ImmutableMap<String, SourcePath> lexSrcs,
-      ImmutableList<String> yaccFlags,
-      ImmutableMap<String, SourcePath> yaccSrcs) {
-    if (!lexSrcs.isEmpty() && !cxxPlatform.getLex().isPresent()) {
-      throw new HumanReadableException(
-          "Platform %s must support lex to compile srcs %s",
-          cxxPlatform,
-          lexSrcs);
-    }
-
-    if (!yaccSrcs.isEmpty() && !cxxPlatform.getYacc().isPresent()) {
-      throw new HumanReadableException(
-          "Platform %s must support yacc to compile srcs %s",
-          cxxPlatform,
-          yaccSrcs);
-    }
-
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    ImmutableMap.Builder<String, CxxSource> lexYaccCxxSourcesBuilder = ImmutableMap.builder();
-    ImmutableMap.Builder<Path, SourcePath> lexYaccHeadersBuilder = ImmutableMap.builder();
-
-    // Loop over all lex sources, generating build rule for each one and adding the sources
-    // and headers it generates to our bookkeeping maps.
-    UnflavoredBuildTarget unflavoredBuildTarget =
-        params.getBuildTarget().getUnflavoredBuildTarget();
-    for (ImmutableMap.Entry<String, SourcePath> ent : lexSrcs.entrySet()) {
-      final String name = ent.getKey();
-      final SourcePath source = ent.getValue();
-
-      BuildTarget target = createLexBuildTarget(unflavoredBuildTarget, name);
-      Path outputSource = getLexSourceOutputPath(unflavoredBuildTarget, name);
-      Path outputHeader = getLexHeaderOutputPath(unflavoredBuildTarget, name);
-
-      // Create the build rule to run lex on this source and add it to the resolver.
-      Lex lex = new Lex(
-          params.copyWithChanges(
-              target,
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.copyOf(
-                      pathResolver.filterBuildRuleInputs(ImmutableList.of(source)))),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-          pathResolver,
-          cxxPlatform.getLex().get(),
-          ImmutableList.<String>builder()
-              .addAll(cxxPlatform.getLexFlags())
-              .addAll(lexFlags)
-              .build(),
-          outputSource,
-          outputHeader,
-          source);
-      resolver.addToIndex(lex);
-
-      // Record the output source and header as {@link BuildRuleSourcePath} objects.
-      lexYaccCxxSourcesBuilder.put(
-          name + ".cc",
-          CxxSource.of(
-              CxxSource.Type.CXX,
-              new BuildTargetSourcePath(lex.getBuildTarget(), outputSource),
-              ImmutableList.<String>of()));
-      lexYaccHeadersBuilder.put(
-          params.getBuildTarget().getBasePath().resolve(name + ".h"),
-          new BuildTargetSourcePath(lex.getBuildTarget(), outputHeader));
-    }
-
-    // Loop over all yaccc sources, generating build rule for each one and adding the sources
-    // and headers it generates to our bookkeeping maps.
-    for (ImmutableMap.Entry<String, SourcePath> ent : yaccSrcs.entrySet()) {
-      final String name = ent.getKey();
-      final SourcePath source = ent.getValue();
-
-      BuildTarget target = createYaccBuildTarget(unflavoredBuildTarget, name);
-      Path outputPrefix = getYaccOutputPrefix(
-          unflavoredBuildTarget,
-          Files.getNameWithoutExtension(name));
-
-      // Create the build rule to run yacc on this source and add it to the resolver.
-      Yacc yacc = new Yacc(
-          params.copyWithChanges(
-              target,
-              Suppliers.ofInstance(
-                  ImmutableSortedSet.copyOf(
-                      pathResolver.filterBuildRuleInputs(ImmutableList.of(source)))),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-          pathResolver,
-          cxxPlatform.getYacc().get(),
-          ImmutableList.<String>builder()
-              .addAll(cxxPlatform.getYaccFlags())
-              .addAll(yaccFlags)
-              .build(),
-          outputPrefix,
-          source);
-      resolver.addToIndex(yacc);
-
-      // Record the output source and header as {@link BuildRuleSourcePath} objects.
-      lexYaccCxxSourcesBuilder.put(
-          name + ".cc",
-          CxxSource.of(
-              CxxSource.Type.CXX,
-              new BuildTargetSourcePath(
-                  yacc.getBuildTarget(),
-                  Yacc.getSourceOutputPath(outputPrefix)),
-              ImmutableList.<String>of()));
-
-      lexYaccHeadersBuilder.put(
-          params.getBuildTarget().getBasePath().resolve(name + ".h"),
-          new BuildTargetSourcePath(
-              yacc.getBuildTarget(),
-              Yacc.getHeaderOutputPath(outputPrefix)));
-    }
-
-    return CxxHeaderSourceSpec.of(
-        lexYaccHeadersBuilder.build(),
-        lexYaccCxxSourcesBuilder.build());
-  }
-
   public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
       TargetGraph targetGraph,
       BuildRuleParams params,
@@ -775,8 +501,6 @@ public class CxxDescriptionEnhancer {
 
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(params, resolver, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers = parseHeaders(params, resolver, cxxPlatform, args);
-    ImmutableMap<String, SourcePath> lexSrcs = parseLexSources(params, resolver, args);
-    ImmutableMap<String, SourcePath> yaccSrcs = parseYaccSources(params, resolver, args);
     return createBuildRulesForCxxBinary(
         targetGraph,
         params,
@@ -784,8 +508,6 @@ public class CxxDescriptionEnhancer {
         cxxPlatform,
         srcs,
         headers,
-        lexSrcs,
-        yaccSrcs,
         preprocessMode,
         args.linkStyle.or(Linker.LinkableDepType.STATIC),
         args.preprocessorFlags,
@@ -807,8 +529,6 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
-      ImmutableMap<String, SourcePath> lexSrcs,
-      ImmutableMap<String, SourcePath> yaccSrcs,
       CxxPreprocessMode preprocessMode,
       Linker.LinkableDepType linkStyle,
       Optional<ImmutableList<String>> preprocessorFlags,
@@ -826,16 +546,6 @@ public class CxxDescriptionEnhancer {
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
-    // Setup the rules to run lex/yacc.
-    CxxHeaderSourceSpec lexYaccSources =
-        requireLexYaccSources(
-            params,
-            resolver,
-            sourcePathResolver,
-            cxxPlatform,
-            lexSrcs,
-            yaccSrcs);
-
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
     HeaderSymlinkTree headerSymlinkTree = requireHeaderSymlinkTree(
@@ -843,9 +553,6 @@ public class CxxDescriptionEnhancer {
         resolver,
         sourcePathResolver,
         cxxPlatform,
-        /* includeLexYaccHeaders */ true,
-        lexSrcs,
-        yaccSrcs,
         headers,
         HeaderVisibility.PRIVATE);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
@@ -866,13 +573,6 @@ public class CxxDescriptionEnhancer {
                 FluentIterable.from(params.getDeps())
                     .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
 
-    // The complete list of input sources.
-    ImmutableMap<String, CxxSource> sources =
-        ImmutableMap.<String, CxxSource>builder()
-            .putAll(srcs)
-            .putAll(lexYaccSources.getCxxSources())
-            .build();
-
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -888,7 +588,7 @@ public class CxxDescriptionEnhancer {
                 cxxPlatform),
             prefixHeader,
             preprocessMode,
-            sources,
+            srcs,
             linkStyle == Linker.LinkableDepType.STATIC ?
                 CxxSourceRuleFactory.PicType.PDC :
                 CxxSourceRuleFactory.PicType.PIC);

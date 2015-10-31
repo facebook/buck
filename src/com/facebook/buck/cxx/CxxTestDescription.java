@@ -238,10 +238,6 @@ public class CxxTestDescription implements
 
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
-    if (!constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep());
-    }
-
     // Extract parse time deps from flags, args, and environment parameters.
     Iterable<Iterable<String>> macroStrings =
         ImmutableList.<Iterable<String>>builder()

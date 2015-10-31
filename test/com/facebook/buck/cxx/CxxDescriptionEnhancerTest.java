@@ -20,141 +20,31 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.io.Files;
 
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxDescriptionEnhancerTest {
-
-  @Test
-  public void createLexYaccBuildRules() throws IOException {
-    BuildRuleResolver resolver = new BuildRuleResolver();
-
-    // Setup our C++ buck config with the paths to the lex/yacc binaries.
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path lexPath = Paths.get("lex");
-    filesystem.touch(lexPath);
-    Path yaccPath = Paths.get("yacc");
-    filesystem.touch(yaccPath);
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(
-        ImmutableMap.of(
-            "cxx", ImmutableMap.of(
-                "lex", lexPath.toString(),
-                "yacc", yaccPath.toString())))
-        .setFilesystem(filesystem)
-        .build();
-    CxxPlatform cxxBuckConfig = DefaultCxxPlatforms.build(
-        new CxxBuckConfig(buckConfig));
-
-    // Setup the target name and build params.
-    UnflavoredBuildTarget target =
-        BuildTargetFactory.newInstance("//:test").getUnflavoredBuildTarget();
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(BuildTarget.of(target)).build();
-
-    // Setup a genrule that generates our lex source.
-    String lexSourceName = "test.ll";
-    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule_lex");
-    Genrule genrule = (Genrule) GenruleBuilder
-        .newGenruleBuilder(genruleTarget)
-        .setOut(lexSourceName)
-        .build(resolver);
-    SourcePath lexSource = new BuildTargetSourcePath(genrule.getBuildTarget());
-
-    // Use a regular path for our yacc source.
-    String yaccSourceName = "test.yy";
-    SourcePath yaccSource = new TestSourcePath(yaccSourceName);
-
-    // Build the rules.
-    CxxHeaderSourceSpec actual = CxxDescriptionEnhancer.createLexYaccBuildRules(
-        params,
-        resolver,
-        cxxBuckConfig,
-        ImmutableList.<String>of(),
-        ImmutableMap.of(lexSourceName, lexSource),
-        ImmutableList.<String>of(),
-        ImmutableMap.of(yaccSourceName, yaccSource));
-
-    // Grab the generated lex rule and verify it has the genrule as a dep.
-    Lex lex = (Lex) resolver.getRule(
-        CxxDescriptionEnhancer.createLexBuildTarget(target, lexSourceName));
-    assertNotNull(lex);
-    assertEquals(
-        ImmutableSortedSet.<BuildRule>of(genrule),
-        lex.getDeps());
-
-    // Grab the generated yacc rule and verify it has no deps.
-    Yacc yacc = (Yacc) resolver.getRule(
-        CxxDescriptionEnhancer.createYaccBuildTarget(target, yaccSourceName));
-    assertNotNull(yacc);
-    assertEquals(
-        ImmutableSortedSet.<BuildRule>of(),
-        yacc.getDeps());
-
-    // Check the header/source spec is correct.
-    Path lexOutputSource = CxxDescriptionEnhancer.getLexSourceOutputPath(target, lexSourceName);
-    Path lexOutputHeader = CxxDescriptionEnhancer.getLexHeaderOutputPath(target, lexSourceName);
-    Path yaccOutputPrefix =
-        CxxDescriptionEnhancer.getYaccOutputPrefix(
-            target,
-            Files.getNameWithoutExtension(yaccSourceName));
-    Path yaccOutputSource = Yacc.getSourceOutputPath(yaccOutputPrefix);
-    Path yaccOutputHeader = Yacc.getHeaderOutputPath(yaccOutputPrefix);
-    CxxHeaderSourceSpec expected =
-        CxxHeaderSourceSpec.of(
-            ImmutableMap.<Path, SourcePath>of(
-                target.getBasePath().resolve(lexSourceName + ".h"),
-                new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputHeader),
-                target.getBasePath().resolve(yaccSourceName + ".h"),
-                new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputHeader)),
-            ImmutableMap.of(
-                lexSourceName + ".cc",
-                CxxSource.of(
-                    CxxSource.Type.CXX,
-                    new BuildTargetSourcePath(lex.getBuildTarget(), lexOutputSource),
-                    ImmutableList.<String>of()),
-                yaccSourceName + ".cc",
-                CxxSource.of(
-                    CxxSource.Type.CXX,
-                    new BuildTargetSourcePath(yacc.getBuildTarget(), yaccOutputSource),
-                    ImmutableList.<String>of())));
-    assertEquals(expected, actual);
-  }
 
   @Test
   public void libraryTestIncludesPrivateHeadersOfLibraryUnderTest() throws Exception {

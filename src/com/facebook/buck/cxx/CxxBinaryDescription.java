@@ -49,19 +49,16 @@ public class CxxBinaryDescription implements
 
   public static final BuildRuleType TYPE = BuildRuleType.of("cxx_binary");
 
-  private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPreprocessMode preprocessMode;
 
   public CxxBinaryDescription(
-      CxxBuckConfig cxxBuckConfig,
       InferBuckConfig inferBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPreprocessMode preprocessMode) {
-    this.cxxBuckConfig = cxxBuckConfig;
     this.inferBuckConfig = inferBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
@@ -78,12 +75,8 @@ public class CxxBinaryDescription implements
       A args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
-        resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        /* includeLexYaccHeaders */ true,
-        CxxDescriptionEnhancer.parseLexSources(params, resolver, args),
-        CxxDescriptionEnhancer.parseYaccSources(params, resolver, args),
         CxxDescriptionEnhancer.parseHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PRIVATE);
   }
@@ -217,10 +210,6 @@ public class CxxBinaryDescription implements
       Function<Optional<String>, Path> cellRoots,
       Arg constructorArg) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-
-    if (!constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep());
-    }
 
     Iterable<Iterable<String>> macroStrings =
         ImmutableList.<Iterable<String>>builder()

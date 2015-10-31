@@ -215,8 +215,6 @@ public class AppleDescriptions {
     output.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     output.frameworks = arg.frameworks;
     output.libraries = arg.libraries;
-    output.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
-    output.yaccSrcs = Optional.of(ImmutableList.<SourcePath>of());
     output.deps = arg.deps;
     // This is intentionally an empty string; we put all prefixes into
     // the header map itself.

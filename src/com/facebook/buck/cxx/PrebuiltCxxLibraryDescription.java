@@ -206,12 +206,8 @@ public class PrebuiltCxxLibraryDescription
       A args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
-        resolver,
         new SourcePathResolver(resolver),
         cxxPlatform,
-        /* includeLexYaccHeaders */ false,
-        ImmutableMap.<String, SourcePath>of(),
-        ImmutableMap.<String, SourcePath>of(),
         parseExportedHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC);
   }

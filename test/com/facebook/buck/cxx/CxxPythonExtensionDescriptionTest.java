@@ -232,7 +232,6 @@ public class CxxPythonExtensionDescriptionTest {
             .build()
             .getDescription();
     CxxPythonExtensionDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
-    constructorArg.lexSrcs = Optional.of(ImmutableList.<SourcePath>of());
     Iterable<BuildTarget> res = desc.findDepsForTargetFromConstructorArgs(
         BuildTargetFactory.newInstance("//foo:bar"),
         createCellRoots(filesystem),

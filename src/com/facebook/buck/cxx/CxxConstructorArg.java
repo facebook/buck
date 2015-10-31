@@ -48,8 +48,6 @@ public class CxxConstructorArg implements HasTests {
   public Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags;
   public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
   public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
-  public Optional<ImmutableList<SourcePath>> lexSrcs;
-  public Optional<ImmutableList<SourcePath>> yaccSrcs;
   public Optional<ImmutableSortedSet<BuildTarget>> deps;
   public Optional<String> headerNamespace;
   public Optional<Linker.CxxRuntimeType> cxxRuntimeType;

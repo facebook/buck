@@ -24,12 +24,10 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<CxxBinaryDescript
 
   public CxxBinaryBuilder(
       BuildTarget target,
-      CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new CxxBinaryDescription(
-            cxxBuckConfig,
             new InferBuckConfig(FakeBuckConfig.builder().build()),
             defaultCxxPlatform,
             cxxPlatforms,
@@ -38,7 +36,7 @@ public class CxxBinaryBuilder extends AbstractCxxSourceBuilder<CxxBinaryDescript
   }
 
   public CxxBinaryBuilder(BuildTarget target) {
-    this(target, createDefaultConfig(), createDefaultPlatform(), createDefaultPlatforms());
+    this(target, createDefaultPlatform(), createDefaultPlatforms());
   }
 
 }

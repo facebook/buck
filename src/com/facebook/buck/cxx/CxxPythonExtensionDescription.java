@@ -127,20 +127,6 @@ public class CxxPythonExtensionDescription implements
             params,
             ruleResolver,
             cxxPlatform, args);
-    ImmutableMap<String, SourcePath> lexSrcs =
-        CxxDescriptionEnhancer.parseLexSources(params, ruleResolver, args);
-    ImmutableMap<String, SourcePath> yaccSrcs =
-        CxxDescriptionEnhancer.parseYaccSources(params, ruleResolver, args);
-
-    CxxHeaderSourceSpec lexYaccSources =
-        CxxDescriptionEnhancer.createLexYaccBuildRules(
-            params,
-            ruleResolver,
-            cxxPlatform,
-            ImmutableList.<String>of(),
-            lexSrcs,
-            ImmutableList.<String>of(),
-            yaccSrcs);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -149,9 +135,6 @@ public class CxxPythonExtensionDescription implements
         ruleResolver,
         new SourcePathResolver(ruleResolver),
         cxxPlatform,
-        /* includeLexYaccHeaders */ true,
-        lexSrcs,
-        yaccSrcs,
         headers,
         HeaderVisibility.PRIVATE);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
@@ -171,12 +154,6 @@ public class CxxPythonExtensionDescription implements
                 cxxPlatform,
                 params.getDeps()));
 
-    ImmutableMap<String, CxxSource> allSources =
-        ImmutableMap.<String, CxxSource>builder()
-            .putAll(srcs)
-            .putAll(lexYaccSources.getCxxSources())
-            .build();
-
     // Generate rule to build the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
         CxxSourceRuleFactory.requirePreprocessAndCompileRules(
@@ -191,7 +168,7 @@ public class CxxPythonExtensionDescription implements
                 cxxPlatform),
             args.prefixHeader,
             cxxBuckConfig.getPreprocessMode(),
-            allSources,
+            srcs,
             CxxSourceRuleFactory.PicType.PIC);
 
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
@@ -320,10 +297,6 @@ public class CxxPythonExtensionDescription implements
 
     for (PythonPlatform pythonPlatform : pythonPlatforms.getValues()) {
       deps.addAll(pythonPlatform.getCxxLibrary().asSet());
-    }
-
-    if (constructorArg.lexSrcs.isPresent() && !constructorArg.lexSrcs.get().isEmpty()) {
-      deps.add(cxxBuckConfig.getLexDep());
     }
 
     return deps.build();

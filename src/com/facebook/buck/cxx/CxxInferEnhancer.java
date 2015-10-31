@@ -125,14 +125,6 @@ public final class CxxInferEnhancer {
         resolver,
         cxxPlatform,
         args);
-    ImmutableMap<String, SourcePath> lexSrcs = CxxDescriptionEnhancer.parseLexSources(
-        paramsWithoutInferFlavor,
-        resolver,
-        args);
-    ImmutableMap<String, SourcePath> yaccSrcs = CxxDescriptionEnhancer.parseYaccSources(
-        paramsWithoutInferFlavor,
-        resolver,
-        args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -141,9 +133,6 @@ public final class CxxInferEnhancer {
         resolver,
         pathResolver,
         cxxPlatform,
-        /* includeLexYaccHeaders */ true,
-        lexSrcs,
-        yaccSrcs,
         headers,
         HeaderVisibility.PRIVATE);
 
@@ -175,28 +164,11 @@ public final class CxxInferEnhancer {
         cxxPlatform,
         paramsWithoutInferFlavor.getDeps());
 
-    // Setup the rules to run lex/yacc.
-    CxxHeaderSourceSpec lexYaccSources =
-        CxxDescriptionEnhancer.requireLexYaccSources(
-            paramsWithoutInferFlavor,
-            resolver,
-            pathResolver,
-            cxxPlatform,
-            lexSrcs,
-            yaccSrcs);
-
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
         paramsWithoutInferFlavor,
         resolver,
         cxxPlatform,
         args);
-
-    // The complete list of input sources.
-    ImmutableMap<String, CxxSource> sources =
-        ImmutableMap.<String, CxxSource>builder()
-            .putAll(srcs)
-            .putAll(lexYaccSources.getCxxSources())
-            .build();
 
     CxxInferCaptureAndAnalyzeRules cxxInferCaptureAndAnalyzeRules =
         new CxxInferCaptureAndAnalyzeRules(
@@ -204,7 +176,7 @@ public final class CxxInferEnhancer {
               paramsWithoutInferFlavor,
               resolver,
               cxxPlatform,
-              sources,
+              srcs,
               CxxSourceRuleFactory.PicType.PDC,
               inferTools,
               preprocessorInputs,
