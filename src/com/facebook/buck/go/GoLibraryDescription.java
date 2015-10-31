@@ -16,12 +16,15 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -30,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.List;
 
 public class GoLibraryDescription implements Description<GoLibraryDescription.Arg> {
@@ -63,17 +65,26 @@ public class GoLibraryDescription implements Description<GoLibraryDescription.Ar
         params,
         resolver,
         goBuckConfig,
-        args.packageName.or(params.getBuildTarget().getBasePath()),
+        args.packageName.transform(MorePaths.TO_PATH)
+            .or(params.getBuildTarget().getBasePath()),
         args.srcs,
-        args.compilerFlags.or(ImmutableList.<String>of())
+        args.compilerFlags.or(ImmutableList.<String>of()),
+        args.tests.get()
     );
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg {
+  public static class Arg implements HasTests {
     public ImmutableSet<SourcePath> srcs;
     public Optional<List<String>> compilerFlags;
-    public Optional<Path> packageName;
+    public Optional<String> packageName;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getTests() {
+      return tests.get();
+    }
   }
 }

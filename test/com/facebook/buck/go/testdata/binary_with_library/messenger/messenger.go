@@ -1,6 +1,6 @@
 package messenger
 
-import "fmt"
+import "messenger/printer"
 
 type Messenger struct {
 	message string
@@ -11,5 +11,5 @@ func NewMessenger(message string) *Messenger {
 }
 
 func (m *Messenger) Deliver() {
-	fmt.Print(m.message)
+	printer.Print(m.message)
 }
