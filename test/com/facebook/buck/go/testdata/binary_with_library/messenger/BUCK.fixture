@@ -3,7 +3,18 @@ go_library(
   srcs = [
     'messenger.go',
   ],
+  deps = [
+    ':printer',
+  ],
   visibility = [
     'PUBLIC',
   ],
+)
+
+go_library(
+  name = 'printer',
+  package_name = 'messenger/printer',
+  srcs = [
+    'printer.go',
+  ]
 )
