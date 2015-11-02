@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,12 +67,7 @@ public class JavacStep implements Step {
 
   private final ProjectFilesystem filesystem;
 
-  /**
-   * Will be {@code true} once {@link Javac#buildWithClasspath(ExecutionContext, ProjectFilesystem,
-   * SourcePathResolver, BuildTarget, ImmutableList, ImmutableSortedSet, Optional, Optional)} has
-   * been invoked.
-   */
-  private AtomicBoolean isExecuted = new AtomicBoolean(false);
+  private final Javac javac;
 
   private static final Pattern IMPORT_FAILURE =
       Pattern.compile("import ([\\w\\.\\*]*);");
@@ -111,6 +105,7 @@ public class JavacStep implements Step {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Optional<Path> pathToSrcsList,
       ImmutableSortedSet<Path> declaredClasspathEntries,
+      Javac javac,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
       Optional<SuggestBuildRules> suggestBuildRules,
@@ -123,6 +118,7 @@ public class JavacStep implements Step {
     this.javacOptions = javacOptions;
 
     this.declaredClasspathEntries = declaredClasspathEntries;
+    this.javac = javac;
     this.invokingRule = invokingRule;
     this.suggestBuildRules = suggestBuildRules;
     this.resolver = resolver;
@@ -131,11 +127,7 @@ public class JavacStep implements Step {
 
   @Override
   public final int execute(ExecutionContext context) throws IOException, InterruptedException {
-    try {
-      return tryBuildWithFirstOrderDeps(context, filesystem);
-    } finally {
-      isExecuted.set(true);
-    }
+    return tryBuildWithFirstOrderDeps(context, filesystem);
   }
 
   private int tryBuildWithFirstOrderDeps(ExecutionContext context, ProjectFilesystem filesystem)
@@ -207,7 +199,7 @@ public class JavacStep implements Step {
 
   @VisibleForTesting
   Javac getJavac() {
-    return javacOptions.getJavac();
+    return javac;
   }
 
   @Override

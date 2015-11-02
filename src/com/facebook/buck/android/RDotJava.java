@@ -71,6 +71,7 @@ public class RDotJava {
         javaSourceFilePaths,
         Optional.<Path>absent(),
         /* declared classpath */ ImmutableSortedSet.<Path>of(),
+        javacOptions.getJavac(),
         JavacOptions.builder(javacOptions)
             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
             .build(),

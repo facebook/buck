@@ -95,6 +95,7 @@ public class JavacToJarStepFactory {
         javaSourceFilePaths,
         pathToSrcsList,
         declaredClasspathEntries,
+        javacOptions.getJavac(),
         javacOptions,
         invokingRule,
         suggestBuildRules,
