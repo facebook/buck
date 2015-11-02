@@ -16,6 +16,9 @@
 
 package com.facebook.buck.bser;
 
+// CHECKSTYLE.OFF: AvoidStarImport
+import static com.facebook.buck.bser.BserConstants.*;
+
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 
@@ -85,19 +88,6 @@ public class BserDeserializer {
 
   // 2 bytes marker, 1 byte int size, up to 8 bytes int64 value
   private static final int SNIFF_BUFFER_SIZE = 13;
-
-  private static final byte BSER_ARRAY = 0x00;
-  private static final byte BSER_OBJECT = 0x01;
-  private static final byte BSER_STRING = 0x02;
-  private static final byte BSER_INT8 = 0x03;
-  private static final byte BSER_INT16 = 0x04;
-  private static final byte BSER_INT32 = 0x05;
-  private static final byte BSER_INT64 = 0x06;
-  private static final byte BSER_REAL = 0x07;
-  private static final byte BSER_TRUE = 0x08;
-  private static final byte BSER_FALSE = 0x09;
-  private static final byte BSER_NULL = 0x0a;
-  private static final byte BSER_TEMPLATE = 0x0b;
 
   /**
    * Deserializes the next BSER-encoded value from the stream.
