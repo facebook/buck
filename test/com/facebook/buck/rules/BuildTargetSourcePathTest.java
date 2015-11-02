@@ -37,6 +37,7 @@ public class BuildTargetSourcePathTest {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     BuildRule rule = new FakeBuildRule(target, pathResolver);
+
     resolver.addToIndex(rule);
     BuildTargetSourcePath path = new BuildTargetSourcePath(rule.getBuildTarget());
 
