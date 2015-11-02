@@ -11,7 +11,6 @@ java_library(
       '//src/com/facebook/buck/cxx:rules',
       '//src/com/facebook/buck/d:d',
       '//src/com/facebook/buck/event:event',
-      '//src/com/facebook/buck/go:go',
       '//src/com/facebook/buck/io:watchman',
       '//src/com/facebook/buck/jvm/java:rules',
       '//src/com/facebook/buck/python:rules',

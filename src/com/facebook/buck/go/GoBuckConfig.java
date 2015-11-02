@@ -17,7 +17,6 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.io.ExecutableFinder;
@@ -85,10 +84,6 @@ public class GoBuckConfig {
   }
   Supplier<Tool> getGoLinker() {
     return getGoTool("linker", "link");
-  }
-
-  Optional<Tool> getGoTestMainGenerator(BuildRuleResolver resolver) {
-    return delegate.getTool("go", "test_main_gen", resolver);
   }
 
   ImmutableList<String> getCompilerFlags() {

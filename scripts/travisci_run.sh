@@ -15,7 +15,7 @@ export TERM=dumb
 # Go tests in Travis
 ./bin/buck test \
   --num-threads=3 \
-  --test-selectors '!GoBinaryIntegrationTest|GoTestIntegrationTest'
+  --test-selectors '!GoBinaryIntegrationTest'
 
 # Run all the other checks with ant.
 ant travis

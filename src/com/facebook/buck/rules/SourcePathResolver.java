@@ -91,7 +91,7 @@ public class SourcePathResolver {
   }
 
   /**
-   * @return the {@link Path} for this {@code sourcePath}, resolved using its associated
+   * @return the {@link Path} for this {@code sourcPath}, resolved using its associated
    *     {@link com.facebook.buck.io.ProjectFilesystem}.
    */
   public Path getAbsolutePath(SourcePath sourcePath) {
@@ -138,7 +138,7 @@ public class SourcePathResolver {
       throw new HumanReadableException("No known output for: %s", sourcePath);
     }
 
-    Preconditions.checkState(!toReturn.isAbsolute(), toReturn);
+    Preconditions.checkState(!toReturn.isAbsolute());
 
     return toReturn;
   }

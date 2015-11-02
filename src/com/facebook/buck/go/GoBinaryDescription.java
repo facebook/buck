@@ -18,19 +18,23 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 public class GoBinaryDescription implements Description<GoBinaryDescription.Arg> {
@@ -62,14 +66,42 @@ public class GoBinaryDescription implements Description<GoBinaryDescription.Arg>
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return GoDescriptors.createGoBinaryRule(
-        params,
+    BuildTarget libraryTarget =
+        BuildTarget.builder(params.getBuildTarget())
+            .addFlavors(ImmutableFlavor.of("compile"))
+            .build();
+    GoLibrary library = GoDescriptors.createGoLibraryRule(
+        params.copyWithBuildTarget(libraryTarget),
         resolver,
         goBuckConfig,
-        cxxPlatform,
+        Paths.get("main"),
         args.srcs,
-        args.compilerFlags.or(ImmutableList.<String>of()),
-        args.linkerFlags.or(ImmutableList.<String>of()));
+        args.compilerFlags.or(ImmutableList.<String>of())
+    );
+    resolver.addToIndex(library);
+
+    BuildRuleParams binaryParams = params.copyWithDeps(
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(library)),
+        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())
+    );
+
+    GoSymlinkTree symlinkTree = GoDescriptors.requireTransitiveSymlinkTreeRule(
+        binaryParams,
+        resolver);
+
+    return new GoBinary(
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(symlinkTree, library)),
+            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+        new SourcePathResolver(resolver),
+        cxxPlatform.getLd(),
+        symlinkTree,
+        library,
+        goBuckConfig.getGoLinker().get(),
+        ImmutableList.<String>builder()
+            .addAll(goBuckConfig.getLinkerFlags())
+            .addAll(args.linkerFlags.or(ImmutableList.<String>of()))
+            .build());
   }
 
   @SuppressFieldNotInitialized

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
@@ -31,11 +29,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class GoLibrary extends GoLinkable implements HasTests {
+public class GoLibrary extends GoLinkable {
   @AddToRuleKey
   private final Tool compiler;
   @AddToRuleKey(stringify = true)
@@ -44,9 +41,6 @@ public class GoLibrary extends GoLinkable implements HasTests {
   private final ImmutableSet<SourcePath> srcs;
   @AddToRuleKey
   private final ImmutableList<String> flags;
-
-  private final ImmutableSortedSet<BuildTarget> tests;
-
 
   private final GoSymlinkTree symlinkTree;
   private final Path output;
@@ -58,15 +52,13 @@ public class GoLibrary extends GoLinkable implements HasTests {
       Path packageName,
       ImmutableSet<SourcePath> srcs,
       ImmutableList<String> compilerFlags,
-      Tool compiler,
-      ImmutableSortedSet<BuildTarget> tests) {
+      Tool compiler) {
     super(params, resolver);
     this.srcs = srcs;
     this.symlinkTree = symlinkTree;
     this.packageName = packageName;
     this.flags = compilerFlags;
     this.compiler = compiler;
-    this.tests = tests;
     this.output = BuildTargets.getGenPath(
         getBuildTarget(), "%s/" + getBuildTarget().getShortName() + ".a");
   }
@@ -106,10 +98,5 @@ public class GoLibrary extends GoLinkable implements HasTests {
   @Override
   public BuildableProperties getProperties() {
     return new BuildableProperties(BuildableProperties.Kind.LIBRARY);
-  }
-
-  @Override
-  public ImmutableSortedSet<BuildTarget> getTests() {
-    return tests;
   }
 }

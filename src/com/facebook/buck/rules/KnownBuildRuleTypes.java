@@ -83,7 +83,6 @@ import com.facebook.buck.file.StackedDownloader;
 import com.facebook.buck.go.GoBinaryDescription;
 import com.facebook.buck.go.GoBuckConfig;
 import com.facebook.buck.go.GoLibraryDescription;
-import com.facebook.buck.go.GoTestDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
@@ -521,7 +520,6 @@ public class KnownBuildRuleTypes {
     builder.register(new GenAidlDescription());
     builder.register(new GoBinaryDescription(goBuckConfig, defaultCxxPlatform));
     builder.register(new GoLibraryDescription(goBuckConfig));
-    builder.register(new GoTestDescription(goBuckConfig, defaultCxxPlatform));
     builder.register(new GwtBinaryDescription());
     builder.register(
       new HalideLibraryDescription(
