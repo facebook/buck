@@ -59,6 +59,7 @@ public class JarDirectoryStepHelper {
   public static int createJarFile(
       ProjectFilesystem filesystem,
       Path pathToOutputFile,
+      CustomZipOutputStream outputFile,
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
@@ -71,75 +72,97 @@ public class JarDirectoryStepHelper {
     manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
     Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
-    try (CustomZipOutputStream outputFile = ZipOutputStreams.newOutputStream(
-        absoluteOutputPath, APPEND_TO_ZIP)) {
 
-      Set<String> alreadyAddedEntries = Sets.newHashSet();
-      for (Path entry : entriesToJar) {
-        Path file = filesystem.getPathForRelativePath(entry);
-        if (Files.isRegularFile(file)) {
-          Preconditions.checkArgument(
-              !file.equals(absoluteOutputPath),
-              "Trying to put file %s into itself",
-              file);
-          // Assume the file is a ZIP/JAR file.
-          copyZipEntriesToJar(
-              file,
-              outputFile,
-              manifest,
-              alreadyAddedEntries,
-              context.getBuckEventBus(),
-              blacklist);
-        } else if (Files.isDirectory(file)) {
-          addFilesInDirectoryToJar(
-              file,
-              outputFile,
-              alreadyAddedEntries,
-              context.getBuckEventBus());
-        } else {
-          throw new IllegalStateException("Must be a file or directory: " + file);
-        }
+    Set<String> alreadyAddedEntries = Sets.newHashSet();
+    for (Path entry : entriesToJar) {
+      Path file = filesystem.getPathForRelativePath(entry);
+      if (Files.isRegularFile(file)) {
+        Preconditions.checkArgument(
+            !file.equals(absoluteOutputPath),
+            "Trying to put file %s into itself",
+            file);
+        // Assume the file is a ZIP/JAR file.
+        copyZipEntriesToJar(
+            file,
+            outputFile,
+            manifest,
+            alreadyAddedEntries,
+            context.getBuckEventBus(),
+            blacklist);
+      } else if (Files.isDirectory(file)) {
+        addFilesInDirectoryToJar(
+            file,
+            outputFile,
+            alreadyAddedEntries,
+            context.getBuckEventBus());
+      } else {
+        throw new IllegalStateException("Must be a file or directory: " + file);
       }
-
-      // Read the user supplied manifest file, allowing it to overwrite existing entries in the
-      // uber manifest we've built.
-      if (manifestFile.isPresent()) {
-        try (InputStream manifestStream = Files.newInputStream(
-            filesystem.getPathForRelativePath(manifestFile.get()))) {
-          Manifest userSupplied = new Manifest(manifestStream);
-
-          // In the common case, we want to use the merged manifests. In the uncommon case, we just
-          // want to use the one the user gave us.
-          if (mergeManifests) {
-            merge(manifest, userSupplied);
-          } else {
-            manifest = userSupplied;
-          }
-        }
-      }
-
-      // The process of merging the manifests means that existing entries are
-      // overwritten. To ensure that our main_class is set as expected, we
-      // write it here.
-      if (mainClass.isPresent()) {
-        if (!mainClassPresent(mainClass.get(), alreadyAddedEntries)) {
-          context.getStdErr().print(
-              String.format(
-                  "ERROR: Main class %s does not exist.\n",
-                  mainClass.get()));
-          return 1;
-        }
-
-        manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass.get());
-      }
-
-      JarEntry manifestEntry = new JarEntry(JarFile.MANIFEST_NAME);
-      manifestEntry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
-      outputFile.putNextEntry(manifestEntry);
-      manifest.write(outputFile);
     }
 
+    // Read the user supplied manifest file, allowing it to overwrite existing entries in the
+    // uber manifest we've built.
+    if (manifestFile.isPresent()) {
+      try (InputStream manifestStream = Files.newInputStream(
+          filesystem.getPathForRelativePath(manifestFile.get()))) {
+        Manifest userSupplied = new Manifest(manifestStream);
+
+        // In the common case, we want to use the merged manifests. In the uncommon case, we just
+        // want to use the one the user gave us.
+        if (mergeManifests) {
+          merge(manifest, userSupplied);
+        } else {
+          manifest = userSupplied;
+        }
+      }
+    }
+
+    // The process of merging the manifests means that existing entries are
+    // overwritten. To ensure that our main_class is set as expected, we
+    // write it here.
+    if (mainClass.isPresent()) {
+      if (!mainClassPresent(mainClass.get(), alreadyAddedEntries)) {
+        context.getStdErr().print(
+            String.format(
+                "ERROR: Main class %s does not exist.\n",
+                mainClass.get()));
+        return 1;
+      }
+
+      manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass.get());
+    }
+
+    JarEntry manifestEntry = new JarEntry(JarFile.MANIFEST_NAME);
+    manifestEntry.setTime(0);  // We want deterministic JARs, so avoid mtimes.
+    outputFile.putNextEntry(manifestEntry);
+    manifest.write(outputFile);
+
     return 0;
+  }
+
+  public static int createJarFile(
+      ProjectFilesystem filesystem,
+      Path pathToOutputFile,
+      ImmutableSortedSet<Path> entriesToJar,
+      Optional<String> mainClass,
+      Optional<Path> manifestFile,
+      boolean mergeManifests,
+      Iterable<Pattern> blacklist,
+      ExecutionContext context) throws IOException {
+
+    Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
+    try (CustomZipOutputStream outputFile = ZipOutputStreams.newOutputStream(
+        absoluteOutputPath, APPEND_TO_ZIP)) {
+      return createJarFile(filesystem,
+          pathToOutputFile,
+          outputFile,
+          entriesToJar,
+          mainClass,
+          manifestFile,
+          mergeManifests,
+          blacklist,
+          context);
+    }
   }
 
   private static boolean mainClassPresent(
