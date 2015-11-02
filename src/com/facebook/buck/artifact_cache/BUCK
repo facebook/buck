@@ -2,6 +2,7 @@ PUBLIC_API_SOURCES = [
   'AbstractCacheResult.java',
   'ArtifactCache.java',
   'ArtifactCacheEvent.java',
+  'HttpArtifactCacheEvent.java',
   'ArtifactCacheConnectEvent.java',
   'CacheResultType.java',
   'NoopArtifactCache.java',
@@ -23,6 +24,7 @@ java_immutables_library(
   deps = [
     '//src/com/facebook/buck/rules:rule_key',
     '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/model:model',
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-annotations',
   ],

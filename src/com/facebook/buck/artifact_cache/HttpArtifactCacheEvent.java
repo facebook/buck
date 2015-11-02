@@ -14,15 +14,18 @@
  * under the License.
  */
 
-package com.facebook.buck.event;
+package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import java.util.List;
@@ -31,49 +34,42 @@ import java.util.Map;
 /**
  * Event produced for HttpArtifactCache operations containing different stats.
  */
-public abstract class HttpArtifactCacheEvent extends AbstractBuckEvent {
+public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
-  /**
-   * Operation executed by the HttpArtifactCache.
-   */
-  public enum Operation {
-    FETCH,
-    STORE
+  public static final ArtifactCacheEvent.CacheMode CACHE_MODE =
+      ArtifactCacheEvent.CacheMode.http;
+
+  protected HttpArtifactCacheEvent(
+      EventKey eventKey,
+      ArtifactCacheEvent.Operation operation,
+      ImmutableSet<RuleKey> ruleKeys) {
+    super(
+        eventKey,
+        CACHE_MODE,
+        operation,
+        ruleKeys);
   }
 
-  @JsonProperty("operation")
-  private final Operation operation;
-
-  protected HttpArtifactCacheEvent(EventKey eventKey, Operation operation) {
-    super(eventKey);
-    this.operation = operation;
+  public static Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
+    return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys);
   }
 
-  public static Started newFetchStartedEvent() {
-    return new Started(Operation.FETCH);
-  }
-
-  public static Started newStoreStartedEvent() {
-    return new Started(Operation.STORE);
+  public static Started newStoreStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
+    return new Started(ArtifactCacheEvent.Operation.STORE, ruleKeys);
   }
 
   public static Finished.Builder newFinishedEventBuilder(Started event) {
     return new Finished.Builder(event);
   }
 
-  public Operation getOperation() {
-    return operation;
-  }
-
-  @Override
-  protected String getValueString() {
-    return getEventName() + getEventKey().toString();
-  }
-
-  public static class Started extends HttpArtifactCacheEvent {
-
-    public Started(Operation operation) {
-      super(EventKey.unique(), operation);
+  public static class Started extends ArtifactCacheEvent.AbstractStarted {
+    public Started(ArtifactCacheEvent.Operation operation,
+        ImmutableSet<RuleKey> ruleKeys) {
+      super(
+          EventKey.unique(),
+          CACHE_MODE,
+          operation,
+          ruleKeys);
     }
 
     @Override
@@ -82,19 +78,26 @@ public abstract class HttpArtifactCacheEvent extends AbstractBuckEvent {
     }
   }
 
-  public static class Finished extends HttpArtifactCacheEvent {
+  public static class Finished extends ArtifactCacheEvent.AbstractFinished {
 
     @JsonProperty("event_info")
     private final ImmutableMap<String, Object> eventInfo;
 
     @JsonIgnore
-    private final Started startedEvent;
+    private final HttpArtifactCacheEvent.Started startedEvent;
 
     @JsonProperty("request_duration_millis")
     private long requestDurationMillis;
 
-    private Finished(Started event, ImmutableMap<String, Object> data) {
-      super(event.getEventKey(), event.getOperation());
+    private Finished(HttpArtifactCacheEvent.Started event,
+        ImmutableMap<String, Object> data,
+        Optional<CacheResult> cacheResult) {
+      super(
+          event.getEventKey(),
+          CACHE_MODE,
+          event.getOperation(),
+          event.getRuleKeys(),
+          cacheResult);
       this.startedEvent = event;
       this.eventInfo = data;
       this.requestDurationMillis = -1;
@@ -122,16 +125,18 @@ public abstract class HttpArtifactCacheEvent extends AbstractBuckEvent {
 
     public static class Builder {
       private final Map<String, Object> data;
+      private Optional<CacheResult> cacheResult = Optional.absent();
 
-      private final Started startedEvent;
+      private final HttpArtifactCacheEvent.Started startedEvent;
 
-      private Builder(Started event) {
+      private Builder(HttpArtifactCacheEvent.Started event) {
         this.data = Maps.newHashMap();
         this.startedEvent = event;
       }
 
-      public Finished build() {
-        return new Finished(startedEvent, ImmutableMap.copyOf(data));
+      public HttpArtifactCacheEvent.Finished build() {
+        return new HttpArtifactCacheEvent.Finished(
+            startedEvent, ImmutableMap.copyOf(data), cacheResult);
       }
 
       public Builder setArtifactSizeBytes(long artifactSizeBytes) {
@@ -168,8 +173,9 @@ public abstract class HttpArtifactCacheEvent extends AbstractBuckEvent {
         return this;
       }
 
-      public Builder setFetchResult(String cacheResult) {
-        data.put("fetch_result", cacheResult);
+      public Builder setFetchResult(CacheResult cacheResult) {
+        data.put("fetch_result", cacheResult.toString());
+        this.cacheResult = Optional.of(cacheResult);
         return this;
       }
 

@@ -22,8 +22,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.HttpArtifactCacheEvent;
-import com.facebook.buck.event.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -86,8 +84,10 @@ public class HttpArtifactCacheTest {
     }
   }
 
-  private static Finished.Builder createFinishedEventBuilder() {
-    HttpArtifactCacheEvent.Started started = HttpArtifactCacheEvent.newFetchStartedEvent();
+  private static HttpArtifactCacheEvent.Finished.Builder createFinishedEventBuilder() {
+    HttpArtifactCacheEvent.Started started = HttpArtifactCacheEvent.newFetchStartedEvent(
+        ImmutableSet.<RuleKey>of()
+    );
     started.configure(-1, -1, -1, new BuildId());
     return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
   }

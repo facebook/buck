@@ -18,9 +18,8 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.HttpArtifactCacheEvent;
-import com.facebook.buck.event.HttpArtifactCacheEvent.Finished;
-import com.facebook.buck.event.HttpArtifactCacheEvent.Started;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Started;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
@@ -165,7 +164,7 @@ public class HttpArtifactCache implements ArtifactCache {
   public CacheResult fetch(
       RuleKey ruleKey,
       Path output) throws InterruptedException {
-    Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent();
+    Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(ImmutableSet.<RuleKey>of());
     buckEventBus.post(startedEvent);
     Finished.Builder eventBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
         .setRuleKeys(Lists.newArrayList(ruleKey));
@@ -174,7 +173,7 @@ public class HttpArtifactCache implements ArtifactCache {
       CacheResult result = fetchImpl(ruleKey, output, eventBuilder);
       buckEventBus.post(
           eventBuilder
-              .setFetchResult(result.toString())
+              .setFetchResult(result)
               .build());
       return result;
     } catch (IOException e) {
@@ -182,7 +181,7 @@ public class HttpArtifactCache implements ArtifactCache {
       reportFailure(e, "fetch(%s, %s): %s", uri, ruleKey, msg);
       CacheResult cacheResult = CacheResult.error(name, msg);
       buckEventBus.post(eventBuilder
-          .setFetchResult(cacheResult.toString())
+          .setFetchResult(cacheResult)
           .setErrorMessage(msg)
           .build());
       return cacheResult;
@@ -259,7 +258,7 @@ public class HttpArtifactCache implements ArtifactCache {
       return;
     }
 
-    Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent();
+    Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(ruleKeys);
     buckEventBus.post(startedEvent);
     Finished.Builder finishedEventBuilder =
         HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
@@ -307,5 +306,4 @@ public class HttpArtifactCache implements ArtifactCache {
 
   @Override
   public void close() {}
-
 }

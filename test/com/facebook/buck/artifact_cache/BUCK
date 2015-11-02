@@ -52,6 +52,7 @@ java_test(
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/testutil:testutil',
     '//test/com/facebook/buck/timing:testutil',
+    '//third-party/java/jackson:jackson',
     '//third-party/java/guava:guava',
     '//third-party/java/hamcrest:hamcrest',
     '//third-party/java/jsr:jsr305',

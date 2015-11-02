@@ -18,11 +18,13 @@ package com.facebook.buck.event;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Test;
@@ -65,12 +67,14 @@ public class HttpArtifactCacheEventTest {
   }
 
   private static HttpArtifactCacheEvent.Finished.Builder createBuilder() {
-    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent();
+    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(
+        ImmutableSet.<RuleKey>of()
+    );
     configureEvent(startedEvent);
     return HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
   }
 
-  private static void configureEvent(HttpArtifactCacheEvent event) {
+  private static void configureEvent(AbstractBuckEvent event) {
     event.configure(-1, -1, -1, new BuildId());
   }
 }
