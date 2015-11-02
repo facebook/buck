@@ -51,7 +51,7 @@ JAVA_CLASSPATHS = [
     "third-party/java/jackson/jackson-databind-2.0.5.jar",
     "third-party/java/jackson/jackson-datatype-jdk7-2.5.0.jar",
     "third-party/java/jetty/jetty-all-9.2.10.v20150310.jar",
-    "third-party/java/jna/jna-4.1.0.jar",
+    "third-party/java/jna/jna-4.2.0.jar",
     "third-party/java/jsr/javax.inject-1.jar",
     "third-party/java/jsr/jsr305.jar",
     "third-party/java/kxml2/kxml2-2.3.0.jar",
