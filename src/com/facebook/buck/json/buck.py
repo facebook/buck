@@ -7,6 +7,7 @@
 
 import __builtin__
 import __future__
+from collections import namedtuple
 import functools
 import imp
 import inspect
@@ -74,6 +75,7 @@ class BuildFileContext(object):
         self.watchman_project_prefix = watchman_project_prefix
         self.sync_cookie_state = sync_cookie_state
         self.watchman_error = watchman_error
+        self.diagnostics = set()
         self.rules = {}
 
 
@@ -87,6 +89,7 @@ class IncludeContext(object):
     def __init__(self):
         self.globals = {}
         self.includes = set()
+        self.diagnostics = set()
 
 
 class LazyBuildEnvPartial(object):
@@ -110,6 +113,9 @@ class LazyBuildEnvPartial(object):
         updated_kwargs = kwargs.copy()
         updated_kwargs.update({'build_env': self.build_env})
         return self.func(*args, **updated_kwargs)
+
+
+DiagnosticMessageAndLevel = namedtuple('DiagnosticMessageAndLevel', ['message', 'level'])
 
 
 def provide_for_build(func):
@@ -185,9 +191,13 @@ def glob(includes, excludes=[], include_dotfiles=False, build_env=None, search_b
                 build_env.watchman_watch_root,
                 build_env.watchman_project_prefix,
                 build_env.sync_cookie_state,
-                build_env.watchman_client)
+                build_env.watchman_client,
+                build_env.diagnostics)
         except build_env.watchman_error, e:
-            print >>sys.stderr, 'Watchman error, falling back to slow glob: ' + str(e)
+            build_env.diagnostics.add(
+                DiagnosticMessageAndLevel(
+                    message='Watchman error, falling back to slow glob: {0}'.format(e),
+                    level='error'))
             try:
                 build_env.watchman_client.close()
             except:
@@ -298,7 +308,7 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
 
 @memoized
 def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
-                  watchman_project_prefix, sync_cookie_state, watchman_client):
+                  watchman_project_prefix, sync_cookie_state, watchman_client, diagnostics):
     assert includes, "The includes argument must be a non-empty list of strings."
 
     if watchman_project_prefix:
@@ -319,9 +329,10 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
     query = ["query", watchman_watch_root, query_params]
     res = watchman_client.query(*query)
     if res.get('warning'):
-        print >> sys.stderr, 'Watchman warning from query {}: {}'.format(
-            query,
-            res.get('warning'))
+        diagnostics.add(
+            DiagnosticMessageAndLevel(
+                message='Watchman warning: {0}'.format(res.get('warning')),
+                level='warning'))
     result = res.get('files', [])
     return sorted(result)
 
@@ -493,6 +504,9 @@ class BuildFileProcessor(object):
         build_env.includes.add(path)
         build_env.includes.update(inner_env.includes)
 
+        # Pull in any diagnostics issued by the include.
+        build_env.diagnostics.update(inner_env.diagnostics)
+
     def _push_build_env(self, build_env):
         """
         Set the given build context as the current context.
@@ -538,6 +552,7 @@ class BuildFileProcessor(object):
             self._merge_globals(mod, default_globals)
             build_env.includes.add(include_path)
             build_env.includes.update(inner_env.includes)
+            build_env.diagnostics.update(inner_env.diagnostics)
 
         # Build a new module for the given file, using the default globals
         # created above.
@@ -599,7 +614,7 @@ class BuildFileProcessor(object):
             path,
             implicit_includes=implicit_includes)
 
-    def process(self, path):
+    def process(self, path, diagnostics):
         """
         Process a build file returning a dict of it's rules and includes.
         """
@@ -608,6 +623,7 @@ class BuildFileProcessor(object):
             implicit_includes=self._implicit_includes)
         values = build_env.rules.values()
         values.append({"__includes": [path] + sorted(build_env.includes)})
+        diagnostics.update(build_env.diagnostics)
         return values
 
 
@@ -616,6 +632,20 @@ def cygwin_adjusted_path(path):
         return subprocess.check_output(['cygpath', path]).rstrip()
     else:
         return path
+
+
+def encode_result(values, diagnostics):
+    result = {'values': values}
+    if diagnostics:
+        encoded_diagnostics = []
+        for d in diagnostics:
+            encoded_diagnostics.append({
+                'message': d.message,
+                'level': d.level,
+            })
+        result['diagnostics'] = encoded_diagnostics
+    return bser.dumps(result)
+
 
 # Inexplicably, this script appears to run faster when the arguments passed
 # into it are absolute paths. However, we want the "buck.base_path" property
@@ -725,15 +755,17 @@ def main():
 
     for build_file in args:
         build_file = cygwin_adjusted_path(build_file)
-        values = buildFileProcessor.process(build_file)
-        to_parent.write(bser.dumps(values))
+        diagnostics = set()
+        values = buildFileProcessor.process(build_file, diagnostics=diagnostics)
+        to_parent.write(encode_result(values, diagnostics))
         to_parent.flush()
 
     # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
     for build_file in iter(sys.stdin.readline, ''):
         build_file = cygwin_adjusted_path(build_file)
-        values = buildFileProcessor.process(build_file.rstrip())
-        to_parent.write(bser.dumps(values))
+        diagnostics = set()
+        values = buildFileProcessor.process(build_file.rstrip(), diagnostics=diagnostics)
+        to_parent.write(encode_result(values, diagnostics))
         to_parent.flush()
 
     # Python tries to flush/close stdout when it quits, and if there's a dead

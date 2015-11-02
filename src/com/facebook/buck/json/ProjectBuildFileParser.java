@@ -271,7 +271,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   @VisibleForTesting
-  @SuppressWarnings("unchecked")
   protected List<Map<String, Object>> getAllRulesInternal(Path buildFile)
       throws IOException {
     ensureNotClosed();
@@ -294,8 +293,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     try {
       Object deserializedValue = bserDeserializer.deserializeBserValue(
           buckPyProcess.getInputStream());
-      Preconditions.checkState(deserializedValue instanceof List<?>);
-      result = (List<Map<String, Object>>) deserializedValue;
+      result = handleDeserializedValue(deserializedValue, buckEventBus);
     } catch (BserDeserializer.BserEofException e) {
       LOG.warn(e, "Parser exited while decoding BSER data");
       throw new IOException("Parser exited unexpectedly", e);
@@ -305,6 +303,55 @@ public class ProjectBuildFileParser implements AutoCloseable {
     LOG.debug("Parsed %d rules from process", numRules);
     buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, numRules));
     return result;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<Map<String, Object>> handleDeserializedValue(
+      Object deserializedValue,
+      BuckEventBus buckEventBus) throws IOException {
+    if (!(deserializedValue instanceof Map<?, ?>)) {
+      throw new IOException(
+          String.format("Invalid parser output (expected map, got %s)", deserializedValue));
+    }
+    Map<String, Object> decodedResult = (Map<String, Object>) deserializedValue;
+    Object diagnostics = decodedResult.get("diagnostics");
+    if (diagnostics != null) {
+      if (!(diagnostics instanceof List<?>)) {
+        throw new IOException(
+            String.format("Invalid parser diagnostics (expected list, got %s)", diagnostics));
+      }
+      List<Map<String, String>> diagnosticsList = (List<Map<String, String>>) diagnostics;
+      handleDiagnostics(diagnosticsList, buckEventBus);
+    }
+    Object values = decodedResult.get("values");
+    if (!(values instanceof List<?>)) {
+      throw new IOException(
+          String.format("Invalid parser values (expected list, got %s)", values));
+    }
+    return (List<Map<String, Object>>) values;
+  }
+
+  private static void handleDiagnostics(
+      List<Map<String, String>> diagnosticsList,
+      BuckEventBus buckEventBus) throws IOException {
+    for (Map<String, String> diagnostic : diagnosticsList) {
+      String level = diagnostic.get("level");
+      String message = diagnostic.get("message");
+      if (level == null || message == null) {
+        throw new IOException(
+            String.format("Invalid diagnostic(level=%s, message=%s)", level, message));
+      }
+      switch (level) {
+        case "warning":
+          buckEventBus.post(
+              ConsoleEvent.warning("Warning raised by BUCK file parser: %s", message));
+          break;
+        case "error":
+          buckEventBus.post(
+              ConsoleEvent.severe("Error raised by BUCK file parser: %s", message));
+        break;
+      }
+    }
   }
 
   @Override

@@ -21,6 +21,7 @@ import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -43,6 +44,8 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
@@ -51,10 +54,18 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class ProjectBuildFileParserTest {
 
@@ -63,6 +74,31 @@ public class ProjectBuildFileParserTest {
   @Before
   public void createCell() throws IOException, InterruptedException {
     cell = new TestCellBuilder().build();
+  }
+
+  private static FakeProcess fakeProcessWithBserOutput(
+      int returnCode,
+      List<Object> values,
+      Optional<List<Object>> diagnostics,
+      Optional<String> stdout) {
+    BserSerializer bserSerializer = new BserSerializer();
+    ByteBuffer buffer = ByteBuffer.allocate(512).order(ByteOrder.nativeOrder());
+    try {
+      Map<String, Object> outputToSerialize = new LinkedHashMap<>();
+      outputToSerialize.put("values", values);
+      if (diagnostics.isPresent()) {
+        outputToSerialize.put("diagnostics", diagnostics.get());
+      }
+      buffer = bserSerializer.serializeToBuffer(outputToSerialize, buffer);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    buffer.flip();
+    return new FakeProcess(
+        returnCode,
+        new ByteArrayOutputStream(),
+        new ByteArrayInputStream(buffer.array()),
+        new ByteArrayInputStream(stdout.or("").getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -77,7 +113,6 @@ public class ProjectBuildFileParserTest {
     }
   }
 
-
   @Test(expected = BuildFileParseException.class)
   public void whenSubprocessReturnsFailureThenProjectBuildFileParserThrowsOnClose()
       throws IOException, BuildFileParseException, InterruptedException {
@@ -91,7 +126,7 @@ public class ProjectBuildFileParserTest {
   }
 
   @Test
-  public void whenSubprocessRaisesWarningThenConsoleEventPublished()
+  public void whenSubprocessPrintsWarningToStderrThenConsoleEventPublished()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
@@ -109,15 +144,77 @@ public class ProjectBuildFileParserTest {
     EventListener eventListener = new EventListener();
     buckEventBus.register(eventListener);
     try (ProjectBuildFileParser buildFileParser =
-             buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessAndPrintsWarning(
+             buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(
                  buckEventBus)) {
       buildFileParser.initIfNeeded();
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
     }
     assertThat(
         consoleEvents,
         Matchers.contains(
             Matchers.hasToString("Warning raised by BUCK file parser: Don't Panic!")));
   }
+
+  @Test
+  public void whenSubprocessReturnsWarningThenConsoleEventPublished()
+      throws IOException, BuildFileParseException, InterruptedException {
+    // This test depends on unix utilities that don't exist on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    class EventListener {
+      @Subscribe
+      public void onConsoleEvent(ConsoleEvent consoleEvent) {
+        consoleEvents.add(consoleEvent);
+      }
+    }
+    EventListener eventListener = new EventListener();
+    buckEventBus.register(eventListener);
+    try (ProjectBuildFileParser buildFileParser =
+             buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
+                 buckEventBus, "This is a warning")) {
+      buildFileParser.initIfNeeded();
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
+    }
+    assertThat(
+        consoleEvents,
+        Matchers.contains(
+            Matchers.hasToString("Warning raised by BUCK file parser: This is a warning")));
+  }
+
+  @Test
+  public void whenSubprocessReturnsErrorThenConsoleEventPublished()
+      throws IOException, BuildFileParseException, InterruptedException {
+    // This test depends on unix utilities that don't exist on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+    BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(new FakeClock(0));
+    final List<ConsoleEvent> consoleEvents = new ArrayList<>();
+    class EventListener {
+      @Subscribe
+      public void onConsoleEvent(ConsoleEvent consoleEvent) {
+        consoleEvents.add(consoleEvent);
+      }
+    }
+    EventListener eventListener = new EventListener();
+    buckEventBus.register(eventListener);
+    try (ProjectBuildFileParser buildFileParser =
+             buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithError(
+                 buckEventBus, "This is an error")) {
+      buildFileParser.initIfNeeded();
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"));
+    }
+    assertThat(
+        consoleEvents,
+        Matchers.contains(
+            Matchers.hasToString("Error raised by BUCK file parser: This is an error")));
+  }
+
   /**
    * ProjectBuildFileParser test double which counts the number of times rules are parsed to test
    * caching logic in Parser.
@@ -153,7 +250,11 @@ public class ProjectBuildFileParserTest {
               new Function<ProcessExecutorParams, FakeProcess>() {
                 @Override
                 public FakeProcess apply(ProcessExecutorParams params) {
-                  return new FakeProcess(1, "JSON\n", "");
+                  return fakeProcessWithBserOutput(
+                      1,
+                      ImmutableList.of(),
+                      Optional.<List<Object>>absent(),
+                      Optional.<String>absent());
                 }
               },
               new TestConsole()));
@@ -166,13 +267,17 @@ public class ProjectBuildFileParserTest {
               new Function<ProcessExecutorParams, FakeProcess>() {
                 @Override
                 public FakeProcess apply(ProcessExecutorParams params) {
-                  return new FakeProcess(0, "JSON\n", "");
+                  return fakeProcessWithBserOutput(
+                      0,
+                      ImmutableList.of(),
+                      Optional.<List<Object>>absent(),
+                      Optional.<String>absent());
                 }
               },
               new TestConsole()));
     }
 
-    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessAndPrintsWarning(
+    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(
         BuckEventBus buckEventBus) {
       return new TestProjectBuildFileParser(
           "fake-python",
@@ -180,7 +285,55 @@ public class ProjectBuildFileParserTest {
               new Function<ProcessExecutorParams, FakeProcess>() {
                 @Override
                 public FakeProcess apply(ProcessExecutorParams params) {
-                  return new FakeProcess(0, "JSON\n", "Don't Panic!");
+                  return fakeProcessWithBserOutput(
+                      0,
+                      ImmutableList.of(),
+                      Optional.<List<Object>>absent(),
+                      Optional.of("Don't Panic!"));
+                }
+              },
+              new TestConsole()),
+          buckEventBus);
+    }
+
+    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithWarning(
+        BuckEventBus buckEventBus,
+        final String warning) {
+      return new TestProjectBuildFileParser(
+          "fake-python",
+          new FakeProcessExecutor(
+              new Function<ProcessExecutorParams, FakeProcess>() {
+                @Override
+                public FakeProcess apply(ProcessExecutorParams params) {
+                  return fakeProcessWithBserOutput(
+                      0,
+                      ImmutableList.of(),
+                      Optional.<List<Object>>of(
+                          ImmutableList.<Object>of(
+                              ImmutableMap.of("level", "warning", "message", warning))),
+                      Optional.<String>absent());
+                }
+              },
+              new TestConsole()),
+          buckEventBus);
+    }
+
+    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithError(
+        BuckEventBus buckEventBus,
+        final String error) {
+      return new TestProjectBuildFileParser(
+          "fake-python",
+          new FakeProcessExecutor(
+              new Function<ProcessExecutorParams, FakeProcess>() {
+                @Override
+                public FakeProcess apply(ProcessExecutorParams params) {
+                  return fakeProcessWithBserOutput(
+                      0,
+                      ImmutableList.of(),
+                      Optional.<List<Object>>of(
+                          ImmutableList.<Object>of(
+                              ImmutableMap.of("level", "error", "message", error))),
+                      Optional.<String>absent());
                 }
               },
               new TestConsole()),
