@@ -33,7 +33,7 @@ public class DLibraryIntegrationTest {
 
   @Test
   public void compileAndRun() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "library", tmp);

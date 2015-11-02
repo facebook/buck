@@ -33,7 +33,7 @@ public class DBinaryIntegrationTest {
 
   @Test
   public void cxx() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "cxx", tmp);
@@ -53,7 +53,7 @@ public class DBinaryIntegrationTest {
 
   @Test
   public void xyzzy() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);

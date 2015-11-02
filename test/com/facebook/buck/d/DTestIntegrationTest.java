@@ -31,7 +31,7 @@ public class DTestIntegrationTest {
 
   @Test
   public void failingTest() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "test", tmp);
@@ -47,7 +47,7 @@ public class DTestIntegrationTest {
 
   @Test
   public void passingTest() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "test", tmp);
@@ -60,7 +60,7 @@ public class DTestIntegrationTest {
 
   @Test
   public void withCxx() throws Exception {
-    Assumptions.assumeDCompilerAvailable();
+    Assumptions.assumeDCompilerUsable();
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "test", tmp);
