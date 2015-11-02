@@ -147,8 +147,8 @@ public class UnzipAar extends AbstractBuildRule
                 getProjectFilesystem(),
                 uberClassesJar,
                 entriesToJar,
-                /* mainClass */ null,
-                /* manifestFile */ null,
+                /* mainClass */ Optional.<String>absent(),
+                /* manifestFile */ Optional.<Path>absent(),
                 /* mergeManifests */ true,
                 /* blacklist */ ImmutableList.<Pattern>of(),
                 context);

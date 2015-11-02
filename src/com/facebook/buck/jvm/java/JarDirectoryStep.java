@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -140,8 +141,8 @@ public class JarDirectoryStep implements Step {
           filesystem,
           pathToOutputFile,
           entriesToJar,
-          mainClass,
-          manifestFile,
+          Optional.fromNullable(mainClass),
+          Optional.fromNullable(manifestFile),
           mergeManifests,
           blacklist,
           context);

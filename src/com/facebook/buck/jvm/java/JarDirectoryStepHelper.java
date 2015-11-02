@@ -52,8 +52,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Nullable;
-
 public class JarDirectoryStepHelper {
 
   private JarDirectoryStepHelper() {}
@@ -62,8 +60,8 @@ public class JarDirectoryStepHelper {
       ProjectFilesystem filesystem,
       Path pathToOutputFile,
       ImmutableSortedSet<Path> entriesToJar,
-      @Nullable String mainClass,
-      @Nullable Path manifestFile,
+      Optional<String> mainClass,
+      Optional<Path> manifestFile,
       boolean mergeManifests,
       Iterable<Pattern> blacklist,
       ExecutionContext context) throws IOException {
@@ -105,9 +103,9 @@ public class JarDirectoryStepHelper {
 
       // Read the user supplied manifest file, allowing it to overwrite existing entries in the
       // uber manifest we've built.
-      if (manifestFile != null) {
+      if (manifestFile.isPresent()) {
         try (InputStream manifestStream = Files.newInputStream(
-            filesystem.getPathForRelativePath(manifestFile))) {
+            filesystem.getPathForRelativePath(manifestFile.get()))) {
           Manifest userSupplied = new Manifest(manifestStream);
 
           // In the common case, we want to use the merged manifests. In the uncommon case, we just
@@ -123,16 +121,16 @@ public class JarDirectoryStepHelper {
       // The process of merging the manifests means that existing entries are
       // overwritten. To ensure that our main_class is set as expected, we
       // write it here.
-      if (mainClass != null) {
-        if (!mainClassPresent(mainClass, alreadyAddedEntries)) {
+      if (mainClass.isPresent()) {
+        if (!mainClassPresent(mainClass.get(), alreadyAddedEntries)) {
           context.getStdErr().print(
               String.format(
                   "ERROR: Main class %s does not exist.\n",
-                  mainClass));
+                  mainClass.get()));
           return 1;
         }
 
-        manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass);
+        manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, mainClass.get());
       }
 
       JarEntry manifestEntry = new JarEntry(JarFile.MANIFEST_NAME);
