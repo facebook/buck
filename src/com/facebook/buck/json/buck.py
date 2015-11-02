@@ -18,7 +18,7 @@ import os.path
 from pywatchman import bser
 import subprocess
 import sys
-
+import traceback
 
 # When build files are executed, the functions in this file tagged with
 # @provide_for_build will be provided in the build file's local symbol table.
@@ -647,6 +647,46 @@ def encode_result(values, diagnostics):
     return bser.dumps(result)
 
 
+def filter_tb(entries):
+    for i in range(len(entries)):
+        # Filter out the beginning of the stack trace (any entries including the buck.py file)
+        if entries[i][0] != sys.argv[0]:
+            return entries[i:]
+    return []
+
+
+def format_traceback_and_exception():
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    filtered_traceback = filter_tb(traceback.extract_tb(exc_traceback))
+    formatted_traceback = ''.join(traceback.format_list(filtered_traceback))
+    formatted_exception = ''.join(traceback.format_exception_only(exc_type, exc_value))
+    return formatted_traceback + formatted_exception
+
+
+def process_with_diagnostics(build_file, build_file_processor, to_parent):
+    build_file = cygwin_adjusted_path(build_file)
+    diagnostics = set()
+    values = []
+    try:
+        values = build_file_processor.process(build_file.rstrip(), diagnostics=diagnostics)
+    except Exception as e:
+        # Control-C and sys.exit() don't emit diagnostics.
+        if not (e is KeyboardInterrupt or e is SystemExit):
+            diagnostics.add(
+                DiagnosticMessageAndLevel(
+                    message=format_traceback_and_exception(),
+                    level='fatal'))
+        raise e
+    finally:
+        to_parent.write(encode_result(values, diagnostics))
+        to_parent.flush()
+
+
+def silent_excepthook(exctype, value, tb):
+    # We already handle all exceptions by writing them to the parent, so
+    # no need to dump them again to stderr.
+    pass
+
 # Inexplicably, this script appears to run faster when the arguments passed
 # into it are absolute paths. However, we want the "buck.base_path" property
 # of each rule to be printed out to be the base path of the build target that
@@ -717,6 +757,11 @@ def main():
         '--include',
         action='append',
         dest='include')
+    parser.add_option(
+        '--quiet',
+        action='store_true',
+        dest='quiet',
+        help='Stifles exception backtraces printed to stderr during parsing.')
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
@@ -753,20 +798,24 @@ def main():
 
     buildFileProcessor.install_builtins(__builtin__.__dict__)
 
+    # While processing, we'll write exceptions as diagnostic messages
+    # to the parent then re-raise them to crash the process. While
+    # doing so, we don't want Python's default unhandled exception
+    # behavior of writing to stderr.
+    orig_excepthook = None
+    if options.quiet:
+        orig_excepthook = sys.excepthook
+        sys.excepthook = silent_excepthook
+
     for build_file in args:
-        build_file = cygwin_adjusted_path(build_file)
-        diagnostics = set()
-        values = buildFileProcessor.process(build_file, diagnostics=diagnostics)
-        to_parent.write(encode_result(values, diagnostics))
-        to_parent.flush()
+        process_with_diagnostics(build_file, buildFileProcessor, to_parent)
 
     # "for ... in sys.stdin" in Python 2.x hangs until stdin is closed.
     for build_file in iter(sys.stdin.readline, ''):
-        build_file = cygwin_adjusted_path(build_file)
-        diagnostics = set()
-        values = buildFileProcessor.process(build_file.rstrip(), diagnostics=diagnostics)
-        to_parent.write(encode_result(values, diagnostics))
-        to_parent.flush()
+        process_with_diagnostics(build_file, buildFileProcessor, to_parent)
+
+    if options.quiet:
+        sys.excepthook = orig_excepthook
 
     # Python tries to flush/close stdout when it quits, and if there's a dead
     # pipe on the other end, it will spit some warnings to stderr. This breaks

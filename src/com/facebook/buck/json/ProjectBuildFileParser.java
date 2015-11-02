@@ -232,6 +232,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
     argBuilder.add("--project_root", options.getProjectRoot().toAbsolutePath().toString());
     argBuilder.add("--build_file_name", options.getBuildFileName());
 
+    // Tell the parser not to print exceptions to stderr.
+    argBuilder.add("--quiet");
+
     // Add the --include flags.
     for (String include : options.getDefaultIncludes()) {
       argBuilder.add("--include");
@@ -272,7 +275,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   @VisibleForTesting
   protected List<Map<String, Object>> getAllRulesInternal(Path buildFile)
-      throws IOException {
+      throws IOException, BuildFileParseException {
     ensureNotClosed();
     initIfNeeded();
 
@@ -281,34 +284,39 @@ public class ProjectBuildFileParser implements AutoCloseable {
     Preconditions.checkNotNull(buckPyProcess);
 
     ParseBuckFileEvent.Started parseBuckFileStarted = ParseBuckFileEvent.started(buildFile);
+    int numRules = 0;
     buckEventBus.post(parseBuckFileStarted);
-    String buildFileString = buildFile.toString();
-    LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
-    buckPyStdinWriter.write(buildFileString);
-    buckPyStdinWriter.newLine();
-    buckPyStdinWriter.flush();
-
-    LOG.debug("Parsing output of process %s...", buckPyProcess);
-    List<Map<String, Object>> result;
     try {
-      Object deserializedValue = bserDeserializer.deserializeBserValue(
-          buckPyProcess.getInputStream());
-      result = handleDeserializedValue(deserializedValue, buckEventBus);
-    } catch (BserDeserializer.BserEofException e) {
-      LOG.warn(e, "Parser exited while decoding BSER data");
-      throw new IOException("Parser exited unexpectedly", e);
+      String buildFileString = buildFile.toString();
+      LOG.verbose("Writing to buck.py stdin: %s", buildFileString);
+      buckPyStdinWriter.write(buildFileString);
+      buckPyStdinWriter.newLine();
+      buckPyStdinWriter.flush();
+
+      LOG.debug("Parsing output of process %s...", buckPyProcess);
+      List<Map<String, Object>> result;
+      try {
+        Object deserializedValue = bserDeserializer.deserializeBserValue(
+            buckPyProcess.getInputStream());
+        result = handleDeserializedValue(buildFile, deserializedValue, buckEventBus);
+      } catch (BserDeserializer.BserEofException e) {
+        LOG.warn(e, "Parser exited while decoding BSER data");
+        throw new IOException("Parser exited unexpectedly", e);
+      }
+      LOG.verbose("Got rules: %s", result);
+      numRules = result.size();
+      LOG.debug("Parsed %d rules from process", numRules);
+      return result;
+    } finally {
+      buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, numRules));
     }
-    LOG.verbose("Got rules: %s", result);
-    int numRules = result.size();
-    LOG.debug("Parsed %d rules from process", numRules);
-    buckEventBus.post(ParseBuckFileEvent.finished(parseBuckFileStarted, numRules));
-    return result;
   }
 
   @SuppressWarnings("unchecked")
   private static List<Map<String, Object>> handleDeserializedValue(
+      Path buildFile,
       Object deserializedValue,
-      BuckEventBus buckEventBus) throws IOException {
+      BuckEventBus buckEventBus) throws IOException, BuildFileParseException {
     if (!(deserializedValue instanceof Map<?, ?>)) {
       throw new IOException(
           String.format("Invalid parser output (expected map, got %s)", deserializedValue));
@@ -321,7 +329,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
             String.format("Invalid parser diagnostics (expected list, got %s)", diagnostics));
       }
       List<Map<String, String>> diagnosticsList = (List<Map<String, String>>) diagnostics;
-      handleDiagnostics(diagnosticsList, buckEventBus);
+      handleDiagnostics(buildFile, diagnosticsList, buckEventBus);
     }
     Object values = decodedResult.get("values");
     if (!(values instanceof List<?>)) {
@@ -332,8 +340,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
   }
 
   private static void handleDiagnostics(
+      Path buildFile,
       List<Map<String, String>> diagnosticsList,
-      BuckEventBus buckEventBus) throws IOException {
+      BuckEventBus buckEventBus) throws IOException, BuildFileParseException {
     for (Map<String, String> diagnostic : diagnosticsList) {
       String level = diagnostic.get("level");
       String message = diagnostic.get("message");
@@ -343,13 +352,27 @@ public class ProjectBuildFileParser implements AutoCloseable {
       }
       switch (level) {
         case "warning":
+          LOG.warn("Warning raised by BUCK file parser for file %s: %s", buildFile, message);
           buckEventBus.post(
               ConsoleEvent.warning("Warning raised by BUCK file parser: %s", message));
           break;
         case "error":
+          LOG.warn("Error raised by BUCK file parser for file %s: %s", buildFile, message);
           buckEventBus.post(
               ConsoleEvent.severe("Error raised by BUCK file parser: %s", message));
-        break;
+          break;
+        case "fatal":
+          LOG.warn("Fatal error raised by BUCK file parser for file %s: %s", buildFile, message);
+          throw BuildFileParseException.createForBuildFileParseError(
+              buildFile,
+              new IOException(message));
+        default:
+          LOG.warn(
+              "Unknown diagnostic (level %s) raised by BUCK file parser for build file %s: %s",
+              level,
+              buildFile,
+              message);
+          break;
       }
     }
   }
