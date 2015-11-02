@@ -596,6 +596,51 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     return keys.build();
   }
 
+  private void addStoryboardProcessingSteps(
+      Path sourcePath,
+      Path destinationPath,
+      ImmutableList.Builder<Step> stepsBuilder) {
+    if (platformName.contains("watch")) {
+      LOG.debug("Compiling storyboard %s to storyboardc %s and linking",
+          sourcePath,
+          destinationPath);
+
+      Path compiledStoryboardPath =
+          BuildTargets.getScratchPath(getBuildTarget(), "%s.storyboardc");
+      stepsBuilder.add(
+          new IbtoolStep(
+              getProjectFilesystem(),
+              ibtool.getCommandPrefix(getResolver()),
+              ImmutableList.of("--target-device", "watch", "--compile"),
+              sourcePath,
+              compiledStoryboardPath));
+
+      stepsBuilder.add(
+          new IbtoolStep(
+              getProjectFilesystem(),
+              ibtool.getCommandPrefix(getResolver()),
+              ImmutableList.of("--target-device", "watch", "--link"),
+              compiledStoryboardPath,
+              destinationPath.getParent()));
+
+    } else {
+      LOG.debug("Compiling storyboard %s to storyboardc %s", sourcePath, destinationPath);
+
+      String compiledStoryboardFilename =
+          Files.getNameWithoutExtension(destinationPath.toString()) + ".storyboardc";
+
+      Path compiledStoryboardPath =
+          destinationPath.getParent().resolve(compiledStoryboardFilename);
+      stepsBuilder.add(
+          new IbtoolStep(
+              getProjectFilesystem(),
+              ibtool.getCommandPrefix(getResolver()),
+              ImmutableList.of("--compile"),
+              sourcePath,
+              compiledStoryboardPath));
+    }
+  }
+
   private void addResourceProcessingSteps(
       Path sourcePath,
       Path destinationPath,
@@ -615,6 +660,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
                 ImmutableMap.<String, NSObject>of(),
                 PlistProcessStep.OutputFormat.BINARY));
         break;
+      case "storyboard":
+        addStoryboardProcessingSteps(sourcePath, destinationPath, stepsBuilder);
+        break;
       case "xib":
         String compiledNibFilename = Files.getNameWithoutExtension(destinationPath.toString()) +
             ".nib";
@@ -624,6 +672,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
             new IbtoolStep(
                 getProjectFilesystem(),
                 ibtool.getCommandPrefix(getResolver()),
+                ImmutableList.of("--compile"),
                 sourcePath,
                 compiledNibPath));
         break;
