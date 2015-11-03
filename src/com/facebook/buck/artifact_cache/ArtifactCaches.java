@@ -63,7 +63,8 @@ public class ArtifactCaches {
             buckConfig,
             buckEventBus,
             projectFilesystem,
-            wifiSsid));
+            wifiSsid),
+        new ArtifactCacheEvent.AggregateArtifactCacheEventFactory());
     buckEventBus.post(ArtifactCacheConnectEvent.finished(started));
     return artifactCache;
   }
@@ -82,7 +83,8 @@ public class ArtifactCaches {
     if (!buckConfig.getServingLocalCacheEnabled()) {
       return Optional.absent();
     } else {
-      return Optional.of(createDirArtifactCache(buckConfig, projectFilesystem));
+      return Optional.of(createDirArtifactCache(
+              Optional.<BuckEventBus>absent(), buckConfig, projectFilesystem));
     }
   }
 
@@ -96,12 +98,12 @@ public class ArtifactCaches {
     if (modes.isEmpty()) {
       return new NoopArtifactCache();
     }
-
     ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
     for (ArtifactCacheBuckConfig.ArtifactCacheMode mode : modes) {
       switch (mode) {
         case dir:
-          builder.add(createDirArtifactCache(buckConfig, projectFilesystem));
+          builder.add(createDirArtifactCache(
+                  Optional.of(buckEventBus), buckConfig, projectFilesystem));
           break;
         case http:
           for (HttpCacheEntry cacheEntry : buckConfig.getHttpCaches()) {
@@ -128,17 +130,27 @@ public class ArtifactCaches {
   }
 
   private static ArtifactCache createDirArtifactCache(
+      Optional<BuckEventBus> buckEventBus,
       ArtifactCacheBuckConfig buckConfig,
       ProjectFilesystem projectFilesystem) {
     Path cacheDir = buckConfig.getCacheDir();
     boolean doStore = buckConfig.getDirCacheReadMode().isDoStore();
     try {
-      return new DirArtifactCache(
+      DirArtifactCache dirArtifactCache =  new DirArtifactCache(
           "dir",
           projectFilesystem,
           cacheDir,
           doStore,
           buckConfig.getCacheDirMaxSizeBytes());
+
+      if (!buckEventBus.isPresent()) {
+        return dirArtifactCache;
+      }
+
+      return new LoggingArtifactCacheDecorator(buckEventBus.get(),
+          dirArtifactCache,
+          new DirArtifactCacheEvent.DirArtifactCacheEventFactory());
+
     } catch (IOException e) {
       throw new HumanReadableException(
           "Failure initializing artifact cache directory: %s",

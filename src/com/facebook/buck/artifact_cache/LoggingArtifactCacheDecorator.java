@@ -30,21 +30,25 @@ import java.nio.file.Path;
 public class LoggingArtifactCacheDecorator implements ArtifactCache {
   private final BuckEventBus eventBus;
   private final ArtifactCache delegate;
+  private final ArtifactCacheEventFactory eventFactory;
 
-  public LoggingArtifactCacheDecorator(BuckEventBus eventBus, ArtifactCache delegate) {
+  public LoggingArtifactCacheDecorator(
+      BuckEventBus eventBus,
+      ArtifactCache delegate,
+      ArtifactCacheEventFactory eventFactory) {
     this.eventBus = eventBus;
     this.delegate = delegate;
+    this.eventFactory = eventFactory;
   }
 
   @Override
   public CacheResult fetch(RuleKey ruleKey, Path output)
       throws InterruptedException {
-    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.FETCH,
-        ImmutableSet.of(ruleKey));
+    ArtifactCacheEvent.AbstractStarted started =
+        eventFactory.newFetchStartedEvent(ImmutableSet.of(ruleKey));
     eventBus.post(started);
     CacheResult fetchResult = delegate.fetch(ruleKey, output);
-    eventBus.post(ArtifactCacheEvent.finished(
+    eventBus.post(eventFactory.newFetchFinishedEvent(
             started,
             fetchResult));
     return fetchResult;
@@ -56,12 +60,10 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache {
       ImmutableMap<String, String> metadata,
       Path output)
       throws InterruptedException {
-    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.STORE,
-        ruleKeys);
+    ArtifactCacheEvent.AbstractStarted started = eventFactory.newStoreStartedEvent(ruleKeys);
     eventBus.post(started);
     delegate.store(ruleKeys, metadata, output);
-    eventBus.post(ArtifactCacheEvent.finished(started));
+    eventBus.post(eventFactory.newStoreFinishedEvent(started));
   }
 
   @Override

@@ -57,9 +57,8 @@ public class ArtifactCachesTest {
         buckEventBus,
         projectFilesystem,
         Optional.<String>absent());
-    assertThat(artifactCache, Matchers.instanceOf(LoggingArtifactCacheDecorator.class));
-    LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;
-    assertThat(cacheDecorator.getDelegate(), Matchers.instanceOf(DirArtifactCache.class));
+
+    assertInnerDirCache(artifactCache);
   }
 
   @Test
@@ -92,8 +91,20 @@ public class ArtifactCachesTest {
         buckEventBus,
         projectFilesystem,
         Optional.of("evilwifi"));
+    assertInnerDirCache(artifactCache);
+  }
+
+  private static void assertInnerDirCache(ArtifactCache artifactCache) {
     assertThat(artifactCache, Matchers.instanceOf(LoggingArtifactCacheDecorator.class));
     LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;
-    assertThat(cacheDecorator.getDelegate(), Matchers.instanceOf(DirArtifactCache.class));
+    assertThat(
+        cacheDecorator.getDelegate(),
+        Matchers.instanceOf(LoggingArtifactCacheDecorator.class));
+
+    LoggingArtifactCacheDecorator dirCacheDecorator =
+        (LoggingArtifactCacheDecorator) cacheDecorator.getDelegate();
+    assertThat(
+        dirCacheDecorator.getDelegate(),
+        Matchers.instanceOf(DirArtifactCache.class));
   }
 }

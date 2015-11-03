@@ -83,11 +83,34 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     return ruleKeys;
   }
 
+  public static class AggregateArtifactCacheEventFactory implements ArtifactCacheEventFactory {
+    @Override
+    public AbstractStarted newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
+      return started(Operation.FETCH, ruleKeys);
+    }
+
+    @Override
+    public AbstractStarted newStoreStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
+      return started(Operation.STORE, ruleKeys);
+    }
+
+    @Override
+    public AbstractFinished newStoreFinishedEvent(AbstractStarted started) {
+      return finished(started);
+    }
+
+    @Override
+    public AbstractFinished newFetchFinishedEvent(
+        AbstractStarted started, CacheResult cacheResult) {
+      return finished(started, cacheResult);
+    }
+  }
+
   public static Started started(Operation operation, ImmutableSet<RuleKey> ruleKeys) {
     return new Started(EventKey.unique(), CacheMode.aggregate, operation, ruleKeys);
   }
 
-  public static Finished finished(Started started) {
+  public static Finished finished(AbstractStarted started) {
     return new Finished(
         started.getEventKey(),
         CacheMode.aggregate,
@@ -96,7 +119,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
         Optional.<CacheResult>absent());
   }
 
-  public static Finished finished(Started started, CacheResult cacheResult) {
+  public static Finished finished(AbstractStarted started, CacheResult cacheResult) {
     return new Finished(
         started.getEventKey(),
         CacheMode.aggregate,
