@@ -22,10 +22,12 @@ import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
 public class GoLinkStep extends ShellStep {
+
   enum LinkMode {
     EXECUTABLE("exe");
     // Other gc modes: http://blog.ralch.com/tutorial/golang-sharing-libraries/
@@ -40,6 +42,7 @@ public class GoLinkStep extends ShellStep {
     }
   }
 
+  private final Path goRoot;
   private final ImmutableList<String> cxxLinkCommandPrefix;
   private final ImmutableList<String> linkCommandPrefix;
   private final ImmutableList<String> flags;
@@ -50,6 +53,7 @@ public class GoLinkStep extends ShellStep {
 
   public GoLinkStep(
       Path workingDirectory,
+      Path goRoot,
       ImmutableList<String> cxxLinkCommandPrefix,
       ImmutableList<String> linkCommandPrefix,
       ImmutableList<String> flags,
@@ -58,6 +62,7 @@ public class GoLinkStep extends ShellStep {
       LinkMode linkMode,
       Path output) {
     super(workingDirectory);
+    this.goRoot = goRoot;
     this.cxxLinkCommandPrefix = cxxLinkCommandPrefix;
     this.linkCommandPrefix = linkCommandPrefix;
     this.flags = flags;
@@ -91,6 +96,11 @@ public class GoLinkStep extends ShellStep {
     command.add(mainArchive.toString());
 
     return command.build();
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    return ImmutableMap.of("GOROOT", goRoot.toString());
   }
 
   @Override

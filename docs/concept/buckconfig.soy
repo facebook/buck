@@ -456,8 +456,18 @@ This section defines the go <code>compiler</code> and <code>linker</code> used b
 </p>
 
 <p>
-  You can specify the path find the <code>go</code> tool.  This in turn will
-  allow Buck to discover the compiler/linker by default.
+  If you have a non-standard go install, you will need to set the go root. The root should
+  contain <code>pkg</code> and <code>bin</code> directories.
+</p>
+{literal}<pre class="prettyprint lang-ini">
+[go]
+  root = /opt/golang/libexec
+</pre>{/literal}
+
+<p>
+  You can specify the path to find the <code>go</code> tool.  This in turn will
+  allow Buck to discover the compiler/linker by default. This defaults to
+  {sp}<code>${go.root}/bin/go</code>.
 </p>
 {literal}<pre class="prettyprint lang-ini">
 [go]
