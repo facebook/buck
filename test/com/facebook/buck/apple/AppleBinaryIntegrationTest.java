@@ -25,8 +25,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
@@ -42,7 +42,7 @@ import java.nio.file.Path;
 public class AppleBinaryIntegrationTest {
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testAppleBinaryBuildsSomething() throws IOException {
@@ -53,7 +53,7 @@ public class AppleBinaryIntegrationTest {
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
@@ -67,7 +67,7 @@ public class AppleBinaryIntegrationTest {
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
@@ -81,7 +81,7 @@ public class AppleBinaryIntegrationTest {
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
@@ -96,7 +96,7 @@ public class AppleBinaryIntegrationTest {
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp#macosx-x86_64").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
@@ -114,7 +114,7 @@ public class AppleBinaryIntegrationTest {
         buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = tmp.getRootPath().toRealPath();
+    Path projectRoot = tmp.getRoot().toRealPath();
 
     Path inputPath = projectRoot.resolve(
         buildTarget.getBasePath());
@@ -137,7 +137,7 @@ public class AppleBinaryIntegrationTest {
 
     workspace.runBuckCommand("build", "//Apps/TestApp:TestApp").assertSuccess();
 
-    assertTrue(Files.exists(tmp.getRootPath().resolve(BuckConstant.GEN_DIR)));
+    assertTrue(Files.exists(getGenDir()));
   }
 
   @Test
@@ -213,8 +213,7 @@ public class AppleBinaryIntegrationTest {
         "build",
         "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64")
         .assertSuccess();
-    Path output = tmp.getRootPath()
-        .resolve(BuckConstant.GEN_DIR)
+    Path output = getGenDir()
         .resolve("DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64");
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
@@ -222,6 +221,11 @@ public class AppleBinaryIntegrationTest {
         lipoVerifyResult.getStderr().or(""),
         0,
         lipoVerifyResult.getExitCode());
+  }
+
+  private Path getGenDir() {
+    return tmp.getRoot()
+        .resolve(BuckConstant.GEN_DIR);
   }
 
   private static void assertIsSymbolicLink(

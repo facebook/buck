@@ -40,6 +40,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Utility class to discover the location of SDKs contained inside an Xcode
@@ -119,9 +121,13 @@ public class AppleSdkDiscovery {
           try (DirectoryStream<Path> sdkStream = Files.newDirectoryStream(
                    developerSdksPath,
                    "*.sdk")) {
+            Set<Path> scannedSdkDirs = new HashSet<>();
             for (Path sdkDir : sdkStream) {
               LOG.debug("Fetching SDK name for %s", sdkDir);
-              if (Files.isSymbolicLink(sdkDir)) {
+
+              sdkDir = sdkDir.toRealPath();
+              if (scannedSdkDirs.contains(sdkDir)) {
+                LOG.debug("Skipping already scanned SDK directory %s", sdkDir);
                 continue;
               }
 
@@ -142,6 +148,7 @@ public class AppleSdkDiscovery {
                 appleSdkPathsBuilder.put(sdk, xcodePaths);
                 orderedSdksForPlatform.put(sdk.getApplePlatform(), sdk);
               }
+              scannedSdkDirs.add(sdkDir);
             }
           } catch (NoSuchFileException e) {
             LOG.warn(

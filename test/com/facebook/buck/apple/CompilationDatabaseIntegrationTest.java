@@ -23,8 +23,8 @@ import com.facebook.buck.cxx.CxxCompilationDatabaseEntry;
 import com.facebook.buck.cxx.CxxCompilationDatabaseUtils;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
@@ -51,7 +51,7 @@ public class CompilationDatabaseIntegrationTest {
   private static final Path XCODE_DEVELOPER_DIR = Paths.get("xcode-developer-dir");
 
   @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  public TemporaryPaths tmp = new TemporaryPaths();
   private ProjectWorkspace workspace;
 
   @Before
@@ -65,9 +65,9 @@ public class CompilationDatabaseIntegrationTest {
 
     Path platforms = workspace.getPath("xcode-developer-dir/Platforms");
     Path sdk = platforms.resolve("iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk");
-    Files.createSymbolicLink(sdk.getParent().resolve("iPhoneOS8.0.sdk"), sdk);
+    Files.createSymbolicLink(sdk.getParent().resolve("iPhoneOS8.0.sdk"), sdk.getFileName());
     sdk = platforms.resolve("iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk");
-    Files.createSymbolicLink(sdk.getParent().resolve("iPhoneSimulator8.0.sdk"), sdk);
+    Files.createSymbolicLink(sdk.getParent().resolve("iPhoneSimulator8.0.sdk"), sdk.getFileName());
   }
 
   @Test
@@ -78,7 +78,7 @@ public class CompilationDatabaseIntegrationTest {
     assertEquals(
         Paths.get("buck-out/gen/Libraries/EXExample/" +
             "__EXExample#compilation-database,iphonesimulator-x86_64.json"),
-        tmp.getRootPath().relativize(compilationDatabase));
+        tmp.getRoot().relativize(compilationDatabase));
 
     // Parse the compilation_database.json file.
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
@@ -135,7 +135,7 @@ public class CompilationDatabaseIntegrationTest {
     assertEquals(
         Paths.get("buck-out/gen/Apps/Weather/" +
             "__Weather#compilation-database,iphonesimulator-x86_64.json"),
-        tmp.getRootPath().relativize(compilationDatabase));
+        tmp.getRoot().relativize(compilationDatabase));
 
     // Parse the compilation_database.json file.
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
@@ -182,7 +182,7 @@ public class CompilationDatabaseIntegrationTest {
       Map<String, CxxCompilationDatabaseEntry> fileToEntry,
       ImmutableSet<String> additionalFrameworks,
       Iterable<String> includes) throws IOException {
-    Path tmpRoot = tmp.getRootPath().toRealPath();
+    Path tmpRoot = tmp.getRoot().toRealPath();
     String key = tmpRoot.resolve(source).toString();
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
