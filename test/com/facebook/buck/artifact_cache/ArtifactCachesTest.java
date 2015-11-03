@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -39,10 +40,9 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
-    assertThat(artifactCache, Matchers.instanceOf(LoggingArtifactCacheDecorator.class));
-    LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;
-    assertThat(cacheDecorator.getDelegate(), Matchers.instanceOf(HttpArtifactCache.class));
+        Optional.<String>absent(),
+        MoreExecutors.newDirectExecutorService());
+    assertThat(artifactCache, Matchers.instanceOf(HttpArtifactCache.class));
   }
 
   @Test
@@ -56,7 +56,8 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
+        Optional.<String>absent(),
+        MoreExecutors.newDirectExecutorService());
 
     assertInnerDirCache(artifactCache);
   }
@@ -72,10 +73,9 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
-    assertThat(artifactCache, Matchers.instanceOf(LoggingArtifactCacheDecorator.class));
-    LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;
-    assertThat(cacheDecorator.getDelegate(), Matchers.instanceOf(MultiArtifactCache.class));
+        Optional.<String>absent(),
+        MoreExecutors.newDirectExecutorService());
+    assertThat(artifactCache, Matchers.instanceOf(MultiArtifactCache.class));
   }
 
   @Test
@@ -90,7 +90,8 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.of("evilwifi"));
+        Optional.of("evilwifi"),
+        MoreExecutors.newDirectExecutorService());
     assertInnerDirCache(artifactCache);
   }
 
@@ -99,12 +100,6 @@ public class ArtifactCachesTest {
     LoggingArtifactCacheDecorator cacheDecorator = (LoggingArtifactCacheDecorator) artifactCache;
     assertThat(
         cacheDecorator.getDelegate(),
-        Matchers.instanceOf(LoggingArtifactCacheDecorator.class));
-
-    LoggingArtifactCacheDecorator dirCacheDecorator =
-        (LoggingArtifactCacheDecorator) cacheDecorator.getDelegate();
-    assertThat(
-        dirCacheDecorator.getDelegate(),
         Matchers.instanceOf(DirArtifactCache.class));
   }
 }

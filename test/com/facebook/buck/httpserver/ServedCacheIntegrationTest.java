@@ -37,6 +37,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -68,6 +72,9 @@ public class ServedCacheIntegrationTest {
       "key",
       "value");
 
+  private static final ListeningExecutorService DIRECT_EXECUTOR_SERVICE =
+      MoreExecutors.newDirectExecutorService();
+
   @Before
   public void setUp() throws Exception {
     buckEventBus = BuckEventBusFactory.newInstance();
@@ -78,7 +85,8 @@ public class ServedCacheIntegrationTest {
         createMockLocalDirCacheConfig(),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
     dirCache.store(
         ImmutableSet.of(A_FILE_RULE_KEY),
         A_FILE_METADATA,
@@ -131,7 +139,8 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
 
     Path fetchedContents = tmpDir.newFile();
     CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
@@ -202,7 +211,8 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
 
     Path fetchedContents = tmpDir.newFile();
     CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
@@ -233,7 +243,8 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
 
     Path fetchedContents = tmpDir.newFile();
     CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
@@ -253,7 +264,8 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
 
     Path fetchedContents = tmpDir.newFile();
     CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
@@ -273,7 +285,8 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent());
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
 
     Path fetchedContents = tmpDir.newFile();
     assertThat(
@@ -318,10 +331,11 @@ public class ServedCacheIntegrationTest {
       }
 
       @Override
-      public void store(
+      public ListenableFuture<Void> store(
           ImmutableSet<RuleKey> ruleKeys,
           ImmutableMap<String, String> metadata,
-          Path output) throws InterruptedException {
+          Path output) {
+        return Futures.immediateFuture(null);
       }
 
       @Override
@@ -362,7 +376,8 @@ public class ServedCacheIntegrationTest {
           mutltiCacheConfig,
           buckEventBus,
           projectFilesystem,
-          Optional.<String>absent());
+          Optional.<String>absent(),
+          DIRECT_EXECUTOR_SERVICE);
 
       assertThat(
           serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),

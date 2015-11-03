@@ -22,6 +22,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.squareup.okhttp.ConnectionPool;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.OkHttpClient;
@@ -54,17 +55,16 @@ public class ArtifactCaches {
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
-      Optional<String> wifiSsid) throws InterruptedException {
+      Optional<String> wifiSsid,
+      ListeningExecutorService httpWriteExecutorService) throws InterruptedException {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
-    ArtifactCache artifactCache = new LoggingArtifactCacheDecorator(
+    ArtifactCache artifactCache = newInstanceInternal(
+        buckConfig,
         buckEventBus,
-        newInstanceInternal(
-            buckConfig,
-            buckEventBus,
-            projectFilesystem,
-            wifiSsid),
-        new ArtifactCacheEvent.AggregateArtifactCacheEventFactory());
+        projectFilesystem,
+        wifiSsid,
+        httpWriteExecutorService);
     buckEventBus.post(ArtifactCacheConnectEvent.finished(started));
     return artifactCache;
   }
@@ -92,7 +92,8 @@ public class ArtifactCaches {
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
-      Optional<String> wifiSsid) throws InterruptedException {
+      Optional<String> wifiSsid,
+      ListeningExecutorService httpWriteExecutorService) throws InterruptedException {
     ImmutableSet<ArtifactCacheBuckConfig.ArtifactCacheMode> modes =
         buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
@@ -102,8 +103,11 @@ public class ArtifactCaches {
     for (ArtifactCacheBuckConfig.ArtifactCacheMode mode : modes) {
       switch (mode) {
         case dir:
-          builder.add(createDirArtifactCache(
-                  Optional.of(buckEventBus), buckConfig, projectFilesystem));
+          builder.add(
+              createDirArtifactCache(
+                  Optional.of(buckEventBus),
+                  buckConfig,
+                  projectFilesystem));
           break;
         case http:
           for (HttpCacheEntry cacheEntry : buckConfig.getHttpCaches()) {
@@ -114,7 +118,8 @@ public class ArtifactCaches {
                     cacheEntry,
                     buckConfig.getHostToReportToRemoteCacheServer(),
                     buckEventBus,
-                    projectFilesystem));
+                    projectFilesystem,
+                    httpWriteExecutorService));
           }
           break;
       }
@@ -162,7 +167,8 @@ public class ArtifactCaches {
       HttpCacheEntry cacheDescription,
       final String hostToReportToRemote,
       BuckEventBus buckEventBus,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      ListeningExecutorService httpWriteExecutorService) {
     String cacheName = cacheDescription.getName()
         .transform(new Function<String, String>() {
                      @Override
@@ -211,7 +217,8 @@ public class ArtifactCaches {
         url,
         doStore,
         projectFilesystem,
-        buckEventBus);
+        buckEventBus,
+        httpWriteExecutorService);
   }
 
 }

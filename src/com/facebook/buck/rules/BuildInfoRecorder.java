@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.ArtifactCompressionEvent;
@@ -45,6 +47,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -323,12 +326,20 @@ public class BuildInfoRecorder {
     }
 
     // Store the artifact, including any additional metadata.
-    artifactCache.store(ruleKeys, buildMetadata, zip);
-    try {
-      Files.delete(zip);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    final Path finalZip = zip;
+    ListenableFuture<Void> storeFuture = artifactCache.store(ruleKeys, buildMetadata, zip);
+    storeFuture.addListener(
+        new Runnable() {
+          @Override
+          public void run() {
+            try {
+              Files.delete(finalZip);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          }
+        },
+        directExecutor());
   }
 
   /**

@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cli;
 
+import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
+import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
+
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
@@ -27,6 +30,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
@@ -102,6 +106,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ServiceManager;
 import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
@@ -721,6 +726,8 @@ public final class Main {
     ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
     ExecutorService diskIoExecutorService = MoreExecutors.newSingleThreadExecutor("Disk I/O");
+    ListeningExecutorService httpWriteExecutorService =
+        getHttpWriteExecutorService(cacheBuckConfig);
     VersionControlStatsGenerator vcStatsGenerator = null;
 
     // The order of resources in the try-with-resources block is important: the BuckEventBus must
@@ -750,7 +757,8 @@ public final class Main {
               cacheBuckConfig,
               buildEventBus,
               filesystem,
-              executionEnvironment.getWifiSsid()));
+              executionEnvironment.getWifiSsid(),
+              httpWriteExecutorService));
 
       ProgressEstimator progressEstimator = new ProgressEstimator(
           filesystem.getRootPath(),
@@ -877,9 +885,15 @@ public final class Main {
               buckConfig,
               fileHashCache));
       parser.cleanCache();
+
+      // Wait for HTTP writes to complete.
+      closeHttpExecutorService(
+          cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
       buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
     } catch (Throwable t) {
       LOG.debug(t, "Failing build on exception.");
+      closeHttpExecutorService(
+          cacheBuckConfig, Optional.<BuckEventBus>absent(), httpWriteExecutorService);
       closeDiskIoExecutorService(diskIoExecutorService);
       flushEventListeners(console, buildId, eventListeners);
       throw t;
@@ -892,21 +906,62 @@ public final class Main {
       context.get().in.close(); // Avoid client exit triggering client disconnection handling.
       context.get().exit(exitCode); // Allow nailgun client to exit while outputting traces.
     }
+
     closeDiskIoExecutorService(diskIoExecutorService);
     flushEventListeners(console, buildId, eventListeners);
     return exitCode;
   }
 
+  private static void closeExecutorService(
+      String executorName,
+      ExecutorService executorService,
+      long timeoutSeconds) throws InterruptedException {
+    executorService.shutdown();
+    LOG.info(
+        "Awaiting termination of %s executor service. Waiting for all jobs to complete, " +
+            "or up to maximum of %s seconds...",
+        executorName,
+        timeoutSeconds);
+    executorService.awaitTermination(timeoutSeconds, TimeUnit.SECONDS);
+    if (!executorService.isShutdown()) {
+      LOG.warn(
+          "%s executor service is still running after shutdown request and " +
+              "%s second timeout. Shutting down forcefully..",
+          executorName,
+          timeoutSeconds);
+      executorService.shutdownNow();
+    }
+  }
+
   private static void closeDiskIoExecutorService(
       ExecutorService diskIoExecutorService) throws InterruptedException {
-    diskIoExecutorService.shutdown();
-    diskIoExecutorService.awaitTermination(DISK_IO_STATS_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    if (!diskIoExecutorService.isShutdown()) {
-      LOG.warn(
-          "Disk IO executor service is still running after shutdown request and " +
-              DISK_IO_STATS_TIMEOUT_SECONDS + " second timeout." +
-              "Shutting down forcefully..");
-      diskIoExecutorService.shutdownNow();
+    closeExecutorService("Disk IO", diskIoExecutorService, DISK_IO_STATS_TIMEOUT_SECONDS);
+  }
+
+  private static void closeHttpExecutorService(
+      ArtifactCacheBuckConfig buckConfig,
+      Optional<BuckEventBus> eventBus,
+      ListeningExecutorService httpWriteExecutorService) throws InterruptedException {
+    closeExecutorService(
+        "HTTP Write",
+        httpWriteExecutorService,
+        buckConfig.getHttpWriterShutdownTimeout());
+
+    if (eventBus.isPresent()) {
+      eventBus.get().post(HttpArtifactCacheEvent.newShutdownEvent());
+    }
+  }
+
+  private static ListeningExecutorService getHttpWriteExecutorService(
+      ArtifactCacheBuckConfig buckConfig) {
+    if (buckConfig.hasAtLeastOneWriteableCache()) {
+      ExecutorService executorService = MoreExecutors.newMultiThreadExecutor(
+          "HTTP Write",
+          buckConfig.getHttpMaxConcurrentWrites());
+
+      return listeningDecorator(executorService);
+    } else {
+      return newDirectExecutorService();
     }
   }
 

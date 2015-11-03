@@ -16,16 +16,22 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
+import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreFinished;
+import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreScheduled;
+import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreStarted;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.cli.CommandEvent;
-import com.facebook.buck.event.ArtifactCompressionEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.httpserver.WebServer;
@@ -76,6 +82,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.hash.HashCode;
 import com.google.gson.Gson;
 
+
 import org.junit.Test;
 
 import java.io.IOException;
@@ -87,6 +94,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class SuperConsoleEventBusListenerTest {
+  private static final String TARGET_ONE = "TARGET_ONE";
+  private static final String TARGET_TWO = "TARGET_TWO";
+
   private static final DecimalFormat timeFormatter = new DecimalFormat("0.0s");
   private static final TestResultSummaryVerbosity noisySummaryVerbosity =
       TestResultSummaryVerbosity.of(true, true);
@@ -220,9 +230,33 @@ public class SuperConsoleEventBusListenerTest {
             ArtifactCompressionEvent.finished(compressStarted),
             703L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
+    validateConsole(console, listener, 704L, ImmutableList.of(parsingLine,
+        formatConsoleTimes("[+] BUILDING...%s", 0.3),
+        formatConsoleTimes(" |=> //banana:stand...  %s (checking local cache)", 0.1)));
+
+    DirArtifactCacheEvent.DirArtifactCacheEventFactory dirArtifactCacheEventFactory =
+        new DirArtifactCacheEvent.DirArtifactCacheEventFactory();
+
+    ArtifactCacheEvent.Started dirFetchStarted = dirArtifactCacheEventFactory
+        .newFetchStartedEvent(ImmutableSet.<RuleKey>of());
+
+    rawEventBus.post(configureTestEventAtTime(
+            dirFetchStarted,
+            740L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 741L, ImmutableList.of(parsingLine,
+            formatConsoleTimes("[+] BUILDING...%s", 0.3),
+            formatConsoleTimes(
+                " |=> //banana:stand...  %s (running dir_artifact_fetch[%s])", 0.1, 0.0)));
+
+    rawEventBus.post(configureTestEventAtTime(
+            dirArtifactCacheEventFactory.newFetchFinishedEvent(
+                dirFetchStarted, CacheResult.hit("dir")),
+            742L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
     validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
-        formatConsoleTimes("[+] BUILDING...%s", 0.4),
-        formatConsoleTimes(" |=> //banana:stand...  %s (checking local cache)", 0.2)));
+            formatConsoleTimes("[+] BUILDING...%s", 0.4),
+            formatConsoleTimes(" |=> //banana:stand...  %s (checking local cache)", 0.2)));
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
@@ -306,9 +340,51 @@ public class SuperConsoleEventBusListenerTest {
         InstallEvent.finished(installEventStarted, true, Optional.<Long>absent()),
         4000L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
+    final String installingFinished = formatConsoleTimes("[-] INSTALLING...FINISHED %s", 1.5);
+
     validateConsole(console, listener, 5000L, ImmutableList.of(parsingLine,
         buildingLine,
-        formatConsoleTimes("[-] INSTALLING...FINISHED %s", 1.5)));
+            installingFinished));
+
+    HttpArtifactCacheEvent.Scheduled storeScheduledOne = postStoreScheduled(
+        rawEventBus, 0L, TARGET_ONE, 6000L);
+
+    HttpArtifactCacheEvent.Scheduled storeScheduledTwo = postStoreScheduled(
+        rawEventBus, 0L, TARGET_TWO, 6010L);
+
+    validateConsole(console, listener, 6011L, ImmutableList.of(parsingLine,
+            buildingLine,
+            installingFinished,
+            formatConsoleTimes(
+                "[+] HTTP CACHE UPLOAD...%s (0 COMPLETE/0 FAILED/0 UPLOADING/2 PENDING)", 0.0)));
+
+    HttpArtifactCacheEvent.Started storeStartedOne =
+        postStoreStarted(rawEventBus, 0, 6015L, storeScheduledOne);
+
+    validateConsole(console, listener, 7000, ImmutableList.of(parsingLine,
+            buildingLine,
+            installingFinished,
+            formatConsoleTimes(
+                "[+] HTTP CACHE UPLOAD...%s (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)", 1.0)));
+
+    postStoreFinished(rawEventBus, 0, 7020L, true, storeStartedOne);
+
+    validateConsole(console, listener, 7020, ImmutableList.of(parsingLine,
+            buildingLine,
+            installingFinished,
+            formatConsoleTimes(
+                "[+] HTTP CACHE UPLOAD...%s (1 COMPLETE/0 FAILED/0 UPLOADING/1 PENDING)", 1.0)));
+
+    HttpArtifactCacheEvent.Started storeStartedTwo =
+        postStoreStarted(rawEventBus, 0, 7030L, storeScheduledTwo);
+    postStoreFinished(rawEventBus, 0, 7030L, false, storeStartedTwo);
+
+    validateConsole(console, listener, 7040, ImmutableList.of(parsingLine,
+            buildingLine,
+            installingFinished,
+            formatConsoleTimes(
+                "[+] HTTP CACHE UPLOAD...%s (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)", 1.0)));
+
 
     listener.render();
     String beforeStderrWrite = console.getTextWrittenToStdErr();

@@ -333,6 +333,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           installFinished,
           Optional.<Double>absent(),
           lines);
+
+      logEventPair("HTTP CACHE UPLOAD",
+          renderHttpUploads(),
+          currentTimeMillis,
+          0,
+          firstHttpCacheUploadScheduled.get(),
+          httpShutdownEvent,
+          Optional.<Double>absent(),
+          lines);
     }
     return lines.build();
   }
@@ -589,13 +598,17 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  public void artifactStarted(ArtifactCacheEvent.Started started) {
-    threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
+  public void artifactCacheStarted(ArtifactCacheEvent.Started started) {
+    if (started.getInvocationType() == ArtifactCacheEvent.InvocationType.SYNCHRONOUS) {
+      threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
+    }
   }
 
   @Subscribe
-  public void artifactFinished(ArtifactCacheEvent.Finished finished) {
-    threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
+  public void artifactCacheFinished(ArtifactCacheEvent.Finished finished) {
+    if (finished.getInvocationType() == ArtifactCacheEvent.InvocationType.SYNCHRONOUS) {
+      threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
+    }
   }
 
   @Subscribe

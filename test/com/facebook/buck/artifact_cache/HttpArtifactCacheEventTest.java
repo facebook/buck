@@ -14,15 +14,16 @@
  * under the License.
  */
 
-package com.facebook.buck.event;
+package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Functions;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -67,9 +68,12 @@ public class HttpArtifactCacheEventTest {
   }
 
   private static HttpArtifactCacheEvent.Finished.Builder createBuilder() {
+
+    HttpArtifactCacheEvent.Scheduled scheduledEvent =
+        HttpArtifactCacheEvent.newStoreScheduledEvent(
+            Optional.of("target"), ImmutableSet.<RuleKey>of());
     HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(
-        ImmutableSet.<RuleKey>of()
-    );
+        scheduledEvent);
     configureEvent(startedEvent);
     return HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
   }

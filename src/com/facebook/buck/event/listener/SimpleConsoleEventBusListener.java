@@ -16,6 +16,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
@@ -81,6 +82,12 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         buildFinished,
         getApproximateBuildProgress(),
         lines);
+
+    Optional<String> httpStatus = renderHttpUploads();
+    if (httpStatus.isPresent()) {
+      lines.add("WAITING FOR HTTP CACHE UPLOADS " + httpStatus.get());
+    }
+
     printLines(lines);
   }
 
@@ -147,6 +154,24 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       }
       console.getStdErr().println(line);
     }
+  }
+
+  @Override
+  @Subscribe
+  public void onHttpArtifactCacheShutdownEvent(HttpArtifactCacheEvent.Shutdown event) {
+    super.onHttpArtifactCacheShutdownEvent(event);
+
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
+    logEventPair("HTTP CACHE UPLOAD",
+        renderHttpUploads(),
+        clock.currentTimeMillis(),
+        0L,
+        firstHttpCacheUploadScheduled.get(),
+        httpShutdownEvent,
+        Optional.<Double>absent(),
+        lines);
+
+    printLines(lines);
   }
 
   private void printLines(ImmutableList.Builder<String> lines) {

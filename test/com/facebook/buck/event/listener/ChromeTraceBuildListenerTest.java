@@ -32,6 +32,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -41,7 +42,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -195,14 +195,15 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(ArtifactCacheConnectEvent.finished(artifactCacheConnectEventStarted));
     BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
     eventBus.post(buildEventStarted);
-    ArtifactCacheEvent.Started artifactCacheEventStarted = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.FETCH,
+
+    HttpArtifactCacheEvent.Started artifactCacheEventStarted =
+        HttpArtifactCacheEvent.newFetchStartedEvent(
         ImmutableSet.of(ruleKey));
     eventBus.post(artifactCacheEventStarted);
     eventBus.post(
-        ArtifactCacheEvent.finished(
-            artifactCacheEventStarted,
-            CacheResult.hit("http")));
+        HttpArtifactCacheEvent.newFinishedEventBuilder(artifactCacheEventStarted)
+        .setFetchResult(CacheResult.hit("http"))
+        .build());
 
     ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
         ArtifactCompressionEvent.started(
@@ -232,6 +233,18 @@ public class ChromeTraceBuildListenerTest {
         annotationRound,
         isLastRound);
     eventBus.post(annotationProcessingEventStarted);
+
+    HttpArtifactCacheEvent.Scheduled httpScheduled = HttpArtifactCacheEvent.newStoreScheduledEvent(
+        Optional.of("TARGET_ONE"), ImmutableSet.of(ruleKey));
+    HttpArtifactCacheEvent.Started httpStarted =
+        HttpArtifactCacheEvent.newStoreStartedEvent(httpScheduled);
+
+    eventBus.post(httpStarted);
+
+    HttpArtifactCacheEvent.Finished httpFinished =
+        HttpArtifactCacheEvent.newFinishedEventBuilder(httpStarted).build();
+
+    eventBus.post(httpFinished);
 
     final CompilerPluginDurationEvent.Started processingPartOneStarted =
         CompilerPluginDurationEvent.started(
@@ -315,13 +328,13 @@ public class ChromeTraceBuildListenerTest {
 
     assertNextResult(
         resultListCopy,
-        "artifact_fetch",
+        "http_artifact_fetch",
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.of("rule_key", "abc123"));
 
     assertNextResult(
         resultListCopy,
-        "artifact_fetch",
+        "http_artifact_fetch",
         ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "rule_key", "abc123",
@@ -364,6 +377,21 @@ public class ChromeTraceBuildListenerTest {
         "com.facebook.FakeProcessor.process",
         ChromeTraceEvent.Phase.BEGIN,
         emptyArgs);
+
+    assertNextResult(
+        resultListCopy,
+        "http_artifact_store",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "rule_key", "abc123"));
+
+    assertNextResult(
+        resultListCopy,
+        "http_artifact_store",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "success", "true",
+            "rule_key", "abc123"));
 
     assertNextResult(
         resultListCopy,

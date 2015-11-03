@@ -28,6 +28,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -64,6 +67,7 @@ public class HttpArtifactCache implements ArtifactCache {
   private final boolean doStore;
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
+  private final ListeningExecutorService httpWriteExecutorService;
 
   private final Set<String> seenErrors = Sets.newConcurrentHashSet();
 
@@ -74,7 +78,8 @@ public class HttpArtifactCache implements ArtifactCache {
       URI uri,
       boolean doStore,
       ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      ListeningExecutorService httpWriteExecutorService) {
     this.name = name;
     this.fetchClient = fetchClient;
     this.storeClient = storeClient;
@@ -82,6 +87,7 @@ public class HttpArtifactCache implements ArtifactCache {
     this.doStore = doStore;
     this.projectFilesystem = projectFilesystem;
     this.buckEventBus = buckEventBus;
+    this.httpWriteExecutorService = httpWriteExecutorService;
   }
 
   protected Response fetchCall(Request request) throws IOException {
@@ -249,38 +255,54 @@ public class HttpArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
-      Path output)
+  public ListenableFuture<Void> store(
+      final ImmutableSet<RuleKey> ruleKeys,
+      final ImmutableMap<String, String> metadata,
+      final Path output)
       throws InterruptedException {
     if (!isStoreSupported()) {
-      return;
+      return Futures.immediateFuture(null);
     }
 
-    Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(ruleKeys);
-    buckEventBus.post(startedEvent);
-    Finished.Builder finishedEventBuilder =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-            .setRuleKeys(ruleKeys);
+    final HttpArtifactCacheEvent.Scheduled scheduled =
+        HttpArtifactCacheEvent.newStoreScheduledEvent(
+            ArtifactCacheEvent.getTarget(metadata), ruleKeys);
+    buckEventBus.post(scheduled);
 
-    try {
-      storeImpl(ruleKeys, metadata, output, finishedEventBuilder);
-      buckEventBus.post(finishedEventBuilder.build());
-    } catch (IOException e) {
-      reportFailure(
-          e,
-          "store(%s, %s): %s: %s",
-          uri,
-          ruleKeys,
-          e.getClass().getName(),
-          e.getMessage());
+    // HTTP Store operations are asynchronous.
+    return httpWriteExecutorService.submit(
+        new Runnable() {
+          @Override
+          public void run() {
+            Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
+            buckEventBus.post(startedEvent);
+            Finished.Builder finishedEventBuilder =
+                HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
+                    .setRuleKeys(ruleKeys);
 
-      buckEventBus.post(finishedEventBuilder
-          .setWasUploadSuccessful(false)
-          .setErrorMessage(e.toString())
-          .build());
-    }
+            try {
+              storeImpl(ruleKeys, metadata, output, finishedEventBuilder);
+              buckEventBus.post(finishedEventBuilder.build());
+
+            } catch (IOException e) {
+              reportFailure(
+                  e,
+                  "store(%s, %s): %s: %s",
+                  uri,
+                  ruleKeys,
+                  e.getClass().getName(),
+                  e.getMessage());
+
+              buckEventBus.post(
+                  finishedEventBuilder
+                      .setWasUploadSuccessful(false)
+                      .setErrorMessage(e.toString())
+                      .build());
+            }
+          }
+        },
+        /* result */ null
+    );
   }
 
   private void reportFailure(Exception exception, String format, Object... args) {

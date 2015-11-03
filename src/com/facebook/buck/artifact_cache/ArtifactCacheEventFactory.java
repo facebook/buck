@@ -17,16 +17,17 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public interface ArtifactCacheEventFactory {
-  ArtifactCacheEvent.AbstractStarted newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys);
+  ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys);
 
-  ArtifactCacheEvent.AbstractStarted newStoreStartedEvent(ImmutableSet<RuleKey> ruleKeys);
+  ArtifactCacheEvent.Started newStoreStartedEvent(ImmutableSet<RuleKey> ruleKeys,
+      ImmutableMap<String, String> metadata);
 
-  ArtifactCacheEvent.AbstractFinished newStoreFinishedEvent(
-      ArtifactCacheEvent.AbstractStarted started);
+  ArtifactCacheEvent.Finished newStoreFinishedEvent(ArtifactCacheEvent.Started started);
 
-  ArtifactCacheEvent.AbstractFinished newFetchFinishedEvent(
-      ArtifactCacheEvent.AbstractStarted started, CacheResult cacheResult);
+  ArtifactCacheEvent.Finished newFetchFinishedEvent(
+      ArtifactCacheEvent.Started started, CacheResult cacheResult);
 }

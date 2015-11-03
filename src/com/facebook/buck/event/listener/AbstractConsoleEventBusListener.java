@@ -16,9 +16,11 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.json.ParseBuckFileEvent;
@@ -41,6 +43,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
@@ -85,6 +88,17 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected volatile InstallEvent.Started installStarted;
   @Nullable
   protected volatile InstallEvent.Finished installFinished;
+
+  protected AtomicReference<HttpArtifactCacheEvent.Scheduled> firstHttpCacheUploadScheduled =
+      new AtomicReference<>();
+
+  protected final AtomicInteger httpArtifactUploadsScheduledCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadsStartedCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadedCount = new AtomicInteger(0);
+  protected final AtomicInteger httpArtifactUploadFailedCount = new AtomicInteger(0);
+
+  @Nullable
+  protected volatile HttpArtifactCacheEvent.Shutdown httpShutdownEvent;
 
   protected volatile Optional<Integer> ruleCount = Optional.absent();
 
@@ -355,6 +369,65 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void installFinished(InstallEvent.Finished finished) {
     installFinished = finished;
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheScheduledEvent(HttpArtifactCacheEvent.Scheduled event) {
+    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
+      firstHttpCacheUploadScheduled.compareAndSet(null, event);
+      httpArtifactUploadsScheduledCount.incrementAndGet();
+    }
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
+    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
+      httpArtifactUploadsStartedCount.incrementAndGet();
+    }
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
+    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
+      if (event.wasUploadSuccessful()) {
+        httpArtifactUploadedCount.incrementAndGet();
+      } else {
+        httpArtifactUploadFailedCount.incrementAndGet();
+      }
+    }
+  }
+
+  @Subscribe
+  public void onHttpArtifactCacheShutdownEvent(HttpArtifactCacheEvent.Shutdown event) {
+    httpShutdownEvent = event;
+  }
+
+  protected int getHttpUploadFinishedCount() {
+    return httpArtifactUploadedCount.get() + httpArtifactUploadFailedCount.get();
+  }
+
+  protected int getHttpUploadScheduledCount() {
+    return httpArtifactUploadsScheduledCount.get();
+  }
+
+  protected Optional<String> renderHttpUploads() {
+    int scheduled = httpArtifactUploadsScheduledCount.get();
+    int complete = httpArtifactUploadedCount.get();
+    int failed = httpArtifactUploadFailedCount.get();
+    int uploading = httpArtifactUploadsStartedCount.get() - (complete + failed);
+    int pending = scheduled - (uploading + complete + failed);
+    if (scheduled > 0) {
+      return Optional.of(
+          String.format(
+              "(%d COMPLETE/%d FAILED/%d UPLOADING/%d PENDING)",
+              complete,
+              failed,
+              uploading,
+              pending
+          ));
+    } else {
+      return Optional.absent();
+    }
   }
 
   @Override

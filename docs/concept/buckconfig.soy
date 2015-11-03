@@ -290,6 +290,15 @@ directory-based and http caching.
     # Timeout for http requests (defaults to 3 seconds).
     http_timeout_seconds = 3
 
+    # The number of writer threads to use to upload to the http cache (defaults to 1)
+    # Note: when using multiple http caches (see below) the writer thread pool is shared.
+    http_max_concurrent_writes = 2
+
+    # The length of time to wait, after the build has complete, for any remaining
+    # http cache uploads to complete before forcefully shutting down the writer thread pool.
+    # (Defaults to 1800 seconds == 30 minutes)
+    http_writer_shutdown_timeout_seconds = 600
+
     # Make the directory-based cache available to other hosts on the network via the
     # buck httpserver (which must also be enabled for this to work).
     serve_local_cache = true

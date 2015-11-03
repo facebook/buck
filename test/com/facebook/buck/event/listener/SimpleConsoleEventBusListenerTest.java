@@ -16,12 +16,16 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
+import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreFinished;
+import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreScheduled;
+import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreStarted;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -52,8 +56,12 @@ import org.junit.Test;
 import java.util.concurrent.TimeUnit;
 
 public class SimpleConsoleEventBusListenerTest {
+  private static final String TARGET_ONE = "TARGET_ONE";
+  private static final String TARGET_TWO = "TARGET_TWO";
+
   @Test
   public void testSimpleBuild() {
+    String expectedOutput = "";
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     EventBus rawEventBus = BuckEventBusFactory.getEventBusFor(eventBus);
@@ -86,8 +94,7 @@ public class SimpleConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
             parseStarted, 0L, TimeUnit.MILLISECONDS, threadId));
 
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals("", console.getTextWrittenToStdErr());
+    assertOutput("", console);
 
     rawEventBus.post(configureTestEventAtTime(
         ParseEvent.finished(parseStarted,
@@ -96,14 +103,20 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    final String parsingLine = "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
-
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals(parsingLine,
-        console.getTextWrittenToStdErr());
+    expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
+    assertOutput(expectedOutput, console);
 
     rawEventBus.post(configureTestEventAtTime(
         BuildRuleEvent.started(fakeRule), 600L, TimeUnit.MILLISECONDS, threadId));
+
+    HttpArtifactCacheEvent.Scheduled storeScheduledOne = postStoreScheduled(
+        rawEventBus, threadId, TARGET_ONE, 700L);
+
+    HttpArtifactCacheEvent.Scheduled storeScheduledTwo = postStoreScheduled(
+        rawEventBus, threadId, TARGET_TWO, 700L);
+
+    HttpArtifactCacheEvent.Started storeStartedOne =
+        postStoreStarted(rawEventBus, threadId, 710L, storeScheduledOne);
 
     rawEventBus.post(
         configureTestEventAtTime(
@@ -120,28 +133,22 @@ public class SimpleConsoleEventBusListenerTest {
     rawEventBus.post(configureTestEventAtTime(
         BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
-    final String buildingLine = "BUILT //banana:stand\n[-] BUILDING...FINISHED 0.8s\n";
-
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals(parsingLine + buildingLine,
-        console.getTextWrittenToStdErr());
+    expectedOutput += "BUILT //banana:stand\n" +
+        "[-] BUILDING...FINISHED 0.8s\n" +
+        "WAITING FOR HTTP CACHE UPLOADS (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n";
+    assertOutput(expectedOutput, console);
 
     rawEventBus.post(configureTestEventAtTime(
         ConsoleEvent.severe("I've made a huge mistake."), 1500L, TimeUnit.MILLISECONDS, threadId));
 
-    final String logLine = "I've made a huge mistake.\n";
-
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals(parsingLine + buildingLine + logLine,
-        console.getTextWrittenToStdErr());
+    expectedOutput += "I've made a huge mistake.\n";
+    assertOutput(expectedOutput, console);
 
     InstallEvent.Started installEventStarted = configureTestEventAtTime(
         InstallEvent.started(fakeTarget), 2500L, TimeUnit.MILLISECONDS, threadId);
     rawEventBus.post(installEventStarted);
 
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals(parsingLine + buildingLine + logLine,
-        console.getTextWrittenToStdErr());
+    assertOutput(expectedOutput, console);
 
     rawEventBus.post(configureTestEventAtTime(
         InstallEvent.finished(installEventStarted, true, Optional.<Long>absent()),
@@ -149,11 +156,32 @@ public class SimpleConsoleEventBusListenerTest {
         TimeUnit.MILLISECONDS,
         threadId));
 
-    final String installLine = "[-] INSTALLING...FINISHED 1.5s\n";
+    expectedOutput += "[-] INSTALLING...FINISHED 1.5s\n";
+    assertOutput(expectedOutput, console);
 
-    assertEquals("", console.getTextWrittenToStdOut());
-    assertEquals(parsingLine + buildingLine + logLine + installLine,
-        console.getTextWrittenToStdErr());
+
+    postStoreFinished(rawEventBus, threadId, 5015L, true, storeStartedOne);
+
+    HttpArtifactCacheEvent.Started storeStartedTwo =
+        postStoreStarted(rawEventBus, threadId, 5020L, storeScheduledTwo);
+
+    postStoreFinished(rawEventBus, threadId, 5020L, false, storeStartedTwo);
+
+    rawEventBus.post(configureTestEventAtTime(
+            HttpArtifactCacheEvent.newShutdownEvent(),
+            6000L,
+            TimeUnit.MILLISECONDS,
+            threadId));
+
+    expectedOutput +=
+        "[-] HTTP CACHE UPLOAD...FINISHED 5.3s (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)\n";
+    assertOutput(expectedOutput, console);
   }
+
+  private void assertOutput(String expectedOutput, TestConsole console) {
+    assertEquals("", console.getTextWrittenToStdOut());
+    assertEquals(expectedOutput, console.getTextWrittenToStdErr());
+  }
+
 
 }

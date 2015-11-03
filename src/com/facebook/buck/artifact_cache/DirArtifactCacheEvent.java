@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class DirArtifactCacheEvent {
@@ -31,36 +32,38 @@ public class DirArtifactCacheEvent {
   {
     @Override
     public ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
-      return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys);
+      return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.<String>absent());
     }
 
     @Override
-    public ArtifactCacheEvent.AbstractStarted newStoreStartedEvent(
-        ImmutableSet<RuleKey> ruleKeys) {
+    public ArtifactCacheEvent.Started newStoreStartedEvent(
+        ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata) {
       return new Started(
           ArtifactCacheEvent.Operation.STORE,
-          ruleKeys);
+          ruleKeys,
+          ArtifactCacheEvent.getTarget(metadata));
     }
 
     @Override
-    public ArtifactCacheEvent.Finished newStoreFinishedEvent(
-        ArtifactCacheEvent.AbstractStarted started) {
+    public ArtifactCacheEvent.Finished newStoreFinishedEvent(ArtifactCacheEvent.Started started) {
       return newFinishedEvent(started, Optional.<CacheResult>absent());
     }
 
     @Override
     public ArtifactCacheEvent.Finished newFetchFinishedEvent(
-        ArtifactCacheEvent.AbstractStarted started, CacheResult cacheResult) {
+        ArtifactCacheEvent.Started started, CacheResult cacheResult) {
       return newFinishedEvent(started, Optional.of(cacheResult));
     }
 
     public Finished newFinishedEvent(
-        ArtifactCacheEvent.AbstractStarted started, Optional<CacheResult> cacheResult) {
+        ArtifactCacheEvent.Started started, Optional<CacheResult> cacheResult) {
       return new Finished(
           started.getEventKey(),
           CACHE_MODE,
           started.getOperation(),
+          started.getTarget(),
           started.getRuleKeys(),
+          started.getInvocationType(),
           cacheResult
       );
     }
@@ -69,12 +72,16 @@ public class DirArtifactCacheEvent {
   public static class Started extends ArtifactCacheEvent.Started {
 
     public Started(
-        ArtifactCacheEvent.Operation operation, ImmutableSet<RuleKey> ruleKeys) {
+        ArtifactCacheEvent.Operation operation,
+        ImmutableSet<RuleKey> ruleKeys,
+        Optional<String> target) {
       super(
           EventKey.unique(),
           CACHE_MODE,
           operation,
-          ruleKeys);
+          target,
+          ruleKeys,
+          ArtifactCacheEvent.InvocationType.SYNCHRONOUS);
     }
 
     @Override
@@ -88,9 +95,11 @@ public class DirArtifactCacheEvent {
         EventKey eventKey,
         ArtifactCacheEvent.CacheMode cacheMode,
         Operation operation,
+        Optional<String> target,
         ImmutableSet<RuleKey> ruleKeys,
+        ArtifactCacheEvent.InvocationType invocationType,
         Optional<CacheResult> cacheResult) {
-      super(eventKey, cacheMode, operation, ruleKeys, cacheResult);
+      super(eventKey, cacheMode, operation, target, ruleKeys, invocationType, cacheResult);
     }
 
     @Override

@@ -29,6 +29,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -116,13 +118,13 @@ public class DirArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public void store(
+  public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
       Path output) {
 
     if (!doStore) {
-      return;
+      return Futures.immediateFuture(null);
     }
 
     try {
@@ -176,6 +178,8 @@ public class DirArtifactCache implements ArtifactCache {
       bytesSinceLastDeleteOldFiles = 0L;
       deleteOldFiles();
     }
+
+    return Futures.immediateFuture(null);
   }
 
   /**

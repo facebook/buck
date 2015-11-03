@@ -24,6 +24,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -64,12 +65,36 @@ public class ArtifactCacheBuckConfig {
   private static final URI DEFAULT_HTTP_URL = URI.create("http://localhost:8080/");
   private static final String DEFAULT_HTTP_CACHE_MODE = CacheReadMode.readwrite.name();
   private static final long DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = 3L;
+  private static final String DEFAULT_HTTP_MAX_CONCURRENT_WRITES = "1";
+  private static final String DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS = "1800"; // 30 minutes
 
 
   private final BuckConfig buckConfig;
 
   public ArtifactCacheBuckConfig(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
+  }
+
+  public int getHttpMaxConcurrentWrites() {
+    return Integer.valueOf(
+        buckConfig.getValue("cache", "http_max_concurrent_writes")
+            .or(DEFAULT_HTTP_MAX_CONCURRENT_WRITES));
+  }
+
+  public int getHttpWriterShutdownTimeout() {
+    return Integer.valueOf(
+        buckConfig.getValue("cache", "http_writer_shutdown_timeout_seconds")
+            .or(DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS));
+  }
+
+  public boolean hasAtLeastOneWriteableCache() {
+    return FluentIterable.from(getHttpCaches()).anyMatch(
+        new Predicate<HttpCacheEntry>() {
+          @Override
+          public boolean apply(HttpCacheEntry input) {
+            return input.getCacheReadMode().equals(ArtifactCacheBuckConfig.CacheReadMode.readwrite);
+          }
+        });
   }
 
   public String getHostToReportToRemoteCacheServer() {

@@ -22,20 +22,26 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.rules.RuleKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements LeafEvent {
+  private static final String TARGET_KEY = "TARGET";
+
   public enum Operation {
     FETCH,
     STORE,
   }
 
+  public enum InvocationType {
+    SYNCHRONOUS, ASYNCHRONOUS
+  }
+
   public enum CacheMode {
-    aggregate, dir, http
+    dir, http
   }
 
   @JsonIgnore
@@ -45,17 +51,27 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   private final Operation operation;
 
   @JsonIgnore
+  private final ArtifactCacheEvent.InvocationType invocationType;
+
+  @JsonIgnore
+  private final Optional<String> target;
+
+  @JsonIgnore
   private final ImmutableSet<RuleKey> ruleKeys;
 
   protected ArtifactCacheEvent(
       EventKey eventKey,
       CacheMode cacheMode,
       Operation operation,
-      ImmutableSet<RuleKey> ruleKeys) {
+      Optional<String> target,
+      ImmutableSet<RuleKey> ruleKeys,
+      ArtifactCacheEvent.InvocationType invocationType) {
     super(eventKey);
     this.cacheMode = cacheMode;
     this.operation = operation;
+    this.target = target;
     this.ruleKeys = ruleKeys;
+    this.invocationType = invocationType;
   }
 
   @Override
@@ -65,12 +81,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   @Override
   public String getCategory() {
-    if (cacheMode == CacheMode.aggregate) {
-      return "artifact_" + operation.toString().toLowerCase();
-    } else {
-      return cacheMode.toString().toLowerCase() +
-          "_artifact_" + operation.toString().toLowerCase();
-    }
+    return cacheMode.toString().toLowerCase() + "_artifact_" + operation.toString().toLowerCase();
   }
 
   public Operation getOperation() {
@@ -81,99 +92,47 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     return ruleKeys;
   }
 
-  public static class AggregateArtifactCacheEventFactory implements ArtifactCacheEventFactory {
-    @Override
-    public AbstractStarted newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
-      return started(Operation.FETCH, ruleKeys);
-    }
-
-    @Override
-    public AbstractStarted newStoreStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
-      return started(Operation.STORE, ruleKeys);
-    }
-
-    @Override
-    public AbstractFinished newStoreFinishedEvent(AbstractStarted started) {
-      return finished(started);
-    }
-
-    @Override
-    public AbstractFinished newFetchFinishedEvent(
-        AbstractStarted started, CacheResult cacheResult) {
-      return finished(started, cacheResult);
-    }
+  public Optional<String> getTarget() {
+    return target;
   }
 
-  public static Started started(Operation operation, ImmutableSet<RuleKey> ruleKeys) {
-    return new Started(EventKey.unique(), CacheMode.aggregate, operation, ruleKeys);
+  public ArtifactCacheEvent.InvocationType getInvocationType() {
+    return invocationType;
   }
 
-  public static Finished finished(AbstractStarted started) {
-    return new Finished(
-        started.getEventKey(),
-        CacheMode.aggregate,
-        started.getOperation(),
-        started.getRuleKeys(),
-        Optional.<CacheResult>absent());
+  @Override
+  public abstract String getEventName();
+
+  public static final Optional<String> getTarget(final ImmutableMap<String, String> metadata) {
+    return metadata.containsKey(TARGET_KEY) ?
+        Optional.of(metadata.get(TARGET_KEY)) : Optional.<String>absent();
   }
 
-  public static Finished finished(AbstractStarted started, CacheResult cacheResult) {
-    return new Finished(
-        started.getEventKey(),
-        CacheMode.aggregate,
-        started.getOperation(),
-        started.getRuleKeys(),
-        Optional.of(cacheResult));
-  }
-
-  public static class Started extends AbstractStarted {
+  public abstract static class Started extends ArtifactCacheEvent {
     protected Started(
         EventKey eventKey,
         CacheMode cacheMode,
         Operation operation,
-        ImmutableSet<RuleKey> ruleKeys) {
-      super(eventKey, cacheMode, operation, ruleKeys);
+        Optional<String> target,
+        ImmutableSet<RuleKey> ruleKeys,
+        ArtifactCacheEvent.InvocationType invocationType) {
+      super(eventKey, cacheMode, operation, target, ruleKeys, invocationType);
     }
   }
 
-  public static class Finished extends AbstractFinished {
+  public abstract static class Finished extends ArtifactCacheEvent {
+    /** Not present iff {@link #getOperation()} is not {@link Operation#FETCH}. */
+    private final Optional<CacheResult> cacheResult;
+
     protected Finished(
         EventKey eventKey,
         CacheMode cacheMode,
         Operation operation,
+        Optional<String> target,
         ImmutableSet<RuleKey> ruleKeys,
+        ArtifactCacheEvent.InvocationType invocationType,
         Optional<CacheResult> cacheResult) {
-      super(eventKey, cacheMode, operation, ruleKeys, cacheResult);
-    }
-  }
-
-  public abstract static class AbstractStarted extends ArtifactCacheEvent {
-    protected AbstractStarted(
-        EventKey eventKey,
-        CacheMode cacheMode,
-        Operation operation,
-        ImmutableSet<RuleKey> ruleKeys) {
-      super(eventKey, cacheMode, operation, ruleKeys);
-    }
-
-    @Override
-    public String getEventName() {
-      return String.format("Artifact%sCacheStarted",
-          CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, getOperation().toString()));
-    }
-  }
-
-  public abstract static class AbstractFinished extends ArtifactCacheEvent {
-    /** Not present iff {@link #getOperation()} is not {@link Operation#FETCH}. */
-    private final Optional<CacheResult> cacheResult;
-
-    protected AbstractFinished(
-        EventKey eventKey,
-        CacheMode cacheMode,
-        Operation operation,
-        ImmutableSet<RuleKey> ruleKeys,
-        Optional<CacheResult> cacheResult) {
-      super(eventKey, cacheMode, operation, ruleKeys);
+      super(eventKey, cacheMode, operation, target, ruleKeys, invocationType);
       Preconditions.checkArgument(
           (!operation.equals(Operation.FETCH) || cacheResult.isPresent()),
           "For FETCH operations, cacheResult must be non-null. " +
@@ -187,12 +146,6 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
     public boolean isSuccess() {
       return !cacheResult.isPresent() || cacheResult.get().getType().isSuccess();
-    }
-
-    @Override
-    public String getEventName() {
-      return String.format("Artifact%sCacheFinished",
-          CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, getOperation().toString()));
     }
 
 

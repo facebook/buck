@@ -84,6 +84,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -263,7 +264,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
             .setArtifactCache(
                 new NoopArtifactCache() {
                   @Override
-                  public void store(
+                  public ListenableFuture<Void> store(
                       ImmutableSet<RuleKey> ruleKeys,
                       ImmutableMap<String, String> metadata,
                       Path output) {
@@ -272,6 +273,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
                     } catch (InterruptedException e) {
                       throw Throwables.propagate(e);
                     }
+                    return Futures.immediateFuture(null);
                   }
                 })
             .setEventBus(buckEventBus)
@@ -2096,7 +2098,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
     }
 
     @Override
-    public void store(
+    public ListenableFuture<Void> store(
         ImmutableSet<RuleKey> ruleKeys,
         ImmutableMap<String, String> metadata,
         Path output) {

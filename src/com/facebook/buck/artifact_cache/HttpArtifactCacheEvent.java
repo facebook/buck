@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
@@ -42,34 +43,78 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   protected HttpArtifactCacheEvent(
       EventKey eventKey,
       ArtifactCacheEvent.Operation operation,
-      ImmutableSet<RuleKey> ruleKeys) {
+      Optional<String> target,
+      ImmutableSet<RuleKey> ruleKeys,
+      ArtifactCacheEvent.InvocationType invocationType) {
     super(
         eventKey,
         CACHE_MODE,
         operation,
-        ruleKeys);
+        target,
+        ruleKeys,
+        invocationType);
   }
 
   public static Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
     return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys);
   }
 
-  public static Started newStoreStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
-    return new Started(ArtifactCacheEvent.Operation.STORE, ruleKeys);
+  public static Started newStoreStartedEvent(Scheduled scheduled) {
+    return new Started(scheduled);
+  }
+
+  public static Scheduled newStoreScheduledEvent(
+      Optional<String> target,
+      ImmutableSet<RuleKey> ruleKeys) {
+    return new Scheduled(ArtifactCacheEvent.Operation.STORE, target, ruleKeys);
+  }
+
+  public static Shutdown newShutdownEvent() {
+    return new Shutdown();
   }
 
   public static Finished.Builder newFinishedEventBuilder(Started event) {
     return new Finished.Builder(event);
   }
 
-  public static class Started extends ArtifactCacheEvent.AbstractStarted {
-    public Started(ArtifactCacheEvent.Operation operation,
+  public static class Scheduled extends HttpArtifactCacheEvent {
+
+    public Scheduled(ArtifactCacheEvent.Operation operation,
+        Optional<String> target,
         ImmutableSet<RuleKey> ruleKeys) {
+      super(
+          EventKey.unique(),
+          operation,
+          target,
+          ruleKeys,
+          ArtifactCacheEvent.InvocationType.ASYNCHRONOUS);
+    }
+
+    @Override
+    public String getEventName() {
+      return "HttpArtifactCacheEvent.Scheduled";
+    }
+  }
+
+  public static class Started extends ArtifactCacheEvent.Started {
+    public Started(Scheduled event) {
+      super(
+          event.getEventKey(),
+          CACHE_MODE,
+          event.getOperation(),
+          event.getTarget(),
+          event.getRuleKeys(),
+          event.getInvocationType());
+    }
+
+    public Started(ArtifactCacheEvent.Operation operation, ImmutableSet<RuleKey> ruleKeys) {
       super(
           EventKey.unique(),
           CACHE_MODE,
           operation,
-          ruleKeys);
+          Optional.<String>absent(),
+          ruleKeys,
+          ArtifactCacheEvent.InvocationType.SYNCHRONOUS);
     }
 
     @Override
@@ -78,29 +123,52 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     }
   }
 
-  public static class Finished extends ArtifactCacheEvent.AbstractFinished {
+  public static class Shutdown extends AbstractBuckEvent {
+    public Shutdown() {
+      super(EventKey.unique());
+    }
+
+    @Override
+    public String getEventName() {
+      return "HttpArtifactCacheEvent.Shutdown";
+    }
+
+    @Override
+    protected String getValueString() {
+      return getEventName() + getEventKey().toString();
+    }
+  }
+
+  public static class Finished extends ArtifactCacheEvent.Finished {
 
     @JsonProperty("event_info")
     private final ImmutableMap<String, Object> eventInfo;
 
     @JsonIgnore
-    private final HttpArtifactCacheEvent.Started startedEvent;
+    private final Started startedEvent;
 
     @JsonProperty("request_duration_millis")
     private long requestDurationMillis;
 
-    private Finished(HttpArtifactCacheEvent.Started event,
+    @JsonIgnore
+    private boolean wasUploadSuccessful;
+
+    private Finished(Started event,
         ImmutableMap<String, Object> data,
+        boolean wasUploadSuccessful,
         Optional<CacheResult> cacheResult) {
       super(
           event.getEventKey(),
           CACHE_MODE,
           event.getOperation(),
+          event.getTarget(),
           event.getRuleKeys(),
+          event.getInvocationType(),
           cacheResult);
       this.startedEvent = event;
       this.eventInfo = data;
       this.requestDurationMillis = -1;
+      this.wasUploadSuccessful = wasUploadSuccessful;
     }
 
     public long getRequestDurationMillis() {
@@ -123,20 +191,25 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       return "HttpArtifactCacheEvent.Finished";
     }
 
+    public boolean wasUploadSuccessful() {
+      return wasUploadSuccessful;
+    }
+
     public static class Builder {
       private final Map<String, Object> data;
+      private boolean wasUploadSuccessful;
       private Optional<CacheResult> cacheResult = Optional.absent();
 
-      private final HttpArtifactCacheEvent.Started startedEvent;
+      private final Started startedEvent;
 
-      private Builder(HttpArtifactCacheEvent.Started event) {
+      private Builder(Started event) {
         this.data = Maps.newHashMap();
         this.startedEvent = event;
       }
 
       public HttpArtifactCacheEvent.Finished build() {
         return new HttpArtifactCacheEvent.Finished(
-            startedEvent, ImmutableMap.copyOf(data), cacheResult);
+            startedEvent, ImmutableMap.copyOf(data), wasUploadSuccessful, cacheResult);
       }
 
       public Builder setArtifactSizeBytes(long artifactSizeBytes) {
@@ -165,6 +238,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
       public Builder setWasUploadSuccessful(boolean wasUploadSuccessful) {
         data.put("was_upload_successful", wasUploadSuccessful);
+        this.wasUploadSuccessful = wasUploadSuccessful;
         return this;
       }
 

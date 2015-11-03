@@ -21,8 +21,15 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.nio.file.Path;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 /**
  * MultiArtifactCache encapsulates a set of ArtifactCache instances such that fetch() succeeds if
@@ -76,14 +83,28 @@ public class MultiArtifactCache implements ArtifactCache {
    * Store the artifact to all encapsulated ArtifactCaches.
    */
   @Override
-  public void store(
+  public ListenableFuture<Void> store(
       ImmutableSet<RuleKey> ruleKeys,
       ImmutableMap<String, String> metadata,
       Path output)
       throws InterruptedException {
+    List<ListenableFuture<Void>> storeFutures =
+        Lists.newArrayListWithExpectedSize(artifactCaches.size());
+
     for (ArtifactCache artifactCache : artifactCaches) {
-      artifactCache.store(ruleKeys, metadata, output);
+      storeFutures.add(artifactCache.store(ruleKeys, metadata, output));
     }
+
+    // Aggregate future to ensure all store operations have completed.
+    return Futures.transform(
+        Futures.allAsList(storeFutures),
+        new AsyncFunction<List<Void>, Void>() {
+          @Override
+          @Nullable
+          public ListenableFuture<Void> apply(List<Void> input) throws Exception {
+            return null;
+          }
+        });
   }
 
   /** @return {@code true} if there is at least one ArtifactCache that supports storing. */

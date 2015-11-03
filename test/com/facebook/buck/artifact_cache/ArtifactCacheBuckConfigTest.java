@@ -75,6 +75,7 @@ public class ArtifactCacheBuckConfigTest {
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",
         "mode = http");
+    assertThat(config.hasAtLeastOneWriteableCache(), Matchers.is(true));
     assertThat(
         config.getArtifactCacheModes(),
         Matchers.contains(ArtifactCacheBuckConfig.ArtifactCacheMode.http));
@@ -82,6 +83,7 @@ public class ArtifactCacheBuckConfigTest {
     config = createFromText(
         "[cache]",
         "mode = dir");
+    assertThat(config.hasAtLeastOneWriteableCache(), Matchers.is(false));
     assertThat(
         config.getArtifactCacheModes(),
         Matchers.contains(ArtifactCacheBuckConfig.ArtifactCacheMode.dir));
@@ -89,6 +91,7 @@ public class ArtifactCacheBuckConfigTest {
     config = createFromText(
         "[cache]",
         "mode = dir, http");
+    assertThat(config.hasAtLeastOneWriteableCache(), Matchers.is(true));
     assertThat(
         config.getArtifactCacheModes(),
         Matchers.containsInAnyOrder(
@@ -100,6 +103,8 @@ public class ArtifactCacheBuckConfigTest {
   public void testHttpCacheSettings() throws Exception {
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",
+        "http_max_concurrent_writes = 5",
+        "http_writer_shutdown_timeout_seconds = 6",
         "http_timeout_seconds = 42",
         "http_url = http://test.host:1234",
         "http_mode = readwrite");
@@ -107,6 +112,8 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(httpCaches, Matchers.hasSize(1));
     HttpCacheEntry cacheEntry = FluentIterable.from(httpCaches).get(0);
 
+    assertThat(config.getHttpMaxConcurrentWrites(), Matchers.is(5));
+    assertThat(config.getHttpWriterShutdownTimeout(), Matchers.is(6));
     assertThat(cacheEntry.getTimeoutSeconds(), Matchers.is(42));
     assertThat(cacheEntry.getUrl(), Matchers.equalTo(new URI("http://test.host:1234")));
     assertThat(
