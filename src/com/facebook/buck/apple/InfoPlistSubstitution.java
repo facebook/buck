@@ -155,7 +155,7 @@ public class InfoPlistSubstitution {
           variablesToExpand,
           new ImmutableList.Builder<String>().addAll(maskedVariables).add(variableName).build());
 
-      // TODO(user): Add support for "rfc1034identifier" modifier and sanitize
+      // TODO(beng): Add support for "rfc1034identifier" modifier and sanitize
       // expansion so it's a legal hostname (a-zA-Z0-9, dash, period).
 
       variableMatcher.appendReplacement(

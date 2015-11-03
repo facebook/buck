@@ -143,7 +143,7 @@ public class TestRunning {
           // We'll use the filesystem of the first rule under test. This will fail if there are any
           // tests from a different repo, but it'll help us bootstrap ourselves to being able to
           // support multiple repos
-          // TODO(user): Support tests in multiple repos
+          // TODO(t8220837): Support tests in multiple repos
           JavaLibrary library = rulesUnderTest.iterator().next();
           stepRunner.runStepForBuildTarget(
               new MakeCleanDirectoryStep(library.getProjectFilesystem(), JACOCO_OUTPUT_DIR),
@@ -594,7 +594,7 @@ public class TestRunning {
     } else if (isRunningWithTestSelectors) {
       // As a feature to aid developers, we'll assume that when we are using test selectors,
       // we should always run each test (and never look at the cache.)
-      // TODO(user) When #3090004 and #3436849 are closed we can respect the cache again.
+      // TODO(edward) When #3090004 and #3436849 are closed we can respect the cache again.
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&

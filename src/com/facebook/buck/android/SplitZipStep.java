@@ -414,7 +414,7 @@ public class SplitZipStep implements Step {
         }
       }
     }
-    // TODO(user): It's possible for this to happen by chance, so we should handle it better.
+    // TODO(dreiss): It's possible for this to happen by chance, so we should handle it better.
     throw new IllegalStateException("Couldn't find any class in " + jarFile.toAbsolutePath());
   }
 

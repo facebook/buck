@@ -130,7 +130,7 @@ public class Parser {
 
   /**
    * A cached BuildFileTree which can be invalidated and lazily constructs new BuildFileTrees.
-   * TODO(user): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
+   * TODO(jimp): refactor this as a generic CachingSupplier<T> when it's needed elsewhere.
    */
   @VisibleForTesting
   static class BuildFileTreeCache implements Supplier<BuildFileTree> {

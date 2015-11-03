@@ -91,7 +91,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectory() throws IOException {
 
-    // TODO(user): Currently, we don't properly sanitize the working directory for the default
+    // TODO(7534285): Currently, we don't properly sanitize the working directory for the default
     // platform when using the clang compiler.
     assumeNotUsingSeparateOrPipedModesWithClang();
 
@@ -107,7 +107,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeSymlinkedWorkingDirectory() throws IOException {
 
-    // TODO(user): Currently, we don't properly sanitize the working directory for the default
+    // TODO(7534285): Currently, we don't properly sanitize the working directory for the default
     // platform when using the clang compiler.
     assumeNotUsingSeparateOrPipedModesWithClang();
 

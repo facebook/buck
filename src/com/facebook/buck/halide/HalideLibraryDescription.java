@@ -14,7 +14,7 @@
  * under the License.
  */
 
-// TODO(user): Handle building the pipeline for different targets (e.g.
+// TODO(jcarreiro): Handle building the pipeline for different targets (e.g.
 // GPU) using flavors.
 
 package com.facebook.buck.halide;

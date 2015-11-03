@@ -168,7 +168,7 @@ class PEXBuilder(object):
     entry_point.replace(os.path.sep, '.')
     self._pex_info.entry_point = entry_point.rpartition('.')[0]
 
-  # TODO(user) Consider changing this behavior to put the onus on the consumer
+  # TODO(wickman) Consider changing this behavior to put the onus on the consumer
   # of twitter.common.python to write the pex sources correctly.
   def _prepare_inits(self):
     relative_digest = self._chroot.get("source")
@@ -188,7 +188,7 @@ class PEXBuilder(object):
   def _prepare_main(self):
     self._chroot.write(BOOTSTRAP_ENVIRONMENT, '__main__.py', label='main')
 
-  # TODO(user) Ideally we unqualify our setuptools dependency and inherit whatever is
+  # TODO(wickman) Ideally we unqualify our setuptools dependency and inherit whatever is
   # bundled into the environment so long as it is compatible (and error out if not.)
   #
   # As it stands, we're picking and choosing the pieces we think we need, which means

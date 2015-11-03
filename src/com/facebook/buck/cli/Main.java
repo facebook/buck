@@ -337,7 +337,7 @@ public final class Main {
         ImmutableSet.Builder<String> encounteredWatchmanWarningsBuilder = ImmutableSet.builder();
         watchmanWatcher.postEvents(eventBus, encounteredWatchmanWarningsBuilder);
 
-        // TODO(user): Pass encountered Watchman warnings to parser so Watchman glob can
+        // TODO(beng): Pass encountered Watchman warnings to parser so Watchman glob can
         // ignore them.
       }
     }
@@ -669,7 +669,7 @@ public final class Main {
     ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
         processExecutor,
         clientEnvironment,
-        // TODO(user): Thread through properties from client environment.
+        // TODO(t4854620): Thread through properties from client environment.
         System.getProperties());
 
     ParserConfig.AllowSymlinks allowSymlinks = parserConfig.getAllowSymlinks();

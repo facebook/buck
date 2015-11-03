@@ -46,7 +46,7 @@ public class ApplePackage extends AbstractBuildRule {
       AppleBundle bundle) {
     super(params, resolver);
     BuildTarget buildTarget = params.getBuildTarget();
-    // TODO(user): This will be different for Mac apps.
+    // TODO(markwang): This will be different for Mac apps.
     this.pathToOutputFile = BuildTargets.getGenPath(buildTarget, "%s.ipa");
     this.temp = BuildTargets.getScratchPath(buildTarget, "__temp__%s");
     this.bundle = bundle;

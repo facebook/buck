@@ -87,7 +87,7 @@ public class DotNetFramework {
     return version.equals(((DotNetFramework) obj).version);
   }
 
-  // TODO(user): Use official Win32 APIs to find the framework
+  // TODO(t8390117): Use official Win32 APIs to find the framework
   @VisibleForTesting
   static DotNetFramework resolveFramework(
       FileSystem osFilesystem,

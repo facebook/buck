@@ -60,7 +60,7 @@ public class OCamlCCompileStep extends ShellStep {
     public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
       builder.setReflectively("cCompiler", cCompiler);
       builder.setReflectively("ocamlCompiler", ocamlCompiler);
-      // TODO(user): Ensure that this is not an absolute path.
+      // TODO(t7145608): Ensure that this is not an absolute path.
       builder.setReflectively("output", output.toString());
       builder.setReflectively("input", input);
       builder.setReflectively("flags", flags);

@@ -156,7 +156,7 @@ public class NdkCxxPlatformIntegrationTest {
     // Verify that the working directory is sanitized.
     assertFalse(contents.contains(tmp.getRootPath().toString()));
 
-    // TODO(user): We don't currently support fixing up debug paths for the combined flow.
+    // TODO(7534323): We don't currently support fixing up debug paths for the combined flow.
     if (mode != CxxPreprocessMode.COMBINED) {
 
       // Verify that we don't have any references to the build toolchain in the debug info.

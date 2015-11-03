@@ -427,7 +427,7 @@ public class AppleTestDescription implements
       BuildTarget buildTarget,
       Function<Optional<String>, Path> cellRoots,
       AppleTestDescription.Arg constructorArg) {
-    // TODO(user, coneko): This should technically only be a runtime dependency;
+    // TODO(beng, coneko): This should technically only be a runtime dependency;
     // doing this adds it to the extra deps in BuildRuleParams passed to
     // the bundle and test rule.
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();

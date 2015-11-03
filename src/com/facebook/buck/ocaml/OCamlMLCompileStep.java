@@ -59,7 +59,7 @@ public class OCamlMLCompileStep extends ShellStep {
       return builder.setReflectively("cCompiler", cCompiler)
           .setReflectively("ocamlCompiler", ocamlCompiler)
           .setReflectively("output", output.toString())
-          // TODO(user): I suspect this is going to mean absolute paths in rule keys
+          // TODO(t7145608): I suspect this is going to mean absolute paths in rule keys
           .setReflectively("input", input)
           .setReflectively("flags", flags);
     }

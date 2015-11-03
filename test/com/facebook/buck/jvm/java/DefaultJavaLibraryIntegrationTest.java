@@ -225,7 +225,7 @@ public class DefaultJavaLibraryIntegrationTest {
       }
     }
 
-    // TODO(user): Change the output to the intended output.
+    // TODO(mread): Change the output to the intended output.
     assertEquals(
         jarContents.build(),
         ImmutableSet.of(

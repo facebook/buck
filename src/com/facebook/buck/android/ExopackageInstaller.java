@@ -219,7 +219,7 @@ public class ExopackageInstaller {
       determineBestAgent();
 
       final File apk = apkRule.getApkPath().toFile();
-      // TODO(user): Support SD installation.
+      // TODO(dreiss): Support SD installation.
       final boolean installViaSd = false;
 
       if (shouldAppBeInstalled()) {
@@ -239,7 +239,7 @@ public class ExopackageInstaller {
         installNativeLibraryFiles();
       }
 
-      // TODO(user): Make this work on Gingerbread.
+      // TODO(dreiss): Make this work on Gingerbread.
       try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "kill_app")) {
         AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
       }

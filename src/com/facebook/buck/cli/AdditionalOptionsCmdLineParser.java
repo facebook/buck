@@ -74,7 +74,7 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
     for (Field f : beanClass.getDeclaredFields()) {
       if (f.isAnnotationPresent(AdditionalOptions.class)) {
         try {
-          // TODO(user): nicer to do this lazily in parseArgument()
+          // TODO(vlada): nicer to do this lazily in parseArgument()
           Object fieldValue = f.getType().newInstance();
           Setters.create(f, bean).addValue(fieldValue);
           parseAdditionalOptions(classParser, fieldValue, visited);

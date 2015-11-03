@@ -77,7 +77,7 @@ public class PackageStringAssets extends AbstractBuildRule
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
   }
 
-  // TODO(user): Add an integration test for packaging string assets
+  // TODO(russell): Add an integration test for packaging string assets
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,

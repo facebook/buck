@@ -90,6 +90,6 @@ public class AndroidManifestTest {
         .createBuildRule(TargetGraph.EMPTY, buildRuleParams, new BuildRuleResolver(), arg);
   }
 
-  // TODO(user): Add another unit test that passes in a non-trivial DependencyGraph and verify that
+  // TODO(abhi): Add another unit test that passes in a non-trivial DependencyGraph and verify that
   // the resulting set of libraryManifestPaths is computed correctly.
 }

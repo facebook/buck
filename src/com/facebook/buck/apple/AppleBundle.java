@@ -305,7 +305,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     stepsBuilder.add(
         new MakeCleanDirectoryStep(getProjectFilesystem(), bundleRoot),
         new MkdirStep(getProjectFilesystem(), metadataPath),
-        // TODO(user): This is only appropriate for .app bundles.
+        // TODO(beng): This is only appropriate for .app bundles.
         new WriteFileStep(
             getProjectFilesystem(),
             "APPLWRUN",

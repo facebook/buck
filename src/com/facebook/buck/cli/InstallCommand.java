@@ -180,7 +180,7 @@ public class InstallCommand extends BuildCommand {
       return 1;
     }
 
-    // TODO(user): Cache argument parsing.
+    // TODO(markwang): Cache argument parsing.
     Optional<String> helperTarget = Optional.absent();
     try {
       TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
@@ -314,7 +314,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor) throws IOException, InterruptedException {
-    // TODO(user): This should be shared with the build and passed down.
+    // TODO(beng): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
 
     final Path helperPath;
@@ -440,7 +440,7 @@ public class InstallCommand extends BuildCommand {
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor) throws IOException, InterruptedException {
 
-    // TODO(user): This should be shared with the build and passed down.
+    // TODO(beng): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
     Optional<Path> xcodeDeveloperPath = appleConfig.getAppleDeveloperDirectorySupplier(
         processExecutor).get();

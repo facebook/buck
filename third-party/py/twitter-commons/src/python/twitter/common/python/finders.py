@@ -124,7 +124,7 @@ class WheelMetadata(pkg_resources.EggMetadata):
     while path != old:
       if path.lower().endswith('.whl'):
         self.egg_name = os.path.basename(path)
-        # TODO(user) Test the regression where we have both upper and lower cased package
+        # TODO(wickman) Test the regression where we have both upper and lower cased package
         # names.
         self.egg_info = os.path.join(path, '%s.dist-info' % self._split_wheelname(self.egg_name))
         self.egg_root = path
@@ -166,7 +166,7 @@ def wheel_from_metadata(location, metadata):
   return pkg_resources.DistInfoDistribution(
       location=location,
       metadata=metadata,
-      # TODO(user) Is this necessary or will they get picked up correctly?
+      # TODO(wickman) Is this necessary or will they get picked up correctly?
       project_name=pkg_info.get('Name'),
       version=pkg_info.get('Version'),
       platform=None)

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-// TODO(user): Delete this class once we can use reflection for all rulekeys
+// TODO(t6430785): Delete this class once we can use reflection for all rulekeys
 public interface RuleKeyAppendable {
 
   RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder);

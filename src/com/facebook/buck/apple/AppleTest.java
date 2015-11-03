@@ -355,7 +355,7 @@ public class AppleTest
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    // TODO(user): Refactor the JavaTest implementation; this is identical.
+    // TODO(beng): Refactor the JavaTest implementation; this is identical.
 
     List<String> pathsList = new ArrayList<>();
     pathsList.add(getBuildTarget().getBaseNameWithSlash());

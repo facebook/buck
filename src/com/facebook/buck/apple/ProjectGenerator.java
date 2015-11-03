@@ -997,7 +997,7 @@ public class ProjectGenerator {
       String bundleLoaderOutputPath = Joiner.on('/').join(
           getTargetOutputPath(bundleLoader),
           bundleName,
-          // TODO(user): How do we handle the "Contents" sub-directory for OS X app tests?
+          // TODO(beng): How do we handle the "Contents" sub-directory for OS X app tests?
           bundleLoaderProductName);
       extraSettingsBuilder
           .put("BUNDLE_LOADER", bundleLoaderOutputPath)
@@ -1522,7 +1522,7 @@ public class ProjectGenerator {
   private void addCoreDataModelBuildPhase(
       PBXGroup targetGroup,
       Iterable<CoreDataModelDescription.Arg> dataModels) throws IOException {
-    // TODO(user): actually add a build phase
+    // TODO(coneko): actually add a build phase
 
     for (final CoreDataModelDescription.Arg dataModel : dataModels) {
       // Core data models go in the resources group also.
