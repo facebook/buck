@@ -16,7 +16,10 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
@@ -28,16 +31,14 @@ import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.io.PathListing;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
-import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.ActionGraphEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -492,17 +493,17 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void artifactFetchStarted(ArtifactCacheEvent.Started started) {
-    writeChromeTraceEvent("buck",
+  public void artifactCacheEventStarted(ArtifactCacheEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
         started.getCategory(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of(
-            "rule_key", Joiner.on(", ").join(started.getRuleKeys())),
+        ImmutableMap.of("rule_key", Joiner.on(", ").join(started.getRuleKeys())),
         started);
   }
 
   @Subscribe
-  public void artifactFetchFinished(ArtifactCacheEvent.Finished finished) {
+  public void artifactCacheEventFinished(ArtifactCacheEvent.Finished finished) {
     ImmutableMap.Builder<String, String> argumentsBuilder = ImmutableMap.<String, String>builder()
         .put("success", Boolean.toString(finished.isSuccess()))
         .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()));
@@ -515,6 +516,26 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ChromeTraceEvent.Phase.END,
         argumentsBuilder.build(),
         finished);
+  }
+
+  @Subscribe
+  public void artifactCompressionStarted(ArtifactCompressionEvent.Started started) {
+    writeArtifactCompressionEvent(started, ChromeTraceEvent.Phase.BEGIN);
+  }
+
+  @Subscribe
+  public void artifactCompressionFinished(ArtifactCompressionEvent.Finished finished) {
+    writeArtifactCompressionEvent(finished, ChromeTraceEvent.Phase.END);
+  }
+
+  public void writeArtifactCompressionEvent(
+      ArtifactCompressionEvent event, ChromeTraceEvent.Phase phase) {
+    writeChromeTraceEvent(
+        "buck",
+        event.getCategory(),
+        phase,
+        ImmutableMap.of("rule_key", Joiner.on(", ").join(event.getRuleKeys())),
+        event);
   }
 
   @Subscribe

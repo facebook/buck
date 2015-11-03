@@ -17,7 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.event.ConsoleEvent;
@@ -887,8 +887,8 @@ public class CachingBuildEngine implements BuildEngine {
     //
     // Unfortunately, this does not appear to work, in practice, because MoreFiles fails when trying
     // to resolve a Path for a zip entry against a file Path on disk.
-    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.DECOMPRESS,
+    ArtifactCompressionEvent.Started started = ArtifactCompressionEvent.started(
+        ArtifactCompressionEvent.Operation.DECOMPRESS,
         ImmutableSet.of(ruleKey));
     buildContext.getEventBus().post(started);
     try {
@@ -925,7 +925,7 @@ public class CachingBuildEngine implements BuildEngine {
               Throwables.getStackTraceAsString(e)));
       return CacheResult.miss();
     } finally {
-      buildContext.getEventBus().post(ArtifactCacheEvent.finished(started));
+      buildContext.getEventBus().post(ArtifactCompressionEvent.finished(started));
     }
 
     return cacheResult;

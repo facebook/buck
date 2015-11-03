@@ -32,8 +32,6 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   public enum Operation {
     FETCH,
     STORE,
-    COMPRESS,
-    DECOMPRESS,
   }
 
   public enum CacheMode {

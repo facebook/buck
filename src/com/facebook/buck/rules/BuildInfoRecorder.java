@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MoreFiles;
@@ -297,8 +297,8 @@ public class BuildInfoRecorder {
       return;
     }
 
-    ArtifactCacheEvent.Started started = ArtifactCacheEvent.started(
-        ArtifactCacheEvent.Operation.COMPRESS,
+    ArtifactCompressionEvent.Started started = ArtifactCompressionEvent.started(
+        ArtifactCompressionEvent.Operation.COMPRESS,
         ruleKeys);
     eventBus.post(started);
 
@@ -319,7 +319,7 @@ public class BuildInfoRecorder {
       e.printStackTrace();
       return;
     } finally {
-      eventBus.post(ArtifactCacheEvent.finished(started));
+      eventBus.post(ArtifactCompressionEvent.finished(started));
     }
 
     // Store the artifact, including any additional metadata.

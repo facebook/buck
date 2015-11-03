@@ -16,9 +16,10 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.httpserver.WebServer;
@@ -594,6 +595,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void artifactFinished(ArtifactCacheEvent.Finished finished) {
+    threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
+  }
+
+  @Subscribe
+  public void artifactCompressionStarted(ArtifactCompressionEvent.Started started) {
+    threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
+  }
+
+  @Subscribe
+  public void artifactCompressionFinished(ArtifactCompressionEvent.Finished finished) {
     threadsToRunningStep.put(finished.getThreadId(), Optional.<StepEvent>absent());
   }
 

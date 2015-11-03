@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -202,8 +203,16 @@ public class ChromeTraceBuildListenerTest {
         ArtifactCacheEvent.finished(
             artifactCacheEventStarted,
             CacheResult.hit("http")));
+
+    ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
+        ArtifactCompressionEvent.started(
+            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(ruleKey));
+    eventBus.post(artifactCompressionStartedEvent);
+    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent));
+
     eventBus.post(BuildRuleEvent.started(rule));
     eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
+
 
     JavacPhaseEvent.Started runProcessorsStartedEvent = JavacPhaseEvent.started(
         target,
@@ -318,6 +327,18 @@ public class ChromeTraceBuildListenerTest {
             "rule_key", "abc123",
             "success", "true",
             "cache_result", "HTTP_HIT"));
+
+    assertNextResult(
+        resultListCopy,
+        "artifact_compress",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("rule_key", "abc123"));
+
+    assertNextResult(
+        resultListCopy,
+        "artifact_compress",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of("rule_key", "abc123"));
 
     // BuildRuleEvent.Started
     assertNextResult(

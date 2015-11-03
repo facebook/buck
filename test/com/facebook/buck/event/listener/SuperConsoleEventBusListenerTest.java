@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRunEvent;
@@ -199,6 +201,24 @@ public class SuperConsoleEventBusListenerTest {
         BuildRuleEvent.started(fakeRule),
         600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
+    validateConsole(console, listener, 700L, ImmutableList.of(parsingLine,
+            formatConsoleTimes("[+] BUILDING...%s", 0.3),
+            formatConsoleTimes(" |=> //banana:stand...  %s (checking local cache)", 0.1)));
+
+    ArtifactCompressionEvent.Started compressStarted = ArtifactCompressionEvent.started(
+        ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.<RuleKey>of());
+    rawEventBus.post(configureTestEventAtTime(
+            compressStarted,
+            701L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(console, listener, 702L, ImmutableList.of(parsingLine,
+            formatConsoleTimes("[+] BUILDING...%s", 0.3),
+            formatConsoleTimes(
+                " |=> //banana:stand...  %s (running artifact_compress[%s])", 0.1, 0.0)));
+
+    rawEventBus.post(configureTestEventAtTime(
+            ArtifactCompressionEvent.finished(compressStarted),
+            703L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     validateConsole(console, listener, 800L, ImmutableList.of(parsingLine,
         formatConsoleTimes("[+] BUILDING...%s", 0.4),
