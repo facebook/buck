@@ -649,6 +649,14 @@ platform libraries should target.  This is equivalent to{sp}
   app_platform = android-21
 </pre>{/literal}
 
+If your apps only support a subset of the CPU ABIs that Android supports,
+you can control which ABIs you target with <code>cpu_abis</code>:
+{literal}<pre class="prettyprint lang-ini">
+[ndk]
+  # Only support ICS and above.
+  cpu_abis = armv7, x86
+</pre>{/literal}
+
 This section also supports parameters to control how {call buck.cxx_library /} rules
 build C/C++ for NDK platforms:
 {literal}<pre class="prettyprint lang-ini">

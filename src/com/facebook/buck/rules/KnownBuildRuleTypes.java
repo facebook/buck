@@ -314,6 +314,7 @@ public class KnownBuildRuleTypes {
               compiler,
               androidConfig.getNdkCxxRuntime().or(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
               androidConfig.getNdkAppPlatform().or(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
+              androidConfig.getNdkCpuAbis().or(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
               platform));
     }
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =

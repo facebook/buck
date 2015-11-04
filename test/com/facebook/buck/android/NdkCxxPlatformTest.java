@@ -227,6 +227,7 @@ public class NdkCxxPlatformTest {
                       .build(),
                   NdkCxxPlatforms.CxxRuntime.GNUSTL,
                   "target-app-platform",
+                  ImmutableSet.of("x86"),
                   platform,
                   new AlwaysFoundExecutableFinder());
           preprocessAndCompileRukeKeys.put(
