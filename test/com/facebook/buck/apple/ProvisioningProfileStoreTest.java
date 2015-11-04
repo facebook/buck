@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
+import java.nio.file.Paths;
 import java.util.Date;
 
 public class ProvisioningProfileStoreTest {
@@ -34,6 +35,7 @@ public class ProvisioningProfileStoreTest {
         .setAppID(ProvisioningProfileMetadata.splitAppID(appID))
         .setExpirationDate(expirationDate)
         .setUUID(uuid)
+        .setProfilePath(Paths.get("dummy.mobileprovision"))
         .build();
   }
 

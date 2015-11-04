@@ -74,7 +74,7 @@ public class ProvisioningProfileMetadataTest {
     assertThat(data.getExpirationDate(), is(equalTo(new NSDate("9999-03-05T01:33:40Z").getDate())));
     assertThat(data.getAppID(), is(equalTo(new Pair<>("ABCDE12345", "com.example.TestApp"))));
     assertThat(data.getUUID(), is(equalTo("00000000-0000-0000-0000-000000000000")));
-    assertThat(data.getProfilePath().get(), is(equalTo(testFile)));
+    assertThat(data.getProfilePath(), is(equalTo(testFile)));
     assertThat(
         data.getDeveloperCertificateFingerprints(),
         equalTo(ImmutableSet.of(HashCode.fromString("be16fc419bfb6b59a86bc08755ba0f332ec574fb"))));

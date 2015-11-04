@@ -73,7 +73,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
 
   public abstract String getUUID();
 
-  public abstract Optional<Path> getProfilePath();
+  public abstract Path getProfilePath();
 
   /**
    * Key/value pairs of the "Entitlements" dictionary in the embedded plist.
@@ -156,7 +156,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
           .setAppID(ProvisioningProfileMetadata.splitAppID(appID))
           .setExpirationDate(expirationDate)
           .setUUID(uuid)
-          .setProfilePath(Optional.of(profilePath))
+          .setProfilePath(profilePath)
           .setEntitlements(builder.build())
           .setDeveloperCertificateFingerprints(certificateFingerprints.build())
           .build();

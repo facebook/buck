@@ -133,7 +133,7 @@ public class ProvisioningProfileCopyStep implements Step {
         prefix.or("*") + "." + bundleID);
     }
 
-    Path provisioningProfileSource = bestProfile.get().getProfilePath().get();
+    Path provisioningProfileSource = bestProfile.get().getProfilePath();
 
     // Copy the actual .mobileprovision.
     try {
