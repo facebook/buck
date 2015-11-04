@@ -359,7 +359,7 @@ public class XctoolRunTestsStepTest {
   }
 
   @Test
-  public void xctoolCommandWithTestSelectorMatchingNothingFails() throws Exception {
+  public void xctoolCommandWithTestSelectorMatchingNothingDoesNotFail() throws Exception {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     XctoolRunTestsStep step = new XctoolRunTestsStep(
         projectFilesystem,
@@ -412,7 +412,7 @@ public class XctoolRunTestsStepTest {
           .build();
       assertThat(
           step.execute(executionContext),
-          equalTo(1));
+          equalTo(0));
     }
   }
 }

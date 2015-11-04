@@ -222,7 +222,7 @@ public class XctoolRunTestsStep implements Step {
               String.format(
                   "No tests found matching specified filter (%s)",
                   testSelectorList.getExplanation()));
-          return 1;
+          return 0;
         }
         processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
       } catch (IOException e) {
