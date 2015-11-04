@@ -28,6 +28,8 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -52,6 +54,8 @@ public class ProvisioningProfileCopyStep implements Step {
   private final Path signingEntitlementsTempPath;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final Path infoPlist;
+  private final SettableFuture<ProvisioningProfileMetadata> selectedProvisioningProfileFuture =
+      SettableFuture.create();
 
   /**
    * @param infoPlist  Bundle relative path of the bundle's {@code Info.plist} file.
@@ -133,6 +137,7 @@ public class ProvisioningProfileCopyStep implements Step {
         prefix.or("*") + "." + bundleID);
     }
 
+    selectedProvisioningProfileFuture.set(bestProfile.get());
     Path provisioningProfileSource = bestProfile.get().getProfilePath();
 
     // Copy the actual .mobileprovision.
@@ -179,5 +184,12 @@ public class ProvisioningProfileCopyStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format("provisioning-profile-copy %s",
         provisioningProfileDestination);
+  }
+
+  /**
+   * Returns a future that's populated once the rule is executed.
+   */
+  public ListenableFuture<ProvisioningProfileMetadata> getSelectedProvisioningProfileFuture() {
+    return selectedProvisioningProfileFuture;
   }
 }

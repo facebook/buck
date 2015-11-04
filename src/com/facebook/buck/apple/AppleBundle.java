@@ -50,8 +50,10 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,6 +61,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
+import com.google.common.util.concurrent.Futures;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -86,7 +89,6 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
-  private static final String CODE_SIGN_IDENTITY = "CODE_SIGN_IDENTITY";
 
   @AddToRuleKey
   private final String extension;
@@ -140,7 +142,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final ProvisioningProfileStore provisioningProfileStore;
 
   @AddToRuleKey
-  private final Optional<CodeSignIdentity> codeSignIdentity;
+  private final CodeSignIdentityStore codeSignIdentityStore;
 
   @AddToRuleKey
   private final DebugInfoFormat debugInfoFormat;
@@ -207,47 +209,22 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.platformName = sdk.getApplePlatform().getName();
     this.sdkName = sdk.getName();
     this.debugInfoFormat = debugInfoFormat;
-
-    // We need to resolve the possible set of profiles and code sign identity at construction time
-    // because they form part of the rule key.
-    if (binary.isPresent() && ApplePlatform.needsCodeSign(this.platformName)) {
-      this.provisioningProfileStore = provisioningProfileStore;
-
-      Optional<CodeSignIdentity> foundIdentity = Optional.absent();
-      Optional<String> customIdentity = InfoPlistSubstitution.getVariableExpansionForPlatform(
-          CODE_SIGN_IDENTITY,
-          this.platformName,
-          this.infoPlistSubstitutions);
-      if (customIdentity.isPresent()) {
-        LOG.debug("Bundle specifies custom code signing identity: " + customIdentity.get());
-        Optional<HashCode> fingerprint = CodeSignIdentity.toFingerprint(customIdentity.get());
-        if (fingerprint.isPresent()) {
-          foundIdentity = codeSignIdentityStore.findIdentityMatchingFingerprint(fingerprint.get());
-        } else {
-          foundIdentity =
-              codeSignIdentityStore.findIdentityByCommonNamePrefix(customIdentity.get());
-        }
-      } else if (!codeSignIdentityStore.getIdentities().isEmpty()) {
-        LOG.debug("Using arbitrary code signing identity");
-        foundIdentity = Optional.of(Iterables.getLast(codeSignIdentityStore.getIdentities()));
-      }
-      if (!foundIdentity.isPresent()) {
-        throw new HumanReadableException("The platform " + platformName + " for this target " +
-            "requires code signing but couldn't find a compatible code signing identity to use.");
-      }
-      LOG.debug("Code signing identity is " + foundIdentity.toString());
-      this.codeSignIdentity = foundIdentity;
-    } else {
-      this.provisioningProfileStore = ProvisioningProfileStore.fromProvisioningProfiles(
-          ImmutableList.<ProvisioningProfileMetadata>of());
-      this.codeSignIdentity = Optional.absent();
-    }
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     dsymPath = bundleBinaryPath
         .getParent()
         .getParent()
         .resolve(bundleBinaryPath.getFileName().toString() + ".dSYM");
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
+
+    if (needCodeSign()) {
+      this.provisioningProfileStore = provisioningProfileStore;
+      this.codeSignIdentityStore = codeSignIdentityStore;
+    } else {
+      this.provisioningProfileStore = ProvisioningProfileStore.fromProvisioningProfiles(
+          ImmutableList.<ProvisioningProfileMetadata>of());
+      this.codeSignIdentityStore =
+          CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
+    }
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -454,8 +431,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
-    // Copy the .mobileprovision file if the platform requires it.
-    if (codeSignIdentity.isPresent()) {
+    if (needCodeSign()) {
+      // Copy the .mobileprovision file if the platform requires it, and sign the executable.
       Optional<Path> entitlementsPlist = Optional.absent();
       final Path srcRoot = getProjectFilesystem().getRootPath().resolve(
           getBuildTarget().getBasePath());
@@ -476,7 +453,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       final Path signingEntitlementsTempPath =
           BuildTargets.getScratchPath(getBuildTarget(), "%s.xcent");
 
-      stepsBuilder.add(
+      final ProvisioningProfileCopyStep provisioningProfileCopyStep =
           new ProvisioningProfileCopyStep(
               getProjectFilesystem(),
               infoPlistOutputPath,
@@ -484,15 +461,45 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               entitlementsPlist,
               provisioningProfileStore,
               bundleDestinationPath.resolve("embedded.mobileprovision"),
-              signingEntitlementsTempPath)
-      );
+              signingEntitlementsTempPath);
+      stepsBuilder.add(provisioningProfileCopyStep);
+
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier = new Supplier<CodeSignIdentity>() {
+        @Override
+        public CodeSignIdentity get() {
+          // Using getUnchecked here because the previous step should already throw if exception
+          // occurred, and this supplier would never be evaluated.
+          ProvisioningProfileMetadata selectedProfile = Futures.getUnchecked(
+              provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
+          ImmutableSet<HashCode> fingerprints =
+              selectedProfile.getDeveloperCertificateFingerprints();
+          if (fingerprints.isEmpty()) {
+            // No constraints, pick an arbitrary identity.
+            // If no identities are available, use an ad-hoc identity.
+            return
+                Iterables.getFirst(codeSignIdentityStore.getIdentities(), CodeSignIdentity.AD_HOC);
+          }
+          for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
+            if (identity.getFingerprint().isPresent() &&
+                fingerprints.contains(identity.getFingerprint().get())) {
+              return identity;
+            }
+          }
+          throw new HumanReadableException(
+              "No code sign identity available for provisioning profile: %s\n" +
+                  "Profile requires an identity with one of the following SHA1 fingerprints " +
+                  "available in your keychain: \n  %s",
+              selectedProfile.getProfilePath(),
+              Joiner.on("\n  ").join(fingerprints));
+        }
+      };
 
       stepsBuilder.add(
           new CodeSignStep(
               getProjectFilesystem().getRootPath(),
               bundleDestinationPath,
               signingEntitlementsTempPath,
-              codeSignIdentity.get()));
+              codeSignIdentitySupplier));
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
@@ -713,5 +720,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       }
     }
     return CxxPreprocessorInput.EMPTY;
+  }
+
+  private boolean needCodeSign() {
+    return binary.isPresent() && ApplePlatform.needsCodeSign(this.platformName);
   }
 }

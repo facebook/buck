@@ -24,7 +24,6 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.NSDate;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -33,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -79,7 +79,7 @@ public class ProvisioningProfileMetadataTest {
         data.getDeveloperCertificateFingerprints(),
         equalTo(ImmutableSet.of(HashCode.fromString("be16fc419bfb6b59a86bc08755ba0f332ec574fb"))));
 
-    thrown.expect(HumanReadableException.class);
+    thrown.expect(IOException.class);
     ProvisioningProfileMetadata.fromProvisioningProfilePath(
         testdataDir.resolve("invalid.mobileprovision"));
   }

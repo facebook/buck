@@ -17,6 +17,8 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
@@ -36,7 +38,7 @@ import java.util.regex.Pattern;
 /**
  * A collection of code sign identities.
  */
-public class CodeSignIdentityStore {
+public class CodeSignIdentityStore implements RuleKeyAppendable {
   private static final Logger LOG = Logger.get(CodeSignIdentityStore.class);
   private static final Pattern CODE_SIGN_IDENTITY_PATTERN =
       Pattern.compile("([A-F0-9]{40}) \"(iPhone.*)\"");
@@ -54,28 +56,9 @@ public class CodeSignIdentityStore {
     return identitiesSupplier.get();
   }
 
-  /**
-   * Find an identity with a particular SHA1 hash of the certificate.
-   */
-  public Optional<CodeSignIdentity> findIdentityMatchingFingerprint(HashCode fingerprint) {
-    for (CodeSignIdentity identity : getIdentities()) {
-      if (identity.getFingerprint().equals(fingerprint)) {
-        return Optional.of(identity);
-      }
-    }
-    return Optional.absent();
-  }
-
-  /**
-   * Find an identity based by matching a prefix of the certificate common name.
-   */
-  public Optional<CodeSignIdentity> findIdentityByCommonNamePrefix(String prefix) {
-    for (CodeSignIdentity identity : getIdentities()) {
-      if (identity.getSubjectCommonName().startsWith(prefix)) {
-        return Optional.of(identity);
-      }
-    }
-    return Optional.absent();
+  @Override
+  public RuleKeyBuilder appendToRuleKey(RuleKeyBuilder builder) {
+    return builder.setReflectively("CodeSignIdentityStore", getIdentities());
   }
 
   /**

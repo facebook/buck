@@ -22,6 +22,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -33,17 +34,17 @@ public class CodeSignStep implements Step {
   private final Path workingDirectory;
   private final Path pathToSign;
   private final Path pathToSigningEntitlements;
-  private final CodeSignIdentity codeSignIdentity;
+  private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
 
   public CodeSignStep(
       Path workingDirectory,
       Path pathToSign,
       Path pathToSigningEntitlements,
-      CodeSignIdentity codeSignIdentity) {
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier) {
     this.workingDirectory = workingDirectory;
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
-    this.codeSignIdentity = codeSignIdentity;
+    this.codeSignIdentitySupplier = codeSignIdentitySupplier;
   }
 
   @Override
@@ -54,7 +55,7 @@ public class CodeSignStep implements Step {
                 ImmutableList.of(
                     "codesign",
                     "--force",
-                    "--sign", getIdentityArg(codeSignIdentity),
+                    "--sign", getIdentityArg(codeSignIdentitySupplier.get()),
                     "--entitlements", pathToSigningEntitlements.toString(),
                     pathToSign.toString()))
             .setDirectory(workingDirectory.toFile())

@@ -60,7 +60,6 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
     return Optional.absent();
   }
 
-
   // If multiple valid ones, find the one which matches the most specifically.  I.e.,
   // XXXXXXXXXX.com.example.* will match over XXXXXXXXXX.* for com.example.TestApp
   // TODO(markwang): Account for differences between development and distribution certificates.

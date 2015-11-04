@@ -29,7 +29,6 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
@@ -126,7 +125,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
             /* timeOutMs */ Optional.<Long>absent(),
             /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
     if (result.getExitCode() != 0) {
-      throw new HumanReadableException("Invalid provisioning profile: " + profilePath +
+      throw new IOException("Invalid provisioning profile: " + profilePath +
           ": " + result.getStderr());
     }
 

@@ -16,8 +16,10 @@
 
 package com.facebook.buck.apple;
 
-import static org.junit.Assume.assumeTrue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -36,6 +38,8 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.Future;
 
 public class ProvisioningProfileCopyStepTest {
   private Path testdataDir;
@@ -56,7 +60,7 @@ public class ProvisioningProfileCopyStepTest {
     tmp.create();
     tempOutputDir = tmp.getRootPath();
     outputFile = tempOutputDir.resolve("embedded.mobileprovision");
-    xcentFile = tempOutputDir.resolve("test.xcent");
+    xcentFile = Paths.get("test.xcent");
     executionContext = TestExecutionContext.newInstance();
   }
 
@@ -119,5 +123,23 @@ public class ProvisioningProfileCopyStepTest {
     );
 
     step.execute(executionContext);
+  }
+
+  @Test
+  public void shouldSetProvisioningProfileFutureWhenStepIsRun() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
+        projectFilesystem,
+        testdataDir.resolve("Info.plist"),
+        Optional.<String>absent(),
+        Optional.<Path>absent(),
+        ProvisioningProfileStore.fromSearchPath(testdataDir),
+        outputFile,
+        xcentFile);
+
+    Future<ProvisioningProfileMetadata> profileFuture = step.getSelectedProvisioningProfileFuture();
+    step.execute(executionContext);
+    assertTrue(profileFuture.isDone());
+    assertNotNull(profileFuture.get());
   }
 }
