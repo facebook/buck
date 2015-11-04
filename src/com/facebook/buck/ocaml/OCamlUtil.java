@@ -66,7 +66,7 @@ public class OCamlUtil {
     return new Predicate<SourcePath>() {
       @Override
       public boolean apply(SourcePath input) {
-        String strInput = resolver.deprecatedGetPath(input).toString();
+        String strInput = resolver.getRelativePath(input).toString();
         for (String ext : extensions) {
           if (strInput.endsWith(ext)) {
             return true;

@@ -156,7 +156,7 @@ public class OCamlBuildRulesGenerator {
     CxxPreprocessorInput cxxPreprocessorInput = ocamlContext.getCxxPreprocessorInput();
 
     for (SourcePath cSrc : cInput) {
-      String name = pathResolver.deprecatedGetPath(cSrc).toFile().getName();
+      String name = pathResolver.getAbsolutePath(cSrc).toFile().getName();
       BuildTarget target = createCCompileBuildTarget(
           params.getBuildTarget(),
           name);
@@ -184,7 +184,7 @@ public class OCamlBuildRulesGenerator {
                   .build()),
         /* extraDeps */ params.getExtraDeps());
 
-      Path outputPath = ocamlContext.getCOutput(pathResolver.deprecatedGetPath(cSrc));
+      Path outputPath = ocamlContext.getCOutput(pathResolver.getRelativePath(cSrc));
       OCamlCCompile compileRule = new OCamlCCompile(
           cCompileParams,
           pathResolver,
@@ -192,7 +192,7 @@ public class OCamlBuildRulesGenerator {
             cCompiler.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlCompiler().get(),
             outputPath,
-            pathResolver.deprecatedGetPath(cSrc),
+            cSrc,
             cCompileFlags.build(),
             ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
       resolver.addToIndex(compileRule);

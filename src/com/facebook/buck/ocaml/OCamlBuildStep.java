@@ -18,6 +18,8 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -34,7 +36,8 @@ import java.nio.file.Paths;
  */
 public class OCamlBuildStep implements Step {
 
-  private ProjectFilesystem filesystem;
+  private final SourcePathResolver resolver;
+  private final ProjectFilesystem filesystem;
   private final OCamlBuildContext ocamlContext;
   private final ImmutableList<String> cCompiler;
   private final ImmutableList<String> cxxCompiler;
@@ -43,10 +46,12 @@ public class OCamlBuildStep implements Step {
   private final OCamlDepToolStep depToolStep;
 
   public OCamlBuildStep(
+      SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       OCamlBuildContext ocamlContext,
       ImmutableList<String> cCompiler,
       ImmutableList<String> cxxCompiler) {
+    this.resolver = resolver;
     this.filesystem = filesystem;
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
@@ -166,14 +171,15 @@ public class OCamlBuildStep implements Step {
       Path outputPath = ocamlContext.getCOutput(cSrc);
       linkerInputs.add(outputPath.toString());
       Step compileStep = new OCamlCCompileStep(
+          resolver,
           filesystem.getRootPath(),
           new OCamlCCompileStep.Args(
             cCompiler,
             ocamlContext.getOcamlCompiler().get(),
             outputPath,
-            cSrc,
+            new PathSourcePath(filesystem, cSrc),
             cCompileFlags.build(),
-              ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
+            ImmutableMap.copyOf(cxxPreprocessorInput.getIncludes().getNameToPathMap())));
       int compileExitCode = compileStep.execute(context);
       if (compileExitCode != 0) {
         return compileExitCode;

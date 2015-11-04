@@ -22,14 +22,13 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -93,16 +92,12 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
     argsBuilder.add(
         new SourcePathArg(
             getResolver(),
-            new BuildTargetSourcePath(
-                getBuildTarget(),
-                getResolver().deprecatedGetPath(staticNativeLibraryPath))));
+            staticNativeLibraryPath));
     for (SourcePath staticCLibraryPath : staticCLibraryPaths) {
       argsBuilder.add(
           new SourcePathArg(
               getResolver(),
-              new BuildTargetSourcePath(
-                  getBuildTarget(),
-                  getResolver().deprecatedGetPath(staticCLibraryPath))));
+              staticCLibraryPath));
     }
     return NativeLinkableInput.of(
         argsBuilder.build(),
