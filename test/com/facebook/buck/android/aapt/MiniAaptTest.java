@@ -170,6 +170,54 @@ public class MiniAaptTest {
   }
 
   @Test
+  public void testParsingValuesExcludedFromResMap() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<resources exclude-from-buck-resource-map=\"true\">",
+        "<string name=\"hello\">Hello, <xliff:g id=\"name\">%s</xliff:g>!</string>",
+        "</resources>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+
+    MiniAapt aapt = new MiniAapt(
+        filesystem,
+        Paths.get("res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertTrue(definitions.isEmpty());
+  }
+
+  @Test
+  public void testParsingValuesNotExcludedFromResMap() throws IOException, ResourceParseException {
+    ImmutableList<String> lines = ImmutableList.<String>builder().add(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<resources exclude-from-buck-resource-map=\"false\">",
+        "<string name=\"hello\">Hello, <xliff:g id=\"name\">%s</xliff:g>!</string>",
+        "</resources>")
+        .build();
+
+    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+
+    MiniAapt aapt = new MiniAapt(
+        filesystem,
+        Paths.get("res"),
+        Paths.get("R.txt"),
+        ImmutableSet.<Path>of());
+    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+
+    assertEquals(
+        definitions,
+        ImmutableSet.<RDotTxtEntry>of(new FakeRDotTxtEntry(IdType.INT, RType.STRING, "hello")));
+  }
+
+  @Test
   public void testParsingAndroidDrawables() throws IOException, ResourceParseException {
     ImmutableList<String> lines = ImmutableList.<String>builder().add(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",

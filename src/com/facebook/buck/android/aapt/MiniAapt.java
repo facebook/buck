@@ -330,6 +330,14 @@ public class MiniAapt implements Step {
       Document dom = parseXml(valuesFile, stream);
       Element root = dom.getDocumentElement();
 
+      // Exclude resources annotated with the attribute {@code exclude-from-resource-map}.
+      // This is useful to exclude using generated strings to build the
+      // resource map, which ensures a build break will show up at build time
+      // rather than being hidden until generated resources are updated.
+      if (root.getAttribute("exclude-from-buck-resource-map").equals("true")) {
+        return;
+      }
+
       for (Node node = root.getFirstChild(); node != null; node = node.getNextSibling()) {
         if (node.getNodeType() != Node.ELEMENT_NODE) {
           continue;
