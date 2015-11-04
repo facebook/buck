@@ -404,7 +404,7 @@ public class MiniAapt implements Step {
       ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
     for (Path path : filesystem.getFilesUnderPath(resDirectory, ENDS_WITH_XML)) {
-      String dirname = resDirectory.normalize().getName(0).toString();
+      String dirname = resDirectory.relativize(path).getName(0).toString();
       if (isAValuesDir(dirname)) {
         // Ignore files under values* directories.
         continue;

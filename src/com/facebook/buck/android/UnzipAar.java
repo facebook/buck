@@ -86,13 +86,11 @@ public class UnzipAar extends AbstractBuildRule
     steps.add(
         new UnzipStep(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(aarFile),
+            getResolver().deprecatedGetPath(aarFile),
             unpackDirectory));
     steps.add(new TouchStep(getProjectFilesystem(), getProguardConfig()));
-    steps.add(
-        new MkdirStep(
-            getProjectFilesystem(),
-            getResolver().getAbsolutePath(getAssetsDirectory())));
+    steps.add(new MkdirStep(getProjectFilesystem(), getResolver().deprecatedGetPath(
+        getAssetsDirectory())));
     steps.add(new MkdirStep(getProjectFilesystem(), getNativeLibsDirectory()));
     steps.add(new TouchStep(getProjectFilesystem(), getTextSymbolsFile()));
 

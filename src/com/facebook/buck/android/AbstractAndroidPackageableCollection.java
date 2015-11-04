@@ -42,7 +42,7 @@ import java.util.Set;
 interface AbstractAndroidPackageableCollection {
 
   @Value.Immutable
-  abstract class AbstractResourceDetails {
+  abstract static class AbstractResourceDetails {
 
     /**
      * A list of "res" directories that should be passed to the aapt command to build the APK,

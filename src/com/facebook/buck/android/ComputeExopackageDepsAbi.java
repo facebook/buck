@@ -36,18 +36,14 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.Map;
 
@@ -132,13 +128,15 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               // a native library to an asset will change the ABI key.
               // We assume that these are all order-insensitive to avoid having our ABI key
               // affected by filesystem iteration order.
+              ImmutableSortedMap.Builder<Path, String> filesToHash =
+                  ImmutableSortedMap.naturalOrder();
 
               // If exopackage is disabled for secondary dexes, we need to hash the secondary dex
               // files that end up in the APK. PreDexMerge already hashes those files, so we can
               // just hash the summary of those hashes.
               if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes) &&
                   preDexMerge.isPresent()) {
-                addToHash(hasher, "secondary_dexes", preDexMerge.get().getMetadataTxtPath());
+                filesToHash.put(preDexMerge.get().getMetadataTxtPath(), "secondary_dexes");
               }
 
               // If exopackage is disabled for native libraries, we add them in apkbuilder, so we
@@ -147,7 +145,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               // small enough that we can just hash them all without too much of a perf hit.
               if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
                   copyNativeLibraries.isPresent()) {
-                addToHash(hasher, "native_libs", copyNativeLibraries.get().getPathToMetadataTxt());
+                filesToHash.put(copyNativeLibraries.get().getPathToMetadataTxt(), "native_libs");
               }
 
               // In native exopackage mode, we include a bundle of fake
@@ -161,51 +159,38 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
                     fakeNativeLibraryBundle,
                     "fake native bundle not specified in properties.");
 
-                Path fakePath = Paths.get(fakeNativeLibraryBundle);
-                Preconditions.checkState(
-                    fakePath.isAbsolute(),
-                    "Expected fake path to be absolute: %s",
-                    fakePath);
-
-                addToHash(hasher, "fake_native_libs", fakePath, fakePath.getFileName());
+                filesToHash.put(Paths.get(fakeNativeLibraryBundle), "fake_native_libs");
               }
 
               // Same deal for native libs as assets.
-              final ImmutableSortedMap.Builder<Path, Path> allNativeFiles =
-                  ImmutableSortedMap.naturalOrder();
               for (SourcePath libDir : packageableCollection.getNativeLibAssetsDirectories()) {
-                // A sourcepath may not come from the same projectfilesystem as the step. Yay. The
-                // `getFilesUnderPath` method returns files relative to the projectfilesystem's root
-                // and so they may not exist, but we could go and do some path manipulation to
-                // figure out where they are. Since we'll have to do the work anyway, let's just
-                // handle things ourselves.
-                final Path root = getResolver().getAbsolutePath(libDir);
-
-                Files.walkFileTree(
-                    root,
-                    new SimpleFileVisitor<Path>() {
-                      @Override
-                      public FileVisitResult visitFile(
-                          Path file, BasicFileAttributes attrs) throws IOException {
-                        allNativeFiles.put(file, root.relativize(file));
-                        return FileVisitResult.CONTINUE;
-                      }
-                    });
-              }
-              for (Map.Entry<Path, Path> entry : allNativeFiles.build().entrySet()) {
-                addToHash(hasher, "native_lib_as_asset", entry.getKey(), entry.getValue());
+                ImmutableSet<Path> allNativeFiles = getProjectFilesystem()
+                    .getFilesUnderPath(getResolver().deprecatedGetPath(libDir));
+                for (Path nativeFile : allNativeFiles) {
+                  filesToHash.put(nativeFile, "native_lib_as_asset");
+                }
               }
 
               // Resources get copied from third-party JARs, so hash them.
-              for (SourcePath jar :
-                  ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars())) {
-                addToHash(hasher, "third-party jar", jar);
+              for (SourcePath jar : packageableCollection.getPathsToThirdPartyJars()) {
+                filesToHash.put(getResolver().deprecatedGetPath(jar), "third-party jar");
               }
 
               // The last input is the keystore.
-              // TODO(simons): Warning! This needs to be tested cross-cell.
-              addToHash(hasher, "keystore", keystore.getPathToStore());
-              addToHash(hasher, "keystore properties", keystore.getPathToPropertiesFile());
+              filesToHash.put(keystore.getPathToStore(), "keystore");
+              filesToHash.put(keystore.getPathToPropertiesFile(), "keystore properties");
+
+              for (Map.Entry<Path, String> entry : filesToHash.build().entrySet()) {
+                Path path = entry.getKey();
+                hasher.putUnencodedChars(path.toString());
+                hasher.putByte((byte) 0);
+                String fileSha1 = getProjectFilesystem().computeSha1(path);
+                hasher.putUnencodedChars(fileSha1);
+                hasher.putByte((byte) 0);
+                hasher.putUnencodedChars(entry.getValue());
+                hasher.putByte((byte) 0);
+                LOG.verbose("file %s(%s) = %s", path, entry.getValue(), fileSha1);
+              }
 
               String abiHash = hasher.hash().toString();
               LOG.verbose("ABI hash = %s", abiHash);
@@ -217,37 +202,6 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
             }
           }
         });
-  }
-
-  private void addToHash(Hasher hasher, String role, SourcePath path) throws IOException {
-    addToHash(
-        hasher,
-        role,
-        getResolver().getAbsolutePath(path),
-        getResolver().getRelativePath(path));
-  }
-
-  private void addToHash(Hasher hasher, String role, Path path) throws IOException {
-    Preconditions.checkState(!path.isAbsolute(), "Input path must not be absolute: %s", path);
-    addToHash(hasher, role, getProjectFilesystem().resolve(path), path);
-  }
-
-  private void addToHash(Hasher hasher, String role, Path absolutePath, Path relativePath)
-      throws IOException {
-    // No need to check relative path. That's already been done for us.
-    Preconditions.checkState(
-        absolutePath.isAbsolute(),
-        "Expected absolute path to be absolute: %s",
-        absolutePath);
-
-    hasher.putUnencodedChars(relativePath.toString());
-    hasher.putByte((byte) 0);
-    String fileSha1 = getProjectFilesystem().computeSha1(absolutePath);
-    hasher.putUnencodedChars(fileSha1);
-    hasher.putByte((byte) 0);
-    hasher.putUnencodedChars(role);
-    hasher.putByte((byte) 0);
-    LOG.verbose("file %s(%s) = %s", relativePath, role, fileSha1);
   }
 
   @Nullable

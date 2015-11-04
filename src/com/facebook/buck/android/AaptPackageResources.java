@@ -203,7 +203,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(
         new MkdirAndSymlinkFileStep(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(manifest),
+            getResolver().deprecatedGetPath(manifest),
             getAndroidManifestXml()));
 
     // Copy the transitive closure of files in assets to a single directory, if any.

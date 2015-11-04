@@ -67,7 +67,7 @@ public class AssembleDirectoriesTest {
         .setProjectFilesystem(filesystem)
         .build();
     ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
-        new TestSourcePath(filesystem, "folder_a"), new TestSourcePath(filesystem, "folder_b"));
+        new TestSourcePath("folder_a"), new TestSourcePath("folder_b"));
     AssembleDirectories assembleDirectories = new AssembleDirectories(
         buildRuleParams, new SourcePathResolver(new BuildRuleResolver()), directories);
     ImmutableList<Step> steps = assembleDirectories.getBuildSteps(
