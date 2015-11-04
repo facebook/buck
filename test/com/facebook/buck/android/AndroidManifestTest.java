@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -27,7 +28,6 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
@@ -38,7 +38,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 public class AndroidManifestTest {
@@ -62,10 +61,12 @@ public class AndroidManifestTest {
 
     List<Step> steps = androidManifest.getBuildSteps(buildContext, new FakeBuildableContext());
     Step generateManifestStep = steps.get(2);
+
+    ProjectFilesystem filesystem = androidManifest.getProjectFilesystem();
     assertEquals(
         new GenerateManifestStep(
-            new FakeProjectFilesystem(),
-            Paths.get("java/com/example/AndroidManifestSkeleton.xml"),
+            filesystem,
+            filesystem.resolve("java/com/example/AndroidManifestSkeleton.xml"),
             /* libraryManifestPaths */ ImmutableSet.<Path>of(),
             BuckConstant.GEN_PATH.resolve("java/com/example/AndroidManifest__manifest__.xml")),
         generateManifestStep);

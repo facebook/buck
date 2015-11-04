@@ -143,9 +143,10 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     for (SourcePath dir : nativeLibAssetsDirectories) {
       CopyNativeLibraries.copyNativeLibrary(
           getProjectFilesystem(),
-          getResolver().deprecatedGetPath(dir),
+          getResolver().getAbsolutePath(dir),
           temp.resolve("assets").resolve("lib"),
-          ImmutableSet.<TargetCpuType>of(), commands);
+          ImmutableSet.<TargetCpuType>of(),
+          commands);
     }
 
     // do the zipping

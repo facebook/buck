@@ -170,7 +170,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
               getProjectFilesystem().getRootPath(),
               platform.getCxxPlatform().getStrip().getCommandPrefix(getResolver()),
               ImmutableList.of("--strip-unneeded"),
-              getResolver().deprecatedGetPath(entry.getValue()),
+              getResolver().getAbsolutePath(entry.getValue()),
               destination));
     }
   }
@@ -192,7 +192,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements RuleKeyApp
     for (SourcePath nativeLibDir : nativeLibDirectories.asList().reverse()) {
       copyNativeLibrary(
           getProjectFilesystem(),
-          getResolver().deprecatedGetPath(nativeLibDir),
+          getResolver().getAbsolutePath(nativeLibDir),
           pathToNativeLibs,
           cpuFilters,
           steps);
