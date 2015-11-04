@@ -23,6 +23,7 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -64,7 +65,7 @@ public class AaptStep extends ShellStep {
 
   private final Path androidManifest;
   private final ImmutableList<Path> resDirectories;
-  private final Optional<Path> assetsDirectory;
+  private final ImmutableSortedSet<Path> assetsDirectories;
   private final Path pathToOutputApkFile;
   private final Path pathToRDotTxtDir;
   private final Optional<Path> pathToGeneratedProguardConfig;
@@ -75,7 +76,7 @@ public class AaptStep extends ShellStep {
       Path workingDirectory,
       Path androidManifest,
       ImmutableList<Path> resDirectories,
-      Optional<Path> assetsDirectory,
+      ImmutableSortedSet<Path> assetsDirectories,
       Path pathToOutputApkFile,
       Path pathToRDotTxtDir,
       Optional<Path> pathToGeneratedProguardConfig,
@@ -83,7 +84,7 @@ public class AaptStep extends ShellStep {
     super(workingDirectory);
     this.androidManifest = androidManifest;
     this.resDirectories = resDirectories;
-    this.assetsDirectory = assetsDirectory;
+    this.assetsDirectories = assetsDirectories;
     this.pathToOutputApkFile = pathToOutputApkFile;
     this.pathToRDotTxtDir = pathToRDotTxtDir;
     this.pathToGeneratedProguardConfig = pathToGeneratedProguardConfig;
@@ -122,11 +123,8 @@ public class AaptStep extends ShellStep {
     }
 
     // Include the assets/ directory, if any.
-    // According to the aapt documentation, it appears that it should be possible to specify the -A
-    // flag multiple times; however, in practice, when it is specified multiple times, only one of
-    // the folders is included in the final APK.
-    if (assetsDirectory.isPresent()) {
-      builder.add("-A", assetsDirectory.get().toString());
+    for (Path assetDir : assetsDirectories) {
+      builder.add("-A", assetDir.toString());
     }
 
     builder.add("--output-text-symbols").add(pathToRDotTxtDir.toString());
