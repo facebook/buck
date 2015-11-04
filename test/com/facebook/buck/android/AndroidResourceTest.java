@@ -43,7 +43,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
@@ -172,11 +171,9 @@ public class AndroidResourceTest {
                 buildableContext)
             .isEmpty());
 
-    Sha1HashCode expectedSha1 = HasAndroidResourceDeps.ABI_HASHER.apply(
-        ImmutableList.of((HasAndroidResourceDeps) resourceRule1));
     buildableContext.assertContainsMetadataMapping(
         AndroidResource.METADATA_KEY_FOR_ABI,
-        expectedSha1.getHash());
+        Hashing.sha1().newHasher().hash().toString());
   }
 
   @Test
@@ -204,15 +201,9 @@ public class AndroidResourceTest {
                 buildableContext)
             .isEmpty());
 
-    Sha1HashCode expectedSha1 = Sha1HashCode.fromHashCode(
-        Hashing.sha1().newHasher()
-            .putUnencodedChars(Hashing.sha1().newHasher().hash().toString())
-            .putUnencodedChars(additionalAbiKey)
-            .hash());
-
     buildableContext.assertContainsMetadataMapping(
         AndroidResource.METADATA_KEY_FOR_ABI,
-        expectedSha1.getHash());
+        additionalAbiKey);
   }
 
   @Test
