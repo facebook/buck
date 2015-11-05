@@ -281,8 +281,9 @@ public class AndroidResource extends AbstractBuildRule
 
     steps.add(
         new MiniAapt(
+            getResolver(),
             getProjectFilesystem(),
-            getResolver().deprecatedGetPath(Preconditions.checkNotNull(res)),
+            Preconditions.checkNotNull(res),
             Preconditions.checkNotNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps));
 

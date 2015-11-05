@@ -510,10 +510,9 @@ public class ProjectFilesystem {
     }).toArray(result);
   }
 
-  public ImmutableCollection<Path> getDirectoryContents(Path pathRelativeToProjectRoot)
+  public ImmutableCollection<Path> getDirectoryContents(Path pathToUse)
       throws IOException {
-    Preconditions.checkArgument(!pathRelativeToProjectRoot.isAbsolute());
-    Path path = getPathForRelativePath(pathRelativeToProjectRoot);
+    Path path = pathToUse.isAbsolute() ? pathToUse : getPathForRelativePath(pathToUse);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return FluentIterable.from(stream)
           .transform(

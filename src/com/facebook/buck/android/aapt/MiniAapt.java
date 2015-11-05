@@ -22,6 +22,8 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreStrings;
@@ -93,17 +95,20 @@ public class MiniAapt implements Step {
     }
   };
 
+  private final SourcePathResolver resolver;
   private final ProjectFilesystem filesystem;
-  private final Path resDirectory;
+  private final SourcePath resDirectory;
   private final Path pathToTextSymbolsFile;
   private final ImmutableSet<Path> pathsToSymblolsOfDeps;
   private final AaptResourceCollector resourceCollector;
 
   public MiniAapt(
+      SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      Path resDirectory,
+      SourcePath resDirectory,
       Path pathToTextSymbolsFile,
       ImmutableSet<Path> pathsToSymblolsOfDeps) {
+    this.resolver = resolver;
     this.filesystem = filesystem;
     this.resDirectory = resDirectory;
     this.pathToTextSymbolsFile = pathToTextSymbolsFile;
@@ -205,7 +210,8 @@ public class MiniAapt implements Step {
    */
   private void collectResources(ProjectFilesystem filesystem, BuckEventBus eventBus)
       throws IOException, ResourceParseException {
-    Collection<Path> contents = filesystem.getDirectoryContents(resDirectory);
+    Collection<Path> contents = filesystem.getDirectoryContents(
+        resolver.getAbsolutePath(resDirectory));
     for (Path dir : contents) {
       if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(dir)) {
         if (!shouldIgnoreFile(dir, filesystem)) {
@@ -411,8 +417,10 @@ public class MiniAapt implements Step {
       ProjectFilesystem filesystem,
       ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
-    for (Path path : filesystem.getFilesUnderPath(resDirectory, ENDS_WITH_XML)) {
-      String dirname = resDirectory.relativize(path).getName(0).toString();
+    Path absoluteResDir = resolver.getAbsolutePath(resDirectory);
+    Path relativeResDir = resolver.getRelativePath(resDirectory);
+    for (Path path : filesystem.getFilesUnderPath(absoluteResDir, ENDS_WITH_XML)) {
+      String dirname = relativeResDir.relativize(path).getName(0).toString();
       if (isAValuesDir(dirname)) {
         // Ignore files under values* directories.
         continue;
