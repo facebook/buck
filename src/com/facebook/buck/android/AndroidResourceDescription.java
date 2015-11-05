@@ -19,25 +19,22 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -103,39 +100,11 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     // hashing the contents of the entire resources directory, we try to filter out anything that
     // doesn't look like a resource.  This means when our resources are supplied from another rule,
     // we have to resort to some hackery to make sure things work correctly.
-    ImmutableSortedSet<Path> inputResFiles = ImmutableSortedSet.of();
-    Optional<Supplier<Sha1HashCode>> additionalAbiKey = Optional.absent();
-    if (args.res.isPresent()) {
+    Pair<ImmutableSortedSet<Path>, Optional<SourcePath>> resInputsAndKey =
+        collectInputFilesAndKey(args.res);
+    Pair<ImmutableSortedSet<Path>, Optional<SourcePath>> assetsInputsAndKey =
+        collectInputFilesAndKey(args.assets);
 
-      // If our resources are coming from a `PathSourcePath`, we collect only the inputs we care
-      // about and pass those in separately, so that that `AndroidResource` rule knows to only hash
-      // these into it's rule key.
-      if (args.res.get() instanceof PathSourcePath) {
-        PathSourcePath path = (PathSourcePath) args.res.get();
-        inputResFiles = collectInputFiles(
-            path.getFilesystem(),
-            Optional.of(path.getRelativePath()));
-
-      // Otherwise, if our resources are coming form a `BuildTargetSourcePath`, we can't inspect the
-      // contents of the directory, so we can't populate the `resSrcs` set.  Instead, we have to use
-      // the `additionalAbiKey` suppler to use when calculating the ABI rule key.  We just use the
-      // providing rule's rule key for now -- eventually this will all get cleaned up and use
-      // input-based rule keys.
-      } else if (args.res.get() instanceof BuildTargetSourcePath) {
-        final BuildTargetSourcePath path = (BuildTargetSourcePath) args.res.get();
-        additionalAbiKey =
-            Optional.<Supplier<Sha1HashCode>>of(
-                new Supplier<Sha1HashCode>() {
-                  @Override
-                  public Sha1HashCode get() {
-                    return Sha1HashCode.of(
-                        pathResolver.getRule(path).get().getRuleKey().toString());
-                  }
-                });
-      }
-    }
-
-    ProjectFilesystem filesystem = params.getProjectFilesystem();
     return new AndroidResource(
         // We only propagate other AndroidResource rule dependencies, as these are
         // the only deps which should control whether we need to re-run the aapt_package
@@ -147,13 +116,37 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         pathResolver,
         resolver.getAllRules(args.deps.get()),
         args.res.orNull(),
-        inputResFiles,
+        resInputsAndKey.getFirst(),
+        resInputsAndKey.getSecond(),
         args.rDotJavaPackage.orNull(),
-        args.assets.transform(SourcePaths.toSourcePath(params.getProjectFilesystem())).orNull(),
-        collectInputFiles(filesystem, args.assets),
+        args.assets.orNull(),
+        assetsInputsAndKey.getFirst(),
+        assetsInputsAndKey.getSecond(),
         args.manifest.orNull(),
-        args.hasWhitelistedStrings.or(false),
-        additionalAbiKey);
+        args.hasWhitelistedStrings.or(false));
+  }
+
+  private Pair<ImmutableSortedSet<Path>, Optional<SourcePath>> collectInputFilesAndKey(
+      Optional<SourcePath> sourcePath) {
+    ImmutableSortedSet<Path> inputFiles = ImmutableSortedSet.of();
+    Optional<SourcePath> additionalKey = Optional.absent();
+    if (!sourcePath.isPresent()) {
+      return new Pair<>(inputFiles, additionalKey);
+    }
+    if (sourcePath.get() instanceof PathSourcePath) {
+      // If our resources are coming from a `PathSourcePath`, we collect only the inputs we care
+      // about and pass those in separately, so that that `AndroidResource` rule knows to only hash
+      // these into it's rule key.
+      PathSourcePath path = (PathSourcePath) sourcePath.get();
+      inputFiles = collectInputFiles(
+          path.getFilesystem(),
+          Optional.of(path.getRelativePath()));
+    } else {
+      // Otherwise, we can't inspect the contents of the directory, so we can't populate the
+      // `resSrcs` set.  Instead, we have to pass the source path unfiltered.
+      additionalKey = Optional.of(sourcePath.get());
+    }
+    return new Pair<>(inputFiles, additionalKey);
   }
 
   @VisibleForTesting
@@ -213,7 +206,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
   @SuppressFieldNotInitialized
   public static class Arg {
     public Optional<SourcePath> res;
-    public Optional<Path> assets;
+    public Optional<SourcePath> assets;
     public Optional<Boolean> hasWhitelistedStrings;
     @Hint(name = "package")
     public Optional<String> rDotJavaPackage;

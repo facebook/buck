@@ -55,7 +55,7 @@ public class AndroidResourceBuilder extends AbstractNodeBuilder<AndroidResourceD
     return this;
   }
 
-  public AndroidResourceBuilder setAssets(Path assets) {
+  public AndroidResourceBuilder setAssets(SourcePath assets) {
     arg.assets = Optional.of(assets);
     return this;
   }

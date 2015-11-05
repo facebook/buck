@@ -101,6 +101,12 @@ public class IjModuleFactory {
      * @return path on disk to the resources folder.
      */
     Optional<Path> getAndroidResourcePath(TargetNode<AndroidResourceDescription.Arg> targetNode);
+
+    /**
+     * @param targetNode node describing the Android assets to get the path of.
+     * @return path on disk to the assets folder.
+     */
+    Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescription.Arg> targetNode);
   }
 
   /**
@@ -464,11 +470,11 @@ public class IjModuleFactory {
       context.addDeps(target.getDeps(), IjModuleGraph.DependencyType.PROD);
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
-      AndroidResourceDescription.Arg arg = target.getConstructorArg();
 
       // TODO(mkosiba): Add support for arg.rDotJavaPackage and maybe arg.manifest
-      if (arg.assets.isPresent()) {
-        androidFacetBuilder.addAssetPaths(arg.assets.get());
+      Optional<Path> assets = moduleFactoryResolver.getAssetsPath(target);
+      if (assets.isPresent()) {
+        androidFacetBuilder.addAssetPaths(assets.get());
       }
       androidFacetBuilder.addAllResourcePaths(
           moduleFactoryResolver.getAndroidResourcePath(target).asSet());

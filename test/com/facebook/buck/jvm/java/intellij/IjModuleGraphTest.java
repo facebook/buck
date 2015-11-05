@@ -616,6 +616,12 @@ public class IjModuleGraphTest {
               TargetNode<AndroidResourceDescription.Arg> targetNode) {
             return Optional.absent();
           }
+
+          @Override
+          public Optional<Path> getAssetsPath(
+              TargetNode<AndroidResourceDescription.Arg> targetNode) {
+            return Optional.absent();
+          }
         });
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraph.from(

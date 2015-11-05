@@ -467,6 +467,12 @@ public class IjModuleFactoryTest {
               TargetNode<AndroidResourceDescription.Arg> targetNode) {
             return Optional.absent();
           }
+
+          @Override
+          public Optional<Path> getAssetsPath(
+              TargetNode<AndroidResourceDescription.Arg> targetNode) {
+            return Optional.absent();
+          }
         });
   }
 

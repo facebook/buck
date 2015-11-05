@@ -47,7 +47,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -59,7 +58,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -454,12 +452,13 @@ public class AndroidBinaryGraphEnhancerTest {
                 ImmutableSortedSet.<BuildRule>of(),
                 new BuildTargetSourcePath(resourcesDep.getBuildTarget()),
                 ImmutableSortedSet.<Path>of(),
+                Optional.<SourcePath>absent(),
                 null,
                 null,
                 ImmutableSortedSet.<Path>of(),
+                Optional.<SourcePath>absent(),
                 new TestSourcePath("manifest"),
-                false,
-                Optional.<Supplier<Sha1HashCode>>absent()));
+                false));
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");

@@ -134,6 +134,15 @@ public class IjProject {
                 .res
                 .transform(sourcePathResolver.deprecatedPathFunction());
           }
+
+          @Override
+          public Optional<Path> getAssetsPath(
+              TargetNode<AndroidResourceDescription.Arg> targetNode) {
+            return targetNode
+                .getConstructorArg()
+                .assets
+                .transform(sourcePathResolver.deprecatedPathFunction());
+          }
         };
     IjModuleGraph moduleGraph = IjModuleGraph.from(
         targetGraphAndTargets.getTargetGraph(),

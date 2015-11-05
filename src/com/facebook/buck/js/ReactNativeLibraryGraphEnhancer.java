@@ -24,11 +24,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -122,25 +121,22 @@ public class ReactNativeLibraryGraphEnhancer {
               .copyWithExtraDeps(Suppliers.ofInstance(
                       ImmutableSortedSet.<BuildRule>of(bundle, reactNativeDeps)));
 
+      SourcePath resources = new BuildTargetSourcePath(
+          bundle.getBuildTarget(),
+          bundle.getResources());
       BuildRule resource = new AndroidResource(
-              paramsForResource,
-              sourcePathResolver,
-              /* deps */ ImmutableSortedSet.<BuildRule>of(),
-              new BuildTargetSourcePath(bundle.getBuildTarget(), bundle.getResources()),
-              /* resSrcs */ ImmutableSortedSet.<Path>of(),
-              args.rDotJavaPackage.get(),
-              /* assets */ null,
-              /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
-              /* manifest */ null,
-              /* hasWhitelistedStrings */ false,
-              Optional.of(
-                  Suppliers.memoize(
-                      new Supplier<Sha1HashCode>() {
-                        @Override
-                        public Sha1HashCode get() {
-                          return reactNativeDeps.getInputsHash();
-                        }
-                      })));
+          paramsForResource,
+          sourcePathResolver,
+          /* deps */ ImmutableSortedSet.<BuildRule>of(),
+          resources,
+          /* resSrcs */ ImmutableSortedSet.<Path>of(),
+          Optional.of(resources),
+          args.rDotJavaPackage.get(),
+          /* assets */ null,
+          /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+          Optional.<SourcePath>absent(),
+          /* manifest */ null,
+          /* hasWhitelistedStrings */ false);
       resolver.addToIndex(resource);
       extraDeps.add(resource);
     }

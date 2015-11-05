@@ -34,6 +34,7 @@ import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -41,8 +42,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
@@ -177,36 +176,6 @@ public class AndroidResourceTest {
   }
 
   @Test
-  public void testAdditionalAbiKey() throws IOException {
-    BuildRuleResolver ruleResolver = new BuildRuleResolver();
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-
-    BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/example:res2");
-    String additionalAbiKey = Strings.repeat("d", 40);
-    BuildRule resourceRule2 = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(pathResolver)
-            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
-            .setAdditionalAbiKey(
-                Optional.of(Suppliers.ofInstance(Sha1HashCode.of(additionalAbiKey))))
-            .setBuildRuleParams(
-                new FakeBuildRuleParamsBuilder(target).build())
-            .build());
-
-    FakeBuildableContext buildableContext = new FakeBuildableContext();
-    assertTrue(
-        resourceRule2
-            .getBuildSteps(
-                EasyMock.createMock(BuildContext.class),
-                buildableContext)
-            .isEmpty());
-
-    buildableContext.assertContainsMetadataMapping(
-        AndroidResource.METADATA_KEY_FOR_ABI,
-        additionalAbiKey);
-  }
-
-  @Test
   public void testGetRDotJavaPackageWhenPackageIsSpecified() {
     AndroidResource androidResource = new AndroidResource(
         new FakeBuildRuleParamsBuilder("//foo:bar").build(),
@@ -214,12 +183,13 @@ public class AndroidResourceTest {
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         new TestSourcePath("foo/res"),
         ImmutableSortedSet.of(Paths.get("foo/res/values/strings.xml")),
+        Optional.<SourcePath>absent(),
         /* rDotJavaPackage */ "com.example.android",
         /* assets */ null,
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+        Optional.<SourcePath>absent(),
         /* manifestFile */ null,
-        /* hasWhitelistedStrings */ false,
-        Optional.<Supplier<Sha1HashCode>>absent());
+        /* hasWhitelistedStrings */ false);
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
   }
 
@@ -232,14 +202,15 @@ public class AndroidResourceTest {
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         new TestSourcePath("foo/res"),
         ImmutableSortedSet.of(Paths.get("foo/res/values/strings.xml")),
+        Optional.<SourcePath>absent(),
         /* rDotJavaPackage */ null,
         /* assets */ null,
         /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+        Optional.<SourcePath>absent(),
         /* manifestFile */ new PathSourcePath(
             projectFilesystem,
             Paths.get("foo/AndroidManifest.xml")),
-        /* hasWhitelistedStrings */ false,
-        Optional.<Supplier<Sha1HashCode>>absent());
+        /* hasWhitelistedStrings */ false);
     FakeOnDiskBuildInfo onDiskBuildInfo = new FakeOnDiskBuildInfo();
     onDiskBuildInfo.putMetadata(AndroidResource.METADATA_KEY_FOR_ABI, Strings.repeat("a", 40));
     onDiskBuildInfo.putMetadata(AndroidResource.METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE, "com.ex.pkg");

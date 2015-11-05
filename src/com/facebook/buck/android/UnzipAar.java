@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
@@ -61,6 +62,9 @@ public class UnzipAar extends AbstractBuildRule
   private final SourcePath aarFile;
   private final Path unpackDirectory;
   private final Path uberClassesJar;
+  private final Path pathToTextSymbolsDir;
+  private final Path pathToTextSymbolsFile;
+  private final Path pathToRDotJavaPackageFile;
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
 
   UnzipAar(
@@ -74,6 +78,9 @@ public class UnzipAar extends AbstractBuildRule
     this.uberClassesJar = BuildTargets.getScratchPath(
         buildTarget,
         "__uber_classes_%s__/classes.jar");
+    pathToTextSymbolsDir = BuildTargets.getGenPath(buildTarget, "__%s_text_symbols__");
+    pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
+    pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
     this.outputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
@@ -161,19 +168,27 @@ public class UnzipAar extends AbstractBuildRule
       }
     });
 
-    steps.add(new ExtractFromAndroidManifestStep(
-        getAndroidManifest(),
-        getProjectFilesystem(),
-        buildableContext,
-        METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE));
-    steps.add(new RecordFileSha1Step(
-        getProjectFilesystem(),
-        getTextSymbolsFile(),
-        METADATA_KEY_FOR_R_DOT_TXT_SHA1,
-        buildableContext));
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTextSymbolsDir));
+    steps.add(
+        new ExtractFromAndroidManifestStep(
+            getAndroidManifest(),
+            getProjectFilesystem(),
+            buildableContext,
+            METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
+            pathToRDotJavaPackageFile));
+    steps.add(
+        new RecordFileSha1Step(
+            getProjectFilesystem(),
+            getTextSymbolsFile(),
+            METADATA_KEY_FOR_R_DOT_TXT_SHA1,
+            buildableContext));
+    steps.add(
+        CopyStep.forFile(getProjectFilesystem(), getTextSymbolsFile(), pathToTextSymbolsFile));
 
     buildableContext.recordArtifact(unpackDirectory);
     buildableContext.recordArtifact(uberClassesJar);
+    buildableContext.recordArtifact(pathToTextSymbolsFile);
+    buildableContext.recordArtifact(pathToRDotJavaPackageFile);
     return steps.build();
   }
 
@@ -204,7 +219,7 @@ public class UnzipAar extends AbstractBuildRule
   @Override
   @Nullable
   public Path getPathToOutput() {
-    return null;
+    return pathToTextSymbolsDir;
   }
 
   Path getPathToClassesJar() {

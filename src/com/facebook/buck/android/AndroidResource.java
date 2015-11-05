@@ -22,7 +22,6 @@ import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -37,7 +36,7 @@ import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.keys.AbiRule;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
@@ -72,8 +71,11 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class AndroidResource extends AbstractBuildRule
-    implements AbiRule, HasAndroidResourceDeps, InitializableFromDisk<AndroidResource.BuildOutput>,
-    AndroidPackageable {
+    implements
+    AndroidPackageable,
+    HasAndroidResourceDeps,
+    InitializableFromDisk<AndroidResource.BuildOutput>,
+    SupportsInputBasedRuleKey {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
 
@@ -91,6 +93,10 @@ public class AndroidResource extends AbstractBuildRule
   @AddToRuleKey
   private final ImmutableSortedSet<Path> resSrcs;
 
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
+  private final Optional<SourcePath> additionalResKey;
+
   @Nullable
   private final SourcePath assets;
 
@@ -99,11 +105,18 @@ public class AndroidResource extends AbstractBuildRule
   @AddToRuleKey
   private final ImmutableSortedSet<Path> assetsSrcs;
 
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
+  private final Optional<SourcePath> additionalAssetsKey;
+
   @Nullable
   private final Path pathToTextSymbolsDir;
 
   @Nullable
   private final Path pathToTextSymbolsFile;
+
+  @Nullable
+  private final Path pathToRDotJavaPackageFile;
 
   @AddToRuleKey
   @Nullable
@@ -113,21 +126,6 @@ public class AndroidResource extends AbstractBuildRule
   private final boolean hasWhitelistedStrings;
 
   private final ImmutableSortedSet<BuildRule> deps;
-
-  /**
-   * For an {@code android_react_native_library} rule, we create an {@code android_resource} rule
-   * which operates on the output of {@link com.facebook.buck.js.ReactNativeBundle}. We do not know
-   * the exact input sources to this rule at parse time, because users generally over specify the
-   * sources to {@code android_react_native_library} rule.
-   *
-   * Since we pass empty {@link #resSrcs} to this rule, its rule-key-without-deps does not
-   * incorporate any source files at all, which means editing one of its actual sources would not
-   * trigger a re-build of this rule. In order to fix that, we indirectly incorporate the hashes
-   * of actual source files through this supplier. See
-   * {@link com.facebook.buck.js.ReactNativeLibraryGraphEnhancer} to find out more about where this
-   * hash comes from.
-   */
-  private final Optional<Supplier<Sha1HashCode>> additionalAbiKey;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -160,12 +158,13 @@ public class AndroidResource extends AbstractBuildRule
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final SourcePath res,
       ImmutableSortedSet<Path> resSrcs,
+      Optional<SourcePath> additionalResKey,
       @Nullable String rDotJavaPackageArgument,
       @Nullable SourcePath assets,
       ImmutableSortedSet<Path> assetsSrcs,
+      Optional<SourcePath> additionalAssetsKey,
       @Nullable SourcePath manifestFile,
-      boolean hasWhitelistedStrings,
-      Optional<Supplier<Sha1HashCode>> additionalAbiKey) {
+      boolean hasWhitelistedStrings) {
     super(buildRuleParams, resolver);
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
@@ -176,8 +175,10 @@ public class AndroidResource extends AbstractBuildRule
 
     this.res = res;
     this.resSrcs = resSrcs;
+    this.additionalResKey = additionalResKey;
     this.assets = assets;
     this.assetsSrcs = assetsSrcs;
+    this.additionalAssetsKey = additionalAssetsKey;
     this.manifestFile = manifestFile;
     this.hasWhitelistedStrings = hasWhitelistedStrings;
 
@@ -185,14 +186,14 @@ public class AndroidResource extends AbstractBuildRule
     if (res == null) {
       pathToTextSymbolsDir = null;
       pathToTextSymbolsFile = null;
+      pathToRDotJavaPackageFile = null;
     } else {
       pathToTextSymbolsDir = BuildTargets.getGenPath(buildTarget, "__%s_text_symbols__");
       pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
+      pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
     }
 
     this.deps = deps;
-
-    this.additionalAbiKey = additionalAbiKey;
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
 
@@ -243,15 +244,9 @@ public class AndroidResource extends AbstractBuildRule
     // need to take anything into account.
     // TODO(mbolin): Change android_resources() so that 'res' is required.
     if (getRes() == null) {
-      if (additionalAbiKey.isPresent()) {
-        buildableContext.addMetadata(
-            METADATA_KEY_FOR_ABI,
-            additionalAbiKey.get().get().getHash());
-      } else {
-        buildableContext.addMetadata(
-            METADATA_KEY_FOR_ABI,
-            Hashing.sha1().newHasher().hash().toString());
-      }
+      buildableContext.addMetadata(
+          METADATA_KEY_FOR_ABI,
+          Hashing.sha1().newHasher().hash().toString());
       return ImmutableList.of();
     }
 
@@ -268,11 +263,14 @@ public class AndroidResource extends AbstractBuildRule
           manifestFile,
           "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is " +
               "null. This should already be enforced by the constructor.");
-      steps.add(new ExtractFromAndroidManifestStep(
-          getResolver().deprecatedGetPath(manifestFile),
-          getProjectFilesystem(),
-          buildableContext,
-          METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE));
+      steps.add(
+          new ExtractFromAndroidManifestStep(
+              getResolver().deprecatedGetPath(manifestFile),
+              getProjectFilesystem(),
+              buildableContext,
+              METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
+              Preconditions.checkNotNull(pathToRDotJavaPackageFile)));
+      buildableContext.recordArtifact(Preconditions.checkNotNull(pathToRDotJavaPackageFile));
     }
 
     ImmutableSet<Path> pathsToSymbolsOfDeps = FluentIterable.from(getNonEmptyResourceDeps())
@@ -302,7 +300,7 @@ public class AndroidResource extends AbstractBuildRule
   @Override
   @Nullable
   public Path getPathToOutput() {
-    return pathToTextSymbolsFile;
+    return pathToTextSymbolsDir;
   }
 
   @Override
@@ -328,22 +326,6 @@ public class AndroidResource extends AbstractBuildRule
   @Override
   public BuildableProperties getProperties() {
     return PROPERTIES;
-  }
-
-  @Override
-  public Sha1HashCode getAbiKeyForDeps() {
-    Sha1HashCode abiKey = HasAndroidResourceDeps.ABI_HASHER.apply(
-        FluentIterable.from(getNonEmptyResourceDeps())
-            .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR));
-    if (!additionalAbiKey.isPresent()) {
-      return abiKey;
-    }
-
-    return Sha1HashCode.fromHashCode(
-        Hashing.sha1().newHasher()
-            .putUnencodedChars(abiKey.getHash())
-            .putUnencodedChars(additionalAbiKey.get().get().getHash())
-            .hash());
   }
 
   private Iterable<HasAndroidResourceDeps> getNonEmptyResourceDeps() {

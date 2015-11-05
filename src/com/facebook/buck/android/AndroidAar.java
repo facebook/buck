@@ -105,7 +105,8 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     commands.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            Preconditions.checkNotNull(androidResource.getPathToOutput()),
+            getProjectFilesystem().resolve(
+                Preconditions.checkNotNull(androidResource.getPathToTextSymbolsFile())),
             temp.resolve("R.txt")));
 
     // put res/ and assets/ into tmp folder
