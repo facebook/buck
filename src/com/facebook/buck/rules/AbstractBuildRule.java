@@ -121,7 +121,7 @@ public abstract class AbstractBuildRule implements BuildRule {
     if (ruleKey == null) {
       synchronized (this) {
         if (ruleKey == null) {
-          ruleKey = ruleKeyBuilderFactory.newInstance(this).build();
+          ruleKey = ruleKeyBuilderFactory.build(this);
         }
       }
     }

@@ -46,17 +46,16 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestSourcePath;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -763,8 +762,7 @@ AppleSdkPaths appleSdkPaths =
         default:
           throw new IllegalStateException();
       }
-      RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(rule);
-      ruleKeys.put(entry.getKey(), builder.build());
+      ruleKeys.put(entry.getKey(), ruleKeyBuilderFactory.build(rule));
     }
     return ruleKeys.build();
   }
@@ -804,8 +802,7 @@ AppleSdkPaths appleSdkPaths =
               Optional.<SourcePath>absent(),
               ImmutableSet.<BuildTarget>of(),
               ImmutableSet.<FrameworkPath>of());
-      RuleKeyBuilder builder = ruleKeyBuilderFactory.newInstance(rule);
-      ruleKeys.put(entry.getKey(), builder.build());
+      ruleKeys.put(entry.getKey(), ruleKeyBuilderFactory.build(rule));
     }
     return ruleKeys.build();
   }

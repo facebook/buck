@@ -70,9 +70,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(new UndecoratedFields(target));
+    RuleKey seen = factory.build(new UndecoratedFields(target));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
   @Test
@@ -98,9 +98,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(new DecoratedFields(target));
+    RuleKey seen = factory.build(new DecoratedFields(target));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
 
@@ -135,9 +135,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(new StringifiedField(target));
+    RuleKey seen = factory.build(new StringifiedField(target));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
   @Test
@@ -169,9 +169,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(new AppendingField(target));
+    RuleKey seen = factory.build(new AppendingField(target));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
   @Test
@@ -223,10 +223,10 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(
+    RuleKey seen = factory.build(
         new RuleContainingAppendableRule(target, appendableRule));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
   @Test
@@ -252,9 +252,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(new AppendingField(target));
+    RuleKey seen = factory.build(new AppendingField(target));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
   @Test
@@ -286,9 +286,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(new UnsortedFields(target));
+    RuleKey seen = factory.build(new UnsortedFields(target));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
   @Test
@@ -326,9 +326,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(new Child(topLevelTarget));
+    RuleKey seen = factory.build(new Child(topLevelTarget));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
   @Test
@@ -363,9 +363,9 @@ public class DefaultRuleKeyBuilderFactoryTest {
       }
     }
 
-    RuleKeyBuilder seen = factory.newInstance(new Child(target));
+    RuleKey seen = factory.build(new Child(target));
 
-    assertEquals(expected, seen.build());
+    assertEquals(expected, seen);
   }
 
   private static class Appender implements RuleKeyAppendable {

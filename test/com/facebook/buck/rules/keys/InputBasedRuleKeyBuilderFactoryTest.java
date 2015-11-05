@@ -75,12 +75,10 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             .build(resolver);
 
     dep.setRuleKey(new RuleKey("aaaa"));
-    RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     dep.setRuleKey(new RuleKey("bbbb"));
-    RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(
         inputKey1,
@@ -106,8 +104,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             ImmutableMap.of(
                 output,
                 HashCode.fromInt(0)));
-    RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
@@ -115,8 +112,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             ImmutableMap.of(
                 output,
                 HashCode.fromInt(1)));
-    RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(
         inputKey1,
@@ -147,8 +143,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             ImmutableMap.of(
                 Preconditions.checkNotNull(dep.getPathToOutput()),
                 HashCode.fromInt(0)));
-    RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
@@ -156,8 +151,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             ImmutableMap.of(
                 Preconditions.checkNotNull(dep.getPathToOutput()),
                 HashCode.fromInt(1)));
-    RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(
         inputKey1,
@@ -185,8 +179,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             ImmutableMap.of(
                 output,
                 HashCode.fromInt(0)));
-    RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
@@ -194,8 +187,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             ImmutableMap.of(
                 output,
                 HashCode.fromInt(1)));
-    RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(
         inputKey1,
@@ -231,8 +223,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             ImmutableMap.of(
                 Preconditions.checkNotNull(dep.getPathToOutput()),
                 HashCode.fromInt(0)));
-    RuleKey inputKey1 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey1 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
@@ -240,8 +231,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
             ImmutableMap.of(
                 Preconditions.checkNotNull(dep.getPathToOutput()),
                 HashCode.fromInt(1)));
-    RuleKey inputKey2 =
-        new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey2 = new InputBasedRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(
         inputKey1,

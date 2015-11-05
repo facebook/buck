@@ -31,7 +31,6 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -40,7 +39,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -80,14 +78,6 @@ import java.util.List;
 public class GenruleTest {
 
   private ProjectFilesystem filesystem;
-
-  private RuleKey generateRuleKey(
-      RuleKeyBuilderFactory factory,
-      AbstractBuildRule rule) {
-
-    RuleKeyBuilder builder = factory.newInstance(rule);
-    return builder.build();
-  }
 
   @Before
   public void newFakeFilesystem() {
@@ -467,15 +457,15 @@ public class GenruleTest {
 
     // Get a rule key for two genrules using two different output names, but are otherwise the
     // same.
-    RuleKey key1 = generateRuleKey(
-        ruleKeyBuilderFactory,
-        (Genrule) GenruleBuilder
+
+    RuleKey key1 = ruleKeyBuilderFactory.build(
+        GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule1"))
             .setOut("foo")
             .build(resolver));
-    RuleKey key2 = generateRuleKey(
-        ruleKeyBuilderFactory,
-        (Genrule) GenruleBuilder
+
+    RuleKey key2 = ruleKeyBuilderFactory.build(
+        GenruleBuilder
             .newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule2"))
             .setOut("bar")
             .build(resolver));
@@ -509,8 +499,8 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
 
     // Change the genrule's command, which will change its normal rule key, but since we're keeping
     // its output the same, the input-based rule key for the consuming rule will stay the same.
@@ -530,8 +520,8 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
     assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
 
@@ -548,7 +538,7 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
   }
 
@@ -577,8 +567,8 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
 
     // Change the dep's resource list, which will change its normal rule key, but since we're
     // keeping its output the same, the input-based rule key for the consuming rule will stay the
@@ -602,8 +592,8 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
     assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
 
@@ -619,7 +609,7 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
   }
 
@@ -648,8 +638,8 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey originalRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey originalInputRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
 
     // Change the dep's resource root, which will change its normal rule key, but since we're
     // keeping its output JAR the same, the input-based rule key for the consuming rule will stay
@@ -669,8 +659,8 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.newInstance(rule).build();
-    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey unchangedRuleKey = defaultRuleKeyBuilderFactory.build(rule);
+    RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
     assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
 
@@ -686,7 +676,7 @@ public class GenruleTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+    RuleKey changedInputBasedRuleKey = inputBasedRuleKeyBuilderFactory.build(rule);
     assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
   }
 

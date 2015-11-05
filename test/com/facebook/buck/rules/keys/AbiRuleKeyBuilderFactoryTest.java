@@ -58,12 +58,10 @@ public class AbiRuleKeyBuilderFactoryTest {
     BuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver, dep);
 
     dep.setRuleKey(new RuleKey("aaaa"));
-    RuleKey inputKey1 =
-        new AbiRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey1 = new AbiRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     dep.setRuleKey(new RuleKey("bbbb"));
-    RuleKey inputKey2 =
-        new AbiRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey2 = new AbiRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(
         inputKey1,
@@ -79,12 +77,10 @@ public class AbiRuleKeyBuilderFactoryTest {
     FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver);
 
     rule.setAbiKey(Sha1HashCode.of(Strings.repeat("a", 40)));
-    RuleKey inputKey1 =
-        new AbiRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey1 = new AbiRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     rule.setAbiKey(Sha1HashCode.of(Strings.repeat("b", 40)));
-    RuleKey inputKey2 =
-        new AbiRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+    RuleKey inputKey2 = new AbiRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(
         inputKey1,

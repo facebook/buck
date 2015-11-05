@@ -20,13 +20,11 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -53,14 +51,6 @@ public class ArchiveTest {
           new TestSourcePath("b.o"),
           new TestSourcePath("c.o"));
 
-  private RuleKey generateRuleKey(
-      RuleKeyBuilderFactory factory,
-      AbstractBuildRule rule) {
-
-    RuleKeyBuilder builder = factory.newInstance(rule);
-    return builder.build();
-  }
-
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
@@ -69,17 +59,16 @@ public class ArchiveTest {
     RuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(
-              ImmutableMap.of(
-                  "ar", Strings.repeat("0", 40),
-                  "a.o", Strings.repeat("a", 40),
-                  "b.o", Strings.repeat("b", 40),
-                  "c.o", Strings.repeat("c", 40),
-                  "different", Strings.repeat("d", 40))),
+                ImmutableMap.of(
+                    "ar", Strings.repeat("0", 40),
+                    "a.o", Strings.repeat("a", 40),
+                    "b.o", Strings.repeat("b", 40),
+                    "c.o", Strings.repeat("c", 40),
+                    "different", Strings.repeat("d", 40))),
             pathResolver);
 
     // Generate a rule key for the defaults.
-    RuleKey defaultRuleKey = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
         new Archive(
             params,
             pathResolver,
@@ -88,8 +77,7 @@ public class ArchiveTest {
             DEFAULT_INPUTS));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKey archiverChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey archiverChange = ruleKeyBuilderFactory.build(
         new Archive(
             params,
             pathResolver,
@@ -99,8 +87,7 @@ public class ArchiveTest {
     assertNotEquals(defaultRuleKey, archiverChange);
 
     // Verify that changing the output path causes a rulekey change.
-    RuleKey outputChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey outputChange = ruleKeyBuilderFactory.build(
         new Archive(
             params,
             pathResolver,
@@ -110,8 +97,7 @@ public class ArchiveTest {
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
-    RuleKey inputChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey inputChange = ruleKeyBuilderFactory.build(
         new Archive(
             params,
             pathResolver,
@@ -121,8 +107,7 @@ public class ArchiveTest {
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.
-    RuleKey archiverTypeChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+    RuleKey archiverTypeChange = ruleKeyBuilderFactory.build(
         new Archive(
             params,
             pathResolver,

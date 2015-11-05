@@ -147,4 +147,8 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
     return builder;
   }
 
+  @Override
+  public RuleKey build(BuildRule buildRule) {
+    return newInstance(buildRule).build();
+  }
 }

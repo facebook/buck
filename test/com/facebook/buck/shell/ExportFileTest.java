@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaPackageFinder;
@@ -28,7 +29,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -193,9 +193,7 @@ public class ExportFileTest {
 
     ExportFile rule = (ExportFile) builder.build(new BuildRuleResolver(), filesystem);
 
-    RuleKey original = ruleKeyFactory
-            .newInstance(rule)
-            .build();
+    RuleKey original = ruleKeyFactory.build(rule);
 
     filesystem.writeContentsToPath("I really like cheese", temp);
 
@@ -206,9 +204,7 @@ public class ExportFileTest {
     hashCache = new DefaultFileHashCache(filesystem);
     resolver = new SourcePathResolver(new BuildRuleResolver());
     ruleKeyFactory = new DefaultRuleKeyBuilderFactory(hashCache, resolver);
-    RuleKey refreshed = ruleKeyFactory
-        .newInstance(rule)
-        .build();
+    RuleKey refreshed = ruleKeyFactory.build(rule);
 
     assertNotEquals(original, refreshed);
   }

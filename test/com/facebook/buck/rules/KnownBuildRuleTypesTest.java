@@ -222,8 +222,8 @@ public class KnownBuildRuleTypesTest {
             new FakeFileHashCache(
                 ImmutableMap.of(javacPath, MorePaths.asByteSource(javacPath).hash(Hashing.sha1()))),
             resolver);
-    RuleKey configuredKey = factory.newInstance(configuredRule).build();
-    RuleKey libraryKey = factory.newInstance(libraryRule).build();
+    RuleKey configuredKey = factory.build(configuredRule);
+    RuleKey libraryKey = factory.build(libraryRule);
 
     assertNotEquals(libraryKey, configuredKey);
   }

@@ -33,7 +33,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -182,13 +181,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
         new DefaultRuleKeyBuilderFactory(
             FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of()),
             resolver);
-    RuleKeyBuilder builder1 = ruleKeyBuilderFactory.newInstance(
-        symlinkTreeBuildRule);
-    RuleKeyBuilder builder2 = ruleKeyBuilderFactory.newInstance(
-        modifiedSymlinkTreeBuildRule);
-    RuleKey pair1 = builder1.build();
-    RuleKey pair2 = builder2.build();
-    assertNotEquals(pair1, pair2);
+    RuleKey key1 = ruleKeyBuilderFactory.build(symlinkTreeBuildRule);
+    RuleKey key2 = ruleKeyBuilderFactory.build(modifiedSymlinkTreeBuildRule);
+    assertNotEquals(key1, key2);
   }
 
   @Test
@@ -202,8 +197,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             resolver);
 
     // Calculate the rule key
-    RuleKeyBuilder builder1 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
-    RuleKey pair1 = builder1.build();
+    RuleKey key1 = ruleKeyBuilderFactory.build(symlinkTreeBuildRule);
 
     // Change the contents of the target of the link.
     Path existingFile =
@@ -213,11 +207,10 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key
-    RuleKeyBuilder builder2 = ruleKeyBuilderFactory.newInstance(symlinkTreeBuildRule);
-    RuleKey pair2 = builder2.build();
+    RuleKey key2 = ruleKeyBuilderFactory.build(symlinkTreeBuildRule);
 
     // Verify that the rules keys are the same.
-    assertEquals(pair1, pair2);
+    assertEquals(key1, key2);
   }
 
 }

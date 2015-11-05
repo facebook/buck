@@ -17,9 +17,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.MoreFiles;
@@ -277,8 +277,7 @@ public class CachingBuildEngine implements BuildEngine {
             if (rule instanceof SupportsInputBasedRuleKey) {
 
               // Calculate the input-based rule key and record it in the metadata.
-              RuleKey inputRuleKey =
-                  cellData.inputBasedRuleKeyBuilderFactory.newInstance(rule).build();
+              RuleKey inputRuleKey = cellData.inputBasedRuleKeyBuilderFactory.build(rule);
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
                   inputRuleKey.toString());
@@ -335,7 +334,7 @@ public class CachingBuildEngine implements BuildEngine {
             // rebuilt, which is slow. Fortunately, we limit the effects of this when building Java
             // code when checking the ABI of deps instead of the RuleKey for deps.
             if (rule instanceof AbiRule) {
-              RuleKey abiRuleKey = cellData.abiRuleKeyBuilderFactory.newInstance(rule).build();
+              RuleKey abiRuleKey = cellData.abiRuleKeyBuilderFactory.build(rule);
               buildInfoRecorder.addBuildMetadata(
                   BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY,
                   abiRuleKey.toString());

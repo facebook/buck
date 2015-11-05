@@ -48,7 +48,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -659,7 +658,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = factory.newInstance(library).build();
+    RuleKey originalRuleKey = factory.build(library);
 
     // Now change the genrule such that its rule key changes, but it's output stays the same (since
     // we don't change it).  This should *not* affect the input-based rule key of the consuming
@@ -678,7 +677,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey unaffectedRuleKey = factory.newInstance(library).build();
+    RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.equalTo(unaffectedRuleKey));
 
     // Now actually modify the source, which should make the input-based rule key change.
@@ -697,7 +696,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey affectedRuleKey = factory.newInstance(library).build();
+    RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
   }
 
@@ -727,7 +726,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = factory.newInstance(library).build();
+    RuleKey originalRuleKey = factory.build(library);
 
     // Now change the Java library dependency such that its rule key changes, and change its JAR
     // contents, but keep its ABI JAR the same.  This should *not* affect the input-based rule key
@@ -747,7 +746,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey unaffectedRuleKey = factory.newInstance(library).build();
+    RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.equalTo(unaffectedRuleKey));
 
     // Now actually change the Java library dependency's ABI JAR.  This *should* affect the
@@ -769,7 +768,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey affectedRuleKey = factory.newInstance(library).build();
+    RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
   }
 
@@ -805,7 +804,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = factory.newInstance(library).build();
+    RuleKey originalRuleKey = factory.build(library);
 
     // Now change the exported Java library dependency such that its rule key changes, and change
     // its JAR contents, but keep its ABI JAR the same.  This should *not* affect the input-based
@@ -830,7 +829,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey unaffectedRuleKey = factory.newInstance(library).build();
+    RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.equalTo(unaffectedRuleKey));
 
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
@@ -856,7 +855,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey affectedRuleKey = factory.newInstance(library).build();
+    RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
   }
 
@@ -896,7 +895,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey originalRuleKey = factory.newInstance(library).build();
+    RuleKey originalRuleKey = factory.build(library);
 
     // Now change the exported Java library dependency such that its rule key changes, and change
     // its JAR contents, but keep its ABI JAR the same.  This should *not* affect the input-based
@@ -925,7 +924,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey unaffectedRuleKey = factory.newInstance(library).build();
+    RuleKey unaffectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.equalTo(unaffectedRuleKey));
 
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
@@ -955,7 +954,7 @@ public class DefaultJavaLibraryTest {
         new InputBasedRuleKeyBuilderFactory(
             new DefaultFileHashCache(filesystem),
             new SourcePathResolver(resolver));
-    RuleKey affectedRuleKey = factory.newInstance(library).build();
+    RuleKey affectedRuleKey = factory.build(library);
     assertThat(originalRuleKey, Matchers.not(Matchers.equalTo(affectedRuleKey)));
   }
 
@@ -1107,10 +1106,8 @@ public class DefaultJavaLibraryTest {
             FakeFileHashCache.createFromStrings(fileHashes.build()),
             pathResolver2);
 
-    RuleKeyBuilder builder1 = ruleKeyBuilderFactory1.newInstance(rule1);
-    RuleKeyBuilder builder2 = ruleKeyBuilderFactory2.newInstance(rule2);
-    RuleKey key1 = builder1.build();
-    RuleKey key2 = builder2.build();
+    RuleKey key1 = ruleKeyBuilderFactory1.build(rule1);
+    RuleKey key2 = ruleKeyBuilderFactory2.build(rule2);
     assertEquals(key1, key2);
   }
 

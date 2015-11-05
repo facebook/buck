@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
@@ -29,7 +28,6 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -70,14 +68,6 @@ public class ThriftCompilerTest {
   private static final ImmutableSortedSet<String> DEFAULT_GENERATED_SOURCES =
       ImmutableSortedSet.of("source1", "source2");
 
-  private RuleKey generateRuleKey(
-      RuleKeyBuilderFactory factory,
-      AbstractBuildRule rule) {
-
-    RuleKeyBuilder builder = factory.newInstance(rule);
-    return builder.build();
-  }
-
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
@@ -95,8 +85,8 @@ public class ThriftCompilerTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     // Generate a rule key for the defaults.
-    RuleKey defaultRuleKey = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -112,8 +102,8 @@ public class ThriftCompilerTest {
             DEFAULT_GENERATED_SOURCES));
 
     // Verify that changing the compiler causes a rulekey change.
-    RuleKey compilerChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey compilerChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -130,8 +120,8 @@ public class ThriftCompilerTest {
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKey flagsChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey flagsChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -148,8 +138,8 @@ public class ThriftCompilerTest {
     assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKey outputDirChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey outputDirChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -166,8 +156,8 @@ public class ThriftCompilerTest {
     assertNotEquals(defaultRuleKey, outputDirChange);
 
     // Verify that changing the input causes a rulekey change.
-    RuleKey inputChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey inputChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -184,8 +174,8 @@ public class ThriftCompilerTest {
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the input causes a rulekey change.
-    RuleKey languageChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey languageChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -202,8 +192,8 @@ public class ThriftCompilerTest {
     assertNotEquals(defaultRuleKey, languageChange);
 
     // Verify that changing the input causes a rulekey change.
-    RuleKey optionsChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey optionsChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -221,8 +211,8 @@ public class ThriftCompilerTest {
 
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
-    RuleKey includeRootsChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey includeRootsChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -240,8 +230,8 @@ public class ThriftCompilerTest {
 
     // Verify that changing the header maps does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
-    RuleKey headerMapKeyChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey headerMapKeyChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -258,8 +248,8 @@ public class ThriftCompilerTest {
     assertEquals(defaultRuleKey, headerMapKeyChange);
 
     // Verify that changing the name of the include causes a rulekey change.
-    RuleKey includesKeyChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey includesKeyChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,
@@ -278,8 +268,8 @@ public class ThriftCompilerTest {
     assertNotEquals(defaultRuleKey, includesKeyChange);
 
     // Verify that changing the contents of an include causes a rulekey change.
-    RuleKey includesValueChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey includesValueChange = ruleKeyBuilderFactory.build(
         new ThriftCompiler(
             params,
             resolver,

@@ -1867,7 +1867,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
-        abiRuleKeyBuilderFactory.newInstance(rule).build().toString(),
+        abiRuleKeyBuilderFactory.build(rule).toString(),
         BuildInfo.getPathToMetadataDirectory(target)
             .resolve(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY));
 
@@ -1916,7 +1916,7 @@ public class CachingBuildEngineTest extends EasyMockSupport {
 
     // Prepopulate the dep file rule key and dep file.
     filesystem.writeContentsToPath(
-        new StringBuilder(abiRuleKeyBuilderFactory.newInstance(rule).build().toString())
+        new StringBuilder(abiRuleKeyBuilderFactory.build(rule).toString())
             .reverse()
             .toString(),
         BuildInfo.getPathToMetadataDirectory(target)
@@ -2168,6 +2168,11 @@ public class CachingBuildEngineTest extends EasyMockSupport {
         }
 
       };
+    }
+
+    @Override
+    public RuleKey build(BuildRule buildRule) {
+      return newInstance(buildRule).build();
     }
   }
 

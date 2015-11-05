@@ -101,9 +101,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         inputRuleX)));
-    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
-        .newInstance(inputRuleX)
-        .build();
+    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
 
     assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
   }
@@ -128,9 +126,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         inputRuleX)));
-    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
-        .newInstance(inputRuleX)
-        .build();
+    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
 
@@ -164,9 +160,7 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver(ImmutableSet.of(
         inputRuleX)));
-    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver)
-        .newInstance(inputRuleX)
-        .build();
+    RuleKey ruleKeyX = new DefaultRuleKeyBuilderFactory(fileHashCache, resolver).build(inputRuleX);
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
 
@@ -216,15 +210,9 @@ public class DirArtifactCacheTest {
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
 
-    RuleKey ruleKeyX = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleX)
-        .build();
-    RuleKey ruleKeyY = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleY)
-        .build();
-    RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleZ)
-        .build();
+    RuleKey ruleKeyX = fakeRuleKeyBuilderFactory.build(inputRuleX);
+    RuleKey ruleKeyY = fakeRuleKeyBuilderFactory.build(inputRuleY);
+    RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory.build(inputRuleZ);
 
     assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
     assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
@@ -288,15 +276,9 @@ public class DirArtifactCacheTest {
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
 
-    RuleKey ruleKeyX = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleX)
-        .build();
-    RuleKey ruleKeyY = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleY)
-        .build();
-    RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleZ)
-        .build();
+    RuleKey ruleKeyX = fakeRuleKeyBuilderFactory.build(inputRuleX);
+    RuleKey ruleKeyY = fakeRuleKeyBuilderFactory.build(inputRuleY);
+    RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory.build(inputRuleZ);
 
     assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyX, fileX).getType());
     assertEquals(CacheResultType.MISS, dirArtifactCache.fetch(ruleKeyY, fileY).getType());
@@ -451,15 +433,9 @@ public class DirArtifactCacheTest {
     DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(fileHashCache, resolver);
 
-    RuleKey ruleKeyX = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleX)
-        .build();
-    RuleKey ruleKeyY = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleY)
-        .build();
-    RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory
-        .newInstance(inputRuleZ)
-        .build();
+    RuleKey ruleKeyX = fakeRuleKeyBuilderFactory.build(inputRuleX);
+    RuleKey ruleKeyY = fakeRuleKeyBuilderFactory.build(inputRuleY);
+    RuleKey ruleKeyZ = fakeRuleKeyBuilderFactory.build(inputRuleZ);
 
     dirArtifactCache.store(ImmutableSet.of(ruleKeyX), ImmutableMap.<String, String>of(), fileX);
     assertEquals(CacheResultType.HIT, dirArtifactCache.fetch(ruleKeyX, fileX).getType());

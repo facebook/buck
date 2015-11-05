@@ -118,10 +118,8 @@ public class AndroidResourceTest {
                 "java/src/com/facebook/base/res/drawable/C.xml", "eeeeeeeeee"
                 )),
             pathResolver);
-    RuleKey ruleKey1 =
-        factory.newInstance(androidResource1).build();
-    RuleKey ruleKey2 =
-        factory.newInstance(androidResource2).build();
+    RuleKey ruleKey1 = factory.build(androidResource1);
+    RuleKey ruleKey2 = factory.build(androidResource2);
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.",

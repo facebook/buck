@@ -21,22 +21,20 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyBuilderFactory;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
@@ -73,14 +71,6 @@ public class CxxLinkTest {
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
       CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
 
-  private RuleKey generateRuleKey(
-      RuleKeyBuilderFactory factory,
-      AbstractBuildRule rule) {
-
-    RuleKeyBuilder builder = factory.newInstance(rule);
-    return builder.build();
-  }
-
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
@@ -98,8 +88,8 @@ public class CxxLinkTest {
             pathResolver);
 
     // Generate a rule key for the defaults.
-    RuleKey defaultRuleKey = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
         new CxxLink(
             params,
             pathResolver,
@@ -110,8 +100,8 @@ public class CxxLinkTest {
             DEFAULT_SANITIZER));
 
     // Verify that changing the archiver causes a rulekey change.
-    RuleKey linkerChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey linkerChange = ruleKeyBuilderFactory.build(
         new CxxLink(
             params,
             pathResolver,
@@ -123,8 +113,8 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
-    RuleKey outputChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey outputChange = ruleKeyBuilderFactory.build(
         new CxxLink(
             params,
             pathResolver,
@@ -136,8 +126,8 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the flags causes a rulekey change.
-    RuleKey flagsChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey flagsChange = ruleKeyBuilderFactory.build(
         new CxxLink(
             params,
             pathResolver,
@@ -152,8 +142,8 @@ public class CxxLinkTest {
     assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the libraries causes a rulekey change.
-    RuleKey librariesRootsChange = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey librariesRootsChange = ruleKeyBuilderFactory.build(
         new CxxLink(
             params,
             pathResolver,
@@ -203,8 +193,8 @@ public class CxxLinkTest {
             new SanitizedArg(
                 sanitizer1.sanitize(Optional.<Path>absent()),
                 "-Lsomething/foo"));
-    RuleKey ruleKey1 = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey ruleKey1 = ruleKeyBuilderFactory.build(
         new CxxLink(
             params,
             pathResolver,
@@ -221,8 +211,8 @@ public class CxxLinkTest {
             new SanitizedArg(
                 sanitizer2.sanitize(Optional.<Path>absent()),
                 "-Ldifferent/foo"));
-    RuleKey ruleKey2 = generateRuleKey(
-        ruleKeyBuilderFactory,
+
+    RuleKey ruleKey2 = ruleKeyBuilderFactory.build(
         new CxxLink(
             params,
             pathResolver,

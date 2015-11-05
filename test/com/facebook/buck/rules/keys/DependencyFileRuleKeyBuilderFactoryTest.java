@@ -65,7 +65,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
                 output,
                 HashCode.fromInt(0)));
     RuleKey inputKey1 =
-        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
@@ -74,7 +74,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
                 output,
                 HashCode.fromInt(1)));
     RuleKey inputKey2 =
-        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -101,7 +101,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
                 output,
                 HashCode.fromInt(0)));
     RuleKey inputKey1 =
-        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache =
@@ -110,7 +110,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
                 output,
                 HashCode.fromInt(1)));
     RuleKey inputKey2 =
-        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).newInstance(rule).build();
+        new DependencyFileRuleKeyBuilderFactory(hashCache, pathResolver).build(rule);
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
