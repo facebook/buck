@@ -63,6 +63,8 @@ public class EnvironmentFilter {
   // Ignore the environment variables with these names when comparing environments.
   private static final ImmutableSet<String> ENV_TO_IGNORE = ImmutableSet.of(
       "ANDROID_SERIAL", // Serial of the target Android device/emulator.
+      "SCRIPT",         // Populated by script command: http://www.freebsd.org/cgi/man.cgi?script
+      "NAILGUN_TTY_0",  // Nailgun stdin supports ANSI escape sequences.
       "NAILGUN_TTY_1",  // Nailgun stdout supports ANSI escape sequences.
       "NAILGUN_TTY_2"   // Nailgun stderr supports ANSI escape sequences.
   );
