@@ -119,7 +119,7 @@ public class NdkLibraryTest {
                 /* NDK_LIBS_OUT */ projectFilesystem.resolve(Paths.get(libbase, "libs")),
                 /* host-echo-build-step */ Platform.detect() == Platform.WINDOWS ? "@REM" : "@#")
         ),
-        steps.subList(0, 1),
+        steps.subList(3, 4),
         executionContext);
   }
 }

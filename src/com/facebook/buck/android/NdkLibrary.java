@@ -34,6 +34,9 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -73,6 +76,7 @@ public class NdkLibrary extends AbstractBuildRule
   /** The directory containing the Android.mk file to use. This value includes a trailing slash. */
   private final Path root;
   private final Path makefile;
+  private final String makefileContents;
   private final String lastPathComponent;
   private final Path buildArtifactsDirectory;
   private final Path genDirectory;
@@ -91,6 +95,7 @@ public class NdkLibrary extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       Path makefile,
+      String makefileContents,
       Set<SourcePath> sources,
       List<String> flags,
       boolean isAsset,
@@ -102,11 +107,13 @@ public class NdkLibrary extends AbstractBuildRule
     BuildTarget buildTarget = params.getBuildTarget();
     this.root = buildTarget.getBasePath();
     this.makefile = Preconditions.checkNotNull(makefile);
+    this.makefileContents = makefileContents;
     this.lastPathComponent = "__lib" + buildTarget.getShortNameAndFlavorPostfix();
     this.buildArtifactsDirectory = getBuildArtifactsDirectory(buildTarget, true /* isScratchDir */);
     this.genDirectory = getBuildArtifactsDirectory(buildTarget, false /* isScratchDir */);
 
-    Preconditions.checkArgument(!sources.isEmpty(),
+    Preconditions.checkArgument(
+        !sources.isEmpty(),
         "Must include at least one file (Android.mk?) in ndk_library rule");
     this.sources = ImmutableSortedSet.copyOf(sources);
     this.flags = ImmutableList.copyOf(flags);
@@ -136,31 +143,37 @@ public class NdkLibrary extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       final BuildableContext buildableContext) {
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // .so files are written to the libs/ subdirectory of the output directory.
     // All of them should be recorded via the BuildableContext.
     Path binDirectory = buildArtifactsDirectory.resolve("libs");
-    Step nkdBuildStep = new NdkBuildStep(
-        getProjectFilesystem(),
-        root,
-        makefile,
-        buildArtifactsDirectory,
-        binDirectory,
-        flags,
-        macroExpander);
+    steps.add(new RmStep(getProjectFilesystem(), makefile, true));
+    steps.add(new MkdirStep(getProjectFilesystem(), makefile.getParent()));
+    steps.add(new WriteFileStep(getProjectFilesystem(), makefileContents, makefile, false));
+    steps.add(
+        new NdkBuildStep(
+            getProjectFilesystem(),
+            root,
+            makefile,
+            buildArtifactsDirectory,
+            binDirectory,
+            flags,
+            macroExpander));
 
-    Step mkDirStep = new MakeCleanDirectoryStep(getProjectFilesystem(), genDirectory);
-    Step copyStep = CopyStep.forDirectory(
-        getProjectFilesystem(),
-        binDirectory,
-        genDirectory,
-        CopyStep.DirectoryMode.CONTENTS_ONLY);
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), genDirectory));
+    steps.add(
+        CopyStep.forDirectory(
+            getProjectFilesystem(),
+            binDirectory,
+            genDirectory,
+            CopyStep.DirectoryMode.CONTENTS_ONLY));
 
     buildableContext.recordArtifact(genDirectory);
     // Some tools need to inspect .so files whose symbols haven't been stripped, so cache these too.
     // However, the intermediate object files are huge and we have no interest in them, so filter
     // them out.
-    Step cacheUnstrippedObjs = new AbstractExecutionStep("cache_unstripped_so") {
+    steps.add(new AbstractExecutionStep("cache_unstripped_so") {
       @Override
       public int execute(ExecutionContext context) {
         try {
@@ -182,9 +195,9 @@ public class NdkLibrary extends AbstractBuildRule
         }
         return 0;
       }
-    };
+    });
 
-    return ImmutableList.of(nkdBuildStep, mkDirStep, copyStep, cacheUnstrippedObjs);
+    return steps.build();
   }
 
   /**
