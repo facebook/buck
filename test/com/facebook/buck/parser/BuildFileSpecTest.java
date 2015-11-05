@@ -65,20 +65,20 @@ public class BuildFileSpecTest {
 
   @Test
   public void recursiveIgnorePaths() throws IOException, InterruptedException {
-    // NOTE(agallagher): FakeProjectFilesystem doesn't currently support a proper walkFileTree
-    // method, so use a real one here to test ignore dirs.
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    Path ignoredBuildFile = Paths.get("a", "b", "BUCK");
+    ImmutableSet<Path> ignore = ImmutableSet.of(ignoredBuildFile.getParent());
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath(), ignore);
     Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
     filesystem.writeContentsToPath("", buildFile);
 
-    Path ignoredBuildFile = Paths.get("a", "b", "BUCK");
+
     filesystem.mkdirs(ignoredBuildFile.getParent());
     filesystem.writeContentsToPath("", ignoredBuildFile);
 
     // Test a recursive spec with an ignored dir.
-    ImmutableSet<Path> ignore = ImmutableSet.of(ignoredBuildFile.getParent());
-    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent(), ignore);
+
+    BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(buildFile.getParent());
     ImmutableSet<Path> expectedBuildFiles = ImmutableSet.of(filesystem.resolve(buildFile));
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ImmutableSet<Path> actualBuildFiles = recursiveSpec.findBuildFiles(cell);

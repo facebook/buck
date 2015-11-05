@@ -168,13 +168,12 @@ public abstract class AbstractCommand implements Command {
 
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
       BuckConfig config,
-      ImmutableSet<Path> ignorePaths,
       Iterable<String> targetsAsArgs) {
     ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
     CommandLineTargetNodeSpecParser parser =
         new CommandLineTargetNodeSpecParser(
             config,
-            new BuildTargetPatternTargetNodeParser(ignorePaths));
+            new BuildTargetPatternTargetNodeParser());
     for (String arg : targetsAsArgs) {
       specs.add(parser.parse(config.getCellRoots(), arg));
     }

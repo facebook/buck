@@ -31,7 +31,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployResult;
@@ -40,7 +39,6 @@ import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 
 import javax.annotation.Nullable;
 
@@ -153,10 +151,9 @@ public class PublishCommand extends BuildCommand {
 
   @Override
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      BuckConfig config, ImmutableSet<Path> ignorePaths, Iterable<String> targetsAsArgs) {
+      BuckConfig config, Iterable<String> targetsAsArgs) {
     ImmutableList<TargetNodeSpec> specs = super.parseArgumentsAsTargetNodeSpecs(
         config,
-        ignorePaths,
         targetsAsArgs);
 
     if (includeSource) {

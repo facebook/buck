@@ -109,7 +109,6 @@ public class UninstallCommand extends AbstractCommand {
           .buildTargetGraphForTargetNodeSpecs(
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  params.getCell().getFilesystem().getIgnorePaths(),
                   getArguments()),
               new ParserConfig(params.getBuckConfig()),
               params.getBuckEventBus(),

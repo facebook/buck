@@ -46,25 +46,13 @@ abstract class AbstractBuildFileSpec {
   // and that the paths enumerated here should be ignored.
   @Value.Parameter
   abstract boolean isRecursive();
-  @Value.Parameter
-  abstract ImmutableSet<Path> getRecursiveIgnorePaths();
-
-  public static BuildFileSpec fromRecursivePath(Path basePath, ImmutableSet<Path> ignorePaths) {
-    return BuildFileSpec.of(basePath, /* recursive */ true, ignorePaths);
-  }
 
   public static BuildFileSpec fromRecursivePath(Path basePath) {
-    return BuildFileSpec.of(
-        basePath,
-        /* recursive */ true,
-        /* ignorePaths */ ImmutableSet.<Path>of());
+    return BuildFileSpec.of(basePath, /* recursive */ true);
   }
 
   public static BuildFileSpec fromPath(Path basePath) {
-    return BuildFileSpec.of(
-        basePath,
-        /* recursive */ false,
-        ImmutableSet.<Path>of());
+    return BuildFileSpec.of(basePath, /* recursive */ false);
   }
 
   public static BuildFileSpec fromBuildTarget(BuildTarget target) {
@@ -96,7 +84,7 @@ abstract class AbstractBuildFileSpec {
               BasicFileAttributes attrs)
               throws IOException {
             // Skip sub-dirs that we should ignore.
-            if (getRecursiveIgnorePaths().contains(dir)) {
+            if (filesystem.isIgnored(dir)) {
               return FileVisitResult.SKIP_SUBTREE;
             }
             return FileVisitResult.CONTINUE;
@@ -107,7 +95,8 @@ abstract class AbstractBuildFileSpec {
               Path file,
               BasicFileAttributes attrs)
               throws IOException {
-            if (buildFileName.equals(file.getFileName().toString())) {
+            if (buildFileName.equals(file.getFileName().toString()) &&
+                !filesystem.isIgnored(file)) {
               function.apply(filesystem.resolve(file));
             }
             return FileVisitResult.CONTINUE;

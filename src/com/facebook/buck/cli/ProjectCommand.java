@@ -29,6 +29,7 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -38,7 +39,6 @@ import com.facebook.buck.jvm.java.intellij.IjModuleGraph;
 import com.facebook.buck.jvm.java.intellij.IjProject;
 import com.facebook.buck.jvm.java.intellij.IntellijConfig;
 import com.facebook.buck.jvm.java.intellij.Project;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -342,7 +342,6 @@ public class ProjectCommand extends BuildCommand {
           .buildTargetGraphForTargetNodeSpecs(
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  params.getCell().getFilesystem().getIgnorePaths(),
                   getArguments()),
               new ParserConfig(params.getBuckConfig()),
               params.getBuckEventBus(),
@@ -371,13 +370,12 @@ public class ProjectCommand extends BuildCommand {
     TargetGraph projectGraph = projectGraphParser.buildTargetGraphForTargetNodeSpecs(
         getTargetNodeSpecsForIde(
             passedInTargetsSet,
-            params.getCell().getFilesystem().getIgnorePaths(),
             useExperimentalProjectGeneration));
 
     projectIde = getIdeBasedOnPassedInTargetsAndProjectGraph(
         params.getBuckConfig(),
         passedInTargetsSet,
-        Optional.<TargetGraph>of(projectGraph));
+        Optional.of(projectGraph));
     if (projectIde == ProjectCommand.Ide.XCODE) {
       useExperimentalProjectGeneration = true;  // we want to use this feature for Xcode projects
       checkForAndKillXcodeIfRunning(params, getIdePrompt(params.getBuckConfig()));
@@ -408,7 +406,6 @@ public class ProjectCommand extends BuildCommand {
         projectPredicates.getAssociatedProjectPredicate(),
         isWithTests(),
         isWithDependenciesTests(),
-        params.getCell().getFilesystem().getIgnorePaths(),
         useExperimentalProjectGeneration);
 
     if (getDryRun()) {
@@ -947,7 +944,6 @@ public class ProjectCommand extends BuildCommand {
 
   private static Iterable<? extends TargetNodeSpec> getTargetNodeSpecsForIde(
       Collection<BuildTarget> passedInBuildTargets,
-      ImmutableSet<Path> ignoreDirs,
       boolean experimentalProjectGenerationEnabled
   ) {
     if (experimentalProjectGenerationEnabled && !passedInBuildTargets.isEmpty()) {
@@ -958,7 +954,7 @@ public class ProjectCommand extends BuildCommand {
       return ImmutableList.of(
           TargetNodePredicateSpec.of(
               Predicates.<TargetNode<?>>alwaysTrue(),
-              BuildFileSpec.fromRecursivePath(Paths.get(""), ignoreDirs)));
+              BuildFileSpec.fromRecursivePath(Paths.get(""))));
     }
   }
 
@@ -969,7 +965,6 @@ public class ProjectCommand extends BuildCommand {
       AssociatedTargetNodePredicate associatedProjectPredicate,
       boolean isWithTests,
       boolean isWithDependenciesTests,
-      ImmutableSet<Path> ignoreDirs,
       boolean experimentalProjectGenerationEnabled
   )
       throws IOException, InterruptedException {
@@ -988,7 +983,6 @@ public class ProjectCommand extends BuildCommand {
           projectGraphParser.buildTargetGraphForTargetNodeSpecs(
               getTargetNodeSpecsForIde(
                   Sets.union(graphRoots, explicitTestTargets),
-                  ignoreDirs,
                   experimentalProjectGenerationEnabled));
     } else {
       resultProjectGraph = projectGraph;

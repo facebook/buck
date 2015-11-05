@@ -25,11 +25,9 @@ import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CommandLineTargetNodeSpecParserTest {
@@ -37,7 +35,7 @@ public class CommandLineTargetNodeSpecParserTest {
   private static final CommandLineTargetNodeSpecParser PARSER =
       new CommandLineTargetNodeSpecParser(
           FakeBuckConfig.builder().build(),
-          new BuildTargetPatternTargetNodeParser(ImmutableSet.<Path>of()));
+          new BuildTargetPatternTargetNodeParser());
 
   @Test
   public void trailingDotDotDot() {

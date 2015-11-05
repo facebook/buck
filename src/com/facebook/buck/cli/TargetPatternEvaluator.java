@@ -50,8 +50,7 @@ public class TargetPatternEvaluator {
     this.projectRoot = params.getCell().getFilesystem().getRootPath();
     this.targetNodeSpecParser = new CommandLineTargetNodeSpecParser(
         params.getBuckConfig(),
-        new BuildTargetPatternTargetNodeParser(
-            params.getCell().getFilesystem().getIgnorePaths()));
+        new BuildTargetPatternTargetNodeParser());
   }
 
   /**

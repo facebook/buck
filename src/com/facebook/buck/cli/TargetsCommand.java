@@ -288,10 +288,8 @@ public class TargetsCommand extends AbstractCommand {
                 ImmutableList.of(
                     TargetNodePredicateSpec.of(
                         Predicates.<TargetNode<?>>alwaysTrue(),
-                        BuildFileSpec.fromRecursivePath(
-                            Paths.get(""),
-                            params.getCell().getFilesystem().getIgnorePaths()))),
-                parserConfig,
+                        BuildFileSpec.fromRecursivePath(Paths.get("")))),
+                    parserConfig,
                 params.getBuckEventBus(),
                 params.getConsole(),
                 params.getEnvironment(),
@@ -301,7 +299,6 @@ public class TargetsCommand extends AbstractCommand {
             .buildTargetGraphForTargetNodeSpecs(
                 parseArgumentsAsTargetNodeSpecs(
                     params.getBuckConfig(),
-                    params.getCell().getFilesystem().getIgnorePaths(),
                     getArguments()),
                 parserConfig,
                 params.getBuckEventBus(),
@@ -610,7 +607,6 @@ public class TargetsCommand extends AbstractCommand {
           .buildTargetGraphForTargetNodeSpecs(
               parseArgumentsAsTargetNodeSpecs(
                   params.getBuckConfig(),
-                  params.getCell().getFilesystem().getIgnorePaths(),
                   getArguments()),
               new ParserConfig(params.getBuckConfig()),
               params.getBuckEventBus(),

@@ -1635,9 +1635,8 @@ public class ParserNgTest {
                 ImmutableList.of(
                     TargetNodePredicateSpec.of(
                         filter,
-                        BuildFileSpec.fromRecursivePath(
-                            Paths.get(""),
-                            cell.getFilesystem().getIgnorePaths())))).getSecond().getNodes())
+                        BuildFileSpec.fromRecursivePath(Paths.get("")))))
+                .getSecond().getNodes())
         .filter(filter)
         .transform(HasBuildTarget.TO_TARGET)
         .toSet();
