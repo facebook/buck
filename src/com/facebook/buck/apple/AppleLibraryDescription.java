@@ -122,8 +122,7 @@ public class AppleLibraryDescription implements
         pathResolver,
         delegateArg,
         args,
-        params.getBuildTarget(),
-        !isSharedLibraryTarget(params.getBuildTarget()));
+        params.getBuildTarget());
 
     return delegate.createBuildRule(
         targetGraph,
