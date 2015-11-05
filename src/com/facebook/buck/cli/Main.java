@@ -98,6 +98,7 @@ import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -160,6 +161,9 @@ public final class Main {
   private static final TimeSpan SUPER_CONSOLE_REFRESH_RATE =
       new TimeSpan(100, TimeUnit.MILLISECONDS);
 
+  private static final TimeSpan HANG_DETECTOR_TIMEOUT =
+      new TimeSpan(5, TimeUnit.MINUTES);
+
   /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
    */
@@ -187,6 +191,20 @@ public final class Main {
       ImmutableSet.of("*.pbxproj", "*.xcscheme", "*.xcworkspacedata");
 
   private static final Logger LOG = Logger.get(Main.class);
+
+  private static final HangMonitor.AutoStartInstance HANG_MONITOR =
+      new HangMonitor.AutoStartInstance(
+          new Function<String, Void>() {
+            @Nullable
+            @Override
+            public Void apply(String input) {
+              LOG.info(
+                  "No recent activity, dumping thread stacks (`tr , '\\n'` to decode): %s",
+                  input);
+              return null;
+            }
+          },
+          HANG_DETECTOR_TIMEOUT);
 
   /**
    * Daemon used to monitor the file system and cache build rules between Main() method
@@ -751,6 +769,8 @@ public final class Main {
              new TempDirectoryCreator(testTempDirOverride);
          AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
          BuckEventBus buildEventBus = new BuckEventBus(clock, buildId)) {
+
+      buildEventBus.register(HANG_MONITOR.getHangMonitor());
 
       ArtifactCache artifactCache = asyncCloseable.closeAsync(
           ArtifactCaches.newInstance(
