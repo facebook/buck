@@ -61,14 +61,26 @@ import java.util.Map;
  * Example:
  * <pre>
  * {
- *   "strings":{
- *     "thread_list_new_message_button":{
+ *   "strings": {
+ *     "thread_list_new_message_button": {
  *       "androidResourceId":"0x7f0800e6",
  *       "stringsXmlPath":"android_res/com/facebook/messaging/res/values/strings.xml"
  *     },
- *     "bug_report_category_lock_screen":{
+ *     "bug_report_category_lock_screen": {
  *       "androidResourceId":"0x7f080489",
  *       "stringsXmlPath":"android_res/com/facebook/bugreporter/res/values/strings.xml"
+ *     }
+ *   },
+ *   "plurals": {
+ *     "like_count": {
+ *       "androidResourceId": "0x7f080480",
+ *       "stringsXmlPath":"android_res/com/facebook/likes/res/values/strings.xml"
+ *     }
+ *   },
+ *   "string-arrays": {
+ *     "share_types": {
+ *       "androidResourceId": "0x7f080470",
+ *       "stringsXmlPath":"android_res/com/facebook/share/res/values/strings.xml"
  *     }
  *   }
  * }
@@ -81,7 +93,9 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
   private final ImmutableList<Path> resDirectories;
   private final Path destinationPath;
 
-  private Map<String, Integer> mapResNameToResId = Maps.newHashMap();
+  private final Map<String, Integer> stringResourceNameToIdMap = Maps.newHashMap();
+  private final Map<String, Integer> pluralsResourceNameToIdMap = Maps.newHashMap();
+  private final Map<String, Integer> arrayResourceNameToIdMap = Maps.newHashMap();
 
   /**
    * Associates each string resource with it's integer id (as assigned by {@code aapt} during
@@ -110,7 +124,12 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     // This file contains all the resource names and the integer id that aapt assigned.
     Path rDotTxtPath = rDotTxtDir.resolve("R.txt");
     try {
-      CompileStringsStep.buildResourceNameToIdMap(filesystem, rDotTxtPath, mapResNameToResId);
+      CompileStringsStep.buildResourceNameToIdMap(
+          filesystem,
+          rDotTxtPath,
+          stringResourceNameToIdMap,
+          pluralsResourceNameToIdMap,
+          arrayResourceNameToIdMap);
     } catch (FileNotFoundException ex) {
       context.logError(ex,
         "The '%s' file is not present.",
@@ -121,7 +140,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
       return 1;
     }
 
-    Map<String, NativeStringInfo> nativeStrings = parseStringFiles(context);
+    Map<String, Map<String, NativeResourceInfo>> nativeStrings = parseStringFiles(context);
 
     // write nativeStrings out to a file
     Path outputPath = destinationPath.resolve("strings.json");
@@ -137,24 +156,27 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     return 0; // success
   }
 
-  private Map<String, NativeStringInfo> parseStringFiles(ExecutionContext context) {
-    Map<String, NativeStringInfo> nativeStrings = Maps.newHashMap();
+  private Map<String, Map<String, NativeResourceInfo>> parseStringFiles(ExecutionContext context) {
+    Map<String, NativeResourceInfo> nativeStrings = Maps.newHashMap();
+    Map<String, NativeResourceInfo> nativePlurals = Maps.newHashMap();
+    Map<String, NativeResourceInfo> nativeArrays = Maps.newHashMap();
 
     for (Path resDir : resDirectories) {
       Path stringsPath = resDir.resolve("values").resolve("strings.xml");
+      String stringsPathName = stringsPath.toString();
       Path stringsFile = filesystem.getPathForRelativePath(stringsPath);
       if (Files.exists(stringsFile)) {
         try {
           Document dom = XmlDomParser.parse(stringsFile);
 
           NodeList stringNodes = dom.getElementsByTagName("string");
-          scrapeNodes(stringNodes, stringsPath.toString(), nativeStrings);
+          scrapeNodes(stringNodes, stringsPathName, nativeStrings, stringResourceNameToIdMap);
 
           NodeList pluralNodes = dom.getElementsByTagName("plurals");
-          scrapeNodes(pluralNodes, stringsPath.toString(), nativeStrings);
+          scrapeNodes(pluralNodes, stringsPathName, nativePlurals, pluralsResourceNameToIdMap);
 
           NodeList arrayNodes = dom.getElementsByTagName("string-array");
-          scrapeNodes(arrayNodes, stringsPath.toString(), nativeStrings);
+          scrapeNodes(arrayNodes, stringsPathName, nativeArrays, arrayResourceNameToIdMap);
         } catch (IOException | SAXException ex) {
           context.logError(
               ex,
@@ -164,7 +186,11 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
       }
     }
 
-    return nativeStrings;
+    Map<String, Map<String, NativeResourceInfo>> resultMap = Maps.newHashMap();
+    resultMap.put("strings", nativeStrings);
+    resultMap.put("plurals", nativePlurals);
+    resultMap.put("string-arrays", nativeArrays);
+    return resultMap;
   }
 
   /**
@@ -175,20 +201,21 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
    * @param nativeStrings Collection of native strings, only new ones will be added to it.
    */
   @VisibleForTesting
-  void scrapeNodes(
+  static void scrapeNodes(
       NodeList nodes,
       String stringsFilePath,
-      Map<String, NativeStringInfo> nativeStrings) {
+      Map<String, NativeResourceInfo> nativeStrings,
+      Map<String, Integer> resourceNameToIdMap) {
     for (int i = 0; i < nodes.getLength(); ++i) {
       Node node = nodes.item(i);
       String resourceName = node.getAttributes().getNamedItem("name").getNodeValue();
-      if (!mapResNameToResId.containsKey(resourceName)) {
+      if (!resourceNameToIdMap.containsKey(resourceName)) {
         continue;
       }
-      int resourceId = checkNotNull(mapResNameToResId.get(resourceName)).intValue();
+      int resourceId = checkNotNull(resourceNameToIdMap.get(resourceName)).intValue();
       // Add only new resources (don't overwrite existing ones)
       if (!nativeStrings.containsKey(resourceName)) {
-        nativeStrings.put(resourceName, new NativeStringInfo(resourceId, stringsFilePath));
+        nativeStrings.put(resourceName, new NativeResourceInfo(resourceId, stringsFilePath));
       }
     }
   }
@@ -199,12 +226,12 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
    * combined set of knowledge for each string is kept here. This class is serialized to JSON for
    * the final output file.
    */
-  private static class NativeStringInfo {
+  private static class NativeResourceInfo {
     private String androidResourceId; // assigned by aapt, we got it from R.txt
     private String stringsXmlPath;    // relative path to the strings.xml where this
     // resource originated from
 
-    public NativeStringInfo(Integer androidResourceId, String stringsXmlPath) {
+    public NativeResourceInfo(Integer androidResourceId, String stringsXmlPath) {
       this.androidResourceId = String.format("0x%08X", androidResourceId);
       this.stringsXmlPath = stringsXmlPath;
     }
