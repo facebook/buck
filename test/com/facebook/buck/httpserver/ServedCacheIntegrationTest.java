@@ -389,4 +389,42 @@ public class ServedCacheIntegrationTest {
       secondWebServer.stop();
     }
   }
+
+  @Test
+  public void testStoreAndFetch() throws Exception {
+    webServer = new WebServer(
+        /* port */ 0,
+        projectFilesystem,
+        "/static/",
+        new ObjectMapper());
+    webServer.updateAndStartIfNeeded(Optional.of(dirCache));
+
+    ArtifactCache serverBackedCache = ArtifactCaches.newInstance(
+        createMockLocalHttpCacheConfig(webServer.getPort().get()),
+        buckEventBus,
+        projectFilesystem,
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
+
+    RuleKey ruleKey = new RuleKey("00111222333444");
+    ImmutableMap<String, String> metadata = ImmutableMap.of(
+        "some key",
+        "some value");
+    Path originalDataPath = tmpDir.newFile();
+    String data = "you won't believe this!";
+    projectFilesystem.writeContentsToPath(data, originalDataPath);
+
+    Path fetchedContents = tmpDir.newFile();
+    CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
+
+    serverBackedCache.store(ImmutableSet.of(ruleKey), metadata, originalDataPath);
+
+    cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    assertThat(cacheResult.getType().isSuccess(), Matchers.is(true));
+    assertThat(cacheResult.getMetadata(), Matchers.equalTo(metadata));
+    assertThat(
+        projectFilesystem.readFileIfItExists(fetchedContents).get(),
+        Matchers.equalTo(data));
+  }
 }

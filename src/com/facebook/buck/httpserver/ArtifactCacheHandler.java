@@ -19,6 +19,7 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheBinaryProtocol;
+import com.facebook.buck.artifact_cache.StoreResponseReadResult;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
@@ -30,8 +31,10 @@ import com.google.common.io.ByteSource;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 
 import javax.servlet.ServletException;
@@ -65,8 +68,11 @@ public class ArtifactCacheHandler extends AbstractHandler {
       throws IOException, ServletException {
     try {
       int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-      if (baseRequest.getMethod().equals("GET")) {
+      String method = baseRequest.getMethod();
+      if (method.equals("GET")) {
         status = handleGet(baseRequest, response);
+      } else if (method.equals("PUT")) {
+        status = handlePut(baseRequest, response);
       }
       response.setStatus(status);
     } catch (Exception e) {
@@ -132,5 +138,45 @@ public class ArtifactCacheHandler extends AbstractHandler {
         projectFilesystem.deleteFileAtPathIfExists(temp);
       }
     }
+  }
+
+  private int handlePut(Request baseRequest, HttpServletResponse response) throws IOException {
+    if (!artifactCache.isPresent()) {
+      response.getWriter().write("Serving local cache is disabled for this instance.");
+      return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+    }
+
+    Path temp = null;
+    try {
+      temp = projectFilesystem.createTempFile(
+          BuckConstant.SCRATCH_PATH,
+          "incoming_upload",
+          ".tmp");
+      projectFilesystem.createParentDirs(temp);
+
+      StoreResponseReadResult storeRequest;
+      try (DataInputStream requestInputData = new DataInputStream(baseRequest.getInputStream());
+           OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
+        storeRequest = HttpArtifactCacheBinaryProtocol.readStoreRequest(
+            requestInputData,
+            tempFileOutputStream);
+      }
+
+      if (!storeRequest.getActualHashCode().equals(storeRequest.getExpectedHashCode())) {
+        response.getWriter().write("Checksum mismatch.");
+        return HttpServletResponse.SC_NOT_ACCEPTABLE;
+      }
+
+      artifactCache.get().store(storeRequest.getRuleKeys(), storeRequest.getMetadata(), temp);
+      return HttpServletResponse.SC_ACCEPTED;
+    } catch (InterruptedException e) {
+      response.getWriter().write("Interrupted while serving request.");
+      return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+    } finally {
+      if (temp != null) {
+        projectFilesystem.deleteFileAtPathIfExists(temp);
+      }
+    }
+
   }
 }
