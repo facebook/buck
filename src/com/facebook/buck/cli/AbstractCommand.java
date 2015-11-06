@@ -79,13 +79,18 @@ public abstract class AbstractCommand implements Command {
     // Parse command-line config overrides.
     for (Map.Entry<String, String> entry : configOverrides.entrySet()) {
       List<String> key = Splitter.on('.').limit(2).splitToList(entry.getKey());
+      String value = entry.getValue();
+      if (value == null) {
+        value = "";
+      }
       if (key.size() != 2) {
         throw new HumanReadableException(
             "Invalid config override \"%s=%s\".  Expected \"<section>.<field>=<value>\".",
             entry.getKey(),
-            entry.getValue());
+            value);
       }
-      builder.put(key.get(0), key.get(1), entry.getValue());
+
+      builder.put(key.get(0), key.get(1), value);
     }
     if (numThreads != null) {
       builder.put("build", "threads", String.valueOf(numThreads));

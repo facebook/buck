@@ -23,8 +23,10 @@ import static org.hamcrest.Matchers.containsString;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -73,6 +75,27 @@ public class MainIntegrationTest {
     workspace.runBuckCommand("targets", "--config", "buildfile.includes=//includes.py")
         .assertSuccess();
   }
+
+  @Test
+  public void testConfigRemoval() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "includes_removals", tmp);
+    workspace.setUp();
+    // BUCK file defines `ide` as idea, now lets switch to undefined one!
+    // It should produce exception as we want explicit ide setting.
+    try {
+      workspace.runBuckCommand("project", "--config", "project.ide=");
+    } catch (HumanReadableException e) {
+      assertThat(e.getHumanReadableErrorMessage(),
+          Matchers.stringContainsInOrder(
+              "Please specify ide using --ide option " +
+                  "or set ide in .buckconfig"));
+    } catch (Exception e) {
+      // other exceptions are not expected
+      throw e;
+    }
+  }
+
 
   private String getUsageString() {
     return Joiner.on('\n').join(

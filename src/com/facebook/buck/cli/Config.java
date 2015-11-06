@@ -169,7 +169,11 @@ public class Config {
 
   public Optional<String> getValue(String sectionName, String propertyName) {
     ImmutableMap<String, String> properties = get(sectionName);
-    return Optional.fromNullable(properties.get(propertyName));
+    String value = properties.get(propertyName);
+    if (value != null && value.length() == 0) {
+      value = null;
+    }
+    return Optional.fromNullable(value);
   }
 
   public Optional<Long> getLong(String sectionName, String propertyName) {

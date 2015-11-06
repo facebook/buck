@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.HumanReadableException;
@@ -25,6 +26,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -108,7 +110,8 @@ public class ConfigTest {
         "[cache]",
         "    mode ="));
     // Verify that no exception is thrown when a definition is overridden.
-    new Config(Inis.read(readerA), Inis.read(readerB));
+    Config config = new Config(Inis.read(readerA), Inis.read(readerB));
+    assertThat(config.getValue("cache", "mode"), Matchers.equalToObject(Optional.absent()));
   }
 
   private static enum TestEnum {
