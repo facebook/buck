@@ -33,35 +33,47 @@ public class HangMonitorTest {
 
   @Test
   public void reportContainsCurrentThread() throws Exception {
-    Thread sleepingThread = new Thread("testThread") {
-      @Override
-      public void run() {
-        hangForHangMonitorTestReport();
-      }
-      private void hangForHangMonitorTestReport() {
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException e) {
-          // Ignore.
+    final AtomicBoolean sleepingThreadShouldRun = new AtomicBoolean(true);
+    final SettableFuture<Void> sleepingThreadRunning = SettableFuture.create();
+    try {
+      Thread sleepingThread = new Thread("testThread") {
+        @Override
+        public void run() {
+          hangForHangMonitorTestReport();
         }
-      }
-    };
-    sleepingThread.start();
-    final SettableFuture<String> result = SettableFuture.create();
-    HangMonitor hangMonitor = new HangMonitor(
-        new Function<String, Void>() {
-          @Nullable
-          @Override
-          public Void apply(String input) {
-            result.set(input);
-            return null;
+
+        private void hangForHangMonitorTestReport() {
+          sleepingThreadRunning.set(null);
+          try {
+            while (sleepingThreadShouldRun.get()) {
+              Thread.sleep(1000);
+            }
+          } catch (InterruptedException e) {
+            // Ignore.
           }
-        },
-        new TimeSpan(10, TimeUnit.MILLISECONDS));
-    hangMonitor.runOneIteration();
-    assertThat(result.isDone(), Matchers.is(true));
-    String report = result.get();
-    assertThat(report, Matchers.containsString("hangForHangMonitorTestReport"));
+        }
+      };
+      sleepingThread.start();
+      sleepingThreadRunning.get(1, TimeUnit.SECONDS);
+
+      final SettableFuture<String> result = SettableFuture.create();
+      HangMonitor hangMonitor = new HangMonitor(
+          new Function<String, Void>() {
+            @Nullable
+            @Override
+            public Void apply(String input) {
+              result.set(input);
+              return null;
+            }
+          },
+          new TimeSpan(10, TimeUnit.MILLISECONDS));
+      hangMonitor.runOneIteration();
+      assertThat(result.isDone(), Matchers.is(true));
+      String report = result.get();
+      assertThat(report, Matchers.containsString("hangForHangMonitorTestReport"));
+    } finally {
+      sleepingThreadShouldRun.set(false);
+    }
   }
 
   @Test
