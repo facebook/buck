@@ -63,6 +63,10 @@ public class CxxPreprocessAndCompileTest {
       ImmutableList.of("-fsanitize=address");
   private static final ImmutableList<String> DEFAULT_RULE_FLAGS =
       ImmutableList.of("-O3");
+  private static final ImmutableList<String> DEFAULT_PREPROCESSOR_PLATFORM_FLAGS =
+      ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_PREPROCESOR_RULE_FLAGS =
+      ImmutableList.of("-DTEST");
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
   private static final SourcePath DEFAULT_INPUT = new TestSourcePath("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
@@ -85,7 +89,7 @@ public class CxxPreprocessAndCompileTest {
       CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
 
   @Test
-  public void testThatInputChangesCauseRuleKeyChanges() {
+  public void inputChangesCauseRuleKeyChangesForCompilation() {
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
@@ -107,65 +111,41 @@ public class CxxPreprocessAndCompileTest {
     // Generate a rule key for the defaults.
 
     RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(DEFAULT_RULE_FLAGS),
+            DEFAULT_COMPILER,
+            DEFAULT_PLATFORM_FLAGS,
+            DEFAULT_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_FRAMEWORK_ROOTS,
-            Optional.<SourcePath>absent(),
-            DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
 
     // Verify that changing the compiler causes a rulekey change.
 
     RuleKey compilerChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<Compiler>of(new DefaultCompiler(new HashedFileTool(Paths.get("different")))),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(DEFAULT_RULE_FLAGS),
+            new DefaultCompiler(new HashedFileTool(Paths.get("different"))),
+            DEFAULT_PLATFORM_FLAGS,
+            DEFAULT_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_FRAMEWORK_ROOTS,
-            Optional.<SourcePath>absent(),
-            DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the operation causes a rulekey change.
 
     RuleKey operationChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-            Optional.of(DEFAULT_PREPROCESSOR),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(DEFAULT_RULE_FLAGS),
-            Optional.<Compiler>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
+            DEFAULT_PREPROCESSOR,
+            DEFAULT_PLATFORM_FLAGS,
+            DEFAULT_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -181,41 +161,78 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the platform flags causes a rulekey change.
 
     RuleKey platformFlagsChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.of(DEFAULT_COMPILER),
-            Optional.of(ImmutableList.of("-different")),
-            Optional.of(DEFAULT_RULE_FLAGS),
+            DEFAULT_COMPILER,
+            ImmutableList.of("-different"),
+            DEFAULT_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_FRAMEWORK_ROOTS,
-            Optional.<SourcePath>absent(),
-            DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
     assertNotEquals(defaultRuleKey, platformFlagsChange);
 
     // Verify that changing the rule flags causes a rulekey change.
 
     RuleKey ruleFlagsChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(ImmutableList.of("-other", "flags")),
+            DEFAULT_COMPILER,
+            DEFAULT_PLATFORM_FLAGS,
+            ImmutableList.of("-other", "flags"),
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUT,
+            DEFAULT_INPUT_TYPE,
+            DEFAULT_SANITIZER));
+    assertNotEquals(defaultRuleKey, ruleFlagsChange);
+
+    // Verify that changing the input causes a rulekey change.
+
+    RuleKey inputChange = ruleKeyBuilderFactory.build(
+        CxxPreprocessAndCompile.compile(
+            params,
+            pathResolver,
+            DEFAULT_COMPILER,
+            DEFAULT_PLATFORM_FLAGS,
+            DEFAULT_RULE_FLAGS,
+            DEFAULT_OUTPUT,
+            new TestSourcePath("different"),
+            DEFAULT_INPUT_TYPE,
+            DEFAULT_SANITIZER));
+    assertNotEquals(defaultRuleKey, inputChange);
+  }
+
+  @Test
+  public void inputChangesCauseRuleKeyChangesForPreprocessing() {
+    SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
+    RuleKeyBuilderFactory ruleKeyBuilderFactory =
+        new DefaultRuleKeyBuilderFactory(
+            FakeFileHashCache.createFromStrings(
+                ImmutableMap.<String, String>builder()
+                    .put("preprocessor", Strings.repeat("a", 40))
+                    .put("compiler", Strings.repeat("a", 40))
+                    .put("test.o", Strings.repeat("b", 40))
+                    .put("test.cpp", Strings.repeat("c", 40))
+                    .put("different", Strings.repeat("d", 40))
+                    .put("foo/test.h", Strings.repeat("e", 40))
+                    .put("path/to/a/plugin.so", Strings.repeat("f", 40))
+                    .put("path/to/a/different/plugin.so", Strings.repeat("a0", 40))
+                    .build()),
+            pathResolver);
+
+    // Generate a rule key for the defaults.
+
+    RuleKey defaultRuleKey = ruleKeyBuilderFactory.build(
+        CxxPreprocessAndCompile.preprocess(
+            params,
+            pathResolver,
+            DEFAULT_PREPROCESSOR,
+            DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
+            DEFAULT_PREPROCESOR_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -226,47 +243,17 @@ public class CxxPreprocessAndCompileTest {
             Optional.<SourcePath>absent(),
             DEFAULT_INCLUDES,
             DEFAULT_SANITIZER));
-    assertNotEquals(defaultRuleKey, ruleFlagsChange);
-
-    // Verify that changing the input causes a rulekey change.
-
-    RuleKey inputChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
-            params,
-            pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(DEFAULT_RULE_FLAGS),
-            DEFAULT_OUTPUT,
-            new TestSourcePath("different"),
-            DEFAULT_INPUT_TYPE,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_FRAMEWORK_ROOTS,
-            Optional.<SourcePath>absent(),
-            DEFAULT_INCLUDES,
-            DEFAULT_SANITIZER));
-    assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
     RuleKey includesChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(DEFAULT_RULE_FLAGS),
+            DEFAULT_PREPROCESSOR,
+            DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
+            DEFAULT_PREPROCESOR_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -283,16 +270,12 @@ public class CxxPreprocessAndCompileTest {
     // different mechanism to track header changes.
 
     RuleKey systemIncludesChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(DEFAULT_RULE_FLAGS),
+            DEFAULT_PREPROCESSOR,
+            DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
+            DEFAULT_PREPROCESOR_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -309,16 +292,12 @@ public class CxxPreprocessAndCompileTest {
     // different mechanism to track header changes.
 
     RuleKey headerMapsIncludesChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(DEFAULT_RULE_FLAGS),
+            DEFAULT_PREPROCESSOR,
+            DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
+            DEFAULT_PREPROCESOR_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -334,16 +313,12 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the framework roots causes a rulekey change.
 
     RuleKey frameworkRootsChange = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.of(DEFAULT_COMPILER),
-            Optional.of(DEFAULT_PLATFORM_FLAGS),
-            Optional.of(DEFAULT_RULE_FLAGS),
+            DEFAULT_PREPROCESSOR,
+            DEFAULT_PREPROCESSOR_PLATFORM_FLAGS,
+            DEFAULT_PREPROCESOR_RULE_FLAGS,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -395,16 +370,12 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> ruleFlags1 = ImmutableList.of("-Isomething/bar");
 
     RuleKey ruleKey1 = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-            Optional.of(DEFAULT_PREPROCESSOR),
-            Optional.of(platformFlags1),
-            Optional.of(ruleFlags1),
-            Optional.<Compiler>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
+            DEFAULT_PREPROCESSOR,
+            platformFlags1,
+            ruleFlags1,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -421,16 +392,12 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> ruleFlags2 = ImmutableList.of("-Idifferent/bar");
 
     RuleKey ruleKey2 = ruleKeyBuilderFactory.build(
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-            Optional.of(DEFAULT_PREPROCESSOR),
-            Optional.of(platformFlags2),
-            Optional.of(ruleFlags2),
-            Optional.<Compiler>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
+            DEFAULT_PREPROCESSOR,
+            platformFlags2,
+            ruleFlags2,
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -458,26 +425,17 @@ public class CxxPreprocessAndCompileTest {
     Path depFile = Paths.get("test.o.dep");
     Path input = Paths.get("test.ii");
 
-    CxxPreprocessAndCompile buildRule = new CxxPreprocessAndCompile(
-        params,
-        pathResolver,
-        CxxPreprocessAndCompileStep.Operation.COMPILE,
-        Optional.<Preprocessor>absent(),
-        Optional.<ImmutableList<String>>absent(),
-        Optional.<ImmutableList<String>>absent(),
-        Optional.of(DEFAULT_COMPILER),
-        Optional.of(platformFlags),
-        Optional.of(ruleFlags),
-        output,
-        new TestSourcePath(input.toString()),
-        DEFAULT_INPUT_TYPE,
-        ImmutableSet.<Path>of(),
-        ImmutableSet.<Path>of(),
-        ImmutableSet.<Path>of(),
-        DEFAULT_FRAMEWORK_ROOTS,
-        Optional.<SourcePath>absent(),
-        ImmutableList.of(CxxHeaders.builder().build()),
-        DEFAULT_SANITIZER);
+    CxxPreprocessAndCompile buildRule =
+        CxxPreprocessAndCompile.compile(
+            params,
+            pathResolver,
+            DEFAULT_COMPILER,
+            platformFlags,
+            ruleFlags,
+            output,
+            new TestSourcePath(input.toString()),
+            DEFAULT_INPUT_TYPE,
+            DEFAULT_SANITIZER);
 
     ImmutableList<String> expectedCompileCommand = ImmutableList.<String>builder()
         .add("compiler")
@@ -509,26 +467,23 @@ public class CxxPreprocessAndCompileTest {
     Path input = Paths.get("test.cpp");
     Path prefixHeader = Paths.get("prefix.pch");
 
-    CxxPreprocessAndCompile buildRule = new CxxPreprocessAndCompile(
-        params,
-        pathResolver,
-        CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-        Optional.of(DEFAULT_PREPROCESSOR),
-        Optional.of(platformFlags),
-        Optional.of(ruleFlags),
-        Optional.<Compiler>absent(),
-        Optional.<ImmutableList<String>>absent(),
-        Optional.<ImmutableList<String>>absent(),
-        output,
-        new TestSourcePath(input.toString()),
-        DEFAULT_INPUT_TYPE,
-        ImmutableSet.<Path>of(),
-        ImmutableSet.<Path>of(),
-        ImmutableSet.<Path>of(),
-        DEFAULT_FRAMEWORK_ROOTS,
-        Optional.<SourcePath>of(new TestSourcePath(prefixHeader.toString())),
-        ImmutableList.of(CxxHeaders.builder().build()),
-        DEFAULT_SANITIZER);
+    CxxPreprocessAndCompile buildRule =
+        CxxPreprocessAndCompile.preprocess(
+            params,
+            pathResolver,
+            DEFAULT_PREPROCESSOR,
+            platformFlags,
+            ruleFlags,
+            output,
+            new TestSourcePath(input.toString()),
+            DEFAULT_INPUT_TYPE,
+            ImmutableSet.<Path>of(),
+            ImmutableSet.<Path>of(),
+            ImmutableSet.<Path>of(),
+            DEFAULT_FRAMEWORK_ROOTS,
+            Optional.<SourcePath>of(new TestSourcePath(prefixHeader.toString())),
+            ImmutableList.of(CxxHeaders.builder().build()),
+            DEFAULT_SANITIZER);
 
     // Verify it uses the expected command.
     ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
@@ -570,16 +525,12 @@ public class CxxPreprocessAndCompileTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     CxxPreprocessAndCompile cxxPreprocess =
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-            Optional.<Preprocessor>of(new DefaultPreprocessor(preprocessorTool)),
-            Optional.of(ImmutableList.<String>of()),
-            Optional.of(ImmutableList.<String>of()),
-            Optional.<Compiler>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
+            new DefaultPreprocessor(preprocessorTool),
+            ImmutableList.<String>of(),
+            ImmutableList.<String>of(),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
@@ -595,25 +546,15 @@ public class CxxPreprocessAndCompileTest {
         Matchers.hasItem(preprocessor));
 
     CxxPreprocessAndCompile cxxCompile =
-        new CxxPreprocessAndCompile(
+        CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
-            CxxPreprocessAndCompileStep.Operation.COMPILE,
-            Optional.<Preprocessor>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<Compiler>of(new DefaultCompiler(compilerTool)),
-            Optional.of(ImmutableList.<String>of()),
-            Optional.of(ImmutableList.<String>of()),
+            new DefaultCompiler(compilerTool),
+            ImmutableList.<String>of(),
+            ImmutableList.<String>of(),
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_SYSTEM_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_FRAMEWORK_ROOTS,
-            Optional.<SourcePath>absent(),
-            DEFAULT_INCLUDES,
             DEFAULT_SANITIZER);
     assertThat(
         cxxCompile.getInputsAfterBuildingLocally(),
