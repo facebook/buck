@@ -28,6 +28,17 @@ Optionally the generated bundle can also be signed using specified provisioning 
 {/call}
 
 {call buck.arg}
+  {param name : 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  A list of dependencies of this bundle as build targets. You can embed application
+  extensions by specifying the extension's bundle target.  To include a WatchKit app, append the
+  flavor <code>#watch</code> to the target specification.  Buck will automatically substitute the appropriate
+  platform flavor (either <code>watchsimulator</code> or <code>watchos</code>) based on the parent.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'product_name' /}
   {param desc}
   The name of the resulting bundle and binary. The setting behaves like PRODUCT_NAME Xcode build setting.
@@ -76,6 +87,34 @@ apple_bundle(
   info_plist = 'Info.plist',
 )
 </pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+# iOS app with embedded WatchOS 2.0 app/extension
+apple_bundle(
+  name = 'DemoWatchAppExtension',
+  binary = ':DemoWatchAppExtensionBinary',
+  extension = 'appex',
+  info_plist = 'WatchExtension/Resources/Info.plist',
+)
+
+apple_bundle(
+  name = 'DemoWatchApp',
+  binary = ':DemoWatchAppBinary',
+  deps = [':DemoWatchAppResources', ':DemoWatchAppExtension'],
+  extension = 'app',
+  info_plist = 'WatchApplication/Info.plist',
+)
+
+apple_bundle(
+  name = 'DemoApp',
+  binary = ':DemoAppBinary',
+  deps = [':DemoWatchApp#watch'],
+  extension = 'app',
+  info_plist = 'Info.plist',
+)
+</pre>{/literal}
+
+
 {/param} // examples
 {/call} // buck.rule
 
