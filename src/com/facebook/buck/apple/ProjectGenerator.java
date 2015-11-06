@@ -137,6 +137,7 @@ public class ProjectGenerator {
 
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
   private static final String BUILD_WITH_BUCK_TEMPLATE = "build-with-buck.st";
+  private static final String FIX_UUID_TEMPLATE = "fix-uuid.st";
   private static final String FIX_UUID_PY_RESOURCE = "fix_uuid.py";
   public static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   public static final String XCODE_BUILD_SCRIPT_CONFIG_ARG_NAME = "--config";
@@ -350,6 +351,13 @@ public class ProjectGenerator {
     return headerSymlinkTrees;
   }
 
+  @VisibleForTesting
+  static String getFixUUIDScriptPath() {
+    return Resources.getResource(
+        ProjectGenerator.class,
+        FIX_UUID_PY_RESOURCE).getPath();
+  }
+
   public Path getProjectPath() {
     return projectPath;
   }
@@ -432,65 +440,23 @@ public class ProjectGenerator {
   }
 
   private void generateBuildWithBuckTarget(TargetNode<?> targetNode) throws IOException {
-    CxxPlatform cxxPlatform;
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(targetNode.getBuildTarget().getFlavors());
-    try {
-      cxxPlatform = cxxPlatforms
-          .getValue(flavors)
-          .or(defaultCxxPlatform);
-    } catch (FlavorDomainException e) {
-      throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
-    }
-
     final BuildTarget buildTarget = targetNode.getBuildTarget();
 
     String buckTargetProductName = getXcodeTargetName(buildTarget) + BUILD_WITH_BUCK_POSTFIX;
 
-    Optional<String> productName = getProductNameForTargetNode(targetNode);
-    String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
-    Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName);
-    Path dsymDestination = getScratchPathForDsymBundle(targetToBuildWithBuck.get(), binaryName);
+    PBXAggregateTarget buildWithBuckTarget = new PBXAggregateTarget(buckTargetProductName);
+    buildWithBuckTarget.setProductName(buckTargetProductName);
 
-    PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
-    ST template = new ST(Resources.toString(
-        Resources.getResource(ProjectGenerator.class, BUILD_WITH_BUCK_TEMPLATE),
-        Charsets.UTF_8));
+    PBXShellScriptBuildPhase buildShellScriptBuildPhase = new PBXShellScriptBuildPhase();
+    buildShellScriptBuildPhase.setShellScript(getBuildWithBuckShellScript(targetNode));
+    buildWithBuckTarget.getBuildPhases().add(buildShellScriptBuildPhase);
 
-    Path pathToBuck = executableFinder.getExecutable(Paths.get("buck"), environment);
-    String compDir = cxxPlatform.getDebugPathSanitizer().getCompilationDirectory();
-    // Use the hostname for padding instead of the directory, this way the directory matches without
-    // having to resolve it.
-    String sourceDir = Strings.padStart(
-        ":" + projectFilesystem.getRootPath().toString(),
-        compDir.length(),
-        'f');
-    String buildFlags = getBuildFlags();
-    String escapedBuildTarget = Escaper.escapeAsBashString(buildTarget.getFullyQualifiedName());
-    Path resolvedBundleSource = projectFilesystem.resolve(
-        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "app"));
-    Path resolvedDsymSource = projectFilesystem.resolve(
-        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "dSYM"));
-    Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
-    Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
-    String fixUuidScriptPath = Resources.getResource(
-        ProjectGenerator.class,
-        FIX_UUID_PY_RESOURCE).getPath();
-
-    template.add("repo_root", projectFilesystem.getRootPath());
-    template.add("path_to_buck", pathToBuck);
-    template.add("comp_dir", compDir);
-    template.add("source_dir", sourceDir);
-    template.add("build_flags", buildFlags);
-    template.add("escaped_build_target", escapedBuildTarget);
-    template.add("resolved_bundle_source", resolvedBundleSource);
-    template.add("resolved_bundle_destination", resolvedBundleDestination);
-    template.add("resolved_bundle_destination_parent", resolvedBundleDestination.getParent());
-    template.add("resolved_dsym_source", resolvedDsymSource);
-    template.add("resolved_dsym_destination", resolvedDsymDestination);
-    template.add("binary_name", binaryName);
-    template.add("path_to_fix_uuid_script", fixUuidScriptPath);
-
-    shellScriptBuildPhase.setShellScript(template.render());
+    // Only add a shell script for fixing UUIDs if it is an AppleBundle
+    if (targetNode.getType().equals(AppleBundleDescription.TYPE)) {
+      PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = new PBXShellScriptBuildPhase();
+      fixUUIDShellScriptBuildPhase.setShellScript(getFixUUIDShellScript(targetNode));
+      buildWithBuckTarget.getBuildPhases().add(fixUUIDShellScriptBuildPhase);
+    }
 
     TargetNode<CxxLibraryDescription.Arg> node = getAppleNativeNode(targetGraph, targetNode).get();
     ImmutableMap<String, ImmutableMap<String, String>> configs =
@@ -521,9 +487,6 @@ public class ProjectGenerator {
       configuration.setBuildSettings(inlineSettings);
     }
 
-    PBXAggregateTarget buildWithBuckTarget = new PBXAggregateTarget(buckTargetProductName);
-    buildWithBuckTarget.setProductName(buckTargetProductName);
-    buildWithBuckTarget.getBuildPhases().add(shellScriptBuildPhase);
     buildWithBuckTarget.setBuildConfigurationList(configurationList);
     project.getTargets().add(buildWithBuckTarget);
 
@@ -552,6 +515,84 @@ public class ProjectGenerator {
       flags.add(1, XCODE_BUILD_SCRIPT_CONFIG_ARG_VALUE);
     }
     return Joiner.on(' ').join(flags);
+  }
+
+  private String getBuildWithBuckShellScript(TargetNode<?> targetNode) {
+    ST template;
+    try {
+      template = new ST(Resources.toString(
+          Resources.getResource(ProjectGenerator.class, BUILD_WITH_BUCK_TEMPLATE),
+          Charsets.UTF_8));
+    } catch (IOException e) {
+      throw new RuntimeException(
+          "There was an error loading '" + BUILD_WITH_BUCK_TEMPLATE + "' template", e);
+    }
+
+    Path pathToBuck = executableFinder.getExecutable(Paths.get("buck"), environment);
+
+    String buildFlags = getBuildFlags();
+    String escapedBuildTarget = Escaper.escapeAsBashString(
+        targetNode.getBuildTarget().getFullyQualifiedName());
+
+    template.add("repo_root", projectFilesystem.getRootPath());
+    template.add("path_to_buck", pathToBuck);
+    template.add("build_flags", buildFlags);
+    template.add("escaped_build_target", escapedBuildTarget);
+
+    return template.render();
+  }
+
+  private String getFixUUIDShellScript(TargetNode<?> targetNode) {
+    ST template;
+    try {
+      template = new ST(Resources.toString(
+          Resources.getResource(ProjectGenerator.class, FIX_UUID_TEMPLATE), Charsets.UTF_8));
+    } catch (IOException e) {
+      throw new RuntimeException(
+          "There was an error loading '" + FIX_UUID_TEMPLATE + "' template", e);
+    }
+
+    CxxPlatform cxxPlatform;
+    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(targetNode.getBuildTarget().getFlavors());
+    try {
+      cxxPlatform = cxxPlatforms
+          .getValue(flavors)
+          .or(defaultCxxPlatform);
+    } catch (FlavorDomainException e) {
+      throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
+    }
+    String compDir = cxxPlatform.getDebugPathSanitizer().getCompilationDirectory();
+    // Use the hostname for padding instead of the directory, this way the directory matches without
+    // having to resolve it.
+    String sourceDir = Strings.padStart(
+        ":" + projectFilesystem.getRootPath().toString(),
+        compDir.length(),
+        'f');
+
+    Optional<String> productName = getProductNameForTargetNode(targetNode);
+    String binaryName = AppleBundle.getBinaryName(targetToBuildWithBuck.get(), productName);
+    Path bundleDestination = getScratchPathForAppBundle(targetToBuildWithBuck.get(), binaryName);
+    Path dsymDestination = getScratchPathForDsymBundle(targetToBuildWithBuck.get(), binaryName);
+
+    Path resolvedBundleSource = projectFilesystem.resolve(
+        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "app"));
+    Path resolvedDsymSource = projectFilesystem.resolve(
+        AppleBundle.getBundleRoot(targetToBuildWithBuck.get(), binaryName, "dSYM"));
+    Path resolvedBundleDestination = projectFilesystem.resolve(bundleDestination);
+    Path resolvedDsymDestination = projectFilesystem.resolve(dsymDestination);
+    String fixUUIDScriptPath = getFixUUIDScriptPath();
+
+    template.add("comp_dir", compDir);
+    template.add("source_dir", sourceDir);
+    template.add("resolved_bundle_source", resolvedBundleSource);
+    template.add("resolved_bundle_destination", resolvedBundleDestination);
+    template.add("resolved_bundle_destination_parent", resolvedBundleDestination.getParent());
+    template.add("resolved_dsym_source", resolvedDsymSource);
+    template.add("resolved_dsym_destination", resolvedDsymDestination);
+    template.add("binary_name", binaryName);
+    template.add("path_to_fix_uuid_script", fixUUIDScriptPath);
+
+    return template.render();
   }
 
   static Path getScratchPathForAppBundle(BuildTarget targetToBuildWithBuck, String binaryName) {

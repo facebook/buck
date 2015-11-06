@@ -3215,7 +3215,77 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void aggregateTargetForBuildWithBuck() throws IOException {
+  public void aggregateTargetForBundleForBuildWithBuck() throws IOException {
+    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("buck"),
+        ImmutableMap.<String, String>of());
+    assumeThat(buck.isPresent(), is(true));
+    BuildTarget binaryTarget = BuildTarget.builder(rootPath, "//foo", "binary").build();
+    BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
+    TargetNode<?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setBinary(binaryTarget)
+        .build();
+
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(bundleNode);
+    ProjectGenerator projectGenerator = new ProjectGenerator(
+        TargetGraphFactory.newInstance(nodes),
+        FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
+        projectFilesystem,
+        OUTPUT_DIRECTORY,
+        PROJECT_NAME,
+        "BUCK",
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        Optional.of(bundleTarget),
+        ImmutableList.of("--flag", "value with spaces"),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        Functions.<Path>constant(null),
+        getFakeBuckEventBus(),
+        false);
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget buildWithBuckTarget = null;
+    for (PBXTarget target : projectGenerator.getGeneratedProject().getTargets()) {
+      if (target.getProductName() != null &&
+          target.getProductName().endsWith("-Buck")) {
+        buildWithBuckTarget = target;
+      }
+    }
+    assertThat(buildWithBuckTarget, is(notNullValue()));
+
+    assertHasConfigurations(buildWithBuckTarget, "Debug");
+    assertKeepsConfigurationsInMainGroup(
+        projectGenerator.getGeneratedProject(),
+        buildWithBuckTarget);
+
+    assertEquals(
+        "Should have exact number of build phases",
+        2,
+        buildWithBuckTarget.getBuildPhases().size());
+    PBXBuildPhase buildPhase = Iterables.get(buildWithBuckTarget.getBuildPhases(), 0);
+    assertThat(buildPhase, instanceOf(PBXShellScriptBuildPhase.class));
+    PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        containsString(
+            "buck build --report-absolute-paths --flag 'value with spaces' " +
+                binaryTarget.getFullyQualifiedName()));
+
+    PBXBuildPhase fixUUIDPhase = Iterables.getLast(buildWithBuckTarget.getBuildPhases());
+    assertThat(fixUUIDPhase, instanceOf(PBXShellScriptBuildPhase.class));
+    PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
+    String fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath();
+    assertThat(
+        fixUUIDShellScriptBuildPhase.getShellScript(),
+        containsString(
+            "python " + fixUUIDScriptPath + " --verbose"));
+  }
+
+  @Test
+  public void aggregateTargetForBinaryForBuildWithBuck() throws IOException {
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
         ImmutableMap.<String, String>of());
@@ -3281,6 +3351,75 @@ public class ProjectGeneratorTest {
         containsString(
             "buck build --report-absolute-paths --flag 'value with spaces' " +
                 binaryTarget.getFullyQualifiedName()));
+  }
+
+  @Test
+  public void aggregateTargetForLibraryForBuildWithBuck() throws IOException {
+    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
+        Paths.get("buck"),
+        ImmutableMap.<String, String>of());
+    assumeThat(buck.isPresent(), is(true));
+    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "library").build();
+    TargetNode<?> binaryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .setSrcs(
+            Optional.of(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(
+                        new TestSourcePath("foo.m"), ImmutableList.of("-foo")))))
+        .build();
+
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(binaryNode);
+    ProjectGenerator projectGenerator = new ProjectGenerator(
+        TargetGraphFactory.newInstance(nodes),
+        FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
+        projectFilesystem,
+        OUTPUT_DIRECTORY,
+        PROJECT_NAME,
+        "BUCK",
+        ImmutableSet.<ProjectGenerator.Option>of(),
+        Optional.of(libraryTarget),
+        ImmutableList.of("--flag", "value with spaces"),
+        new AlwaysFoundExecutableFinder(),
+        ImmutableMap.<String, String>of(),
+        PLATFORMS,
+        DEFAULT_PLATFORM,
+        Functions.<Path>constant(null),
+        getFakeBuckEventBus(),
+        false);
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget buildWithBuckTarget = null;
+    for (PBXTarget target : projectGenerator.getGeneratedProject().getTargets()) {
+      if (target.getProductName() != null &&
+          target.getProductName().endsWith("-Buck")) {
+        buildWithBuckTarget = target;
+      }
+    }
+    assertThat(buildWithBuckTarget, is(notNullValue()));
+
+    assertHasConfigurations(buildWithBuckTarget, "Debug");
+    assertKeepsConfigurationsInMainGroup(
+        projectGenerator.getGeneratedProject(),
+        buildWithBuckTarget);
+
+    assertEquals(
+        "Should have exact number of build phases",
+        1,
+        buildWithBuckTarget.getBuildPhases().size());
+    PBXBuildPhase buildPhase = Iterables.getOnlyElement(buildWithBuckTarget.getBuildPhases());
+    assertThat(buildPhase, instanceOf(PBXShellScriptBuildPhase.class));
+    PBXShellScriptBuildPhase shellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
+    assertThat(
+        shellScriptBuildPhase.getShellScript(),
+        containsString(
+            "buck build --report-absolute-paths --flag 'value with spaces' " +
+                libraryTarget.getFullyQualifiedName()));
   }
 
   @Test
