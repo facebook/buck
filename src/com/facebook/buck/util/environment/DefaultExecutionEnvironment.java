@@ -16,11 +16,14 @@
 package com.facebook.buck.util.environment;
 
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.network.HostnameFetching;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.sun.management.OperatingSystemMXBean;
 
 import java.io.IOException;
@@ -88,16 +91,27 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
     // TODO(royw): Support Linux and Windows.
     if (getPlatform().equals(Platform.MACOS)) {
       try {
-        ProcessExecutor.Result allNetworksResult = this.processExecutor.execute(
-            Runtime.getRuntime().exec("networksetup -listallhardwareports"));
+        ProcessExecutor.Result allNetworksResult = this.processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder()
+                .addCommand("networksetup", "-listallhardwareports")
+                .build(),
+            /* options */ ImmutableSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
+            /* stdin */ Optional.<String>absent(),
+            /* timeOutMs */ Optional.<Long>absent(),
+            /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
 
         if (allNetworksResult.getExitCode() == 0) {
           String allNetworks = allNetworksResult.getStdout().get();
           Optional<String> wifiNetwork = parseNetworksetupOutputForWifi(allNetworks);
           if (wifiNetwork.isPresent()) {
-            ProcessExecutor.Result wifiNameResult = this.processExecutor.execute(
-                Runtime.getRuntime().exec("networksetup -getairportnetwork " + wifiNetwork.get()));
-
+            ProcessExecutor.Result wifiNameResult = this.processExecutor.launchAndExecute(
+                ProcessExecutorParams.builder()
+                    .addCommand("networksetup", "-getairportnetwork", wifiNetwork.get())
+                    .build(),
+                /* options */ ImmutableSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
+                /* stdin */ Optional.<String>absent(),
+                /* timeOutMs */ Optional.<Long>absent(),
+                /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
             if (wifiNameResult.getExitCode() == 0) {
               return parseWifiSsid(wifiNameResult.getStdout().get());
             }
