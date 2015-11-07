@@ -35,7 +35,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeThat;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
@@ -65,10 +64,9 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.halide.HalideLibraryBuilder;
+import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryBuilder;
 import com.facebook.buck.js.ReactNativeBuckConfig;
@@ -3215,19 +3213,26 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void aggregateTargetForBundleForBuildWithBuck() throws IOException {
-    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("buck"),
-        ImmutableMap.<String, String>of());
-    assumeThat(buck.isPresent(), is(true));
+  public void testAggregateTargetForBundleForBuildWithBuck() throws IOException {
     BuildTarget binaryTarget = BuildTarget.builder(rootPath, "//foo", "binary").build();
+    TargetNode<?> binaryNode = AppleBinaryBuilder
+        .createBuilder(binaryTarget)
+        .setConfigs(
+            Optional.of(
+                ImmutableSortedMap.of(
+                    "Debug",
+                    ImmutableMap.<String, String>of())))
+        .build();
+
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
     TargetNode<?> bundleNode = AppleBundleBuilder
         .createBuilder(bundleTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setInfoPlist(new TestSourcePath("Info.plist"))
         .setBinary(binaryTarget)
         .build();
 
-    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(bundleNode);
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(bundleNode, binaryNode);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         TargetGraphFactory.newInstance(nodes),
         FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
@@ -3272,11 +3277,11 @@ public class ProjectGeneratorTest {
         shellScriptBuildPhase.getShellScript(),
         containsString(
             "buck build --report-absolute-paths --flag 'value with spaces' " +
-                binaryTarget.getFullyQualifiedName()));
+                bundleTarget.getFullyQualifiedName()));
 
     PBXBuildPhase fixUUIDPhase = Iterables.getLast(buildWithBuckTarget.getBuildPhases());
     assertThat(fixUUIDPhase, instanceOf(PBXShellScriptBuildPhase.class));
-    PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = (PBXShellScriptBuildPhase) buildPhase;
+    PBXShellScriptBuildPhase fixUUIDShellScriptBuildPhase = (PBXShellScriptBuildPhase) fixUUIDPhase;
     String fixUUIDScriptPath = ProjectGenerator.getFixUUIDScriptPath();
     assertThat(
         fixUUIDShellScriptBuildPhase.getShellScript(),
@@ -3285,11 +3290,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void aggregateTargetForBinaryForBuildWithBuck() throws IOException {
-    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("buck"),
-        ImmutableMap.<String, String>of());
-    assumeThat(buck.isPresent(), is(true));
+  public void testAggregateTargetForBinaryForBuildWithBuck() throws IOException {
     BuildTarget binaryTarget = BuildTarget.builder(rootPath, "//foo", "binary").build();
     TargetNode<?> binaryNode = AppleBinaryBuilder
         .createBuilder(binaryTarget)
@@ -3354,11 +3355,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void aggregateTargetForLibraryForBuildWithBuck() throws IOException {
-    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("buck"),
-        ImmutableMap.<String, String>of());
-    assumeThat(buck.isPresent(), is(true));
+  public void testAggregateTargetForLibraryForBuildWithBuck() throws IOException {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "library").build();
     TargetNode<?> binaryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
