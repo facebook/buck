@@ -34,6 +34,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
@@ -55,9 +56,11 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import org.stringtemplate.v4.ST;
@@ -95,6 +98,8 @@ public class NewNativeTargetProjectMutator {
   private Path productOutputPath = Paths.get("");
   private String productName = "";
   private String targetName = "";
+  private ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
+      ImmutableMap.of();
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
@@ -139,6 +144,12 @@ public class NewNativeTargetProjectMutator {
 
   public NewNativeTargetProjectMutator setTargetName(String targetName) {
     this.targetName = targetName;
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setLangPreprocessorFlags(
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
+    this.langPreprocessorFlags = langPreprocessorFlags;
     return this;
   }
 
@@ -388,15 +399,27 @@ public class NewNativeTargetProjectMutator {
       SourceWithFlags sourceWithFlags,
       PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase) {
+    SourceTreePath sourceTreePath = new SourceTreePath(
+        PBXReference.SourceTree.SOURCE_ROOT,
+        pathRelativizer.outputDirToRootRelative(
+            sourcePathResolver.apply(sourceWithFlags.getSourcePath())),
+        Optional.<String>absent());
     PBXFileReference fileReference = sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputDirToRootRelative(
-                sourcePathResolver.apply(sourceWithFlags.getSourcePath())),
-            Optional.<String>absent()));
+        sourceTreePath);
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
-    List<String> customFlags = sourceWithFlags.getFlags();
+
+    ImmutableList<String> customLangPreprocessorFlags = ImmutableList.of();
+    Optional<CxxSource.Type> sourceType = CxxSource.Type.fromExtension(
+        Files.getFileExtension(sourceTreePath.toString()));
+    if (sourceType.isPresent() && langPreprocessorFlags.containsKey(sourceType.get())) {
+      customLangPreprocessorFlags = langPreprocessorFlags.get(sourceType.get());
+    }
+
+    ImmutableList<String> customFlags = ImmutableList.copyOf(
+        Iterables.concat(
+            customLangPreprocessorFlags,
+            sourceWithFlags.getFlags()));
     if (!customFlags.isEmpty()) {
       NSDictionary settings = new NSDictionary();
       settings.put("COMPILER_FLAGS", Joiner.on(' ').join(customFlags));

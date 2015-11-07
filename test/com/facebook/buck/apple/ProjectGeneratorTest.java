@@ -3427,8 +3427,13 @@ public class ProjectGeneratorTest {
         .setLangPreprocessorFlags(
             Optional.of(
                 ImmutableMap.of(
+                    CxxSource.Type.C, ImmutableList.of("-std=gnu11"),
+                    CxxSource.Type.OBJC, ImmutableList.of("-std=gnu11", "-fobjc-arc"),
                     CxxSource.Type.CXX, ImmutableList.of("-std=c++11", "-stdlib=libc++"),
-                    CxxSource.Type.OBJCXX, ImmutableList.of("-std=c++11", "-stdlib=libc++"))))
+                    CxxSource.Type.OBJCXX, ImmutableList.of(
+                        "-std=c++11",
+                        "-stdlib=libc++",
+                        "-fobjc-arc"))))
         .setConfigs(
             Optional.of(
                 ImmutableSortedMap.of(
@@ -3436,7 +3441,12 @@ public class ProjectGeneratorTest {
                     ImmutableMap.<String, String>of())))
         .setSrcs(
             Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo.mm")))))
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(new TestSourcePath("foo1.m")),
+                    SourceWithFlags.of(new TestSourcePath("foo2.mm")),
+                    SourceWithFlags.of(new TestSourcePath("foo3.c")),
+                    SourceWithFlags.of(new TestSourcePath("foo4.cc"))
+                    )))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -3448,8 +3458,23 @@ public class ProjectGeneratorTest {
         projectGenerator.getGeneratedProject(),
         "//foo:lib");
 
-    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -std=c++11 -stdlib=libc++", settings.get("OTHER_CPLUSPLUSFLAGS"));
+    PBXSourcesBuildPhase sourcesBuildPhase =
+        getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
+
+    ImmutableMap<String, String> expected = ImmutableMap.of(
+        "foo1.m", "-std=gnu11 -fobjc-arc",
+        "foo2.mm", "-std=c++11 -stdlib=libc++ -fobjc-arc",
+        "foo3.c", "-std=gnu11",
+        "foo4.cc", "-std=c++11 -stdlib=libc++"
+    );
+
+    for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
+      String fileName = file.getFileRef().getName();
+      NSDictionary buildFileSettings = file.getSettings().get();
+      NSString compilerFlags = (NSString) buildFileSettings.get("COMPILER_FLAGS");
+      assertNotNull("Build file settings should have COMPILER_FLAGS entry", compilerFlags);
+      assertEquals(compilerFlags.toString(), expected.get(fileName));
+    }
   }
 
   @Test
@@ -3484,36 +3509,6 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> releaseSettings = ProjectGeneratorTestUtils.getBuildSettings(
         projectFilesystem, buildTarget, target, "Release");
     assertThat(debugSettings, Matchers.equalTo(releaseSettings));
-  }
-
-  @Test
-  public void unsupportedLangPreprocessorFlagsThrows() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "//foo:lib: Xcode project generation does not support specified lang_preprocessor_flags " +
-        "keys: [ASSEMBLER]");
-
-    BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
-    TargetNode<?> node = AppleLibraryBuilder
-        .createBuilder(buildTarget)
-        .setLangPreprocessorFlags(
-            Optional.of(
-                ImmutableMap.of(
-                    CxxSource.Type.ASSEMBLER, ImmutableList.of("-Xawesome"))))
-        .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.<String, String>of())))
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo.mm")))))
-        .build();
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.<TargetNode<?>>of(node));
-
-    projectGenerator.createXcodeProjects();
   }
 
   @Test

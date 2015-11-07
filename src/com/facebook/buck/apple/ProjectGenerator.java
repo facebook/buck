@@ -204,9 +204,6 @@ public class ProjectGenerator {
         }
       };
 
-  private static final ImmutableSet<CxxSource.Type> SUPPORTED_LANG_PREPROCESSOR_FLAG_TYPES =
-      ImmutableSet.of(CxxSource.Type.CXX, CxxSource.Type.OBJCXX);
-
   private final Function<SourcePath, Path> sourcePathResolver;
   private final TargetGraph targetGraph;
   private final ProjectFilesystem projectFilesystem;
@@ -931,8 +928,12 @@ public class ProjectGenerator {
     ImmutableSet<SourcePath> exportedHeaders =
         ImmutableSet.copyOf(getHeaderSourcePaths(arg.exportedHeaders));
     ImmutableSet<SourcePath> headers = ImmutableSet.copyOf(getHeaderSourcePaths(arg.headers));
+    ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
+        targetNode.getConstructorArg().langPreprocessorFlags.get();
+
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
+        .setLangPreprocessorFlags(langPreprocessorFlags)
         .setProduct(
             productType,
             buildTargetName,
@@ -1126,36 +1127,6 @@ public class ProjectGenerator {
                                 collectRecursiveExportedLinkerFlags(
                                     ImmutableList.of(targetNode)))),
                         Escaper.BASH_ESCAPER)));
-
-    ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
-        targetNode.getConstructorArg().langPreprocessorFlags.get();
-
-    Sets.SetView<CxxSource.Type> unsupportedLangPreprocessorFlags =
-        Sets.difference(langPreprocessorFlags.keySet(), SUPPORTED_LANG_PREPROCESSOR_FLAG_TYPES);
-
-    if (!unsupportedLangPreprocessorFlags.isEmpty()) {
-      throw new HumanReadableException(
-          "%s: Xcode project generation does not support specified lang_preprocessor_flags keys: " +
-              "%s",
-          buildTarget,
-          unsupportedLangPreprocessorFlags);
-    }
-
-    ImmutableSet.Builder<String> allCxxFlagsBuilder = ImmutableSet.builder();
-    ImmutableList<String> cxxFlags = langPreprocessorFlags.get(CxxSource.Type.CXX);
-    if (cxxFlags != null) {
-      allCxxFlagsBuilder.addAll(cxxFlags);
-    }
-    ImmutableList<String> objcxxFlags = langPreprocessorFlags.get(CxxSource.Type.OBJCXX);
-    if (objcxxFlags != null) {
-      allCxxFlagsBuilder.addAll(objcxxFlags);
-    }
-    ImmutableSet<String> allCxxFlags = allCxxFlagsBuilder.build();
-    if (!allCxxFlags.isEmpty()) {
-      appendConfigsBuilder.put(
-          "OTHER_CPLUSPLUSFLAGS",
-          Joiner.on(' ').join(allCxxFlags));
-    }
 
     ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
 
