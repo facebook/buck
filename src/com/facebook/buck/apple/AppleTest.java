@@ -312,6 +312,7 @@ public class AppleTest
       XctestRunTestsStep xctestStep =
           new XctestRunTestsStep(
               getProjectFilesystem(),
+              testRunningTool.getEnvironment(getResolver()),
               testRunningTool.getCommandPrefix(getResolver()),
               (testBundleExtension.equals("xctest") ? "-XCTest" : "-SenTest"),
               resolvedTestBundleDirectory,

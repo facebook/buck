@@ -45,6 +45,7 @@ public class XctestRunTestsStep implements Step {
   private static final Logger LOG = Logger.get(XctestRunTestsStep.class);
 
   private final ProjectFilesystem filesystem;
+  private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> xctest;
   private final String testArgument; // -XCTest or -SenTest
   private final Path logicTestBundlePath;
@@ -53,12 +54,14 @@ public class XctestRunTestsStep implements Step {
 
   public XctestRunTestsStep(
       ProjectFilesystem filesystem,
+      ImmutableMap<String, String> environment,
       ImmutableList<String> xctest,
       String testArgument,
       Path logicTestBundlePath,
       Path outputPath,
       Supplier<Optional<Path>> xcodeDeveloperDirSupplier) {
     this.filesystem = filesystem;
+    this.environment = environment;
     this.xctest = xctest;
     this.testArgument = testArgument;
     this.logicTestBundlePath = logicTestBundlePath;
@@ -89,6 +92,7 @@ public class XctestRunTestsStep implements Step {
     } else {
       throw new RuntimeException("Cannot determine xcode developer dir");
     }
+    environment.putAll(this.environment);
     // if (appTestHostAppPath.isPresent()) {
     //   TODO(grp): Pass XCBundleInjection environment.
     // }
