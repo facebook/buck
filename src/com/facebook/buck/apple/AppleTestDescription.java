@@ -419,7 +419,10 @@ public class AppleTestDescription implements
         args.contacts.get(),
         args.labels.get(),
         args.getRunTestSeparately(),
-        xcodeDeveloperDirectorySupplier);
+        xcodeDeveloperDirectorySupplier,
+        appleConfig.getTestLogDirectoryEnvironmentVariable(),
+        appleConfig.getTestLogLevelEnvironmentVariable(),
+        appleConfig.getTestLogLevel());
   }
 
   @Override

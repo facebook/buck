@@ -37,6 +37,10 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public class AppleConfig {
+  private static final String DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE = "FB_LOG_DIRECTORY";
+  private static final String DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE = "FB_LOG_LEVEL";
+  private static final String DEFAULT_TEST_LOG_LEVEL = "debug";
+
   private static final Logger LOG = Logger.get(AppleConfig.class);
 
   private final BuckConfig delegate;
@@ -204,5 +208,26 @@ public class AppleConfig {
         "apple",
         "attempt_to_detect_best_platform",
         false);
+  }
+
+  public String getTestLogDirectoryEnvironmentVariable() {
+    return delegate.getValue(
+        "apple",
+        "test_log_directory_environment_variable")
+        .or(DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE);
+  }
+
+  public String getTestLogLevelEnvironmentVariable() {
+    return delegate.getValue(
+        "apple",
+        "test_log_level_environment_variable")
+        .or(DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE);
+  }
+
+  public String getTestLogLevel() {
+    return delegate.getValue(
+        "apple",
+        "test_log_level")
+        .or(DEFAULT_TEST_LOG_LEVEL);
   }
 }

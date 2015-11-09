@@ -67,6 +67,7 @@ public class XctoolRunTestsStep implements Step {
   private static final Semaphore stutterLock = new Semaphore(1);
   private static final ScheduledExecutorService stutterTimeoutExecutorService =
       Executors.newSingleThreadScheduledExecutor();
+  private static final String XCTOOL_ENV_VARIABLE_PREFIX = "XCTOOL_TEST_ENV_";
 
   private final ProjectFilesystem filesystem;
 
@@ -82,6 +83,10 @@ public class XctoolRunTestsStep implements Step {
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
   private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
   private final TestSelectorList testSelectorList;
+  private final Optional<String> logDirectoryEnvironmentVariable;
+  private final Optional<Path> logDirectory;
+  private final Optional<String> logLevelEnvironmentVariable;
+  private final Optional<String> logLevel;
 
   // Helper class to parse the output of `xctool -listTestsOnly` then
   // store it in a multimap of {target: [testDesc1, testDesc2, ...], ... } pairs.
@@ -144,7 +149,11 @@ public class XctoolRunTestsStep implements Step {
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
       Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
-      TestSelectorList testSelectorList) {
+      TestSelectorList testSelectorList,
+      Optional<String> logDirectoryEnvironmentVariable,
+      Optional<Path> logDirectory,
+      Optional<String> logLevelEnvironmentVariable,
+      Optional<String> logLevel) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty() &&
           appTestBundleToHostAppPaths.isEmpty()),
@@ -178,6 +187,10 @@ public class XctoolRunTestsStep implements Step {
     this.stdoutReadingCallback = stdoutReadingCallback;
     this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
     this.testSelectorList = testSelectorList;
+    this.logDirectoryEnvironmentVariable = logDirectoryEnvironmentVariable;
+    this.logDirectory = logDirectory;
+    this.logLevelEnvironmentVariable = logLevelEnvironmentVariable;
+    this.logLevel = logLevel;
   }
 
   @Override
@@ -194,6 +207,20 @@ public class XctoolRunTestsStep implements Step {
     } else {
       throw new RuntimeException("Cannot determine xcode developer dir");
     }
+    // xctool will only pass through to the test environment variables whose names
+    // start with `XCTOOL_TEST_ENV_`. (It will remove that prefix when passing them
+    // to the test.)
+    if (logDirectoryEnvironmentVariable.isPresent() && logDirectory.isPresent()) {
+      environment.put(
+          XCTOOL_ENV_VARIABLE_PREFIX + logDirectoryEnvironmentVariable.get(),
+          logDirectory.get().toString());
+    }
+    if (logLevelEnvironmentVariable.isPresent() && logLevel.isPresent()) {
+      environment.put(
+          XCTOOL_ENV_VARIABLE_PREFIX + logLevelEnvironmentVariable.get(),
+          logLevel.get());
+    }
+
     return ImmutableMap.copyOf(environment);
   }
 

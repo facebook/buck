@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
@@ -108,6 +109,10 @@ public class AppleTest
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
 
+  private final String testLogDirectoryEnvironmentVariable;
+  private final String testLogLevelEnvironmentVariable;
+  private final String testLogLevel;
+
   /**
    * Absolute path to xcode developer dir.
    *
@@ -156,7 +161,10 @@ public class AppleTest
       ImmutableSet<String> contacts,
       ImmutableSet<Label> labels,
       boolean runTestSeparately,
-      Supplier<Optional<Path>> xcodeDeveloperDirSupplier) {
+      Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
+      String testLogDirectoryEnvironmentVariable,
+      String testLogLevelEnvironmentVariable,
+      String testLogLevel) {
     super(params, resolver);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
@@ -175,6 +183,9 @@ public class AppleTest
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.xctoolStdoutReader = Optional.absent();
     this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
+    this.testLogDirectoryEnvironmentVariable = testLogDirectoryEnvironmentVariable;
+    this.testLogLevelEnvironmentVariable = testLogLevelEnvironmentVariable;
+    this.testLogLevel = testLogLevel;
   }
 
   @Override
@@ -216,6 +227,9 @@ public class AppleTest
     Path pathToTestOutput = getProjectFilesystem().resolve(
         getPathToTestOutputDirectory());
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToTestOutput));
+
+    Path pathToTestLogs = pathToTestOutput.resolve("logs");
+    steps.add(new MkdirStep(getProjectFilesystem(), pathToTestLogs));
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(
         testOutputPath);
@@ -275,7 +289,11 @@ public class AppleTest
               resolvedTestOutputPath,
               xctoolStdoutReader,
               xcodeDeveloperDirSupplier,
-              options.getTestSelectorList());
+              options.getTestSelectorList(),
+              Optional.of(testLogDirectoryEnvironmentVariable),
+              Optional.of(pathToTestLogs),
+              Optional.of(testLogLevelEnvironmentVariable),
+              Optional.of(testLogLevel));
       steps.add(xctoolStep);
       externalSpec.setType("xctool-" + (testHostApp.isPresent() ? "application" : "logic"));
       externalSpec.setCommand(xctoolStep.getCommand());
