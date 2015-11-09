@@ -115,7 +115,7 @@ public class JUnitStepTest {
                 FluentIterable.from(classpathEntries)
                     .append("build/classes/junit")),
             FileClassPathRunner.class.getName(),
-            JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
+            TestType.JUNIT.getDefaultTestRunner(),
             "--output",
             directoryForTestResults.toString(),
             "--default-test-timeout",
@@ -196,7 +196,7 @@ public class JUnitStepTest {
                 FluentIterable.from(classpathEntries)
                     .append("build/classes/junit")),
             FileClassPathRunner.class.getName(),
-            JUnitStep.JUNIT_TEST_RUNNER_CLASS_NAME,
+            TestType.JUNIT.getDefaultTestRunner(),
             "--output",
             directoryForTestResults.toString(),
             "--default-test-timeout",

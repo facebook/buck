@@ -17,6 +17,18 @@
 package com.facebook.buck.jvm.java;
 
 public enum TestType {
-  JUNIT,
-  TESTNG,
+  JUNIT("com.facebook.buck.testrunner.JUnitMain"),
+  TESTNG("com.facebook.buck.testrunner.TestNGMain"),
+  ;
+
+  private final String defaultRunner;
+
+  TestType(String defaultRunner) {
+    this.defaultRunner = defaultRunner.toString();
+  }
+
+  public String getDefaultTestRunner() {
+    return defaultRunner;
+  }
+
 }

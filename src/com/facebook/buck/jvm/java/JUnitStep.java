@@ -49,14 +49,6 @@ import java.util.logging.Level;
 public class JUnitStep extends ShellStep {
   private static final Logger LOG = Logger.get(JUnitStep.class);
 
-  // Note that the default value is used when `buck test --all` is run on Buck itself.
-  @VisibleForTesting
-  static final String JUNIT_TEST_RUNNER_CLASS_NAME =
-      "com.facebook.buck.testrunner.JUnitMain";
-  @VisibleForTesting
-  static final String TESTNG_TEST_RUNNER_CLASS_NAME =
-      "com.facebook.buck.testrunner.TestNGMain";
-
   private static final Path TESTRUNNER_CLASSES =
       Paths.get(
           System.getProperty(
@@ -277,14 +269,7 @@ public class JUnitStep extends ShellStep {
 
     // Specify the Java class whose main() method should be run. This is the class that is
     // responsible for running the tests.
-    if (TestType.JUNIT == type) {
-      args.add(JUNIT_TEST_RUNNER_CLASS_NAME);
-    } else if (TestType.TESTNG == type) {
-      args.add(TESTNG_TEST_RUNNER_CLASS_NAME);
-    } else {
-      throw new IllegalArgumentException(
-          "java_test: unrecognized type " + type + ", expected eg. junit or testng");
-    }
+    args.add(type.getDefaultTestRunner());
 
     // The first argument to the test runner is where the test results should be written. It is not
     // reliable to write test results to stdout or stderr because there may be output from the unit
