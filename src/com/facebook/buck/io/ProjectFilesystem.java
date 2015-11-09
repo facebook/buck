@@ -114,8 +114,6 @@ public class ProjectFilesystem {
 
   @VisibleForTesting
   static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
-  @VisibleForTesting
-  static final String DEFAULT_CACHE_DIR = "buck-cache";
 
   private final Path projectRoot;
 
@@ -217,7 +215,7 @@ public class ProjectFilesystem {
     }
 
     String cacheDir = config.getValue("cache", "dir")
-        .or(root.resolve(DEFAULT_CACHE_DIR).toString());
+        .or(root.resolve(BuckConstant.DEFAULT_CACHE_DIR).toString());
     if (!Strings.isNullOrEmpty(cacheDir)) {
       Path cacheDirPath = MorePaths.expandHomeDir(Paths.get(cacheDir)).normalize().toAbsolutePath();
       builder.add(cacheDirPath);

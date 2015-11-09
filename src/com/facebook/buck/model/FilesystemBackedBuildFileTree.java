@@ -16,6 +16,9 @@
 
 package com.facebook.buck.model;
 
+import static com.facebook.buck.util.BuckConstant.BUCK_OUTPUT_DIRECTORY;
+import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
@@ -107,6 +110,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
       // If filePath names a directory with a build file, filePath is a base path.
       // If filePath or any of its parents are in ignoredPaths, we should keep looking.
       if (pathExistenceCache.getUnchecked(filePath.resolve(buildFileName)) &&
+          !isBuckOutput(filePath) &&
           !projectFilesystem.isIgnored(filePath)) {
         return Optional.of(filePath);
       }
@@ -129,5 +133,23 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
 
     // filePath does not fall under any build file
     return Optional.absent();
+  }
+
+  /**
+   * Assume that any directory called "buck-out", "buck-cache" or ".buckd" can be ignored. Not the
+   * world's best heuristic, but it works in every existing code base we have access to.
+   */
+  private boolean isBuckOutput(Path path) {
+    Path sameFsBuckOut = path.getFileSystem().getPath(BUCK_OUTPUT_DIRECTORY);
+    Path sameFsBuckCache = path.getFileSystem().getPath(DEFAULT_CACHE_DIR);
+
+    for (Path segment : path) {
+      if (sameFsBuckOut.equals(segment) ||
+          sameFsBuckCache.equals(segment)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

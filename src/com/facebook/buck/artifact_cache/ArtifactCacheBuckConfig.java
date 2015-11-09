@@ -16,6 +16,8 @@
 
 package com.facebook.buck.artifact_cache;
 
+import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
+
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -44,7 +46,6 @@ import java.nio.file.Paths;
 public class ArtifactCacheBuckConfig {
   private static final String CACHE_SECTION_NAME = "cache";
 
-  private static final String DEFAULT_CACHE_DIR = "buck-cache";
   private static final String DEFAULT_DIR_CACHE_MODE = CacheReadMode.readwrite.name();
 
   // Names of the fields in a [cache*] section that describe a single HTTP cache.

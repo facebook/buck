@@ -584,7 +584,7 @@ public class ProjectFilesystemTest {
             BuckConstant.BUCK_OUTPUT_PATH,
             Paths.get(".idea"),
             Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
-            rootPath.resolve(ProjectFilesystem.DEFAULT_CACHE_DIR),
+            rootPath.resolve(BuckConstant.DEFAULT_CACHE_DIR),
             Paths.get(".git"),
             Paths.get("foo"),
             Paths.get("bar"),

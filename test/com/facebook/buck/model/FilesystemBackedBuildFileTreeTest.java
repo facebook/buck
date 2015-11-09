@@ -16,9 +16,13 @@
 
 package com.facebook.buck.model;
 
+import static com.facebook.buck.util.BuckConstant.BUCK_OUTPUT_PATH;
+import static com.facebook.buck.util.BuckConstant.DEFAULT_CACHE_DIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.cli.Config;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
@@ -157,6 +161,45 @@ public class FilesystemBackedBuildFileTreeTest {
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
     assertEquals(Optional.<Path>absent(), ancestor);
   }
+
+  @Test
+  public void shouldIgnoreBuckOutputDirectoriesByDefault() throws IOException {
+    Path root = tmp.getRoot();
+
+    Path buckOut = root.resolve(BUCK_OUTPUT_PATH);
+    Files.createDirectories(buckOut);
+    touch(buckOut.resolve("BUCK"));
+    Path sibling = buckOut.resolve("someFile");
+    touch(sibling);
+
+    // Config doesn't set any "ignore" entries.
+    ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
+    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
+
+    Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(
+        BUCK_OUTPUT_PATH.resolve("someFile"));
+    assertFalse(ancestor.isPresent());
+  }
+
+  @Test
+  public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
+    Path root = tmp.getRoot();
+
+    Path cacheDir = root.resolve(DEFAULT_CACHE_DIR);
+    Files.createDirectories(cacheDir);
+    touch(cacheDir.resolve("BUCK"));
+    Path sibling = cacheDir.resolve("someFile");
+    touch(sibling);
+
+    // Config doesn't set any "ignore" entries.
+    ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
+    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
+
+    Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(
+        Paths.get(DEFAULT_CACHE_DIR, "someFile"));
+    assertFalse(ancestor.isPresent());
+  }
+
 
   private void touch(Path path) throws IOException {
     Files.write(path, "".getBytes(UTF_8));

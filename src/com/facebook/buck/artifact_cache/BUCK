@@ -99,6 +99,7 @@ java_immutables_library(
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/rules:build_rule',
     '//src/com/facebook/buck/util/unit:unit',
+    '//src/com/facebook/buck/util:constants',
     '//src/com/facebook/buck/util:exceptions',
     '//third-party/java/guava:guava',
     '//third-party/java/okhttp:okhttp',
