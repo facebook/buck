@@ -48,7 +48,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -97,9 +96,9 @@ class DaemonicParserState {
 
   private final boolean useWatchmanGlob;
   private final ConstructorArgMarshaller marshaller;
-  private final Cache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
+  private final OptimisticLoadingCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
   private final HashMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
-  private final Cache<BuildTarget, TargetNode<?>> allTargetNodes;
+  private final OptimisticLoadingCache<BuildTarget, TargetNode<?>> allTargetNodes;
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
   /**
@@ -132,9 +131,9 @@ class DaemonicParserState {
     this.useWatchmanGlob = useWatchmanGlob;
 
     this.marshaller = new ConstructorArgMarshaller();
-    this.allRawNodes = CacheBuilder.newBuilder().build();
+    this.allRawNodes = new OptimisticLoadingCache<>();
     this.targetsCornucopia = HashMultimap.create();
-    this.allTargetNodes = CacheBuilder.newBuilder().build();
+    this.allTargetNodes = new OptimisticLoadingCache<>();
     this.buildFileTrees = CacheBuilder.newBuilder().build(
         new CacheLoader<Cell, BuildFileTree>() {
           @Override
@@ -167,21 +166,29 @@ class DaemonicParserState {
   }
 
   public ImmutableSet<TargetNode<?>> getAllTargetNodes(
-      BuckEventBus eventBus,
-      Cell cell,
+      final BuckEventBus eventBus,
+      final Cell cell,
       ProjectBuildFileParser parser,
-      Path buildFile,
-      TargetNodeListener nodeListener) throws BuildFileParseException, InterruptedException {
+      final Path buildFile,
+      final TargetNodeListener nodeListener) throws BuildFileParseException, InterruptedException {
     Preconditions.checkState(buildFile.isAbsolute());
     invalidateIfProjectBuildFileParserStateChanged(cell);
     try {
       List<Map<String, Object>> allRawNodes = loadRawNodes(cell, buildFile, parser);
 
       ImmutableSet.Builder<TargetNode<?>> nodes = ImmutableSet.builder();
-      for (Map<String, Object> rawNode : allRawNodes) {
+      for (final Map<String, Object> rawNode : allRawNodes) {
         UnflavoredBuildTarget unflavored = parseBuildTargetFromRawRule(cell.getRoot(), rawNode);
-        BuildTarget target = BuildTarget.of(unflavored);
-        nodes.add(createTargetNode(eventBus, cell, buildFile, target, rawNode, nodeListener));
+        final BuildTarget target = BuildTarget.of(unflavored);
+
+        TargetNode<?> node = allTargetNodes.get(target, new Callable<TargetNode<?>>() {
+          @Override
+          public TargetNode<?> call() throws Exception {
+            return createTargetNode(eventBus, cell, buildFile, target, rawNode, nodeListener);
+          }
+        });
+
+        nodes.add(node);
       }
       return nodes.build();
     } catch (UncheckedExecutionException | ExecutionException e) {
