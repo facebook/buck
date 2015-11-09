@@ -133,6 +133,22 @@ public class CommandToolTest {
   }
 
   @Test
+  public void environment() {
+    BuildRuleResolver resolver = new BuildRuleResolver();
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePath path = new TestSourcePath("input");
+    CommandTool tool =
+        new CommandTool.Builder()
+            .addArg("runit")
+            .addEnvironment("PATH", path)
+            .build();
+
+    assertThat(tool.getEnvironment(pathResolver), Matchers.hasEntry(
+            Matchers.equalTo("PATH"),
+            Matchers.containsString("input")));
+  }
+
+  @Test
   public void sourcePathsContributeToRuleKeys() {
     BuildRuleResolver resolver = new BuildRuleResolver();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

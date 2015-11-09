@@ -35,6 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -104,6 +105,11 @@ public abstract class Jsr199Javac implements Javac {
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+    throw new UnsupportedOperationException("In memory javac may not be used externally");
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     throw new UnsupportedOperationException("In memory javac may not be used externally");
   }
 

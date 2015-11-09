@@ -23,6 +23,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -52,6 +53,11 @@ public class GoTool implements Tool {
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
     return underlyingCommand.getCommandPrefix(resolver);
+  }
+
+  @Override
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    return ImmutableMap.of("GOROOT", goRoot.toString());
   }
 
   @Override

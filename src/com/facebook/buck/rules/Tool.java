@@ -18,6 +18,7 @@ package com.facebook.buck.rules;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * An abstraction for describing some tools used as part of the build.
@@ -39,5 +40,10 @@ public interface Tool extends RuleKeyAppendable {
    * @return the prefix command use to run this tool.
    */
   ImmutableList<String> getCommandPrefix(SourcePathResolver resolver);
+
+  /**
+   * @return the list of environment variables to set when running the command.
+   */
+  ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver);
 
 }
