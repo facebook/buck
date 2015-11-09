@@ -104,8 +104,8 @@ public class AndroidManifest extends AbstractBuildRule {
     commands.add(
         new GenerateManifestStep(
             getProjectFilesystem(),
-            getResolver().deprecatedGetPath(skeletonFile),
-            ImmutableSet.copyOf(getResolver().deprecatedAllPaths(manifestFiles)),
+            getResolver().getAbsolutePath(skeletonFile),
+            ImmutableSet.copyOf(getResolver().getAllAbsolutePaths(manifestFiles)),
             getPathToOutput()));
 
     buildableContext.recordArtifact(pathToOutputFile);

@@ -281,8 +281,8 @@ public class ProjectFilesystem {
         : getPathForRelativePath(pathRelativeToProjectRoot).toFile();
   }
 
-  public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
-    return resolvePathFromOtherVfs(pathRelativeToProjectRoot);
+  public Path getPathForRelativePath(Path pathRelativeToProjectRootOrJustAbsolute) {
+    return resolvePathFromOtherVfs(pathRelativeToProjectRootOrJustAbsolute);
   }
 
   public Path getPathForRelativePath(String pathRelativeToProjectRoot) {
@@ -683,7 +683,7 @@ public class ProjectFilesystem {
         Files.newInputStream(getPathForRelativePath(pathRelativeToProjectRoot)));
   }
 
-  public BufferedSource newSource(Path pathRelativeToProjectRoot) throws IOException {
+  public BufferedSource   newSource(Path pathRelativeToProjectRoot) throws IOException {
     return Okio.buffer(Okio.source(getPathForRelativePath(pathRelativeToProjectRoot)));
   }
 
@@ -800,8 +800,8 @@ public class ProjectFilesystem {
     return Files.newInputStream(file);
   }
 
-  public String computeSha1(Path pathRelativeToProjectRoot) throws IOException {
-    Path fileToHash = getPathForRelativePath(pathRelativeToProjectRoot);
+  public String computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
+    Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
     return Hashing.sha1().hashBytes(Files.readAllBytes(fileToHash)).toString();
   }
 

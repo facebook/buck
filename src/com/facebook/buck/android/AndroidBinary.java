@@ -400,7 +400,7 @@ public class AndroidBinary
       for (SourcePath nativeLibDir : packageableCollection.getNativeLibAssetsDirectories()) {
         CopyNativeLibraries.copyNativeLibrary(
             getProjectFilesystem(),
-            getResolver().deprecatedGetPath(nativeLibDir),
+            getResolver().getAbsolutePath(nativeLibDir),
             libSubdirectory,
             cpuFilters,
             steps);
@@ -826,7 +826,7 @@ public class AndroidBinary
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(getResolver().deprecatedGetPath(proguardConfig.get()));
+      proguardConfigsBuilder.add(getResolver().getAbsolutePath(proguardConfig.get()));
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.

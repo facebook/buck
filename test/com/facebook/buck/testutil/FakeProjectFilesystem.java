@@ -632,11 +632,13 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
    * Does not support symlinks.
    */
   @Override
-  public String computeSha1(Path path) throws IOException {
-    if (!exists(path)) {
-      throw new FileNotFoundException(path.toString());
+  public String computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
+    if (!exists(pathRelativeToProjectRootOrJustAbsolute)) {
+      throw new FileNotFoundException(pathRelativeToProjectRootOrJustAbsolute.toString());
     }
-    return Hashing.sha1().hashBytes(getFileBytes(path)).toString();
+    return Hashing.sha1()
+        .hashBytes(getFileBytes(pathRelativeToProjectRootOrJustAbsolute))
+        .toString();
   }
 
   /**

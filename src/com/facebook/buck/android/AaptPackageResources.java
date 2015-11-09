@@ -195,7 +195,7 @@ public class AaptPackageResources extends AbstractBuildRule
     steps.add(
         new MkdirAndSymlinkFileStep(
             getProjectFilesystem(),
-            getResolver().deprecatedGetPath(manifest),
+            getResolver().getAbsolutePath(manifest),
             getAndroidManifestXml()));
 
     steps.add(new MkdirStep(getProjectFilesystem(), getResourceApkPath().getParent()));
