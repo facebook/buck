@@ -113,7 +113,7 @@ public class  GenerateCodeCoverageReportStepTest {
     expected.setProperty(
         "jacoco.output.dir",
         absolutifyPath(Paths.get(OUTPUT_DIRECTORY)));
-    expected.setProperty("jacoco.exec.data.file", JUnitStep.JACOCO_EXEC_COVERAGE_FILE);
+    expected.setProperty("jacoco.exec.data.file", "jacoco.exec");
     expected.setProperty("jacoco.format", "html");
     expected.setProperty("jacoco.title", "TitleFoo");
     expected.setProperty(

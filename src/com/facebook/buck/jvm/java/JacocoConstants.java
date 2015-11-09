@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,20 +16,18 @@
 
 package com.facebook.buck.jvm.java;
 
-public enum TestType {
-  // TODO(#9027074): Look these up reflectively.
-  JUNIT("com.facebook.buck.testrunner.JUnitMain"),
-  TESTNG("com.facebook.buck.testrunner.TestNGMain"),
-  ;
+import com.facebook.buck.util.BuckConstant;
 
-  private final String defaultRunner;
+import java.nio.file.Path;
 
-  TestType(String defaultRunner) {
-    this.defaultRunner = defaultRunner.toString();
-  }
+public final class JacocoConstants {
+  // Utility class, do not instantiate.
+  private JacocoConstants() { }
 
-  public String getDefaultTestRunner() {
-    return defaultRunner;
-  }
-
+  public static final String PATH_TO_JACOCO_AGENT_JAR =
+      System.getProperty(
+          "buck.jacoco_agent_jar",
+          "third-party/java/jacoco/jacocoagent.jar");
+  public static final String JACOCO_EXEC_COVERAGE_FILE = "jacoco.exec";
+  public static final Path JACOCO_OUTPUT_DIR = BuckConstant.GEN_PATH.resolve("jacoco");
 }

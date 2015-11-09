@@ -213,13 +213,15 @@ java_library(
   visibility = ['PUBLIC'],
 )
 
-java_library(
+java_immutables_library(
   name = 'steps',
   srcs = [
+    'AbstractJUnitJVMArgs.java',
     'AccumulateClassNamesStep.java',
     'CalculateAbiStep.java',
     'CopyResourcesStep.java',
     'GenerateCodeCoverageReportStep.java',
+    'JacocoConstants.java',
     'JavacToJarStepFactory.java',
     'JarDirectoryStep.java',
     'JarDirectoryStepHelper.java',
