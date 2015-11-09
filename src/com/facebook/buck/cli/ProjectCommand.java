@@ -315,8 +315,7 @@ public class ProjectCommand extends BuildCommand {
       initialTargets.addAll(additionalInitialTargets);
     }
 
-    BuildCommand buildCommand = new BuildCommand();
-    buildCommand.setArguments(initialTargets);
+    BuildCommand buildCommand = new BuildCommand(initialTargets);
     return buildCommand;
   }
 
@@ -543,12 +542,10 @@ public class ProjectCommand extends BuildCommand {
     ImmutableSet<BuildTarget> requiredBuildTargets = project.write();
 
     if (!requiredBuildTargets.isEmpty()) {
-      BuildCommand buildCommand = new BuildCommand();
+      BuildCommand buildCommand = new BuildCommand(FluentIterable.from(requiredBuildTargets)
+          .transform(Functions.toStringFunction())
+          .toList());
       buildCommand.setKeepGoing(true);
-      buildCommand.setArguments(
-          FluentIterable.from(requiredBuildTargets)
-              .transform(Functions.toStringFunction())
-              .toList());
       int exitCode = buildCommand.run(params);
       if (exitCode != 0) {
         params.getConsole().getAnsi().printHighlightedSuccessText(
@@ -719,11 +716,9 @@ public class ProjectCommand extends BuildCommand {
         buildWithBuck || shouldForceBuildingWithBuck(params.getBuckConfig(), passedInTargetsSet),
         getCombineTestBundles());
     if (!requiredBuildTargets.isEmpty()) {
-      BuildCommand buildCommand = new BuildCommand();
-      buildCommand.setArguments(
-          FluentIterable.from(requiredBuildTargets)
-              .transform(Functions.toStringFunction())
-              .toList());
+      BuildCommand buildCommand = new BuildCommand(FluentIterable.from(requiredBuildTargets)
+          .transform(Functions.toStringFunction())
+          .toList());
       exitCode = buildCommand.runWithoutHelp(params);
     }
     return exitCode;

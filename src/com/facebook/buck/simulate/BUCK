@@ -1,0 +1,17 @@
+java_immutables_library(
+  name = 'simulate',
+  srcs = glob(['*.java']),
+  deps = [
+    '//src/com/facebook/buck/event:event',
+    '//src/com/facebook/buck/util/immutables:immutables',
+    '//src/com/facebook/buck/model:model',
+    '//src/com/facebook/buck/rules:build_rule',
+    '//third-party/java/guava:guava',
+    '//third-party/java/immutables:processor',
+    '//third-party/java/jackson:jackson',
+    '//third-party/java/jsr:jsr305',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

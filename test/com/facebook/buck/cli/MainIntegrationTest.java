@@ -117,6 +117,7 @@ public class MainIntegrationTest {
         "  quickstart  generates a default project directory",
         "  run         runs a target as a command",
         "  server      query and control the http server",
+        "  simulate    timed simulation of a build without running the steps",
         "  targets     prints the list of buildable targets",
         "  test        builds and runs the tests for the specified target",
         "  uninstall   uninstalls an APK",

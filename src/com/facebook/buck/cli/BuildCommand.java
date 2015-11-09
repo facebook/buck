@@ -48,7 +48,6 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -129,13 +128,10 @@ public class BuildCommand extends AbstractCommand {
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
+  private boolean buildTargetsHaveBeenCalculated;
+
   public List<String> getArguments() {
     return arguments;
-  }
-
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
   }
 
   private boolean isArtifactCacheDisabled = false;
@@ -146,6 +142,14 @@ public class BuildCommand extends AbstractCommand {
 
   public boolean isDebugEnabled() {
     return false;
+  }
+
+  public BuildCommand() {
+    this(ImmutableList.<String>of());
+  }
+
+  public BuildCommand(List<String> arguments) {
+    this.arguments.addAll(arguments);
   }
 
   public Optional<CachingBuildEngine.BuildMode> getBuildEngineMode() {
@@ -248,11 +252,6 @@ public class BuildCommand extends AbstractCommand {
 
   protected int run(CommandRunnerParams params, Optional<String> additionalTarget)
       throws IOException, InterruptedException {
-    ArtifactCache artifactCache = params.getArtifactCache();
-    if (isArtifactCacheDisabled()) {
-      artifactCache = new NoopArtifactCache();
-    }
-
     if (getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
 
@@ -282,6 +281,36 @@ public class BuildCommand extends AbstractCommand {
     }
 
     // Parse the build files to create a ActionGraph.
+    Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver =
+        createActionGraphAndResolver(params);
+    if (actionGraphAndResolver == null) {
+      return 1;
+    }
+
+    int exitCode = executeBuild(params, actionGraphAndResolver);
+    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
+    return exitCode;
+  }
+
+  @Nullable
+  public Pair<ActionGraph, BuildRuleResolver> createActionGraphAndResolver(
+      CommandRunnerParams params)
+      throws IOException, InterruptedException {
+    if (getArguments().isEmpty()) {
+      params.getConsole().printBuildFailure("Must specify at least one build target.");
+
+      // If there are aliases defined in .buckconfig, suggest that the user
+      // build one of them. We show the user only the first 10 aliases.
+      ImmutableSet<String> aliases = params.getBuckConfig().getAliases();
+      if (!aliases.isEmpty()) {
+        params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
+            "Try building one of the following targets:\n%s",
+            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)))));
+      }
+      return null;
+    }
+
+    // Parse the build files to create a ActionGraph.
     Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver;
     try {
       Pair<ImmutableSet<BuildTarget>, TargetGraph> result = params.getParser()
@@ -295,6 +324,7 @@ public class BuildCommand extends AbstractCommand {
               params.getEnvironment(),
               getEnableProfiling());
       buildTargets = result.getFirst();
+      buildTargetsHaveBeenCalculated = true;
       TargetGraphToActionGraph targetGraphToActionGraph =
           new TargetGraphToActionGraph(
               params.getBuckEventBus(),
@@ -305,7 +335,7 @@ public class BuildCommand extends AbstractCommand {
     } catch (BuildTargetException | BuildFileParseException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      return null;
     }
 
     // If the user specified an explicit build target, use that.
@@ -321,9 +351,22 @@ public class BuildCommand extends AbstractCommand {
       if (!actionGraphTargets.contains(explicitTarget)) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
             "Targets specified via `--just-build` must be a subset of action graph."));
-        return 1;
+        return null;
       }
       buildTargets = ImmutableSet.of(explicitTarget);
+    }
+
+    return actionGraphAndResolver;
+  }
+
+  protected int executeBuild(
+      CommandRunnerParams params,
+      Pair<ActionGraph, BuildRuleResolver> actionGraphAndResolver)
+      throws IOException, InterruptedException {
+
+    ArtifactCache artifactCache = params.getArtifactCache();
+    if (isArtifactCacheDisabled()) {
+      artifactCache = new NoopArtifactCache();
     }
 
     try (CommandThreadManager pool = new CommandThreadManager(
@@ -350,14 +393,12 @@ public class BuildCommand extends AbstractCommand {
              Optional.<AdbOptions>absent(),
              Optional.<TargetDeviceOptions>absent())) {
       lastBuild = build;
-      int exitCode = build.executeAndPrintFailuresToEventBus(
+      return build.executeAndPrintFailuresToEventBus(
           buildTargets,
           isKeepGoing(),
           params.getBuckEventBus(),
           params.getConsole(),
           getPathToBuildReport(params.getBuckConfig()));
-      params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
-      return exitCode;
     }
   }
 
@@ -371,7 +412,8 @@ public class BuildCommand extends AbstractCommand {
     return lastBuild;
   }
 
-  ImmutableList<BuildTarget> getBuildTargets() {
+  public ImmutableList<BuildTarget> getBuildTargets() {
+    Preconditions.checkState(buildTargetsHaveBeenCalculated);
     return ImmutableList.copyOf(buildTargets);
   }
 

@@ -102,8 +102,8 @@ public class RunCommand extends AbstractCommand {
     }
 
     // Make sure the target is built.
-    BuildCommand buildCommand = new BuildCommand();
-    buildCommand.setArguments(ImmutableList.of(getTarget(params.getBuckConfig())));
+    BuildCommand buildCommand = new BuildCommand(
+        ImmutableList.of(getTarget(params.getBuckConfig())));
     int exitCode = buildCommand.runWithoutHelp(params);
     if (exitCode != 0) {
       return exitCode;

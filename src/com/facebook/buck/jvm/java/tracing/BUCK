@@ -33,6 +33,7 @@ java_library(
     '//src/com/facebook/buck/jvm/java:support',
     '//test/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
+    '//test/com/facebook/buck/simulate:simulate',
   ],
 )
 
