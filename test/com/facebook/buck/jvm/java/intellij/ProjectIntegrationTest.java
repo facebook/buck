@@ -37,9 +37,6 @@ import org.junit.rules.ExpectedException;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Integration test for the {@code buck project} command.
- */
 public class ProjectIntegrationTest {
 
   @Rule

@@ -18,6 +18,8 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.Config;
+import com.facebook.buck.cli.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -66,8 +68,10 @@ public class BuildFileSpecTest {
   @Test
   public void recursiveIgnorePaths() throws IOException, InterruptedException {
     Path ignoredBuildFile = Paths.get("a", "b", "BUCK");
-    ImmutableSet<Path> ignore = ImmutableSet.of(ignoredBuildFile.getParent());
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath(), ignore);
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = a/b");
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath(), config);
     Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
     filesystem.writeContentsToPath("", buildFile);

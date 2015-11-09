@@ -16,8 +16,6 @@
 
 package com.facebook.buck.io;
 
-import static com.facebook.buck.io.MorePaths.TO_PATH;
-
 import com.facebook.buck.cli.Config;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
@@ -38,7 +36,8 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
@@ -67,7 +66,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -81,6 +80,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
 
 import okio.BufferedSource;
 import okio.Okio;
@@ -112,6 +114,9 @@ public class ProjectFilesystem {
       DIRECTORY_AND_CONTENTS,
   }
 
+  // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
+  private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
+
   @VisibleForTesting
   static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
@@ -121,36 +126,28 @@ public class ProjectFilesystem {
   private final Function<Path, Path> pathRelativizer;
 
   private final Optional<ImmutableSet<Path>> whiteListedPaths;
-  private final ImmutableSet<Path> blackListedPaths;
+  private final ImmutableSet<PathMatcher> blackListedPaths;
+  private final ImmutableSortedSet<Path> blackListedDirectories;
 
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting
   protected boolean ignoreValidityOfPaths;
 
-  public ProjectFilesystem(Path projectRoot) {
-    this(projectRoot, ImmutableSet.<Path>of());
+  public ProjectFilesystem(Path root) {
+    this(
+        root.getFileSystem(),
+        root,
+        Optional.<ImmutableSet<Path>>absent(),
+        ImmutableSet.<PathMatcher>of());
   }
 
   /**
    * There should only be one {@link ProjectFilesystem} created per process.
-   * <p>
-   * When creating a {@code ProjectFilesystem} for a test, rather than create a filesystem with an
-   * arbitrary argument for the project root, such as {@code new File(".")}, prefer the creation of
-   * a mock filesystem via EasyMock instead. Note that there are cases (such as integration tests)
-   * where specifying {@code new File(".")} as the project root might be the appropriate thing.
    */
-  public ProjectFilesystem(Path projectRoot, ImmutableSet<Path> blackListedPaths) {
-    this(
-        projectRoot.getFileSystem(),
-        projectRoot,
-        Optional.<ImmutableSet<Path>>absent(),
-        blackListedPaths);
-  }
-
   public ProjectFilesystem(
       Path projectRoot,
       Optional<ImmutableSet<Path>> whiteListedPaths,
-      ImmutableSet<Path> blackListedPaths) {
+      ImmutableSet<PathMatcher> blackListedPaths) {
     this(
         projectRoot.getFileSystem(),
         projectRoot,
@@ -168,9 +165,9 @@ public class ProjectFilesystem {
 
   protected ProjectFilesystem(
       FileSystem vfs,
-      Path root,
+      final Path root,
       Optional<ImmutableSet<Path>> whiteListedPaths,
-      ImmutableSet<Path> blackListedPaths) {
+      ImmutableSet<PathMatcher> blackListedPaths) {
     Preconditions.checkArgument(Files.isDirectory(root));
     Preconditions.checkState(vfs.equals(root.getFileSystem()));
     Preconditions.checkArgument(root.isAbsolute());
@@ -187,41 +184,91 @@ public class ProjectFilesystem {
         return projectRoot.relativize(input);
       }
     };
-    this.blackListedPaths = MorePaths.filterForSubpaths(blackListedPaths, projectRoot);
-    this.whiteListedPaths =
-        whiteListedPaths.transform(
-            new Function<ImmutableSet<Path>, ImmutableSet<Path>>() {
-              @Override
-              public ImmutableSet<Path> apply(ImmutableSet<Path> input) {
-                return MorePaths.filterForSubpaths(input, ProjectFilesystem.this.projectRoot);
-              }
-            });
+    this.whiteListedPaths = whiteListedPaths.transform(
+        new Function<ImmutableSet<Path>, ImmutableSet<Path>>() {
+          @Override
+          public ImmutableSet<Path> apply(ImmutableSet<Path> input) {
+            return MorePaths.filterForSubpaths(input, ProjectFilesystem.this.projectRoot);
+          }
+        });
     this.ignoreValidityOfPaths = false;
+    this.blackListedPaths = blackListedPaths;
+
+    this.blackListedDirectories = FluentIterable.from(this.blackListedPaths)
+        .filter(BasePathMatcher.class)
+        .transform(new Function<BasePathMatcher, Path>() {
+          @Override
+          public Path apply(BasePathMatcher matcher) {
+            Path path = matcher.getPath();
+            ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(
+                ImmutableSet.<Path>of(path),
+                root);
+            if (filtered.isEmpty()) {
+              return path;
+            }
+            return Iterables.getOnlyElement(filtered);
+          }
+        })
+        // So we claim to ignore this path to preserve existing behaviour
+        .append(root.getFileSystem().getPath(BuckConstant.BUCK_OUTPUT_DIRECTORY))
+        // "Path" is Iterable, so avoid adding each segment.
+        // We use the default value here because that's what we've always done.
+        .append(ImmutableSet.of(getCacheDir(root, Optional.of(BuckConstant.DEFAULT_CACHE_DIR))))
+        .toSortedSet(Ordering.<Path>natural());
   }
 
-  @VisibleForTesting
-  static ImmutableSet<Path> extractIgnorePaths(Path root, Config config) {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+  private static Path getCacheDir(Path root, Optional<String> value) {
+      String cacheDir = value.or(root.resolve(BuckConstant.DEFAULT_CACHE_DIR).toString());
+      Path toReturn = root.getFileSystem().getPath(cacheDir);
+      toReturn = MorePaths.expandHomeDir(toReturn);
+      if (toReturn.isAbsolute()) {
+         return toReturn;
+       }
+      ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(ImmutableSet.of(toReturn), root);
+      if (filtered.isEmpty()) {
+         // OK. For some reason the relative path managed to be out of our directory.
+             return toReturn;
+       }
+      return Iterables.getOnlyElement(filtered);
+    }
 
-    builder.add(Paths.get(BuckConstant.BUCK_OUTPUT_DIRECTORY));
-    builder.add(Paths.get(".idea"));
+
+  private static ImmutableSet<PathMatcher> extractIgnorePaths(final Path root, Config config) {
+    ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
+
+    builder.add(new BasePathMatcher(root, ".idea"));
 
     final String projectKey = "project";
     final String ignoreKey = "ignore";
 
     String buckdDirProperty = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
     if (!Strings.isNullOrEmpty(buckdDirProperty)) {
-      builder.add(Paths.get(buckdDirProperty));
+      builder.add(new BasePathMatcher(root, buckdDirProperty));
     }
 
-    String cacheDir = config.getValue("cache", "dir")
-        .or(root.resolve(BuckConstant.DEFAULT_CACHE_DIR).toString());
-    if (!Strings.isNullOrEmpty(cacheDir)) {
-      Path cacheDirPath = MorePaths.expandHomeDir(Paths.get(cacheDir)).normalize().toAbsolutePath();
-      builder.add(cacheDirPath);
-    }
+    Path cacheDir = getCacheDir(root, config.getValue("cache", "dir"));
+    builder.add(new BasePathMatcher(cacheDir));
 
-    builder.addAll(Lists.transform(config.getListWithoutComments(projectKey, ignoreKey), TO_PATH));
+    builder.addAll(FluentIterable.from(config.getListWithoutComments(projectKey, ignoreKey))
+        .transform(new Function<String, PathMatcher>() {
+          @Nullable
+          @Override
+          public PathMatcher apply(String input) {
+            // We don't really want to ignore the output directory when doing things like filesystem
+            // walks, so return null
+            if (BuckConstant.BUCK_OUTPUT_DIRECTORY.equals(input)) {
+              return null; //root.getFileSystem().getPathMatcher("glob:**");
+            }
+
+            if (GLOB_CHARS.matcher(input).find()) {
+              return root.getFileSystem().getPathMatcher("glob:" + input);
+            }
+            return new BasePathMatcher(root, input);
+          }
+        })
+        // And now remove any null patterns
+        .filter(Predicates.<PathMatcher>notNull())
+        .toList());
 
     return builder.build();
   }
@@ -242,8 +289,9 @@ public class ProjectFilesystem {
   }
 
   /**
-   * We often create {@link Path} instances using {@link Paths#get(String, String...)}, but there's
-   * no guarantee that the underlying {@link FileSystem} is the default one.
+   * We often create {@link Path} instances using
+   * {@link java.nio.file.Paths#get(String, String...)}, but there's no guarantee that the
+   * underlying {@link FileSystem} is the default one.
    */
   protected Path resolvePathFromOtherVfs(Path path) {
     if (path.getFileSystem().equals(getRootPath().getFileSystem())) {
@@ -264,11 +312,10 @@ public class ProjectFilesystem {
   }
 
   /**
-   * @return A {@link ImmutableSet} of {@link Path} objects to have buck ignore.  All paths will be
-   *     relative to the {@link ProjectFilesystem#getRootPath()}.
+   * @return A {@link ImmutableSet} of {@link Path} objects to have buck ignore.
    */
   public ImmutableSet<Path> getIgnorePaths() {
-    return blackListedPaths;
+    return blackListedDirectories;
   }
 
   /**
@@ -407,11 +454,8 @@ public class ProjectFilesystem {
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       final FileVisitor<Path> fileVisitor) throws IOException {
-    Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
-    Files.walkFileTree(
-        rootPath,
-        visitOptions,
-        Integer.MAX_VALUE,
+
+    FileVisitor<Path> actualVisitor = wrapWithIgnoringFileVisitor(
         new FileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(
@@ -435,13 +479,20 @@ public class ProjectFilesystem {
             return fileVisitor.postVisitDirectory(projectRoot.relativize(dir), exc);
           }
         });
+
+    Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
+    Files.walkFileTree(
+        rootPath,
+        visitOptions,
+        Integer.MAX_VALUE,
+        actualVisitor);
   }
 
   /**
    * Allows {@link Files#walkFileTree} to be faked in tests.
    */
   public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
-    Files.walkFileTree(root, fileVisitor);
+    Files.walkFileTree(root, wrapWithIgnoringFileVisitor(fileVisitor));
   }
 
   public ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
@@ -465,15 +516,16 @@ public class ProjectFilesystem {
     walkRelativeFileTree(
         pathRelativeToProjectRoot,
         visitOptions,
-        new SimpleFileVisitor<Path>() {
-          @Override
-          public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-            if (predicate.apply(path)) {
-              paths.add(path);
-            }
-            return FileVisitResult.CONTINUE;
-          }
-        });
+        wrapWithIgnoringFileVisitor(
+            new SimpleFileVisitor<Path>() {
+              @Override
+              public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
+                if (predicate.apply(path)) {
+                  paths.add(path);
+                }
+                return FileVisitResult.CONTINUE;
+              }
+            }));
     return paths.build();
   }
 
@@ -513,6 +565,12 @@ public class ProjectFilesystem {
     Path path = pathToUse.isAbsolute() ? pathToUse : getPathForRelativePath(pathToUse);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return FluentIterable.from(stream)
+          .filter(new Predicate<Path>() {
+            @Override
+            public boolean apply(Path input) {
+              return !isIgnored(pathRelativizer.apply(input));
+            }
+          })
           .transform(
               new Function<Path, Path>() {
                 @Override
@@ -535,8 +593,9 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Returns the files inside {@code pathRelativeToProjectRoot} which match
-   * {@code globPattern}, ordered in descending last modified time order.
+   * Returns the files inside {@code pathRelativeToProjectRoot} which match {@code globPattern},
+   * ordered in descending last modified time order. This will not obey the results of
+   * {@link #isIgnored(Path)}.
    */
   public ImmutableSortedSet<Path> getSortedMatchingDirectoryContents(
       Path pathRelativeToProjectRoot,
@@ -887,7 +946,8 @@ public class ProjectFilesystem {
 
   /**
    * Similar to {@link #createZip(Collection, Path)}, but also takes a list of additional files to
-   * write in the zip, including their contents, as a map.
+   * write in the zip, including their contents, as a map. It's assumed only paths that should not
+   * be ignored are passed to this method.
    */
   public void createZip(
       Collection<Path> pathsToIncludeInZip,
@@ -973,8 +1033,8 @@ public class ProjectFilesystem {
   }
 
   private boolean isBlackListed(Path path) {
-    for (Path blackListedPath : blackListedPaths) {
-      if (path.startsWith(blackListedPath)) {
+    for (PathMatcher blackListedPath : blackListedPaths) {
+      if (blackListedPath.matches(path)) {
         return true;
       }
     }
@@ -1007,4 +1067,66 @@ public class ProjectFilesystem {
     }
   }
 
+  /**
+   * Wraps an existing {@link FileVisitor} so that paths that {@link #isIgnored(Path)} indicates
+   * should be ignored are ignored.
+   */
+  private FileVisitor<Path> wrapWithIgnoringFileVisitor(final FileVisitor<Path> delegate) {
+    return new FileVisitor<Path>() {
+      @Override
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+          throws IOException {
+        if (isIgnored(relativize(dir))) {
+          return FileVisitResult.SKIP_SUBTREE;
+        }
+        return delegate.preVisitDirectory(dir, attrs);
+      }
+
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        if (isIgnored(relativize(file))) {
+          return FileVisitResult.CONTINUE;
+        }
+        return delegate.visitFile(file, attrs);
+      }
+
+      @Override
+      public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+        return delegate.visitFileFailed(file, exc);
+      }
+
+      @Override
+      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+        return delegate.postVisitDirectory(dir, exc);
+      }
+
+      private Path relativize(Path path) {
+        if (path.startsWith(getRootPath())) {
+          return pathRelativizer.apply(path);
+        }
+        return path;
+      }
+    };
+  }
+
+  private static class BasePathMatcher implements PathMatcher {
+    private final Path basePath;
+
+    public BasePathMatcher(Path basePath) {
+      this.basePath = basePath;
+    }
+
+    public BasePathMatcher(Path root, String basePath) {
+      this.basePath = root.getFileSystem().getPath(basePath);
+    }
+
+    @Override
+    public boolean matches(Path path) {
+      return path.startsWith(basePath);
+    }
+
+    public Path getPath() {
+      return basePath;
+    }
+  }
 }

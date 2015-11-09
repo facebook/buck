@@ -6,6 +6,7 @@ java_test(
     '//src/com/facebook/buck/io:io',
     '//src/com/facebook/buck/timing:timing',
     '//src/com/facebook/buck/util/cache:cache',
+    '//test/com/facebook/buck/cli:testutil',
     '//test/com/facebook/buck/testutil/integration:integration',
     '//test/com/facebook/buck/testutil:testutil',
     '//third-party/java/junit:junit',

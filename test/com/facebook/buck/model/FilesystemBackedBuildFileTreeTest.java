@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.cli.Config;
+import com.facebook.buck.cli.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
@@ -123,8 +124,10 @@ public class FilesystemBackedBuildFileTreeTest {
     touch(fooBarBuck);
     touch(fooBazBuck);
 
-    ImmutableSet<Path> ignoredPaths = ImmutableSet.of(Paths.get("foo/bar"));
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir, ignoredPaths);
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = foo/bar");
+    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir, config);
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Collection<Path> children =

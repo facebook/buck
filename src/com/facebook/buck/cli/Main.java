@@ -124,6 +124,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -235,7 +236,7 @@ public final class Main {
               new ProjectFilesystem(
                   cell.getFilesystem().getRootPath(),
                   Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
-                  ImmutableSet.<Path>of()));
+                  ImmutableSet.<PathMatcher>of()));
       this.fileEventBus = new EventBus("file-change-events");
 
       this.parser = Parser.createBuildFileParser(
@@ -704,7 +705,7 @@ public final class Main {
               new ProjectFilesystem(
                   rootCell.getFilesystem().getRootPath(),
                   Optional.of(ImmutableSet.of(BuckConstant.BUCK_OUTPUT_PATH)),
-                  ImmutableSet.<Path>of()));
+                  ImmutableSet.<PathMatcher>of()));
     }
 
     // Build up the hash cache, which is a collection of the stateful cell cache and some per-run

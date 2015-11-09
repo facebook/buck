@@ -68,7 +68,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-/** Unit test for {@link com.facebook.buck.io.ProjectFilesystem}. */
 public class ProjectFilesystemTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -576,20 +575,20 @@ public class ProjectFilesystemTest {
         "[project]",
         "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
-    ImmutableSet<Path> ignorePaths = ProjectFilesystem.extractIgnorePaths(rootPath, config);
+    ImmutableSet<Path> ignorePaths = new ProjectFilesystem(rootPath, config).getIgnorePaths();
     assertEquals(
         "Should ignore paths, sans trailing slashes",
-        ignorePaths,
         ImmutableSet.of(
             BuckConstant.BUCK_OUTPUT_PATH,
             Paths.get(".idea"),
             Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
-            rootPath.resolve(BuckConstant.DEFAULT_CACHE_DIR),
+            Paths.get(BuckConstant.DEFAULT_CACHE_DIR),
             Paths.get(".git"),
             Paths.get("foo"),
             Paths.get("bar"),
             Paths.get("baz"),
-            Paths.get("a/b/c")));
+            Paths.get("a/b/c")),
+        ignorePaths);
   }
 
   @Test
@@ -598,10 +597,36 @@ public class ProjectFilesystemTest {
         "[cache]",
         "dir = cache_dir");
     Path rootPath = tmp.getRoot();
-    ImmutableSet<Path> ignorePaths = ProjectFilesystem.extractIgnorePaths(rootPath, config);
+    ImmutableSet<Path> ignorePaths = new ProjectFilesystem(rootPath, config).getIgnorePaths();
     assertThat(
         "Cache directory should be in set of ignored paths",
         ignorePaths,
-        Matchers.hasItem(Paths.get("cache_dir").normalize().toAbsolutePath()));
+        Matchers.hasItem(Paths.get("cache_dir")));
+  }
+
+  @Test
+  public void ignoredPathsShouldBeIgnoredWhenWalkingTheFilesystem() throws IOException {
+    Config config = ConfigBuilder.createFromText(
+        "[project]",
+        "ignore = **/*.orig");
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    Files.createDirectories(tmp.getRoot().resolve("foo/bar"));
+    filesystem.touch(Paths.get("foo/bar/cake.txt"));
+    filesystem.touch(Paths.get("foo/bar/cake.txt.orig"));
+
+    final ImmutableSet.Builder<String> allPaths = ImmutableSet.builder();
+
+    filesystem.walkRelativeFileTree(tmp.getRoot(), new SimpleFileVisitor<Path>() {
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        allPaths.add(file.toString());
+        return FileVisitResult.CONTINUE;
+      }
+    });
+
+    ImmutableSet<String> found = allPaths.build();
+    assertTrue(found.contains("foo/bar/cake.txt"));
+    assertFalse(found.contains("foo/bar/cake.txt.orig"));
   }
 }
