@@ -245,6 +245,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.getTests(),
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
+        appleCxxPlatform.getCodesignAllocatePath(),
         provisioningProfileStore,
         AppleBundle.DebugInfoFormat.DSYM);
   }

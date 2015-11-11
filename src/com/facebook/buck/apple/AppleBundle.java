@@ -148,6 +148,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final CodeSignIdentityStore codeSignIdentityStore;
 
   @AddToRuleKey
+  private final Optional<Path> codesignAllocatePath;
+
+  @AddToRuleKey
   private final DebugInfoFormat debugInfoFormat;
 
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
@@ -185,6 +188,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Set<BuildTarget> tests,
       AppleSdk sdk,
       CodeSignIdentityStore codeSignIdentityStore,
+      Optional<Path> codesignAllocatePath,
       ProvisioningProfileStore provisioningProfileStore,
       DebugInfoFormat debugInfoFormat) {
     super(params, resolver);
@@ -230,6 +234,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       this.codeSignIdentityStore =
           CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
     }
+    this.codesignAllocatePath = codesignAllocatePath;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -504,7 +509,8 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
               getProjectFilesystem().getRootPath(),
               bundleDestinationPath,
               signingEntitlementsTempPath,
-              codeSignIdentitySupplier));
+              codeSignIdentitySupplier,
+              codesignAllocatePath));
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.

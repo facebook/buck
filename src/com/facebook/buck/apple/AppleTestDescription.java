@@ -349,6 +349,7 @@ public class AppleTestDescription implements
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),
         codeSignIdentityStore,
+        appleCxxPlatform.getCodesignAllocatePath(),
         provisioningProfileStore,
         AppleBundle.DebugInfoFormat.NONE);
 

@@ -24,6 +24,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -35,22 +36,30 @@ public class CodeSignStep implements Step {
   private final Path pathToSign;
   private final Path pathToSigningEntitlements;
   private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
+  private final Optional<Path> codesignAllocatePath;
 
   public CodeSignStep(
       Path workingDirectory,
       Path pathToSign,
       Path pathToSigningEntitlements,
-      Supplier<CodeSignIdentity> codeSignIdentitySupplier) {
+      Supplier<CodeSignIdentity> codeSignIdentitySupplier,
+      Optional<Path> codesignAllocatePath) {
     this.workingDirectory = workingDirectory;
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
+    this.codesignAllocatePath = codesignAllocatePath;
   }
 
   @Override
   public int execute(ExecutionContext context) throws InterruptedException {
+    ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
+    if (codesignAllocatePath.isPresent()) {
+      paramsBuilder.setEnvironment(
+          ImmutableMap.of("CODESIGN_ALLOCATE", codesignAllocatePath.get().toString()));
+    }
     ProcessExecutorParams processExecutorParams =
-        ProcessExecutorParams.builder()
+        paramsBuilder
             .setCommand(
                 ImmutableList.of(
                     "codesign",

@@ -113,6 +113,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"))
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/strip"))
+        .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"))
         .add(Paths.get("usr/bin/actool"))
@@ -147,6 +148,9 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
+    assertEquals(
+        Optional.of(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate")),
+        appleCxxPlatform.getCodesignAllocatePath());
 
     assertEquals(
         ImmutableList.of("usr/bin/xctest"),
