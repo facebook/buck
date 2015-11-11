@@ -36,6 +36,7 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   private final BuildTarget buildTarget;
   private final Supplier<ImmutableSortedSet<BuildRule>> declaredDeps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> extraDeps;
   private final Supplier<ImmutableSortedSet<BuildRule>> deps;
   private final RuleKeyBuilderFactory ruleKeyBuilderFactory;
   private final SourcePathResolver resolver;
@@ -45,6 +46,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     this.buildTarget = buildRuleParams.getBuildTarget();
     this.declaredDeps = buildRuleParams.getDeclaredDeps();
+    this.extraDeps = buildRuleParams.getExtraDeps();
     this.deps = buildRuleParams.getTotalDeps();
     this.ruleKeyBuilderFactory = buildRuleParams.getRuleKeyBuilderFactory();
     this.resolver = resolver;
@@ -73,6 +75,10 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   public final ImmutableSortedSet<BuildRule> getDeclaredDeps() {
     return declaredDeps.get();
+  }
+
+  public final ImmutableSortedSet<BuildRule> deprecatedGetExtraDeps() {
+    return extraDeps.get();
   }
 
   @Override

@@ -504,6 +504,39 @@ public class RuleKeyTest {
     assertThat(noopRuleKey, is(equalTo(nullRuleKey)));
   }
 
+  @Test
+  public void declaredDepsAndExtraDepsGenerateDifferentRuleKeys() {
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(new BuildRuleResolver());
+    BuildTarget target = BuildTargetFactory.newInstance("//a:target");
+
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//some:dep");
+    BuildRuleParams depParams = new FakeBuildRuleParamsBuilder(depTarget).build();
+    NoopBuildRule dep = new NoopBuildRule(depParams, sourcePathResolver);
+
+    BuildRuleParams paramsWithDeclaredDep = new FakeBuildRuleParamsBuilder(target)
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .build();
+    NoopBuildRule ruleWithDeclaredDep =
+        new NoopBuildRule(paramsWithDeclaredDep, sourcePathResolver);
+
+    BuildRuleParams paramsWithExtraDep = new FakeBuildRuleParamsBuilder(target)
+        .setExtraDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .build();
+    NoopBuildRule ruleWithExtraDep =
+        new NoopBuildRule(paramsWithExtraDep, sourcePathResolver);
+
+    BuildRuleParams paramsWithBothDeps = new FakeBuildRuleParamsBuilder(target)
+        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .setExtraDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .build();
+    NoopBuildRule ruleWithBothDeps =
+        new NoopBuildRule(paramsWithBothDeps, sourcePathResolver);
+
+    assertNotEquals(ruleWithDeclaredDep.getRuleKey(), ruleWithExtraDep.getRuleKey());
+    assertNotEquals(ruleWithDeclaredDep.getRuleKey(), ruleWithBothDeps.getRuleKey());
+    assertNotEquals(ruleWithExtraDep.getRuleKey(), ruleWithBothDeps.getRuleKey());
+  }
+
   private static class TestRuleKeyAppendable implements RuleKeyAppendable {
     private final String value;
 

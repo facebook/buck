@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -45,7 +46,17 @@ public class DefaultRuleKeyBuilderFactory implements RuleKeyBuilderFactory {
       new Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>() {
         @Override
         public RuleKeyBuilder apply(Pair<RuleKeyBuilder, BuildRule> input) {
-          return input.getFirst().setReflectively("buck.deps", input.getSecond().getDeps());
+          BuildRule rule = input.getSecond();
+          if (rule instanceof AbstractBuildRule) {
+            // TODO(mkosiba): We really need to get rid of declared/extra deps in rules. Instead
+            // rules should explicitly take the needed sub-sets of deps as constructor args.
+            AbstractBuildRule abstractBuildRule = (AbstractBuildRule) rule;
+            return input.getFirst()
+                .setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps())
+                .setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
+          } else {
+            return input.getFirst().setReflectively("buck.deps", rule.getDeps());
+          }
         }
       };
   protected static final Function<Pair<RuleKeyBuilder, BuildRule>, RuleKeyBuilder>
