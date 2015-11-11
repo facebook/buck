@@ -138,15 +138,15 @@ public class ArtifactCaches {
       Optional<BuckEventBus> buckEventBus,
       ArtifactCacheBuckConfig buckConfig,
       ProjectFilesystem projectFilesystem) {
-    Path cacheDir = buckConfig.getCacheDir();
-    boolean doStore = buckConfig.getDirCacheReadMode().isDoStore();
+    DirCacheEntry dirCacheConfig = buckConfig.getDirCache();
+    Path cacheDir = dirCacheConfig.getCacheDir();
     try {
       DirArtifactCache dirArtifactCache =  new DirArtifactCache(
           "dir",
           projectFilesystem,
           cacheDir,
-          doStore,
-          buckConfig.getCacheDirMaxSizeBytes());
+          dirCacheConfig.getCacheReadMode().isDoStore(),
+          dirCacheConfig.getMaxSizeBytes());
 
       if (!buckEventBus.isPresent()) {
         return dirArtifactCache;

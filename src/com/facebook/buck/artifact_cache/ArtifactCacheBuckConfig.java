@@ -125,30 +125,16 @@ public class ArtifactCacheBuckConfig {
         .toSet();
   }
 
-  public Path getCacheDir() {
-    String cacheDir = buckConfig.getValue(CACHE_SECTION_NAME, "dir").or(DEFAULT_CACHE_DIR);
-    Path pathToCacheDir = buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(
-        Paths.get(
-            cacheDir));
-    return Preconditions.checkNotNull(pathToCacheDir);
-  }
-
-  public Optional<Long> getCacheDirMaxSizeBytes() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, "dir_max_size").transform(
-        new Function<String, Long>() {
-          @Override
-          public Long apply(String input) {
-            return SizeUnit.parseBytes(input);
-          }
-        });
-  }
-
   public boolean getServingLocalCacheEnabled() {
     return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "serve_local_cache", false);
   }
 
-  public CacheReadMode getDirCacheReadMode() {
-    return getCacheReadMode(CACHE_SECTION_NAME, "dir_mode", DEFAULT_DIR_CACHE_MODE);
+  public DirCacheEntry getDirCache() {
+    return DirCacheEntry.builder()
+        .setCacheDir(getCacheDir())
+        .setCacheReadMode(getDirCacheReadMode())
+        .setMaxSizeBytes(getCacheDirMaxSizeBytes())
+        .build();
   }
 
   public ImmutableSet<HttpCacheEntry> getHttpCaches() {
@@ -166,6 +152,30 @@ public class ArtifactCacheBuckConfig {
     }
     return result.build();
   }
+
+  private CacheReadMode getDirCacheReadMode() {
+    return getCacheReadMode(CACHE_SECTION_NAME, "dir_mode", DEFAULT_DIR_CACHE_MODE);
+  }
+
+  private Path getCacheDir() {
+    String cacheDir = buckConfig.getValue(CACHE_SECTION_NAME, "dir").or(DEFAULT_CACHE_DIR);
+    Path pathToCacheDir = buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(
+        Paths.get(
+            cacheDir));
+    return Preconditions.checkNotNull(pathToCacheDir);
+  }
+
+  private Optional<Long> getCacheDirMaxSizeBytes() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, "dir_max_size").transform(
+        new Function<String, Long>() {
+          @Override
+          public Long apply(String input) {
+            return SizeUnit.parseBytes(input);
+          }
+        });
+  }
+
+
 
   private CacheReadMode getCacheReadMode(String section, String fieldName, String defaultValue) {
     String cacheMode = buckConfig.getValue(section, fieldName).or(defaultValue);
@@ -244,6 +254,14 @@ public class ArtifactCacheBuckConfig {
     public boolean isDoStore() {
       return doStore;
     }
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractDirCacheEntry {
+    public abstract Path getCacheDir();
+    public abstract Optional<Long> getMaxSizeBytes();
+    public abstract CacheReadMode getCacheReadMode();
   }
 
   @Value.Immutable

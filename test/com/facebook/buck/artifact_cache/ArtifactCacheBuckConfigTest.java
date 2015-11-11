@@ -128,12 +128,15 @@ public class ArtifactCacheBuckConfigTest {
         "dir = cache_dir",
         "dir_mode = readonly",
         "dir_max_size = 1022B");
+    DirCacheEntry dirCacheConfig = config.getDirCache();
 
-    assertThat(config.getCacheDir(), Matchers.equalTo(Paths.get("cache_dir").toAbsolutePath()));
     assertThat(
-        config.getDirCacheReadMode(),
+        dirCacheConfig.getCacheDir(),
+        Matchers.equalTo(Paths.get("cache_dir").toAbsolutePath()));
+    assertThat(
+        dirCacheConfig.getCacheReadMode(),
         Matchers.is(ArtifactCacheBuckConfig.CacheReadMode.readonly));
-    assertThat(config.getCacheDirMaxSizeBytes(), Matchers.equalTo(Optional.of(1022L)));
+    assertThat(dirCacheConfig.getMaxSizeBytes(), Matchers.equalTo(Optional.of(1022L)));
   }
 
   @Test(expected = HumanReadableException.class)
@@ -151,7 +154,7 @@ public class ArtifactCacheBuckConfigTest {
         "[cache]",
         "dir_mode = notamode");
 
-    config.getDirCacheReadMode();
+    config.getDirCache();
   }
 
   @Test
@@ -161,7 +164,7 @@ public class ArtifactCacheBuckConfigTest {
         "dir = ~/cache_dir");
     assertThat(
         "User home cache directory must be expanded.",
-        config.getCacheDir(),
+        config.getDirCache().getCacheDir(),
         Matchers.equalTo(MorePaths.expandHomeDir(Paths.get("~/cache_dir"))));
   }
 
