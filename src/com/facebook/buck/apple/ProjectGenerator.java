@@ -161,7 +161,9 @@ public class ProjectGenerator {
 
     /** Include dependencies tests in the scheme */
     INCLUDE_DEPENDENCIES_TESTS,
-    ;
+
+    /** Don't use header maps as header search paths */
+    DISABLE_HEADER_MAPS,
   }
 
   /**
@@ -1087,15 +1089,15 @@ public class ProjectGenerator {
 
     ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
 
-    ImmutableSet<Path> recursiveHeaderMaps = collectRecursiveHeaderMaps(targetNode);
-    ImmutableSet<Path> headerMapBases = recursiveHeaderMaps.isEmpty() ?
+    ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
+    ImmutableSet<Path> headerMapBases = recursiveHeaderSearchPaths.isEmpty() ?
         ImmutableSet.<Path>of() :
         ImmutableSet.of(pathRelativizer.outputDirToRootRelative(BuckConstant.BUCK_OUTPUT_PATH));
 
     appendConfigsBuilder
         .put(
             "HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(Iterables.concat(recursiveHeaderMaps, headerMapBases)))
+            Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)))
         .put(
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
@@ -1765,6 +1767,14 @@ public class ProjectGenerator {
     return headerSymlinkTreeRoot.resolve(".tree.hmap");
   }
 
+  private Path getHeaderSearchPathFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
+    if (options.contains(Option.DISABLE_HEADER_MAPS)) {
+      return headerSymlinkTreeRoot;
+    } else {
+      return getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
+    }
+  }
+
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
     if (targetNode.getType().equals(AppleBinaryDescription.TYPE) ||
         targetNode.getType().equals(AppleTestDescription.TYPE) ||
@@ -1839,12 +1849,12 @@ public class ProjectGenerator {
             AppleBundleExtension.FRAMEWORK));
   }
 
-  private ImmutableSet<Path> collectRecursiveHeaderMaps(
+  private ImmutableSet<Path> collectRecursiveHeaderSearchPaths(
       TargetNode<? extends CxxLibraryDescription.Arg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
     for (Path headerSymlinkTreePath : collectRecursiveHeaderSymlinkTrees(targetNode)) {
-      builder.add(getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreePath));
+      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(headerSymlinkTreePath));
     }
 
     for (Path halideHeaderPath : collectRecursiveHalideLibraryHeaderPaths(targetNode)) {

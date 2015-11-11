@@ -210,6 +210,13 @@ public class AppleConfig {
         false);
   }
 
+  public boolean shouldUseHeaderMapsInXcodeProject() {
+    return delegate.getBooleanValue(
+        "apple",
+        "use_header_maps_in_xcode",
+        true);
+  }
+
   public String getTestLogDirectoryEnvironmentVariable() {
     return delegate.getValue(
         "apple",

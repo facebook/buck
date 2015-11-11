@@ -3679,6 +3679,52 @@ public class ProjectGeneratorTest {
     assertThat(resource.getExplicitFileType(), not(equalTo(Optional.of("folder"))));
   }
 
+  @Test
+  public void testAppleLibraryWithoutHeaderMaps() throws IOException {
+    ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
+        ImmutableSortedMap.of(
+            "Debug", ImmutableMap.<String, String>of());
+
+    BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
+    TargetNode<?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setConfigs(Optional.of(configs))
+        .setSrcs(
+            Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("foo.m")))))
+        .build();
+
+    BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
+    TargetNode<?> testNode = AppleTestBuilder
+        .createBuilder(testTarget)
+        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setConfigs(Optional.of(configs))
+        .setInfoPlist(new TestSourcePath("Info.plist"))
+        .setSrcs(
+            Optional.of(
+                ImmutableSortedSet.of(SourceWithFlags.of(new TestSourcePath("fooTest.m")))))
+        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .build();
+
+    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
+        ImmutableSet.of(libraryNode, testNode),
+        ImmutableSet.of(ProjectGenerator.Option.DISABLE_HEADER_MAPS));
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(
+        projectGenerator.getGeneratedProject(),
+        "//foo:xctest");
+
+    ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
+    assertEquals(
+        "$(inherited) " +
+            "../buck-out/gen/foo/xctest-private-header-symlink-tree " +
+            "../buck-out/gen/foo/xctest-public-header-symlink-tree " +
+            "../buck-out/gen/foo/lib-public-header-symlink-tree " +
+            "../buck-out",
+        settings.get("HEADER_SEARCH_PATHS"));
+  }
+
   private ProjectGenerator createProjectGeneratorForCombinedProject(
       Iterable<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(

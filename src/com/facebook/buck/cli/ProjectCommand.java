@@ -699,12 +699,14 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> passedInTargetsSet)
       throws IOException, InterruptedException {
     int exitCode = 0;
+    AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
     ImmutableSet<ProjectGenerator.Option> options = buildWorkspaceGeneratorOptions(
         getReadOnly(params.getBuckConfig()),
         isWithTests(),
         isWithDependenciesTests(),
-        getCombinedProject()
-    );
+        getCombinedProject(),
+        appleConfig.shouldUseHeaderMapsInXcodeProject());
+
     ImmutableSet<BuildTarget> requiredBuildTargets = generateWorkspacesForTargets(
         params,
         targetGraphAndTargets,
@@ -835,7 +837,8 @@ public class ProjectCommand extends BuildCommand {
       boolean isReadonly,
       boolean isWithTests,
       boolean isWithDependenciesTests,
-      boolean isProjectsCombined) {
+      boolean isProjectsCombined,
+      boolean shouldUseHeaderMaps) {
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (isReadonly) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
@@ -850,6 +853,9 @@ public class ProjectCommand extends BuildCommand {
       optionsBuilder.addAll(ProjectGenerator.COMBINED_PROJECT_OPTIONS);
     } else {
       optionsBuilder.addAll(ProjectGenerator.SEPARATED_PROJECT_OPTIONS);
+    }
+    if (!shouldUseHeaderMaps) {
+      optionsBuilder.add(ProjectGenerator.Option.DISABLE_HEADER_MAPS);
     }
     return optionsBuilder.build();
   }
