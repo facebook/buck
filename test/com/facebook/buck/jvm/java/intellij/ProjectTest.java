@@ -51,6 +51,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.RuleMap;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -729,6 +730,14 @@ public class ProjectTest {
     // Create the Project.
     ExecutionContext executionContext = EasyMock.createMock(ExecutionContext.class);
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
+    EasyMock.expect(projectFilesystem.getRelativizer()).andStubReturn(
+        new Function<Path, Path>() {
+          @Override
+          public Path apply(@Nullable Path input) {
+            return Paths.get("").toAbsolutePath().relativize(input);
+          }
+        });
+    EasyMock.expect(projectFilesystem.getRootPath()).andStubReturn(Paths.get("").toAbsolutePath());
 
     Properties keystoreProperties = new Properties();
     keystoreProperties.put("key.alias", "androiddebugkey");

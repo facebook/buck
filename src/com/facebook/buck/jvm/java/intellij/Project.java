@@ -63,6 +63,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
@@ -282,8 +283,10 @@ public class Project {
         AndroidBinary androidBinary = (AndroidBinary) srcRule;
         AndroidPackageableCollection packageableCollection =
             androidBinary.getAndroidPackageableCollection();
-        noDxJarsBuilder.addAll(
-            resolver.deprecatedAllPaths(packageableCollection.getNoDxClasspathEntries()));
+        ImmutableList<Path> dxAbsolutePaths =
+            resolver.getAllAbsolutePaths(packageableCollection.getNoDxClasspathEntries());
+        noDxJarsBuilder.addAll(FluentIterable.from(dxAbsolutePaths)
+                .transform(projectFilesystem.getRelativizer()));
       }
 
       final Optional<Path> rJava;
@@ -311,7 +314,7 @@ public class Project {
     ImmutableSet<Path> noDxJars = noDxJarsBuilder.build();
 
     // Update module dependencies to apply scope="PROVIDED", where appropriate.
-    markNoDxJarsAsProvided(modules, noDxJars, resolver);
+    markNoDxJarsAsProvided(projectFilesystem, modules, noDxJars, resolver);
 
     return modules;
   }
@@ -427,7 +430,8 @@ public class Project {
         module.resFolder =
             createRelativeResourcesPath(
                 Optional.fromNullable(androidResource.getRes())
-                    .transform(resolver.deprecatedPathFunction())
+                    .transform(resolver.getAbsolutePathFunction())
+                    .transform(projectFilesystem.getRelativizer())
                     .orNull(),
                 target);
         module.isAndroidLibraryProject = true;
@@ -707,6 +711,7 @@ public class Project {
    */
   @VisibleForTesting
   static void markNoDxJarsAsProvided(
+      ProjectFilesystem projectFilesystem,
       List<SerializableModule> modules,
       Set<Path> noDxJars,
       SourcePathResolver resolver) {
@@ -731,7 +736,8 @@ public class Project {
             Sets.intersection(
                 noDxJars,
                 FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
-                    .transform(resolver.deprecatedPathFunction())
+                    .transform(resolver.getAbsolutePathFunction())
+                    .transform(projectFilesystem.getRelativizer())
                     .toSet()));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
@@ -924,7 +930,8 @@ public class Project {
     String name;
     if (rule instanceof PrebuiltJar) {
       PrebuiltJar prebuiltJar = (PrebuiltJar) rule;
-      String binaryJar = resolver.deprecatedGetPath(prebuiltJar.getBinaryJar()).toString();
+      Path absolutePath = resolver.getAbsolutePath(prebuiltJar.getBinaryJar());
+      String binaryJar = projectFilesystem.getRootPath().relativize(absolutePath).toString();
       return getIntellijNameForBinaryJar(binaryJar);
     } else {
       Path basePath = rule.getBuildTarget().getBasePath();
@@ -986,10 +993,13 @@ public class Project {
 
       PrebuiltJar prebuiltJar = (PrebuiltJar) libraryJar;
 
-      String binaryJar = resolver.deprecatedGetPath(prebuiltJar.getBinaryJar()).toString();
-      String sourceJar = prebuiltJar.getSourceJar().isPresent()
-          ? resolver.deprecatedGetPath(prebuiltJar.getSourceJar().get()).toString()
-          : null;
+      Path binaryJarAbsolutePath = resolver.getAbsolutePath(prebuiltJar.getBinaryJar());
+      String binaryJar = projectFilesystem.getRelativizer().apply(binaryJarAbsolutePath).toString();
+      String sourceJar = prebuiltJar.getSourceJar()
+          .transform(resolver.getAbsolutePathFunction())
+          .transform(projectFilesystem.getRelativizer())
+          .transform(Functions.toStringFunction())
+          .orNull();
       String javadocUrl = prebuiltJar.getJavadocUrl().orNull();
       libraries.add(new SerializablePrebuiltJarRule(name, binaryJar, sourceJar, javadocUrl));
     }
