@@ -5,6 +5,7 @@ java_library(
     '//test/com/facebook/buck/halide:halide',
   ],
   deps = [
+    '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/io:io',

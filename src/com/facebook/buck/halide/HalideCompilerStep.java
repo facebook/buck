@@ -18,32 +18,59 @@ package com.facebook.buck.halide;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 public class HalideCompilerStep extends ShellStep {
+  // The list of arguments needed to run our generated compiler.
   private final ImmutableList<String> compilerPrefix;
+
+  // The output directory in which to write the generated shader code.
   private final Path outputDir;
-  private final String outputName;
+
+  // The name of the function (or pipeline) to compile.
+  private final String funcName;
+
+  // The Halide target string for the target architecture, e.g. "x86-64-osx".
+  // May be empty; if so, we assume that we should generate code for the host
+  // architecture.
+  private final Optional<String> halideTarget;
+
+  // If true, only generate the header file for the compiled shader.
+  private final boolean headerOnly;
 
   public HalideCompilerStep(
       Path workingDirectory,
       ImmutableList<String> compilerPrefix,
       Path outputDir,
-      String outputName) {
+      String funcName,
+      Optional<String> halideTarget,
+      boolean headerOnly) {
     super(workingDirectory);
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;
-    this.outputName = outputName;
+    this.funcName = funcName;
+    this.halideTarget = halideTarget;
+    this.headerOnly = headerOnly;
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    return ImmutableList.<String>builder()
-      .addAll(compilerPrefix)
-      .add("-o", outputDir.toString())
-      .add(outputName)
-      .build();
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    builder.addAll(compilerPrefix);
+    builder.add("-o", outputDir.toString());
+
+    if (halideTarget.isPresent() && !halideTarget.get().isEmpty()) {
+      builder.add("-t", halideTarget.get());
+    }
+
+    if (headerOnly) {
+      builder.add("--header-only");
+    }
+
+    builder.add(funcName);
+    return builder.build();
   }
 
   @Override

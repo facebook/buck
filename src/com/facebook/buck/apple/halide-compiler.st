@@ -9,7 +9,8 @@ set -e
 REPO_ROOT=<repo_root>
 PATH_TO_COMPILER=<path_to_compiler>
 PATH_TO_OUTPUT=<output_dir>
-OUTPUT_PREFIX=<output_prefix>
+FUNC_NAME=<func_name>
+OBJECTS=''
 
 cd $REPO_ROOT
 mkdir -p $PATH_TO_OUTPUT
@@ -40,11 +41,13 @@ do
             echo "Unrecognized architecture: $ARCH"
             exit 1
     esac
-    $PATH_TO_COMPILER -t "$TARGET" -o $PATH_TO_OUTPUT $OUTPUT_PREFIX
+    mkdir -p $PATH_TO_OUTPUT/$ARCH
+    $PATH_TO_COMPILER -t "$TARGET" -o $PATH_TO_OUTPUT/$ARCH $FUNC_NAME
+    OBJECTS+=" $PATH_TO_OUTPUT/$ARCH/$FUNC_NAME.o"
 done
 
-# TODO: lipo the object files into a "universal" library here
-lipo $PATH_TO_OUTPUT/*.o -create -output $PATH_TO_OUTPUT/$OUTPUT_PREFIX.a
+# Use lipo to create a "universal" library from the object files.
+lipo $OBJECTS -create -output $PATH_TO_OUTPUT/$FUNC_NAME.a
 
 # Now generate the header.
-$PATH_TO_COMPILER -o $PATH_TO_OUTPUT --header-only $OUTPUT_PREFIX
+$PATH_TO_COMPILER -o $PATH_TO_OUTPUT --header-only $FUNC_NAME

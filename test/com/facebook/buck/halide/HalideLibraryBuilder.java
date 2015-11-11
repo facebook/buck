@@ -16,6 +16,8 @@
 
 package com.facebook.buck.halide;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
@@ -29,16 +31,23 @@ import com.google.common.collect.ImmutableMap;
 public class HalideLibraryBuilder extends AbstractCxxSourceBuilder<HalideLibraryDescription.Arg> {
   public HalideLibraryBuilder(
     BuildTarget target,
+    HalideBuckConfig halideBuckConfig,
     FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
       new HalideLibraryDescription(
         cxxPlatforms,
-        CxxPreprocessMode.SEPARATE),
+        CxxPreprocessMode.SEPARATE,
+        halideBuckConfig),
       target);
   }
 
   public HalideLibraryBuilder(BuildTarget target) {
-    this(target, createDefaultPlatforms());
+    this(target, createDefaultHalideConfig(), createDefaultPlatforms());
+  }
+
+  public static HalideBuckConfig createDefaultHalideConfig() {
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    return new HalideBuckConfig(buckConfig);
   }
 
   // The #halide-compiler version of the HalideLibrary rule expects to be able

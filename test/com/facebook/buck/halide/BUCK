@@ -2,11 +2,13 @@ java_library(
   name = 'testutil',
   srcs = glob(['*.java'], excludes=['*Test.java']),
   deps = [
+    '//src/com/facebook/buck/cli:config',
     '//src/com/facebook/buck/cxx:platform',
     '//src/com/facebook/buck/cxx:rules',
     '//src/com/facebook/buck/halide:rules',
     '//src/com/facebook/buck/model:model',
     '//src/com/facebook/buck/rules:build_rule',
+    '//test/com/facebook/buck/cli:FakeBuckConfig',
     '//test/com/facebook/buck/cxx:testutil',
     '//test/com/facebook/buck/rules:testutil',
     '//third-party/java/guava:guava',

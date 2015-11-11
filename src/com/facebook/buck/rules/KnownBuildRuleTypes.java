@@ -85,6 +85,7 @@ import com.facebook.buck.go.GoBuckConfig;
 import com.facebook.buck.go.GoLibraryDescription;
 import com.facebook.buck.go.GoTestDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
+import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -379,6 +380,8 @@ public class KnownBuildRuleTypes {
 
     GoBuckConfig goBuckConfig = new GoBuckConfig(config, processExecutor);
 
+    HalideBuckConfig halideBuckConfig = new HalideBuckConfig(config);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
 
     PythonBuckConfig pyConfig = new PythonBuckConfig(config, new ExecutableFinder());
@@ -527,7 +530,8 @@ public class KnownBuildRuleTypes {
     builder.register(
       new HalideLibraryDescription(
         cxxPlatforms,
-        cxxBuckConfig.getPreprocessMode()));
+        cxxBuckConfig.getPreprocessMode(),
+        halideBuckConfig));
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new JavaBinaryDescription(defaultJavacOptions, defaultCxxPlatform));
     builder.register(new JavaLibraryDescription(defaultJavacOptions));

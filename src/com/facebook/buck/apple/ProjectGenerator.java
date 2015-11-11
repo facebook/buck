@@ -693,7 +693,7 @@ public class ProjectGenerator {
     template.add("repo_root", projectFilesystem.getRootPath());
     template.add("path_to_compiler", compilerPath);
     template.add("output_dir", outputPath);
-    template.add("output_prefix", buildTarget.getShortName());
+    template.add("func_name", buildTarget.getShortName());
     scriptPhase.setShellScript(template.render());
 
     NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(

@@ -89,12 +89,15 @@ public class HalideLibraryDescription implements
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPreprocessMode preprocessMode;
+  private final HalideBuckConfig halideBuckConfig;
 
   public HalideLibraryDescription(
     FlavorDomain<CxxPlatform> cxxPlatforms,
-    CxxPreprocessMode preprocessMode) {
+    CxxPreprocessMode preprocessMode,
+    HalideBuckConfig halideBuckConfig) {
     this.cxxPlatforms = cxxPlatforms;
     this.preprocessMode = preprocessMode;
+    this.halideBuckConfig = halideBuckConfig;
   }
 
   public static boolean isHalideCompilerTarget(BuildTarget target) {
@@ -240,12 +243,10 @@ public class HalideLibraryDescription implements
           .builder(target.getUnflavoredBuildTarget())
           .build();
         String headerName = unflavoredTarget.getShortName() + ".h";
-        Path outputPath = BuildTargets.getGenPath(
-          unflavoredTarget,
-          "%s/" + headerName);
+        Path outputPath = BuildTargets.getGenPath(unflavoredTarget, "%s");
         headersBuilder.put(
           Paths.get(headerName),
-          new BuildTargetSourcePath(unflavoredTarget, outputPath));
+          new BuildTargetSourcePath(unflavoredTarget, outputPath.resolve(headerName)));
         return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           params,
           new SourcePathResolver(resolver),
@@ -294,14 +295,13 @@ public class HalideLibraryDescription implements
     Preconditions.checkState(rule.isPresent());
     CxxBinary halideCompiler = (CxxBinary) rule.get();
     return new HalideLibrary(
-      // params.copyWithExtraDeps(
-      //   Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(halideCompiler))),
       params,
       resolver,
       pathResolver,
       args.srcs.get(),
       halideCompiler.getExecutableCommand(),
-      /* outputDir */ BuildTargets.getGenPath(params.getBuildTarget(), "%s"));
+      Optional.<CxxPlatform>absent(),
+      halideBuckConfig);
   }
 
   @SuppressFieldNotInitialized
