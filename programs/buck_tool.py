@@ -4,13 +4,15 @@ import json
 import os
 import platform
 import re
+import shlex
+import signal
 import signal
 import subprocess
 import sys
 import tempfile
 import textwrap
 import time
-import shlex
+import traceback
 
 from timing import monotonic_time_nanos
 from tracing import Tracing
@@ -487,3 +489,10 @@ def is_java8():
     except CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e
+
+
+def install_signal_handlers():
+    if os.name == 'posix':
+        signal.signal(
+            signal.SIGUSR1,
+            lambda sig, frame: traceback.print_stack(frame))

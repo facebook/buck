@@ -6,7 +6,7 @@ import sys
 import uuid
 import zipfile
 
-from buck_tool import BuckToolException, RestartBuck
+from buck_tool import BuckToolException, RestartBuck, install_signal_handlers
 from buck_project import BuckProject, NoBuckConfigFoundException
 from tracing import Tracing
 from subprocutils import propagate_failure
@@ -15,6 +15,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def main(argv):
+    install_signal_handlers()
     try:
         java_home = os.getenv("JAVA_HOME", "")
         path = os.getenv("PATH", "")
