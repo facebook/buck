@@ -690,4 +690,21 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testExperimentalBuckProjectSourceMerging() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "experimental_project_source_merge", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--experimental-ij-generation",
+        "//java/code/modules/tip");
+    result.assertSuccess("buck project should exit cleanly");
+
+    workspace.verify();
+  }
 }

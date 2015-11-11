@@ -102,7 +102,7 @@ abstract class AbstractIjFolder {
   }
 
   public IjFolder merge(IjFolder otherFolder) {
-    Preconditions.checkArgument(otherFolder.getPath().equals(getPath()));
+    Preconditions.checkArgument(getPath().startsWith(otherFolder.getPath()));
 
     return otherFolder
         .withWantsPackagePrefix(getWantsPackagePrefix() || otherFolder.getWantsPackagePrefix())
