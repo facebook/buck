@@ -98,10 +98,22 @@ public class RuleKeyBuilder {
       return setSingleValue(buildRule.get());
     } else {
       // The original version of this expected the path to be relative, however, sometimes the
-      // deprecated method returned an absolute path, which is obviously less than ideal. Maintain
-      // the old behaviour until we root out the places where things aren't working as expected.
-      Path path = resolver.deprecatedGetPath(sourcePath);
-      return setSingleValue(path);
+      // deprecated method returned an absolute path, which is obviously less than ideal. If we can,
+      // grab the relative path to the output. We also need to hash the contents of the absolute
+      // path no matter what.
+      Path ideallyRelative;
+      try {
+        ideallyRelative = resolver.getRelativePath(sourcePath);
+      } catch (IllegalStateException e) {
+        // Expected relative path was absolute. Yay.
+        ideallyRelative = resolver.getAbsolutePath(sourcePath);
+      }
+      Path absolutePath = resolver.getAbsolutePath(sourcePath);
+      try {
+        return setPath(absolutePath, ideallyRelative);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -211,26 +223,37 @@ public class RuleKeyBuilder {
     }
   }
 
+  public RuleKeyBuilder setPath(Path path) throws IOException {
+    return setPath(path, path);
+  }
+
   // Paths get added as a combination of the file name and file hash. If the path is absolute
   // then we only include the file name (assuming that it represents a tool of some kind
   // that's being used for compilation or some such). This does mean that if a user renames a
   // file without changing the contents, we have a cache miss. We're going to assume that this
   // doesn't happen that often in practice.
-  public RuleKeyBuilder setPath(Path path) throws IOException {
-    HashCode sha1 = hashCache.get(path);
+  private RuleKeyBuilder setPath(Path absolutePath, Path ideallyRelative) throws IOException {
+    // TODO(simons): Enable this precondition once setPath(Path) has been removed.
+    // Preconditions.checkState(absolutePath.isAbsolute());
+    HashCode sha1 = hashCache.get(absolutePath);
     if (sha1 == null) {
-      throw new RuntimeException("No SHA for " + path);
+      throw new RuntimeException("No SHA for " + absolutePath);
     }
-    if (logElms != null) {
-      logElms.add(String.format("path(%s:%s):", path, sha1));
-    }
-    if (path.isAbsolute()) {
+
+    Path addToKey;
+    if (ideallyRelative.isAbsolute()) {
       logger.warn(
-          "Attempting to add absolute path to rule key. Only using file name: %s", path);
-      feed(path.getFileName().toString().getBytes());
+          "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
+      addToKey = ideallyRelative.getFileName();
     } else {
-      feed(path.toString().getBytes());
+      addToKey = ideallyRelative;
     }
+
+    if (logElms != null) {
+      logElms.add(String.format("path(%s:%s):", addToKey, sha1));
+    }
+
+    feed(addToKey.toString().getBytes());
     feed(sha1.toString().getBytes());
     return this;
   }
