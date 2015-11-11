@@ -180,6 +180,7 @@ public class AndroidBinaryDescription
         resolver,
         compressionMode,
         resourceFilter,
+        args.resourceUnionPackage,
         addFallbackLocales(args.locales.or(ImmutableSet.<String>of())),
         args.manifest,
         packageType,
@@ -350,6 +351,7 @@ public class AndroidBinaryDescription
     public Optional<SourcePath> secondaryDexTailClassesFile;
     public Optional<Long> linearAllocHardLimit;
     public Optional<List<String>> resourceFilter;
+    public Optional<String> resourceUnionPackage;
     public Optional<ImmutableSet<String>> locales;
     public Optional<Boolean> buildStringSourceMap;
     public Optional<Set<TargetCpuType>> cpuFilters;

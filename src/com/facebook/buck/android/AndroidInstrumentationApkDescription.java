@@ -120,6 +120,7 @@ public class AndroidInstrumentationApkDescription
         resolver,
         ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+        /* resourceUnionPackage */ Optional.<String>absent(),
         /* locales */ ImmutableSet.<String>of(),
         args.manifest,
         PackageType.INSTRUMENTED,

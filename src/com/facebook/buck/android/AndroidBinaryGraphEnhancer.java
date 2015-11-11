@@ -73,6 +73,7 @@ public class AndroidBinaryGraphEnhancer {
   private final SourcePathResolver pathResolver;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ResourceFilter resourceFilter;
+  private final Optional<String> resourceUnionPackage;
   private final ImmutableSet<String> locales;
   private final SourcePath manifest;
   private final PackageType packageType;
@@ -99,6 +100,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleResolver ruleResolver,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourcesFilter,
+      Optional<String> resourceUnionPackage,
       ImmutableSet<String> locales,
       SourcePath manifest,
       PackageType packageType,
@@ -126,6 +128,7 @@ public class AndroidBinaryGraphEnhancer {
     this.pathResolver = new SourcePathResolver(ruleResolver);
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourcesFilter;
+    this.resourceUnionPackage = resourceUnionPackage;
     this.locales = locales;
     this.manifest = manifest;
     this.packageType = packageType;
@@ -226,6 +229,7 @@ public class AndroidBinaryGraphEnhancer {
         filteredResourcesProvider,
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         packageableCollection.getAssetsDirectories(),
+        resourceUnionPackage,
         packageType,
         javacOptions,
         shouldPreDex,

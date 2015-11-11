@@ -96,13 +96,14 @@ public class MergeAndroidResourcesStep implements Step {
       ProjectFilesystem filesystem,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path uberRDotTxt,
-      Path outputDir) {
+      Path outputDir,
+      Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
         filesystem,
         androidResourceDeps,
         Optional.of(uberRDotTxt),
         outputDir,
-        Optional.<String>absent());
+        unionPackage);
   }
 
   public ImmutableSortedSet<Path> getRDotJavaFiles() {

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -64,6 +65,7 @@ public class AaptPackageResourcesTest {
             resourcesProvider,
             ImmutableList.<HasAndroidResourceDeps>of(),
             ImmutableSet.<SourcePath>of(),
+            /* resourceUnionPackage */ Optional.<String>absent(),
             PackageType.DEBUG,
             DEFAULT_JAVAC_OPTIONS,
             /* rDotJavaNeedsDexing */ false,

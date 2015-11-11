@@ -84,6 +84,8 @@ public class AaptPackageResources extends AbstractBuildRule
   private final FilteredResourcesProvider filteredResourcesProvider;
   private final ImmutableSet<SourcePath> assetsDirectories;
   @AddToRuleKey
+  private final Optional<String> resourceUnionPackage;
+  @AddToRuleKey
   private final PackageType packageType;
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
   private final JavacOptions javacOptions;
@@ -102,6 +104,7 @@ public class AaptPackageResources extends AbstractBuildRule
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       ImmutableSet<SourcePath> assetsDirectories,
+      Optional<String> resourceUnionPackage,
       PackageType packageType,
       JavacOptions javacOptions,
       boolean rDotJavaNeedsDexing,
@@ -112,6 +115,7 @@ public class AaptPackageResources extends AbstractBuildRule
     this.filteredResourcesProvider = filteredResourcesProvider;
     this.resourceDeps = resourceDeps;
     this.assetsDirectories = assetsDirectories;
+    this.resourceUnionPackage = resourceUnionPackage;
     this.packageType = packageType;
     this.javacOptions = javacOptions;
     this.rDotJavaNeedsDexing = rDotJavaNeedsDexing;
@@ -305,7 +309,8 @@ public class AaptPackageResources extends AbstractBuildRule
         getProjectFilesystem(),
         resourceDeps,
         getPathToRDotTxtFile(),
-        rDotJavaSrc);
+        rDotJavaSrc,
+        resourceUnionPackage);
     steps.add(mergeStep);
 
     if (shouldBuildStringSourceMap) {
