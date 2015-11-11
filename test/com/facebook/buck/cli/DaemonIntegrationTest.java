@@ -488,7 +488,6 @@ public class DaemonIntegrationTest {
                 ImmutableMap.of("somesection", ImmutableMap.of("somename", "somevalue"))).build())
             .setFilesystem(filesystem)
             .build(),
-        ParserConfig.GlobHandler.PYTHON,
         ParserConfig.AllowSymlinks.ALLOW,
         new ObjectMapper());
     assertEquals(
@@ -501,7 +500,6 @@ public class DaemonIntegrationTest {
                     .build())
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON,
             ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
 
@@ -515,7 +513,6 @@ public class DaemonIntegrationTest {
                         ImmutableMap.of("somename", "someothervalue"))).build())
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON,
             ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
   }
@@ -557,7 +554,6 @@ public class DaemonIntegrationTest {
                     Optional.of("something")))
             .setFilesystem(filesystem)
             .build(),
-        ParserConfig.GlobHandler.PYTHON,
         ParserConfig.AllowSymlinks.ALLOW,
         new ObjectMapper());
 
@@ -572,7 +568,6 @@ public class DaemonIntegrationTest {
                         Optional.of("different")))
                 .setFilesystem(filesystem)
                 .build(),
-            ParserConfig.GlobHandler.PYTHON,
             ParserConfig.AllowSymlinks.ALLOW,
             new ObjectMapper()));
   }

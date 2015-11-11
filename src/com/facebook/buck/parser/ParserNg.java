@@ -62,8 +62,8 @@ public class ParserNg {
 
   private final DaemonicParserState permState;
 
-  public ParserNg(boolean useWatchmanGlob) {
-    this.permState = new DaemonicParserState(useWatchmanGlob);
+  public ParserNg() {
+    this.permState = new DaemonicParserState();
   }
 
   public ImmutableList<Map<String, Object>> getRawTargetNodes(

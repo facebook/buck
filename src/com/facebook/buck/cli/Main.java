@@ -224,7 +224,6 @@ public final class Main {
 
     public Daemon(
         Cell cell,
-        ParserConfig.GlobHandler globHandler,
         ParserConfig.AllowSymlinks allowSymlinks,
         ObjectMapper objectMapper,
         Optional<WebServer> webServerToReuse)
@@ -241,7 +240,6 @@ public final class Main {
 
       this.parser = Parser.createBuildFileParser(
           cell,
-          globHandler == ParserConfig.GlobHandler.WATCHMAN,
           allowSymlinks);
       fileEventBus.register(parser);
       fileEventBus.register(hashCache);
@@ -409,15 +407,14 @@ public final class Main {
   @VisibleForTesting
   static Daemon getDaemon(
       Cell cell,
-      ParserConfig.GlobHandler globHandler,
       ParserConfig.AllowSymlinks allowSymlinks,
       ObjectMapper objectMapper)
       throws IOException, InterruptedException  {
     Path rootPath = cell.getFilesystem().getRootPath();
-    Optional<WebServer> webServer = Optional.<WebServer>absent();
+    Optional<WebServer> webServer = Optional.absent();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon = new Daemon(cell, globHandler, allowSymlinks, objectMapper, webServer);
+      daemon = new Daemon(cell, allowSymlinks, objectMapper, webServer);
     } else {
       // Buck daemons cache build files within a single project root, changing to a different
       // project root is not supported and will likely result in incorrect builds. The buck and
@@ -440,7 +437,7 @@ public final class Main {
         } else {
           daemon.close();
         }
-        daemon = new Daemon(cell, globHandler, allowSymlinks, objectMapper, webServer);
+        daemon = new Daemon(cell, allowSymlinks, objectMapper, webServer);
       }
     }
     return daemon;
@@ -643,28 +640,18 @@ public final class Main {
 
     ParserConfig parserConfig = new ParserConfig(buckConfig);
     Watchman watchman;
-    ParserConfig.GlobHandler globHandler;
     if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
       watchman = Watchman.build(projectRoot, clientEnvironment, console, clock);
-      if (parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN &&
-          watchman.hasWildmatchGlob()) {
-        globHandler = ParserConfig.GlobHandler.WATCHMAN;
-      } else {
-        globHandler = ParserConfig.GlobHandler.PYTHON;
-      }
 
       LOG.debug(
-          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s " +
-          "Final glob handler: %s",
+          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s ",
           watchman.getCapabilities(),
           watchman.getWatchRoot(),
           watchman.getProjectPrefix(),
-          parserConfig.getGlobHandler(),
-          globHandler);
+          parserConfig.getGlobHandler());
 
     } else {
       watchman = Watchman.NULL_WATCHMAN;
-      globHandler = ParserConfig.GlobHandler.PYTHON;
     }
 
     final boolean isDaemon = context.isPresent() && (watchman != Watchman.NULL_WATCHMAN);
@@ -695,9 +682,8 @@ public final class Main {
     ProjectFileHashCache cellHashCache;
     ProjectFileHashCache buckOutHashCache;
     if (isDaemon) {
-      cellHashCache = getFileHashCacheFromDaemon(rootCell, globHandler, allowSymlinks);
-      buckOutHashCache = getBuckOutFileHashCacheFromDaemon(
-          rootCell, globHandler, allowSymlinks);
+      cellHashCache = getFileHashCacheFromDaemon(rootCell, allowSymlinks);
+      buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootCell, allowSymlinks);
     } else {
       cellHashCache = new DefaultFileHashCache(rootCell.getFilesystem());
       buckOutHashCache =
@@ -738,7 +724,6 @@ public final class Main {
     Optional<WebServer> webServer = getWebServerIfDaemon(
         context,
         rootCell,
-        globHandler,
         allowSymlinks);
 
     TestConfig testConfig = new TestConfig(buckConfig);
@@ -829,7 +814,7 @@ public final class Main {
 
       if (isDaemon && watchman != Watchman.NULL_WATCHMAN) {
         try {
-          Daemon daemon = getDaemon(rootCell, globHandler, allowSymlinks, objectMapper);
+          Daemon daemon = getDaemon(rootCell, allowSymlinks, objectMapper);
           WatchmanWatcher watchmanWatcher = new WatchmanWatcher(
              watchman.getWatchRoot().or(canonicalRootPath.toString()),
              daemon.getFileEventBus(),
@@ -846,7 +831,6 @@ public final class Main {
               startedEvent,
               buildEventBus,
               watchmanWatcher,
-              globHandler,
               allowSymlinks);
         } catch (WatchmanWatcherException | IOException e) {
           buildEventBus.post(
@@ -859,7 +843,6 @@ public final class Main {
       if (parser == null) {
         parser = Parser.createBuildFileParser(
             rootCell,
-            globHandler == ParserConfig.GlobHandler.WATCHMAN,
             allowSymlinks);
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(rootCell.getFilesystem());
@@ -1070,10 +1053,9 @@ public final class Main {
       CommandEvent commandEvent,
       BuckEventBus eventBus,
       WatchmanWatcher watchmanWatcher,
-      ParserConfig.GlobHandler globHandler,
       ParserConfig.AllowSymlinks allowSymlinks) throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
-    Daemon daemon = getDaemon(cell, globHandler, allowSymlinks, objectMapper);
+    Daemon daemon = getDaemon(cell, allowSymlinks, objectMapper);
     daemon.watchClient(context.get());
     daemon.watchFileSystem(commandEvent, eventBus, watchmanWatcher);
     return daemon.getParser();
@@ -1081,30 +1063,27 @@ public final class Main {
 
   private DefaultFileHashCache getFileHashCacheFromDaemon(
       Cell cell,
-      ParserConfig.GlobHandler globHandler,
       ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
-    Daemon daemon = getDaemon(cell, globHandler, allowSymlinks, objectMapper);
+    Daemon daemon = getDaemon(cell, allowSymlinks, objectMapper);
     return daemon.getFileHashCache();
   }
 
   private DefaultFileHashCache getBuckOutFileHashCacheFromDaemon(
       Cell cell,
-      ParserConfig.GlobHandler globHandler,
       ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
-    Daemon daemon = getDaemon(cell, globHandler, allowSymlinks, objectMapper);
+    Daemon daemon = getDaemon(cell, allowSymlinks, objectMapper);
     return daemon.getBuckOutHashCache();
   }
 
   private Optional<WebServer> getWebServerIfDaemon(
       Optional<NGContext> context,
       Cell cell,
-      ParserConfig.GlobHandler globHandler,
       ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException  {
     if (context.isPresent()) {
-      Daemon daemon = getDaemon(cell, globHandler, allowSymlinks, objectMapper);
+      Daemon daemon = getDaemon(cell, allowSymlinks, objectMapper);
       return daemon.getWebServer();
     }
     return Optional.absent();

@@ -108,7 +108,6 @@ public class Parser {
   private final CachedState state;
 
   private final Cell cell;
-  private final boolean useWatchmanGlob;
 
   /**
    * Key of the meta-rule that lists the build files executed while reading rules.
@@ -185,7 +184,6 @@ public class Parser {
 
   public static Parser createBuildFileParser(
       final Cell cell,
-      boolean useWatchmanGlob,
       ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
     return new Parser(
@@ -200,7 +198,6 @@ public class Parser {
                 cell.getBuildFileName());  // TODO(simons): This is doomed to failure.
           }
         },
-        useWatchmanGlob,
         allowSymlinks);
   }
 
@@ -211,11 +208,9 @@ public class Parser {
   Parser(
       Cell cell,
       Supplier<BuildFileTree> buildFileTreeSupplier,
-      boolean useWatchmanGlob,
       ParserConfig.AllowSymlinks allowSymlinks)
       throws IOException, InterruptedException {
     this.cell = cell;
-    this.useWatchmanGlob = useWatchmanGlob;
     this.buildFileTreeCache = new BuildFileTreeCache(buildFileTreeSupplier);
     this.state = new CachedState(cell.getBuildFileName(), allowSymlinks);
   }
@@ -309,8 +304,7 @@ public class Parser {
 
     try (BuildFileParsers buildFileParsers = new BuildFileParsers(
         console,
-        eventBus,
-        useWatchmanGlob)) {
+        eventBus)) {
       buildFileParsers.setEnableProfiling(enableProfiling);
 
       return resolveTargetSpec(spec, parserConfig, buildFileParsers, environment);
@@ -357,8 +351,7 @@ public class Parser {
 
     try (BuildFileParsers buildFileParsers = new BuildFileParsers(
         console,
-        eventBus,
-        useWatchmanGlob)) {
+        eventBus)) {
       buildFileParsers.setEnableProfiling(enableProfiling);
       // TODO(simons): This is doomed since we should be using the cell for each resolved node.
       ProjectBuildFileParser buildFileParser = buildFileParsers.create(cell);
@@ -434,8 +427,7 @@ public class Parser {
 
       try (BuildFileParsers buildFileParsers = new BuildFileParsers(
           console,
-          eventBus,
-          useWatchmanGlob)) {
+          eventBus)) {
         buildFileParsers.setEnableProfiling(enableProfiling);
 
         Cell targetCell = cell.getCell(buildTarget);
@@ -743,8 +735,7 @@ public class Parser {
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     try (BuildFileParsers buildFileParsers = new BuildFileParsers(
         console,
-        buckEventBus,
-        useWatchmanGlob)) {
+        buckEventBus)) {
       return parseBuildFile(
           cellRoot,
           buildFile,
@@ -1465,14 +1456,12 @@ public class Parser {
 
     private final Console console;
     private final BuckEventBus eventBus;
-    private final boolean useWatchmanGlob;
     private Map<Cell, ProjectBuildFileParser> toClose = new HashMap<>();
     private boolean enableProfiling;
 
-    public BuildFileParsers(Console console, BuckEventBus eventBus, boolean useWatchmanGlob) {
+    public BuildFileParsers(Console console, BuckEventBus eventBus) {
       this.console = console;
       this.eventBus = eventBus;
-      this.useWatchmanGlob = useWatchmanGlob;
     }
 
     public void setEnableProfiling(boolean enableProfiling) {
@@ -1483,7 +1472,7 @@ public class Parser {
       ProjectBuildFileParser parser = toClose.get(cell);
 
       if (parser == null) {
-        parser = cell.createBuildFileParser(console, eventBus, useWatchmanGlob);
+        parser = cell.createBuildFileParser(console, eventBus);
         parser.setEnableProfiling(enableProfiling);
         toClose.put(cell, parser);
       }

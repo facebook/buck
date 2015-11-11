@@ -146,8 +146,7 @@ class PerBuildState implements AutoCloseable {
     if (parser == null) {
       parser = cell.createBuildFileParser(
           console,
-          eventBus,
-          permState.isUsingWatchmanGlob());
+          eventBus);
       parser.setEnableProfiling(enableProfiling);
       parsers.put(cell, parser);
     }

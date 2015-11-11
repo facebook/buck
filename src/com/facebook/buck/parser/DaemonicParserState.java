@@ -94,7 +94,6 @@ class DaemonicParserState {
    */
   private static final String INCLUDES_META_RULE = "__includes";
 
-  private final boolean useWatchmanGlob;
   private final ConstructorArgMarshaller marshaller;
   private final OptimisticLoadingCache<Path, ImmutableList<Map<String, Object>>> allRawNodes;
   private final HashMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
@@ -127,9 +126,7 @@ class DaemonicParserState {
    */
   private final Set<Cell> knownCells;
 
-  public DaemonicParserState(boolean useWatchmanGlob) {
-    this.useWatchmanGlob = useWatchmanGlob;
-
+  public DaemonicParserState() {
     this.marshaller = new ConstructorArgMarshaller();
     this.allRawNodes = new OptimisticLoadingCache<>();
     this.targetsCornucopia = HashMultimap.create();
@@ -145,10 +142,6 @@ class DaemonicParserState {
     this.cachedEnvironment = ImmutableMap.of();
     this.cachedIncludes = new ConcurrentHashMap<>();
     this.knownCells = Collections.synchronizedSet(new HashSet<Cell>());
-  }
-
-  public boolean isUsingWatchmanGlob() {
-    return useWatchmanGlob;
   }
 
   public ImmutableList<Map<String, Object>> getAllRawNodes(
@@ -624,7 +617,6 @@ class DaemonicParserState {
     return String.format(
         "memoized=%s known-cells=%s use-watchman-globbing=%s",
         allTargetNodes,
-        knownCells,
-        useWatchmanGlob);
+        knownCells);
   }
 }

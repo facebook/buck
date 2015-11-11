@@ -71,7 +71,6 @@ public class CommandRunnerParamsForTesting {
         eventBus,
         Parser.createBuildFileParser(
             cell,
-            /* useWatchmanGlob */ false,
             ParserConfig.AllowSymlinks.ALLOW),
         platform,
         environment,

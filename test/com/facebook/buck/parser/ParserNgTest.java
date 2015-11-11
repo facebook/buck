@@ -149,7 +149,7 @@ public class ParserNgTest {
         .setBuckConfig(config)
         .build();
 
-    parser = new ParserNg(false);
+    parser = new ParserNg();
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -1231,7 +1231,7 @@ public class ParserNgTest {
     BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    parser = new ParserNg(false);
+    parser = new ParserNg();
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1345,7 +1345,7 @@ public class ParserNgTest {
     HashCode libKey = hashes.get(fooLibTarget);
     HashCode lib2Key = hashes.get(fooLib2Target);
 
-    parser = new ParserNg(false);
+    parser = new ParserNg();
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n" +
