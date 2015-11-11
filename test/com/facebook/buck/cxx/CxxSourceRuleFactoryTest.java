@@ -169,7 +169,7 @@ public class CxxSourceRuleFactoryTest {
     assertNotEquals(
         -1,
         Collections.indexOfSubList(
-            cxxPreprocess.getPlatformPreprocessorFlags().get(),
+            cxxPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand(),
             platformFlags));
     CxxPreprocessAndCompile cxxPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -181,7 +181,7 @@ public class CxxSourceRuleFactoryTest {
     assertNotEquals(
         -1,
         Collections.indexOfSubList(
-            cxxPreprocessAndCompile.getPlatformPreprocessorFlags().get(),
+            cxxPreprocessAndCompile.getPreprocessorDelegate().get().getPreprocessorCommand(),
             platformFlags));
   }
 
@@ -248,9 +248,11 @@ public class CxxSourceRuleFactoryTest {
             cSourceName,
             cSource,
             CxxSourceRuleFactory.PicType.PDC);
-    assertContains(cPreprocess.getRulePreprocessorFlags().get(), explicitCppflags);
-    assertContains(cPreprocess.getPlatformPreprocessorFlags().get(), cppflags);
-    assertContains(cPreprocess.getRulePreprocessorFlags().get(), perFileFlagsForTestC);
+    ImmutableList<String> cPreprocessCommand =
+        cPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand();
+    assertContains(cPreprocessCommand, explicitCppflags);
+    assertContains(cPreprocessCommand, cppflags);
+    assertContains(cPreprocessCommand, perFileFlagsForTestC);
     CxxPreprocessAndCompile cPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
             buildRuleResolver,
@@ -273,9 +275,11 @@ public class CxxSourceRuleFactoryTest {
             cxxSourceName,
             cxxSource,
             CxxSourceRuleFactory.PicType.PDC);
-    assertContains(cxxPreprocess.getRulePreprocessorFlags().get(), explicitCxxppflags);
-    assertContains(cxxPreprocess.getPlatformPreprocessorFlags().get(), cxxppflags);
-    assertContains(cxxPreprocess.getRulePreprocessorFlags().get(), perFileFlagsForTestCpp);
+    ImmutableList<String> cxxPreprocessCommand =
+        cxxPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand();
+    assertContains(cxxPreprocessCommand, explicitCxxppflags);
+    assertContains(cxxPreprocessCommand, cxxppflags);
+    assertContains(cxxPreprocessCommand, perFileFlagsForTestCpp);
     CxxPreprocessAndCompile cxxPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
             buildRuleResolver,
@@ -298,9 +302,11 @@ public class CxxSourceRuleFactoryTest {
             assemblerWithCppSourceName,
             assemblerWithCppSource,
             CxxSourceRuleFactory.PicType.PDC);
-    assertContains(assemblerWithCppPreprocess.getPlatformPreprocessorFlags().get(), asppflags);
     assertContains(
-        assemblerWithCppPreprocess.getRulePreprocessorFlags().get(),
+        assemblerWithCppPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand(),
+         asppflags);
+    assertContains(
+        assemblerWithCppPreprocess.getPreprocessorDelegate().get().getPreprocessorCommand(),
         perFileFlagsForTestS);
     CxxPreprocessAndCompile assemblerWithCppPreprocessAndCompile =
         cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -511,7 +517,7 @@ public class CxxSourceRuleFactoryTest {
     assertNotEquals(
         -1,
         Collections.indexOfSubList(
-            cxxPreprocessAndCompile.getPlatformPreprocessorFlags().get(),
+            cxxPreprocessAndCompile.getPreprocessorDelegate().get().getPreprocessorCommand(),
             platformFlags));
   }
 

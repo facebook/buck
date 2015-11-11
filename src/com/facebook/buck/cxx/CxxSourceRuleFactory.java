@@ -272,21 +272,24 @@ public class CxxSourceRuleFactory {
             Suppliers.ofInstance(dependencies),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        tool,
-        platformFlags,
-        ruleFlags,
+        new PreprocessorDelegate(
+            pathResolver,
+            cxxPlatform.getDebugPathSanitizer(),
+            tool,
+            platformFlags,
+            ruleFlags,
+            includeRoots.get(),
+            systemIncludeRoots.get(),
+            headerMaps.get(),
+            CxxDescriptionEnhancer.getFrameworkSearchPaths(
+                Optional.of(ImmutableSortedSet.copyOf(frameworks.get())),
+                cxxPlatform,
+                pathResolver),
+            prefixHeader,
+            includes.get()),
         getPreprocessOutputPath(target, source.getType(), name),
         source.getPath(),
         source.getType(),
-        includeRoots.get(),
-        systemIncludeRoots.get(),
-        headerMaps.get(),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            Optional.of(ImmutableSortedSet.<FrameworkPath>copyOf(frameworks.get())),
-            cxxPlatform,
-            pathResolver),
-        prefixHeader,
-        includes.get(),
         cxxPlatform.getDebugPathSanitizer());
     resolver.addToIndex(result);
     return result;
@@ -634,24 +637,28 @@ public class CxxSourceRuleFactory {
                 computeSourcePreprocessorAndToolDeps(Optional.of((Tool) compiler), source)),
             Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
         pathResolver,
-        preprocessor,
-        CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, source.getType()),
-        preprocessorFlags.getUnchecked(source.getType()),
+        new PreprocessorDelegate(
+            pathResolver,
+            cxxPlatform.getDebugPathSanitizer(),
+            preprocessor,
+            CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, source.getType()),
+            preprocessorFlags.getUnchecked(source.getType()),
+            includeRoots.get(),
+            systemIncludeRoots.get(),
+            headerMaps.get(),
+            CxxDescriptionEnhancer.getFrameworkSearchPaths(
+                Optional.of(
+                    ImmutableSortedSet.copyOf(
+                        frameworks.get())), cxxPlatform, pathResolver),
+            prefixHeader,
+            includes.get()
+        ),
         compiler,
         computePlatformCompilerFlags(pic, source),
         computeRuleCompilerFlags(source),
         getCompileOutputPath(target, name),
         source.getPath(),
         source.getType(),
-        includeRoots.get(),
-        systemIncludeRoots.get(),
-        headerMaps.get(),
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            Optional.of(
-                ImmutableSortedSet.copyOf(
-                    frameworks.get())), cxxPlatform, pathResolver),
-        prefixHeader,
-        includes.get(),
         cxxPlatform.getDebugPathSanitizer(),
         strategy);
     resolver.addToIndex(result);

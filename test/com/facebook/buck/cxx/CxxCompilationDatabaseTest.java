@@ -98,24 +98,27 @@ public class CxxCompilationDatabaseTest {
       case SEPARATE:
         CxxPreprocessAndCompile preprocessRule =
             CxxPreprocessAndCompile.preprocess(
-              new FakeBuildRuleParamsBuilder(preprocessTarget)
-                  .setProjectFilesystem(filesystem)
-                  .build(),
-              testSourcePathResolver,
-              new DefaultPreprocessor(new HashedFileTool(Paths.get("compiler"))),
-              ImmutableList.<String>of(),
-              ImmutableList.<String>of(),
+                new FakeBuildRuleParamsBuilder(preprocessTarget)
+                    .setProjectFilesystem(filesystem)
+                    .build(),
+                testSourcePathResolver,
+                new PreprocessorDelegate(
+                    testSourcePathResolver,
+                    CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    new DefaultPreprocessor(new HashedFileTool(Paths.get("compiler"))),
+                    ImmutableList.<String>of(),
+                    ImmutableList.<String>of(),
+                    ImmutableSet.of(
+                        Paths.get("foo/bar"),
+                        Paths.get("test")),
+                    ImmutableSet.<Path>of(),
+                    ImmutableSet.<Path>of(),
+                    ImmutableSet.<Path>of(),
+                    Optional.<SourcePath>absent(),
+                    ImmutableList.<CxxHeaders>of()),
               Paths.get("test.ii"),
               new TestSourcePath("test.cpp"),
-              CxxSource.Type.CXX_CPP_OUTPUT,
-              ImmutableSet.of(
-                  Paths.get("foo/bar"),
-                  Paths.get("test")),
-              ImmutableSet.<Path>of(),
-              ImmutableSet.<Path>of(),
-              ImmutableSet.<Path>of(),
-              Optional.<SourcePath>absent(),
-              ImmutableList.<CxxHeaders>of(),
+              CxxSource.Type.CXX,
               CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
@@ -131,7 +134,7 @@ public class CxxCompilationDatabaseTest {
                 ImmutableList.<String>of(),
                 Paths.get("test.o"),
                 new TestSourcePath("test.ii"),
-                CxxSource.Type.CXX,
+                CxxSource.Type.CXX_CPP_OUTPUT,
                 CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER));
         break;
       case COMBINED:
@@ -143,23 +146,26 @@ public class CxxCompilationDatabaseTest {
             CxxPreprocessAndCompile.preprocessAndCompile(
                 compileBuildRuleParams,
                 testSourcePathResolver,
-                new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
-                ImmutableList.<String>of(),
-                ImmutableList.<String>of(),
+                new PreprocessorDelegate(
+                    testSourcePathResolver,
+                    CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
+                    new DefaultPreprocessor(new HashedFileTool(Paths.get("preprocessor"))),
+                    ImmutableList.<String>of(),
+                    ImmutableList.<String>of(),
+                    ImmutableSet.of(
+                        Paths.get("foo/bar"),
+                        Paths.get("test")),
+                    ImmutableSet.<Path>of(),
+                    ImmutableSet.<Path>of(),
+                    ImmutableSet.<Path>of(),
+                    Optional.<SourcePath>absent(),
+                    ImmutableList.<CxxHeaders>of()),
                 new DefaultCompiler(new HashedFileTool(Paths.get("compiler"))),
                 ImmutableList.<String>of(),
                 ImmutableList.<String>of(),
                 Paths.get("test.o"),
                 new TestSourcePath("test.cpp"),
                 CxxSource.Type.CXX,
-                ImmutableSet.of(
-                    Paths.get("foo/bar"),
-                    Paths.get("test")),
-                ImmutableSet.<Path>of(),
-                ImmutableSet.<Path>of(),
-                ImmutableSet.<Path>of(),
-                Optional.<SourcePath>absent(),
-                ImmutableList.<CxxHeaders>of(),
                 CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
                 strategy));
         break;
@@ -241,12 +247,11 @@ public class CxxCompilationDatabaseTest {
     runCombinedTest(CxxPreprocessMode.SEPARATE,
         ImmutableList.of(
             "compiler",
-            "-I",
-            "foo/bar",
-            "-I",
-            "test",
-            "-x",
-            "c++-cpp-output",
+            "-I", "foo/bar",
+            "-I", "test",
+            // compdb will present a single command despite this being two commands under the hood,
+            // hence, this is compiling a cpp file, not cpp preprocessed output.
+            "-x", "c++",
             "-c",
             "-o",
             "test.o",
