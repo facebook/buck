@@ -75,6 +75,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String LOAD_LIMIT_LONG_ARG = "--load-limit";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
   private static final String DEEP_LONG_ARG = "--deep";
+  private static final String POPULATE_CACHE_LONG_ARG = "--populate-cache";
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
 
@@ -110,6 +111,15 @@ public class BuildCommand extends AbstractCommand {
           " available.",
       forbids = SHALLOW_LONG_ARG)
   private boolean deepBuild = false;
+
+  @Option(
+      name = POPULATE_CACHE_LONG_ARG,
+      usage =
+          "Performs a cache population, which makes the output of all unchanged " +
+              "transitive dependencies available (if these outputs are available " +
+              "in the remote cache). Does not build changed or unavailable dependencies locally.",
+      forbids = {SHALLOW_LONG_ARG, DEEP_LONG_ARG})
+  private boolean populateCacheOnly = false;
 
   @Option(
       name = SHALLOW_LONG_ARG,
@@ -156,6 +166,9 @@ public class BuildCommand extends AbstractCommand {
     Optional<CachingBuildEngine.BuildMode> mode = Optional.absent();
     if (deepBuild) {
       mode = Optional.of(CachingBuildEngine.BuildMode.DEEP);
+    }
+    if (populateCacheOnly) {
+      mode = Optional.of(CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE);
     }
     if (shallowBuild) {
       mode = Optional.of(CachingBuildEngine.BuildMode.SHALLOW);

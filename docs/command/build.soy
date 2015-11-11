@@ -136,6 +136,16 @@ Buck. To build a rule, pass its target to buck build:
 {/call}
 
 {call buck.param}
+  {param name: 'populate-cache' /}
+  {param desc}
+
+  Performs a cache population, which makes the output of all unchanged transitive dependencies available 
+  (if these outputs are available in the remote cache). Does not build changed or unavailable dependencies locally.
+ {/param}
+{/call}
+
+
+{call buck.param}
   {param name: 'verbose' /}
   {param alias: 'v'/}
   {param desc}

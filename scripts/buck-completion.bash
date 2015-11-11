@@ -161,6 +161,7 @@ function _buck_completion_try_project() {
       --help
       --ide
       --no-cache
+      --populate-cache
       --process-annotations
       --verbose
       --without-tests"

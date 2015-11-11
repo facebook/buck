@@ -36,6 +36,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -235,14 +236,17 @@ public class CachingBuildEngine implements BuildEngine {
 
             // If any dependency wasn't successful, cancel ourselves.
             for (BuildResult depResult : depResults) {
-              if (depResult.getStatus() != BuildRuleStatus.SUCCESS) {
+              if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE &&
+                  depResult.getStatus() != BuildRuleStatus.SUCCESS) {
                 return Futures.immediateFuture(
                     BuildResult.canceled(rule, Preconditions.checkNotNull(depResult.getFailure())));
               }
             }
 
             // If we've already seen a failure, exit early.
-            if (!context.isKeepGoing() && firstFailure != null) {
+            if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE &&
+                !context.isKeepGoing() &&
+                firstFailure != null) {
               return Futures.immediateFuture(BuildResult.canceled(rule, firstFailure));
             }
 
@@ -350,11 +354,20 @@ public class CachingBuildEngine implements BuildEngine {
               }
             }
 
-            // 5. build the rule
-            executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
+            if (buildMode != BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+              // 5. build the rule
+              executeCommandsNowThatDepsAreBuilt(rule, context, buildableContext);
+              return Futures.immediateFuture(
+                  BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
+            } else {
+              LOG.info("Cannot populate cache for " +
+                      rule.getBuildTarget().getFullyQualifiedName());
+              return Futures.immediateFuture(BuildResult.canceled(rule,
+                      new HumanReadableException("Skipping %s: in cache population mode " +
+                          "local builds are disabled", rule)));
+            }
 
-            return Futures.immediateFuture(
-                BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
+
           }
         },
         service);
@@ -391,7 +404,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     // If we're performing a deep build, guarantee that all dependencies will *always* get
     // materialized locally by chaining up to our result future.
-    if (buildMode == BuildMode.DEEP) {
+    if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       buildResult =
           MoreFutures.chainExceptions(
               getDepResults(rule, context, asyncCallbacks),
@@ -1077,6 +1090,11 @@ public class CachingBuildEngine implements BuildEngine {
     // Perform a deep build, locally materializing all the transitive dependencies of the top-level
     // build targets.
     DEEP,
+
+    // Perform local cache population by only loading all the transitive dependencies of
+    // the top-level build targets from the remote cache, without building missing or changed
+    // dependencies locally.
+    POPULATE_FROM_REMOTE_CACHE,
   }
 
   /**
