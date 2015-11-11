@@ -191,6 +191,12 @@ public class AppleCxxPlatforms {
         "apple-lipo",
         version);
 
+    Tool lldb = new VersionedTool(
+        getToolPath("lldb", toolSearchPaths, executableFinder),
+        ImmutableList.<String>of(),
+        "lldb",
+        version);
+
     Optional<Path> stubBinaryPath;
     switch (targetSdk.getApplePlatform().getName()) {
       case ApplePlatform.Name.WATCHOS:
@@ -267,6 +273,7 @@ public class AppleCxxPlatforms {
         .setDsymutil(dsymutil)
         .setLipo(lipo)
         .setStubBinary(stubBinaryPath)
+        .setLldb(lldb)
         .build();
   }
 

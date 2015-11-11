@@ -344,6 +344,7 @@ public class AppleTestDescription implements
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getCxxPlatform().getStrip(),
+        appleCxxPlatform.getLldb(),
         assetCatalog,
         ImmutableSortedSet.<BuildTarget>of(),
         appleCxxPlatform.getAppleSdk(),

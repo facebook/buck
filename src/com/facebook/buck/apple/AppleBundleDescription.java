@@ -240,6 +240,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         appleCxxPlatform.getIbtool(),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getCxxPlatform().getStrip(),
+        appleCxxPlatform.getLldb(),
         assetCatalog,
         args.getTests(),
         appleCxxPlatform.getAppleSdk(),

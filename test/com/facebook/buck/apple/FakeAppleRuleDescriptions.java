@@ -93,6 +93,7 @@ public class FakeAppleRuleDescriptions {
           Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/ar"),
           Paths.get("usr/bin/actool"),
           Paths.get("usr/bin/ibtool"),
+          Paths.get("usr/bin/lldb"),
           Paths.get("Tools/otest"),
           Paths.get("usr/bin/xctest")));
 

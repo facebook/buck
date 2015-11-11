@@ -130,6 +130,9 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
   private final Tool strip;
 
   @AddToRuleKey
+  private final Tool lldb;
+
+  @AddToRuleKey
   private final ImmutableSortedSet<BuildTarget> tests;
 
   @AddToRuleKey
@@ -177,6 +180,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
       Tool ibtool,
       Tool dsymutil,
       Tool strip,
+      Tool lldb,
       Optional<AppleAssetCatalog> assetCatalog,
       Set<BuildTarget> tests,
       AppleSdk sdk,
@@ -200,6 +204,7 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
     this.ibtool = ibtool;
     this.dsymutil = dsymutil;
     this.strip = strip;
+    this.lldb = lldb;
     this.assetCatalog = assetCatalog;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot = getBundleRoot(getBuildTarget(), this.binaryName, this.extension);
@@ -519,9 +524,10 @@ public class AppleBundle extends AbstractBuildRule implements HasPostBuildSteps,
         new Step() {
           @Override
           public int execute(ExecutionContext context) throws IOException, InterruptedException {
+            ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(getResolver());
             ProcessExecutorParams params = ProcessExecutorParams
                 .builder()
-                .addCommand("lldb")
+                .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
                 .build();
             return context.getProcessExecutor().launchAndExecute(
                 params,
