@@ -158,6 +158,62 @@ public class ArtifactCacheBuckConfigTest {
   }
 
   @Test
+  public void testServedCacheAbsentByDefault() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "dir = ~/cache_dir");
+    assertThat(config.getServedLocalCache(), Matchers.equalTo(Optional.<DirCacheEntry>absent()));
+  }
+
+  @Test
+  public void testServedCacheInheritsDirAndSizeFromDirCache() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "serve_local_cache = true",
+        "dir = /cache_dir");
+    assertThat(
+        config.getServedLocalCache(),
+        Matchers.equalTo(Optional.of(
+                DirCacheEntry.builder()
+                    .setMaxSizeBytes(Optional.<Long>absent())
+                    .setCacheDir(Paths.get("/cache_dir"))
+                    .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readonly)
+                    .build())));
+
+    config = createFromText(
+        "[cache]",
+        "serve_local_cache = true",
+        "dir = /cache_dir",
+        "dir_mode = readwrite",
+        "dir_max_size = 42b");
+    assertThat(
+        config.getServedLocalCache(),
+        Matchers.equalTo(Optional.of(
+                DirCacheEntry.builder()
+                    .setMaxSizeBytes(Optional.of(42L))
+                    .setCacheDir(Paths.get("/cache_dir"))
+                    .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readonly)
+                    .build())));
+  }
+
+  @Test
+  public void testServedCacheMode() throws IOException {
+    ArtifactCacheBuckConfig config = createFromText(
+        "[cache]",
+        "serve_local_cache = true",
+        "dir = /cache_dir",
+        "served_local_cache_mode = readwrite");
+    assertThat(
+        config.getServedLocalCache(),
+        Matchers.equalTo(Optional.of(
+                DirCacheEntry.builder()
+                    .setMaxSizeBytes(Optional.<Long>absent())
+                    .setCacheDir(Paths.get("/cache_dir"))
+                    .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readwrite)
+                    .build())));
+  }
+
+  @Test
   public void testExpandUserHomeCacheDir() throws IOException {
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",

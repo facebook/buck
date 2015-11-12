@@ -79,13 +79,17 @@ public class ArtifactCaches {
    */
   public static Optional<ArtifactCache> newServedCache(
       ArtifactCacheBuckConfig buckConfig,
-      ProjectFilesystem projectFilesystem) {
-    if (!buckConfig.getServingLocalCacheEnabled()) {
-      return Optional.absent();
-    } else {
-      return Optional.of(createDirArtifactCache(
-              Optional.<BuckEventBus>absent(), buckConfig, projectFilesystem));
-    }
+      final ProjectFilesystem projectFilesystem) {
+    return buckConfig.getServedLocalCache().transform(
+        new Function<DirCacheEntry, ArtifactCache>() {
+          @Override
+          public ArtifactCache apply(DirCacheEntry input) {
+            return createDirArtifactCache(
+                Optional.<BuckEventBus>absent(),
+                input,
+                projectFilesystem);
+          }
+        });
   }
 
   private static ArtifactCache newInstanceInternal(
@@ -106,7 +110,7 @@ public class ArtifactCaches {
           builder.add(
               createDirArtifactCache(
                   Optional.of(buckEventBus),
-                  buckConfig,
+                  buckConfig.getDirCache(),
                   projectFilesystem));
           break;
         case http:
@@ -136,9 +140,8 @@ public class ArtifactCaches {
 
   private static ArtifactCache createDirArtifactCache(
       Optional<BuckEventBus> buckEventBus,
-      ArtifactCacheBuckConfig buckConfig,
+      DirCacheEntry dirCacheConfig,
       ProjectFilesystem projectFilesystem) {
-    DirCacheEntry dirCacheConfig = buckConfig.getDirCache();
     Path cacheDir = dirCacheConfig.getCacheDir();
     try {
       DirArtifactCache dirArtifactCache =  new DirArtifactCache(

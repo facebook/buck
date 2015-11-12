@@ -69,6 +69,10 @@ public class ArtifactCacheBuckConfig {
   private static final String DEFAULT_HTTP_MAX_CONCURRENT_WRITES = "1";
   private static final String DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS = "1800"; // 30 minutes
 
+  private static final String SERVED_CACHE_ENABLED_FIELD_NAME = "serve_local_cache";
+  private static final String DEFAULT_SERVED_CACHE_MODE = CacheReadMode.readonly.name();
+  private static final String SERVED_CACHE_READ_MODE_FIELD_NAME = "served_local_cache_mode";
+
 
   private final BuckConfig buckConfig;
 
@@ -125,8 +129,11 @@ public class ArtifactCacheBuckConfig {
         .toSet();
   }
 
-  public boolean getServingLocalCacheEnabled() {
-    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "serve_local_cache", false);
+  public Optional<DirCacheEntry> getServedLocalCache() {
+    if (!getServingLocalCacheEnabled()) {
+      return Optional.absent();
+    }
+    return Optional.of(getDirCache().withCacheReadMode(getServedLocalCacheReadMode()));
   }
 
   public DirCacheEntry getDirCache() {
@@ -175,7 +182,16 @@ public class ArtifactCacheBuckConfig {
         });
   }
 
+  private boolean getServingLocalCacheEnabled() {
+    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, SERVED_CACHE_ENABLED_FIELD_NAME, false);
+  }
 
+  private CacheReadMode getServedLocalCacheReadMode() {
+    return getCacheReadMode(
+        CACHE_SECTION_NAME,
+        SERVED_CACHE_READ_MODE_FIELD_NAME,
+        DEFAULT_SERVED_CACHE_MODE);
+  }
 
   private CacheReadMode getCacheReadMode(String section, String fieldName, String defaultValue) {
     String cacheMode = buckConfig.getValue(section, fieldName).or(defaultValue);

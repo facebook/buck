@@ -397,7 +397,13 @@ public class ServedCacheIntegrationTest {
         projectFilesystem,
         "/static/",
         new ObjectMapper());
-    webServer.updateAndStartIfNeeded(Optional.of(dirCache));
+    webServer.updateAndStartIfNeeded(ArtifactCaches.newServedCache(
+            createMockLocalConfig(
+                "[cache]",
+                "dir = test-cache",
+                "serve_local_cache = true",
+                "served_local_cache_mode = readwrite"),
+            projectFilesystem));
 
     ArtifactCache serverBackedCache = ArtifactCaches.newInstance(
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
@@ -426,5 +432,45 @@ public class ServedCacheIntegrationTest {
     assertThat(
         projectFilesystem.readFileIfItExists(fetchedContents).get(),
         Matchers.equalTo(data));
+  }
+
+  @Test
+  public void testStoreDisabled() throws Exception {
+    webServer = new WebServer(
+        /* port */ 0,
+        projectFilesystem,
+        "/static/",
+        new ObjectMapper());
+    webServer.updateAndStartIfNeeded(ArtifactCaches.newServedCache(
+            createMockLocalConfig(
+                "[cache]",
+                "dir = test-cache",
+                "serve_local_cache = true",
+                "served_local_cache_mode = readonly"),
+            projectFilesystem));
+
+    ArtifactCache serverBackedCache = ArtifactCaches.newInstance(
+        createMockLocalHttpCacheConfig(webServer.getPort().get()),
+        buckEventBus,
+        projectFilesystem,
+        Optional.<String>absent(),
+        DIRECT_EXECUTOR_SERVICE);
+
+    RuleKey ruleKey = new RuleKey("00111222333444");
+    ImmutableMap<String, String> metadata = ImmutableMap.of(
+        "some key",
+        "some value");
+    Path originalDataPath = tmpDir.newFile();
+    String data = "you won't believe this!";
+    projectFilesystem.writeContentsToPath(data, originalDataPath);
+
+    Path fetchedContents = tmpDir.newFile();
+    CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
+
+    serverBackedCache.store(ImmutableSet.of(ruleKey), metadata, originalDataPath);
+
+    cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
   }
 }
