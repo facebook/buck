@@ -239,7 +239,7 @@ public class PythonBinaryDescription implements Description<PythonBinaryDescript
         linkTree,
         mainModule,
         components,
-        pythonPlatform.getEnvironment().getPythonPath());
+        pythonPlatform.getEnvironment());
   }
 
   protected PythonBinary createPackageRule(

@@ -51,7 +51,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   @AddToRuleKey
   private final PythonPackageComponents components;
   @AddToRuleKey
-  private final Path python;
+  private final Tool python;
 
   public PythonInPlaceBinary(
       BuildRuleParams params,
@@ -61,7 +61,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       SymlinkTree linkTree,
       String mainModule,
       PythonPackageComponents components,
-      Path python) {
+      Tool python) {
     super(params, resolver, pythonPlatform, mainModule, components);
     this.script = script;
     this.linkTree = linkTree;
@@ -83,8 +83,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(python.toString())
+    return new CommandTool.Builder(python)
         .addArg(new BuildTargetSourcePath(script.getBuildTarget()))
         .addDep(linkTree)
         .addInputs(components.getModules().values())
