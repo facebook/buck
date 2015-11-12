@@ -158,7 +158,9 @@ public class ExopackageInstaller {
           @Override
           public boolean call(IDevice device) throws Exception {
             try {
-              return new SingleDeviceInstaller(device, nextAgentPort.getAndIncrement()).doInstall();
+              return new SingleDeviceInstaller(
+                  device,
+                  nextAgentPort.getAndIncrement()).doInstall();
             } catch (Exception e) {
               throw new RuntimeException("Failed to install exopackage on " + device, e);
             }
@@ -204,7 +206,9 @@ public class ExopackageInstaller {
     @Nullable
     private String nativeAgentPath;
 
-    private SingleDeviceInstaller(IDevice device, int agentPort) {
+    private SingleDeviceInstaller(
+        IDevice device,
+        int agentPort) {
       this.device = device;
       this.agentPort = agentPort;
     }
@@ -218,7 +222,8 @@ public class ExopackageInstaller {
       nativeAgentPath = agentInfo.get().nativeLibPath;
       determineBestAgent();
 
-      final File apk = apkRule.getApkPath().toFile();
+      final File apk = apkRule.getProjectFilesystem().resolve(
+          apkRule.getApkPath()).toFile();
       // TODO(dreiss): Support SD installation.
       final boolean installViaSd = false;
 
@@ -265,7 +270,7 @@ public class ExopackageInstaller {
       // hashes in the file names (because we use that to skip re-uploads), so just hack
       // the metadata file to have hash-like names.
       String metadataContents = com.google.common.io.Files.toString(
-          exopackageInfo.getDexInfo().get().getMetadata().toFile(),
+          projectFilesystem.resolve(exopackageInfo.getDexInfo().get().getMetadata()).toFile(),
           Charsets.UTF_8)
           .replaceAll(
               "secondary-(\\d+)\\.dex\\.jar (\\p{XDigit}{40}) ",
@@ -453,7 +458,8 @@ public class ExopackageInstaller {
 
       LOG.debug("App path: %s", appPackageInfo.get().apkPath);
       String installedAppSignature = getInstalledAppSignature(appPackageInfo.get().apkPath);
-      String localAppSignature = AgentUtil.getJarSignature(apkRule.getApkPath().toString());
+      String localAppSignature = AgentUtil.getJarSignature(apkRule.getProjectFilesystem().resolve(
+              apkRule.getApkPath()).toString());
       LOG.debug("Local app signature: %s", localAppSignature);
       LOG.debug("Remote app signature: %s", installedAppSignature);
 
@@ -588,7 +594,8 @@ public class ExopackageInstaller {
         IDevice device,
         final int port,
         Path pathRelativeToDataRoot,
-        final Path source) throws Exception {
+        final Path relativeSource) throws Exception {
+      final Path source = projectFilesystem.resolve(relativeSource);
       CollectingOutputReceiver receiver = new CollectingOutputReceiver() {
 
         private boolean sentPayload = false;
@@ -617,7 +624,8 @@ public class ExopackageInstaller {
         }
       };
 
-      String targetFileName = dataRoot.resolve(pathRelativeToDataRoot).toString();
+      String targetFileName = projectFilesystem.resolve(
+          dataRoot.resolve(pathRelativeToDataRoot)).toString();
       String command =
           "umask 022 && " +
               getAgentCommand() +
