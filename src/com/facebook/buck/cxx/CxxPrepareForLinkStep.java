@@ -20,20 +20,13 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
 
 /**
  * Prepares argfile for the CxxLinkStep, so all arguments to the linker will be stored in a
@@ -46,22 +39,16 @@ public class CxxPrepareForLinkStep implements Step {
   private final Path argFilePath;
   private final Path output;
   private final ImmutableList<String> args;
-  private final ImmutableSet<Path> librarySearchDirectories;
-  private final ImmutableSet<String> libraries;
 
   private static final Logger LOG = Logger.get(CxxPrepareForLinkStep.class);
 
   public CxxPrepareForLinkStep(
       Path argFilePath,
       Path output,
-      ImmutableList<String> args,
-      ImmutableSet<Path> librarySearchDirectories,
-      ImmutableSet<String> libraries) {
+      ImmutableList<String> args) {
     this.argFilePath = argFilePath;
     this.output = output;
     this.args = args;
-    this.librarySearchDirectories = librarySearchDirectories;
-    this.libraries = libraries;
   }
 
   private void prepareArgFileContents() throws IOException {
@@ -90,19 +77,6 @@ public class CxxPrepareForLinkStep implements Step {
   private ImmutableList<String> getLinkerOptions() {
     return ImmutableList.<String>builder()
         .add("-o", output.toString())
-        .addAll(
-            MoreIterables.zipAndConcat(
-                Iterables.cycle("-L"),
-                Iterables.transform(librarySearchDirectories, Functions.toStringFunction())))
-        .addAll(
-            Iterables.transform(
-                libraries, new Function<String, String>() {
-                  @Nullable
-                  @Override
-                  public String apply(String input) {
-                    return "-l" + input;
-                  }
-                }))
         .addAll(args)
         .build();
   }

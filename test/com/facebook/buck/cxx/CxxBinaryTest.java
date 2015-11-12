@@ -25,10 +25,9 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -53,10 +52,7 @@ public class CxxBinaryTest {
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd(),
                 bin,
-                ImmutableList.<Arg>of(),
-                ImmutableSet.<Path>of(),
-                CxxPlatformUtils.DEFAULT_PLATFORM.getDebugPathSanitizer()));
-
+                ImmutableList.<Arg>of()));
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:target").build();
     CxxBinary binary =
         ruleResolver.addToIndex(

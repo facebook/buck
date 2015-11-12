@@ -16,6 +16,9 @@
 
 package com.facebook.buck.cxx;
 
+import static com.google.common.base.Predicates.notNull;
+
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,6 +34,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -41,6 +45,8 @@ import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
+
+import javax.annotation.Nullable;
 
 public class CxxLinkableEnhancer {
 
@@ -124,6 +130,13 @@ public class CxxLinkableEnhancer {
     // Add all arguments from our dependencies.
     argsBuilder.addAll(linkableInput.getArgs());
 
+    // Add all shared libraries
+    addSharedLibrariesLinkerArgs(
+        cxxPlatform,
+        resolver,
+        ImmutableSortedSet.<FrameworkPath>copyOf(linkableInput.getLibraries()),
+        argsBuilder);
+
     // Add framework args - from both linkable dependancies and the frameworks for the binary
     addFrameworkLinkerArgs(
         cxxPlatform,
@@ -159,12 +172,7 @@ public class CxxLinkableEnhancer {
         resolver,
         cxxPlatform.getLd(),
         output,
-        allArgs,
-        CxxDescriptionEnhancer.getFrameworkSearchPaths(
-            Optional.of(ImmutableSortedSet.copyOf(linkableInput.getLibraries())),
-            cxxPlatform,
-            resolver),
-        cxxPlatform.getDebugPathSanitizer());
+        allArgs);
   }
 
   private static ImmutableSortedSet<FrameworkPath> mergeFrameworks(
@@ -174,6 +182,49 @@ public class CxxLinkableEnhancer {
         .addAll(nativeLinkable.getFrameworks())
         .addAll(frameworkPaths)
         .build();
+  }
+
+  private static void addSharedLibrariesLinkerArgs(
+      CxxPlatform cxxPlatform,
+      SourcePathResolver resolver,
+      ImmutableSortedSet<FrameworkPath> allLibraries,
+      ImmutableList.Builder<Arg> argsBuilder) {
+
+    Optional<ImmutableSortedSet<FrameworkPath>> libraries = Optional.of(allLibraries);
+    ImmutableSet<Path> librarySearchPaths = CxxDescriptionEnhancer.getFrameworkSearchPaths(
+        libraries,
+        cxxPlatform,
+        resolver);
+
+    for (Path unsanitizedLibrarySearchPath : getLibrarySearchDirectories(librarySearchPaths)) {
+      argsBuilder.add(new StringArg("-L"));
+      argsBuilder.add(
+          new SanitizedArg(
+              cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()),
+              unsanitizedLibrarySearchPath.toString()));
+    }
+
+    // Add all libraries link args
+    ImmutableList<String> librariesStringArgs = libraries
+        .transform(librariesToLinkerFlagsFunction(resolver))
+        .get();
+    for (String libraryStringArg : librariesStringArgs) {
+      argsBuilder.add(new StringArg(libraryStringArg));
+    }
+  }
+
+  private static ImmutableSet<Path> getLibrarySearchDirectories(ImmutableSet<Path> libraries) {
+    return FluentIterable.from(libraries)
+        .transform(
+            new Function<Path, Path>() {
+              @Nullable
+              @Override
+              public Path apply(Path input) {
+                return input.getParent();
+              }
+            }
+        ).filter(notNull())
+        .toSet();
   }
 
   private static void addFrameworkLinkerArgs(
@@ -203,6 +254,42 @@ public class CxxLinkableEnhancer {
     for (String frameworkStringArg : frameworkStringArgs) {
       argsBuilder.add(new StringArg(frameworkStringArg));
     }
+  }
+
+  public static final Predicate<String> CONTAINS_LIBRARY_NAME =
+      new Predicate<String>() {
+        @Override
+        public boolean apply(@Nullable String input) {
+          return (input != null && !input.equals("-l"));
+        }
+      };
+
+  @VisibleForTesting
+  static Function<
+      ImmutableSortedSet<FrameworkPath>,
+      ImmutableList<String>> librariesToLinkerFlagsFunction(final SourcePathResolver resolver) {
+    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<String>>() {
+      @Override
+      public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
+        return FluentIterable
+            .from(input)
+            .transform(linkerFlagsForLibraryFunction(resolver.deprecatedPathFunction()))
+            // libraries set can contain path-qualified libraries, or just library search paths.
+            // Assume these end in '../lib' and filter out here.
+            .filter(CONTAINS_LIBRARY_NAME)
+            .toList();
+      }
+    };
+  }
+
+  private static Function<FrameworkPath, String> linkerFlagsForLibraryFunction(
+      final Function<SourcePath, Path> resolver) {
+    return new Function<FrameworkPath, String>() {
+      @Override
+      public String apply(FrameworkPath input) {
+        return "-l" + MorePaths.stripPathPrefixAndExtension(input.getFileName(resolver), "lib");
+      }
+    };
   }
 
   @VisibleForTesting

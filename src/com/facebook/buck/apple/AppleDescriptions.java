@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -31,7 +30,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
@@ -207,11 +205,7 @@ public class AppleDescriptions {
     output.preprocessorFlags = arg.preprocessorFlags;
     output.platformPreprocessorFlags = arg.platformPreprocessorFlags;
     output.langPreprocessorFlags = arg.langPreprocessorFlags;
-    output.linkerFlags = Optional.of(
-        FluentIterable
-            .from(arg.libraries.transform(librariesToLinkerFlagsFunction(resolver)).get())
-            .append(arg.linkerFlags.get())
-            .toList());
+    output.linkerFlags = arg.linkerFlags;
     output.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     output.frameworks = arg.frameworks;
     output.libraries = arg.libraries;
@@ -266,11 +260,7 @@ public class AppleDescriptions {
         PatternMatchedCollection.<ImmutableList<String>>of());
     output.exportedLangPreprocessorFlags = Optional.of(
         ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    output.exportedLinkerFlags = Optional.of(
-        FluentIterable
-            .from(arg.libraries.transform(librariesToLinkerFlagsFunction(resolver)).get())
-            .append(arg.exportedLinkerFlags.get())
-            .toList());
+    output.exportedLinkerFlags = arg.exportedLinkerFlags;
     output.exportedPlatformLinkerFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());
     output.soname = Optional.absent();
@@ -278,41 +268,6 @@ public class AppleDescriptions {
     output.linkWhole = arg.linkWhole;
     output.supportedPlatformsRegex = Optional.absent();
     output.canBeAsset = arg.canBeAsset;
-  }
-
-  @VisibleForTesting
-  static Function<
-      ImmutableSortedSet<FrameworkPath>,
-      ImmutableList<String>> librariesToLinkerFlagsFunction(final SourcePathResolver resolver) {
-    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<String>>() {
-      @Override
-      public ImmutableList<String> apply(ImmutableSortedSet<FrameworkPath> input) {
-        return FluentIterable
-            .from(input)
-            .transformAndConcat(linkerFlagsForLibraryFunction(resolver.deprecatedPathFunction()))
-            .toList();
-      }
-    };
-  }
-
-  @VisibleForTesting
-  static Function<
-      ImmutableSortedSet<FrameworkPath>,
-      ImmutableList<Path>> frameworksToSearchPathsFunction(
-      final SourcePathResolver resolver,
-      final AppleSdkPaths appleSdkPaths) {
-    return new Function<ImmutableSortedSet<FrameworkPath>, ImmutableList<Path>>() {
-      @Override
-      public ImmutableList<Path> apply(ImmutableSortedSet<FrameworkPath> frameworkPaths) {
-        return FluentIterable
-            .from(frameworkPaths)
-            .transform(
-                FrameworkPath.getExpandedSearchPathFunction(
-                    resolver.deprecatedPathFunction(),
-                    appleSdkPaths.resolveFunction()))
-            .toList();
-      }
-    };
   }
 
   @VisibleForTesting
@@ -327,18 +282,6 @@ public class AppleDescriptions {
             .from(flags)
             .transform(appleSdkPaths.replaceSourceTreeReferencesFunction())
             .toList();
-      }
-    };
-  }
-
-  private static Function<FrameworkPath, Iterable<String>> linkerFlagsForLibraryFunction(
-      final Function<SourcePath, Path> resolver) {
-    return new Function<FrameworkPath, Iterable<String>>() {
-      @Override
-      public Iterable<String> apply(FrameworkPath input) {
-        return ImmutableList.of(
-            "-l",
-            MorePaths.stripPathPrefixAndExtension(input.getFileName(resolver), "lib"));
       }
     };
   }

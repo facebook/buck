@@ -40,7 +40,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
@@ -65,11 +64,10 @@ public class CxxLinkTest {
               new TestSourcePath("b.o")),
           new SourcePathArg(
               new SourcePathResolver(new BuildRuleResolver()),
-              new TestSourcePath("libc.a")));
-  private static final ImmutableSet<Path> DEFAULT_LIBRARIES = ImmutableSet.of(
-      Paths.get("/System/Libraries/libz.dynlib"));
-  private static final DebugPathSanitizer DEFAULT_SANITIZER =
-      CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER;
+              new TestSourcePath("libc.a")),
+          new StringArg("-L"),
+          new StringArg("/System/Libraries/libz.dynlib"),
+          new StringArg("-llibz.dylib"));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
@@ -95,9 +93,7 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            DEFAULT_ARGS,
-            DEFAULT_LIBRARIES,
-            DEFAULT_SANITIZER));
+            DEFAULT_ARGS));
 
     // Verify that changing the archiver causes a rulekey change.
 
@@ -107,9 +103,7 @@ public class CxxLinkTest {
             pathResolver,
             new GnuLinker(new HashedFileTool(Paths.get("different"))),
             DEFAULT_OUTPUT,
-            DEFAULT_ARGS,
-            DEFAULT_LIBRARIES,
-            DEFAULT_SANITIZER));
+            DEFAULT_ARGS));
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
@@ -120,9 +114,7 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             Paths.get("different"),
-            DEFAULT_ARGS,
-            DEFAULT_LIBRARIES,
-            DEFAULT_SANITIZER));
+            DEFAULT_ARGS));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the flags causes a rulekey change.
@@ -136,24 +128,8 @@ public class CxxLinkTest {
             ImmutableList.<Arg>of(
                 new SourcePathArg(
                     new SourcePathResolver(new BuildRuleResolver()),
-                    new TestSourcePath("different"))),
-            DEFAULT_LIBRARIES,
-            DEFAULT_SANITIZER));
+                    new TestSourcePath("different")))));
     assertNotEquals(defaultRuleKey, flagsChange);
-
-    // Verify that changing the libraries causes a rulekey change.
-
-    RuleKey librariesRootsChange = ruleKeyBuilderFactory.build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            DEFAULT_ARGS,
-            ImmutableSet.of(Paths.get("/System/Libraries/libx.dynlib")),
-            DEFAULT_SANITIZER));
-    assertNotEquals(defaultRuleKey, librariesRootsChange);
-
   }
 
   @Test
@@ -200,9 +176,7 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            args1,
-            DEFAULT_LIBRARIES,
-            sanitizer1));
+            args1));
 
     // Generate another rule with a different path we need to sanitize to the
     // same consistent value as above.
@@ -218,9 +192,7 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            args2,
-            DEFAULT_LIBRARIES,
-            sanitizer2));
+            args2));
 
     assertEquals(ruleKey1, ruleKey2);
   }

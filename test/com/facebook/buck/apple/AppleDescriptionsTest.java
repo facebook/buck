@@ -18,19 +18,12 @@ package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
-import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestSourcePath;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -144,50 +137,6 @@ public class AppleDescriptionsTest {
                 new TestSourcePath("path/to/another_file.h"),
                 new TestSourcePath("different/path/to/a_file.h"),
                 new TestSourcePath("file.h"))));
-  }
-
-  @Test
-  public void frameworksToSearchPathsTransformer() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver resolver = new SourcePathResolver(new BuildRuleResolver());
-    Path appleSdkRoot = Paths.get("Root");
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(appleSdkRoot)
-            .addToolchainPaths(appleSdkRoot.resolve("Toolchain"))
-            .setPlatformPath(appleSdkRoot.resolve("Platform"))
-            .setSdkPath(appleSdkRoot.resolve("SDK"))
-            .build();
-
-    Function<
-        ImmutableSortedSet<FrameworkPath>,
-        ImmutableList<Path>> frameworksToSearchPathsTransformer =
-        AppleDescriptions.frameworksToSearchPathsFunction(resolver, appleSdkPaths);
-
-    ImmutableList<Path> searchPaths = frameworksToSearchPathsTransformer.apply(
-        ImmutableSortedSet.of(
-            FrameworkPath.ofSourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.SDKROOT,
-                    Paths.get("usr/lib/libz.dylib"),
-                    Optional.<String>absent())),
-            FrameworkPath.ofSourcePath(
-                new PathSourcePath(projectFilesystem, Paths.get("Vendor/Foo/libFoo.a"))),
-            FrameworkPath.ofSourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.DEVELOPER_DIR,
-                    Paths.get("Library/Frameworks/XCTest.framework"),
-                    Optional.<String>absent())),
-            FrameworkPath.ofSourcePath(
-                new PathSourcePath(projectFilesystem, Paths.get("Vendor/Bar/Bar.framework")))));
-
-    assertEquals(
-        ImmutableList.of(
-            Paths.get("Root/SDK/usr/lib"),
-            Paths.get("Root/Library/Frameworks"),
-            Paths.get("Vendor/Bar"),
-            Paths.get("Vendor/Foo")),
-        searchPaths);
   }
 
   @Test
