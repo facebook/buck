@@ -657,6 +657,12 @@ public class ProjectGenerator {
       // that invokes the "compiler" with the correct target architecture.
       if (!HalideLibraryDescription.isHalideCompilerTarget(buildTarget)) {
         result = generateHalideLibraryTarget(project, halideTargetNode);
+
+        // Make sure the compiler gets built at project time, since we'll need
+        // it to generate the shader code during the Xcode build.
+        requiredBuildTargetsBuilder.add(
+          HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget));
+
         // Also, run the compiler once at project time to generate the header
         // file needed for compilation.
         requiredBuildTargetsBuilder.add(buildTarget);

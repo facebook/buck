@@ -838,6 +838,14 @@ public class ProjectGeneratorTest {
       PBXShellScriptBuildPhase.class);
     assertEquals(0, scriptPhase.getInputPaths().size());
     assertEquals(0, scriptPhase.getOutputPaths().size());
+
+    // Note that we require that both the Halide "compiler" and the unflavored
+    // library target are present in the requiredBuildTargets, so that both the
+    // compiler and the generated header for the pipeline will be available for
+    // use by the Xcode compilation step.
+    ImmutableSet<BuildTarget> requiredBuildTargets = projectGenerator.getRequiredBuildTargets();
+    assertTrue(requiredBuildTargets.contains(compilerTarget));
+    assertTrue(requiredBuildTargets.contains(libTarget));
   }
 
   @Test
