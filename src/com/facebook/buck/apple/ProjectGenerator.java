@@ -657,12 +657,9 @@ public class ProjectGenerator {
       // that invokes the "compiler" with the correct target architecture.
       if (!HalideLibraryDescription.isHalideCompilerTarget(buildTarget)) {
         result = generateHalideLibraryTarget(project, halideTargetNode);
-      } else {
-        // ATM we build the compiler on the command-line using Buck, so we need
-        // to add it to the requiredBuildTargetsBuilder here.
-        BuildTarget compilerTarget =
-          HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
-        requiredBuildTargetsBuilder.add(compilerTarget);
+        // Also, run the compiler once at project time to generate the header
+        // file needed for compilation.
+        requiredBuildTargetsBuilder.add(buildTarget);
       }
     }
     buckEventBus.post(ProjectGenerationEvent.processed());
@@ -1877,11 +1874,12 @@ public class ProjectGenerator {
             HalideLibraryDescription.TYPE)))) {
       BuildTarget buildTarget = input.getBuildTarget();
       if (!HalideLibraryDescription.isHalideCompilerTarget(buildTarget)) {
-        Path outputDir = getHalideOutputPath(buildTarget);
-        builder.add(pathRelativizer.outputDirToRootRelative(outputDir));
+        builder.add(
+          pathRelativizer.outputDirToRootRelative(
+            BuildTargets.getGenPath(
+              BuildTarget.of(buildTarget.getUnflavoredBuildTarget()), "%s")));
       }
     }
-
     return builder.build();
   }
 

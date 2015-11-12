@@ -48,6 +48,3 @@ done
 
 # Use lipo to create a "universal" library from the object files.
 lipo $OBJECTS -create -output $PATH_TO_OUTPUT/$FUNC_NAME.a
-
-# Now generate the header.
-$PATH_TO_COMPILER -o $PATH_TO_OUTPUT --header-only $FUNC_NAME
