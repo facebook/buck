@@ -26,13 +26,13 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildableContext;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.List;
 
 public class KeystoreTest {
@@ -41,8 +41,8 @@ public class KeystoreTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
     return (Keystore) KeystoreBuilder.createBuilder(
         BuildTargetFactory.newInstance("//keystores:debug"))
-        .setStore(Paths.get("keystores/debug.keystore"))
-        .setProperties(Paths.get("keystores/debug.keystore.properties"))
+        .setStore(new TestSourcePath("keystores/debug.keystore"))
+        .setProperties(new TestSourcePath("keystores/debug.keystore.properties"))
         .build(ruleResolver);
   }
 
@@ -51,8 +51,8 @@ public class KeystoreTest {
     Keystore keystore = createKeystoreRuleForTest();
     assertEquals("keystore", keystore.getType());
 
-    assertEquals(Paths.get("keystores/debug.keystore"), keystore.getPathToStore());
-    assertEquals(Paths.get("keystores/debug.keystore.properties"),
+    assertEquals(new TestSourcePath("keystores/debug.keystore"), keystore.getPathToStore());
+    assertEquals(new TestSourcePath("keystores/debug.keystore.properties"),
         keystore.getPathToPropertiesFile());
   }
 

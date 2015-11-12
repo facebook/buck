@@ -111,8 +111,8 @@ public class AndroidPackageableCollectorTest {
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(Paths.get("keystore/debug.keystore"))
-        .setProperties(Paths.get("keystore/debug.keystore.properties"))
+        .setStore(new TestSourcePath(projectFilesystem, "keystore/debug.keystore"))
+        .setProperties(new TestSourcePath(projectFilesystem, "keystore/debug.keystore.properties"))
         .build(ruleResolver);
 
     ImmutableSortedSet<BuildTarget> originalDepsTargets =
@@ -255,8 +255,8 @@ public class AndroidPackageableCollectorTest {
     // right thing when it gets a non-AndroidResourceRule as well as an AndroidResourceRule.
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(Paths.get("keystore/debug.keystore"))
-        .setProperties(Paths.get("keystore/debug.keystore.properties"))
+        .setStore(new TestSourcePath("keystore/debug.keystore"))
+        .setProperties(new TestSourcePath("keystore/debug.keystore.properties"))
         .build(ruleResolver);
 
     ImmutableSortedSet<BuildTarget> declaredDepsTargets =
@@ -295,8 +295,8 @@ public class AndroidPackageableCollectorTest {
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(Paths.get("keystore/debug.keystore"))
-        .setProperties(Paths.get("keystore/debug.keystore.properties"))
+        .setStore(new TestSourcePath("keystore/debug.keystore"))
+        .setProperties(new TestSourcePath("keystore/debug.keystore.properties"))
         .addDep(androidLibraryKeystore.getBuildTarget())
         .build(ruleResolver);
 

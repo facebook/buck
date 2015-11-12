@@ -408,8 +408,8 @@ public class AndroidBinaryTest {
   private Keystore addKeystoreRule(BuildRuleResolver ruleResolver) {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     return (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(Paths.get("keystore/debug.keystore"))
-        .setProperties(Paths.get("keystore/debug.keystore.properties"))
+        .setStore(new TestSourcePath("keystore/debug.keystore"))
+        .setProperties(new TestSourcePath("keystore/debug.keystore.properties"))
         .build(ruleResolver);
   }
 }

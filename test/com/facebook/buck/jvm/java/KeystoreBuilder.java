@@ -18,8 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-
-import java.nio.file.Path;
+import com.facebook.buck.rules.SourcePath;
 
 public class KeystoreBuilder extends AbstractNodeBuilder<KeystoreDescription.Arg> {
 
@@ -31,12 +30,12 @@ public class KeystoreBuilder extends AbstractNodeBuilder<KeystoreDescription.Arg
     return new KeystoreBuilder(target);
   }
 
-  public KeystoreBuilder setStore(Path store) {
+  public KeystoreBuilder setStore(SourcePath store) {
     arg.store = store;
     return this;
   }
 
-  public KeystoreBuilder setProperties(Path properties) {
+  public KeystoreBuilder setProperties(SourcePath properties) {
     arg.properties = properties;
     return this;
   }

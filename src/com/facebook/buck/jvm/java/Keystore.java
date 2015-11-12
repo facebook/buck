@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -32,15 +33,15 @@ import javax.annotation.Nullable;
 public class Keystore extends AbstractBuildRule {
 
   @AddToRuleKey
-  private final Path pathToStore;
+  private final SourcePath pathToStore;
   @AddToRuleKey
-  private final Path pathToProperties;
+  private final SourcePath pathToProperties;
 
   public Keystore(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Path store,
-      Path properties) {
+      SourcePath store,
+      SourcePath properties) {
     super(params, resolver);
     this.pathToStore = store;
     this.pathToProperties = properties;
@@ -52,11 +53,11 @@ public class Keystore extends AbstractBuildRule {
     return null;
   }
 
-  public Path getPathToStore() {
+  public SourcePath getPathToStore() {
     return pathToStore;
   }
 
-  public Path getPathToPropertiesFile() {
+  public SourcePath getPathToPropertiesFile() {
     return pathToProperties;
   }
 

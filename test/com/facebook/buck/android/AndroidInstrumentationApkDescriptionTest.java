@@ -57,8 +57,8 @@ public class AndroidInstrumentationApkDescriptionTest {
             new Keystore(
                 new FakeBuildRuleParamsBuilder("//:keystore").build(),
                 pathResolver,
-                Paths.get("store"),
-                Paths.get("properties")));
+                new TestSourcePath("store"),
+                new TestSourcePath("properties")));
     AndroidBinary androidBinary =
         (AndroidBinary) AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
             .setManifest(new TestSourcePath("manifest.xml"))

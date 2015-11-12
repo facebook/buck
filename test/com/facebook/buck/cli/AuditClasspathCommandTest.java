@@ -96,8 +96,8 @@ public class AuditClasspathCommandTest {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
     TargetNode<?> keystoreNode = KeystoreBuilder
         .createBuilder(keystoreTarget)
-        .setStore(Paths.get("debug.keystore"))
-        .setProperties(Paths.get("keystore.properties"))
+        .setStore(new TestSourcePath("debug.keystore"))
+        .setProperties(new TestSourcePath("keystore.properties"))
         .build();
 
     BuildTarget testAndroidTarget = BuildTargetFactory.newInstance("//:test-android-binary");

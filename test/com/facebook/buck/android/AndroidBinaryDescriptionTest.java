@@ -55,8 +55,8 @@ public class AndroidBinaryDescriptionTest {
             new Keystore(
                 new FakeBuildRuleParamsBuilder("//:keystore").build(),
                 pathResolver,
-                Paths.get("store"),
-                Paths.get("properties")));
+                new TestSourcePath("store"),
+                new TestSourcePath("properties")));
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     AndroidBinary androidBinary =
         (AndroidBinary) AndroidBinaryBuilder.createBuilder(target)

@@ -445,13 +445,19 @@ public class Project {
             projectRule.getBuildTarget().getShortName(),
             basePath);
         KeystoreProperties keystoreProperties = KeystoreProperties.createFromPropertiesFile(
-            androidBinary.getKeystore().getPathToStore(),
-            androidBinary.getKeystore().getPathToPropertiesFile(),
+            resolver.getAbsolutePath(androidBinary.getKeystore().getPathToStore()),
+            resolver.getAbsolutePath(androidBinary.getKeystore().getPathToPropertiesFile()),
             projectFilesystem);
 
-        // getKeystore() returns a path relative to the project root, but an IntelliJ module
+        // getKeystore() returns an absolute path, but an IntelliJ module
         // expects the path to the keystore to be relative to the module root.
-        module.keystorePath = relativePath.relativize(keystoreProperties.getKeystore());
+
+        // First, grab the aboslute path to the project config.
+        BuildTarget projectTarget = projectConfig.getBuildTarget();
+        Path modulePath = projectTarget.getCellPath().resolve(projectTarget.getBasePath());
+
+        // Now relativize to the keystore path, which is absolute too.
+        module.keystorePath = modulePath.relativize(keystoreProperties.getKeystore());
       } else {
         module.isAndroidLibraryProject = true;
         module.keystorePath = null;

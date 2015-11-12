@@ -203,7 +203,6 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               }
 
               // The last input is the keystore.
-              // TODO(simons): Warning! This needs to be tested cross-cell.
               addToHash(hasher, "keystore", keystore.getPathToStore());
               addToHash(hasher, "keystore properties", keystore.getPathToPropertiesFile());
 

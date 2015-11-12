@@ -92,8 +92,8 @@ public class AndroidInstrumentationApkTest {
 
     BuildRule keystore = KeystoreBuilder.createBuilder(
         BuildTargetFactory.newInstance("//keystores:debug"))
-        .setProperties(Paths.get("keystores/debug.properties"))
-        .setStore(Paths.get("keystores/debug.keystore"))
+        .setProperties(new TestSourcePath("keystores/debug.properties"))
+        .setStore(new TestSourcePath("keystores/debug.keystore"))
         .build(ruleResolver);
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.

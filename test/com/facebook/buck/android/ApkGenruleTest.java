@@ -95,8 +95,8 @@ public class ApkGenruleTest {
 
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     Keystore keystore = (Keystore) KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(Paths.get("keystore/debug.keystore"))
-        .setProperties(Paths.get("keystore/debug.keystore.properties"))
+        .setStore(new TestSourcePath(filesystem, "keystore/debug.keystore"))
+        .setProperties(new TestSourcePath(filesystem, "keystore/debug.keystore.properties"))
         .build(ruleResolver, filesystem);
 
     AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:fb4a"))

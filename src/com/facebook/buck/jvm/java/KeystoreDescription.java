@@ -21,13 +21,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 public class KeystoreDescription implements Description<KeystoreDescription.Arg> {
 
@@ -54,8 +53,8 @@ public class KeystoreDescription implements Description<KeystoreDescription.Arg>
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Path store;
-    public Path properties;
+    public SourcePath store;
+    public SourcePath properties;
 
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
   }

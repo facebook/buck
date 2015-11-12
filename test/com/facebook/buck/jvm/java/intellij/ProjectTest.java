@@ -166,8 +166,8 @@ public class ProjectTest {
     // keystore //keystore:debug
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
-        .setStore(Paths.get("keystore/debug.keystore"))
-        .setProperties(Paths.get("keystore/debug.keystore.properties"))
+        .setStore(new TestSourcePath("keystore/debug.keystore"))
+        .setProperties(new TestSourcePath("keystore/debug.keystore.properties"))
         .build(ruleResolver);
 
     // android_binary //foo:app
@@ -744,7 +744,7 @@ public class ProjectTest {
     keystoreProperties.put("key.store.password", "android");
     keystoreProperties.put("key.alias.password", "android");
     EasyMock.expect(projectFilesystem.readPropertiesFile(
-        Paths.get("keystore/debug.keystore.properties")))
+        Paths.get("keystore/debug.keystore.properties").toAbsolutePath()))
         .andReturn(keystoreProperties).anyTimes();
 
     ImmutableMap<Path, String> basePathToAliasMap = ImmutableMap.of();

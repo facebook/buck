@@ -29,7 +29,6 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -43,6 +42,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.EchoStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
@@ -545,8 +545,8 @@ public class AndroidBinary
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
             .transform(getResolver().deprecatedPathFunction())
             .toSet(),
-        keystore.getPathToStore(),
-        keystore.getPathToPropertiesFile(),
+        getResolver().getAbsolutePath(keystore.getPathToStore()),
+        getResolver().getAbsolutePath(keystore.getPathToPropertiesFile()),
         /* debugMode */ false);
     steps.add(apkBuilderCommand);
 
