@@ -32,18 +32,17 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.jimfs.Configuration;
-import com.google.common.jimfs.Jimfs;
 
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,22 +52,26 @@ public class GenAidlTest {
 
   @Test
   public void testSimpleGenAidlRule() throws IOException {
-    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path root = vfs.getPath("/");
-    Files.createDirectories(root);
-    ProjectFilesystem stubFilesystem = new ProjectFilesystem(root) {
-      @Override
-      public Path resolve(Path path) {
-        return path;
-      }
+//    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+//    Path root = vfs.getPath("/");
+//    Files.createDirectories(root);
+//    ProjectFilesystem stubFilesystem = new ProjectFilesystem(root) {
+//      @Override
+//      public Path resolve(Path path) {
+//        return path;
+//      }
+//
+//      @Override
+//      public boolean exists(Path pathRelativeToProjectRoot) {
+//        return true;
+//      }
+//    };
+    ProjectFilesystem stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
 
-      @Override
-      public boolean exists(Path pathRelativeToProjectRoot) {
-        return true;
-      }
-    };
-
-    Path pathToAidl = Paths.get("java/com/example/base/IWhateverService.aidl");
+    TestSourcePath pathToAidl = new TestSourcePath(
+        stubFilesystem,
+        "java/com/example/base/IWhateverService.aidl");
     String importPath = Paths.get("java/com/example/base").toString();
 
     BuildTarget target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
@@ -110,11 +113,12 @@ public class GenAidlTest {
     ShellStep aidlStep = (ShellStep) steps.get(2);
     assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
-        String.format("(cd / && %s -b -p%s -I%s -o%s %s)",
+        String.format("(cd %s && %s -b -p%s -I%s -o%s %s)",
+            stubFilesystem.getRootPath(),
             pathToAidlExecutable,
             pathToFrameworkAidl,
-            importPath,
-            outputDirectory,
+            stubFilesystem.resolve(importPath),
+            stubFilesystem.resolve(outputDirectory),
             pathToAidl),
         aidlStep.getDescription(executionContext));
 

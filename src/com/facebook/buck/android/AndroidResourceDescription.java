@@ -100,9 +100,9 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     // hashing the contents of the entire resources directory, we try to filter out anything that
     // doesn't look like a resource.  This means when our resources are supplied from another rule,
     // we have to resort to some hackery to make sure things work correctly.
-    Pair<ImmutableSortedSet<Path>, Optional<SourcePath>> resInputsAndKey =
+    Pair<ImmutableSortedSet<SourcePath>, Optional<SourcePath>> resInputsAndKey =
         collectInputFilesAndKey(args.res);
-    Pair<ImmutableSortedSet<Path>, Optional<SourcePath>> assetsInputsAndKey =
+    Pair<ImmutableSortedSet<SourcePath>, Optional<SourcePath>> assetsInputsAndKey =
         collectInputFilesAndKey(args.assets);
 
     return new AndroidResource(
@@ -126,9 +126,9 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         args.hasWhitelistedStrings.or(false));
   }
 
-  private Pair<ImmutableSortedSet<Path>, Optional<SourcePath>> collectInputFilesAndKey(
+  private Pair<ImmutableSortedSet<SourcePath>, Optional<SourcePath>> collectInputFilesAndKey(
       Optional<SourcePath> sourcePath) {
-    ImmutableSortedSet<Path> inputFiles = ImmutableSortedSet.of();
+    ImmutableSortedSet<SourcePath> inputFiles = ImmutableSortedSet.of();
     Optional<SourcePath> additionalKey = Optional.absent();
     if (!sourcePath.isPresent()) {
       return new Pair<>(inputFiles, additionalKey);
@@ -150,13 +150,13 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
   }
 
   @VisibleForTesting
-  ImmutableSortedSet<Path> collectInputFiles(
-      ProjectFilesystem filesystem,
+  ImmutableSortedSet<SourcePath> collectInputFiles(
+      final ProjectFilesystem filesystem,
       Optional<Path> inputDir) {
     if (!inputDir.isPresent()) {
       return ImmutableSortedSet.of();
     }
-    final ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+    final ImmutableSortedSet.Builder<SourcePath> paths = ImmutableSortedSet.naturalOrder();
 
     // We ignore the same files that mini-aapt and aapt ignore.
     FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
@@ -176,7 +176,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
       public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
         String filename = file.getFileName().toString();
         if (isResource(filename)) {
-          paths.add(file);
+          paths.add(new PathSourcePath(filesystem, file));
         }
         return FileVisitResult.CONTINUE;
       }

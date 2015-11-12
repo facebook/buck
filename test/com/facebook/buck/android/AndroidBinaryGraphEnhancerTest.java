@@ -69,7 +69,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 
@@ -456,11 +455,11 @@ public class AndroidBinaryGraphEnhancerTest {
                 pathResolver,
                 ImmutableSortedSet.<BuildRule>of(),
                 new BuildTargetSourcePath(resourcesDep.getBuildTarget()),
-                ImmutableSortedSet.<Path>of(),
+                ImmutableSortedSet.<SourcePath>of(),
                 Optional.<SourcePath>absent(),
                 null,
                 null,
-                ImmutableSortedSet.<Path>of(),
+                ImmutableSortedSet.<SourcePath>of(),
                 Optional.<SourcePath>absent(),
                 new TestSourcePath("manifest"),
                 false));

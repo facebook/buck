@@ -174,11 +174,11 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             .addAll(originalBuildRuleParams.getDeclaredDeps().get())
             .build(),
         new BuildTargetSourcePath(assembleResourceDirectories.getBuildTarget()),
-        /* resSrcs */ ImmutableSortedSet.<Path>of(),
+        /* resSrcs */ ImmutableSortedSet.<SourcePath>of(),
         Optional.<SourcePath>absent(),
         /* rDotJavaPackage */ null,
         new BuildTargetSourcePath(assembleAssetsDirectories.getBuildTarget()),
-        /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
         Optional.<SourcePath>absent(),
         new BuildTargetSourcePath(manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);

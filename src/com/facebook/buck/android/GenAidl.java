@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -66,7 +67,7 @@ public class GenAidl extends AbstractBuildRule {
   // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
   // should incorporate which version of aidl is used.
   @AddToRuleKey
-  private final Path aidlFilePath;
+  private final SourcePath aidlFilePath;
   @AddToRuleKey
   private final String importPath;
   private final Path output;
@@ -75,7 +76,7 @@ public class GenAidl extends AbstractBuildRule {
   GenAidl(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Path aidlFilePath,
+      SourcePath aidlFilePath,
       String importPath) {
     super(params, resolver);
     this.aidlFilePath = aidlFilePath;
@@ -112,7 +113,7 @@ public class GenAidl extends AbstractBuildRule {
     AidlStep command = new AidlStep(
         getProjectFilesystem(),
         target,
-        aidlFilePath,
+        getResolver().getAbsolutePath(aidlFilePath),
         ImmutableSet.of(importPath),
         outputDirectory);
     commands.add(command);

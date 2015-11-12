@@ -32,7 +32,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
 import java.util.Collections;
 
 public class ReactNativeLibraryGraphEnhancer {
@@ -129,11 +128,11 @@ public class ReactNativeLibraryGraphEnhancer {
           sourcePathResolver,
           /* deps */ ImmutableSortedSet.<BuildRule>of(),
           resources,
-          /* resSrcs */ ImmutableSortedSet.<Path>of(),
+          /* resSrcs */ ImmutableSortedSet.<SourcePath>of(),
           Optional.of(resources),
           args.rDotJavaPackage.get(),
           /* assets */ null,
-          /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+          /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
           Optional.<SourcePath>absent(),
           /* manifest */ null,
           /* hasWhitelistedStrings */ false);

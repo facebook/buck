@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.util.HumanReadableException;
@@ -54,10 +56,11 @@ public class ProGuardConfigTest {
         .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
-    Optional<Path> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
+    Optional<SourcePath> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
 
     assertTrue(proGuardJarOverride.isPresent());
-    assertEquals(filesystem.getPathForRelativePath(proGuardJar), proGuardJarOverride.get());
+    assertEquals(
+        new PathSourcePath(filesystem, proGuardJar), proGuardJarOverride.get());
   }
 
   @Test(expected = HumanReadableException.class)
@@ -74,10 +77,10 @@ public class ProGuardConfigTest {
         .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
-    Optional<Path> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
+    Optional<SourcePath> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
 
     assertTrue(proGuardJarOverride.isPresent());
-    assertEquals(proGuardJar, proGuardJarOverride.get());
+    assertEquals(new PathSourcePath(filesystem, proGuardJar), proGuardJarOverride.get());
   }
 
   @Test

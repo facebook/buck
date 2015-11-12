@@ -183,7 +183,7 @@ public class AndroidBinary
   @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey
-  private final Optional<Path> proguardJarOverride;
+  private final Optional<SourcePath> proguardJarOverride;
   private final String proguardMaxHeapSize;
   @AddToRuleKey
   private final ResourceCompressionMode resourceCompressionMode;
@@ -213,7 +213,7 @@ public class AndroidBinary
   AndroidBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
-      Optional<Path> proguardJarOverride,
+      Optional<SourcePath> proguardJarOverride,
       String proguardMaxHeapSize,
       Keystore keystore,
       PackageType packageType,
@@ -846,7 +846,9 @@ public class AndroidBinary
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
         getProjectFilesystem(),
-        proguardJarOverride,
+        proguardJarOverride.isPresent() ?
+            Optional.of(getResolver().getAbsolutePath(proguardJarOverride.get())) :
+            Optional.<Path>absent(),
         proguardMaxHeapSize,
         proguardConfigDir.resolve("proguard.txt"),
         proguardConfigsBuilder.build(),

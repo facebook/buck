@@ -50,7 +50,6 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
@@ -79,12 +78,16 @@ public class AndroidResourceTest {
         .setRes(new TestSourcePath("java/src/com/facebook/base/res"))
         .setResSrcs(
             ImmutableSortedSet.of(
-                Paths.get("java/src/com/facebook/base/res/drawable/A.xml")))
+                new TestSourcePath(
+                    params.getProjectFilesystem(),
+                    "java/src/com/facebook/base/res/drawable/A.xml")))
         .setRDotJavaPackage("com.facebook")
         .setAssets(new TestSourcePath("java/src/com/facebook/base/assets"))
         .setAssetsSrcs(
             ImmutableSortedSet.of(
-                Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
+                new TestSourcePath(
+                    params.getProjectFilesystem(),
+                    "java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(
             new PathSourcePath(
                 projectFilesystem,
@@ -97,12 +100,16 @@ public class AndroidResourceTest {
         .setRes(new TestSourcePath("java/src/com/facebook/base/res"))
         .setResSrcs(
             ImmutableSortedSet.of(
-                Paths.get("java/src/com/facebook/base/res/drawable/C.xml")))
+                new TestSourcePath(
+                    params.getProjectFilesystem(),
+                    "java/src/com/facebook/base/res/drawable/C.xml")))
         .setRDotJavaPackage("com.facebook")
         .setAssets(new TestSourcePath("java/src/com/facebook/base/assets"))
         .setAssetsSrcs(
             ImmutableSortedSet.of(
-                Paths.get("java/src/com/facebook/base/assets/drawable/B.xml")))
+                new TestSourcePath(
+                    params.getProjectFilesystem(),
+                    "java/src/com/facebook/base/assets/drawable/B.xml")))
         .setManifest(
             new PathSourcePath(
                 projectFilesystem,
@@ -180,11 +187,11 @@ public class AndroidResourceTest {
         new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         new TestSourcePath("foo/res"),
-        ImmutableSortedSet.of(Paths.get("foo/res/values/strings.xml")),
+        ImmutableSortedSet.of((SourcePath) new TestSourcePath("foo/res/values/strings.xml")),
         Optional.<SourcePath>absent(),
         /* rDotJavaPackage */ "com.example.android",
         /* assets */ null,
-        /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
         Optional.<SourcePath>absent(),
         /* manifestFile */ null,
         /* hasWhitelistedStrings */ false);
@@ -199,11 +206,11 @@ public class AndroidResourceTest {
         new SourcePathResolver(new BuildRuleResolver()),
         /* deps */ ImmutableSortedSet.<BuildRule>of(),
         new TestSourcePath("foo/res"),
-        ImmutableSortedSet.of(Paths.get("foo/res/values/strings.xml")),
+        ImmutableSortedSet.of((SourcePath) new TestSourcePath("foo/res/values/strings.xml")),
         Optional.<SourcePath>absent(),
         /* rDotJavaPackage */ null,
         /* assets */ null,
-        /* assetsSrcs */ ImmutableSortedSet.<Path>of(),
+        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
         Optional.<SourcePath>absent(),
         /* manifestFile */ new PathSourcePath(
             projectFilesystem,

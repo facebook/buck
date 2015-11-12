@@ -19,8 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
-import java.nio.file.Paths;
-
 public class TestSourcePath extends PathSourcePath {
 
   public TestSourcePath(String path) {
@@ -28,6 +26,6 @@ public class TestSourcePath extends PathSourcePath {
   }
 
   public TestSourcePath(ProjectFilesystem filesystem, String path) {
-    super(filesystem, Paths.get(path));
+    super(filesystem, filesystem.getRootPath().getFileSystem().getPath(path));
   }
 }

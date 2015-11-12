@@ -25,8 +25,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-
 public class AndroidResourceRuleBuilder {
 
   private AndroidResourceRuleBuilder() {
@@ -43,10 +41,10 @@ public class AndroidResourceRuleBuilder {
     private BuildRuleParams buildRuleParams;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     private SourcePath res;
-    private ImmutableSortedSet<Path> resSrcs = ImmutableSortedSet.of();
+    private ImmutableSortedSet<? extends SourcePath> resSrcs = ImmutableSortedSet.of();
     private String rDotJavaPackage;
     private SourcePath assets;
-    private ImmutableSortedSet<Path> assetsSrcs = ImmutableSortedSet.of();
+    private ImmutableSortedSet<? extends SourcePath> assetsSrcs = ImmutableSortedSet.of();
     private SourcePath manifest;
     private boolean hasWhitelistedStrings = false;
 
@@ -91,7 +89,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setResSrcs(ImmutableSortedSet<Path> resSrcs) {
+    public Builder setResSrcs(ImmutableSortedSet<? extends SourcePath> resSrcs) {
       this.resSrcs = resSrcs;
       return this;
     }
@@ -106,7 +104,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setAssetsSrcs(ImmutableSortedSet<Path> assetsSrcs) {
+    public Builder setAssetsSrcs(ImmutableSortedSet<? extends SourcePath> assetsSrcs) {
       this.assetsSrcs = assetsSrcs;
       return this;
     }
