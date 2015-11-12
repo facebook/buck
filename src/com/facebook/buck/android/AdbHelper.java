@@ -534,7 +534,8 @@ public class AdbHelper {
       getBuckEventBus().post(started);
     }
 
-    final File apk = installableApk.getApkPath().toFile();
+    final File apk = installableApk.getProjectFilesystem().resolve(
+        installableApk.getApkPath()).toFile();
     boolean success = adbCall(
         new AdbHelper.AdbCallable() {
           @Override
@@ -724,7 +725,8 @@ public class AdbHelper {
       @Nullable String activity) throws IOException, InterruptedException {
 
     // Might need the package name and activities from the AndroidManifest.
-    Path pathToManifest = installableApk.getManifestPath();
+    Path pathToManifest = installableApk.getProjectFilesystem().resolve(
+        installableApk.getManifestPath());
     AndroidManifestReader reader = DefaultAndroidManifestReader.forPath(
         pathToManifest, installableApk.getProjectFilesystem());
 
@@ -917,7 +919,8 @@ public class AdbHelper {
   }
 
   public static String tryToExtractPackageNameFromManifest(InstallableApk androidBinaryRule) {
-    Path pathToManifest = androidBinaryRule.getManifestPath();
+    Path pathToManifest = androidBinaryRule.getProjectFilesystem().resolve(
+        androidBinaryRule.getManifestPath());
 
     // Note that the file may not exist if AndroidManifest.xml is a generated file
     // and the rule has not been built yet.
@@ -938,7 +941,8 @@ public class AdbHelper {
 
   public static String tryToExtractInstrumentationTestRunnerFromManifest(
       InstallableApk androidBinaryRule) {
-    Path pathToManifest = androidBinaryRule.getManifestPath();
+    Path pathToManifest = androidBinaryRule.getProjectFilesystem().resolve(
+        androidBinaryRule.getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
       throw new HumanReadableException(
