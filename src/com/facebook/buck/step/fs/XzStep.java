@@ -43,7 +43,7 @@ import java.nio.file.Paths;
  * @see <a href="http://tukaani.org/xz/embedded.html">XZ Embedded</a>
  */
 public class XzStep implements Step {
-
+  public static final int DEFAULT_COMPRESSION_LEVEL = 4;
   private static final Logger LOG = Logger.get(XzStep.class);
 
   private final ProjectFilesystem filesystem;
@@ -91,7 +91,7 @@ public class XzStep implements Step {
    * @param sourceFile file to compress
    */
   public XzStep(ProjectFilesystem filesystem, Path sourceFile) {
-    this(filesystem, sourceFile, 4);
+    this(filesystem, sourceFile, DEFAULT_COMPRESSION_LEVEL);
   }
 
   /**
@@ -103,7 +103,7 @@ public class XzStep implements Step {
    * @param outputPath desired output path
    */
   public XzStep(ProjectFilesystem filesystem, Path sourceFile, Path outputPath) {
-    this(filesystem, sourceFile, outputPath, 4);
+    this(filesystem, sourceFile, outputPath, DEFAULT_COMPRESSION_LEVEL);
   }
 
   /**
