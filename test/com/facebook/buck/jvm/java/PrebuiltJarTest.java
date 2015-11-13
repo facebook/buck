@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
@@ -76,6 +77,6 @@ public class PrebuiltJarTest {
 
   @Test
   public void testGetAnnotationProcessingDataIsEmpty() {
-    assertTrue(junitJarRule.getAnnotationProcessingParams().isEmpty());
+    assertFalse(junitJarRule.getGeneratedSourcePath().isPresent());
   }
 }

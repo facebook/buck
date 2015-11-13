@@ -218,8 +218,8 @@ public class PrebuiltJar extends AbstractBuildRule
   }
 
   @Override
-  public AnnotationProcessingParams getAnnotationProcessingParams() {
-    return AnnotationProcessingParams.EMPTY;
+  public Optional<Path> getGeneratedSourcePath() {
+    return Optional.absent();
   }
 
   @Override

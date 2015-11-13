@@ -34,7 +34,6 @@ import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaPackageFinder;
@@ -489,11 +488,9 @@ public class Project {
       javaLibrary = (JavaLibrary) projectRule;
     }
     if (javaLibrary != null) {
-      AnnotationProcessingParams processingParams = javaLibrary.getAnnotationProcessingParams();
-
-      Path annotationGenSrc = processingParams.getGeneratedSourceFolderName();
-      if (annotationGenSrc != null) {
-        module.annotationGenPath = basePath.relativize(annotationGenSrc);
+      Optional<Path> processingParams = javaLibrary.getGeneratedSourcePath();
+      if (processingParams.isPresent()) {
+        module.annotationGenPath = basePath.relativize(processingParams.get());
         module.annotationGenIsForTest = !hasSourceFoldersForSrcRule;
       }
     }

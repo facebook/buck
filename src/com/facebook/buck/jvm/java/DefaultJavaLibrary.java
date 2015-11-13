@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
+import static com.google.common.base.Optional.fromNullable;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
@@ -430,8 +431,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public AnnotationProcessingParams getAnnotationProcessingParams() {
-    return javacOptions.getAnnotationProcessingParams();
+  public Optional<Path> getGeneratedSourcePath() {
+    return fromNullable(
+        javacOptions.getAnnotationProcessingParams().getGeneratedSourceFolderName());
   }
 
   @Override
