@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 public enum TestType {
-  // TODO(#9027074): Look these up reflectively.
   JUNIT("com.facebook.buck.testrunner.JUnitMain"),
   TESTNG("com.facebook.buck.testrunner.TestNGMain"),
   ;

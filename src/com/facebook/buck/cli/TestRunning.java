@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_OUTPUT_DIR;
+import static com.facebook.buck.jvm.java.JUnitStep.JACOCO_OUTPUT_DIR;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
