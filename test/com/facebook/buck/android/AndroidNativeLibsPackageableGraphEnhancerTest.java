@@ -25,11 +25,11 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -37,8 +37,10 @@ import com.facebook.buck.rules.TestSourcePath;
 import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -85,7 +87,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         enhancer.getCopyNativeLibraries(TargetGraph.EMPTY, collector.build());
     CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
 
-    assertThat(copyNativeLibraries.getFilteredNativeLibraries(), Matchers.anEmptyMap());
+    assertThat(copyNativeLibraries.getStrippedObjectDescriptions(), Matchers.empty());
     assertThat(
         FluentIterable.from(copyNativeLibraries.getNativeLibDirectories())
             .transform(sourcePathResolver.deprecatedPathFunction())
@@ -100,6 +102,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   @SuppressWarnings("unchecked")
   public void testCxxLibrary() {
     BuildRuleResolver ruleResolver = new BuildRuleResolver();
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
     NdkCxxPlatform ndkCxxPlatform =
         NdkCxxPlatform.builder()
@@ -113,7 +116,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         .put(NdkCxxPlatforms.TargetCpuType.ARMV7, ndkCxxPlatform)
         .put(NdkCxxPlatforms.TargetCpuType.X86, ndkCxxPlatform)
         .build();
-
 
     AbstractCxxSourceBuilder<CxxLibraryDescription.Arg> cxxLibraryBuilder = new CxxLibraryBuilder(
         BuildTargetFactory.newInstance("//:cxxlib"))
@@ -155,12 +157,41 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
 
     assertThat(
-        copyNativeLibraries.getFilteredNativeLibraries().keySet(),
+        copyNativeLibraries.getStrippedObjectDescriptions(),
         Matchers.containsInAnyOrder(
-            new Pair<>(NdkCxxPlatforms.TargetCpuType.ARMV7, "somelib.so"),
-            new Pair<>(NdkCxxPlatforms.TargetCpuType.ARMV7, "libgnustl_shared.so")
+            Matchers.allOf(
+                Matchers.hasProperty(
+                    "targetCpuType",
+                    Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
+                Matchers.hasProperty(
+                    "strippedObjectName",
+                    Matchers.equalTo("somelib.so"))
+            ),
+            Matchers.allOf(
+                Matchers.hasProperty(
+                    "targetCpuType",
+                    Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
+                Matchers.hasProperty(
+                    "strippedObjectName",
+                    Matchers.equalTo("libgnustl_shared.so"))
+            )
         )
     );
     assertThat(copyNativeLibraries.getNativeLibDirectories(), Matchers.empty());
+    ImmutableCollection<BuildRule> stripRules = sourcePathResolver.filterBuildRuleInputs(
+        FluentIterable.from(copyNativeLibraries.getStrippedObjectDescriptions())
+            .transform(
+                new Function<StrippedObjectDescription, SourcePath>() {
+                  @Override
+                  public SourcePath apply(StrippedObjectDescription input) {
+                    return input.getSourcePath();
+                  }
+                })
+            .toSet());
+    assertThat(
+        stripRules,
+        Matchers.contains(
+            Matchers.instanceOf(StripLinkable.class),
+            Matchers.instanceOf(StripLinkable.class)));
   }
 }

@@ -95,6 +95,7 @@ RULES_SRCS = [
   'RobolectricTestDescription.java',
   'RobolectricTest.java',
   'RDotJava.java',
+  'StripLinkable.java',
   'UnsortedAndroidResourceDeps.java',
   'UnzipAar.java',
   # This and the InstrumentationStep would make more sense in the steps

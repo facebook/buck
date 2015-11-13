@@ -29,10 +29,12 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -154,6 +156,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       return Optional.absent();
     }
 
+    ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap = generateStripRules(
+        nativeLinkableLibs);
+    ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
+        generateStripRules(nativeLinkableLibsAssets);
+
     BuildTarget targetForCopyNativeLibraries = BuildTarget.builder(originalBuildTarget)
         .addFlavors(COPY_NATIVE_LIBS_FLAVOR)
         .build();
@@ -169,18 +176,68 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 .addAll(
                     pathResolver.filterBuildRuleInputs(
                         packageableCollection.getNativeLibsDirectories()))
-                .addAll(pathResolver.filterBuildRuleInputs(nativeLinkableLibs.values()))
-                .addAll(pathResolver.filterBuildRuleInputs(nativeLinkableLibsAssets.values()))
+                .addAll(strippedLibsMap.keySet())
+                .addAll(strippedLibsAssetsMap.keySet())
                 .build()),
-          /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
     return Optional.of(
         new CopyNativeLibraries(
             paramsForCopyNativeLibraries,
             pathResolver,
             packageableCollection.getNativeLibsDirectories(),
-            cpuFilters,
-            nativePlatforms,
-            nativeLinkableLibs,
-            nativeLinkableLibsAssets));
+            ImmutableSet.copyOf(strippedLibsMap.values()),
+            ImmutableSet.copyOf(strippedLibsAssetsMap.values()),
+            cpuFilters));
+  }
+
+  private ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
+      ImmutableMap<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> libs) {
+    ImmutableMap.Builder<StripLinkable, StrippedObjectDescription> result = ImmutableMap.builder();
+    for (Map.Entry<Pair<NdkCxxPlatforms.TargetCpuType, String>, SourcePath> entry :
+        libs.entrySet()) {
+      SourcePath sourcePath = entry.getValue();
+      NdkCxxPlatforms.TargetCpuType targetCpuType = entry.getKey().getFirst();
+
+      NdkCxxPlatform platform =
+          Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
+
+      String sharedLibrarySoName = entry.getKey().getSecond();
+      BuildTarget targetForStripRule = BuildTarget.builder(originalBuildTarget)
+          .addFlavors(ImmutableFlavor.of("strip"))
+          .addFlavors(ImmutableFlavor.of(sharedLibrarySoName))
+          .addFlavors(ImmutableFlavor.of(targetCpuType.name()))
+          .build();
+
+      Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(targetForStripRule);
+      StripLinkable stripLinkable;
+      if (previouslyCreated.isPresent()) {
+        stripLinkable = (StripLinkable) previouslyCreated.get();
+      } else {
+        BuildRuleParams paramsForStripLinkable = buildRuleParams.copyWithChanges(
+            targetForStripRule,
+            Suppliers.ofInstance(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(pathResolver.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
+                    .build()),
+            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+
+        stripLinkable = new StripLinkable(
+            paramsForStripLinkable,
+            pathResolver,
+            platform.getCxxPlatform().getStrip(),
+            sourcePath,
+            sharedLibrarySoName);
+
+        ruleResolver.addToIndex(stripLinkable);
+      }
+      result.put(
+          stripLinkable,
+          StrippedObjectDescription.builder()
+              .setSourcePath(SourcePaths.getToBuildTargetSourcePath().apply(stripLinkable))
+              .setStrippedObjectName(sharedLibrarySoName)
+              .setTargetCpuType(targetCpuType)
+              .build());
+    }
+    return result.build();
   }
 }
