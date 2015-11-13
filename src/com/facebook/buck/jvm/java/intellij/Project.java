@@ -483,8 +483,7 @@ public class Project {
     }
     if (javaLibrary != null) {
       Optional<Path> processingParams = javaLibrary.getGeneratedSourcePath();
-      if (processingParams.isPresent())
-      {
+      if (processingParams.isPresent()) {
         module.annotationGenPath = basePath.relativize(processingParams.get());
         module.annotationGenIsForTest = !hasSourceFoldersForSrcRule;
       }
