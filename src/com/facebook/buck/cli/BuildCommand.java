@@ -260,10 +260,10 @@ public class BuildCommand extends AbstractCommand {
   @Override
   @SuppressWarnings("PMD.PrematureDeclaration")
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    return run(params, Optional.<String>absent());
+    return run(params, ImmutableSet.<String>of());
   }
 
-  protected int run(CommandRunnerParams params, Optional<String> additionalTarget)
+  protected int run(CommandRunnerParams params, ImmutableSet<String> additionalTargets)
       throws IOException, InterruptedException {
     if (getArguments().isEmpty()) {
       params.getConsole().printBuildFailure("Must specify at least one build target.");
@@ -279,8 +279,8 @@ public class BuildCommand extends AbstractCommand {
       return 1;
     }
 
-    if (additionalTarget.isPresent()) {
-      arguments.add(additionalTarget.get());
+    if (!additionalTargets.isEmpty()){
+      this.arguments.addAll(additionalTargets);
     }
 
     // Post the build started event, setting it to the Parser recorded start time if appropriate.

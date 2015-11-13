@@ -518,7 +518,7 @@ public class AdbHelper {
    *  devices will be used to install the apk if needed.
    */
   public boolean installApk(
-      InstallableApk installableApk,
+      final InstallableApk installableApk,
       final boolean installViaSd,
       final boolean quiet) throws InterruptedException {
     Optional<ExopackageInfo> exopackageInfo = installableApk.getExopackageInfo();
@@ -545,7 +545,7 @@ public class AdbHelper {
 
           @Override
           public String toString() {
-            return "install apk";
+            return String.format("install apk %s", installableApk.getBuildTarget().toString());
           }
         },
         quiet);

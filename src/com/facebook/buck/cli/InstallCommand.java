@@ -47,15 +47,18 @@ import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.UnixUserIdFetcher;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Option;
@@ -174,88 +177,139 @@ public class InstallCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    // Make sure that only one build target is specified.
-    if (getArguments().size() != 1) {
-      params.getBuckEventBus().post(ConsoleEvent.severe("Must specify exactly one rule."));
+
+    // Make sure that at least one build target is specified.
+    if (getArguments().size() < 1) {
+      params.getBuckEventBus().post(ConsoleEvent.severe("Must specify at least one rule."));
       return 1;
     }
 
-    // TODO(markwang): Cache argument parsing.
-    Optional<String> helperTarget = Optional.absent();
+    // Get the helper targets if present
+    ImmutableSet<String> installHelperTargets;
     try {
-      TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
-          params.getBuckConfig(),
-          getArguments()).get(0);
-
-      BuildTarget target = params.getParser().resolveTargetSpec(
-          spec,
-          new ParserConfig(params.getBuckConfig()),
-          params.getBuckEventBus(),
-          params.getConsole(),
-          params.getEnvironment(),
-          getEnableProfiling()).iterator().next();
-      TargetNode<?> node = params.getParser().getTargetNode(target);
-      if (node != null &&
-          node.getDescription().getBuildRuleType().equals(AppleBundleDescription.TYPE)) {
-        for (Flavor flavor : node.getBuildTarget().getFlavors()) {
-          if (ApplePlatform.needsInstallHelper(flavor.getName())) {
-            AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
-
-            Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
-            if (deviceHelperTarget.isPresent()) {
-              helperTarget = Optional.of(deviceHelperTarget.get().toString());
-            }
-          }
-        }
-      }
+      installHelperTargets = getInstallHelperTargets(params);
     } catch (BuildTargetException | BuildFileParseException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      params.getBuckEventBus().post(
+          ConsoleEvent.severe(
+              MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return 1;
     }
 
-    // Build the specified target.
-    int exitCode = super.run(params, helperTarget);
+    // Build the targets
+    int exitCode = super.run(params, installHelperTargets);
     if (exitCode != 0) {
       return exitCode;
     }
 
+    //Install the targets
+    exitCode = install(params);
+    if (exitCode != 0) {
+      return exitCode;
+    }
+    return exitCode;
+  }
+
+  private int install(CommandRunnerParams params) throws IOException, InterruptedException{
+
     Build build = super.getBuild();
     ActionGraph graph = build.getActionGraph();
-    BuildRule buildRule = Preconditions.checkNotNull(
-        graph.findBuildRuleByTarget(getBuildTargets().get(0)));
+    int exitCode = 0;
 
-    if (buildRule instanceof InstallableApk) {
-      ExecutionContext.Builder builder = ExecutionContext.builder()
-          .setExecutionContext(build.getExecutionContext())
-          .setAdbOptions(Optional.<AdbOptions>of(adbOptions(params.getBuckConfig())))
-          .setTargetDeviceOptions(Optional.<TargetDeviceOptions>of(targetDeviceOptions()));
-      return installApk(
-          params,
-          (InstallableApk) buildRule,
-          builder.build());
-    } else if (buildRule instanceof AppleBundle) {
-      AppleBundle appleBundle = (AppleBundle) buildRule;
-      InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
-      params.getBuckEventBus().post(started);
-      InstallResult installResult = installAppleBundle(
-          params,
-          appleBundle,
-          appleBundle.getProjectFilesystem(),
-          build.getExecutionContext().getProcessExecutor());
-      params.getBuckEventBus().post(InstallEvent.finished(
-          started,
-          installResult.getExitCode() == 0,
-          installResult.getLaunchedPid()));
-      return installResult.getExitCode();
-    } else {
-      params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
-          "Specified rule %s must be of type android_binary() or apk_genrule() or " +
-              "apple_bundle() but was %s().\n",
-          buildRule.getFullyQualifiedName(),
-          buildRule.getType())));
-      return 1;
+    for (BuildTarget buildTarget : getBuildTargets()) {
+
+
+      BuildRule buildRule = Preconditions.checkNotNull(
+          graph.findBuildRuleByTarget(buildTarget));
+
+      if (buildRule instanceof InstallableApk) {
+        ExecutionContext.Builder builder = ExecutionContext.builder()
+            .setExecutionContext(build.getExecutionContext())
+            .setAdbOptions(Optional.<AdbOptions>of(adbOptions(params.getBuckConfig())))
+            .setTargetDeviceOptions(Optional.<TargetDeviceOptions>of(targetDeviceOptions()));
+        exitCode = installApk(
+            params,
+            (InstallableApk) buildRule,
+            builder.build());
+        if (exitCode != 0) {
+          return exitCode;
+        }
+      } else if (buildRule instanceof AppleBundle) {
+        AppleBundle appleBundle = (AppleBundle) buildRule;
+        InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
+        params.getBuckEventBus().post(started);
+        InstallResult installResult = installAppleBundle(
+            params,
+            appleBundle,
+            appleBundle.getProjectFilesystem(),
+            build.getExecutionContext().getProcessExecutor());
+        params.getBuckEventBus().post(
+            InstallEvent.finished(
+                started,
+                installResult.getExitCode() == 0,
+                installResult.getLaunchedPid()));
+        exitCode = installResult.getExitCode();
+        if (exitCode != 0) {
+          return exitCode;
+        }
+      } else {
+        params.getBuckEventBus().post(
+            ConsoleEvent.severe(
+                String.format(
+                    "Specified rule %s must be of type android_binary() or apk_genrule() or " +
+                        "apple_bundle() but was %s().\n",
+                    buildRule.getFullyQualifiedName(),
+                    buildRule.getType())));
+        return 1;
+      }
+
+
     }
+    return exitCode;
+  }
+
+  private ImmutableSet<String> getInstallHelperTargets(CommandRunnerParams params)
+      throws IOException, InterruptedException, BuildTargetException, BuildFileParseException{
+
+    ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
+    for (int index = 0; index < getArguments().size(); index++) {
+
+      // TODO(markwang): Cache argument parsing
+        TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
+            params.getBuckConfig(),
+            getArguments()).get(index);
+
+        BuildTarget target = params.getParser().resolveTargetSpec(
+            spec,
+            new ParserConfig(params.getBuckConfig()),
+            params.getBuckEventBus(),
+            params.getConsole(),
+            params.getEnvironment(),
+            getEnableProfiling()).iterator().next();
+
+        TargetNode<?> node = params.getParser().getTargetNode(target);
+
+        if (node != null &&
+            node.getDescription().getBuildRuleType().equals(AppleBundleDescription.TYPE)) {
+          for (Flavor flavor : node.getBuildTarget().getFlavors()) {
+            if (ApplePlatform.needsInstallHelper(flavor.getName())) {
+              AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
+
+              Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
+              Optionals.addIfPresent(
+                  Optionals.bind(deviceHelperTarget,
+                      new Function<BuildTarget, Optional<String>>() {
+                        @Override
+                        public Optional<String> apply(BuildTarget input) {
+                          return !input.toString().isEmpty()
+                              ? Optional.of(input.toString())
+                              : Optional.<String>absent();
+                        }}),
+                  installHelperTargets);
+              }
+            }
+          }
+        }
+    return installHelperTargets.build();
   }
 
   private int installApk(
