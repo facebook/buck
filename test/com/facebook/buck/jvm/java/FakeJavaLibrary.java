@@ -117,8 +117,8 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public AnnotationProcessingParams getAnnotationProcessingParams() {
-    return AnnotationProcessingParams.EMPTY;
+  public Optional<Path> getGeneratedSourcePath() {
+    return Optional.absent();
   }
 
   @Override

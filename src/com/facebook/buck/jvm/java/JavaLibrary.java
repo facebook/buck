@@ -92,7 +92,7 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
   @Override
   public ImmutableSortedSet<SourcePath> getSources();
 
-  public AnnotationProcessingParams getAnnotationProcessingParams();
+  public Optional<Path> getGeneratedSourcePath();
 
   public static class Data {
     private final ImmutableSortedMap<String, HashCode> classNamesToHashes;
