@@ -45,10 +45,12 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
 
   private static final Flavor PYTHON_FLAVOR = ImmutableFlavor.of("py");
   private static final Flavor PYTHON_TWISTED_FLAVOR = ImmutableFlavor.of("py-twisted");
+  private static final Flavor PYTHON_ASYNCIO_FLAVOR = ImmutableFlavor.of("py-asyncio");
 
   public enum Type {
     NORMAL,
     TWISTED,
+    ASYNCIO,
   }
 
   private final ThriftBuckConfig thriftBuckConfig;
@@ -66,7 +68,15 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
 
   @Override
   public Flavor getFlavor() {
-    return type == Type.TWISTED ? PYTHON_TWISTED_FLAVOR : PYTHON_FLAVOR;
+    switch (type) {
+      case NORMAL:
+        return PYTHON_FLAVOR;
+      case TWISTED:
+        return PYTHON_TWISTED_FLAVOR;
+      case ASYNCIO:
+        return PYTHON_ASYNCIO_FLAVOR;
+    }
+    throw new IllegalStateException();
   }
 
   @Override
@@ -101,9 +111,10 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
         return args.pyBaseModule;
       case TWISTED:
         return args.pyTwistedBaseModule;
-      default:
-        throw new IllegalStateException(String.format("Unexpected python thrift type: %s", type));
+      case ASYNCIO:
+        return args.pyAsyncioBaseModule;
     }
+    throw new IllegalStateException(String.format("Unexpected python thrift type: %s", type));
   }
 
   @Override
@@ -160,6 +171,8 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
 
     if (type == Type.TWISTED) {
       implicitDeps.add(thriftBuckConfig.getPythonTwistedDep());
+    } else if (type == Type.ASYNCIO) {
+      implicitDeps.add(thriftBuckConfig.getPythonAsyncioDep());
     }
 
     return implicitDeps.build();
@@ -181,8 +194,8 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
 
     if (args.pyOptions.isPresent()) {
 
-      // Don't allow the "twisted" parameter to be pass via the options parameter, as
-      // use a dedicated flavor to handle it.
+      // Don't allow the "twisted" or "asyncio" parameters to be passed in via the options
+      // parameter, as we use dedicated flavors to handle them.
       if (args.pyOptions.get().contains("twisted")) {
         throw new HumanReadableException(
             "%s: parameter \"py_options\": cannot specify \"twisted\" as an option" +
@@ -190,12 +203,21 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
             target,
             PYTHON_TWISTED_FLAVOR);
       }
+      if (args.pyOptions.get().contains("asyncio")) {
+        throw new HumanReadableException(
+            "%s: parameter \"py_options\": cannot specify \"asyncio\" as an option" +
+                " -- use the \"#%s\" flavor instead",
+            target,
+            PYTHON_ASYNCIO_FLAVOR);
+      }
 
       options.addAll(args.pyOptions.get());
     }
 
     if (type == Type.TWISTED) {
       options.add("twisted");
+    } else if (type == Type.ASYNCIO) {
+      options.add("asyncio");
     }
 
     return options.build();

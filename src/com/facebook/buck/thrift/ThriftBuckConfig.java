@@ -103,4 +103,8 @@ public class ThriftBuckConfig {
     return delegate.getRequiredBuildTarget(SECTION, "python_twisted_library");
   }
 
+  public BuildTarget getPythonAsyncioDep() {
+    return delegate.getRequiredBuildTarget(SECTION, "python_asyncio_library");
+  }
+
 }
