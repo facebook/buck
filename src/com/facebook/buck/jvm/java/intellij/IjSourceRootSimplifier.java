@@ -115,11 +115,16 @@ public class IjSourceRootSimplifier {
         Path path = folder.getPath();
         while (path.getNameCount() > limit) {
           Path parent = path.getParent();
-          if (parent != null) {
-            tree.addEdge(parent, path);
-          } else {
+          if (parent == null) {
             break;
           }
+
+          boolean isParentAndGrandParentAlreadyInTree = tree.containsNode(parent);
+          tree.addEdge(parent, path);
+          if (isParentAndGrandParentAlreadyInTree) {
+            break;
+          }
+
           path = parent;
         }
       }
