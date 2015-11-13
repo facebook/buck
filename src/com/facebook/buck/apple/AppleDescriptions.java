@@ -32,7 +32,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.coercer.SourceWithFlags;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -194,14 +193,12 @@ public class AppleDescriptions {
             .build();
 
     output.srcs = arg.srcs;
-    output.platformSrcs = Optional.of(
-        PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
+    output.platformSrcs = arg.platformSrcs;
     output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
     output.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     output.prefixHeader = arg.prefixHeader;
     output.compilerFlags = arg.compilerFlags;
-    output.platformCompilerFlags = Optional.of(
-        PatternMatchedCollection.<ImmutableList<String>>of());
+    output.platformCompilerFlags = arg.platformCompilerFlags;
     output.preprocessorFlags = arg.preprocessorFlags;
     output.platformPreprocessorFlags = arg.platformPreprocessorFlags;
     output.langPreprocessorFlags = arg.langPreprocessorFlags;
