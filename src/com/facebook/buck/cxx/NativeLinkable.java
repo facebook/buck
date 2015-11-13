@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableMap;
@@ -24,7 +25,7 @@ import com.google.common.collect.ImmutableMap;
  * Interface for {@link com.facebook.buck.rules.BuildRule} objects (e.g. C++ libraries) which can
  * contribute to the top-level link of a native binary (e.g. C++ binary).
  */
-public interface NativeLinkable {
+public interface NativeLinkable extends HasBuildTarget {
 
   Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform);
 

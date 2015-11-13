@@ -168,7 +168,6 @@ public class CxxLibraryDescriptionTest {
         throw new RuntimeException("Invalid header visibility: " + headerVisibility);
       }
 
-
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
           TargetGraph targetGraph,

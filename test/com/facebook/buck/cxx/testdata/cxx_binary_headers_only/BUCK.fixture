@@ -21,7 +21,7 @@ cxx_library(
   exported_headers = [
     'echo.h',
   ],
-  deps = [
+  exported_deps = [
     ':has-srcs',
   ],
 )

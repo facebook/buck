@@ -20,8 +20,8 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
-import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -29,9 +29,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -229,17 +227,13 @@ public class AppleTestDescription implements
       testHostAppBinarySourcePath = Optional.<SourcePath>of(
           new BuildTargetSourcePath(testHostAppDescription.binary));
 
-      Pair<MutableDirectedGraph<BuildRule>, Map<BuildTarget, Linker.LinkableDepType>>
-          transitiveDependencies = NativeLinkables.getTransitiveNativeLinkableInput(
-            cxxPlatform,
-            testHostApp.get().getBinary().get().getDeps(),
-            Linker.LinkableDepType.STATIC,
-            Predicates.alwaysTrue());
-
-      blacklist =
-          FluentIterable.from(transitiveDependencies.getFirst().getNodes())
-              .transform(HasBuildTarget.TO_TARGET)
-              .toSet();
+      ImmutableMap<BuildTarget, NativeLinkable> roots =
+          NativeLinkables.getNativeLinkableRoots(
+              testHostApp.get().getBinary().get().getDeps(),
+              Predicates.alwaysTrue());
+      ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
+          NativeLinkables.getTransitiveNativeLinkables(cxxPlatform, roots.values());
+      blacklist = ImmutableSet.copyOf(nativeLinkables.keySet());
     } else {
       testHostApp = Optional.absent();
       testHostAppBinarySourcePath = Optional.absent();

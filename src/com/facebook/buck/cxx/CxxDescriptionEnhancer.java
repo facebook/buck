@@ -792,12 +792,12 @@ public class CxxDescriptionEnhancer {
             params.getBuildTarget(),
             cxxPlatform.getFlavor());
 
-    ImmutableSortedMap<String, SourcePath> libraries = NativeLinkables.getTransitiveSharedLibraries(
-        targetGraph,
-        cxxPlatform,
-        params.getDeps(),
-        Linker.LinkableDepType.SHARED,
-        traverse);
+    ImmutableSortedMap<String, SourcePath> libraries =
+        NativeLinkables.getTransitiveSharedLibraries(
+            targetGraph,
+            cxxPlatform,
+            params.getDeps(),
+            traverse);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {

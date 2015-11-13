@@ -265,6 +265,7 @@ public class AppleDescriptions {
     output.linkWhole = arg.linkWhole;
     output.supportedPlatformsRegex = Optional.absent();
     output.canBeAsset = arg.canBeAsset;
+    output.exportedDeps = arg.exportedDeps;
   }
 
   @VisibleForTesting
