@@ -16,7 +16,6 @@ android_binary(
   keystore = ':debug_keystore',
   use_split_dex = True,
   exopackage_modes = [
-    'native_library',
     'secondary_dex',
   ],
   primary_dex_patterns = [
