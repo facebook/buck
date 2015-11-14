@@ -1330,13 +1330,12 @@ public class ProjectGenerator {
             "LIBRARY_SEARCH_PATHS",
             Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(tests)),
             "OTHER_LDFLAGS",
-            Escaper.escapeAsBashString(
-                Joiner.on(' ').join(
-                    MoreIterables.zipAndConcat(
-                        Iterables.cycle("-Xlinker"),
-                        Iterables.concat(
-                            key.getLinkerFlags(),
-                            collectRecursiveExportedLinkerFlags(tests)))))));
+            Joiner.on(' ').join(
+                MoreIterables.zipAndConcat(
+                    Iterables.cycle("-Xlinker"),
+                    Iterables.concat(
+                        key.getLinkerFlags(),
+                        collectRecursiveExportedLinkerFlags(tests))))));
     buildableCombinedTestTargets.add(result.target);
   }
 
