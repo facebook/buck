@@ -1,19 +1,4 @@
 java_library(
-  name = 'nativelinkable',
-  srcs = [
-    'JavaNativeLinkable.java',
-  ],
-  deps = [
-    '//src/com/facebook/buck/cxx:platform',
-    '//src/com/facebook/buck/rules:build_rule',
-    '//third-party/java/guava:guava',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-java_library(
   name = 'fat-jar-main',
   # Maximum compatibility
   source = '6',
@@ -177,7 +162,6 @@ java_library(
   deps = [
     ':classhash',
     ':fat-jar-main',
-    ':nativelinkable',
     ':packagefinder',
     ':steps',
     ':support',
@@ -187,6 +171,7 @@ java_library(
     '//src/com/facebook/buck/event:event',
     '//src/com/facebook/buck/graph:graph',
     '//src/com/facebook/buck/io:io',
+    '//src/com/facebook/buck/jvm/core:nativelinkable',
     '//src/com/facebook/buck/jvm/java/abi:protocol',
     '//src/com/facebook/buck/log:api',
     '//src/com/facebook/buck/maven:util',
