@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -55,7 +54,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
@@ -218,10 +216,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               cxxPlatform,
               params.getDeps(),
               Linker.LinkableDepType.SHARED,
-              Predicates.or(
-                  Predicates.instanceOf(NativeLinkable.class),
-                  Predicates.instanceOf(NdkLibrary.class)),
-              ImmutableSet.<BuildTarget>of());
+              Predicates.instanceOf(NdkLibrary.class));
 
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.

@@ -491,8 +491,7 @@ public class CxxLinkableEnhancerTest {
             TargetGraph.EMPTY,
             cxxPlatform,
             ImmutableList.of(top),
-            Linker.LinkableDepType.STATIC,
-            ImmutableSet.<BuildTarget>of());
+            Linker.LinkableDepType.STATIC);
     assertThat(
         FluentIterable.from(bottomInput.getArgs())
             .transform(Arg.stringifyFunction())

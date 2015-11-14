@@ -32,10 +32,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import java.util.List;
 import java.util.Map;
 
 public class NativeLinkables {
@@ -167,25 +165,14 @@ public class NativeLinkables {
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
-      Predicate<Object> traverse,
-      ImmutableSet<BuildTarget> blacklist) {
+      Predicate<Object> traverse) {
 
     // Get the topologically sorted native linkables.
     ImmutableMap<BuildTarget, NativeLinkable> roots = getNativeLinkableRoots(inputs, traverse);
     ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
         getNativeLinkables(cxxPlatform, roots.values(), depType);
-
-    // Filter out rules in the blacklist.
-    List<NativeLinkable> filtered = Lists.newArrayListWithExpectedSize(nativeLinkables.size());
-    for (Map.Entry<BuildTarget, NativeLinkable> entry : nativeLinkables.entrySet()) {
-      if (!blacklist.contains(entry.getKey())) {
-        filtered.add(entry.getValue());
-      }
-    }
-
-    // Return a merged view of all native linkable input.
     return NativeLinkableInput.concat(
-        FluentIterable.from(filtered)
+        FluentIterable.from(nativeLinkables.values())
             .transform(getNativeLinkableInputFunction(targetGraph, cxxPlatform, depType)));
   }
 
@@ -193,15 +180,13 @@ public class NativeLinkables {
       TargetGraph targetGraph,
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      Linker.LinkableDepType depType,
-      ImmutableSet<BuildTarget> blacklist) {
+      Linker.LinkableDepType depType) {
     return getTransitiveNativeLinkableInput(
         targetGraph,
         cxxPlatform,
         inputs,
         depType,
-        Predicates.instanceOf(NativeLinkable.class),
-        blacklist);
+        Predicates.instanceOf(NativeLinkable.class));
   }
 
   public static ImmutableMap<BuildTarget, NativeLinkable> getTransitiveNativeLinkables(

@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.graph.TopologicalSort;
@@ -185,10 +184,7 @@ public class OCamlRuleBuilder {
         cxxPlatform,
         deps,
         Linker.LinkableDepType.STATIC,
-        Predicates.or(
-            Predicates.instanceOf(NativeLinkable.class),
-            Predicates.instanceOf(OCamlLibrary.class)),
-        ImmutableSet.<BuildTarget>of());
+        Predicates.instanceOf(OCamlLibrary.class));
   }
 
   public static AbstractBuildRule createBulkBuildRule(

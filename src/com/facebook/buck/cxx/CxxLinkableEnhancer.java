@@ -35,12 +35,14 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
@@ -90,12 +92,21 @@ public class CxxLinkableEnhancer {
 
     // Collect and topologically sort our deps that contribute to the link.
     NativeLinkableInput linkableInput =
-        NativeLinkables.getTransitiveNativeLinkableInput(
-            targetGraph,
-            cxxPlatform,
-            nativeLinkableDeps,
-            depType,
-            blacklist);
+        NativeLinkableInput.concat(
+            FluentIterable
+                .from(
+                    Maps.filterKeys(
+                        NativeLinkables.getNativeLinkables(
+                            cxxPlatform,
+                            FluentIterable.from(nativeLinkableDeps)
+                                .filter(NativeLinkable.class),
+                            depType),
+                        Predicates.not(Predicates.in(blacklist))).values())
+                .transform(
+                    NativeLinkables.getNativeLinkableInputFunction(
+                        targetGraph,
+                        cxxPlatform,
+                        depType)));
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -133,7 +144,7 @@ public class CxxLinkableEnhancer {
     addSharedLibrariesLinkerArgs(
         cxxPlatform,
         resolver,
-        ImmutableSortedSet.<FrameworkPath>copyOf(linkableInput.getLibraries()),
+        ImmutableSortedSet.copyOf(linkableInput.getLibraries()),
         argsBuilder);
 
     // Add framework args - from both linkable dependancies and the frameworks for the binary
