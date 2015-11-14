@@ -816,7 +816,6 @@ AppleSdkPaths appleSdkPaths =
                   new TestSourcePath("input.o")),
               Linker.LinkableDepType.SHARED,
               ImmutableList.<BuildRule>of(),
-              Optional.<Linker.CxxRuntimeType>absent(),
               Optional.<SourcePath>absent(),
               ImmutableSet.<BuildTarget>of(),
               ImmutableSet.<FrameworkPath>of());

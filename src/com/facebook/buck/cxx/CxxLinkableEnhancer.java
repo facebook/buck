@@ -76,7 +76,6 @@ public class CxxLinkableEnhancer {
       ImmutableList<Arg> args,
       Linker.LinkableDepType depType,
       Iterable<? extends BuildRule> nativeLinkableDeps,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<FrameworkPath> frameworks) {
@@ -155,11 +154,7 @@ public class CxxLinkableEnhancer {
         argsBuilder);
 
     // Add all arguments needed to link in the C/C++ platform runtime.
-    Linker.LinkableDepType runtimeDepType = depType;
-    if (cxxRuntimeType.or(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
-      runtimeDepType = Linker.LinkableDepType.STATIC;
-    }
-    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
+    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(depType)));
 
     final ImmutableList<Arg> allArgs = argsBuilder.build();
 

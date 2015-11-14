@@ -136,7 +136,6 @@ abstract class DDescriptionUtils {
             .build(),
         Linker.LinkableDepType.STATIC,
         params.getDeps(),
-        /* cxxRuntimeType */ Optional.<Linker.CxxRuntimeType>absent(),
         /* bundleLoader */ Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());

@@ -518,8 +518,7 @@ public class CxxDescriptionEnhancer {
         args.platformCompilerFlags,
         args.prefixHeader,
         args.linkerFlags,
-        args.platformLinkerFlags,
-        args.cxxRuntimeType);
+        args.platformLinkerFlags);
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
@@ -539,8 +538,7 @@ public class CxxDescriptionEnhancer {
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<ImmutableList<String>> linkerFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType) {
+      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags) {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     Path linkOutput = getLinkOutputPath(params.getBuildTarget());
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -656,7 +654,6 @@ public class CxxDescriptionEnhancer {
             argsBuilder.build(),
             linkStyle,
             params.getDeps(),
-            cxxRuntimeType,
             Optional.<SourcePath>absent(),
             ImmutableSet.<BuildTarget>of(),
             frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));

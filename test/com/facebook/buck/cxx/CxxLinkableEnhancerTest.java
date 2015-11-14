@@ -63,6 +63,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Map;
 
 public class CxxLinkableEnhancerTest {
 
@@ -174,7 +175,6 @@ public class CxxLinkableEnhancerTest {
             new BuildTargetSourcePath(genrule2.getBuildTarget())),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -214,7 +214,6 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -264,7 +263,6 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -296,7 +294,6 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -316,7 +313,6 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -336,7 +332,6 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(),
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -379,7 +374,6 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.STATIC,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -401,7 +395,6 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_INPUTS,
         Linker.LinkableDepType.SHARED,
         ImmutableSortedSet.<BuildRule>of(nativeLinkable),
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -414,48 +407,37 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void platformLdFlags() {
-    CxxPlatform cxxPlatform = CxxPlatform.builder()
-        .from(CXX_PLATFORM)
-        .putRuntimeLdflags(Linker.LinkableDepType.SHARED, "-ldummy-shared-libc")
-        .putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-ldummy-static-libc")
-        .build();
+    ImmutableMap<Linker.LinkableDepType, String> runtimes =
+        ImmutableMap.of(
+            Linker.LinkableDepType.SHARED, "-ldummy-shared-libc",
+            Linker.LinkableDepType.STATIC, "-ldummy-static-libc",
+            Linker.LinkableDepType.STATIC_PIC, "-ldummy-static-pic-libc");
+    CxxPlatform cxxPlatform =
+        CxxPlatform.builder()
+            .from(CXX_PLATFORM)
+            .putAllRuntimeLdflags(runtimes.asMultimap())
+            .build();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     SourcePathResolver pathResolver = new SourcePathResolver(new BuildRuleResolver());
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-
-    ImmutableList<Optional<Linker.CxxRuntimeType>> runtimeTypes =
-        ImmutableList.of(
-            Optional.<Linker.CxxRuntimeType>absent(),
-            Optional.of(Linker.CxxRuntimeType.DYNAMIC),
-            Optional.of(Linker.CxxRuntimeType.STATIC));
-
-    String expectedLibc[] = new String[] {
-      "-ldummy-shared-libc",
-      "-ldummy-shared-libc",
-      "-ldummy-static-libc",
-    };
-
-    for (int i = 0; i < expectedLibc.length; ++i) {
-      CxxLink lib = CxxLinkableEnhancer.createCxxLinkableBuildRule(
-          TargetGraph.EMPTY,
-          cxxPlatform,
-          params,
-          pathResolver,
-          target,
-          Linker.LinkType.SHARED,
-          Optional.<String>absent(),
-          DEFAULT_OUTPUT,
-          DEFAULT_INPUTS,
-          Linker.LinkableDepType.SHARED,
-          ImmutableSortedSet.<BuildRule>of(),
-          runtimeTypes.get(i),
-          Optional.<SourcePath>absent(),
-          ImmutableSet.<BuildTarget>of(),
-          ImmutableSet.<FrameworkPath>of());
-
-      assertTrue(
-          "\"" + lib.getArgs().toString() + "\" contains " + expectedLibc[i],
-          lib.getArgs().contains(expectedLibc[i]));
+    for (Map.Entry<Linker.LinkableDepType, String> ent : runtimes.entrySet()) {
+      CxxLink lib =
+          CxxLinkableEnhancer.createCxxLinkableBuildRule(
+              TargetGraph.EMPTY,
+              cxxPlatform,
+              params,
+              pathResolver,
+              target,
+              Linker.LinkType.SHARED,
+              Optional.<String>absent(),
+              DEFAULT_OUTPUT,
+              DEFAULT_INPUTS,
+              ent.getKey(),
+              ImmutableSortedSet.<BuildRule>of(),
+              Optional.<SourcePath>absent(),
+              ImmutableSet.<BuildTarget>of(),
+              ImmutableSet.<FrameworkPath>of());
+      assertThat(lib.getArgs(), hasItem(ent.getValue()));
     }
   }
 
@@ -523,7 +505,6 @@ public class CxxLinkableEnhancerTest {
             new TestSourcePath("simple.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>of(new TestSourcePath("path/to/MyBundleLoader")),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -555,7 +536,6 @@ public class CxxLinkableEnhancerTest {
             new TestSourcePath("simple.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<FrameworkPath>of());
@@ -577,7 +557,6 @@ public class CxxLinkableEnhancerTest {
             new TestSourcePath("another.o")),
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
         Optional.<SourcePath>of(
             new BuildTargetSourcePath(bundleLoaderRule.getBuildTarget())),
             ImmutableSet.<BuildTarget>of(),

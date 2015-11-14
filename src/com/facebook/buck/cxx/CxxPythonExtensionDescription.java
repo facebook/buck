@@ -209,7 +209,6 @@ public class CxxPythonExtensionDescription implements
         argsBuilder.build(),
         Linker.LinkableDepType.SHARED,
         params.getDeps(),
-        args.cxxRuntimeType,
         Optional.<SourcePath>absent(),
         ImmutableSet.<BuildTarget>of(),
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()));

@@ -340,7 +340,6 @@ public class CxxLibraryDescription implements
       ImmutableSet<FrameworkPath> frameworks,
       Optional<String> soname,
       CxxPreprocessMode preprocessMode,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
@@ -417,7 +416,6 @@ public class CxxLibraryDescription implements
             .build(),
         linkableDepType,
         params.getDeps(),
-        cxxRuntimeType,
         bundleLoader,
         blacklist,
         frameworks);
@@ -508,7 +506,6 @@ public class CxxLibraryDescription implements
     arg.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
     arg.exportedPlatformLinkerFlags = Optional.of(
         PatternMatchedCollection.<ImmutableList<String>>of());
-    arg.cxxRuntimeType = Optional.absent();
     arg.forceStatic = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.headerNamespace = Optional.absent();
@@ -649,7 +646,6 @@ public class CxxLibraryDescription implements
         args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
         args.soname,
         preprocessMode,
-        args.cxxRuntimeType,
         linkType,
         linkableDepType,
         bundleLoader,
